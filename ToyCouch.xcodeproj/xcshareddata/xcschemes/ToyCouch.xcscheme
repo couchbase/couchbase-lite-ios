@@ -14,7 +14,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-               BuildableName = "CouchLite"
+               BuildableName = "ToyCouch"
                BlueprintName = "ToyCouch"
                ReferencedContainer = "container:ToyCouch.xcodeproj">
             </BuildableReference>
@@ -32,7 +32,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-            BuildableName = "CouchLite"
+            BuildableName = "ToyCouch"
             BlueprintName = "ToyCouch"
             ReferencedContainer = "container:ToyCouch.xcodeproj">
          </BuildableReference>
@@ -50,7 +50,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-            BuildableName = "CouchLite"
+            BuildableName = "ToyCouch"
             BlueprintName = "ToyCouch"
             ReferencedContainer = "container:ToyCouch.xcodeproj">
          </BuildableReference>
@@ -98,7 +98,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-            BuildableName = "CouchLite"
+            BuildableName = "ToyCouch"
             BlueprintName = "ToyCouch"
             ReferencedContainer = "container:ToyCouch.xcodeproj">
          </BuildableReference>

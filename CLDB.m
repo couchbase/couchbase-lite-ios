@@ -39,9 +39,13 @@
     
     // Declaring the primary key as AUTOINCREMENT means the values will always be
     // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
-    NSString *sql = @"CREATE TABLE IF NOT EXISTS docs "
-                     "(sequence INTEGER PRIMARY KEY AUTOINCREMENT, "
-                     "docid TEXT, revid TEXT, current INTEGER, json BLOB)";
+    NSString *sql = @"CREATE TABLE IF NOT EXISTS docs ("
+                     "sequence INTEGER PRIMARY KEY AUTOINCREMENT, "
+                     "docid TEXT, "
+                     "revid TEXT, "
+                     "current INTEGER, "            // boolean
+                     "deleted INTEGER DEFAULT 0, "  // boolean
+                     "json BLOB)";
     if (![_fmdb executeUpdate: sql]) {
         [self close];
         return NO;
@@ -142,7 +146,9 @@ static NSString* createUUID() {
 
 - (CLDocument*) getDocumentWithID: (NSString*)docID {
     CLDocument* result = nil;
-    FMResultSet *r = [_fmdb executeQuery: @"SELECT json FROM docs WHERE docid=? and current=1 LIMIT 1",
+    FMResultSet *r = [_fmdb executeQuery: @"SELECT json FROM docs "
+                                           "WHERE docid=? and current=1 and deleted=0 "
+                                           "LIMIT 1",
                       docID];
     if ([r next])
         result = [[[CLDocument alloc] initWithJSON: [r dataForColumnIndex: 0]] autorelease];
@@ -152,7 +158,8 @@ static NSString* createUUID() {
 
 - (CLDocument*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
     CLDocument* result = nil;
-    FMResultSet *r = [_fmdb executeQuery: @"SELECT json FROM docs WHERE docid=? and revid=? LIMIT 1",
+    FMResultSet *r = [_fmdb executeQuery: @"SELECT json FROM docs WHERE docid=? and revid=? "
+                                           "LIMIT 1",
                       docID, revID];
     if ([r next])
         result = [[[CLDocument alloc] initWithJSON: [r dataForColumnIndex: 0]] autorelease];
@@ -161,20 +168,20 @@ static NSString* createUUID() {
 }
 
 
-- (CLDocument*) putDocument: (CLDocument*)document
-                     withID: (NSString*)docID 
-                 revisionID: (NSString*)revID
+- (CLDocument*) putDocument: (CLDocument*)document  // may be nil, in which case this is a delete
+                     withID: (NSString*)docID
+                 revisionID: (NSString*)revID       // rev ID being replaced, or nil if an insert
                      status: (int*)outStatus
 {
     NSParameterAssert(outStatus);
-    // 'document' may be nil, in which case this is a delete.
-    if (!docID) {
+    if (!docID || (!document && !revID)) {
         *outStatus = 400;
         return nil;
     }
     
     *outStatus = 500;
     [self beginTransaction];
+    FMResultSet* r = nil;
     if (revID) {
         // Replacing: make sure given revID is current
         if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 "
@@ -187,18 +194,24 @@ static NSString* createUUID() {
             goto exit;
         }
     } else {
-        // Inserting: make sure docID doesn't exist
-        FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence FROM docs "
-                                               "WHERE docid=? and current=1 LIMIT 1",
-                                              docID];
+        // Inserting: make sure docID doesn't exist, or exists but is currently deleted
+        r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM docs "
+                                  "WHERE docid=? and current=1 LIMIT 1",
+                                 docID];
         if (!r)
             goto exit;
-        BOOL exists = [r next];
-        [r close];
-        if (exists) {
-            *outStatus = 409;
-            goto exit;
+        if ([r next]) {
+            if ([r boolForColumnIndex: 1]) {
+                if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 WHERE sequence=?",
+                                           $object([r intForColumnIndex: 0])])
+                    goto exit;
+            } else {
+                *outStatus = 409;
+                goto exit;
+            }
         }
+        [r close];
+        r = nil;
     }
     
     // Bump the revID and update the JSON:
@@ -213,10 +226,10 @@ static NSString* createUUID() {
         NSAssert(json!=nil, @"Couldn't serialize document");
     }
     
-    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid, revid, current, json) "
-                                "VALUES (?, ?, ?, ?)",
+    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid, revid, current, deleted, json) "
+                                "VALUES (?, ?, 1, ?, ?)",
                                docID, revID,
-                               (json ? kCFBooleanTrue : kCFBooleanFalse),
+                               (document ? kCFBooleanFalse : kCFBooleanTrue),
                                json])
         goto exit;
     
@@ -224,6 +237,7 @@ static NSString* createUUID() {
     *outStatus = document ? 201 : 200;
     
 exit:
+    [r close];
     if (*outStatus >= 300)
         self.transactionFailed = YES;
     [self endTransaction];
@@ -259,18 +273,18 @@ exit:
 
 
 - (NSArray*) changesSinceSequence: (int)lastSequence limit: (int)limit {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, docid, revid FROM docs "
-                                           "WHERE sequence > ?", $object(lastSequence)];
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, docid, revid, deleted FROM docs "
+                                           "WHERE sequence > ? AND current=1 LIMIT ?",
+                                          $object(lastSequence), $object(limit)];
     if (!r)
         return nil;
     NSMutableArray* changes = $marray();
     while ([r next]) {
         NSDictionary* change = $dict({@"seq", $object([r intForColumnIndex: 0])},
                                      {@"id",  [r stringForColumnIndex: 1]},
-                                     {@"rev", [r stringForColumnIndex: 2]});
+                                     {@"rev", [r stringForColumnIndex: 2]},
+                                     {@"deleted", [r boolForColumnIndex: 3] ? $true : nil});
         [changes addObject: change];
-        if (--limit <= 0)
-            break;
     }
     return changes;
 }
@@ -345,7 +359,7 @@ TestCase(CLDB) {
     
     NSArray* changes = [db changesSinceSequence: 0 limit: INT_MAX];
     NSLog(@"Changes = %@", changes);
-    CAssertEq(changes.count, 3u);
+    CAssertEq(changes.count, 1u);
     
     CAssert([db close]);
 }
