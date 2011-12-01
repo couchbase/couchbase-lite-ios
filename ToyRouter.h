@@ -9,6 +9,10 @@
 #import <Foundation/Foundation.h>
 @class ToyDB, ToyServer, ToyResponse, ToyDocument;
 
+
+extern NSString* const kToyVersionString;
+
+
 @interface ToyRouter : NSObject
 {
     @private

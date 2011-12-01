@@ -1,5 +1,5 @@
 /*
- *  CLDB.cpp
+ *  ToyDB.cpp
  *  ToyCouch
  *
  *  Created by Jens Alfke on 6/19/10.
@@ -25,6 +25,7 @@
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = 10;
         _fmdb.logsErrors = YES; //TEMP
+        _fmdb.crashOnErrors = YES; //TEMP
         _fmdb.traceExecution = WillLogTo(SQL);
     }
     return self;
@@ -100,7 +101,7 @@
 
 - (void) beginTransaction {
     if (++_transactionLevel == 1) {
-        LogTo(CLDB, @"Begin transaction...");
+        LogTo(ToyDB, @"Begin transaction...");
         [_fmdb beginTransaction];
         _transactionFailed = NO;
     }
@@ -110,10 +111,10 @@
     Assert(_transactionLevel > 0);
     if (--_transactionLevel == 0) {
         if (_transactionFailed) {
-            LogTo(CLDB, @"Rolling back failed transaction!");
+            LogTo(ToyDB, @"Rolling back failed transaction!");
             [_fmdb rollback];
         } else {
-            LogTo(CLDB, @"Committing transaction");
+            LogTo(ToyDB, @"Committing transaction");
             [_fmdb commit];
         }
     }
@@ -125,7 +126,7 @@
 - (void) setTransactionFailed: (BOOL)failed {
     Assert(_transactionLevel > 0);
     Assert(failed, @"Can't clear the transactionFailed property!");
-    LogTo(CLDB, @"Current transaction failed, will abort!");
+    LogTo(ToyDB, @"Current transaction failed, will abort!");
     _transactionFailed = failed;
 }
 
@@ -319,7 +320,8 @@ exit:
 
 - (NSArray*) changesSinceSequence: (int)lastSequence limit: (int)limit {
     FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, docid, revid, deleted FROM docs "
-                                           "WHERE sequence > ? AND current=1 LIMIT ?",
+                                           "WHERE sequence > ? AND current=1 "
+                                           "ORDER BY sequence LIMIT ?",
                                           $object(lastSequence), $object(limit)];
     if (!r)
         return nil;
@@ -340,6 +342,56 @@ exit:
 }
 
 
+#pragma mark - QUERIES:
+
+// http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
+
+
+const ToyDBQueryOptions kDefaultToyDBQueryOptions = {
+    nil, nil, 0, INT_MAX, NO, NO, NO
+};
+
+
+- (NSDictionary*) getAllDocs: (const ToyDBQueryOptions*)options {
+    if (!options)
+        options = &kDefaultToyDBQueryOptions;
+    
+    NSUInteger update_seq = 0;
+    if (options->updateSeq)
+        update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
+    
+    NSString* sql = $sprintf(@"SELECT docid, revid %@ FROM docs "
+                              "WHERE current=1 AND deleted=0 "
+                              "ORDER BY docid %@ LIMIT ? OFFSET ?",
+                             (options->includeDocs ? @", json" : @""),
+                             (options->descending ? @"DESC" : @"ASC"));
+    FMResultSet* r = [_fmdb executeQuery: sql, $object(options->limit), $object(options->skip)];
+    if (!r)
+        return nil;
+    
+    NSMutableArray* rows = $marray();
+    while ([r next]) {
+        NSString* docID = [r stringForColumnIndex: 0];
+        NSString* revID = [r stringForColumnIndex: 1];
+        NSDictionary* docContents = nil;
+        if (options->includeDocs) {
+            docContents = [NSJSONSerialization JSONObjectWithData: [r dataForColumnIndex: 2]
+                                                          options: 0 error: nil];
+        }
+        NSDictionary* change = $dict({@"id",  docID},
+                                     {@"key", docID},
+                                     {@"value", $dict({@"rev", revID})},
+                                     {@"doc", docContents});
+        [rows addObject: change];
+    }
+    NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
+    return $dict({@"rows", $object(rows)},
+                 {@"total_rows", $object(totalRows)},
+                 {@"offset", $object(options->skip)},
+                 {@"update_seq", update_seq ? $object(update_seq) : nil});
+}
+
+
 @end
 
 
@@ -347,7 +399,7 @@ exit:
 
 #pragma mark - TESTS
 
-TestCase(CLDB) {
+TestCase(ToyDB) {
     // Start with a fresh database in /tmp:
     NSString* kPath = @"/tmp/toycouch_test.sqlite3";
     [[NSFileManager defaultManager] removeItemAtPath: kPath error: nil];

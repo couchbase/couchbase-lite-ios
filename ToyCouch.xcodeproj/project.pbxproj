@@ -10,6 +10,7 @@
 		27C706421486BBD500F0F099 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
 		27C706451486BE7100F0F099 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		27C706481487584300F0F099 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
+		27C7064B1488311100F0F099 /* ToyRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* ToyRouter_Tests.m */; };
 		27F0744811CD4B6D00E9A2AB /* ToyDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* ToyDB.m */; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
@@ -46,6 +47,7 @@
 		27C706441486BE7100F0F099 /* ToyRouter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyRouter.m; sourceTree = "<group>"; };
 		27C706461487584300F0F099 /* ToyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyProtocol.h; sourceTree = "<group>"; };
 		27C706471487584300F0F099 /* ToyProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyProtocol.m; sourceTree = "<group>"; };
+		27C7064A1488311100F0F099 /* ToyRouter_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyRouter_Tests.m; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* ToyDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyDB.h; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* ToyDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyDB.m; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -107,13 +109,14 @@
 				27F0744711CD4B6D00E9A2AB /* ToyDB.m */,
 				27F074A911CD5D7A00E9A2AB /* ToyDocument.h */,
 				27F074AA11CD5D7A00E9A2AB /* ToyDocument.m */,
-				08FB7796FE84155DC02AAC07 /* main.m */,
 				27C706401486BBD500F0F099 /* ToyServer.h */,
 				27C706411486BBD500F0F099 /* ToyServer.m */,
 				27C706431486BE7100F0F099 /* ToyRouter.h */,
 				27C706441486BE7100F0F099 /* ToyRouter.m */,
+				27C7064A1488311100F0F099 /* ToyRouter_Tests.m */,
 				27C706461487584300F0F099 /* ToyProtocol.h */,
 				27C706471487584300F0F099 /* ToyProtocol.m */,
+				08FB7796FE84155DC02AAC07 /* main.m */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -226,6 +229,7 @@
 				27C706421486BBD500F0F099 /* ToyServer.m in Sources */,
 				27C706451486BE7100F0F099 /* ToyRouter.m in Sources */,
 				27C706481487584300F0F099 /* ToyProtocol.m in Sources */,
+				27C7064B1488311100F0F099 /* ToyRouter_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,5 +1,5 @@
 /*
- *  CLDB.h
+ *  ToyDB.h
  *  ToyCouch
  *
  *  Created by Jens Alfke on 6/19/10.
@@ -9,6 +9,19 @@
 
 #import <Foundation/Foundation.h>
 @class FMDatabase, ToyDocument;
+
+
+typedef struct {
+    NSString* startKey;
+    NSString* endKey;
+    int skip;
+    int limit;
+    BOOL descending;
+    BOOL includeDocs;
+    BOOL updateSeq;
+} ToyDBQueryOptions;
+
+extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 
 
 /** A ToyCouch database. Acts primarily as a container for named tables (CLCaches). */
@@ -60,5 +73,9 @@
                                status: (int*)outStatus;;
 
 - (NSArray*) changesSinceSequence: (int)lastSequence;
+
+// QUERIES:
+
+- (NSDictionary*) getAllDocs: (const ToyDBQueryOptions*)options;
 
 @end
