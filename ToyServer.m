@@ -26,6 +26,18 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+#if DEBUG
++ (ToyServer*) createEmptyAtPath: (NSString*)path {
+    CAssert([[NSFileManager defaultManager] removeItemAtPath: path error: nil]);
+    NSError* error;
+    ToyServer* server = [[self alloc] initWithDirectory: path error: &error];
+    Assert(server, @"Failed to create server at %@: %@", path, error);
+    AssertEqual(server.directory, path);
+    return [server autorelease];
+}
+#endif
+
+
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError {
     if (outError) *outError = nil;
     self = [super init];
@@ -51,6 +63,7 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 - (void)dealloc {
+    [self close];
     [_dir release];
     [_databases release];
     [super dealloc];
@@ -112,16 +125,23 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 
-
-TestCase(ToyServer) {
-    static NSString* const kTestPath = @"/tmp/ToyServerTest";
-    CAssert([[NSFileManager defaultManager] removeItemAtPath: kTestPath error: nil]);
+#if DEBUG
+extern ToyServer* CreateTestServer(NSString* name);
+ToyServer* CreateTestServer(NSString* name) {
+    NSString* testPath = [NSString stringWithFormat: @"/tmp/ToyCouch_%@_Test", name];
+    CAssert([[NSFileManager defaultManager] removeItemAtPath: testPath error: nil]);
     
     NSError* error;
-    ToyServer* server = [[ToyServer alloc] initWithDirectory: kTestPath error: &error];
+    ToyServer* server = [[ToyServer alloc] initWithDirectory: testPath error: &error];
     CAssert(server, @"Failed to create server: %@", error);
-    CAssertEqual(server.directory, kTestPath);
-    
+    CAssertEqual(server.directory, testPath);
+    return server;
+}
+
+
+
+TestCase(ToyServer) {
+    ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyServerTest"];
     ToyDB* db = [server databaseNamed: @"foo"];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");
@@ -135,7 +155,6 @@ TestCase(ToyServer) {
     CAssert([db open]);
     CAssert(db.exists);
     CAssertEqual(server.allDatabaseNames, $array(@"foo"));    // because foo doesn't exist yet
-
-    [server close];
-    [server release];
 }
+
+#endif

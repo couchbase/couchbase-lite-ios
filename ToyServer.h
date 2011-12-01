@@ -28,4 +28,8 @@
 
 - (void) close;
 
+#if DEBUG
++ (ToyServer*) createEmptyAtPath: (NSString*)path;  // for testing
+#endif
+
 @end

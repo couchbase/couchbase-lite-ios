@@ -305,19 +305,27 @@ static NSArray* splitPath( NSString* path ) {
 #if DEBUG
 
 static NSString* Send(ToyServer* server, NSString* method, NSString* path,
-                      int expectedStatus, NSString* expectedResult) {
-    NSURL* url = [NSURL URLWithString: [@"http://" stringByAppendingString: path]];
+                      int expectedStatus, id expectedResult) {
+    NSURL* url = [NSURL URLWithString: [@"toy://" stringByAppendingString: path]];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = method;
     ToyRouter* router = [[ToyRouter alloc] initWithServer: server request: request];
     CAssert(router!=nil);
     ToyResponse* response = router.response;
     NSData* json = response.body.asJSON;
-    NSString* result = nil;
-    if (json)
-        result = [[[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding] autorelease];
-    Log(@"%@ %@ --> %d %@", method, path, response.status, result);
+    NSString* jsonStr = nil;
+    id result = nil;
+    if (json) {
+        jsonStr = [[[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding] autorelease];
+        CAssert(jsonStr);
+        NSError* error;
+        result = [NSJSONSerialization JSONObjectWithData: json options: 0 error: &error];
+        CAssert(result, @"Couldn't parse JSON response: %@", error);
+    }
+    Log(@"%@ %@ --> %d %@", method, path, response.status, jsonStr);
+    
     CAssertEq(response.status, expectedStatus);
+
     if (expectedResult)
         CAssertEqual(result, expectedResult);
     [router release];
@@ -325,30 +333,23 @@ static NSString* Send(ToyServer* server, NSString* method, NSString* path,
 }
 
 TestCase(ToyRouter) {
-    static NSString* const kTestPath = @"/tmp/ToyRouterTest";
-    [[NSFileManager defaultManager] removeItemAtPath: kTestPath error: nil];
-    NSError* error;
-    ToyServer* server = [[ToyServer alloc] initWithDirectory: kTestPath error: &error];
-    CAssert(server, @"Failed to create server: %@", error);
+    ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
     
-    Send(server, @"GET", @"/", 200, @"{\"ToyCouch\":\"welcome\",\"version\":\"0.1\"}");
-    Send(server, @"GET", @"/_all_dbs", 200, @"[]");
+    Send(server, @"GET", @"/", 200, $dict({@"ToyCouch", @"welcome"}, {@"version", @"0.1"}));
+    Send(server, @"GET", @"/_all_dbs", 200, $array());
     Send(server, @"GET", @"/non-existent", 404, nil);
     Send(server, @"GET", @"/BadName", 400, nil);
     Send(server, @"PUT", @"/", 400, nil);
     Send(server, @"POST", @"/", 400, nil);
 
     Send(server, @"PUT", @"/database", 201, nil);
-    Send(server, @"GET", @"/database", 200, 
-         @"{\"db_name\":\"database\",\"num_docs\":0,\"update_seq\":0}");
+    Send(server, @"GET", @"/database", 200,
+         $dict({@"db_name", @"database"}, {@"num_docs", $object(0)}, {@"update_seq", $object(0)}));
     Send(server, @"PUT", @"/database", 412, nil);
     Send(server, @"PUT", @"/database2", 201, nil);
-    Send(server, @"GET", @"/database2", 200, 
-         @"{\"db_name\":\"database2\",\"num_docs\":0,\"update_seq\":0}");
+    Send(server, @"GET", @"/database2", 200,
+         $dict({@"db_name", @"database2"}, {@"num_docs", $object(0)}, {@"update_seq", $object(0)}));
     Send(server, @"DELETE", @"/database2", 200, nil);
-    Send(server, @"GET", @"/_all_dbs", 200, @"[\"database\"]");
-
-    [server close];
-    [server release];
+    Send(server, @"GET", @"/_all_dbs", 200, $array(@"database"));
 }
 #endif
