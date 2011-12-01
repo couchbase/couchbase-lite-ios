@@ -143,6 +143,7 @@ static NSArray* splitPath( NSString* path ) {
     
     if (_response.bodyObject)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
+    //TODO: Add 'Date:' header
 }
 
 - (ToyResponse*) response {
@@ -229,25 +230,50 @@ static NSArray* splitPath( NSString* path ) {
 #pragma mark - DOCUMENT REQUESTS:
 
 
+- (NSString*) setResponseEtag: (ToyDocument*)doc {
+    NSString* eTag = $sprintf(@"\"%@\"", doc.revisionID);
+    [_response setValue: eTag ofHeader: @"Etag"];
+    return eTag;
+}
+
+
 - (int) do_GET: (ToyDB*)db docID: (NSString*)docID {
-    NSString* revID = [self query: @"rev"];
-    ToyDocument* doc = [db getDocumentWithID: docID revisionID: revID];
-    if (!doc)
+    ToyDocument* document = [db getDocumentWithID: docID
+                                       revisionID: [self query: @"rev"]];
+    if (!document)
         return 404;
-    // TODO: Conditional GET!
-    _response.body = doc;
+    
+    // Check for conditional GET:
+    NSString* eTag = [self setResponseEtag: document];
+    if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
+        return 304;
+    
+    _response.body = document;
     return 200;
+    //TODO: Handle ?_revs_info query
 }
 
 
 - (int) update: (ToyDB*)db docID: (NSString*)docID json: (NSData*)json {
     ToyDocument* document = json ? [ToyDocument documentWithJSON: json] : nil;
+    
+    // The revision ID can come either from the ?rev= query param or an If-Match header.
+    NSString* revID = [self query: @"rev"];
+    if (!revID) {
+        NSString* ifMatch = [self query: @"If-Match"];
+        if (ifMatch) {
+            // Value of If-Match is an ETag, so have to trim the quotes around it:
+            if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
+                revID = [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
+            else
+                return 400;
+        }
+    }
+    
     int status;
-    document = [db putDocument: document
-                        withID: docID
-                    revisionID: [self query: @"rev"]
-                        status: &status];
+    document = [db putDocument: document withID: docID revisionID: revID status: &status];
     if (status < 300) {
+        [self setResponseEtag: document];
         _response.bodyObject = $dict({@"ok", $true},
                                      {@"id", document.documentID},
                                      {@"rev", document.revisionID});
@@ -257,7 +283,10 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (int) do_PUT: (ToyDB*)db docID: (NSString*)docID {
-    return [self update: db docID: docID json: _request.HTTPBody];
+    NSData* json = _request.HTTPBody;
+    if (!json)
+        return 400;
+    return [self update: db docID: docID json: json];
 }
 
 
