@@ -183,7 +183,8 @@ static NSString* createUUID() {
         if (!ok)
             return nil;
     }
-    return [NSString stringWithFormat: @"%i-%@", ++generation, createUUID()];
+    NSString* digest = @"";  //TODO: Generate canonical digest of body
+    return [NSString stringWithFormat: @"%i-%@", ++generation, digest];
 }
 
 
@@ -275,6 +276,11 @@ static NSString* createUUID() {
                                json])
         goto exit;
     
+    if (!props) {
+        // Create properties to return, so caller can get the new rev ID
+        props = $mdict({@"_id", docID}, {@"_rev", revID});
+    }
+    
     // Success!
     *outStatus = document ? 201 : 200;
     
@@ -295,13 +301,11 @@ exit:
     return [self putDocument: document withID: docID revisionID: nil status: outStatus];
 }
 
-- (int) deleteDocumentWithID: (NSString*)docID 
-                  revisionID: (NSString*)revID
+- (ToyDocument*) deleteDocumentWithID: (NSString*)docID 
+                           revisionID: (NSString*)revID
+                               status: (int*)outStatus
 {
-    NSParameterAssert(docID);
-    int status;
-    [self putDocument: nil withID: docID revisionID: revID status: &status];
-    return status;
+    return [self putDocument: nil withID: docID revisionID: revID status: outStatus];
 }
 
 
@@ -341,6 +345,8 @@ exit:
 
 
 
+#pragma mark - TESTS
+
 TestCase(CLDB) {
     // Start with a fresh database in /tmp:
     NSString* kPath = @"/tmp/toycouch_test.sqlite3";
@@ -359,7 +365,6 @@ TestCase(CLDB) {
     NSString* revID = doc.revisionID;
     Log(@"Doc got _id=%@ _rev=%@", docID, revID);
     CAssert(docID.length >= 10);
-    CAssert(revID.length >= 10);
     CAssert([revID hasPrefix: @"1-"]);
     
     // Read it back:
@@ -377,7 +382,6 @@ TestCase(CLDB) {
     CAssertEqual(doc.documentID, docID);
     revID = doc.revisionID;
     Log(@"Doc got _id=%@ _rev=%@", docID, revID);
-    CAssert(revID.length >= 10);
     CAssert([revID hasPrefix: @"2-"]);
     
     // Read it back:
@@ -391,8 +395,10 @@ TestCase(CLDB) {
     CAssertNil(doc);
     
     // Delete it:
-    status = [db deleteDocumentWithID: docID revisionID: revID];
+    doc = [db deleteDocumentWithID: docID revisionID: revID status: &status];
     CAssertEq(status, 200);
+    CAssertEqual(doc.documentID, docID);
+    CAssert([doc.revisionID hasPrefix: @"3-"]);
     
     // Read it back (should fail):
     readDoc = [db getDocumentWithID: docID];

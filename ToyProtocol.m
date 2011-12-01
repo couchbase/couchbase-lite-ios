@@ -68,12 +68,15 @@ static ToyServer* sServer;
 
 
 - (void)stopLoading {
+    // (Has to be implemented, even though it does nothing)
 }
 
 
 @end
 
 
+
+#pragma mark - TESTS
 
 TestCase(ToyProtocol) {
     [ToyProtocol setServer: [ToyServer createEmptyAtPath: @"/tmp/ToyProtocolTest"]];

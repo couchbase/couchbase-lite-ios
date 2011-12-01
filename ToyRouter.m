@@ -18,7 +18,7 @@
 
 
 @interface ToyRouter ()
-- (int) do_PUT: (ToyDB*)db docID: (NSString*)docID;
+- (int) update: (ToyDB*)db docID: (NSString*)docID json: (NSData*)json;
 @end
 
 
@@ -209,7 +209,7 @@ static NSArray* splitPath( NSString* path ) {
     int status = [self openDB];
     if (status >= 300)
         return status;
-    return [self do_PUT: db docID: nil];
+    return [self update: db docID: nil json: _request.HTTPBody];
 }
 
 
@@ -240,12 +240,12 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_PUT: (ToyDB*)db docID: (NSString*)docID {
-    ToyDocument* document = [ToyDocument documentWithJSON: _request.HTTPBody];
+- (int) update: (ToyDB*)db docID: (NSString*)docID json: (NSData*)json {
+    ToyDocument* document = json ? [ToyDocument documentWithJSON: json] : nil;
     int status;
     document = [db putDocument: document
                         withID: docID
-                    revisionID: document.revisionID
+                    revisionID: [self query: @"rev"]
                         status: &status];
     if (status < 300) {
         _response.bodyObject = $dict({@"ok", $true},
@@ -256,8 +256,13 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
+- (int) do_PUT: (ToyDB*)db docID: (NSString*)docID {
+    return [self update: db docID: docID json: _request.HTTPBody];
+}
+
+
 - (int) do_DELETE: (ToyDB*)db docID: (NSString*)docID {
-    return [db deleteDocumentWithID: docID revisionID: [self query: @"rev"]];
+    return [self update: db docID: docID json: nil];
 }
 
 
@@ -302,13 +307,20 @@ static NSArray* splitPath( NSString* path ) {
 
 
 
-#if DEBUG
 
-static NSString* Send(ToyServer* server, NSString* method, NSString* path,
-                      int expectedStatus, id expectedResult) {
+#if DEBUG
+#pragma mark - TESTS
+
+static id SendBody(ToyServer* server, NSString* method, NSString* path, id bodyObj,
+               int expectedStatus, id expectedResult) {
     NSURL* url = [NSURL URLWithString: [@"toy://" stringByAppendingString: path]];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = method;
+    if (bodyObj) {
+        NSError* error = nil;
+        request.HTTPBody = [NSJSONSerialization dataWithJSONObject: bodyObj options:0 error:&error];
+        CAssertNil(error);
+    }
     ToyRouter* router = [[ToyRouter alloc] initWithServer: server request: request];
     CAssert(router!=nil);
     ToyResponse* response = router.response;
@@ -332,24 +344,66 @@ static NSString* Send(ToyServer* server, NSString* method, NSString* path,
     return result;
 }
 
-TestCase(ToyRouter) {
+static id Send(ToyServer* server, NSString* method, NSString* path,
+               int expectedStatus, id expectedResult) {
+    return SendBody(server, method, path, nil, expectedStatus, expectedResult);
+}
+
+TestCase(ToyRouter_Server) {
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
-    
-    Send(server, @"GET", @"/", 200, $dict({@"ToyCouch", @"welcome"}, {@"version", @"0.1"}));
+    Send(server, @"GET", @"/", 200, $dict({@"ToyCouch", @"welcome"}, {@"version", kVersionString}));
     Send(server, @"GET", @"/_all_dbs", 200, $array());
     Send(server, @"GET", @"/non-existent", 404, nil);
     Send(server, @"GET", @"/BadName", 400, nil);
     Send(server, @"PUT", @"/", 400, nil);
     Send(server, @"POST", @"/", 400, nil);
+}
 
+TestCase(ToyRouter_Databases) {
+    ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
     Send(server, @"PUT", @"/database", 201, nil);
     Send(server, @"GET", @"/database", 200,
          $dict({@"db_name", @"database"}, {@"num_docs", $object(0)}, {@"update_seq", $object(0)}));
     Send(server, @"PUT", @"/database", 412, nil);
     Send(server, @"PUT", @"/database2", 201, nil);
+    Send(server, @"GET", @"/_all_dbs", 200, $array(@"database", @"database2"));
     Send(server, @"GET", @"/database2", 200,
          $dict({@"db_name", @"database2"}, {@"num_docs", $object(0)}, {@"update_seq", $object(0)}));
     Send(server, @"DELETE", @"/database2", 200, nil);
     Send(server, @"GET", @"/_all_dbs", 200, $array(@"database"));
 }
+
+TestCase(ToyRouter_Docs) {
+    ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
+    Send(server, @"PUT", @"/db", 201, nil);
+    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
+                                    201, nil);
+    Log(@"PUT returned %@", result);
+    NSString* revID = [result objectForKey: @"rev"];
+    CAssert([revID hasPrefix: @"1-"]);
+
+    result = SendBody(server, @"PUT", $sprintf(@"/db/doc1?rev=%@", revID),
+                                    $dict({@"message", @"goodbye"}), 
+                                    201, nil);
+    Log(@"PUT returned %@", result);
+    revID = [result objectForKey: @"rev"];
+    CAssert([revID hasPrefix: @"2-"]);
+    
+    Send(server, @"GET", @"/db/doc1", 200,
+         $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"goodbye"}));
+    
+    result = Send(server, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), 200, nil);
+    revID = [result objectForKey: @"rev"];
+    CAssert([revID hasPrefix: @"3-"]);
+
+    Send(server, @"GET", @"/db/doc1", 404, nil);
+
+    result = Send(server, @"GET", @"/db/_changes", 200,
+                  $dict({@"last_seq", $object(3)},
+                        {@"results", $array($dict({@"id", @"doc1"},
+                                                  {@"rev", revID},
+                                                  {@"seq", $object(3)},
+                                                  {@"deleted", $true}))}));
+}
+
 #endif

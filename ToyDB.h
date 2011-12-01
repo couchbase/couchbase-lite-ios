@@ -54,9 +54,10 @@
                  revisionID: (NSString*)revID
                      status: (int*)outStatus;
 - (ToyDocument*) createDocument: (ToyDocument*)document
-                        status: (int*)outStatus;
-- (int) deleteDocumentWithID: (NSString*)docID 
-                  revisionID: (NSString*)revID;
+                         status: (int*)outStatus;
+- (ToyDocument*) deleteDocumentWithID: (NSString*)docID 
+                           revisionID: (NSString*)revID
+                               status: (int*)outStatus;;
 
 - (NSArray*) changesSinceSequence: (int)lastSequence;
 

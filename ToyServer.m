@@ -125,20 +125,8 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 
-#if DEBUG
-extern ToyServer* CreateTestServer(NSString* name);
-ToyServer* CreateTestServer(NSString* name) {
-    NSString* testPath = [NSString stringWithFormat: @"/tmp/ToyCouch_%@_Test", name];
-    CAssert([[NSFileManager defaultManager] removeItemAtPath: testPath error: nil]);
-    
-    NSError* error;
-    ToyServer* server = [[ToyServer alloc] initWithDirectory: testPath error: &error];
-    CAssert(server, @"Failed to create server: %@", error);
-    CAssertEqual(server.directory, testPath);
-    return server;
-}
 
-
+#pragma mark - TESTS
 
 TestCase(ToyServer) {
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyServerTest"];
@@ -156,5 +144,3 @@ TestCase(ToyServer) {
     CAssert(db.exists);
     CAssertEqual(server.allDatabaseNames, $array(@"foo"));    // because foo doesn't exist yet
 }
-
-#endif
