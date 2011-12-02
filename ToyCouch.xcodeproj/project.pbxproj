@@ -7,10 +7,47 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		270B3DFD1489359000E0A926 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DFC1489359000E0A926 /* SenTestingKit.framework */; };
+		270B3DFE1489359000E0A926 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
+		270B3E011489359000E0A926 /* ToyCouch.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* ToyCouch.framework */; };
+		270B3E071489359000E0A926 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 270B3E051489359000E0A926 /* InfoPlist.strings */; };
+		270B3E0A1489359100E0A926 /* ToyCouchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E091489359100E0A926 /* ToyCouchTests.m */; };
+		270B3E111489382F00E0A926 /* ToyDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* ToyDB.m */; };
+		270B3E121489382F00E0A926 /* ToyDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* ToyDocument.m */; };
+		270B3E131489382F00E0A926 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
+		270B3E141489382F00E0A926 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
+		270B3E151489382F00E0A926 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
+		270B3E161489382F00E0A926 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
+		270B3E171489382F00E0A926 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0746D11CD51A200E9A2AB /* FMDatabaseAdditions.m */; };
+		270B3E181489382F00E0A926 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747211CD51A200E9A2AB /* FMResultSet.m */; };
+		270B3E191489382F00E0A926 /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
+		270B3E1A1489382F00E0A926 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
+		270B3E1B1489382F00E0A926 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
+		270B3E1C1489382F00E0A926 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
+		270B3E1D1489384700E0A926 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
+		270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
+		270B3E201489390000E0A926 /* ToyCouch.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* ToyCouch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E211489390F00E0A926 /* ToyProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* ToyProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E221489391E00E0A926 /* ToyDB.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* ToyDB.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E231489392100E0A926 /* ToyDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* ToyDocument.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E241489392600E0A926 /* ToyServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706401486BBD500F0F099 /* ToyServer.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E251489392C00E0A926 /* ToyRouter.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* ToyRouter.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E26148939BD00E0A926 /* ToyCouch.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* ToyCouch.framework */; };
+		270B3E27148939C500E0A926 /* ToyCouch.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* ToyCouch.framework */; };
 		27C706421486BBD500F0F099 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
 		27C706451486BE7100F0F099 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		27C706481487584300F0F099 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
 		27C7064B1488311100F0F099 /* ToyRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* ToyRouter_Tests.m */; };
+		27C706621488625C00F0F099 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
+		27C706701488634300F0F099 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7066F1488634300F0F099 /* AppKit.framework */; };
+		27C706711488637A00F0F099 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
+		27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
+		27C706C31488665A00F0F099 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
+		27C706C61488669100F0F099 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
+		27C706D31488679500F0F099 /* DemoAppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CC1488679500F0F099 /* DemoAppController.m */; };
+		27C706D41488679500F0F099 /* DemoQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CE1488679500F0F099 /* DemoQuery.m */; };
+		27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27C706D01488679500F0F099 /* ShoppingDemo.xib */; };
+		27C706D71488679500F0F099 /* ShoppingItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706D21488679500F0F099 /* ShoppingItem.m */; };
 		27F0744811CD4B6D00E9A2AB /* ToyDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* ToyDB.m */; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
@@ -22,25 +59,53 @@
 		27F074AB11CD5D7A00E9A2AB /* ToyDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* ToyDocument.m */; };
 		27F0751311CDC7F900E9A2AB /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		27F0751811CDC80A00E9A2AB /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
-		8DD76F650486A84900D96B5E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.m */; settings = {ATTRIBUTES = (); }; };
-		8DD76F6A0486A84900D96B5E /* CouchLite.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* CouchLite.1 */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		270B3DFF1489359000E0A926 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270B3DE91489359000E0A926;
+			remoteInfo = ToyCouch;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
+		27C706C51488668A00F0F099 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				27C706C61488669100F0F099 /* CouchCocoa.framework in CopyFiles */,
+				270B3E27148939C500E0A926 /* ToyCouch.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DD76F690486A84900D96B5E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 8;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 10;
 			files = (
-				8DD76F6A0486A84900D96B5E /* CouchLite.1 in CopyFiles */,
+				27C706711488637A00F0F099 /* CouchCocoa.framework in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		08FB7796FE84155DC02AAC07 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		270B3DEA1489359000E0A926 /* ToyCouch.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ToyCouch.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		270B3DEE1489359000E0A926 /* ToyCouch-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ToyCouch-Info.plist"; sourceTree = "<group>"; };
+		270B3DFB1489359000E0A926 /* ToyCouchTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ToyCouchTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		270B3DFC1489359000E0A926 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		270B3E041489359000E0A926 /* ToyCouchTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ToyCouchTests-Info.plist"; sourceTree = "<group>"; };
+		270B3E061489359000E0A926 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		270B3E081489359100E0A926 /* ToyCouchTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ToyCouchTests.h; sourceTree = "<group>"; };
+		270B3E091489359100E0A926 /* ToyCouchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToyCouchTests.m; sourceTree = "<group>"; };
+		270B3E1F148938D800E0A926 /* ToyCouch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ToyCouch.h; sourceTree = "<group>"; };
+		270B3E28148940C000E0A926 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* ToyServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyServer.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* ToyServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyServer.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* ToyRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyRouter.h; sourceTree = "<group>"; };
@@ -48,6 +113,21 @@
 		27C706461487584300F0F099 /* ToyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyProtocol.h; sourceTree = "<group>"; };
 		27C706471487584300F0F099 /* ToyProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyProtocol.m; sourceTree = "<group>"; };
 		27C7064A1488311100F0F099 /* ToyRouter_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyRouter_Tests.m; sourceTree = "<group>"; };
+		27C706611488625C00F0F099 /* CouchCocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchCocoa.framework; path = "../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug/CouchCocoa.framework"; sourceTree = "<group>"; };
+		27C7066F1488634300F0F099 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		27C70694148864BA00F0F099 /* ToyCouch Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ToyCouch Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		27C70697148864BA00F0F099 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		27C7069A148864BA00F0F099 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		27C7069B148864BA00F0F099 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		27C7069C148864BA00F0F099 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		27C706CB1488679500F0F099 /* DemoAppController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoAppController.h; sourceTree = "<group>"; };
+		27C706CC1488679500F0F099 /* DemoAppController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DemoAppController.m; sourceTree = "<group>"; };
+		27C706CD1488679500F0F099 /* DemoQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoQuery.h; sourceTree = "<group>"; };
+		27C706CE1488679500F0F099 /* DemoQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DemoQuery.m; sourceTree = "<group>"; };
+		27C706CF1488679500F0F099 /* ShoppingDemo-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "ShoppingDemo-Info.plist"; sourceTree = "<group>"; };
+		27C706D01488679500F0F099 /* ShoppingDemo.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ShoppingDemo.xib; sourceTree = "<group>"; };
+		27C706D11488679500F0F099 /* ShoppingItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShoppingItem.h; sourceTree = "<group>"; };
+		27C706D21488679500F0F099 /* ShoppingItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShoppingItem.m; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* ToyDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyDB.h; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* ToyDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyDB.m; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -72,16 +152,46 @@
 		27F0751611CDC80A00E9A2AB /* ExceptionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionUtils.h; sourceTree = "<group>"; };
 		27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExceptionUtils.m; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* ToyCouch */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ToyCouch; sourceTree = BUILT_PRODUCTS_DIR; };
-		C6859E8B029090EE04C91782 /* CouchLite.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = CouchLite.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		270B3DE61489359000E0A926 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */,
+				270B3E1D1489384700E0A926 /* libsqlite3.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		270B3DF71489359000E0A926 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270B3DFD1489359000E0A926 /* SenTestingKit.framework in Frameworks */,
+				270B3DFE1489359000E0A926 /* Cocoa.framework in Frameworks */,
+				270B3E011489359000E0A926 /* ToyCouch.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27C70691148864BA00F0F099 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */,
+				27C706C31488665A00F0F099 /* CouchCocoa.framework in Frameworks */,
+				270B3E26148939BD00E0A926 /* ToyCouch.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DD76F660486A84900D96B5E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */,
 				27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */,
+				27C706701488634300F0F099 /* AppKit.framework in Frameworks */,
+				27C706621488625C00F0F099 /* CouchCocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -91,13 +201,14 @@
 		08FB7794FE84155DC02AAC07 /* CouchLite */ = {
 			isa = PBXGroup;
 			children = (
+				270B3E28148940C000E0A926 /* README.md */,
 				08FB7795FE84155DC02AAC07 /* Source */,
+				27C706CA1488679500F0F099 /* Demo */,
 				27F0746C11CD51A200E9A2AB /* FMDB */,
 				27F0749A11CD5B1200E9A2AB /* MYUtilities */,
-				C6859E8C029090F304C91782 /* Documentation */,
+				270B3E021489359000E0A926 /* ToyCouchTests */,
+				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
-				27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */,
-				27F0745C11CD50A600E9A2AB /* Foundation.framework */,
 			);
 			name = CouchLite;
 			sourceTree = "<group>";
@@ -116,17 +227,80 @@
 				27C7064A1488311100F0F099 /* ToyRouter_Tests.m */,
 				27C706461487584300F0F099 /* ToyProtocol.h */,
 				27C706471487584300F0F099 /* ToyProtocol.m */,
-				08FB7796FE84155DC02AAC07 /* main.m */,
+				270B3DEE1489359000E0A926 /* ToyCouch-Info.plist */,
+				270B3E1F148938D800E0A926 /* ToyCouch.h */,
 			);
-			name = Source;
+			path = Source;
 			sourceTree = "<group>";
 		};
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				8DD76F6C0486A84900D96B5E /* ToyCouch */,
+				27C70694148864BA00F0F099 /* ToyCouch Demo.app */,
+				270B3DEA1489359000E0A926 /* ToyCouch.framework */,
+				270B3DFB1489359000E0A926 /* ToyCouchTests.octest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		270B3E021489359000E0A926 /* ToyCouchTests */ = {
+			isa = PBXGroup;
+			children = (
+				270B3E081489359100E0A926 /* ToyCouchTests.h */,
+				270B3E091489359100E0A926 /* ToyCouchTests.m */,
+				270B3E031489359000E0A926 /* Supporting Files */,
+			);
+			name = ToyCouchTests;
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		270B3E031489359000E0A926 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				270B3E041489359000E0A926 /* ToyCouchTests-Info.plist */,
+				270B3E051489359000E0A926 /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		27C70696148864BA00F0F099 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				27C7066F1488634300F0F099 /* AppKit.framework */,
+				27F0745C11CD50A600E9A2AB /* Foundation.framework */,
+				27C70697148864BA00F0F099 /* Cocoa.framework */,
+				27C706611488625C00F0F099 /* CouchCocoa.framework */,
+				27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */,
+				270B3DFC1489359000E0A926 /* SenTestingKit.framework */,
+				27C70699148864BA00F0F099 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		27C70699148864BA00F0F099 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				27C7069A148864BA00F0F099 /* AppKit.framework */,
+				27C7069B148864BA00F0F099 /* CoreData.framework */,
+				27C7069C148864BA00F0F099 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		27C706CA1488679500F0F099 /* Demo */ = {
+			isa = PBXGroup;
+			children = (
+				27C706CB1488679500F0F099 /* DemoAppController.h */,
+				27C706CC1488679500F0F099 /* DemoAppController.m */,
+				27C706CD1488679500F0F099 /* DemoQuery.h */,
+				27C706CE1488679500F0F099 /* DemoQuery.m */,
+				27C706CF1488679500F0F099 /* ShoppingDemo-Info.plist */,
+				27C706D01488679500F0F099 /* ShoppingDemo.xib */,
+				27C706D11488679500F0F099 /* ShoppingItem.h */,
+				27C706D21488679500F0F099 /* ShoppingItem.m */,
+			);
+			path = Demo;
 			sourceTree = "<group>";
 		};
 		27F0746C11CD51A200E9A2AB /* FMDB */ = {
@@ -140,8 +314,8 @@
 				27F0747211CD51A200E9A2AB /* FMResultSet.m */,
 			);
 			name = FMDB;
-			path = Cocoa/FMDB/src;
-			sourceTree = OtherPeoplesStuff;
+			path = vendor/fmdb/src;
+			sourceTree = SOURCE_ROOT;
 		};
 		27F0749A11CD5B1200E9A2AB /* MYUtilities */ = {
 			isa = PBXGroup;
@@ -161,20 +335,83 @@
 			name = MYUtilities;
 			sourceTree = MYUtilities;
 		};
-		C6859E8C029090F304C91782 /* Documentation */ = {
-			isa = PBXGroup;
-			children = (
-				C6859E8B029090EE04C91782 /* CouchLite.1 */,
-			);
-			name = Documentation;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		270B3DE71489359000E0A926 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270B3E201489390000E0A926 /* ToyCouch.h in Headers */,
+				270B3E211489390F00E0A926 /* ToyProtocol.h in Headers */,
+				270B3E221489391E00E0A926 /* ToyDB.h in Headers */,
+				270B3E231489392100E0A926 /* ToyDocument.h in Headers */,
+				270B3E241489392600E0A926 /* ToyServer.h in Headers */,
+				270B3E251489392C00E0A926 /* ToyRouter.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
-		8DD76F620486A84900D96B5E /* ToyCouch */ = {
+		270B3DE91489359000E0A926 /* ToyCouch */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "ToyCouch" */;
+			buildConfigurationList = 270B3E0B1489359100E0A926 /* Build configuration list for PBXNativeTarget "ToyCouch" */;
+			buildPhases = (
+				270B3DE51489359000E0A926 /* Sources */,
+				270B3DE61489359000E0A926 /* Frameworks */,
+				270B3DE71489359000E0A926 /* Headers */,
+				270B3DE81489359000E0A926 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ToyCouch;
+			productName = ToyCouch;
+			productReference = 270B3DEA1489359000E0A926 /* ToyCouch.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		270B3DFA1489359000E0A926 /* ToyCouchTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 270B3E0E1489359100E0A926 /* Build configuration list for PBXNativeTarget "ToyCouchTests" */;
+			buildPhases = (
+				270B3DF61489359000E0A926 /* Sources */,
+				270B3DF71489359000E0A926 /* Frameworks */,
+				270B3DF81489359000E0A926 /* Resources */,
+				270B3DF91489359000E0A926 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				270B3E001489359000E0A926 /* PBXTargetDependency */,
+			);
+			name = ToyCouchTests;
+			productName = ToyCouchTests;
+			productReference = 270B3DFB1489359000E0A926 /* ToyCouchTests.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+		27C70693148864BA00F0F099 /* ToyCouch Demo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "ToyCouch Demo" */;
+			buildPhases = (
+				27C70690148864BA00F0F099 /* Sources */,
+				27C70691148864BA00F0F099 /* Frameworks */,
+				27C70692148864BA00F0F099 /* Resources */,
+				27C706C51488668A00F0F099 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ToyCouch Demo";
+			productName = "ToyCouch Demo";
+			productReference = 27C70694148864BA00F0F099 /* ToyCouch Demo.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8DD76F620486A84900D96B5E /* Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "Tests" */;
 			buildPhases = (
 				8DD76F640486A84900D96B5E /* Sources */,
 				8DD76F660486A84900D96B5E /* Frameworks */,
@@ -184,7 +421,7 @@
 			);
 			dependencies = (
 			);
-			name = ToyCouch;
+			name = Tests;
 			productInstallPath = "$(HOME)/bin";
 			productName = CouchLite;
 			productReference = 8DD76F6C0486A84900D96B5E /* ToyCouch */;
@@ -206,17 +443,98 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8DD76F620486A84900D96B5E /* ToyCouch */,
+				270B3DE91489359000E0A926 /* ToyCouch */,
+				270B3DFA1489359000E0A926 /* ToyCouchTests */,
+				27C70693148864BA00F0F099 /* ToyCouch Demo */,
+				8DD76F620486A84900D96B5E /* Tests */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		270B3DE81489359000E0A926 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		270B3DF81489359000E0A926 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270B3E071489359000E0A926 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27C70692148864BA00F0F099 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		270B3DF91489359000E0A926 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		270B3DE51489359000E0A926 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270B3E111489382F00E0A926 /* ToyDB.m in Sources */,
+				270B3E121489382F00E0A926 /* ToyDocument.m in Sources */,
+				270B3E131489382F00E0A926 /* ToyServer.m in Sources */,
+				270B3E141489382F00E0A926 /* ToyRouter.m in Sources */,
+				270B3E151489382F00E0A926 /* ToyProtocol.m in Sources */,
+				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
+				270B3E171489382F00E0A926 /* FMDatabaseAdditions.m in Sources */,
+				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
+				270B3E191489382F00E0A926 /* ExceptionUtils.m in Sources */,
+				270B3E1A1489382F00E0A926 /* Logging.m in Sources */,
+				270B3E1B1489382F00E0A926 /* CollectionUtils.m in Sources */,
+				270B3E1C1489382F00E0A926 /* Test.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		270B3DF61489359000E0A926 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270B3E0A1489359100E0A926 /* ToyCouchTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27C70690148864BA00F0F099 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27C706D31488679500F0F099 /* DemoAppController.m in Sources */,
+				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
+				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DD76F640486A84900D96B5E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DD76F650486A84900D96B5E /* main.m in Sources */,
 				27F0744811CD4B6D00E9A2AB /* ToyDB.m in Sources */,
 				27F0747511CD51A200E9A2AB /* FMDatabaseAdditions.m in Sources */,
 				27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */,
@@ -235,16 +553,39 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		270B3E001489359000E0A926 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270B3DE91489359000E0A926 /* ToyCouch */;
+			targetProxy = 270B3DFF1489359000E0A926 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		270B3E051489359000E0A926 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				270B3E061489359000E0A926 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		1DEB923208733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				INFOPLIST_FILE = "ShoppingDemo-Info.plist";
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = ToyCouch;
 			};
@@ -255,7 +596,11 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_MODEL_TUNING = G5;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+				);
+				INFOPLIST_FILE = "ShoppingDemo-Info.plist";
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = ToyCouch;
 			};
@@ -271,7 +616,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PREBINDING = NO;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -284,15 +628,150 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				PREBINDING = NO;
 				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		270B3E0C1489359100E0A926 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Source/ToyCouch-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Debug;
+		};
+		270B3E0D1489359100E0A926 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Source/ToyCouch-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		270B3E0F1489359100E0A926 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "ToyCouch/ToyCouch-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "ToyCouchTests/ToyCouchTests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		270B3E101489359100E0A926 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "ToyCouch/ToyCouch-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "ToyCouchTests/ToyCouchTests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+		27C706B0148864BA00F0F099 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+				);
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Demo/ShoppingDemo-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		27C706B1148864BA00F0F099 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+				);
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Demo/ShoppingDemo-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "ToyCouch" */ = {
+		1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB923208733DC60010E9CD /* Debug */,
@@ -306,6 +785,31 @@
 			buildConfigurations = (
 				1DEB923608733DC60010E9CD /* Debug */,
 				1DEB923708733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		270B3E0B1489359100E0A926 /* Build configuration list for PBXNativeTarget "ToyCouch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				270B3E0C1489359100E0A926 /* Debug */,
+				270B3E0D1489359100E0A926 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		270B3E0E1489359100E0A926 /* Build configuration list for PBXNativeTarget "ToyCouchTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				270B3E0F1489359100E0A926 /* Debug */,
+				270B3E101489359100E0A926 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "ToyCouch Demo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27C706B0148864BA00F0F099 /* Debug */,
+				27C706B1148864BA00F0F099 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

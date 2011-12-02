@@ -13,9 +13,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-               BuildableName = "ToyCouch"
-               BlueprintName = "ToyCouch"
+               BlueprintIdentifier = "27C70693148864BA00F0F099"
+               BuildableName = "ToyCouch Demo.app"
+               BlueprintName = "ToyCouch Demo"
                ReferencedContainer = "container:ToyCouch.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,9 +31,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-            BuildableName = "ToyCouch"
-            BlueprintName = "ToyCouch"
+            BlueprintIdentifier = "27C70693148864BA00F0F099"
+            BuildableName = "ToyCouch Demo.app"
+            BlueprintName = "ToyCouch Demo"
             ReferencedContainer = "container:ToyCouch.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -49,42 +49,18 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-            BuildableName = "ToyCouch"
-            BlueprintName = "ToyCouch"
+            BlueprintIdentifier = "27C70693148864BA00F0F099"
+            BuildableName = "ToyCouch Demo.app"
+            BlueprintName = "ToyCouch Demo"
             ReferencedContainer = "container:ToyCouch.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "Test_All"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
             argument = "-Log YES"
             isEnabled = "YES">
          </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-LogSQL YES"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-LogCLDB YES"
-            isEnabled = "YES">
-         </CommandLineArgument>
       </CommandLineArguments>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "MallocPreScribble"
-            value = "1"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MallocScribble"
-            value = "1"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -97,9 +73,9 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8DD76F620486A84900D96B5E"
-            BuildableName = "ToyCouch"
-            BlueprintName = "ToyCouch"
+            BlueprintIdentifier = "27C70693148864BA00F0F099"
+            BuildableName = "ToyCouch Demo.app"
+            BlueprintName = "ToyCouch Demo"
             ReferencedContainer = "container:ToyCouch.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

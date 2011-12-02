@@ -42,6 +42,7 @@ static ToyServer* sServer;
 
 
 - (void)dealloc {
+    [_router stop];
     [_router release];
     [super dealloc];
 }
@@ -54,9 +55,11 @@ static ToyServer* sServer;
 
 
 - (void) load {
+    Log(@"Loading <%@>", self.request.URL);
     id<NSURLProtocolClient> client = self.client;
     _router = [[ToyRouter alloc] initWithServer: sServer request: self.request];
     _router.onResponseReady = ^(ToyResponse* routerResponse) {
+        Log(@"    onResponseReady <%@>", self.request.URL);
         // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
         NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL
                                                                   statusCode: routerResponse.status
@@ -67,13 +70,16 @@ static ToyServer* sServer;
         [response release];
     };
     _router.onDataAvailable = ^(NSData* content) {
+        Log(@"    onDataAvailable <%@>", self.request.URL);
         if (content.length)
             [client URLProtocol: self didLoadData: content];
     };
     _router.onFinished = ^{
+        Log(@"    onFinished <%@>", self.request.URL);
         [client URLProtocolDidFinishLoading: self];
     };
     [_router start];
+    Log(@"...exiting load <%@>", self.request.URL);
 }
 
 
@@ -87,6 +93,7 @@ static ToyServer* sServer;
 
 
 #pragma mark - TESTS
+#if DEBUG
 
 TestCase(ToyProtocol) {
     [ToyProtocol setServer: [ToyServer createEmptyAtPath: @"/tmp/ToyProtocolTest"]];
@@ -109,3 +116,5 @@ TestCase(ToyProtocol) {
     CAssertEqual([response.allHeaderFields objectForKey: @"Content-Type"], @"application/json");
     CAssert([bodyStr hasPrefix: @"{\"ToyCouch\":\"welcome\",\"version\":"]);
 }
+
+#endif

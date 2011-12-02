@@ -58,6 +58,7 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 // DOCUMENTS:
 
 + (BOOL) isValidDocumentID: (NSString*)str;
+- (NSString*) generateDocumentID;
 
 @property (readonly) NSUInteger documentCount;
 @property (readonly) NSUInteger lastSequence;

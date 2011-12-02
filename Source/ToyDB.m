@@ -1,5 +1,5 @@
 /*
- *  ToyDB.cpp
+ *  ToyDB.m
  *  ToyCouch
  *
  *  Created by Jens Alfke on 6/19/10.
@@ -23,7 +23,7 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
 
 
 - (id) initWithPath: (NSString*)path {
-    if ((self = [super init])) {
+    if (self = [super init]) {
         _path = [path copy];
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = 10;

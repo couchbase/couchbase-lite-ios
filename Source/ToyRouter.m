@@ -176,6 +176,9 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (void) stop {
+    self.onResponseReady = nil;
+    self.onDataAvailable = nil;
+    self.onFinished = nil;
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
@@ -236,7 +239,7 @@ static NSArray* splitPath( NSString* path ) {
     int status = [self openDB];
     if (status >= 300)
         return status;
-    return [self update: db docID: nil json: _request.HTTPBody];
+    return [self update: db docID: [db generateDocumentID] json: _request.HTTPBody];
 }
 
 
@@ -296,15 +299,17 @@ static NSArray* splitPath( NSString* path ) {
     if (!changes)
         return 500;
     
-    NSString* mode = [self query: @"mode"];
-    if ($equal(mode, @"continuous")) {
+    NSString* feed = [self query: @"feed"];
+    if ($equal(feed, @"continuous")) {
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(dbChanged:)
                                                      name: ToyDBChangeNotification
                                                    object: db];
         for (NSDictionary* change in changes) 
             [self sendContinuousChange: change];
-        return 0; // means don't close connection; more data to come
+        // Don't close connection; more data to come
+        _waiting = YES;
+        return 0;
     } else {
         id lastSeq = 0;
         if (changes.count > 0)

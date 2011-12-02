@@ -127,6 +127,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 #pragma mark - TESTS
+#if DEBUG
 
 TestCase(ToyServer) {
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyServerTest"];
@@ -144,3 +145,5 @@ TestCase(ToyServer) {
     CAssert(db.exists);
     CAssertEqual(server.allDatabaseNames, $array(@"foo"));    // because foo doesn't exist yet
 }
+
+#endif
