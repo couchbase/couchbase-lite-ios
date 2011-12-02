@@ -7,9 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
-@class ToyServer, ToyResponse;
+@class ToyServer, ToyRouter;
 
 @interface ToyProtocol : NSURLProtocol
+{
+    @private
+    ToyRouter* _router;
+}
 
 + (void) setServer: (ToyServer*)server;
 

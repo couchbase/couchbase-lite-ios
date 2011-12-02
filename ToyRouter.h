@@ -13,6 +13,11 @@
 extern NSString* const kToyVersionString;
 
 
+typedef void (^OnResponseReadyBlock)(ToyResponse*);
+typedef void (^OnDataAvailableBlock)(NSData*);
+typedef void (^OnFinishedBlock)();
+
+
 @interface ToyRouter : NSObject
 {
     @private
@@ -21,11 +26,23 @@ extern NSString* const kToyVersionString;
     NSDictionary* _queries;
     ToyResponse* _response;
     ToyDB* _db;
+    BOOL _waiting;
+    BOOL _responseSent;
+    OnResponseReadyBlock _onResponseReady;
+    OnDataAvailableBlock _onDataAvailable;
+    OnFinishedBlock _onFinished;
 }
 
 - (id) initWithServer: (ToyServer*)server request: (NSURLRequest*)request;
 
+@property (copy) OnResponseReadyBlock onResponseReady;
+@property (copy) OnDataAvailableBlock onDataAvailable;
+@property (copy) OnFinishedBlock onFinished;
+
 @property (readonly) ToyResponse* response;
+
+- (void) start;
+- (void) stop;
 
 @end
 

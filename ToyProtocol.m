@@ -41,6 +41,12 @@ static ToyServer* sServer;
 }
 
 
+- (void)dealloc {
+    [_router release];
+    [super dealloc];
+}
+
+
 - (void)startLoading {
     NSAssert(sServer, @"No server");
     [self performSelector: @selector(load) withObject: nil afterDelay: 0.0];
@@ -49,26 +55,30 @@ static ToyServer* sServer;
 
 - (void) load {
     id<NSURLProtocolClient> client = self.client;
-    ToyRouter *router = [[ToyRouter alloc] initWithServer: sServer request: self.request];
-    ToyResponse* routerResponse = router.response;
-    // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
-    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL
-                                                              statusCode: routerResponse.status
-                                                             HTTPVersion: @"1.1"
-                                                            headerFields: routerResponse.headers];
-    [client URLProtocol: self didReceiveResponse: response 
-                              cacheStoragePolicy: NSURLCacheStorageNotAllowed];
-    [response release];
-    NSData* content = router.response.body.asJSON;
-    if (content.length)
-        [client URLProtocol: self didLoadData: content];
-    [client URLProtocolDidFinishLoading: self];
-    [router release];
+    _router = [[ToyRouter alloc] initWithServer: sServer request: self.request];
+    _router.onResponseReady = ^(ToyResponse* routerResponse) {
+        // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
+        NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL
+                                                                  statusCode: routerResponse.status
+                                                                 HTTPVersion: @"1.1"
+                                                                headerFields: routerResponse.headers];
+        [client URLProtocol: self didReceiveResponse: response 
+                                  cacheStoragePolicy: NSURLCacheStorageNotAllowed];
+        [response release];
+    };
+    _router.onDataAvailable = ^(NSData* content) {
+        if (content.length)
+            [client URLProtocol: self didLoadData: content];
+    };
+    _router.onFinished = ^{
+        [client URLProtocolDidFinishLoading: self];
+    };
+    [_router start];
 }
 
 
 - (void)stopLoading {
-    // (Has to be implemented, even though it does nothing)
+    [_router stop];
 }
 
 

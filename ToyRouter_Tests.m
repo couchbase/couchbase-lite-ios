@@ -29,6 +29,7 @@ static id SendBody(ToyServer* server, NSString* method, NSString* path, id bodyO
     }
     ToyRouter* router = [[ToyRouter alloc] initWithServer: server request: request];
     CAssert(router!=nil);
+    [router start];
     ToyResponse* response = router.response;
     NSData* json = response.body.asJSON;
     NSString* jsonStr = nil;
@@ -144,6 +145,17 @@ TestCase(ToyRouter_Docs) {
                                                   {@"rev", revID},
                                                   {@"seq", $object(5)},
                                                   {@"deleted", $true}))}));
+    
+    // _changes with ?since:
+    result = Send(server, @"GET", @"/db/_changes?since=4", 200,
+                  $dict({@"last_seq", $object(5)},
+                        {@"results", $array($dict({@"id", @"doc1"},
+                                                  {@"rev", revID},
+                                                  {@"seq", $object(5)},
+                                                  {@"deleted", $true}))}));
+    result = Send(server, @"GET", @"/db/_changes?since=5", 200,
+                  $dict({@"last_seq", $object(5)},
+                        {@"results", $array()}));
 }
 
 
@@ -173,7 +185,7 @@ TestCase(ToyRouter_AllDocs) {
                                     {@"value", $dict({@"rev", revID3})})
                               ));
     
-    // _all_docs:
+    // ?include_docs:
     result = Send(server, @"GET", @"/db/_all_docs?include_docs=true", 200, nil);
     CAssertEqual([result objectForKey: @"total_rows"], $object(3));
     CAssertEqual([result objectForKey: @"offset"], $object(0));
@@ -191,6 +203,53 @@ TestCase(ToyRouter_AllDocs) {
                                     {@"doc", $dict({@"message", @"bonjour"},
                                                    {@"_id", @"doc3"}, {@"_rev", revID3} )})
                               ));
+}
+
+
+TestCase(ToyRouter_ContinuousChanges) {
+    ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
+    Send(server, @"PUT", @"/db", 201, nil);
+
+    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
+
+    __block ToyResponse* response = nil;
+    __block NSMutableData* body = [NSMutableData data];
+    __block BOOL finished = NO;
+    
+    NSURL* url = [NSURL URLWithString: @"toy:///db/_changes?mode=continuous"];
+    NSURLRequest* request = [NSURLRequest requestWithURL: url];
+    ToyRouter* router = [[ToyRouter alloc] initWithServer: server request: request];
+    router.onResponseReady = ^(ToyResponse* routerResponse) {
+        CAssert(!response);
+        response = routerResponse;
+    };
+    router.onDataAvailable = ^(NSData* content) {
+        [body appendData: content];
+    };
+    router.onFinished = ^{
+        CAssert(!finished);
+        finished = YES;
+    };
+    
+    // Start:
+    [router start];
+    
+    // Should initially have a response and one line of output:
+    CAssert(response != nil);
+    CAssertEq(response.status, 200);
+    CAssert(body.length > 0);
+    CAssert(!finished);
+    [body setLength: 0];
+    
+    // Now make a change to the database:
+    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"hej"}), 201, nil);
+
+    // Should now have received additional output from the router:
+    CAssert(body.length > 0);
+    CAssert(!finished);
+    
+    [router stop];
+    [router release];
 }
 
 #endif

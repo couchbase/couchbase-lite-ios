@@ -11,6 +11,9 @@
 @class FMDatabase, ToyDocument;
 
 
+extern NSString* const ToyDBChangeNotification;
+
+
 typedef struct {
     NSString* startKey;
     NSString* endKey;
@@ -72,7 +75,8 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
                            revisionID: (NSString*)revID
                                status: (int*)outStatus;;
 
-- (NSArray*) changesSinceSequence: (int)lastSequence;
+- (NSArray*) changesSinceSequence: (int)lastSequence
+                          options: (const ToyDBQueryOptions*)options;
 
 // QUERIES:
 

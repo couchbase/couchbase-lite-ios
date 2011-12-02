@@ -30,17 +30,26 @@ NSString* const kToyVersionString =  @"0.1";
     if (self) {
         _server = [server retain];
         _request = [request retain];
+        _response = [[ToyResponse alloc] init];
     }
     return self;
 }
 
 - (void)dealloc {
+    [self stop];
     [_server release];
     [_request release];
     [_response release];
     [_queries release];
+    [_onResponseReady release];
+    [_onDataAvailable release];
+    [_onFinished release];
     [super dealloc];
 }
+
+
+@synthesize onResponseReady=_onResponseReady, onDataAvailable=_onDataAvailable,
+            onFinished=_onFinished, response=_response;
 
 
 - (NSDictionary*) queries {
@@ -87,7 +96,16 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (void) route {
+- (void) sendResponse {
+    if (!_responseSent) {
+        _responseSent = YES;
+        if (_onResponseReady)
+            _onResponseReady(_response);
+    }
+}
+
+
+- (void) start {
     // Refer to: http://wiki.apache.org/couchdb/Complete_HTTP_API_Reference
     
     NSMutableString* message = [NSMutableString stringWithFormat: @"do_%@", _request.HTTPMethod];
@@ -138,20 +156,29 @@ static NSArray* splitPath( NSString* path ) {
     SEL sel = NSSelectorFromString(message);
     if (!sel || ![self respondsToSelector: sel])
         sel = @selector(do_UNKNOWN);
-    _response.status = (int) [self performSelector: sel withObject: _db withObject: docID];
+    int status = (int) [self performSelector: sel withObject: _db withObject: docID];
     
     if (_response.bodyObject)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
     //TODO: Add 'Date:' header
+    
+    // If response is ready (nonzero status), tell my client about it:
+    if (status > 0) {
+        _response.status = status;
+        [self sendResponse];
+        if (_onDataAvailable && _response.body) {
+            _onDataAvailable(_response.body.asJSON);
+        }
+        if (_onFinished && !_waiting)
+            _onFinished();
+    }
 }
 
-- (ToyResponse*) response {
-    if (!_response) {
-        _response = [[ToyResponse alloc] init];
-        [self route];
-    }
-    return _response;
+
+- (void) stop {
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
+
 
 - (int) do_UNKNOWN {
     return 400;
@@ -213,19 +240,6 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_GET_changes: (ToyDB*)db {
-    int since = [[self query: @"since"] intValue];
-    NSArray* changes = [db changesSinceSequence: since];
-    if (!changes)
-        return 500;
-    NSString* lastSeq = 0;
-    if (changes.count > 0)
-        lastSeq = [[changes lastObject] objectForKey: @"seq"];
-    _response.bodyObject = $dict({@"results", changes}, {@"last_seq", lastSeq});
-    return 200;
-}
-
-
 - (BOOL) getQueryOptions: (ToyDBQueryOptions*)options {
     // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
     *options = kDefaultToyDBQueryOptions;
@@ -250,6 +264,57 @@ static NSArray* splitPath( NSString* path ) {
         return 500;
     _response.bodyObject = result;
     return 200;
+}
+
+
+#pragma mark - CHANGES:
+
+
+- (void) sendContinuousChange: (NSDictionary*)change {
+    [self sendResponse];
+    NSMutableData* json = [[NSJSONSerialization dataWithJSONObject: change
+                                                           options: 0 error: nil] mutableCopy];
+    [json appendBytes: @"\r\n" length: 2];
+    _onDataAvailable(json);
+    [json release];
+}
+
+
+- (void) dbChanged: (NSNotification*)n {
+    [self sendContinuousChange: n.userInfo];
+}
+
+
+- (int) do_GET_changes: (ToyDB*)db {
+    // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
+    ToyDBQueryOptions options;
+    if (![self getQueryOptions: &options])
+        return 400;
+    int since = [[self query: @"since"] intValue];
+    
+    NSArray* changes = [db changesSinceSequence: since options: &options];
+    if (!changes)
+        return 500;
+    
+    NSString* mode = [self query: @"mode"];
+    if ($equal(mode, @"continuous")) {
+        [[NSNotificationCenter defaultCenter] addObserver: self 
+                                                 selector: @selector(dbChanged:)
+                                                     name: ToyDBChangeNotification
+                                                   object: db];
+        for (NSDictionary* change in changes) 
+            [self sendContinuousChange: change];
+        return 0; // means don't close connection; more data to come
+    } else {
+        id lastSeq = 0;
+        if (changes.count > 0)
+            lastSeq = [[changes lastObject] objectForKey: @"seq"];
+        else
+            lastSeq = $object(since);
+        //TODO: Implement longpoll mode
+        _response.bodyObject = $dict({@"results", changes}, {@"last_seq", lastSeq});
+        return 200;
+    }
 }
 
 

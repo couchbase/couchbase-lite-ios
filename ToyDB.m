@@ -16,6 +16,9 @@
 #import "Test.h"
 
 
+NSString* const ToyDBChangeNotification = @"ToyDBChange";
+
+
 @implementation ToyDB
 
 
@@ -208,6 +211,18 @@ static NSString* createUUID() {
 }
 
 
+- (NSDictionary*) changeDictWithSequence: (sqlite_int64)sequence
+                                   docID: (NSString*)docID
+                                   revID: (NSString*)revID
+                                 deleted: (BOOL)deleted
+{
+    return $dict({@"seq", $object(sequence)},
+                 {@"id",  docID},
+                 {@"rev", revID},
+                 {@"deleted", deleted ? $true : nil});
+}
+
+
 - (ToyDocument*) putDocument: (ToyDocument*)document  // may be nil, in which case this is a delete
                      withID: (NSString*)docID
                  revisionID: (NSString*)revID       // rev ID being replaced, or nil if an insert
@@ -276,6 +291,8 @@ static NSString* createUUID() {
                                (document ? kCFBooleanFalse : kCFBooleanTrue),
                                json])
         goto exit;
+    sqlite_int64 sequence = _fmdb.lastInsertRowId;
+    Assert(sequence > 0);
     
     if (!props) {
         // Create properties to return, so caller can get the new rev ID
@@ -292,6 +309,16 @@ exit:
     [self endTransaction];
     if (*outStatus >= 300) 
         return nil;
+    
+    // Send a change notification:
+    NSDictionary* changeInfo = [self changeDictWithSequence: sequence
+                                                      docID: docID
+                                                      revID: revID
+                                                    deleted: (document==nil)];
+    [[NSNotificationCenter defaultCenter] postNotificationName: ToyDBChangeNotification
+                                                        object: self
+                                                      userInfo: changeInfo];
+    
     return props ? [[[ToyDocument alloc] initWithProperties: props] autorelease] : nil;
 }
 
@@ -318,27 +345,25 @@ exit:
 #pragma mark - CHANGES:
 
 
-- (NSArray*) changesSinceSequence: (int)lastSequence limit: (int)limit {
+- (NSArray*) changesSinceSequence: (int)lastSequence
+                          options: (const ToyDBQueryOptions*)options
+{
+    if (!options) options = &kDefaultToyDBQueryOptions;
+
     FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, docid, revid, deleted FROM docs "
                                            "WHERE sequence > ? AND current=1 "
                                            "ORDER BY sequence LIMIT ?",
-                                          $object(lastSequence), $object(limit)];
+                                          $object(lastSequence), $object(options->limit)];
     if (!r)
         return nil;
     NSMutableArray* changes = $marray();
     while ([r next]) {
-        NSDictionary* change = $dict({@"seq", $object([r intForColumnIndex: 0])},
-                                     {@"id",  [r stringForColumnIndex: 1]},
-                                     {@"rev", [r stringForColumnIndex: 2]},
-                                     {@"deleted", [r boolForColumnIndex: 3] ? $true : nil});
-        [changes addObject: change];
+        [changes addObject: [self changeDictWithSequence: [r longLongIntForColumnIndex: 0]
+                                                   docID: [r stringForColumnIndex: 1]
+                                                   revID: [r stringForColumnIndex: 2]
+                                                 deleted: [r boolForColumnIndex: 3] != 0]];
     }
     return changes;
-}
-
-
-- (NSArray*) changesSinceSequence: (int)lastSequence {
-    return [self changesSinceSequence: lastSequence limit: INT_MAX];
 }
 
 
@@ -456,7 +481,7 @@ TestCase(ToyDB) {
     readDoc = [db getDocumentWithID: docID];
     CAssertNil(readDoc);
     
-    NSArray* changes = [db changesSinceSequence: 0 limit: INT_MAX];
+    NSArray* changes = [db changesSinceSequence: 0 options: NULL];
     NSLog(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
     
