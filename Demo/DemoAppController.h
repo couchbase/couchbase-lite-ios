@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import <Cocoa/Cocoa.h>
-@class CouchDatabase, CouchReplication, DemoQuery;
+@class CouchDatabase, CouchReplication, DemoQuery, ToyPuller;
 
 
 /** Generic application delegate for simple Mac OS CouchDB demo apps.
@@ -30,9 +30,13 @@
     DemoQuery* _query;
     CouchReplication *_pull, *_push;
     BOOL _glowing;
+    
+    ToyPuller* _puller;
 }
 
 @property (retain) DemoQuery* query;
+
+- (IBAction) startSync:(id)sender;
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL;
 

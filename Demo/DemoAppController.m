@@ -16,8 +16,10 @@
 #import "DemoAppController.h"
 #import "DemoQuery.h"
 #import "Test.h"
+#import "ToyDB.h"
 #import "ToyServer.h"
 #import "ToyProtocol.h"
+#import "ToyPuller.h"
 #import <CouchCocoa/CouchCocoa.h>
 
 
@@ -38,7 +40,7 @@ int main (int argc, const char * argv[]) {
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
     gRESTLogLevel = kRESTLogRequestURLs;
-    gCouchLogLevel = 1;
+    gCouchLogLevel = 3;//TEMP
     
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
@@ -77,10 +79,20 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
+#if 1
+    ToyDB* db = [[ToyProtocol server] databaseNamed: _database.relativePath];
+    _puller = [[ToyPuller alloc] initWithDB: db remote: otherDbURL];
+#else
     _pull = [[_database pullFromDatabaseAtURL: otherDbURL
                                       options: kCouchReplicationContinuous] retain];
     _push = [[_database pushToDatabaseAtURL: otherDbURL
                                     options: kCouchReplicationContinuous] retain];
+#endif
+}
+
+
+- (IBAction) startSync:(id)sender {
+    [_puller start];
 }
 
 

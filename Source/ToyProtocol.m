@@ -26,8 +26,17 @@ static ToyServer* sServer;
 
 
 + (void) setServer: (ToyServer*)server {
-    [sServer autorelease];
-    sServer = [server retain];
+    @synchronized(self) {
+        [sServer autorelease];
+        sServer = [server retain];
+    }
+}
+
+
++ (ToyServer*) server {
+    @synchronized(self) {
+        return [[sServer retain] autorelease];
+    }
 }
 
 
@@ -49,18 +58,21 @@ static ToyServer* sServer;
 
 
 - (void)startLoading {
-    NSAssert(sServer, @"No server");
     [self performSelector: @selector(load) withObject: nil afterDelay: 0.0];
 }
 
 
 - (void) load {
-    Log(@"Loading <%@>", self.request.URL);
+    LogTo(ToyProtocol, @"Loading <%@>", self.request.URL);
+    ToyServer* server = [[self class] server];
+    NSAssert(server, @"No server");
     id<NSURLProtocolClient> client = self.client;
-    _router = [[ToyRouter alloc] initWithServer: sServer request: self.request];
+    _router = [[ToyRouter alloc] initWithServer: server request: self.request];
     _router.onResponseReady = ^(ToyResponse* routerResponse) {
-        Log(@"    onResponseReady <%@>", self.request.URL);
+        LogTo(ToyProtocol, @"response ready for <%@> (%d)",
+              self.request.URL, routerResponse.status);//TEMP
         // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
+        // TODO: Find a way to work around this; it'd be nice to support 10.6 or iOS 4.x.
         NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL
                                                                   statusCode: routerResponse.status
                                                                  HTTPVersion: @"1.1"
@@ -70,20 +82,20 @@ static ToyServer* sServer;
         [response release];
     };
     _router.onDataAvailable = ^(NSData* content) {
-        Log(@"    onDataAvailable <%@>", self.request.URL);
+        LogTo(ToyProtocol, @"data available from <%@>", self.request.URL);//TEMP
         if (content.length)
             [client URLProtocol: self didLoadData: content];
     };
     _router.onFinished = ^{
-        Log(@"    onFinished <%@>", self.request.URL);
+        LogTo(ToyProtocol, @"finished response <%@>", self.request.URL);//TEMP
         [client URLProtocolDidFinishLoading: self];
     };
     [_router start];
-    Log(@"...exiting load <%@>", self.request.URL);
 }
 
 
 - (void)stopLoading {
+    LogTo(ToyProtocol, @"Stop <%@>", self.request.URL);
     [_router stop];
 }
 
