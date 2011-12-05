@@ -31,6 +31,7 @@ typedef void (^OnFinishedBlock)();
     OnResponseReadyBlock _onResponseReady;
     OnDataAvailableBlock _onDataAvailable;
     OnFinishedBlock _onFinished;
+    BOOL _longpoll;
 }
 
 - (id) initWithServer: (ToyServer*)server request: (NSURLRequest*)request;

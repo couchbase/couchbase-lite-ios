@@ -56,8 +56,9 @@
 - (void) start {
     Assert(!_changeTracker);
     LogTo(Sync, @"*** STARTING PULLER to <%@> from #%@", _remote, _lastSequence);
-    _changeTracker = [[CouchChangeTracker alloc] initWithDatabaseURL: _remote client: self];
-    _changeTracker.lastSequenceNumber = [_lastSequence intValue];
+    _changeTracker = [[CouchChangeTracker alloc] initWithDatabaseURL: _remote
+                                                        lastSequence: [_lastSequence intValue]
+                                                              client: self];
     [_changeTracker start];
 }
 
@@ -105,12 +106,12 @@
             if (!revID)
                 continue;
             ToyRev* rev = [[ToyRev alloc] initWithDocID: docID revID: revID deleted: deleted];
-            LogTo(Sync, @"ToyPuller: Looking up %@", rev);
             [revs addRev: rev];
             [rev release];
         }
     }
     
+    LogTo(Sync, @"ToyPuller: Looking up %@", revs);
     if (![_db findMissingRevisions: revs]) {
         Warn(@"ToyPuller failed to look up local revs");
         return;

@@ -275,6 +275,16 @@ static NSArray* splitPath( NSString* path ) {
 #pragma mark - CHANGES:
 
 
+- (NSDictionary*) responseBodyForChanges: (NSArray*)changes since: (int)since {
+    id lastSeq = 0;
+    if (changes.count > 0)
+        lastSeq = [[changes lastObject] objectForKey: @"seq"];
+    else
+        lastSeq = $object(since);
+    return $dict({@"results", changes}, {@"last_seq", lastSeq});
+}
+
+
 - (void) sendContinuousChange: (NSDictionary*)change {
     NSMutableData* json = [[NSJSONSerialization dataWithJSONObject: change
                                                            options: 0 error: nil] mutableCopy];
@@ -285,8 +295,19 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (void) dbChanged: (NSNotification*)n {
-    Log(@"ToyRouter: Sending continous change chunk");
-    [self sendContinuousChange: n.userInfo];
+    NSDictionary* change = n.userInfo;
+    if (_longpoll) {
+        Log(@"ToyRouter: Sending longpoll response");
+        [self sendResponse];
+        NSDictionary* body = [self responseBodyForChanges: $array(change) since: 0];
+        _onDataAvailable([NSJSONSerialization dataWithJSONObject: body
+                                                         options: 0 error: nil]);
+        _onFinished();
+        [self stop];
+    } else {
+        Log(@"ToyRouter: Sending continous change chunk");
+        [self sendContinuousChange: change];
+    }
 }
 
 
@@ -302,12 +323,15 @@ static NSArray* splitPath( NSString* path ) {
         return 500;
     
     NSString* feed = [self query: @"feed"];
-    if ($equal(feed, @"continuous")) {
-        [self sendResponse];
-        for (NSDictionary* change in changes) 
-            [self sendContinuousChange: change];
-        if (changes.count == 0)
-            _onDataAvailable([NSData dataWithBytes: @"\n" length: 1]); //TEMP?
+    _longpoll = $equal(feed, @"longpoll");
+    BOOL continuous = !_longpoll && $equal(feed, @"continuous");
+    
+    if (continuous || (_longpoll && changes.count==0)) {
+        if (continuous) {
+            [self sendResponse];
+            for (NSDictionary* change in changes) 
+                [self sendContinuousChange: change];
+        }
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(dbChanged:)
                                                      name: ToyDBChangeNotification
@@ -316,13 +340,7 @@ static NSArray* splitPath( NSString* path ) {
         _waiting = YES;
         return 0;
     } else {
-        id lastSeq = 0;
-        if (changes.count > 0)
-            lastSeq = [[changes lastObject] objectForKey: @"seq"];
-        else
-            lastSeq = $object(since);
-        //TODO: Implement longpoll mode
-        _response.bodyObject = $dict({@"results", changes}, {@"last_seq", lastSeq});
+        _response.bodyObject = [self responseBodyForChanges: changes since: since];
         return 200;
     }
 }

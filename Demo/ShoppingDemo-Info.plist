@@ -27,6 +27,6 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SyncDatabaseURL</key>
-	<string>http://localhost:5984/demo-shopping</string>
+	<string>http://127.0.0.1:5984/demo-shopping</string>
 </dict>
 </plist>
