@@ -66,16 +66,10 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 - (ToyDocument*) getDocumentWithID: (NSString*)docID;
 - (ToyDocument*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID;
 
-- (ToyDocument*) putDocument: (ToyDocument*)document
-                      withID: (NSString*)docID 
-              prevRevisionID: (NSString*)revID
-                      status: (int*)outStatus;
-- (ToyDocument*) createDocument: (ToyDocument*)document
-                         status: (int*)outStatus;
+- (ToyRev*) putRevision: (ToyRev*)revision
+         prevRevisionID: (NSString*)revID
+                 status: (int*)outStatus;
 - (int) forceInsert: (ToyRev*)rev;
-- (ToyDocument*) deleteDocumentWithID: (NSString*)docID 
-                           revisionID: (NSString*)revID
-                               status: (int*)outStatus;;
 
 - (NSArray*) changesSinceSequence: (int)lastSequence
                           options: (const ToyDBQueryOptions*)options;

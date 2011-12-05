@@ -9,6 +9,7 @@
 #import "ToyRouter.h"
 #import "ToyDB.h"
 #import "ToyDocument.h"
+#import "ToyRev.h"
 #import "ToyServer.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
@@ -354,29 +355,42 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) update: (ToyDB*)db docID: (NSString*)docID json: (NSData*)json {
+- (int) update: (ToyDB*)db
+         docID: (NSString*)docID
+          json: (NSData*)json {
     ToyDocument* document = json ? [ToyDocument documentWithJSON: json] : nil;
     
-    // The revision ID can come either from the ?rev= query param or an If-Match header.
-    NSString* revID = [self query: @"rev"];
-    if (!revID) {
-        NSString* ifMatch = [self query: @"If-Match"];
-        if (ifMatch) {
-            // Value of If-Match is an ETag, so have to trim the quotes around it:
-            if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
-                revID = [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
-            else
-                return 400;
+    NSString* revID;
+    if (document) {
+        // PUT's revision ID comes from the JSON body.
+        revID = document.revisionID;
+    } else {
+        // DELETE's revision ID can come either from the ?rev= query param or an If-Match header.
+        revID = [self query: @"rev"];
+        if (!revID) {
+            NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
+            if (ifMatch) {
+                // Value of If-Match is an ETag, so have to trim the quotes around it:
+                if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
+                    revID = [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
+                else
+                    return 400;
+            }
         }
     }
     
+    ToyRev* rev = [[[ToyRev alloc] initWithDocID: docID revID: nil deleted: !document] autorelease];
+    if (!rev)
+        return 400;
+    rev.document = document;
+    
     int status;
-    document = [db putDocument: document withID: docID prevRevisionID: revID status: &status];
+    rev = [db putRevision: rev prevRevisionID: revID status: &status];
     if (status < 300) {
         [self setResponseEtag: document];
         _response.bodyObject = $dict({@"ok", $true},
-                                     {@"id", document.documentID},
-                                     {@"rev", document.revisionID});
+                                     {@"id", rev.docID},
+                                     {@"rev", rev.revID});
     }
     return status;
 }

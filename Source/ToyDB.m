@@ -214,15 +214,13 @@ static NSString* createUUID() {
 }
 
 
-- (NSDictionary*) changeDictWithSequence: (sqlite_int64)sequence
-                                   docID: (NSString*)docID
-                                   revID: (NSString*)revID
-                                 deleted: (BOOL)deleted
+- (NSDictionary*) changeDictForRevision: (ToyRev*)rev
+                               sequence: (sqlite3_int64)sequence
 {
     return $dict({@"seq", $object(sequence)},
-                 {@"id",  docID},
-                 {@"rev", revID},
-                 {@"deleted", deleted ? $true : nil});
+                 {@"id",  rev.docID},
+                 {@"rev", rev.revID},
+                 {@"deleted", rev.deleted ? $true : nil});
 }
 
 - (void) notifyChange: (NSDictionary*)changeDict
@@ -233,13 +231,15 @@ static NSString* createUUID() {
 }
 
 
-- (ToyDocument*) putDocument: (ToyDocument*)document // may be nil, in which case this is a delete
-                      withID: (NSString*)docID
-              prevRevisionID: (NSString*)revID       // rev ID being replaced, or nil if an insert
-                      status: (int*)outStatus
+- (ToyRev*) putRevision: (ToyRev*)rev
+         prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
+                 status: (int*)outStatus
 {
-    NSParameterAssert(outStatus);
-    if (!docID || (!document && !revID)) {
+    Assert(!rev.revID);
+    Assert(outStatus);
+    NSString* docID = rev.docID;
+    BOOL deleted = rev.deleted;
+    if (!rev || (prevRevID && !docID) || (deleted && !prevRevID)) {
         *outStatus = 400;
         return nil;
     }
@@ -247,11 +247,11 @@ static NSString* createUUID() {
     *outStatus = 500;
     [self beginTransaction];
     FMResultSet* r = nil;
-    if (revID) {
+    if (prevRevID) {
         // Replacing: make sure given revID is current
         if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 "
                                     "WHERE docid=? AND revid=? and current=1",
-                                   docID, revID])
+                                   docID, prevRevID])
             goto exit;
         if (_fmdb.changes == 0) {
             // This is either a 404 or a 409, depending on whether there is any current revision
@@ -260,6 +260,8 @@ static NSString* createUUID() {
         }
     } else {
         // Inserting: make sure docID doesn't exist, or exists but is currently deleted
+        if (!docID)
+            docID = [self generateDocumentID];
         r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM docs "
                                   "WHERE docid=? and current=1 LIMIT 1",
                                  docID];
@@ -267,6 +269,7 @@ static NSString* createUUID() {
             goto exit;
         if ([r next]) {
             if ([r boolForColumnIndex: 1]) {
+                // Make the deleted revision no longer current:
                 if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 WHERE sequence=?",
                                            $object([r intForColumnIndex: 0])])
                     goto exit;
@@ -280,37 +283,35 @@ static NSString* createUUID() {
     }
     
     // Bump the revID and update the JSON:
-    revID = [self generateNextRevisionID: revID];
+    NSString* newRevID = [self generateNextRevisionID: prevRevID];
     NSMutableDictionary* props = nil;
     NSData* json = nil;
-    if (document) {
-        props = [[document.properties mutableCopy] autorelease];
+    if (!rev.deleted) {
+        props = [[rev.document.properties mutableCopy] autorelease];
         if (!props) {
-            *outStatus = 400;  // bad JSON
+            *outStatus = 400;  // bad or missing JSON
             goto exit;
         }
         [props setObject: docID forKey: @"_id"];
-        [props setObject: revID forKey: @"_rev"];
+        [props setObject: newRevID forKey: @"_rev"];
         json = [NSJSONSerialization dataWithJSONObject: props options: 0 error: nil];
         NSAssert(json!=nil, @"Couldn't serialize document");
     }
     
     if (![_fmdb executeUpdate: @"INSERT INTO docs (docid, revid, current, deleted, json) "
                                 "VALUES (?, ?, 1, ?, ?)",
-                               docID, revID,
-                               (document ? kCFBooleanFalse : kCFBooleanTrue),
+                               docID, newRevID,
+                               $object(deleted),
                                json])
         goto exit;
     sqlite_int64 sequence = _fmdb.lastInsertRowId;
     Assert(sequence > 0);
     
-    if (!props) {
-        // Create properties to return, so caller can get the new rev ID
-        props = $mdict({@"_id", docID}, {@"_rev", revID});
-    }
-    
-    // Success!
-    *outStatus = document ? 201 : 200;
+    // Success! Update the revision & its properties, with the new revID
+    rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
+    if (props)
+        rev.document = [ToyDocument documentWithProperties: props];
+    *outStatus = deleted ? 200 : 201;
     
 exit:
     [r close];
@@ -321,26 +322,8 @@ exit:
         return nil;
     
     // Send a change notification:
-    [self notifyChange: [self changeDictWithSequence: sequence
-                                               docID: docID
-                                               revID: revID
-                                             deleted: (document==nil)]];
-    
-    return props ? [[[ToyDocument alloc] initWithProperties: props] autorelease] : nil;
-}
-
-- (ToyDocument*) createDocument: (ToyDocument*)document
-                        status: (int*)outStatus
-{
-    NSString* docID = document.documentID ?: [self generateDocumentID];
-    return [self putDocument: document withID: docID prevRevisionID: nil status: outStatus];
-}
-
-- (ToyDocument*) deleteDocumentWithID: (NSString*)docID 
-                           revisionID: (NSString*)revID
-                               status: (int*)outStatus
-{
-    return [self putDocument: nil withID: docID prevRevisionID: revID status: outStatus];
+    [self notifyChange: [self changeDictForRevision: rev sequence: sequence]];
+    return rev;
 }
 
 
@@ -373,10 +356,7 @@ exit:
     [self endTransaction];
     if (status < 300) {
         // Send a change notification:
-        [self notifyChange: [self changeDictWithSequence: sequence
-                                                   docID: rev.docID
-                                                   revID: rev.revID
-                                                 deleted: deleted]];
+        [self notifyChange: [self changeDictForRevision: rev sequence: sequence]];
     }
     return status;
 }
@@ -403,10 +383,10 @@ exit:
         return nil;
     NSMutableArray* changes = $marray();
     while ([r next]) {
-        [changes addObject: [self changeDictWithSequence: [r longLongIntForColumnIndex: 0]
-                                                   docID: [r stringForColumnIndex: 1]
-                                                   revID: [r stringForColumnIndex: 2]
-                                                 deleted: [r boolForColumnIndex: 3] != 0]];
+        [changes addObject:  $dict({@"seq", $object([r longLongIntForColumnIndex: 0])},
+                                   {@"id",  [r stringForColumnIndex: 1]},
+                                   {@"rev", [r stringForColumnIndex: 2]},
+                                   {@"deleted", [r boolForColumnIndex: 3] ? $true : nil})];
     }
     return changes;
 }
@@ -517,6 +497,15 @@ static NSString* joinQuoted(NSArray* strings) {
 
 #pragma mark - TESTS
 
+static NSDictionary* userProperties(NSDictionary* dict) {
+    NSMutableDictionary* user = $mdict();
+    for (NSString* key in dict) {
+        if (![key hasPrefix: @"_"])
+            [user setObject: [dict objectForKey: key] forKey: key];
+    }
+    return user;
+}
+
 TestCase(ToyDB) {
     // Start with a fresh database in /tmp:
     NSString* kPath = @"/tmp/toycouch_test.sqlite3";
@@ -528,50 +517,49 @@ TestCase(ToyDB) {
     // Create a document:
     NSMutableDictionary* props = $mdict({@"foo", $object(1)}, {@"bar", $false});
     ToyDocument* doc = [[[ToyDocument alloc] initWithProperties: props] autorelease];
+    ToyRev* rev1 = [[[ToyRev alloc] initWithDocument: doc] autorelease];
     int status;
-    doc = [db createDocument: doc status: &status];
+    rev1 = [db putRevision: rev1 prevRevisionID: nil status: &status];
     CAssertEq(status, 201);
-    NSString* docID = doc.documentID;
-    NSString* revID = doc.revisionID;
-    Log(@"Doc got _id=%@ _rev=%@", docID, revID);
-    CAssert(docID.length >= 10);
-    CAssert([revID hasPrefix: @"1-"]);
+    Log(@"Created: %@", rev1);
+    CAssert(rev1.docID.length >= 10);
+    CAssert([rev1.revID hasPrefix: @"1-"]);
     
     // Read it back:
-    ToyDocument* readDoc = [db getDocumentWithID: docID];
+    ToyDocument* readDoc = [db getDocumentWithID: rev1.docID];
     CAssert(readDoc != nil);
-    CAssertEqual(readDoc.properties, doc.properties);
+    CAssertEqual(userProperties(readDoc.properties), userProperties(doc.properties));
     
     // Now update it:
+    props = [[readDoc.properties mutableCopy] autorelease];
     [props setObject: @"updated!" forKey: @"status"];
-    doc = [[[ToyDocument alloc] initWithProperties: props] autorelease];
-    ToyDocument* docRev1 = doc;
-    NSString* revID1 = revID;
-    doc = [db putDocument: doc withID: docID prevRevisionID: revID status: &status];
+    doc = [ToyDocument documentWithProperties: props];
+    ToyRev* rev2 = [[[ToyRev alloc] initWithDocument: doc] autorelease];
+    ToyRev* rev2Input = rev2;
+    rev2 = [db putRevision: rev2 prevRevisionID: rev1.revID status: &status];
     CAssertEq(status, 201);
-    CAssertEqual(doc.documentID, docID);
-    revID = doc.revisionID;
-    Log(@"Doc got _id=%@ _rev=%@", docID, revID);
-    CAssert([revID hasPrefix: @"2-"]);
+    Log(@"Updated: %@", rev2);
+    CAssertEqual(rev2.docID, rev1.docID);
+    CAssert([rev2.revID hasPrefix: @"2-"]);
     
     // Read it back:
-    readDoc = [db getDocumentWithID: docID];
+    readDoc = [db getDocumentWithID: rev2.docID];
     CAssert(readDoc != nil);
-    CAssertEqual(readDoc.properties, doc.properties);
+    CAssertEqual(userProperties(readDoc.properties), userProperties(doc.properties));
     
     // Try to update the first rev, which should fail:
-    doc = [db putDocument: docRev1 withID: docID prevRevisionID: revID1 status: &status];
+    CAssertNil([db putRevision: rev2Input prevRevisionID: rev1.revID status: &status]);
     CAssertEq(status, 409);
-    CAssertNil(doc);
     
     // Delete it:
-    doc = [db deleteDocumentWithID: docID revisionID: revID status: &status];
+    ToyRev* revD = [[[ToyRev alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
+    revD = [db putRevision: revD prevRevisionID: rev2.revID status: &status];
     CAssertEq(status, 200);
-    CAssertEqual(doc.documentID, docID);
-    CAssert([doc.revisionID hasPrefix: @"3-"]);
+    CAssertEqual(revD.docID, rev2.docID);
+    CAssert([revD.revID hasPrefix: @"3-"]);
     
     // Read it back (should fail):
-    readDoc = [db getDocumentWithID: docID];
+    readDoc = [db getDocumentWithID: revD.docID];
     CAssertNil(readDoc);
     
     NSArray* changes = [db changesSinceSequence: 0 options: NULL];

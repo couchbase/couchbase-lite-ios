@@ -21,12 +21,16 @@
 - (id) initWithDocID: (NSString*)docID 
                revID: (NSString*)revID 
              deleted: (BOOL)deleted;
+- (id) initWithDocument: (ToyDocument*)doc;
+- (id) initWithProperties: (NSDictionary*)properties;
 
 @property (readonly) NSString* docID;
 @property (readonly) NSString* revID;
 @property (readonly) BOOL deleted;
 
 @property (retain) ToyDocument* document;
+
+- (ToyRev*) copyWithDocID: (NSString*)docID revID: (NSString*)revID;
 
 @end
 

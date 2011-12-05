@@ -7,6 +7,7 @@
 //
 
 #import "ToyRev.h"
+#import "ToyDocument.h"
 #import "Test.h"
 
 
@@ -18,12 +19,34 @@
 {
     self = [super init];
     if (self) {
-        Assert(docID && revID);
+        if (!docID && (revID || deleted)) {
+            // Illegal rev
+            [self release];
+            return nil;
+        }
         _docID = docID.copy;
         _revID = revID.copy;
         _deleted = deleted;
     }
     return self;
+}
+
+- (id) initWithDocument: (ToyDocument*)doc {
+    Assert(doc);
+    self = [self initWithDocID: doc.documentID revID: nil deleted: NO];
+    if (self) {
+        self.document = doc;
+    }
+    return self;
+}
+
+- (id) initWithProperties: (NSDictionary*)properties {
+    ToyDocument* doc = [[[ToyDocument alloc] initWithProperties: properties] autorelease];
+    if (!doc) {
+        [self release];
+        return nil;
+    }
+    return [self initWithDocument: doc];
 }
 
 - (void)dealloc {
@@ -46,6 +69,16 @@
 - (NSUInteger) hash {
     return _docID.hash ^ _revID.hash;
 }
+
+- (ToyRev*) copyWithDocID: (NSString*)docID revID: (NSString*)revID {
+    Assert(docID && revID);
+    Assert(!_docID || $equal(_docID, docID));
+    ToyRev* rev = [[[self class] alloc] initWithDocID: docID revID: revID deleted: _deleted];
+    if ( _document)
+        rev.document = _document;
+    return rev;
+}
+
 
 @end
 
