@@ -16,5 +16,6 @@
 }
 
 + (void) setServer: (ToyServer*)server;
++ (ToyServer*) server;
 
 @end

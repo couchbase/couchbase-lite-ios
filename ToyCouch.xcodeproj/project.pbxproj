@@ -34,6 +34,11 @@
 		270B3E251489392C00E0A926 /* ToyRouter.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* ToyRouter.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270B3E26148939BD00E0A926 /* ToyCouch.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* ToyCouch.framework */; };
 		270B3E27148939C500E0A926 /* ToyCouch.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* ToyCouch.framework */; };
+		270B3E2B1489581E00E0A926 /* ToyPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* ToyPuller.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E2C1489581E00E0A926 /* ToyPuller.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E2A1489581E00E0A926 /* ToyPuller.m */; };
+		270B3E361489660E00E0A926 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
+		270B3E3914898DF200E0A926 /* ToyRev.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* ToyRev.h */; };
+		270B3E3A14898DF200E0A926 /* ToyRev.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* ToyRev.m */; };
 		27C706421486BBD500F0F099 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
 		27C706451486BE7100F0F099 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		27C706481487584300F0F099 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
@@ -106,6 +111,10 @@
 		270B3E091489359100E0A926 /* ToyCouchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToyCouchTests.m; sourceTree = "<group>"; };
 		270B3E1F148938D800E0A926 /* ToyCouch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ToyCouch.h; sourceTree = "<group>"; };
 		270B3E28148940C000E0A926 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		270B3E291489581E00E0A926 /* ToyPuller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyPuller.h; sourceTree = "<group>"; };
+		270B3E2A1489581E00E0A926 /* ToyPuller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyPuller.m; sourceTree = "<group>"; };
+		270B3E3714898DF200E0A926 /* ToyRev.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyRev.h; sourceTree = "<group>"; };
+		270B3E3814898DF200E0A926 /* ToyRev.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyRev.m; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* ToyServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyServer.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* ToyServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyServer.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* ToyRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyRouter.h; sourceTree = "<group>"; };
@@ -161,6 +170,7 @@
 			files = (
 				270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */,
 				270B3E1D1489384700E0A926 /* libsqlite3.dylib in Frameworks */,
+				270B3E361489660E00E0A926 /* CouchCocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,6 +230,8 @@
 				27F0744711CD4B6D00E9A2AB /* ToyDB.m */,
 				27F074A911CD5D7A00E9A2AB /* ToyDocument.h */,
 				27F074AA11CD5D7A00E9A2AB /* ToyDocument.m */,
+				270B3E3714898DF200E0A926 /* ToyRev.h */,
+				270B3E3814898DF200E0A926 /* ToyRev.m */,
 				27C706401486BBD500F0F099 /* ToyServer.h */,
 				27C706411486BBD500F0F099 /* ToyServer.m */,
 				27C706431486BE7100F0F099 /* ToyRouter.h */,
@@ -227,6 +239,8 @@
 				27C7064A1488311100F0F099 /* ToyRouter_Tests.m */,
 				27C706461487584300F0F099 /* ToyProtocol.h */,
 				27C706471487584300F0F099 /* ToyProtocol.m */,
+				270B3E291489581E00E0A926 /* ToyPuller.h */,
+				270B3E2A1489581E00E0A926 /* ToyPuller.m */,
 				270B3DEE1489359000E0A926 /* ToyCouch-Info.plist */,
 				270B3E1F148938D800E0A926 /* ToyCouch.h */,
 			);
@@ -348,6 +362,8 @@
 				270B3E231489392100E0A926 /* ToyDocument.h in Headers */,
 				270B3E241489392600E0A926 /* ToyServer.h in Headers */,
 				270B3E251489392C00E0A926 /* ToyRouter.h in Headers */,
+				270B3E2B1489581E00E0A926 /* ToyPuller.h in Headers */,
+				270B3E3914898DF200E0A926 /* ToyRev.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -510,6 +526,8 @@
 				270B3E1A1489382F00E0A926 /* Logging.m in Sources */,
 				270B3E1B1489382F00E0A926 /* CollectionUtils.m in Sources */,
 				270B3E1C1489382F00E0A926 /* Test.m in Sources */,
+				270B3E2C1489581E00E0A926 /* ToyPuller.m in Sources */,
+				270B3E3A14898DF200E0A926 /* ToyRev.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,6 +657,10 @@
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -665,6 +687,10 @@
 				COPY_PHASE_STRIP = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+				);
 				FRAMEWORK_VERSION = A;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;

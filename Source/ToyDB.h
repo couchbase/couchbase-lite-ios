@@ -8,7 +8,7 @@
  */
 
 #import <Foundation/Foundation.h>
-@class FMDatabase, ToyDocument;
+@class FMDatabase, ToyDocument, ToyRev, ToyRevSet;
 
 
 extern NSString* const ToyDBChangeNotification;
@@ -67,11 +67,12 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 - (ToyDocument*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID;
 
 - (ToyDocument*) putDocument: (ToyDocument*)document
-                     withID: (NSString*)docID 
-                 revisionID: (NSString*)revID
-                     status: (int*)outStatus;
+                      withID: (NSString*)docID 
+              prevRevisionID: (NSString*)revID
+                      status: (int*)outStatus;
 - (ToyDocument*) createDocument: (ToyDocument*)document
                          status: (int*)outStatus;
+- (int) forceInsert: (ToyRev*)rev;
 - (ToyDocument*) deleteDocumentWithID: (NSString*)docID 
                            revisionID: (NSString*)revID
                                status: (int*)outStatus;;
@@ -82,5 +83,9 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 // QUERIES:
 
 - (NSDictionary*) getAllDocs: (const ToyDBQueryOptions*)options;
+
+// FOR REPLICATION:
+
+- (BOOL) findMissingRevisions: (ToyRevSet*)toyRevs;
 
 @end

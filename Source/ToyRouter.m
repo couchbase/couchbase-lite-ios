@@ -11,6 +11,7 @@
 #import "ToyDocument.h"
 #import "ToyServer.h"
 #import "CollectionUtils.h"
+#import "Logging.h"
 
 
 NSString* const kToyVersionString =  @"0.1";
@@ -274,16 +275,16 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (void) sendContinuousChange: (NSDictionary*)change {
-    [self sendResponse];
     NSMutableData* json = [[NSJSONSerialization dataWithJSONObject: change
                                                            options: 0 error: nil] mutableCopy];
-    [json appendBytes: @"\r\n" length: 2];
+    [json appendBytes: @"\n" length: 1];
     _onDataAvailable(json);
     [json release];
 }
 
 
 - (void) dbChanged: (NSNotification*)n {
+    Log(@"ToyRouter: Sending continous change chunk");
     [self sendContinuousChange: n.userInfo];
 }
 
@@ -301,12 +302,15 @@ static NSArray* splitPath( NSString* path ) {
     
     NSString* feed = [self query: @"feed"];
     if ($equal(feed, @"continuous")) {
+        [self sendResponse];
+        for (NSDictionary* change in changes) 
+            [self sendContinuousChange: change];
+        if (changes.count == 0)
+            _onDataAvailable([NSData dataWithBytes: @"\n" length: 1]); //TEMP?
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(dbChanged:)
                                                      name: ToyDBChangeNotification
                                                    object: db];
-        for (NSDictionary* change in changes) 
-            [self sendContinuousChange: change];
         // Don't close connection; more data to come
         _waiting = YES;
         return 0;
@@ -367,7 +371,7 @@ static NSArray* splitPath( NSString* path ) {
     }
     
     int status;
-    document = [db putDocument: document withID: docID revisionID: revID status: &status];
+    document = [db putDocument: document withID: docID prevRevisionID: revID status: &status];
     if (status < 300) {
         [self setResponseEtag: document];
         _response.bodyObject = $dict({@"ok", $true},

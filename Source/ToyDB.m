@@ -9,6 +9,7 @@
 
 #import "ToyDB.h"
 #import "ToyDocument.h"
+#import "ToyRev.h"
 
 #import "FMDatabase.h"
 
@@ -27,9 +28,11 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
         _path = [path copy];
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = 10;
-        _fmdb.logsErrors = YES; //TEMP
-        _fmdb.crashOnErrors = YES; //TEMP
-        _fmdb.traceExecution = WillLogTo(SQL);
+        _fmdb.logsErrors = WillLogTo(ToyDB);
+#if DEBUG
+        _fmdb.crashOnErrors = YES;
+#endif
+        _fmdb.traceExecution = WillLogTo(ToyDBVerbose);
     }
     return self;
 }
@@ -187,7 +190,7 @@ static NSString* createUUID() {
         if (!ok)
             return nil;
     }
-    NSString* digest = @"";  //TODO: Generate canonical digest of body
+    NSString* digest = createUUID();  //TODO: Generate canonical digest of body
     return [NSString stringWithFormat: @"%i-%@", ++generation, digest];
 }
 
@@ -222,11 +225,18 @@ static NSString* createUUID() {
                  {@"deleted", deleted ? $true : nil});
 }
 
+- (void) notifyChange: (NSDictionary*)changeDict
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName: ToyDBChangeNotification
+                                                        object: self
+                                                      userInfo: changeDict];
+}
 
-- (ToyDocument*) putDocument: (ToyDocument*)document  // may be nil, in which case this is a delete
-                     withID: (NSString*)docID
-                 revisionID: (NSString*)revID       // rev ID being replaced, or nil if an insert
-                     status: (int*)outStatus
+
+- (ToyDocument*) putDocument: (ToyDocument*)document // may be nil, in which case this is a delete
+                      withID: (NSString*)docID
+              prevRevisionID: (NSString*)revID       // rev ID being replaced, or nil if an insert
+                      status: (int*)outStatus
 {
     NSParameterAssert(outStatus);
     if (!docID || (!document && !revID)) {
@@ -311,13 +321,10 @@ exit:
         return nil;
     
     // Send a change notification:
-    NSDictionary* changeInfo = [self changeDictWithSequence: sequence
-                                                      docID: docID
-                                                      revID: revID
-                                                    deleted: (document==nil)];
-    [[NSNotificationCenter defaultCenter] postNotificationName: ToyDBChangeNotification
-                                                        object: self
-                                                      userInfo: changeInfo];
+    [self notifyChange: [self changeDictWithSequence: sequence
+                                               docID: docID
+                                               revID: revID
+                                             deleted: (document==nil)]];
     
     return props ? [[[ToyDocument alloc] initWithProperties: props] autorelease] : nil;
 }
@@ -326,14 +333,52 @@ exit:
                         status: (int*)outStatus
 {
     NSString* docID = document.documentID ?: [self generateDocumentID];
-    return [self putDocument: document withID: docID revisionID: nil status: outStatus];
+    return [self putDocument: document withID: docID prevRevisionID: nil status: outStatus];
 }
 
 - (ToyDocument*) deleteDocumentWithID: (NSString*)docID 
                            revisionID: (NSString*)revID
                                status: (int*)outStatus
 {
-    return [self putDocument: nil withID: docID revisionID: revID status: outStatus];
+    return [self putDocument: nil withID: docID prevRevisionID: revID status: outStatus];
+}
+
+
+- (int) forceInsert: (ToyRev*)rev {
+    Assert(rev);
+    BOOL deleted = rev.deleted;
+    NSData* json = nil;
+    if (!deleted) {
+        json = rev.document.asJSON;
+        if (!json)
+            return 400;
+    }
+    
+    int status = 500;
+    [self beginTransaction];
+    if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 WHERE docid=?", rev.docID])
+        goto exit;
+    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid, revid, current, deleted, json) "
+                                "VALUES (?, ?, 1, ?, ?)",
+                               rev.docID, rev.revID, $object(deleted), json])
+        goto exit;
+    sqlite_int64 sequence = _fmdb.lastInsertRowId;
+    Assert(sequence > 0);
+    // Success!
+    status = deleted ? 200 : 201;
+    
+exit:
+    if (status >= 300)
+        self.transactionFailed = YES;
+    [self endTransaction];
+    if (status < 300) {
+        // Send a change notification:
+        [self notifyChange: [self changeDictWithSequence: sequence
+                                                   docID: rev.docID
+                                                   revID: rev.revID
+                                                 deleted: deleted]];
+    }
+    return status;
 }
 
 
@@ -417,6 +462,54 @@ const ToyDBQueryOptions kDefaultToyDBQueryOptions = {
 }
 
 
+#pragma mark - FOR REPLICATION
+
+
+static NSString* quote(NSString* str) {
+    return [str stringByReplacingOccurrencesOfString: @"'" withString: @"''"];
+}
+
+static NSString* joinQuoted(NSArray* strings) {
+    if (strings.count == 0)
+        return @"";
+    NSMutableString* result = [NSMutableString stringWithString: @"'"];
+    BOOL first = YES;
+    for (NSString* str in strings) {
+        if (first)
+            first = NO;
+        else
+            [result appendString: @"','"];
+        [result appendString: quote(str)];
+    }
+    [result appendString: @"'"];
+    return result;
+}
+
+
+- (BOOL) findMissingRevisions: (ToyRevSet*)toyRevs {
+    if (toyRevs.count == 0)
+        return YES;
+    
+    NSMutableArray* revIDs = $marray();
+    for (ToyRev* rev in toyRevs)
+        [revIDs addObject: rev.revID];
+    NSString* sql = $sprintf(@"SELECT docid, revid FROM docs "
+                              "WHERE docid IN (%@) AND revid in (%@)",
+                             joinQuoted(toyRevs.allDocIDs), joinQuoted(revIDs));
+    
+    FMResultSet* r = [_fmdb executeQuery: sql];
+    if (!r)
+        return NO;
+    while ([r next]) {
+        ToyRev* rev = [toyRevs revWithDocID: [r stringForColumnIndex: 0]
+                                      revID: [r stringForColumnIndex: 1]];
+        if (rev)
+            [toyRevs removeRev: rev];
+    }
+    return YES;
+}
+
+
 @end
 
 
@@ -454,7 +547,7 @@ TestCase(ToyDB) {
     doc = [[[ToyDocument alloc] initWithProperties: props] autorelease];
     ToyDocument* docRev1 = doc;
     NSString* revID1 = revID;
-    doc = [db putDocument: doc withID: docID revisionID: revID status: &status];
+    doc = [db putDocument: doc withID: docID prevRevisionID: revID status: &status];
     CAssertEq(status, 201);
     CAssertEqual(doc.documentID, docID);
     revID = doc.revisionID;
@@ -467,7 +560,7 @@ TestCase(ToyDB) {
     CAssertEqual(readDoc.properties, doc.properties);
     
     // Try to update the first rev, which should fail:
-    doc = [db putDocument: docRev1 withID: docID revisionID: revID1 status: &status];
+    doc = [db putDocument: docRev1 withID: docID prevRevisionID: revID1 status: &status];
     CAssertEq(status, 409);
     CAssertNil(doc);
     
