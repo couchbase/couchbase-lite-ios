@@ -16,9 +16,6 @@
 #import <CouchCocoa/CouchChangeTracker.h>
 
 
-#define kProcessDelay 0.5
-
-
 @interface ToyPuller () <CouchChangeTrackerClient>
 - (BOOL) pullRemoteRevisions: (ToyRevSet*)toyRevs;
 @end
@@ -27,73 +24,43 @@
 @implementation ToyPuller
 
 
-- (id) initWithDB: (ToyDB*)db remote: (NSURL*)remote {
-    NSParameterAssert(db);
-    NSParameterAssert(remote);
-    self = [super init];
-    if (self) {
-        _db = [db retain];
-        _remote = [remote retain];
-    }
-    return self;
-}
-
-
 - (void)dealloc {
-    [_db release];
     [_changeTracker stop];
     [_changeTracker release];
-    [_remote release];
-    [_lastSequence release];
-    [_inbox release];
     [super dealloc];
 }
 
 
-@synthesize remote=_remote, lastSequence=_lastSequence;
-
-
 - (void) start {
+    if (_started)
+        return;
     Assert(!_changeTracker);
+    [super start];
     LogTo(Sync, @"*** STARTING PULLER to <%@> from #%@", _remote, _lastSequence);
-    _changeTracker = [[CouchChangeTracker alloc] initWithDatabaseURL: _remote
-                                                        lastSequence: [_lastSequence intValue]
-                                                              client: self];
+    _changeTracker = [[CouchChangeTracker alloc]
+                                   initWithDatabaseURL: _remote
+                                                  mode: (_continuous ? kLongPoll :kOneShot)
+                                          lastSequence: [_lastSequence intValue]
+                                                client: self];
     [_changeTracker start];
+    // TODO: In non-continuous mode, only get the existing changes; don't listen for new ones
 }
 
 
 - (void) stop {
     [_changeTracker stop];
     [_changeTracker release];
-    [NSObject cancelPreviousPerformRequestsWithTarget: self];
+    [super stop];
 }
 
-
-- (NSURLCredential*) authCredential {
-    return nil;
-}
 
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
-    if (!_inbox) {
-        _inbox = [[NSMutableArray alloc] init];
-        [self performSelector: @selector(processInbox) withObject: nil afterDelay: kProcessDelay];
-    }
-    [_inbox addObject: change];
-    LogTo(Sync, @"ToyPuller: Received #%@ (%@)",
-          [change objectForKey: @"seq"], [change objectForKey: @"id"]);
+    [self addToInbox: change];
 }
 
 
-- (void) processInbox {
-    if (_inbox.count == 0)
-        return;
-    
-    LogTo(Sync, @"*** BEGIN processInbox (%i sequences)", _inbox.count);
-    NSArray* inbox = [_inbox autorelease];
-    _inbox = nil;
-    
-    NSString* lastSequence = _lastSequence;
+- (void) processInbox: (NSArray*)inbox {
+    id lastSequence = _lastSequence;
     ToyRevSet* revs = [[[ToyRevSet alloc] init] autorelease];
     for (NSDictionary* change in inbox) {
         lastSequence = [change objectForKey: @"seq"];
@@ -134,7 +101,6 @@
     }
     
     self.lastSequence = lastSequence;
-    LogTo(Sync, @"*** END processInbox (lastSequence=%@)", lastSequence);
 }
 
 
@@ -150,29 +116,10 @@
     if (docIDs.count == 0)
         return YES;
     
-    NSString* urlStr = [_remote.absoluteString stringByAppendingString: @"/_all_docs?include_docs=true"];
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: [NSURL URLWithString: urlStr]];
-    request.HTTPMethod = @"POST";
-    NSDictionary* what = $dict({@"keys", docIDs.allObjects});
-    request.HTTPBody = [NSJSONSerialization dataWithJSONObject: what options: 0 error: nil];
-    [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
-    
-    NSHTTPURLResponse* response;
-    NSError* error = nil;
-    NSData* body = [NSURLConnection sendSynchronousRequest: request
-                                         returningResponse: (NSURLResponse**)&response
-                                                     error: &error];
-    if (!body || error || response.statusCode >= 300) {
-        Warn(@"ToyDB: Batch-fetch failed (status %i)", response.statusCode);
+    NSDictionary* results = [self postRequest: @"/_all_docs?include_docs=true"
+                                         body: $dict({@"keys", docIDs.allObjects})];
+    if (!results)
         return NO;
-    }
-    
-    NSDictionary* results = $castIf(NSDictionary,
-            [NSJSONSerialization JSONObjectWithData: body options:0 error:nil]);
-    if (!results) {
-        Warn(@"ToyDB: Batch-fetch returned unparseable data");
-        return NO;
-    }
     
     for (NSDictionary* row in [results objectForKey: @"rows"]) {
         ToyDocument* doc = [ToyDocument documentWithProperties: [row objectForKey: @"doc"]];

@@ -214,20 +214,12 @@ static NSString* createUUID() {
 }
 
 
-- (NSDictionary*) changeDictForRevision: (ToyRev*)rev
-                               sequence: (sqlite3_int64)sequence
+- (void) notifyChange: (ToyRev*)rev
 {
-    return $dict({@"seq", $object(sequence)},
-                 {@"id",  rev.docID},
-                 {@"rev", rev.revID},
-                 {@"deleted", rev.deleted ? $true : nil});
-}
-
-- (void) notifyChange: (NSDictionary*)changeDict
-{
+    NSDictionary* userInfo = $dict({@"rev", rev}, {@"seq", $object(rev.sequence)});
     [[NSNotificationCenter defaultCenter] postNotificationName: ToyDBChangeNotification
                                                         object: self
-                                                      userInfo: changeDict];
+                                                      userInfo: userInfo];
 }
 
 
@@ -311,6 +303,7 @@ static NSString* createUUID() {
     rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
     if (props)
         rev.document = [ToyDocument documentWithProperties: props];
+    rev.sequence = sequence;
     *outStatus = deleted ? 200 : 201;
     
 exit:
@@ -322,7 +315,7 @@ exit:
         return nil;
     
     // Send a change notification:
-    [self notifyChange: [self changeDictForRevision: rev sequence: sequence]];
+    [self notifyChange: rev];
     return rev;
 }
 
@@ -345,8 +338,8 @@ exit:
                                 "VALUES (?, ?, 1, ?, ?)",
                                rev.docID, rev.revID, $object(deleted), json])
         goto exit;
-    sqlite_int64 sequence = _fmdb.lastInsertRowId;
-    Assert(sequence > 0);
+    rev.sequence = _fmdb.lastInsertRowId;
+    Assert(rev.sequence > 0);
     // Success!
     status = deleted ? 200 : 201;
     
@@ -356,7 +349,7 @@ exit:
     [self endTransaction];
     if (status < 300) {
         // Send a change notification:
-        [self notifyChange: [self changeDictForRevision: rev sequence: sequence]];
+        [self notifyChange: rev];
     }
     return status;
 }
@@ -383,10 +376,12 @@ exit:
         return nil;
     NSMutableArray* changes = $marray();
     while ([r next]) {
-        [changes addObject:  $dict({@"seq", $object([r longLongIntForColumnIndex: 0])},
-                                   {@"id",  [r stringForColumnIndex: 1]},
-                                   {@"rev", [r stringForColumnIndex: 2]},
-                                   {@"deleted", [r boolForColumnIndex: 3] ? $true : nil})];
+        ToyRev* rev = [[ToyRev alloc] initWithDocID: [r stringForColumnIndex: 1]
+                                              revID: [r stringForColumnIndex: 2]
+                                            deleted: [r boolForColumnIndex: 3]];
+        rev.sequence = [r longLongIntForColumnIndex: 0];
+        [changes addObject: rev];
+        [rev release];
     }
     return changes;
 }

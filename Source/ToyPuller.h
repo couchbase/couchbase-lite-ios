@@ -6,27 +6,14 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-@class ToyDB, CouchChangeTracker;
+#import "ToyReplicator.h"
 
 
 /** Replicator that pulls from a remote CouchDB. */
-@interface ToyPuller : NSObject
+@interface ToyPuller : ToyReplicator
 {
     @private
-    ToyDB* _db;
-    NSURL* _remote;
     CouchChangeTracker* _changeTracker;
-    NSString* _lastSequence;
-    NSMutableArray* _inbox;
 }
-
-- (id) initWithDB: (ToyDB*)db remote: (NSURL*)remote;
-
-@property (readonly) NSURL* remote;
-
-- (void) start;
-
-@property (copy) NSString* lastSequence;
 
 @end

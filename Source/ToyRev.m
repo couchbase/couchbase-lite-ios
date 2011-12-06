@@ -56,7 +56,7 @@
     [super dealloc];
 }
 
-@synthesize docID=_docID, revID=_revID, deleted=_deleted, document=_document;
+@synthesize docID=_docID, revID=_revID, deleted=_deleted, document=_document, sequence=_sequence;
 
 - (NSString*) description {
     return $sprintf(@"{%@ #%@%@}", _docID, _revID, (_deleted ?@" DEL" :@""));

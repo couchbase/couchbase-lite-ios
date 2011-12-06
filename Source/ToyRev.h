@@ -16,6 +16,7 @@
     NSString* _docID, *_revID;
     BOOL _deleted;
     ToyDocument* _document;
+    UInt64 _sequence;
 }
 
 - (id) initWithDocID: (NSString*)docID 
@@ -29,6 +30,8 @@
 @property (readonly) BOOL deleted;
 
 @property (retain) ToyDocument* document;
+
+@property UInt64 sequence;
 
 - (ToyRev*) copyWithDocID: (NSString*)docID revID: (NSString*)revID;
 

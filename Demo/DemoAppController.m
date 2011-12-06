@@ -20,6 +20,7 @@
 #import "ToyServer.h"
 #import "ToyProtocol.h"
 #import "ToyPuller.h"
+#import "ToyPusher.h"
 #import <CouchCocoa/CouchCocoa.h>
 
 
@@ -81,7 +82,8 @@ int main (int argc, const char * argv[]) {
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
 #if 1
     ToyDB* db = [[ToyProtocol server] databaseNamed: _database.relativePath];
-    _puller = [[ToyPuller alloc] initWithDB: db remote: otherDbURL];
+    _puller = [[ToyPuller alloc] initWithDB: db remote: otherDbURL continuous: NO];
+    _pusher = [[ToyPusher alloc] initWithDB: db remote: otherDbURL continuous: NO];
 #else
     _pull = [[_database pullFromDatabaseAtURL: otherDbURL
                                       options: kCouchReplicationContinuous] retain];
@@ -91,8 +93,12 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (IBAction) startSync:(id)sender {
+- (IBAction) pull:(id)sender {
     [_puller start];
+}
+
+- (IBAction) push:(id)sender {
+    [_pusher start];
 }
 
 
