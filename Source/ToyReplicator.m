@@ -30,6 +30,7 @@
     return self;
 }
 
+
 - (void)dealloc {
     [self stop];
     [_db release];
@@ -39,11 +40,14 @@
     [super dealloc];
 }
 
+
 @synthesize db=_db, remote=_remote, lastSequence=_lastSequence;
+
 
 - (void) start {
     _started = YES;
 }
+
 
 - (void) stop {
     if (_inbox) {
@@ -55,6 +59,7 @@
     _started = NO;
 }
 
+
 - (void) addToInbox: (NSDictionary*)change {
     if (!_inbox) {
         _inbox = [[NSMutableArray alloc] init];
@@ -65,8 +70,10 @@
           self, [change objectForKey: @"seq"], [change objectForKey: @"id"]);
 }
 
+
 - (void) processInbox: (NSArray*)inbox {
 }
+
 
 - (void) doProcessInbox {
     if (_inbox.count == 0)
@@ -79,13 +86,17 @@
     LogTo(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
 }
 
-- (id) postRequest: (NSString*)relativePath body: (id)body
+
+- (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
 {
+    LogTo(Sync, @"%@: %@ %@", self, method, relativePath);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: [NSURL URLWithString: urlStr]];
-    request.HTTPMethod = @"POST";
-    request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
-    [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+    request.HTTPMethod = method;
+    if (body) {
+        request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
+        [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+    }
     
     NSHTTPURLResponse* response;
     NSError* error = nil;
@@ -93,15 +104,17 @@
                                          returningResponse: (NSURLResponse**)&response
                                                      error: &error];
     if (!data || error || response.statusCode >= 300) {
-        Warn(@"%@: POST to %@ failed (status %i)", self, relativePath, response.statusCode);
+        Warn(@"%@: %@ %@ failed (%@)", self, method, relativePath, 
+             (error ? error : $object(response.statusCode)));
         return nil;
     }
     
     NSDictionary* results = $castIf(NSDictionary,
-                                    [NSJSONSerialization JSONObjectWithData: data options:0 error:nil]);
+                                    [NSJSONSerialization JSONObjectWithData: data
+                                                                    options: 0 error:nil]);
     if (!results)
-        Warn(@"%@: POST to %@ returned unparseable data '%@'",
-             self, relativePath, [data my_UTF8ToString]);
+        Warn(@"%@: %@ %@ returned unparseable data '%@'",
+             self, method, relativePath, [data my_UTF8ToString]);
     return results;
 }
 

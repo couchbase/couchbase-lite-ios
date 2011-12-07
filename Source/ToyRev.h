@@ -39,19 +39,23 @@
 
 
 
-@interface ToyRevSet : NSObject <NSFastEnumeration>
+/** An ordered list of ToyRevs. */
+@interface ToyRevList : NSObject <NSFastEnumeration>
 {
     @private
-    NSMutableSet* _revs;
+    NSMutableArray* _revs;
 }
 
 @property (readonly) NSUInteger count;
-- (void) addRev: (ToyRev*)rev;
-- (void) removeRev: (ToyRev*)rev;
+
 - (ToyRev*) revWithDocID: (NSString*)docID revID: (NSString*)revID;
 
 - (NSEnumerator*) objectEnumerator;
 
 @property (readonly) NSArray* allDocIDs;
+@property (readonly) NSArray* allRevIDs;
+
+- (void) addRev: (ToyRev*)rev;
+- (void) removeRev: (ToyRev*)rev;
 
 @end

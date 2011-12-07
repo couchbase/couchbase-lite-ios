@@ -84,12 +84,12 @@
 
 
 
-@implementation ToyRevSet
+@implementation ToyRevList
 
 - (id)init {
     self = [super init];
     if (self) {
-        _revs = [[NSMutableSet alloc] init];
+        _revs = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -116,10 +116,11 @@
 }
 
 - (ToyRev*) revWithDocID: (NSString*)docID revID: (NSString*)revID {
-    ToyRev* example = [[ToyRev alloc] initWithDocID: docID revID: revID deleted: NO];
-    ToyRev* result = [_revs member: example];
-    [example release];
-    return result;
+    for (ToyRev* rev in _revs) {
+        if ($equal(rev.docID, docID) && $equal(rev.revID, revID))
+            return rev;
+    }
+    return nil;
 }
 
 - (NSEnumerator*) objectEnumerator {
@@ -134,10 +135,11 @@
 }
 
 - (NSArray*) allDocIDs {
-    NSMutableArray* docIDs = [NSMutableArray arrayWithCapacity: _revs.count];
-    for (ToyRev* rev in _revs)
-        [docIDs addObject: rev.docID];
-    return docIDs;
+    return [_revs my_map: ^(id rev) {return [rev docID];}];
+}
+
+- (NSArray*) allRevIDs {
+    return [_revs my_map: ^(id rev) {return [rev revID];}];
 }
 
 @end

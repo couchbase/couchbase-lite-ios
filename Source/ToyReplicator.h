@@ -38,7 +38,7 @@
 // protected:
 - (void) addToInbox: (NSDictionary*)change;
 - (void) processInbox: (NSArray*)inbox;  // override this
-- (id) postRequest: (NSString*)relativePath body: (id)body;
+- (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body;
 
 @end
 

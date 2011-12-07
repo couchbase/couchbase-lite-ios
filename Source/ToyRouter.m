@@ -284,12 +284,10 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (NSDictionary*) responseBodyForChanges: (NSArray*)changes since: (UInt64)since {
-    NSMutableArray* results = $marray();
-    for (ToyRev* rev in changes)
-        [results addObject: [self changeDictForRev: rev]];
+    NSArray* results = [changes my_map: ^(id rev) {return [self changeDictForRev: rev];}];
     if (changes.count > 0)
         since = [[changes lastObject] sequence];
-    return $dict({@"results", changes}, {@"last_seq", $object(since)});
+    return $dict({@"results", results}, {@"last_seq", $object(since)});
 }
 
 

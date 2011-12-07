@@ -17,7 +17,8 @@
 
 
 @interface ToyPuller () <CouchChangeTrackerClient>
-- (BOOL) pullRemoteRevisions: (ToyRevSet*)toyRevs;
+- (BOOL) pullRemoteRevision: (ToyRev*)rev
+                parentRevID: (NSString**)outParentRevID;
 @end
 
 
@@ -60,8 +61,9 @@
 
 
 - (void) processInbox: (NSArray*)inbox {
+    // Parse the _changes-feed entries into a list of ToyRevs:
     id lastSequence = _lastSequence;
-    ToyRevSet* revs = [[[ToyRevSet alloc] init] autorelease];
+    ToyRevList* revs = [[[ToyRevList alloc] init] autorelease];
     for (NSDictionary* change in inbox) {
         lastSequence = [change objectForKey: @"seq"];
         NSString* docID = [change objectForKey: @"id"];
@@ -78,54 +80,61 @@
         }
     }
     
+    // Ask the local database which of the revs are not known to it:
     LogTo(Sync, @"ToyPuller: Looking up %@", revs);
     if (![_db findMissingRevisions: revs]) {
         Warn(@"ToyPuller failed to look up local revs");
         return;
     }
     
-    if (revs.count > 0) {
-        if (![self pullRemoteRevisions: revs])
-            return;
-        
-        [_db beginTransaction];
-        for (ToyRev* rev in revs) {
-            int status = [_db forceInsert: rev];
-            if (status >= 300) {
-                _db.transactionFailed = YES;
-                break;
-            }
-            LogTo(Sync, @"ToyPuller added doc %@", rev);
+    // Fetch and add each of the new revs:
+    for (ToyRev* rev in revs) {
+        NSString* parentRevID;
+        if (![self pullRemoteRevision: rev parentRevID: &parentRevID]) {
+            Warn(@"%@ failed to download %@", self, rev);
+            continue;
         }
-        [_db endTransaction];
+        int status = [_db forceInsert: rev parentRevID: parentRevID];
+        if (status >= 300) {
+            Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+            continue;
+        }
+        LogTo(Sync, @"%@ added %@", self, rev);
     }
     
     self.lastSequence = lastSequence;
 }
 
 
-- (BOOL) pullRemoteRevisions: (ToyRevSet*)toyRevs {
-    //FIX: Make this async
-    LogTo(Sync, @"ToyPuller getting remote docs %@", toyRevs);
+// Fetches the contents of a revision from the remote db, including its parent revision ID.
+// The contents are stored into rev.properties.
+- (BOOL) pullRemoteRevision: (ToyRev*)rev
+                parentRevID: (NSString**)outParentRevID
+{
+    NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
+    NSDictionary* properties = [self sendRequest: @"GET" path: path body: nil];
+    if (!properties)
+        return NO;  // GET failed
     
-    NSMutableSet* docIDs = [NSMutableSet setWithCapacity: toyRevs.count];
-    for (ToyRev* rev in toyRevs) {
-        if (!rev.deleted)
-            [docIDs addObject: rev.docID];
+    NSString* parentRevID = nil;
+    NSDictionary* revisions = $castIf(NSDictionary, [properties objectForKey: @"_revisions"]);
+    if (revisions) {
+        // Extract the parent rev ID (the 2nd item):
+        NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
+        if (revIDs.count >= 2) {
+            parentRevID = [revIDs objectAtIndex: 1];
+            id start = [revisions objectForKey: @"start"];
+            if (start)
+                parentRevID = $sprintf(@"%@-%@", start, parentRevID);
+        }
+
+        // Now remove the _revisions dict so it doesn't get stored in the local db:
+        NSMutableDictionary* editedProperties = [[properties mutableCopy] autorelease];
+        [editedProperties removeObjectForKey: @"_revisions"];
+        properties = editedProperties;
     }
-    if (docIDs.count == 0)
-        return YES;
-    
-    NSDictionary* results = [self postRequest: @"/_all_docs?include_docs=true"
-                                         body: $dict({@"keys", docIDs.allObjects})];
-    if (!results)
-        return NO;
-    
-    for (NSDictionary* row in [results objectForKey: @"rows"]) {
-        ToyDocument* doc = [ToyDocument documentWithProperties: [row objectForKey: @"doc"]];
-        ToyRev* rev = [toyRevs revWithDocID: doc.documentID revID: doc.revisionID];
-        rev.document = doc;
-    }
+    rev.document = [ToyDocument documentWithProperties: properties];
+    *outParentRevID = parentRevID;
     return YES;
 }
 

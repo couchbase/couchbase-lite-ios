@@ -8,7 +8,7 @@
  */
 
 #import <Foundation/Foundation.h>
-@class FMDatabase, ToyDocument, ToyRev, ToyRevSet;
+@class FMDatabase, ToyDocument, ToyRev, ToyRevList;
 
 
 extern NSString* const ToyDBChangeNotification;
@@ -66,10 +66,15 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 - (ToyDocument*) getDocumentWithID: (NSString*)docID;
 - (ToyDocument*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID;
 
+/** Returns an array of revision ID strings in reverse chronological order,
+    starting with the given revision's ID. */
+- (NSArray*) getRevisionHistory: (ToyRev*)rev;
+
 - (ToyRev*) putRevision: (ToyRev*)revision
          prevRevisionID: (NSString*)revID
                  status: (int*)outStatus;
-- (int) forceInsert: (ToyRev*)rev;
+- (int) forceInsert: (ToyRev*)rev
+        parentRevID: (NSString*)parentRevID;
 
 - (NSArray*) changesSinceSequence: (int)lastSequence
                           options: (const ToyDBQueryOptions*)options;
@@ -80,6 +85,6 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 
 // FOR REPLICATION:
 
-- (BOOL) findMissingRevisions: (ToyRevSet*)toyRevs;
+- (BOOL) findMissingRevisions: (ToyRevList*)toyRevs;
 
 @end

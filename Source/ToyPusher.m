@@ -58,7 +58,7 @@
         [revs addObject: rev.revID];
     }
     
-    NSDictionary* results = [self postRequest: @"/_revs_diff" body: diffs];
+    NSDictionary* results = [self sendRequest: @"POST" path: @"/_revs_diff" body: diffs];
     
     if (results.count) {
         // Go through the list of local changes again, selecting the ones the destination server
@@ -83,7 +83,8 @@
         
         // Post the revisions to the destination. "new_edits":false means that the server should
         // use the given _rev IDs instead of making up new ones.
-        [self postRequest: @"/_bulk_docs"
+        [self sendRequest: @"POST"
+                     path: @"/_bulk_docs"
                      body: $dict({@"docs", docsToSend},
                                  {@"new_edits", $false})];
     }
