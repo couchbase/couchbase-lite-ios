@@ -70,14 +70,9 @@
             else if ([rev deleted])
                 return $dict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, {@"_deleted", $true});
             else {
-                ToyDocument* doc = [rev document];
-                if (!doc) {
-                    LogTo(Sync, @"%@: Fetching JSON of %@", self, rev);
-                    doc = [_db getDocumentWithID: [rev docID] revisionID: [rev revID]];
-                    if (!doc)
-                        Warn(@"%@: Couldn't get contents of %@", self, rev);
-                }
-                return doc.properties;
+                if (![_db loadRevisionBody: rev])
+                    Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                return [rev properties];
             }
         }];
         

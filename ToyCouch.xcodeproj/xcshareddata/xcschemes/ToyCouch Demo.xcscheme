@@ -61,12 +61,12 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-LogToyProtocol YES"
+            argument = "-LogSync YES"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-LogSync YES"
-            isEnabled = "YES">
+            argument = "-LogToyProtocol YES"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_All"

@@ -70,7 +70,7 @@ static ToyServer* sServer;
     _router = [[ToyRouter alloc] initWithServer: server request: self.request];
     _router.onResponseReady = ^(ToyResponse* routerResponse) {
         LogTo(ToyProtocol, @"response ready for <%@> (%d)",
-              self.request.URL, routerResponse.status);//TEMP
+              self.request.URL, routerResponse.status);
         // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
         // TODO: Find a way to work around this; it'd be nice to support 10.6 or iOS 4.x.
         NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL

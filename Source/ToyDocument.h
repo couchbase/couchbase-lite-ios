@@ -9,7 +9,8 @@
 #import <Cocoa/Cocoa.h>
 
 
-/** A database document contents, stored as either JSON or an NSDictionary. */
+/** A database document contents, stored as either JSON or an NSDictionary.
+    DEPRECATED: This class should get merged into ToyRev. */
 @interface ToyDocument : NSObject 
 {
     @private

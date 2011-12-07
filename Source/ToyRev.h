@@ -10,13 +10,17 @@
 @class ToyDocument;
 
 
+/** Database sequence ID */
+typedef SInt64 SequenceNumber;
+
+
 /** Stores information about a revision -- its docID, revID, and whether it's deleted. It can also store the document contents (mutably). */
 @interface ToyRev : NSObject
 {
     NSString* _docID, *_revID;
     BOOL _deleted;
     ToyDocument* _document;
-    UInt64 _sequence;
+    SInt64 _sequence;
 }
 
 - (id) initWithDocID: (NSString*)docID 
@@ -30,8 +34,10 @@
 @property (readonly) BOOL deleted;
 
 @property (retain) ToyDocument* document;
+@property (copy) NSDictionary* properties;
+@property (copy) NSData* asJSON;
 
-@property UInt64 sequence;
+@property SequenceNumber sequence;
 
 - (ToyRev*) copyWithDocID: (NSString*)docID revID: (NSString*)revID;
 

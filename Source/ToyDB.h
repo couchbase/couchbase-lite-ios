@@ -7,8 +7,12 @@
  *
  */
 
-#import <Foundation/Foundation.h>
+#import "ToyRev.h"
 @class FMDatabase, ToyDocument, ToyRev, ToyRevList;
+
+
+/** Same interpretation as HTTP status codes, esp. 200, 201, 404, 409, 500. */
+typedef int ToyDBStatus;
 
 
 extern NSString* const ToyDBChangeNotification;
@@ -53,7 +57,7 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 - (void) endTransaction;
 @property BOOL transactionFailed;
 
-- (int) compact;
+- (ToyDBStatus) compact;
 
 // DOCUMENTS:
 
@@ -61,20 +65,22 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 - (NSString*) generateDocumentID;
 
 @property (readonly) NSUInteger documentCount;
-@property (readonly) NSUInteger lastSequence;
+@property (readonly) SequenceNumber lastSequence;
 
-- (ToyDocument*) getDocumentWithID: (NSString*)docID;
-- (ToyDocument*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID;
+- (ToyRev*) getDocumentWithID: (NSString*)docID;
+- (ToyRev*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID;
+- (ToyDBStatus) loadRevisionBody: (ToyRev*)rev;
 
-/** Returns an array of revision ID strings in reverse chronological order,
-    starting with the given revision's ID. */
+/** Returns an array of ToyRevs in reverse chronological order,
+    starting with the given revision. */
 - (NSArray*) getRevisionHistory: (ToyRev*)rev;
+- (ToyRevList*) getAllRevisionsOfDocumentID: (NSString*)docID;
 
 - (ToyRev*) putRevision: (ToyRev*)revision
          prevRevisionID: (NSString*)revID
-                 status: (int*)outStatus;
-- (int) forceInsert: (ToyRev*)rev
-        parentRevID: (NSString*)parentRevID;
+                 status: (ToyDBStatus*)outStatus;
+- (ToyDBStatus) forceInsert: (ToyRev*)rev
+            revisionHistory: (NSArray*)history;
 
 - (NSArray*) changesSinceSequence: (int)lastSequence
                           options: (const ToyDBQueryOptions*)options;

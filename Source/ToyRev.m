@@ -58,6 +58,22 @@
 
 @synthesize docID=_docID, revID=_revID, deleted=_deleted, document=_document, sequence=_sequence;
 
+- (NSDictionary*) properties {
+    return _document.properties;
+}
+
+- (void) setProperties:(NSDictionary *)properties {
+    self.document = [ToyDocument documentWithProperties: properties];
+}
+
+- (NSData*) asJSON {
+    return _document.asJSON;
+}
+
+- (void) setAsJSON:(NSData *)asJSON {
+    self.document = [ToyDocument documentWithJSON: asJSON];
+}
+
 - (NSString*) description {
     return $sprintf(@"{%@ #%@%@}", _docID, _revID, (_deleted ?@" DEL" :@""));
 }

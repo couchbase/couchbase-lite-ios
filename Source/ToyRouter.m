@@ -19,7 +19,7 @@ NSString* const kToyVersionString =  @"0.1";
 
 
 @interface ToyRouter ()
-- (int) update: (ToyDB*)db docID: (NSString*)docID json: (NSData*)json;
+- (ToyDBStatus) update: (ToyDB*)db docID: (NSString*)docID json: (NSData*)json;
 @end
 
 
@@ -79,7 +79,7 @@ NSString* const kToyVersionString =  @"0.1";
 }
 
 
-- (int) openDB {
+- (ToyDBStatus) openDB {
     if (!_db.exists)
         return 404;
     if (![_db open])
@@ -132,7 +132,7 @@ static NSArray* splitPath( NSString* path ) {
     
     NSString* docID = nil;
     if (_db && pathLen > 1) {
-        int status = [self openDB];
+        ToyDBStatus status = [self openDB];
         if (status >= 300) {
             _response.status = status;
             return;
@@ -158,7 +158,7 @@ static NSArray* splitPath( NSString* path ) {
     SEL sel = NSSelectorFromString(message);
     if (!sel || ![self respondsToSelector: sel])
         sel = @selector(do_UNKNOWN);
-    int status = (int) [self performSelector: sel withObject: _db withObject: docID];
+    ToyDBStatus status = (ToyDBStatus) [self performSelector: sel withObject: _db withObject: docID];
     
     if (_response.bodyObject)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
@@ -185,7 +185,7 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_UNKNOWN {
+- (ToyDBStatus) do_UNKNOWN {
     return 400;
 }
 
@@ -193,13 +193,13 @@ static NSArray* splitPath( NSString* path ) {
 #pragma mark - SERVER REQUESTS:
 
 
-- (int) do_GETRoot {
+- (ToyDBStatus) do_GETRoot {
     NSDictionary* info = $dict({@"ToyCouch", @"welcome"}, {@"version", kToyVersionString});
     _response.body = [ToyDocument documentWithProperties: info];
     return 200;
 }
 
-- (int) do_GET_all_dbs {
+- (ToyDBStatus) do_GET_all_dbs {
     NSArray* dbs = _server.allDatabaseNames ?: $array();
     _response.body = [[[ToyDocument alloc] initWithArray: dbs] autorelease];
     return 200;
@@ -209,13 +209,13 @@ static NSArray* splitPath( NSString* path ) {
 #pragma mark - DATABASE REQUESTS:
 
 
-- (int) do_GET: (ToyDB*)db {
+- (ToyDBStatus) do_GET: (ToyDB*)db {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Database_Information
-    int status = [self openDB];
+    ToyDBStatus status = [self openDB];
     if (status >= 300)
         return status;
     NSUInteger num_docs = db.documentCount;
-    NSUInteger update_seq = db.lastSequence;
+    SequenceNumber update_seq = db.lastSequence;
     if (num_docs == NSNotFound || update_seq == NSNotFound)
         return 500;
     _response.bodyObject = $dict({@"db_name", db.name},
@@ -225,20 +225,20 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_PUT: (ToyDB*)db {
+- (ToyDBStatus) do_PUT: (ToyDB*)db {
     if (db.exists)
         return 412;
     return [db open] ? 201 : 500;
 }
 
 
-- (int) do_DELETE: (ToyDB*)db {
+- (ToyDBStatus) do_DELETE: (ToyDB*)db {
     return [_server deleteDatabaseNamed: db.name] ? 200 : 404;
 }
 
 
-- (int) do_POST: (ToyDB*)db {
-    int status = [self openDB];
+- (ToyDBStatus) do_POST: (ToyDB*)db {
+    ToyDBStatus status = [self openDB];
     if (status >= 300)
         return status;
     return [self update: db docID: [db generateDocumentID] json: _request.HTTPBody];
@@ -260,7 +260,7 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_GET_all_docs: (ToyDB*)db {
+- (ToyDBStatus) do_GET_all_docs: (ToyDB*)db {
     ToyDBQueryOptions options;
     if (![self getQueryOptions: &options])
         return 400;
@@ -319,7 +319,7 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_GET_changes: (ToyDB*)db {
+- (ToyDBStatus) do_GET_changes: (ToyDB*)db {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     ToyDBQueryOptions options;
     if (![self getQueryOptions: &options])
@@ -357,31 +357,30 @@ static NSArray* splitPath( NSString* path ) {
 #pragma mark - DOCUMENT REQUESTS:
 
 
-- (NSString*) setResponseEtag: (ToyDocument*)doc {
-    NSString* eTag = $sprintf(@"\"%@\"", doc.revisionID);
+- (NSString*) setResponseEtag: (ToyRev*)rev {
+    NSString* eTag = $sprintf(@"\"%@\"", rev.revID);
     [_response setValue: eTag ofHeader: @"Etag"];
     return eTag;
 }
 
 
-- (int) do_GET: (ToyDB*)db docID: (NSString*)docID {
-    ToyDocument* document = [db getDocumentWithID: docID
-                                       revisionID: [self query: @"rev"]];
-    if (!document)
+- (ToyDBStatus) do_GET: (ToyDB*)db docID: (NSString*)docID {
+    ToyRev* rev = [db getDocumentWithID: docID revisionID: [self query: @"rev"]];
+    if (!rev)
         return 404;
     
     // Check for conditional GET:
-    NSString* eTag = [self setResponseEtag: document];
+    NSString* eTag = [self setResponseEtag: rev];
     if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
         return 304;
     
-    _response.body = document;
+    _response.body = rev.document;
     return 200;
     //TODO: Handle ?_revs_info query
 }
 
 
-- (int) update: (ToyDB*)db
+- (ToyDBStatus) update: (ToyDB*)db
          docID: (NSString*)docID
           json: (NSData*)json {
     ToyDocument* document = json ? [ToyDocument documentWithJSON: json] : nil;
@@ -410,10 +409,10 @@ static NSArray* splitPath( NSString* path ) {
         return 400;
     rev.document = document;
     
-    int status;
+    ToyDBStatus status;
     rev = [db putRevision: rev prevRevisionID: revID status: &status];
     if (status < 300) {
-        [self setResponseEtag: document];
+        [self setResponseEtag: rev];
         _response.bodyObject = $dict({@"ok", $true},
                                      {@"id", rev.docID},
                                      {@"rev", rev.revID});
@@ -422,7 +421,7 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_PUT: (ToyDB*)db docID: (NSString*)docID {
+- (ToyDBStatus) do_PUT: (ToyDB*)db docID: (NSString*)docID {
     NSData* json = _request.HTTPBody;
     if (!json)
         return 400;
@@ -430,7 +429,7 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-- (int) do_DELETE: (ToyDB*)db docID: (NSString*)docID {
+- (ToyDBStatus) do_DELETE: (ToyDB*)db docID: (NSString*)docID {
     return [self update: db docID: docID json: nil];
 }
 

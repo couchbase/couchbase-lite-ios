@@ -18,7 +18,7 @@
 
 @interface ToyPuller () <CouchChangeTrackerClient>
 - (BOOL) pullRemoteRevision: (ToyRev*)rev
-                parentRevID: (NSString**)outParentRevID;
+                    history: (NSArray**)outHistory;
 @end
 
 
@@ -89,12 +89,12 @@
     
     // Fetch and add each of the new revs:
     for (ToyRev* rev in revs) {
-        NSString* parentRevID;
-        if (![self pullRemoteRevision: rev parentRevID: &parentRevID]) {
+        NSArray* history;
+        if (![self pullRemoteRevision: rev history: &history]) {
             Warn(@"%@ failed to download %@", self, rev);
             continue;
         }
-        int status = [_db forceInsert: rev parentRevID: parentRevID];
+        int status = [_db forceInsert: rev revisionHistory: history];
         if (status >= 300) {
             Warn(@"%@ failed to write %@: status=%d", self, rev, status);
             continue;
@@ -109,32 +109,30 @@
 // Fetches the contents of a revision from the remote db, including its parent revision ID.
 // The contents are stored into rev.properties.
 - (BOOL) pullRemoteRevision: (ToyRev*)rev
-                parentRevID: (NSString**)outParentRevID
+                    history: (NSArray**)outHistory
 {
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
     NSDictionary* properties = [self sendRequest: @"GET" path: path body: nil];
     if (!properties)
         return NO;  // GET failed
     
-    NSString* parentRevID = nil;
+    NSArray* history = nil;
     NSDictionary* revisions = $castIf(NSDictionary, [properties objectForKey: @"_revisions"]);
     if (revisions) {
-        // Extract the parent rev ID (the 2nd item):
+        // Extract the history, expanding the numeric prefixes:
+        __block int start = [[revisions objectForKey: @"start"] intValue];
         NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
-        if (revIDs.count >= 2) {
-            parentRevID = [revIDs objectAtIndex: 1];
-            id start = [revisions objectForKey: @"start"];
-            if (start)
-                parentRevID = $sprintf(@"%@-%@", start, parentRevID);
-        }
+        history = [revIDs my_map: ^(id revID) {
+            return (start ? $sprintf(@"%@-%@", start--, revID) : revID);
+        }];
 
         // Now remove the _revisions dict so it doesn't get stored in the local db:
         NSMutableDictionary* editedProperties = [[properties mutableCopy] autorelease];
         [editedProperties removeObjectForKey: @"_revisions"];
         properties = editedProperties;
     }
-    rev.document = [ToyDocument documentWithProperties: properties];
-    *outParentRevID = parentRevID;
+    rev.properties = properties;
+    *outHistory = history;
     return YES;
 }
 
