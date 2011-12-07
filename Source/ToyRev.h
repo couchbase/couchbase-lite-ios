@@ -17,6 +17,7 @@ typedef SInt64 SequenceNumber;
 /** Stores information about a revision -- its docID, revID, and whether it's deleted. It can also store the document contents (mutably). */
 @interface ToyRev : NSObject
 {
+    @private
     NSString* _docID, *_revID;
     BOOL _deleted;
     ToyDocument* _document;

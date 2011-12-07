@@ -19,7 +19,7 @@
 
 
 - (void) start {
-    if (_started)
+    if (_running)
         return;
     [super start];
     

@@ -28,7 +28,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 #if DEBUG
 + (ToyServer*) createEmptyAtPath: (NSString*)path {
-    CAssert([[NSFileManager defaultManager] removeItemAtPath: path error: nil]);
+    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
     NSError* error;
     ToyServer* server = [[self alloc] initWithDirectory: path error: &error];
     Assert(server, @"Failed to create server at %@: %@", path, error);

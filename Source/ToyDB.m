@@ -276,7 +276,7 @@ static NSString* createUUID() {
                                 "VALUES (?, ?, ?, ?, ?, ?)",
                                rev.docID,
                                rev.revID,
-                               parentSequence,
+                               $object(parentSequence),
                                $object(current),
                                $object(rev.deleted),
                                json])
@@ -669,85 +669,3 @@ static NSString* joinQuoted(NSArray* strings) {
 
 
 @end
-
-
-
-
-#pragma mark - TESTS
-
-static NSDictionary* userProperties(NSDictionary* dict) {
-    NSMutableDictionary* user = $mdict();
-    for (NSString* key in dict) {
-        if (![key hasPrefix: @"_"])
-            [user setObject: [dict objectForKey: key] forKey: key];
-    }
-    return user;
-}
-
-TestCase(ToyDB) {
-    // Start with a fresh database in /tmp:
-    NSString* kPath = @"/tmp/toycouch_test.sqlite3";
-    [[NSFileManager defaultManager] removeItemAtPath: kPath error: nil];
-    ToyDB *db = [[ToyDB alloc] initWithPath: kPath];
-    CAssert([db open]);
-    CAssert(![db error]);
-    
-    // Create a document:
-    NSMutableDictionary* props = $mdict({@"foo", $object(1)}, {@"bar", $false});
-    ToyDocument* doc = [[[ToyDocument alloc] initWithProperties: props] autorelease];
-    ToyRev* rev1 = [[[ToyRev alloc] initWithDocument: doc] autorelease];
-    ToyDBStatus status;
-    rev1 = [db putRevision: rev1 prevRevisionID: nil status: &status];
-    CAssertEq(status, 201);
-    Log(@"Created: %@", rev1);
-    CAssert(rev1.docID.length >= 10);
-    CAssert([rev1.revID hasPrefix: @"1-"]);
-    
-    // Read it back:
-    ToyRev* readRev = [db getDocumentWithID: rev1.docID];
-    CAssert(readRev != nil);
-    CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
-    
-    // Now update it:
-    props = [[readRev.properties mutableCopy] autorelease];
-    [props setObject: @"updated!" forKey: @"status"];
-    doc = [ToyDocument documentWithProperties: props];
-    ToyRev* rev2 = [[[ToyRev alloc] initWithDocument: doc] autorelease];
-    ToyRev* rev2Input = rev2;
-    rev2 = [db putRevision: rev2 prevRevisionID: rev1.revID status: &status];
-    CAssertEq(status, 201);
-    Log(@"Updated: %@", rev2);
-    CAssertEqual(rev2.docID, rev1.docID);
-    CAssert([rev2.revID hasPrefix: @"2-"]);
-    
-    // Read it back:
-    readRev = [db getDocumentWithID: rev2.docID];
-    CAssert(readRev != nil);
-    CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
-    
-    // Try to update the first rev, which should fail:
-    CAssertNil([db putRevision: rev2Input prevRevisionID: rev1.revID status: &status]);
-    CAssertEq(status, 409);
-    
-    // Delete it:
-    ToyRev* revD = [[[ToyRev alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
-    revD = [db putRevision: revD prevRevisionID: rev2.revID status: &status];
-    CAssertEq(status, 200);
-    CAssertEqual(revD.docID, rev2.docID);
-    CAssert([revD.revID hasPrefix: @"3-"]);
-    
-    // Read it back (should fail):
-    readRev = [db getDocumentWithID: revD.docID];
-    CAssertNil(readRev);
-    
-    NSArray* changes = [db changesSinceSequence: 0 options: NULL];
-    Log(@"Changes = %@", changes);
-    CAssertEq(changes.count, 1u);
-    
-    NSArray* history = [db getRevisionHistory: revD];
-    Log(@"History = %@", history);
-    CAssertEqual(history, $array(revD, rev2, rev1));
-    
-    CAssert([db close]);
-    [db release];
-}

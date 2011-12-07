@@ -19,7 +19,7 @@
     NSURL* _remote;
     BOOL _continuous;
     id _lastSequence;
-    BOOL _started;
+    BOOL _running;
     NSMutableArray* _inbox;
 }
 
@@ -34,10 +34,12 @@
 
 - (void) start;
 - (void) stop;
+@property (readonly) BOOL running;
 
 // protected:
 - (void) addToInbox: (NSDictionary*)change;
 - (void) processInbox: (NSArray*)inbox;  // override this
+- (void) flushInbox;  // optionally call this to flush the inbox
 - (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body;
 
 @end

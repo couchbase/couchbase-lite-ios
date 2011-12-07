@@ -34,6 +34,7 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 /** A ToyCouch database. Acts primarily as a container for named tables (CLCaches). */
 @interface ToyDB : NSObject
 {
+    @private
     NSString* _path;
     FMDatabase *_fmdb;
     BOOL _open;

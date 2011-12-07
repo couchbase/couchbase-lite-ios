@@ -16,6 +16,11 @@
 #define kProcessDelay 0.5
 
 
+@interface ToyReplicator ()
+@property (readwrite) BOOL running;
+@end
+
+
 @implementation ToyReplicator
 
 - (id) initWithDB: (ToyDB*)db remote: (NSURL*)remote continuous: (BOOL)continuous {
@@ -41,11 +46,11 @@
 }
 
 
-@synthesize db=_db, remote=_remote, lastSequence=_lastSequence;
+@synthesize db=_db, remote=_remote, lastSequence=_lastSequence, running=_running;
 
 
 - (void) start {
-    _started = YES;
+    self.running = YES;
 }
 
 
@@ -54,16 +59,17 @@
         [_inbox release];
         _inbox = nil;
         [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(doProcessInbox) object: nil];
+                                                 selector: @selector(flushInbox) object: nil];
     }
-    _started = NO;
+    self.running = NO;
 }
 
 
 - (void) addToInbox: (NSDictionary*)change {
+    Assert(_running);
     if (!_inbox) {
         _inbox = [[NSMutableArray alloc] init];
-        [self performSelector: @selector(doProcessInbox) withObject: nil afterDelay: kProcessDelay];
+        [self performSelector: @selector(flushInbox) withObject: nil afterDelay: kProcessDelay];
     }
     [_inbox addObject: change];
     LogTo(Sync, @"%@: Received #%@ (%@)",
@@ -75,7 +81,7 @@
 }
 
 
-- (void) doProcessInbox {
+- (void) flushInbox {
     if (_inbox.count == 0)
         return;
     

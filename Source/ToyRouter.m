@@ -366,7 +366,8 @@ static NSArray* splitPath( NSString* path ) {
 
 - (ToyDBStatus) do_GET: (ToyDB*)db docID: (NSString*)docID {
     ToyRev* rev = [db getDocumentWithID: docID revisionID: [self query: @"rev"]];
-    if (!rev)
+    ToyDocument* body = rev.document;
+    if (!body)
         return 404;
     
     // Check for conditional GET:
@@ -374,7 +375,7 @@ static NSArray* splitPath( NSString* path ) {
     if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
         return 304;
     
-    _response.body = rev.document;
+    _response.body = body;
     return 200;
     //TODO: Handle ?_revs_info query
 }

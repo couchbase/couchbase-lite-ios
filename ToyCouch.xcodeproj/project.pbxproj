@@ -43,6 +43,8 @@
 		270B3E3F148D7F0000E0A926 /* ToyPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* ToyPusher.m */; };
 		27821BB7148E7D6F0099B373 /* ToyReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* ToyReplicator.h */; };
 		27821BB8148E7D6F0099B373 /* ToyReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* ToyReplicator.m */; };
+		27821BBA148FF56D0099B373 /* ToyDB_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* ToyDB_Tests.m */; };
+		27821BBC149001B30099B373 /* ToyPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* ToyPuller_Tests.m */; };
 		27C706421486BBD500F0F099 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
 		27C706451486BE7100F0F099 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		27C706481487584300F0F099 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
@@ -123,6 +125,8 @@
 		270B3E3D148D7F0000E0A926 /* ToyPusher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyPusher.m; sourceTree = "<group>"; };
 		27821BB5148E7D6F0099B373 /* ToyReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyReplicator.h; sourceTree = "<group>"; };
 		27821BB6148E7D6F0099B373 /* ToyReplicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyReplicator.m; sourceTree = "<group>"; };
+		27821BB9148FF56C0099B373 /* ToyDB_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyDB_Tests.m; sourceTree = "<group>"; };
+		27821BBB149001B20099B373 /* ToyPuller_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyPuller_Tests.m; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* ToyServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyServer.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* ToyServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyServer.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* ToyRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyRouter.h; sourceTree = "<group>"; };
@@ -244,10 +248,12 @@
 				27C706411486BBD500F0F099 /* ToyServer.m */,
 				27C706431486BE7100F0F099 /* ToyRouter.h */,
 				27C706441486BE7100F0F099 /* ToyRouter.m */,
-				27C7064A1488311100F0F099 /* ToyRouter_Tests.m */,
 				27C706461487584300F0F099 /* ToyProtocol.h */,
 				27C706471487584300F0F099 /* ToyProtocol.m */,
 				27821BB4148E7D590099B373 /* Replicator */,
+				27821BB9148FF56C0099B373 /* ToyDB_Tests.m */,
+				27C7064A1488311100F0F099 /* ToyRouter_Tests.m */,
+				27821BBB149001B20099B373 /* ToyPuller_Tests.m */,
 				270B3DEE1489359000E0A926 /* ToyCouch-Info.plist */,
 				270B3E1F148938D800E0A926 /* ToyCouch.h */,
 			);
@@ -552,6 +558,8 @@
 				270B3E3A14898DF200E0A926 /* ToyRev.m in Sources */,
 				270B3E3F148D7F0000E0A926 /* ToyPusher.m in Sources */,
 				27821BB8148E7D6F0099B373 /* ToyReplicator.m in Sources */,
+				27821BBA148FF56D0099B373 /* ToyDB_Tests.m in Sources */,
+				27821BBC149001B30099B373 /* ToyPuller_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

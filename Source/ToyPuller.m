@@ -33,7 +33,7 @@
 
 
 - (void) start {
-    if (_started)
+    if (_running)
         return;
     Assert(!_changeTracker);
     [super start];
@@ -51,12 +51,23 @@
 - (void) stop {
     [_changeTracker stop];
     [_changeTracker release];
+    _changeTracker = nil;
     [super stop];
 }
 
 
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
     [self addToInbox: change];
+}
+
+
+- (void) changeTrackerStopped:(CouchChangeTracker *)tracker {
+    LogTo(Sync, @"%@: ChangeTracker stopped", self);
+    [_changeTracker release];
+    _changeTracker = nil;
+    
+    [self flushInbox];
+    [self stop];
 }
 
 
@@ -123,7 +134,7 @@
         __block int start = [[revisions objectForKey: @"start"] intValue];
         NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
         history = [revIDs my_map: ^(id revID) {
-            return (start ? $sprintf(@"%@-%@", start--, revID) : revID);
+            return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
         }];
 
         // Now remove the _revisions dict so it doesn't get stored in the local db:

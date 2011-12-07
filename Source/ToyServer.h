@@ -12,6 +12,7 @@
 
 @interface ToyServer : NSObject
 {
+    @private
     NSString* _dir;
     NSMutableDictionary* _databases;
 }
