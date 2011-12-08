@@ -8,7 +8,6 @@
  */
 
 #import "ToyDB.h"
-#import "ToyDocument.h"
 #import "ToyRev.h"
 
 #import "FMDatabase.h"
@@ -170,7 +169,7 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
 
 
 - (ToyDBStatus) loadRevisionBody: (ToyRev*)rev {
-    if (rev.document)
+    if (rev.body)
         return 200;
     Assert(rev.docID && rev.revID);
     FMResultSet *r = [_fmdb executeQuery: @"SELECT json FROM docs "
@@ -421,7 +420,7 @@ exit:
                 // Hey, this is the leaf revision we're inserting:
                 newRev = rev;
                 if (!rev.deleted) {
-                    json = rev.document.asJSON;
+                    json = rev.asJSON;
                     if (!json)
                         return 400;
                 }

@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class ToyDB, ToyServer, ToyResponse, ToyDocument;
+@class ToyDB, ToyServer, ToyResponse, ToyBody;
 
 
 extern NSString* const kToyVersionString;
@@ -54,12 +54,12 @@ typedef void (^OnFinishedBlock)();
     @private
     int _status;
     NSMutableDictionary* _headers;
-    ToyDocument* _body;
+    ToyBody* _body;
 }
 
 @property int status;
 @property (copy) NSMutableDictionary* headers;
-@property (retain) ToyDocument* body;
+@property (retain) ToyBody* body;
 @property (copy) id bodyObject;
 
 - (void) setValue: (NSString*)value ofHeader: (NSString*)header;

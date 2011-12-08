@@ -8,7 +8,7 @@
  */
 
 #import "ToyDB.h"
-#import "ToyDocument.h"
+#import "ToyBody.h"
 #import "ToyRev.h"
 
 #import "CollectionUtils.h"
@@ -45,8 +45,8 @@ TestCase(ToyDB_CRUD) {
     
     // Create a document:
     NSMutableDictionary* props = $mdict({@"foo", $object(1)}, {@"bar", $false});
-    ToyDocument* doc = [[[ToyDocument alloc] initWithProperties: props] autorelease];
-    ToyRev* rev1 = [[[ToyRev alloc] initWithDocument: doc] autorelease];
+    ToyBody* doc = [[[ToyBody alloc] initWithProperties: props] autorelease];
+    ToyRev* rev1 = [[[ToyRev alloc] initWithBody: doc] autorelease];
     ToyDBStatus status;
     rev1 = [db putRevision: rev1 prevRevisionID: nil status: &status];
     CAssertEq(status, 201);
@@ -62,8 +62,8 @@ TestCase(ToyDB_CRUD) {
     // Now update it:
     props = [[readRev.properties mutableCopy] autorelease];
     [props setObject: @"updated!" forKey: @"status"];
-    doc = [ToyDocument documentWithProperties: props];
-    ToyRev* rev2 = [[[ToyRev alloc] initWithDocument: doc] autorelease];
+    doc = [ToyBody bodyWithProperties: props];
+    ToyRev* rev2 = [[[ToyRev alloc] initWithBody: doc] autorelease];
     ToyRev* rev2Input = rev2;
     rev2 = [db putRevision: rev2 prevRevisionID: rev1.revID status: &status];
     CAssertEq(status, 201);
@@ -145,7 +145,7 @@ TestCase(ToyDB_RevTree) {
     ToyRev* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too"];
     CAssertEqual(rev2.docID, rev.docID);
     CAssertEqual(rev2.revID, @"2-too");
-    CAssertEqual(rev2.document, nil);
+    CAssertEqual(rev2.body, nil);
     
     // Make sure no duplicate rows were inserted for the common revisions:
     CAssertEq(db.lastSequence, 7u);

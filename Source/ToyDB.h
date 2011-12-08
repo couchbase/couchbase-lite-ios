@@ -8,7 +8,7 @@
  */
 
 #import "ToyRev.h"
-@class FMDatabase, ToyDocument, ToyRev, ToyRevList;
+@class FMDatabase, ToyRev, ToyRevList;
 
 
 /** Same interpretation as HTTP status codes, esp. 200, 201, 404, 409, 500. */

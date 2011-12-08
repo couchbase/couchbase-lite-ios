@@ -8,7 +8,7 @@
 
 #import "ToyRouter.h"
 #import "ToyDB.h"
-#import "ToyDocument.h"
+#import "ToyBody.h"
 #import "ToyRev.h"
 #import "ToyServer.h"
 #import "CollectionUtils.h"
@@ -195,13 +195,13 @@ static NSArray* splitPath( NSString* path ) {
 
 - (ToyDBStatus) do_GETRoot {
     NSDictionary* info = $dict({@"ToyCouch", @"welcome"}, {@"version", kToyVersionString});
-    _response.body = [ToyDocument documentWithProperties: info];
+    _response.body = [ToyBody bodyWithProperties: info];
     return 200;
 }
 
 - (ToyDBStatus) do_GET_all_dbs {
     NSArray* dbs = _server.allDatabaseNames ?: $array();
-    _response.body = [[[ToyDocument alloc] initWithArray: dbs] autorelease];
+    _response.body = [[[ToyBody alloc] initWithArray: dbs] autorelease];
     return 200;
 }
 
@@ -366,7 +366,7 @@ static NSArray* splitPath( NSString* path ) {
 
 - (ToyDBStatus) do_GET: (ToyDB*)db docID: (NSString*)docID {
     ToyRev* rev = [db getDocumentWithID: docID revisionID: [self query: @"rev"]];
-    ToyDocument* body = rev.document;
+    ToyBody* body = rev.body;
     if (!body)
         return 404;
     
@@ -382,14 +382,14 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (ToyDBStatus) update: (ToyDB*)db
-         docID: (NSString*)docID
-          json: (NSData*)json {
-    ToyDocument* document = json ? [ToyDocument documentWithJSON: json] : nil;
+                 docID: (NSString*)docID
+                  json: (NSData*)json {
+    ToyBody* body = json ? [ToyBody bodyWithJSON: json] : nil;
     
     NSString* revID;
-    if (document) {
+    if (body) {
         // PUT's revision ID comes from the JSON body.
-        revID = document.revisionID;
+        revID = [body propertyForKey: @"_rev"];
     } else {
         // DELETE's revision ID can come either from the ?rev= query param or an If-Match header.
         revID = [self query: @"rev"];
@@ -405,10 +405,10 @@ static NSArray* splitPath( NSString* path ) {
         }
     }
     
-    ToyRev* rev = [[[ToyRev alloc] initWithDocID: docID revID: nil deleted: !document] autorelease];
+    ToyRev* rev = [[[ToyRev alloc] initWithDocID: docID revID: nil deleted: !body] autorelease];
     if (!rev)
         return 400;
-    rev.document = document;
+    rev.body = body;
     
     ToyDBStatus status;
     rev = [db putRevision: rev prevRevisionID: revID status: &status];
@@ -469,7 +469,7 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 - (void) setBodyObject:(id)bodyObject {
-    self.body = bodyObject ? [ToyDocument documentWithProperties: bodyObject] : nil;
+    self.body = bodyObject ? [ToyBody bodyWithProperties: bodyObject] : nil;
 }
 
 @end

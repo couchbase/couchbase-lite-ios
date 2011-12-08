@@ -7,7 +7,7 @@
 //
 
 #import "ToyRev.h"
-#import "ToyDocument.h"
+#import "ToyBody.h"
 #import "Test.h"
 
 
@@ -31,47 +31,47 @@
     return self;
 }
 
-- (id) initWithDocument: (ToyDocument*)doc {
-    Assert(doc);
-    self = [self initWithDocID: doc.documentID revID: nil deleted: NO];
+- (id) initWithBody: (ToyBody*)body {
+    Assert(body);
+    self = [self initWithDocID: [body propertyForKey: @"_id"] revID: nil deleted: NO];
     if (self) {
-        self.document = doc;
+        self.body = body;
     }
     return self;
 }
 
 - (id) initWithProperties: (NSDictionary*)properties {
-    ToyDocument* doc = [[[ToyDocument alloc] initWithProperties: properties] autorelease];
-    if (!doc) {
+    ToyBody* body = [[[ToyBody alloc] initWithProperties: properties] autorelease];
+    if (!body) {
         [self release];
         return nil;
     }
-    return [self initWithDocument: doc];
+    return [self initWithBody: body];
 }
 
 - (void)dealloc {
     [_docID release];
     [_revID release];
-    [_document release];
+    [_body release];
     [super dealloc];
 }
 
-@synthesize docID=_docID, revID=_revID, deleted=_deleted, document=_document, sequence=_sequence;
+@synthesize docID=_docID, revID=_revID, deleted=_deleted, body=_body, sequence=_sequence;
 
 - (NSDictionary*) properties {
-    return _document.properties;
+    return _body.properties;
 }
 
 - (void) setProperties:(NSDictionary *)properties {
-    self.document = [ToyDocument documentWithProperties: properties];
+    self.body = [ToyBody bodyWithProperties: properties];
 }
 
 - (NSData*) asJSON {
-    return _document.asJSON;
+    return _body.asJSON;
 }
 
 - (void) setAsJSON:(NSData *)asJSON {
-    self.document = [ToyDocument documentWithJSON: asJSON];
+    self.body = [ToyBody bodyWithJSON: asJSON];
 }
 
 - (NSString*) description {
@@ -90,8 +90,8 @@
     Assert(docID && revID);
     Assert(!_docID || $equal(_docID, docID));
     ToyRev* rev = [[[self class] alloc] initWithDocID: docID revID: revID deleted: _deleted];
-    if ( _document)
-        rev.document = _document;
+    if ( _body)
+        rev.body = _body;
     return rev;
 }
 
