@@ -22,8 +22,7 @@ NSString* kPath = @"/tmp/toycouch_test.sqlite3";
 
 
 static ToyDB* createDB(void) {
-    [[NSFileManager defaultManager] removeItemAtPath: kPath error: nil];
-    ToyDB *db = [[ToyDB alloc] initWithPath: kPath];
+    ToyDB *db = [ToyDB createEmptyDBAtPath: kPath];
     CAssert([db open]);
     CAssert(![db error]);
     return db;
@@ -100,7 +99,6 @@ TestCase(ToyDB_CRUD) {
     CAssertEqual(history, $array(revD, rev2, rev1));
     
     CAssert([db close]);
-    [db release];
 }
 
 

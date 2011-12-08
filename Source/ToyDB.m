@@ -8,12 +8,11 @@
  */
 
 #import "ToyDB.h"
+#import "ToyDB_Internal.h"
 #import "ToyRev.h"
+#import "ToyView.h"
 
 #import "FMDatabase.h"
-
-#import "CollectionUtils.h"
-#import "Test.h"
 
 
 NSString* const ToyDBChangeNotification = @"ToyDBChange";
@@ -22,14 +21,25 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
 @implementation ToyDB
 
 
++ (ToyDB*) createEmptyDBAtPath: (NSString*)path {
+    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
+    ToyDB *db = [[[self alloc] initWithPath: path] autorelease];
+    if (![db open])
+        return nil;
+    return db;
+}
+
+
 - (id) initWithPath: (NSString*)path {
     if (self = [super init]) {
         _path = [path copy];
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = 10;
-        _fmdb.logsErrors = WillLogTo(ToyDB);
 #if DEBUG
+        _fmdb.logsErrors = YES;
         _fmdb.crashOnErrors = YES;
+#else
+        _fmdb.logsErrors = WillLogTo(ToyDB);
 #endif
         _fmdb.traceExecution = WillLogTo(ToyDBVerbose);
     }
@@ -50,20 +60,35 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
     if (![_fmdb open])
         return NO;
     
-    // ***** THIS IS THE "docs" TABLE SCHEMA! *****
-    // Declaring the primary key as AUTOINCREMENT means the values will always be
+    // ***** THIS IS THE SQL DATABASE SCHEMA! *****
+    NSString *sql = @"\
+        PRAGMA foreign_keys = ON; \
+        CREATE TABLE IF NOT EXISTS docs ( \
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
+            docid TEXT NOT NULL, \
+            revid TEXT NOT NULL, \
+            parent INTEGER REFERENCES docs(sequence) ON DELETE SET NULL, \
+            current BOOLEAN, \
+            deleted BOOLEAN DEFAULT 0, \
+            json BLOB); \
+        CREATE TABLE IF NOT EXISTS views ( \
+            view_id INTEGER PRIMARY KEY, \
+            name TEXT UNIQUE NOT NULL,\
+            version TEXT, \
+            lastsequence INTEGER DEFAULT 0); \
+        CREATE TABLE IF NOT EXISTS maps ( \
+            view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
+            sequence INTEGER NOT NULL REFERENCES docs(sequence) ON DELETE CASCADE, \
+            key STRING NOT NULL, \
+            value STRING);";
+    // Declaring docs.sequence as AUTOINCREMENT means the values will always be
     // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
-    NSString *sql = @"CREATE TABLE IF NOT EXISTS docs ("
-                     "sequence INTEGER PRIMARY KEY AUTOINCREMENT, "
-                     "docid TEXT NOT NULL, "
-                     "revid TEXT NOT NULL, "
-                     "parent INTEGER, "
-                     "current BOOLEAN, "            // means 'no child revisions', i.e. 'leaf'
-                     "deleted BOOLEAN DEFAULT 0, "
-                     "json BLOB)";
-    if (![_fmdb executeUpdate: sql]) {
-        [self close];
-        return NO;
+    // TODO: 'docid' should be factored out into a separate table for efficiency.
+    for (NSString* statement in [sql componentsSeparatedByString: @";"]) {
+        if (statement.length && ![_fmdb executeUpdate: statement]) {
+            [self close];
+            return NO;
+        }
     }
 
     _open = YES;
@@ -86,6 +111,7 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
 - (void) dealloc {
     [_fmdb release];
     [_path release];
+    [_views release];
     [super dealloc];
 }
 
@@ -275,7 +301,7 @@ static NSString* createUUID() {
                                 "VALUES (?, ?, ?, ?, ?, ?)",
                                rev.docID,
                                rev.revID,
-                               $object(parentSequence),
+                               (parentSequence ? $object(parentSequence) : nil ),
                                $object(current),
                                $object(rev.deleted),
                                json])
@@ -365,7 +391,7 @@ static NSString* createUUID() {
                                 "VALUES (?, ?, ?, 1, ?, ?)",
                                docID,
                                newRevID,
-                               $object(parentSequence),
+                               (parentSequence ? $object(parentSequence) : nil),
                                $object(deleted),
                                json])
         goto exit;
@@ -478,6 +504,204 @@ exit:
 
 
 #pragma mark - QUERIES:
+
+
+- (ToyView*) viewNamed: (NSString*)name {
+    ToyView* view = [_views objectForKey: name];
+    if (!view) {
+        view = [[[ToyView alloc] initWithDatabase: self name: name] autorelease];
+        if (!view)
+            return nil;
+        if (!_views)
+            _views = [[NSMutableDictionary alloc] init];
+        [_views setObject: view forKey: name];
+    }
+    return view;
+}
+
+
+- (NSArray*) allViews {
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT name FROM views"];
+    if (!r)
+        return nil;
+    NSMutableArray* views = $marray();
+    while ([r next])
+        [views addObject: [self viewNamed: [r stringForColumnIndex: 0]]];
+    return views;
+}
+
+
+- (NSString*) versionOfView: (NSString*)viewName {
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT version FROM views WHERE name=?", viewName];
+    if (![r next])
+        return nil;
+    return [r stringForColumnIndex: 0];
+}
+
+
+- (ToyDBStatus) setVersion: (NSString*)version ofView: (NSString*)viewName {
+    if (![_fmdb executeUpdate: @"INSERT OR IGNORE INTO views (name, version) VALUES (?, ?)", 
+                               viewName, version])
+        return 500;
+    if (_fmdb.changes)
+        return 201;     // created new view
+    if (![_fmdb executeUpdate: @"UPDATE views SET version=? "
+                                "WHERE name=? AND version!=?", 
+                               version, viewName, version])
+        return 500;
+    return _fmdb.changes > 0 ? 200 : 304;
+}
+
+
+- (ToyDBStatus) deleteViewNamed: (NSString*)name {
+    if (![_fmdb executeUpdate: @"DELETE FROM views WHERE name=?", name])
+        return 500;
+    [_views removeObjectForKey: name];
+    return _fmdb.changes ? 200 : 404;
+}
+
+
+- (BOOL) getID: (int*)outID andLastSequence: (SequenceNumber*)outSequence
+                                ofViewNamed: (NSString*)name
+{
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT view_id, lastSequence FROM views WHERE name=?",
+                                          name];
+    if (![r next]) {
+        [r close];
+        return NO;
+    }
+    *outID = [r intForColumnIndex: 0];
+    if (outSequence)
+        *outSequence = [r longLongIntForColumnIndex: 1];
+    [r close];
+    return YES;
+}
+
+
+static NSData* toJSON( id object ) {
+    if (!object)
+        return nil;
+    BOOL wrapped = NO;
+    if (![object isKindOfClass: [NSDictionary class]] && ![object isKindOfClass: [NSArray class]]) {
+        wrapped = YES;
+        object = $array(object);
+    }
+    NSData* json = [NSJSONSerialization dataWithJSONObject: object options: 0 error: nil];
+    if (wrapped)
+        json = [json subdataWithRange: NSMakeRange(1, json.length - 2)];
+    return json;
+}
+
+
+- (BOOL) reindexView: (ToyView*)view {
+    LogTo(View, @"Re-indexing view %@ ...", view.name);
+    ToyMapBlock map = view.mapBlock;
+    Assert(map, @"Cannot reindex view '%@' which has no map block set", view.name);
+    
+    [self beginTransaction];
+    BOOL ok = NO;
+    
+    __block SequenceNumber sequence = 0;
+    __block BOOL emitFailed = NO;
+    FMResultSet* r = nil;
+    
+    // Look up the view's ID and the last revision sequence it mapped:
+    int viewID;
+    SequenceNumber lastSequence;
+    if (![self getID: &viewID andLastSequence: &lastSequence ofViewNamed: view.name])
+        goto exit;
+    sequence = lastSequence;
+    
+    // This is the emit() block, which gets called from within the user-defined map() block
+    // that's called down below.
+    ToyEmitBlock emit = ^(id key, id value) {
+        if (!key)
+            return;
+        NSData* keyJSON = toJSON(key);
+        NSData* valueJSON = toJSON(value);
+        LogTo(View, @"    emit(%@, %@)", [keyJSON my_UTF8ToString], [valueJSON my_UTF8ToString]);
+        if (![_fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
+                                    "(?, ?, ?, ?)",
+                                    $object(viewID), $object(sequence), keyJSON, valueJSON])
+            emitFailed = YES;
+    };
+    
+    // Now scan every revision added since the last time the view was indexed:
+    r = [_fmdb executeQuery: @"SELECT sequence, parent, current, json FROM docs WHERE sequence>?",
+                             $object(lastSequence)];
+    if (!r)
+        goto exit;
+    while ([r next]) {
+        @autoreleasepool {
+            sequence = [r longLongIntForColumnIndex: 0];
+            SequenceNumber parentSequence = [r longLongIntForColumnIndex: 1];
+            BOOL current = [r boolForColumnIndex: 2];
+            NSData* json = [r dataForColumnIndex: 3];
+            LogTo(View, @"Seq# %lld:", sequence);
+            
+            if (parentSequence && parentSequence <= lastSequence) {
+                // Delete any map results emitted from now-obsolete revisions:
+                LogTo(View, @"  delete maps for sequence=%lld", parentSequence);
+                if (![_fmdb executeUpdate: @"DELETE FROM maps WHERE sequence=? AND view_id=?",
+                                           $object(parentSequence), $object(viewID)])
+                    goto exit;
+            }
+            if (current) {
+                // Call the user-defined map() to emit new key/value pairs from this revision:
+                LogTo(View, @"  call map for sequence=%lld...", sequence);
+                NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: json
+                                                                           options: 0 error: nil];
+                if (properties) {
+                    map(properties, emit);
+                    if (emitFailed)
+                        goto exit;
+                }
+            }
+        }
+    }
+    [r close];
+    r = nil;
+    
+    // Finally, record the last revision sequence number that was indexed:
+    if (![_fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
+                               $object(sequence), $object(viewID)])
+        goto exit;
+        
+    LogTo(View, @"...Finished re-indexing view %@ up to sequence %lld", view.name, sequence);
+    ok = YES;
+    
+exit:
+    [r close];
+    if (!ok) {
+        Warn(@"ToyDB: Failed to rebuild view '%@'", view.name);
+        self.transactionFailed = YES;
+    }
+    [self endTransaction];
+    return ok;
+}
+
+
+- (NSArray*) dumpView: (NSString*)viewName {
+    int viewID;
+    if (![self getID: &viewID andLastSequence: NULL ofViewNamed: viewName])
+        return nil;
+
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
+                                           "WHERE view_id=? ORDER BY key",
+                                          $object(viewID)];
+    if (!r)
+        return nil;
+    NSMutableArray* result = $marray();
+    while ([r next]) {
+        [result addObject: $dict({@"seq", [r objectForColumnIndex: 0]},
+                                 {@"key", [r stringForColumnIndex: 1]},
+                                 {@"value", [r stringForColumnIndex: 2]})];
+    }
+    [r close];
+    return result;
+}
+
+
 
 // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
 

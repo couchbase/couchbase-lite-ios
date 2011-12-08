@@ -8,7 +8,7 @@
  */
 
 #import "ToyRev.h"
-@class FMDatabase, ToyRev, ToyRevList;
+@class FMDatabase, ToyRev, ToyRevList, ToyView;
 
 
 /** Same interpretation as HTTP status codes, esp. 200, 201, 404, 409, 500. */
@@ -40,6 +40,7 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
     BOOL _open;
     NSInteger _transactionLevel;
     BOOL _transactionFailed;
+    NSMutableDictionary* _views;
 }    
         
 - (id) initWithPath: (NSString*)path;
@@ -48,6 +49,8 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 - (BOOL) openWithFlags:(int)flags;
 #endif
 - (BOOL) close;
+
++ (ToyDB*) createEmptyDBAtPath: (NSString*)path;
 
 @property (readonly) NSString* path;
 @property (readonly) NSString* name;
@@ -86,9 +89,12 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 - (NSArray*) changesSinceSequence: (int)lastSequence
                           options: (const ToyDBQueryOptions*)options;
 
-// QUERIES:
+// VIEWS & QUERIES:
 
 - (NSDictionary*) getAllDocs: (const ToyDBQueryOptions*)options;
+
+- (ToyView*) viewNamed: (NSString*)name;
+@property (readonly) NSArray* allViews;
 
 // FOR REPLICATION:
 
