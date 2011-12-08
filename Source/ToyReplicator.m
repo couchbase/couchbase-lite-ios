@@ -115,9 +115,7 @@
         return nil;
     }
     
-    NSDictionary* results = $castIf(NSDictionary,
-                                    [NSJSONSerialization JSONObjectWithData: data
-                                                                    options: 0 error:nil]);
+    NSDictionary* results = [NSJSONSerialization JSONObjectWithData: data options: 0 error:nil];
     if (!results)
         Warn(@"%@: %@ %@ returned unparseable data '%@'",
              self, method, relativePath, [data my_UTF8ToString]);

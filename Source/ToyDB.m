@@ -394,51 +394,6 @@ exit:
 }
 
 
-- (ToyDBStatus) forceInsert: (ToyRev*)rev
-     parentSequence: (SequenceNumber)parentSequence
-            current: (BOOL)current
-{
-    Assert(rev.docID);
-    Assert(rev.revID);
-    BOOL deleted = rev.deleted;
-    NSData* json = nil;
-    if (!deleted) {
-        json = rev.document.asJSON;
-        if (!json)
-            return 400;
-    }
-        
-    ToyDBStatus status = 500;
-    [self beginTransaction];
-
-    // Make the parent revision no longer current:
-    if (parentSequence > 0) {
-        if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 WHERE sequence=?", parentSequence])
-            goto exit;
-    }
-    // Insert the new revision and make it current:
-    SequenceNumber sequence = [self insertRevision: rev
-                                   parentSequence: parentSequence
-                                          current: current 
-                                             JSON: json];
-    if (!sequence)
-        goto exit;
-    rev.sequence = sequence;
-    // Success!
-    status = deleted ? 200 : 201;
-    
-exit:
-    if (status >= 300)
-        self.transactionFailed = YES;
-    [self endTransaction];
-    if (status < 300) {
-        // Send a change notification:
-        [self notifyChange: rev];
-    }
-    return status;
-}
-
-
 - (ToyDBStatus) forceInsert: (ToyRev*)rev revisionHistory: (NSArray*)history {
     // First look up all locally-known revisions of this document:
     NSString* docID = rev.docID;
@@ -477,6 +432,7 @@ exit:
                                 autorelease];
             }
 
+            // Insert it:
             parentSequence = [self insertRevision: newRev
                                    parentSequence: parentSequence
                                           current: current 
@@ -485,6 +441,10 @@ exit:
                 return 500;
         }
     }
+    
+    // Record its sequence and send a change notification:
+    rev.sequence = parentSequence;
+    [self notifyChange: rev];
     
     return 201;
 }
