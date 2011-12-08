@@ -1,0 +1,5 @@
+# Symbols exported by the framework
+.objc_class_name_ToyPusher
+.objc_class_name_ToyPuller
+.objc_class_name_ToyProtocol
+.objc_class_name_ToyServer

@@ -45,6 +45,7 @@
 		27821BB8148E7D6F0099B373 /* ToyReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* ToyReplicator.m */; };
 		27821BBA148FF56D0099B373 /* ToyDB_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* ToyDB_Tests.m */; };
 		27821BBC149001B30099B373 /* ToyPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* ToyPuller_Tests.m */; };
+		27821BBE14906FB60099B373 /* ToyCouchPrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BBD14906FB50099B373 /* ToyCouchPrefix.h */; };
 		27C706421486BBD500F0F099 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
 		27C706451486BE7100F0F099 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		27C706481487584300F0F099 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
@@ -127,6 +128,8 @@
 		27821BB6148E7D6F0099B373 /* ToyReplicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyReplicator.m; sourceTree = "<group>"; };
 		27821BB9148FF56C0099B373 /* ToyDB_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyDB_Tests.m; sourceTree = "<group>"; };
 		27821BBB149001B20099B373 /* ToyPuller_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyPuller_Tests.m; sourceTree = "<group>"; };
+		27821BBD14906FB50099B373 /* ToyCouchPrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyCouchPrefix.h; sourceTree = "<group>"; };
+		27821BBF149078C70099B373 /* ToyCouch.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = ToyCouch.exp; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* ToyServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyServer.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* ToyServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyServer.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* ToyRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyRouter.h; sourceTree = "<group>"; };
@@ -256,6 +259,8 @@
 				27821BBB149001B20099B373 /* ToyPuller_Tests.m */,
 				270B3DEE1489359000E0A926 /* ToyCouch-Info.plist */,
 				270B3E1F148938D800E0A926 /* ToyCouch.h */,
+				27821BBD14906FB50099B373 /* ToyCouchPrefix.h */,
+				27821BBF149078C70099B373 /* ToyCouch.exp */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -392,6 +397,7 @@
 				270B3E3914898DF200E0A926 /* ToyRev.h in Headers */,
 				270B3E3E148D7F0000E0A926 /* ToyPusher.h in Headers */,
 				27821BB7148E7D6F0099B373 /* ToyReplicator.h in Headers */,
+				27821BBE14906FB60099B373 /* ToyCouchPrefix.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -661,7 +667,7 @@
 			baseConfigurationReference = 27F074F811CDC71800E9A2AB /* MYUtilities_Debug.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -675,7 +681,7 @@
 			baseConfigurationReference = 27F074F911CDC71800E9A2AB /* MYUtilities_Release.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				SDKROOT = macosx;
@@ -689,6 +695,7 @@
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				EXPORTED_SYMBOLS_FILE = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
@@ -697,10 +704,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
+				GCC_PREFIX_HEADER = Source/ToyCouchPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -717,21 +721,27 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_POSTPROCESSING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				EXPORTED_SYMBOLS_FILE = Source/ToyCouch.exp;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
 				);
 				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Source/ToyCouchPrefix.h;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Source/ToyCouch-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = framework;
 			};
 			name = Release;
