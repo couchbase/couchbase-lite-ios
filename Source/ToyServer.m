@@ -130,6 +130,7 @@ static NSCharacterSet* kIllegalNameChars;
 #if DEBUG
 
 TestCase(ToyServer) {
+    RequireTestCase(ToyDB);
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyServerTest"];
     ToyDB* db = [server databaseNamed: @"foo"];
     CAssert(db != nil);

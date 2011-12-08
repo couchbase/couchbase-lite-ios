@@ -121,6 +121,7 @@ static void verifyHistory(ToyDB* db, ToyRev* rev, NSArray* history) {
 
 
 TestCase(ToyDB_RevTree) {
+    RequireTestCase(ToyDB_CRUD);
     // Start with a fresh database in /tmp:
     ToyDB* db = createDB();
     
@@ -153,6 +154,12 @@ TestCase(ToyDB_RevTree) {
     // Make sure the revision with the higher revID wins the conflict:
     ToyRev* current = [db getDocumentWithID: rev.docID];
     CAssertEqual(current, conflict);
+}
+
+
+TestCase(ToyDB) {
+    RequireTestCase(ToyDB_CRUD);
+    RequireTestCase(ToyDB_RevTree);
 }
 
 

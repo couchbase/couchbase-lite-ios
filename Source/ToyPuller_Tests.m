@@ -34,6 +34,7 @@ static id pull(ToyDB* db, NSString* urlStr, id lastSequence) {
 
 
 TestCase(ToyPuller) {
+    RequireTestCase(ToyDB);
     //gCouchLogLevel = 3;
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyPullerTest"];
     ToyDB* db = [server databaseNamed: @"db"];

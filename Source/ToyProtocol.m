@@ -107,6 +107,7 @@ static ToyServer* sServer;
 #if DEBUG
 
 TestCase(ToyProtocol) {
+    RequireTestCase(ToyRouter);
     [ToyProtocol setServer: [ToyServer createEmptyAtPath: @"/tmp/ToyProtocolTest"]];
     
     NSURL* url = [NSURL URLWithString: @"toy:///"];

@@ -153,6 +153,7 @@ static ToyRev* mkrev(NSString* revID) {
 }
 
 TestCase(ToyPusher_ParseRevID) {
+    RequireTestCase(ToyDB);
     int num;
     NSString* suffix;
     CAssert(parseRevID(@"1-utiopturoewpt", &num, &suffix));

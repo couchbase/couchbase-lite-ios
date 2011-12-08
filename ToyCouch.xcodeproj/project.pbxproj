@@ -46,10 +46,10 @@
 		27821BBA148FF56D0099B373 /* ToyDB_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* ToyDB_Tests.m */; };
 		27821BBC149001B30099B373 /* ToyPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* ToyPuller_Tests.m */; };
 		27821BBE14906FB60099B373 /* ToyCouchPrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BBD14906FB50099B373 /* ToyCouchPrefix.h */; };
+		279EB2CB14913BBE00E74185 /* ToyRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* ToyRouter_Tests.m */; };
 		27C706421486BBD500F0F099 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
 		27C706451486BE7100F0F099 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		27C706481487584300F0F099 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
-		27C7064B1488311100F0F099 /* ToyRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* ToyRouter_Tests.m */; };
 		27C706621488625C00F0F099 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
 		27C706701488634300F0F099 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7066F1488634300F0F099 /* AppKit.framework */; };
 		27C706711488637A00F0F099 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
@@ -566,6 +566,7 @@
 				27821BB8148E7D6F0099B373 /* ToyReplicator.m in Sources */,
 				27821BBA148FF56D0099B373 /* ToyDB_Tests.m in Sources */,
 				27821BBC149001B30099B373 /* ToyPuller_Tests.m in Sources */,
+				279EB2CB14913BBE00E74185 /* ToyRouter_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -603,7 +604,6 @@
 				27C706421486BBD500F0F099 /* ToyServer.m in Sources */,
 				27C706451486BE7100F0F099 /* ToyRouter.m in Sources */,
 				27C706481487584300F0F099 /* ToyProtocol.m in Sources */,
-				27C7064B1488311100F0F099 /* ToyRouter_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

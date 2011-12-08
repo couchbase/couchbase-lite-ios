@@ -8,6 +8,7 @@
 
 #import "ToyRouter.h"
 #import "ToyDB.h"
+#import "ToyBody.h"
 #import "ToyServer.h"
 #import "CollectionUtils.h"
 #import "Test.h"
@@ -57,6 +58,7 @@ static id Send(ToyServer* server, NSString* method, NSString* path,
 
 
 TestCase(ToyRouter_Server) {
+    RequireTestCase(ToyServer);
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
     Send(server, @"GET", @"/", 200, $dict({@"ToyCouch", @"welcome"},
                                           {@"version", kToyVersionString}));
@@ -69,6 +71,7 @@ TestCase(ToyRouter_Server) {
 
 
 TestCase(ToyRouter_Databases) {
+    RequireTestCase(ToyRouter_Server);
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
     Send(server, @"PUT", @"/database", 201, nil);
     Send(server, @"GET", @"/database", 200,
@@ -84,6 +87,7 @@ TestCase(ToyRouter_Databases) {
 
 
 TestCase(ToyRouter_Docs) {
+    RequireTestCase(ToyRouter_Databases);
     // PUT:
     ToyServer* server = [ToyServer createEmptyAtPath: @"/tmp/ToyRouterTest"];
     Send(server, @"PUT", @"/db", 201, nil);
@@ -93,9 +97,9 @@ TestCase(ToyRouter_Docs) {
     CAssert([revID hasPrefix: @"1-"]);
 
     // PUT to update:
-    result = SendBody(server, @"PUT", $sprintf(@"/db/doc1?rev=%@", revID),
-                                    $dict({@"message", @"goodbye"}), 
-                                    201, nil);
+    result = SendBody(server, @"PUT", @"/db/doc1",
+                      $dict({@"message", @"goodbye"}, {@"_rev", revID}), 
+                      201, nil);
     Log(@"PUT returned %@", result);
     revID = [result objectForKey: @"rev"];
     CAssert([revID hasPrefix: @"2-"]);
@@ -135,13 +139,13 @@ TestCase(ToyRouter_Docs) {
     result = Send(server, @"GET", @"/db/_changes", 200,
                   $dict({@"last_seq", $object(5)},
                         {@"results", $array($dict({@"id", @"doc3"},
-                                                  {@"rev", revID3},
+                                                  {@"changes", $array($dict({@"rev", revID3}))},
                                                   {@"seq", $object(3)}),
                                             $dict({@"id", @"doc2"},
-                                                  {@"rev", revID2},
+                                                  {@"changes", $array($dict({@"rev", revID2}))},
                                                   {@"seq", $object(4)}),
                                             $dict({@"id", @"doc1"},
-                                                  {@"rev", revID},
+                                                  {@"changes", $array($dict({@"rev", revID}))},
                                                   {@"seq", $object(5)},
                                                   {@"deleted", $true}))}));
     
@@ -149,7 +153,7 @@ TestCase(ToyRouter_Docs) {
     result = Send(server, @"GET", @"/db/_changes?since=4", 200,
                   $dict({@"last_seq", $object(5)},
                         {@"results", $array($dict({@"id", @"doc1"},
-                                                  {@"rev", revID},
+                                                  {@"changes", $array($dict({@"rev", revID}))},
                                                   {@"seq", $object(5)},
                                                   {@"deleted", $true}))}));
     result = Send(server, @"GET", @"/db/_changes?since=5", 200,
@@ -215,7 +219,7 @@ TestCase(ToyRouter_ContinuousChanges) {
     __block NSMutableData* body = [NSMutableData data];
     __block BOOL finished = NO;
     
-    NSURL* url = [NSURL URLWithString: @"toy:///db/_changes?mode=continuous"];
+    NSURL* url = [NSURL URLWithString: @"toy:///db/_changes?feed=continuous"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
     ToyRouter* router = [[ToyRouter alloc] initWithServer: server request: request];
     router.onResponseReady = ^(ToyResponse* routerResponse) {
@@ -249,6 +253,15 @@ TestCase(ToyRouter_ContinuousChanges) {
     
     [router stop];
     [router release];
+}
+
+
+TestCase(ToyRouter) {
+    RequireTestCase(ToyRouter_Server);
+    RequireTestCase(ToyRouter_Databases);
+    RequireTestCase(ToyRouter_Docs);
+    RequireTestCase(ToyRouter_AllDocs);
+    RequireTestCase(ToyRouter_ContinuousChanges);
 }
 
 #endif
