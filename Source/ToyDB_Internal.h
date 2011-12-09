@@ -11,10 +11,13 @@
 
 @interface ToyDB (ViewInternals)
 
+- (int) getIDOfViewNamed: (NSString*)name;
 - (NSString*) versionOfView: (NSString*)viewName;
 - (ToyDBStatus) setVersion: (NSString*)version ofView: (NSString*)viewName;
 - (ToyDBStatus) deleteViewNamed: (NSString*)name;
 - (BOOL) reindexView: (ToyView*)view;
-- (NSArray*) dumpView: (NSString*)viewName;
+- (NSArray*) dumpView: (ToyView*)view;
+- (NSDictionary*) queryView: (ToyView*)view 
+                    options: (const ToyDBQueryOptions*)options;
 
 @end

@@ -20,6 +20,7 @@
     if (self) {
         _db = [db retain];
         _name = [name copy];
+        _viewID = -1;  // means 'unknown'
     }
     return self;
 }
@@ -35,6 +36,13 @@
 @synthesize database=_db, name=_name, mapBlock=_mapBlock;
 
 
+- (int) viewID {
+    if (_viewID < 0)
+        _viewID = [_db getIDOfViewNamed: _name];
+    return _viewID;
+}
+
+
 - (BOOL) setMapBlock: (ToyMapBlock)mapBlock version:(NSString *)version {
     Assert(mapBlock);
     Assert(version);
@@ -46,6 +54,7 @@
 
 - (void) deleteView {
     [_db deleteViewNamed: _name];
+    _viewID = 0;
 }
 
 
@@ -54,9 +63,16 @@
 }
 
 
+- (NSDictionary*) queryWithOptions: (ToyDBQueryOptions*)options {
+    return [_db queryView: self options: options];
+}
+
+
 @end
 
 
+
+#if DEBUG
 
 TestCase(ToyView_Create) {
     RequireTestCase(ToyDB);
@@ -95,19 +111,20 @@ static ToyRev* putDoc(ToyDB* db, NSDictionary* props) {
 TestCase(ToyView_Index) {
     RequireTestCase(ToyView_Create);
     ToyDB *db = [ToyDB createEmptyDBAtPath: @"/tmp/ToyDB_ViewTest.toydb"];
-    putDoc(db, $dict({@"key", @"one"}));
-    putDoc(db, $dict({@"key", @"two"}));
-    ToyRev* three = putDoc(db, $dict({@"key", @"three"}));
+    ToyRev* rev1 = putDoc(db, $dict({@"key", @"one"}));
+    ToyRev* rev2 = putDoc(db, $dict({@"key", @"two"}));
+    ToyRev* rev3 = putDoc(db, $dict({@"key", @"three"}));
     putDoc(db, $dict({@"clef", @"quatre"}));
     
     ToyView* view = [db viewNamed: @"aview"];
     [view setMapBlock: ^(NSDictionary* doc, ToyEmitBlock emit) { 
         emit([doc objectForKey: @"key"], nil);
     } version: @"1"];
+    CAssertEq(view.viewID, 1);
     
     CAssert([view reindex]);
     
-    NSArray* dump = [db dumpView: view.name];
+    NSArray* dump = [db dumpView: view];
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array(
                               $dict({@"key", @"\"one\""}, {@"seq", $object(1)}),
@@ -118,18 +135,18 @@ TestCase(ToyView_Index) {
     CAssert([view reindex]);
     
     // Now add a doc and update a doc:
-    ToyRev* threeUpdated = [[[ToyRev alloc] initWithDocID: three.docID revID: nil deleted:NO] autorelease];
+    ToyRev* threeUpdated = [[[ToyRev alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
     threeUpdated.properties = $dict({@"key", @"3hree"});
     int status;
-    [db putRevision: threeUpdated prevRevisionID: three.revID status: &status];
+    rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID status: &status];
     CAssert(status < 300);
 
-    putDoc(db, $dict({@"key", @"four"}));
+    ToyRev* rev4 = putDoc(db, $dict({@"key", @"four"}));
 
     // Reindex again:
     CAssert([view reindex]);
 
-    dump = [db dumpView: view.name];
+    dump = [db dumpView: view];
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array(
                               $dict({@"key", @"\"3hree\""}, {@"seq", $object(5)}),
@@ -138,5 +155,18 @@ TestCase(ToyView_Index) {
                               $dict({@"key", @"\"two\""}, {@"seq", $object(2)})
                               ));
     
+    // Now do a real query:
+    NSDictionary* query = [view queryWithOptions: NULL];
+    CAssertEqual([query objectForKey: @"rows"], $array(
+                               $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
+                               $dict({@"key", @"four"}, {@"id", rev4.docID}),
+                               $dict({@"key", @"one"}, {@"id", rev1.docID}),
+                               $dict({@"key", @"two"}, {@"id", rev2.docID})
+                               ));
+    CAssertEqual([query objectForKey: @"total_rows"], $object(4));
+    CAssertEqual([query objectForKey: @"offset"], $object(0));
+    
     [db close];
 }
+
+#endif

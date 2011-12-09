@@ -23,10 +23,9 @@ typedef void (^ToyMapBlock)(NSDictionary* doc, ToyEmitBlock emit);
     @private
     ToyDB* _db;
     NSString* _name;
+    int _viewID;
     ToyMapBlock _mapBlock;
 }
-
-- (id) initWithDatabase: (ToyDB*)db name: (NSString*)name;
 
 - (void) deleteView;
 
@@ -37,5 +36,9 @@ typedef void (^ToyMapBlock)(NSDictionary* doc, ToyEmitBlock emit);
 - (BOOL) setMapBlock: (ToyMapBlock)mapBlock version: (NSString*)version;
 
 - (BOOL) reindex;
+
+// internal:
+- (id) initWithDatabase: (ToyDB*)db name: (NSString*)name;
+@property (readonly) int viewID;
 
 @end

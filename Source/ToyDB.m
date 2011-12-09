@@ -531,7 +531,7 @@ exit:
 }
 
 
-- (NSString*) versionOfView: (NSString*)viewName {
+- (NSString*) getVersionOfViewNamed: (NSString*)viewName {
     FMResultSet* r = [_fmdb executeQuery: @"SELECT version FROM views WHERE name=?", viewName];
     if (![r next])
         return nil;
@@ -561,20 +561,30 @@ exit:
 }
 
 
-- (BOOL) getID: (int*)outID andLastSequence: (SequenceNumber*)outSequence
-                                ofViewNamed: (NSString*)name
+- (int) getIDOfViewNamed: (NSString*)name
 {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT view_id, lastSequence FROM views WHERE name=?",
-                                          name];
-    if (![r next]) {
-        [r close];
-        return NO;
-    }
-    *outID = [r intForColumnIndex: 0];
-    if (outSequence)
-        *outSequence = [r longLongIntForColumnIndex: 1];
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT view_id FROM views WHERE name=?", name];
+    if (!r)
+        return -1;
+    int viewID = 0;
+    if ([r next])
+        viewID = [r intForColumnIndex: 0];
     [r close];
-    return YES;
+    return viewID;
+}
+
+
+- (SequenceNumber) getLastSequenceOfViewNamed: (NSString*)name
+{
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT lastSequence FROM views WHERE name=?",
+                      name];
+    if (!r)
+        return -1;
+    SequenceNumber lastSequence = 0;
+    if ([r next])
+        lastSequence = [r longLongIntForColumnIndex: 0];
+    [r close];
+    return lastSequence;
 }
 
 
@@ -593,10 +603,23 @@ static NSData* toJSON( id object ) {
 }
 
 
+static id fromJSON( NSData* json ) {
+    if (!json)
+        return nil;
+    return [NSJSONSerialization JSONObjectWithData: json 
+                                           options: NSJSONReadingAllowFragments
+                                             error: nil];
+}
+
+
 - (BOOL) reindexView: (ToyView*)view {
     LogTo(View, @"Re-indexing view %@ ...", view.name);
     ToyMapBlock map = view.mapBlock;
     Assert(map, @"Cannot reindex view '%@' which has no map block set", view.name);
+    
+    int viewID = view.viewID;
+    if (viewID <= 0)
+        return NO;
     
     [self beginTransaction];
     BOOL ok = NO;
@@ -605,10 +628,8 @@ static NSData* toJSON( id object ) {
     __block BOOL emitFailed = NO;
     FMResultSet* r = nil;
     
-    // Look up the view's ID and the last revision sequence it mapped:
-    int viewID;
-    SequenceNumber lastSequence;
-    if (![self getID: &viewID andLastSequence: &lastSequence ofViewNamed: view.name])
+    SequenceNumber lastSequence = [self getLastSequenceOfViewNamed: view.name];
+    if (!lastSequence < 0)
         goto exit;
     sequence = lastSequence;
     
@@ -681,9 +702,9 @@ exit:
 }
 
 
-- (NSArray*) dumpView: (NSString*)viewName {
-    int viewID;
-    if (![self getID: &viewID andLastSequence: NULL ofViewNamed: viewName])
+- (NSArray*) dumpView: (ToyView*)view {
+    int viewID = view.viewID;
+    if (viewID <= 0)
         return nil;
 
     FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
@@ -709,6 +730,55 @@ exit:
 const ToyDBQueryOptions kDefaultToyDBQueryOptions = {
     nil, nil, 0, INT_MAX, NO, NO, NO
 };
+
+
+- (NSDictionary*) queryView: (ToyView*)view 
+                    options: (const ToyDBQueryOptions*)options {
+    if (!options)
+        options = &kDefaultToyDBQueryOptions;
+    
+    if (![self reindexView: view])
+        return nil;
+
+    SequenceNumber update_seq = 0;
+    if (options->updateSeq)
+        update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
+    
+    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docs.docid"];
+    if (options->includeDocs)
+        [sql appendString: @", docs.json"];
+    [sql appendString: @" FROM maps, docs "
+                        "WHERE maps.view_id=? AND docs.sequence = maps.sequence ORDER BY key"];
+    if (options->descending)
+        [sql appendString: @" DESC"];
+    [sql appendString: @" LIMIT ? OFFSET ?"];
+    
+    FMResultSet* r = [_fmdb executeQuery: sql, $object(view.viewID),
+                                               $object(options->limit), $object(options->skip)];
+    if (!r)
+        return nil;
+    
+    NSMutableArray* rows = $marray();
+    while ([r next]) {
+        NSData* key = fromJSON([r dataForColumnIndex: 0]);
+        NSData* value = fromJSON([r dataForColumnIndex: 1]);
+        NSString* docID = [r stringForColumnIndex: 2];
+        NSDictionary* docContents = nil;
+        if (options->includeDocs)
+            docContents = fromJSON([r dataForColumnIndex: 3]);
+        NSDictionary* change = $dict({@"id",  docID},
+                                     {@"key", key},
+                                     {@"value", value},
+                                     {@"doc", docContents});
+        [rows addObject: change];
+    }
+    [r close];
+    NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
+    return $dict({@"rows", $object(rows)},
+                 {@"total_rows", $object(totalRows)},
+                 {@"offset", $object(options->skip)},
+                 {@"update_seq", update_seq ? $object(update_seq) : nil});
+}
 
 
 - (NSDictionary*) getAllDocs: (const ToyDBQueryOptions*)options {
