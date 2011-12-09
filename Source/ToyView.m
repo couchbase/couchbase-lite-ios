@@ -108,7 +108,7 @@
 #pragma mark - INDEXING:
 
 
-static NSData* toJSON( id object ) {
+static NSString* toJSONString( id object ) {
     if (!object)
         return nil;
     // NSJSONSerialization won't write fragments, so if I get one wrap it in an array first:
@@ -120,7 +120,7 @@ static NSData* toJSON( id object ) {
     NSData* json = [NSJSONSerialization dataWithJSONObject: object options: 0 error: nil];
     if (wrapped)
         json = [json subdataWithRange: NSMakeRange(1, json.length - 2)];
-    return json;
+    return [json my_UTF8ToString];
 }
 
 
@@ -159,9 +159,9 @@ static id fromJSON( NSData* json ) {
     ToyEmitBlock emit = ^(id key, id value) {
         if (!key)
             return;
-        NSData* keyJSON = toJSON(key);
-        NSData* valueJSON = toJSON(value);
-        LogTo(View, @"    emit(%@, %@)", [keyJSON my_UTF8ToString], [valueJSON my_UTF8ToString]);
+        NSString* keyJSON = toJSONString(key);
+        NSString* valueJSON = toJSONString(value);
+        LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
         if (![fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
                                     "(?, ?, ?, ?)",
                                     $object(viewID), $object(sequence), keyJSON, valueJSON])

@@ -11,6 +11,7 @@
 #import "ToyDB_Internal.h"
 #import "ToyRev.h"
 #import "ToyView.h"
+#import "ToyCollate.h"
 
 #import "FMDatabase.h"
 
@@ -60,6 +61,9 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
     if (![_fmdb open])
         return NO;
     
+    // Register CouchDB-compatible JSON collation function:
+    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8, self, ToyCollate);
+    
     // ***** THIS IS THE SQL DATABASE SCHEMA! *****
     NSString *sql = @"\
         PRAGMA foreign_keys = ON; \
@@ -79,8 +83,8 @@ NSString* const ToyDBChangeNotification = @"ToyDBChange";
         CREATE TABLE IF NOT EXISTS maps ( \
             view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
             sequence INTEGER NOT NULL REFERENCES docs(sequence) ON DELETE CASCADE, \
-            key STRING NOT NULL, \
-            value STRING);";
+            key TEXT NOT NULL COLLATE JSON, \
+            value TEXT);";
     // Declaring docs.sequence as AUTOINCREMENT means the values will always be
     // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
     // TODO: 'docid' should be factored out into a separate table for efficiency.

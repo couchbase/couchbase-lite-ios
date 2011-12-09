@@ -31,7 +31,7 @@ typedef struct {
 extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 
 
-/** A ToyCouch database. Acts primarily as a container for named tables (CLCaches). */
+/** A ToyCouch database. */
 @interface ToyDB : NSObject
 {
     @private
