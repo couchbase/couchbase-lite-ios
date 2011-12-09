@@ -8,6 +8,7 @@
 
 #import "ToyRouter.h"
 #import "ToyDB.h"
+#import "ToyView.h"
 #import "ToyBody.h"
 #import "ToyRev.h"
 #import "ToyServer.h"

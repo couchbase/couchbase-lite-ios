@@ -10,6 +10,7 @@
 @class ToyDB;
 
 
+/** Manages a directory containing ToyDBs. */
 @interface ToyServer : NSObject
 {
     @private

@@ -3,7 +3,7 @@
  *  ToyCouch
  *
  *  Created by Jens Alfke on 6/19/10.
- *  Copyright 2010 Jens Alfke. All rights reserved.
+ *  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
  *
  */
 
@@ -509,7 +509,7 @@ exit:
 }
 
 
-#pragma mark - QUERIES:
+#pragma mark - VIEWS:
 
 
 - (ToyView*) viewNamed: (NSString*)name {
@@ -543,14 +543,6 @@ exit:
     [_views removeObjectForKey: name];
     return _fmdb.changes ? 200 : 404;
 }
-
-
-// http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
-
-
-const ToyDBQueryOptions kDefaultToyDBQueryOptions = {
-    nil, nil, 0, INT_MAX, NO, NO, NO
-};
 
 
 - (NSDictionary*) getAllDocs: (const ToyDBQueryOptions*)options {

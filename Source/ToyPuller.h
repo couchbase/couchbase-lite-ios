@@ -13,7 +13,7 @@
 @interface ToyPuller : ToyReplicator
 {
     @private
-    CouchChangeTracker* _changeTracker;
+    TDChangeTracker* _changeTracker;
 }
 
 @end

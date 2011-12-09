@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class ToyDB, CouchChangeTracker;
+@class ToyDB, TDChangeTracker;
 
 
 /** Abstract base class for push or pull replications. */

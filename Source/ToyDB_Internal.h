@@ -19,4 +19,5 @@
 @interface ToyView ()
 - (id) initWithDatabase: (ToyDB*)db name: (NSString*)name;
 @property (readonly) int viewID;
+- (NSArray*) dump;
 @end

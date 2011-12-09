@@ -18,6 +18,21 @@ typedef void (^ToyEmitBlock)(id key, id value);
 typedef void (^ToyMapBlock)(NSDictionary* doc, ToyEmitBlock emit);
 
 
+/** Standard query options for views. */
+typedef struct ToyDBQueryOptions {
+    NSString* startKey;
+    NSString* endKey;
+    int skip;
+    int limit;
+    BOOL descending;
+    BOOL includeDocs;
+    BOOL updateSeq;
+} ToyDBQueryOptions;
+
+extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
+
+
+/** Represents a view available in a database. */
 @interface ToyView : NSObject
 {
     @private
@@ -37,5 +52,7 @@ typedef void (^ToyMapBlock)(NSDictionary* doc, ToyEmitBlock emit);
 
 - (void) removeIndex;
 - (BOOL) updateIndex;
+
+- (NSDictionary*) queryWithOptions: (const ToyDBQueryOptions*)options;
 
 @end

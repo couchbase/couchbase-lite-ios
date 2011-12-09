@@ -9,13 +9,13 @@
 #import "ToyPuller.h"
 #import "ToyDB.h"
 #import "ToyRev.h"
+#import "TDChangeTracker.h"
 
 #import "CollectionUtils.h"
 #import "Test.h"
-#import <CouchCocoa/CouchChangeTracker.h>
 
 
-@interface ToyPuller () <CouchChangeTrackerClient>
+@interface ToyPuller () <TDChangeTrackerClient>
 - (BOOL) pullRemoteRevision: (ToyRev*)rev
                     history: (NSArray**)outHistory;
 @end
@@ -37,7 +37,7 @@
     Assert(!_changeTracker);
     [super start];
     LogTo(Sync, @"*** STARTING PULLER to <%@> from #%@", _remote, _lastSequence);
-    _changeTracker = [[CouchChangeTracker alloc]
+    _changeTracker = [[TDChangeTracker alloc]
                                    initWithDatabaseURL: _remote
                                                   mode: (_continuous ? kLongPoll :kOneShot)
                                           lastSequence: [_lastSequence intValue]
@@ -60,7 +60,7 @@
 }
 
 
-- (void) changeTrackerStopped:(CouchChangeTracker *)tracker {
+- (void) changeTrackerStopped:(TDChangeTracker *)tracker {
     LogTo(Sync, @"%@: ChangeTracker stopped", self);
     [_changeTracker release];
     _changeTracker = nil;

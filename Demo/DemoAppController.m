@@ -3,7 +3,7 @@
 //  CouchCocoa
 //
 //  Created by Jens Alfke on 6/1/11.
-//  Copyright 2011 Couchbase, Inc.
+//  Copyright (c) 2011 Couchbase, Inc, Inc.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -56,6 +56,7 @@ int main (int argc, const char * argv[]) {
     ToyServer* toyServer = [[ToyServer alloc] initWithDirectory: @"/tmp/ShoppingDemo" error: nil];
     NSAssert(toyServer, @"Couldn't create ToyServer");
     [ToyProtocol setServer: toyServer];
+    [toyServer release];
     NSURL* url = [NSURL URLWithString: @"toy:///"];
     CouchServer *server = [[CouchServer alloc] initWithURL: url];
 #endif

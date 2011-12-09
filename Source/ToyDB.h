@@ -3,32 +3,23 @@
  *  ToyCouch
  *
  *  Created by Jens Alfke on 6/19/10.
- *  Copyright 2010 Jens Alfke. All rights reserved.
+ *  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
  *
  */
 
 #import "ToyRev.h"
 @class FMDatabase, ToyRev, ToyRevList, ToyView;
 
+struct ToyDBQueryOptions;
+
 
 /** Same interpretation as HTTP status codes, esp. 200, 201, 404, 409, 500. */
 typedef int ToyDBStatus;
 
 
+/** NSNotification posted when a document is updated.
+    The userInfo key "rev" has a ToyRev* as its value. */
 extern NSString* const ToyDBChangeNotification;
-
-
-typedef struct {
-    NSString* startKey;
-    NSString* endKey;
-    int skip;
-    int limit;
-    BOOL descending;
-    BOOL includeDocs;
-    BOOL updateSeq;
-} ToyDBQueryOptions;
-
-extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
 
 
 /** A ToyCouch database. */
@@ -87,11 +78,11 @@ extern const ToyDBQueryOptions kDefaultToyDBQueryOptions;
             revisionHistory: (NSArray*)history;
 
 - (NSArray*) changesSinceSequence: (int)lastSequence
-                          options: (const ToyDBQueryOptions*)options;
+                          options: (const struct ToyDBQueryOptions*)options;
 
 // VIEWS & QUERIES:
 
-- (NSDictionary*) getAllDocs: (const ToyDBQueryOptions*)options;
+- (NSDictionary*) getAllDocs: (const struct ToyDBQueryOptions*)options;
 
 - (ToyView*) viewNamed: (NSString*)name;
 @property (readonly) NSArray* allViews;

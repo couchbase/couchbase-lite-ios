@@ -3,7 +3,7 @@
 //  ToyCouch
 //
 //  Created by Jens Alfke on 6/19/10.
-//  Copyright 2010 Jens Alfke. All rights reserved.
+//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
 #import "ToyBody.h"

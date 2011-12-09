@@ -10,7 +10,6 @@
 #import "ToyServer.h"
 #import "ToyDB.h"
 #import "Test.h"
-#import <CouchCocoa/CouchCocoa.h>
 
 
 #if DEBUG

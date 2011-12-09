@@ -159,7 +159,7 @@ int ToyCollate(void *context,
 }
 
 
-
+#if DEBUG
 TestCase(ToyCollateScalars) {
     CAssertEq(ToyCollate(NULL, 0, "true", 0, "false"), 1);
     CAssertEq(ToyCollate(NULL, 0, "false", 0, "true"), -1);
@@ -188,3 +188,4 @@ TestCase(ToyCollateNestedArrays) {
     CAssertEq(ToyCollate(NULL, 0, "[[]]", 0, "[]"), 1);
     CAssertEq(ToyCollate(NULL, 0, "[1,[2,3],4]", 0, "[1,[2,3.1],4,5,6]"), -1);
 }
+#endif

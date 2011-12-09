@@ -18,7 +18,6 @@
 		270B3E141489382F00E0A926 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		270B3E151489382F00E0A926 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
 		270B3E161489382F00E0A926 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
-		270B3E171489382F00E0A926 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0746D11CD51A200E9A2AB /* FMDatabaseAdditions.m */; };
 		270B3E181489382F00E0A926 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747211CD51A200E9A2AB /* FMResultSet.m */; };
 		270B3E191489382F00E0A926 /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
 		270B3E1A1489382F00E0A926 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
@@ -36,7 +35,6 @@
 		270B3E27148939C500E0A926 /* ToyCouch.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* ToyCouch.framework */; };
 		270B3E2B1489581E00E0A926 /* ToyPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* ToyPuller.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270B3E2C1489581E00E0A926 /* ToyPuller.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E2A1489581E00E0A926 /* ToyPuller.m */; };
-		270B3E361489660E00E0A926 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
 		270B3E3914898DF200E0A926 /* ToyRev.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* ToyRev.h */; };
 		270B3E3A14898DF200E0A926 /* ToyRev.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* ToyRev.m */; };
 		270B3E3E148D7F0000E0A926 /* ToyPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* ToyPusher.h */; };
@@ -52,6 +50,15 @@
 		279EB2D11491442500E74185 /* ToyDB_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D01491442500E74185 /* ToyDB_Internal.h */; };
 		279EB2DB1491C34300E74185 /* ToyCollate.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* ToyCollate.h */; };
 		279EB2DC1491C34300E74185 /* ToyCollate.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2DA1491C34300E74185 /* ToyCollate.m */; };
+		27B0B7801491E76200A817AD /* ToyView_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* ToyView_Tests.m */; };
+		27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B790149290AB00A817AD /* TDChangeTracker.h */; };
+		27B0B797149290AB00A817AD /* TDChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* TDChangeTracker.m */; };
+		27B0B798149290AB00A817AD /* TDConnectionChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B792149290AB00A817AD /* TDConnectionChangeTracker.h */; };
+		27B0B799149290AB00A817AD /* TDConnectionChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */; };
+		27B0B79A149290AB00A817AD /* TDSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */; };
+		27B0B79B149290AB00A817AD /* TDSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */; };
+		27B0B79E1492932800A817AD /* TDBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B79C1492932700A817AD /* TDBase64.h */; };
+		27B0B79F1492932800A817AD /* TDBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* TDBase64.m */; };
 		27C706421486BBD500F0F099 /* ToyServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* ToyServer.m */; };
 		27C706451486BE7100F0F099 /* ToyRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* ToyRouter.m */; };
 		27C706481487584300F0F099 /* ToyProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* ToyProtocol.m */; };
@@ -68,7 +75,6 @@
 		27F0744811CD4B6D00E9A2AB /* ToyDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* ToyDB.m */; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
-		27F0747511CD51A200E9A2AB /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0746D11CD51A200E9A2AB /* FMDatabaseAdditions.m */; };
 		27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
 		27F0747711CD51A200E9A2AB /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747211CD51A200E9A2AB /* FMResultSet.m */; };
 		27F0749F11CD5B4F00E9A2AB /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
@@ -140,6 +146,15 @@
 		279EB2D01491442500E74185 /* ToyDB_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyDB_Internal.h; sourceTree = "<group>"; };
 		279EB2D91491C34300E74185 /* ToyCollate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyCollate.h; sourceTree = "<group>"; };
 		279EB2DA1491C34300E74185 /* ToyCollate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyCollate.m; sourceTree = "<group>"; };
+		27B0B77F1491E73400A817AD /* ToyView_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToyView_Tests.m; sourceTree = "<group>"; };
+		27B0B790149290AB00A817AD /* TDChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDChangeTracker.h; sourceTree = "<group>"; };
+		27B0B791149290AB00A817AD /* TDChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDChangeTracker.m; sourceTree = "<group>"; };
+		27B0B792149290AB00A817AD /* TDConnectionChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDConnectionChangeTracker.h; sourceTree = "<group>"; };
+		27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDConnectionChangeTracker.m; sourceTree = "<group>"; };
+		27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDSocketChangeTracker.h; sourceTree = "<group>"; };
+		27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDSocketChangeTracker.m; sourceTree = "<group>"; };
+		27B0B79C1492932700A817AD /* TDBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBase64.h; sourceTree = "<group>"; };
+		27B0B79D1492932700A817AD /* TDBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBase64.m; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* ToyServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyServer.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* ToyServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyServer.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* ToyRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToyRouter.h; sourceTree = "<group>"; };
@@ -166,8 +181,6 @@
 		27F0744711CD4B6D00E9A2AB /* ToyDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToyDB.m; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		27F0745C11CD50A600E9A2AB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		27F0746D11CD51A200E9A2AB /* FMDatabaseAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseAdditions.m; sourceTree = "<group>"; };
-		27F0746E11CD51A200E9A2AB /* FMDatabaseAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseAdditions.h; sourceTree = "<group>"; };
 		27F0746F11CD51A200E9A2AB /* FMDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabase.h; sourceTree = "<group>"; };
 		27F0747011CD51A200E9A2AB /* FMDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabase.m; sourceTree = "<group>"; };
 		27F0747111CD51A200E9A2AB /* FMResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMResultSet.h; sourceTree = "<group>"; };
@@ -195,7 +208,6 @@
 			files = (
 				270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */,
 				270B3E1D1489384700E0A926 /* libsqlite3.dylib in Frameworks */,
-				270B3E361489660E00E0A926 /* CouchCocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -310,6 +322,7 @@
 				270B3E2A1489581E00E0A926 /* ToyPuller.m */,
 				270B3E3C148D7F0000E0A926 /* ToyPusher.h */,
 				270B3E3D148D7F0000E0A926 /* ToyPusher.m */,
+				27B0B78F149290AB00A817AD /* ChangeTracker */,
 			);
 			name = Replicator;
 			sourceTree = "<group>";
@@ -330,6 +343,7 @@
 			children = (
 				279EB2D01491442500E74185 /* ToyDB_Internal.h */,
 				27821BB9148FF56C0099B373 /* ToyDB_Tests.m */,
+				27B0B77F1491E73400A817AD /* ToyView_Tests.m */,
 				27C7064A1488311100F0F099 /* ToyRouter_Tests.m */,
 				27821BBB149001B20099B373 /* ToyPuller_Tests.m */,
 				270B3DEE1489359000E0A926 /* ToyCouch-Info.plist */,
@@ -338,6 +352,21 @@
 				27821BBF149078C70099B373 /* ToyCouch.exp */,
 			);
 			name = Support;
+			sourceTree = "<group>";
+		};
+		27B0B78F149290AB00A817AD /* ChangeTracker */ = {
+			isa = PBXGroup;
+			children = (
+				27B0B790149290AB00A817AD /* TDChangeTracker.h */,
+				27B0B791149290AB00A817AD /* TDChangeTracker.m */,
+				27B0B792149290AB00A817AD /* TDConnectionChangeTracker.h */,
+				27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */,
+				27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */,
+				27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */,
+				27B0B79C1492932700A817AD /* TDBase64.h */,
+				27B0B79D1492932700A817AD /* TDBase64.m */,
+			);
+			path = ChangeTracker;
 			sourceTree = "<group>";
 		};
 		27C70696148864BA00F0F099 /* Frameworks */ = {
@@ -384,8 +413,6 @@
 			children = (
 				27F0746F11CD51A200E9A2AB /* FMDatabase.h */,
 				27F0747011CD51A200E9A2AB /* FMDatabase.m */,
-				27F0746E11CD51A200E9A2AB /* FMDatabaseAdditions.h */,
-				27F0746D11CD51A200E9A2AB /* FMDatabaseAdditions.m */,
 				27F0747111CD51A200E9A2AB /* FMResultSet.h */,
 				27F0747211CD51A200E9A2AB /* FMResultSet.m */,
 			);
@@ -409,7 +436,8 @@
 				27F0749E11CD5B4F00E9A2AB /* Test.m */,
 			);
 			name = MYUtilities;
-			sourceTree = MYUtilities;
+			path = vendor/MYUtilities;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -432,6 +460,10 @@
 				279EB2CE149140DE00E74185 /* ToyView.h in Headers */,
 				279EB2D11491442500E74185 /* ToyDB_Internal.h in Headers */,
 				279EB2DB1491C34300E74185 /* ToyCollate.h in Headers */,
+				27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */,
+				27B0B798149290AB00A817AD /* TDConnectionChangeTracker.h in Headers */,
+				27B0B79A149290AB00A817AD /* TDSocketChangeTracker.h in Headers */,
+				27B0B79E1492932800A817AD /* TDBase64.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -591,7 +623,6 @@
 				270B3E141489382F00E0A926 /* ToyRouter.m in Sources */,
 				270B3E151489382F00E0A926 /* ToyProtocol.m in Sources */,
 				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
-				270B3E171489382F00E0A926 /* FMDatabaseAdditions.m in Sources */,
 				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
 				270B3E191489382F00E0A926 /* ExceptionUtils.m in Sources */,
 				270B3E1A1489382F00E0A926 /* Logging.m in Sources */,
@@ -606,6 +637,11 @@
 				279EB2CB14913BBE00E74185 /* ToyRouter_Tests.m in Sources */,
 				279EB2CF149140DE00E74185 /* ToyView.m in Sources */,
 				279EB2DC1491C34300E74185 /* ToyCollate.m in Sources */,
+				27B0B7801491E76200A817AD /* ToyView_Tests.m in Sources */,
+				27B0B797149290AB00A817AD /* TDChangeTracker.m in Sources */,
+				27B0B799149290AB00A817AD /* TDConnectionChangeTracker.m in Sources */,
+				27B0B79B149290AB00A817AD /* TDSocketChangeTracker.m in Sources */,
+				27B0B79F1492932800A817AD /* TDBase64.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -632,7 +668,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				27F0744811CD4B6D00E9A2AB /* ToyDB.m in Sources */,
-				27F0747511CD51A200E9A2AB /* FMDatabaseAdditions.m in Sources */,
 				27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */,
 				27F0747711CD51A200E9A2AB /* FMResultSet.m in Sources */,
 				27F0749F11CD5B4F00E9A2AB /* CollectionUtils.m in Sources */,
@@ -734,10 +769,6 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
-				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -763,10 +794,6 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = Source/ToyCouch.exp;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
-				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;

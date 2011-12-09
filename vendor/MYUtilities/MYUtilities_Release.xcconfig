@@ -1,0 +1,17 @@
+//
+//  MYUtilities_Release.xcconfig
+//  MYUtilities
+//
+//  Created by Jens Alfke on 6/27/08.
+//  Copyright 2008-2009 Jens Alfke. All rights reserved.
+//
+
+#include "MYUtilities.xcconfig"
+
+
+GCC_OPTIMIZATION_LEVEL = s
+
+DEAD_CODE_STRIPPING = YES
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+
+GCC_WARN_UNINITIALIZED_AUTOS = YES
