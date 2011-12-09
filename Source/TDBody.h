@@ -6,7 +6,7 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 
 /** A request/response/document body, stored as either JSON or an NSDictionary. */
