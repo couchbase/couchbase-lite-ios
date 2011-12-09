@@ -35,10 +35,7 @@ typedef void (^ToyMapBlock)(NSDictionary* doc, ToyEmitBlock emit);
 @property (readonly) ToyMapBlock mapBlock;
 - (BOOL) setMapBlock: (ToyMapBlock)mapBlock version: (NSString*)version;
 
-- (BOOL) reindex;
-
-// internal:
-- (id) initWithDatabase: (ToyDB*)db name: (NSString*)name;
-@property (readonly) int viewID;
+- (void) removeIndex;
+- (BOOL) updateIndex;
 
 @end

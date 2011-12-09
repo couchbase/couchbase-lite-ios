@@ -7,17 +7,16 @@
 //
 
 #import "ToyDB.h"
+#import "ToyView.h"
 
 
-@interface ToyDB (ViewInternals)
-
-- (int) getIDOfViewNamed: (NSString*)name;
-- (NSString*) versionOfView: (NSString*)viewName;
-- (ToyDBStatus) setVersion: (NSString*)version ofView: (NSString*)viewName;
+@interface ToyDB ()
+@property (readonly) FMDatabase* fmdb;
 - (ToyDBStatus) deleteViewNamed: (NSString*)name;
-- (BOOL) reindexView: (ToyView*)view;
-- (NSArray*) dumpView: (ToyView*)view;
-- (NSDictionary*) queryView: (ToyView*)view 
-                    options: (const ToyDBQueryOptions*)options;
+@end
 
+
+@interface ToyView ()
+- (id) initWithDatabase: (ToyDB*)db name: (NSString*)name;
+@property (readonly) int viewID;
 @end
