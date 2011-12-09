@@ -1,4 +1,4 @@
-# ToyCouch #
+# TouchDB #
 
 by Jens Alfke (jens@couchbase.com)
 

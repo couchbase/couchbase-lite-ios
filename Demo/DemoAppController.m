@@ -16,11 +16,11 @@
 #import "DemoAppController.h"
 #import "DemoQuery.h"
 #import "Test.h"
-#import "ToyDB.h"
-#import "ToyServer.h"
-#import "ToyProtocol.h"
-#import "ToyPuller.h"
-#import "ToyPusher.h"
+#import "TDDatabase.h"
+#import "TDServer.h"
+#import "TDURLProtocol.h"
+#import "TDPuller.h"
+#import "TDPusher.h"
 #import <CouchCocoa/CouchCocoa.h>
 
 
@@ -53,11 +53,11 @@ int main (int argc, const char * argv[]) {
 #if 0
     CouchServer *server = [[CouchServer alloc] init];
 #else
-    ToyServer* toyServer = [[ToyServer alloc] initWithDirectory: @"/tmp/ShoppingDemo" error: nil];
-    NSAssert(toyServer, @"Couldn't create ToyServer");
-    [ToyProtocol setServer: toyServer];
-    [toyServer release];
-    NSURL* url = [NSURL URLWithString: @"toy:///"];
+    TDServer* tdServer = [[TDServer alloc] initWithDirectory: @"/tmp/ShoppingDemo" error: nil];
+    NSAssert(tdServer, @"Couldn't create TDServer");
+    [TDURLProtocol setServer: tdServer];
+    [tdServer release];
+    NSURL* url = [NSURL URLWithString: @"touchdb:///"];
     CouchServer *server = [[CouchServer alloc] initWithURL: url];
 #endif
     _database = [[server databaseNamed: dbName] retain];
@@ -82,9 +82,9 @@ int main (int argc, const char * argv[]) {
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
 #if 1
-    ToyDB* db = [[ToyProtocol server] databaseNamed: _database.relativePath];
-    _puller = [[ToyPuller alloc] initWithDB: db remote: otherDbURL continuous: NO];
-    _pusher = [[ToyPusher alloc] initWithDB: db remote: otherDbURL continuous: NO];
+    TDDatabase* db = [[TDURLProtocol server] databaseNamed: _database.relativePath];
+    _puller = [[TDPuller alloc] initWithDB: db remote: otherDbURL continuous: NO];
+    _pusher = [[TDPusher alloc] initWithDB: db remote: otherDbURL continuous: NO];
 #else
     _pull = [[_database pullFromDatabaseAtURL: otherDbURL
                                       options: kCouchReplicationContinuous] retain];

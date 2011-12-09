@@ -1,14 +1,14 @@
 //
-//  ToyCouchTests.m
-//  ToyCouchTests
+//  TouchDBTests.m
+//  TouchDBTests
 //
 //  Created by Jens Alfke on 12/2/11.
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "ToyCouchTests.h"
+#import "TouchDBTests.h"
 
-@implementation ToyCouchTests
+@implementation TouchDBTests
 
 - (void)setUp
 {
@@ -26,7 +26,7 @@
 
 - (void)testExample
 {
-    STFail(@"Unit tests are not implemented yet in ToyCouchTests");
+    STFail(@"Unit tests are not implemented yet in TouchDBTests");
 }
 
 @end

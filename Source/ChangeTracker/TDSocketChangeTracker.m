@@ -1,6 +1,6 @@
 //
 //  TDSocketChangeTracker.m
-//  ToyDB
+//  TouchDB
 //
 //  Created by Jens Alfke on 12/2/11.
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
@@ -135,7 +135,7 @@ enum {
                     [self stop];
                     return NO;
                 }
-                if (_inputBuffer.length < lineLength + 2 + chunkLength)
+                if (_inputBuffer.length < (size_t)lineLength + 2 + chunkLength)
                     return NO;     // Don't read the chunk till it's complete
                 
                 NSData* chunk = [_inputBuffer subdataWithRange: NSMakeRange(lineLength + 2,

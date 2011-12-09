@@ -1,0 +1,15 @@
+# Symbols exported by the framework
+.objc_class_name_TDDatabase
+.objc_class_name_TDView
+.objc_class_name_TDBody
+.objc_class_name_TDRev
+.objc_class_name_TDRevList
+
+.objc_class_name_TDReplicator
+.objc_class_name_TDPusher
+.objc_class_name_TDPuller
+
+.objc_class_name_TDURLProtocol
+.objc_class_name_TDServer
+
+_TDDatabaseChangeNotification

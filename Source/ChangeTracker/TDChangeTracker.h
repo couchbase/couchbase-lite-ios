@@ -1,6 +1,6 @@
 //
 //  TDChangeTracker.h
-//  ToyDB
+//  TouchDB
 //
 //  Created by Jens Alfke on 6/20/11.
 //  Copyright 2011 Couchbase, Inc.
