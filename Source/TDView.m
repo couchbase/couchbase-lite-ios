@@ -182,7 +182,7 @@ static id fromJSON( NSData* json ) {
 
     
     // Now scan every revision added since the last time the view was indexed:
-    r = [fmdb executeQuery: @"SELECT sequence, parent, current, deleted, json FROM docs "
+    r = [fmdb executeQuery: @"SELECT sequence, parent, current, deleted, json FROM revs "
                              "WHERE sequence>?",
                              $object(lastSequence)];
     if (!r)
@@ -252,11 +252,13 @@ exit:
     if (options->updateSeq)
         update_seq = self.lastSequenceIndexed; // TODO: needs to be atomic with the following SELECT
     
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docs.docid"];
+    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid"];
     if (options->includeDocs)
-        [sql appendString: @", docs.json"];
-    [sql appendString: @" FROM maps, docs "
-                        "WHERE maps.view_id=? AND docs.sequence = maps.sequence ORDER BY key"];
+        [sql appendString: @", json"];
+    [sql appendString: @" FROM maps, revs, docs "
+                        "WHERE maps.view_id=? AND revs.sequence = maps.sequence "
+                        "AND docs.doc_id = revs.doc_id "
+                        "ORDER BY key"];
     if (options->descending)
         [sql appendString: @" DESC"];
     [sql appendString: @" LIMIT ? OFFSET ?"];

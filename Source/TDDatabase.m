@@ -20,6 +20,11 @@
 NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
+@interface TDDatabase ()
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID numericID: (SInt64)docNumericID;
+@end
+
+
 @implementation TDDatabase
 
 
@@ -75,10 +80,13 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     NSString *sql = @"\
         PRAGMA foreign_keys = ON; \
         CREATE TABLE IF NOT EXISTS docs ( \
+            doc_id INTEGER PRIMARY KEY, \
+            docid TEXT UNIQUE NOT NULL); \
+        CREATE TABLE IF NOT EXISTS revs ( \
             sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
-            docid TEXT NOT NULL, \
+            doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE, \
             revid TEXT NOT NULL, \
-            parent INTEGER REFERENCES docs(sequence) ON DELETE SET NULL, \
+            parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL, \
             current BOOLEAN, \
             deleted BOOLEAN DEFAULT 0, \
             json BLOB); \
@@ -89,16 +97,15 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             lastsequence INTEGER DEFAULT 0); \
         CREATE TABLE IF NOT EXISTS maps ( \
             view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
-            sequence INTEGER NOT NULL REFERENCES docs(sequence) ON DELETE CASCADE, \
+            sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
             key TEXT NOT NULL COLLATE JSON, \
             value TEXT); \
         CREATE TABLE IF NOT EXISTS attachments ( \
-            sequence INTEGER NOT NULL REFERENCES docs(sequence), \
+            sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
             filename TEXT NOT NULL, \
             key BLOB NOT NULL);";
-    // Declaring docs.sequence as AUTOINCREMENT means the values will always be
+    // Declaring revs.sequence as AUTOINCREMENT means the values will always be
     // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
-    // TODO: 'docid' should be factored out into a separate table for efficiency.
     for (NSString* statement in [sql componentsSeparatedByString: @";"]) {
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             [self close];
@@ -201,9 +208,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     TDRevision* result = nil;
     NSString* sql;
     if (revID)
-        sql = @"SELECT revid, deleted, json FROM docs WHERE docid=? and revid=? LIMIT 1";
+        sql = @"SELECT revid, deleted, json FROM revs, docs "
+               "WHERE docs.docid=? AND revs.doc_id=docs.doc_id AND revid=? LIMIT 1";
     else
-        sql = @"SELECT revid, deleted, json FROM docs WHERE docid=? and current=1 and deleted=0 "
+        sql = @"SELECT revid, deleted, json FROM revs, docs "
+               "WHERE docs.docid=? AND revs.doc_id=docs.doc_id and current=1 and deleted=0 "
                "ORDER BY revid DESC LIMIT 1";
     FMResultSet *r = [_fmdb executeQuery: sql, docID, revID];
     if ([r next]) {
@@ -224,16 +233,17 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     if (rev.body)
         return 200;
     Assert(rev.docID && rev.revID);
-    FMResultSet *r = [_fmdb executeQuery: @"SELECT json FROM docs "
-                                           "WHERE docid=? AND revid=? LIMIT 1",
-                                          rev.docID, rev.revID];
+    FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs, docs "
+                            "WHERE revid=? AND docs.docid=? AND revs.doc_id=docs.doc_id LIMIT 1",
+                            rev.revID, rev.docID];
     if (!r)
         return 500;
     TDStatus status = 404;
     if ([r next]) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
         status = 200;
-        NSData* json = [r dataForColumnIndex: 0];
+        rev.sequence = [r longLongIntForColumnIndex: 0];
+        NSData* json = [r dataForColumnIndex: 1];
         if (json)
             rev.asJSON = json;
     }
@@ -245,7 +255,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 - (TDStatus) compact {
     // Can't delete any rows because that would lose revision tree history.
     // But we can remove the JSON of non-current revisions, which is most of the space.
-    return [_fmdb executeUpdate: @"UPDATE docs SET json=null WHERE current=0"] ? 200 : 500;
+    return [_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"] ? 200 : 500;
 }
 
 
@@ -260,7 +270,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 - (NSUInteger) documentCount {
     NSUInteger result = NSNotFound;
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT COUNT(DISTINCT docid) FROM docs "
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT COUNT(DISTINCT doc_id) FROM revs "
                                            "WHERE current=1 AND deleted=0"];
     if ([r next]) {
         result = [r intForColumnIndex: 0];
@@ -271,7 +281,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
 - (SequenceNumber) lastSequence {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence FROM docs ORDER BY sequence DESC LIMIT 1"];
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence FROM revs ORDER BY sequence DESC LIMIT 1"];
     if (!r)
         return NSNotFound;
     SequenceNumber result = 0;
@@ -317,15 +327,39 @@ static NSString* createUUID() {
 }
 
 
+- (SInt64) insertDocumentID: (NSString*)docID {
+    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
+        return -1;
+    return _fmdb.lastInsertRowId;
+}
+
+- (SInt64) getDocNumericID: (NSString*)docID {
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
+    if (!r)
+        return -1;
+    SInt64 result = [r next] ? [r longLongIntForColumnIndex: 0] : 0;
+    [r close];
+    return result;
+}
+
+- (SInt64) getOrInsertDocNumericID: (NSString*)docID {
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID == 0)
+        docNumericID = [self insertDocumentID: docID];
+    return docNumericID;
+}
+
+
 // Raw row insertion. Returns new sequence, or 0 on error
 - (SequenceNumber) insertRevision: (TDRevision*)rev
+                     docNumericID: (SInt64)docNumericID
                    parentSequence: (SequenceNumber)parentSequence
                           current: (BOOL)current
                              JSON: (NSData*)json
 {
-    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid, revid, parent, current, deleted, json) "
+    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
                                 "VALUES (?, ?, ?, ?, ?, ?)",
-                               rev.docID,
+                               $object(docNumericID),
                                rev.revID,
                                (parentSequence ? $object(parentSequence) : nil ),
                                $object(current),
@@ -337,12 +371,13 @@ static NSString* createUUID() {
 
 
 - (TDRevision*) putRevision: (TDRevision*)rev
-         prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
-                 status: (TDStatus*)outStatus
+             prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
+                     status: (TDStatus*)outStatus
 {
     Assert(!rev.revID);
     Assert(outStatus);
     NSString* docID = rev.docID;
+    SInt64 docNumericID;
     BOOL deleted = rev.deleted;
     if (!rev || (prevRevID && !docID) || (deleted && !prevRevID)) {
         *outStatus = 400;
@@ -355,9 +390,12 @@ static NSString* createUUID() {
     SequenceNumber parentSequence = 0;
     if (prevRevID) {
         // Replacing: make sure given prevRevID is current & find its sequence number:
-        r = [_fmdb executeQuery: @"SELECT sequence FROM docs "
-                                  "WHERE docid=? AND revid=? and current=1",
-                                 docID, prevRevID];
+        docNumericID = [self getOrInsertDocNumericID: docID];
+        if (docNumericID <= 0)
+            goto exit;
+        r = [_fmdb executeQuery: @"SELECT sequence FROM revs "
+                                  "WHERE doc_id=? AND revid=? and current=1",
+                                 $object(docNumericID), prevRevID];
         if (!r)
             goto exit;
         if (![r next]) {
@@ -370,22 +408,24 @@ static NSString* createUUID() {
         r = nil;
         
         // Make replaced rev non-current:
-        if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 WHERE sequence=?",
+        if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                                    $object(parentSequence)])
             goto exit;
-    } else {
-        // Inserting: make sure docID doesn't exist, or exists but is currently deleted
-        if (!docID)
-            docID = [self generateDocumentID];
-        r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM docs "
-                                  "WHERE docid=? and current=1 ORDER BY revid DESC LIMIT 1",
-                                 docID];
+    } else if (docID) {
+        // Inserting first revision, with docID given: make sure docID doesn't exist,
+        // or exists but is currently deleted
+        docNumericID = [self getOrInsertDocNumericID: docID];
+        if (docNumericID <= 0)
+            goto exit;
+        r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
+                                  "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
+                                 $object(docNumericID)];
         if (!r)
             goto exit;
         if ([r next]) {
             if ([r boolForColumnIndex: 1]) {
                 // Make the deleted revision no longer current:
-                if (![_fmdb executeUpdate: @"UPDATE docs SET current=0 WHERE sequence=?",
+                if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                                            $object([r longLongIntForColumnIndex: 0])])
                     goto exit;
             } else {
@@ -395,6 +435,12 @@ static NSString* createUUID() {
         }
         [r close];
         r = nil;
+    } else {
+        // Inserting first revision, with no docID given: generate a unique docID:
+        docID = [self generateDocumentID];
+        docNumericID = [self insertDocumentID: docID];
+        if (docNumericID <= 0)
+            goto exit;
     }
     
     // Bump the revID and update the JSON:
@@ -413,9 +459,9 @@ static NSString* createUUID() {
         NSAssert(json!=nil, @"Couldn't serialize document");
     }
     
-    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid, revid, parent, current, deleted, json) "
+    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
                                 "VALUES (?, ?, ?, 1, ?, ?)",
-                               docID,
+                               $object(docNumericID),
                                newRevID,
                                (parentSequence ? $object(parentSequence) : nil),
                                $object(deleted),
@@ -448,7 +494,8 @@ exit:
 - (TDStatus) forceInsert: (TDRevision*)rev revisionHistory: (NSArray*)history {
     // First look up all locally-known revisions of this document:
     NSString* docID = rev.docID;
-    TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID];
+    SInt64 docNumericID = [self getOrInsertDocNumericID: docID];
+    TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID numericID: docNumericID];
     if (!localRevs)
         return 500;
     
@@ -485,6 +532,7 @@ exit:
 
             // Insert it:
             parentSequence = [self insertRevision: newRev
+                                     docNumericID: docNumericID
                                    parentSequence: parentSequence
                                           current: current 
                                              JSON: json];
@@ -509,8 +557,9 @@ exit:
 {
     if (!options) options = &kDefaultTDQueryOptions;
 
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, docid, revid, deleted FROM docs "
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, docid, revid, deleted FROM revs, docs "
                                            "WHERE sequence > ? AND current=1 "
+                                           "AND revs.doc_id = docs.doc_id "
                                            "ORDER BY sequence LIMIT ?",
                                           $object(lastSequence), $object(options->limit)];
     if (!r)
@@ -573,8 +622,9 @@ exit:
     if (options->updateSeq)
         update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
     
-    NSString* sql = $sprintf(@"SELECT docid, revid %@ FROM docs "
+    NSString* sql = $sprintf(@"SELECT docid, revid %@ FROM revs, docs "
                               "WHERE current=1 AND deleted=0 "
+                              "AND docs.doc_id = revs.doc_id "
                               "ORDER BY docid %@ LIMIT ? OFFSET ?",
                              (options->includeDocs ? @", json" : @""),
                              (options->descending ? @"DESC" : @"ASC"));
@@ -661,7 +711,7 @@ exit:
 - (NSInteger) garbageCollectAttachments {
     // First delete attachment rows for already-cleared revisions:
     [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
-                            "(SELECT sequence from docs WHERE json IS null)"];
+                            "(SELECT sequence from revs WHERE json IS null)"];
     
     // Now compile all remaining attachment IDs and tell the store to delete all but these:
     FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
@@ -702,9 +752,12 @@ static NSString* joinQuoted(NSArray* strings) {
 - (BOOL) findMissingRevisions: (TDRevisionList*)revs {
     if (revs.count == 0)
         return YES;
-    NSString* sql = $sprintf(@"SELECT docid, revid FROM docs "
-                              "WHERE docid IN (%@) AND revid in (%@)",
+    NSString* sql = $sprintf(@"SELECT docid, revid FROM revs, docs "
+                              "WHERE revid in (%@) AND docid IN (%@) "
+                              "AND revs.doc_id == docs.doc_id",
                              joinQuoted(revs.allDocIDs), joinQuoted(revs.allRevIDs));
+    // ?? Not sure sqlite will optimize this fully. May need a first query that looks up all
+    // the numeric doc_ids from the docids.
     FMResultSet* r = [_fmdb executeQuery: sql];
     if (!r)
         return NO;
@@ -719,10 +772,12 @@ static NSString* joinQuoted(NSArray* strings) {
 }
 
 
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, revid, deleted FROM docs "
-                                           "WHERE docid=? ORDER BY sequence DESC",
-                                          docID];
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                      numericID: (SInt64)docNumericID
+{
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, revid, deleted FROM revs "
+                                           "WHERE doc_id=? ORDER BY sequence DESC",
+                                          $object(docNumericID)];
     if (!r)
         return nil;
     TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
@@ -738,14 +793,31 @@ static NSString* joinQuoted(NSArray* strings) {
     return revs;
 }
 
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID {
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID < 0)
+        return nil;
+    else if (docNumericID == 0)
+        return [[[TDRevisionList alloc] init] autorelease];  // no such document
+    else
+        return [self getAllRevisionsOfDocumentID: docID numericID: docNumericID];
+}
+    
 
 - (NSArray*) getRevisionHistory: (TDRevision*)rev {
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     Assert(revID && docID);
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted FROM docs "
-                                           "WHERE docid=? ORDER BY sequence DESC",
-                                          rev.docID];
+
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID < 0)
+        return nil;
+    else if (docNumericID == 0)
+        return $array();
+    
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted FROM revs "
+                                           "WHERE doc_id=? ORDER BY sequence DESC",
+                                          $object(docNumericID)];
     if (!r)
         return nil;
     SequenceNumber lastSequence = 0;
