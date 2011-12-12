@@ -51,8 +51,9 @@ extern const TDQueryOptions kDefaultTDQueryOptions;
 - (BOOL) setMapBlock: (TDMapBlock)mapBlock version: (NSString*)version;
 
 - (void) removeIndex;
-- (BOOL) updateIndex;
+- (TDStatus) updateIndex;
 
-- (NSDictionary*) queryWithOptions: (const TDQueryOptions*)options;
+- (NSDictionary*) queryWithOptions: (const TDQueryOptions*)options
+                            status: (TDStatus*)outStatus;
 
 @end

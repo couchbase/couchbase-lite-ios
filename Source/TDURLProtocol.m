@@ -1,5 +1,5 @@
 //
-//  TDProtocol.m
+//  TDURLProtocol.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 11/30/11.

@@ -138,23 +138,23 @@ static id fromJSON( NSData* json ) {
 }
 
 
-- (BOOL) updateIndex {
+- (TDStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
     Assert(_mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
     
     int viewID = self.viewID;
     if (viewID <= 0)
-        return NO;
+        return 404;
     
     [_db beginTransaction];
-    BOOL ok = NO;
+    TDStatus status = 500;
     
     __block SequenceNumber sequence = 0;
     __block BOOL emitFailed = NO;
     FMDatabase* fmdb = _db.fmdb;
     FMResultSet* r = nil;
     
-    SequenceNumber lastSequence = self.lastSequenceIndexed;
+    const SequenceNumber lastSequence = self.lastSequenceIndexed;
     if (!lastSequence < 0)
         goto exit;
     sequence = lastSequence;
@@ -220,32 +220,37 @@ static id fromJSON( NSData* json ) {
     r = nil;
     
     // Finally, record the last revision sequence number that was indexed:
-    if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
-                               $object(sequence), $object(viewID)])
-        goto exit;
-        
+    if (sequence > lastSequence) {
+        if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
+                                   $object(sequence), $object(viewID)])
+            goto exit;
+    }
+    
     LogTo(View, @"...Finished re-indexing view %@ up to sequence %lld", _name, sequence);
-    ok = YES;
+    status = 200;
     
 exit:
     [r close];
-    if (!ok) {
-        Warn(@"TouchDB: Failed to rebuild view '%@'", _name);
+    if (status >= 300) {
+        Warn(@"TouchDB: Failed to rebuild view '%@': %d", _name, status);
         _db.transactionFailed = YES;
     }
     [_db endTransaction];
-    return ok;
+    return status;
 }
 
 
 #pragma mark - QUERYING:
 
 
-- (NSDictionary*) queryWithOptions: (const TDQueryOptions*)options {
+- (NSDictionary*) queryWithOptions: (const TDQueryOptions*)options
+                            status: (TDStatus*)outStatus
+{
     if (!options)
         options = &kDefaultTDQueryOptions;
     
-    if (![self updateIndex])
+    *outStatus = [self updateIndex];
+    if (*outStatus >= 300)
         return nil;
 
     SequenceNumber update_seq = 0;
@@ -265,8 +270,10 @@ exit:
     
     FMResultSet* r = [_db.fmdb executeQuery: sql, $object(_viewID),
                                              $object(options->limit), $object(options->skip)];
-    if (!r)
+    if (!r) {
+        *outStatus = 500;
         return nil;
+    }
     
     NSMutableArray* rows = $marray();
     while ([r next]) {
@@ -283,6 +290,7 @@ exit:
         [rows addObject: change];
     }
     [r close];
+    *outStatus = 200;
     NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
     return $dict({@"rows", $object(rows)},
                  {@"total_rows", $object(totalRows)},

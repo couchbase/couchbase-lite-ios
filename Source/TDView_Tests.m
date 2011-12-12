@@ -61,7 +61,7 @@ TestCase(TDView_Index) {
     } version: @"1"];
     CAssertEq(view.viewID, 1);
     
-    CAssert([view updateIndex]);
+    CAssertEq([view updateIndex], 200);
     
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -69,7 +69,7 @@ TestCase(TDView_Index) {
                               $dict({@"key", @"\"three\""}, {@"seq", $object(3)}),
                               $dict({@"key", @"\"two\""}, {@"seq", $object(2)}) ));
     // No-op reindex:
-    CAssert([view updateIndex]);
+    CAssertEq([view updateIndex], 200);
     
     // Now add a doc and update a doc:
     TDRevision* threeUpdated = [[[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
@@ -85,7 +85,7 @@ TestCase(TDView_Index) {
     CAssert(status < 300);
 
     // Reindex again:
-    CAssert([view updateIndex]);
+    CAssertEq([view updateIndex], 200);
 
     dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -94,7 +94,8 @@ TestCase(TDView_Index) {
                               $dict({@"key", @"\"one\""}, {@"seq", $object(1)}) ));
     
     // Now do a real query:
-    NSDictionary* query = [view queryWithOptions: NULL];
+    NSDictionary* query = [view queryWithOptions: NULL status: &status];
+    CAssertEq(status, 200);
     CAssertEqual([query objectForKey: @"rows"], $array(
                                $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
                                $dict({@"key", @"four"}, {@"id", rev4.docID}),

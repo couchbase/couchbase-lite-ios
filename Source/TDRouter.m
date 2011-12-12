@@ -129,6 +129,7 @@ static NSArray* splitPath( NSString* path ) {
     
     NSString* docID = nil;
     if (_db && pathLen > 1) {
+        // Interpret doc name:
         TDStatus status = [self openDB];
         if (status >= 300) {
             _response.status = status;
@@ -140,6 +141,9 @@ static NSArray* splitPath( NSString* path ) {
             return;
         } else if ([name hasPrefix: @"_"]) {
             [message appendString: name];
+            if (pathLen > 2)
+                docID = [[path subarrayWithRange: NSMakeRange(2, path.count-2)]
+                                     componentsJoinedByString: @"/"];
         } else {
             docID = name;
         }
@@ -251,6 +255,7 @@ static NSArray* splitPath( NSString* path ) {
     param = [self query: @"skip"];
     if (param)
         options->skip = param.intValue;
+    options->descending = $equal([self query: @"descending"], @"true");
     options->includeDocs = $equal([self query: @"include_docs"], @"true");
     options->updateSeq = $equal([self query: @"update_seq"], @"true");
     return YES;
@@ -379,8 +384,9 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (TDStatus) update: (TDDatabase*)db
-                 docID: (NSString*)docID
-                  json: (NSData*)json {
+              docID: (NSString*)docID
+               json: (NSData*)json
+{
     TDBody* body = json ? [TDBody bodyWithJSON: json] : nil;
     
     NSString* revID;
@@ -432,10 +438,34 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
+#pragma mark - DESIGN DOCS:
+
+
+- (TDStatus) do_GET_design: (TDDatabase*)db docID: (NSString*)docID {
+    if (![docID hasPrefix: @"default/_view/"])
+        return 404;
+    NSString* viewName = [docID substringFromIndex: 14];
+    
+    TDQueryOptions options;
+    if (![self getQueryOptions: &options])
+        return 400;
+    
+    TDView* view = [db viewNamed: viewName];
+    TDStatus status;
+    NSDictionary* result = [view queryWithOptions: &options status: &status];
+    if (!result)
+        return status;
+    _response.bodyObject = result;
+    return 200;
+}
+
+
 @end
 
 
 
+
+#pragma mark - TDRESPONSE
 
 @implementation TDResponse
 
