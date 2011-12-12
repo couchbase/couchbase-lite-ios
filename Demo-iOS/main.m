@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 #import "Test.h"
 
-#import "AppDelegate.h"
+#import "DemoAppDelegate.h"
 
 int main(int argc, char *argv[])
 {
     @autoreleasepool {
         RunTestCases(argc,(const char**)argv);
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([DemoAppDelegate class]));
     }
 }
