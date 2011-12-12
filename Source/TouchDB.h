@@ -6,4 +6,4 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TDProtocol.h>
+#import <TouchDB/TDURLProtocol.h>

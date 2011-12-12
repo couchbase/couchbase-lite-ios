@@ -11,6 +11,7 @@
 #import "TDBody.h"
 #import "TDServer.h"
 #import "TDInternal.h"
+#import "Test.h"
 
 
 #if DEBUG

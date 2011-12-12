@@ -12,6 +12,7 @@
 #import "TDRevision.h"
 #import "TDView.h"
 #import "TDCollateJSON.h"
+#import "TDContentStore.h"
 
 #import "FMDatabase.h"
 
@@ -22,9 +23,15 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 @implementation TDDatabase
 
 
+- (NSString*) attachmentStorePath {
+    return [[_path stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
+}
+
+
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
     TDDatabase *db = [[[self alloc] initWithPath: path] autorelease];
+    [[NSFileManager defaultManager] removeItemAtPath: db.attachmentStorePath error: nil];
     if (![db open])
         return nil;
     return db;
@@ -84,7 +91,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
             sequence INTEGER NOT NULL REFERENCES docs(sequence) ON DELETE CASCADE, \
             key TEXT NOT NULL COLLATE JSON, \
-            value TEXT);";
+            value TEXT); \
+        CREATE TABLE IF NOT EXISTS attachments ( \
+            sequence INTEGER NOT NULL REFERENCES docs(sequence), \
+            filename TEXT NOT NULL, \
+            key BLOB NOT NULL);";
     // Declaring docs.sequence as AUTOINCREMENT means the values will always be
     // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
     // TODO: 'docid' should be factored out into a separate table for efficiency.
@@ -93,6 +104,15 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             [self close];
             return NO;
         }
+    }
+    
+    NSString* attachmentsPath = self.attachmentStorePath;
+    NSError* error;
+    _attachments = [[TDContentStore alloc] initWithPath: attachmentsPath error: &error];
+    if (!_attachments) {
+        Warn(@"%@: Couldn't open attachment store at %@", self, attachmentsPath);
+        [_fmdb close];
+        return NO;
     }
 
     _open = YES;
@@ -119,7 +139,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     [super dealloc];
 }
 
-@synthesize fmdb=_fmdb;
+@synthesize fmdb=_fmdb, attachmentStore=_attachments;
 
 - (NSString*) path {
     return _fmdb.databasePath;
@@ -583,6 +603,75 @@ exit:
                  {@"total_rows", $object(totalRows)},
                  {@"offset", $object(options->skip)},
                  {@"update_seq", update_seq ? $object(update_seq) : nil});
+}
+
+
+#pragma mark - ATTACHMENTS
+
+
+- (BOOL) insertAttachment: (NSData*)contents
+              forSequence: (SequenceNumber)sequence
+                    named: (NSString*)filename
+{
+    TDContentKey key;
+    if (![_attachments storeContents: contents creatingKey: &key])
+        return NO;
+    NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
+    return [_fmdb executeUpdate: @"INSERT INTO attachments (sequence, filename, key) "
+                                  "VALUES (?, ?, ?)",
+                                 $object(sequence), filename, keyData];
+}
+
+
+- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
+                               named: (NSString*)filename
+                              status: (TDStatus*)outStatus
+{
+    Assert(sequence > 0);
+    Assert(filename);
+    FMResultSet* r = [_fmdb executeQuery:
+                      @"SELECT key FROM attachments WHERE sequence=? AND filename=?",
+                      $object(sequence), filename];
+    if (!r) {
+        *outStatus = 500;
+        return nil;
+    }
+    if (![r next]) {
+        *outStatus = 404;
+        return nil;
+    }
+    NSData* keyData = [r dataForColumnIndex: 0];
+    if (keyData.length != sizeof(TDContentKey)) {
+        Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
+             self, sequence, filename, keyData.length);
+        *outStatus = 500;
+        return nil;
+    }
+    NSData* contents = [_attachments contentsForKey: *(TDContentKey*)keyData.bytes];
+    if (!contents) {
+        Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
+        *outStatus = 500;
+    } else {
+        *outStatus = 200;
+    }
+    return contents;
+}
+
+
+- (NSInteger) garbageCollectAttachments {
+    // First delete attachment rows for already-cleared revisions:
+    [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
+                            "(SELECT sequence from docs WHERE json IS null)"];
+    
+    // Now compile all remaining attachment IDs and tell the store to delete all but these:
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
+    if (!r)
+        return -1;
+    NSMutableSet* allKeys = [NSMutableSet set];
+    while ([r next]) {
+        [allKeys addObject: [r dataForColumnIndex: 0]];
+    }
+    return [_attachments deleteContentsExceptWithKeys: allKeys];
 }
 
 

@@ -39,6 +39,9 @@
 		270B3E3A14898DF200E0A926 /* TDRevision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* TDRevision.m */; };
 		270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; };
 		270B3E3F148D7F0000E0A926 /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
+		27731EFF1493FA3100815D67 /* TDContentStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* TDContentStore.h */; };
+		27731F001493FA3100815D67 /* TDContentStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* TDContentStore.m */; };
+		27731F061495335B00815D67 /* TDContentStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* TDContentStore.m */; };
 		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; };
 		27821BB8148E7D6F0099B373 /* TDReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* TDReplicator.m */; };
 		27821BBA148FF56D0099B373 /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
@@ -100,6 +103,22 @@
 		27B0B8031492BDE800A817AD /* TDPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* TDPuller.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27B0B8041492BDE800A817AD /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27B0B8051492BDE800A817AD /* TouchDB.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* TouchDB.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27B0B80D1492C16300A817AD /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7B81492B83C00A817AD /* UIKit.framework */; };
+		27B0B80E1492C16300A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
+		27B0B8101492C16300A817AD /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B80F1492C16300A817AD /* CoreGraphics.framework */; };
+		27B0B8161492C16300A817AD /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 27B0B8141492C16300A817AD /* InfoPlist.strings */; };
+		27B0B8181492C16300A817AD /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B8171492C16300A817AD /* main.m */; };
+		27B0B81C1492C16300A817AD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B81B1492C16300A817AD /* AppDelegate.m */; };
+		27B0B81F1492C16300A817AD /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 27B0B81D1492C16300A817AD /* MainStoryboard_iPhone.storyboard */; };
+		27B0B8221492C16300A817AD /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 27B0B8201492C16300A817AD /* MainStoryboard_iPad.storyboard */; };
+		27B0B8251492C16300A817AD /* MasterViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B8241492C16300A817AD /* MasterViewController.m */; };
+		27B0B8281492C16300A817AD /* DetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B8271492C16300A817AD /* DetailViewController.m */; };
+		27B0B82D1492C4DB00A817AD /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F81492BC8000A817AD /* libsqlite3.dylib */; };
+		27B0B8531492CBE400A817AD /* libTouchDB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libTouchDB.a */; };
+		27B0B8541492D09B00A817AD /* TDRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* TDRouter_Tests.m */; };
+		27B0B8551492D0A000A817AD /* TDView_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* TDView_Tests.m */; };
+		27B0B8561492D0A400A817AD /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
+		27B0B8571492D0AA00A817AD /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; };
 		27C706421486BBD500F0F099 /* TDServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* TDServer.m */; };
 		27C706451486BE7100F0F099 /* TDRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* TDRouter.m */; };
 		27C706481487584300F0F099 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
@@ -113,7 +132,6 @@
 		27C706D41488679500F0F099 /* DemoQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CE1488679500F0F099 /* DemoQuery.m */; };
 		27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27C706D01488679500F0F099 /* ShoppingDemo.xib */; };
 		27C706D71488679500F0F099 /* ShoppingItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706D21488679500F0F099 /* ShoppingItem.m */; };
-		27F0744811CD4B6D00E9A2AB /* TDDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* TDDatabase.m */; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
@@ -190,6 +208,8 @@
 		270B3E3814898DF200E0A926 /* TDRevision.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDRevision.m; sourceTree = "<group>"; };
 		270B3E3C148D7F0000E0A926 /* TDPusher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDPusher.h; sourceTree = "<group>"; };
 		270B3E3D148D7F0000E0A926 /* TDPusher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDPusher.m; sourceTree = "<group>"; };
+		27731EFD1493FA3100815D67 /* TDContentStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDContentStore.h; sourceTree = "<group>"; };
+		27731EFE1493FA3100815D67 /* TDContentStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDContentStore.m; sourceTree = "<group>"; };
 		27821BB5148E7D6F0099B373 /* TDReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDReplicator.h; sourceTree = "<group>"; };
 		27821BB6148E7D6F0099B373 /* TDReplicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDReplicator.m; sourceTree = "<group>"; };
 		27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDDatabase_Tests.m; sourceTree = "<group>"; };
@@ -221,6 +241,20 @@
 		27B0B7E81492BB6B00A817AD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		27B0B7F61492BC7A00A817AD /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		27B0B7F81492BC8000A817AD /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
+		27B0B80B1492C16300A817AD /* TouchDB Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TouchDB Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		27B0B80F1492C16300A817AD /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
+		27B0B8131492C16300A817AD /* iOS Demo-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS Demo-Info.plist"; sourceTree = "<group>"; };
+		27B0B8151492C16300A817AD /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		27B0B8171492C16300A817AD /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		27B0B8191492C16300A817AD /* iOS Demo-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iOS Demo-Prefix.pch"; sourceTree = "<group>"; };
+		27B0B81A1492C16300A817AD /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		27B0B81B1492C16300A817AD /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		27B0B81E1492C16300A817AD /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		27B0B8211492C16300A817AD /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		27B0B8231492C16300A817AD /* MasterViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MasterViewController.h; sourceTree = "<group>"; };
+		27B0B8241492C16300A817AD /* MasterViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MasterViewController.m; sourceTree = "<group>"; };
+		27B0B8261492C16300A817AD /* DetailViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DetailViewController.h; sourceTree = "<group>"; };
+		27B0B8271492C16300A817AD /* DetailViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DetailViewController.m; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* TDServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDServer.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* TDServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDServer.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* TDRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDRouter.h; sourceTree = "<group>"; };
@@ -315,6 +349,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27B0B8081492C16300A817AD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27B0B8531492CBE400A817AD /* libTouchDB.a in Frameworks */,
+				27B0B82D1492C4DB00A817AD /* libsqlite3.dylib in Frameworks */,
+				27B0B80D1492C16300A817AD /* UIKit.framework in Frameworks */,
+				27B0B80E1492C16300A817AD /* Foundation.framework in Frameworks */,
+				27B0B8101492C16300A817AD /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27C70691148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -342,15 +388,14 @@
 		08FB7794FE84155DC02AAC07 /* CouchLite */ = {
 			isa = PBXGroup;
 			children = (
-				27B0B7F81492BC8000A817AD /* libsqlite3.dylib */,
-				27B0B7F61492BC7A00A817AD /* Foundation.framework */,
 				270B3E28148940C000E0A926 /* README.md */,
 				08FB7795FE84155DC02AAC07 /* Source */,
-				27C706CA1488679500F0F099 /* Mac Demo */,
+				27C706CA1488679500F0F099 /* Demo-Mac */,
 				27F0746C11CD51A200E9A2AB /* FMDB */,
 				27F0749A11CD5B1200E9A2AB /* MYUtilities */,
 				270B3E021489359000E0A926 /* ToyCouchTests */,
 				27B0B7BE1492B83C00A817AD /* TouchDBiOSTests */,
+				27B0B8111492C16300A817AD /* iOS Demo */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -372,6 +417,8 @@
 				27C706411486BBD500F0F099 /* TDServer.m */,
 				279EB2D91491C34300E74185 /* TDCollateJSON.h */,
 				279EB2DA1491C34300E74185 /* TDCollateJSON.m */,
+				27731EFD1493FA3100815D67 /* TDContentStore.h */,
+				27731EFE1493FA3100815D67 /* TDContentStore.m */,
 				279EB2D7149192C700E74185 /* HTTP */,
 				27821BB4148E7D590099B373 /* Replicator */,
 				279EB2D8149192DF00E74185 /* Support */,
@@ -389,6 +436,7 @@
 				27B0B7A91492B83B00A817AD /* libTouchDB.a */,
 				27B0B7B61492B83B00A817AD /* TouchDBiOSTests.octest */,
 				27B0B7E71492BB6B00A817AD /* TouchDB.framework */,
+				27B0B80B1492C16300A817AD /* TouchDB Demo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -488,6 +536,34 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		27B0B8111492C16300A817AD /* iOS Demo */ = {
+			isa = PBXGroup;
+			children = (
+				27B0B81A1492C16300A817AD /* AppDelegate.h */,
+				27B0B81B1492C16300A817AD /* AppDelegate.m */,
+				27B0B81D1492C16300A817AD /* MainStoryboard_iPhone.storyboard */,
+				27B0B8201492C16300A817AD /* MainStoryboard_iPad.storyboard */,
+				27B0B8231492C16300A817AD /* MasterViewController.h */,
+				27B0B8241492C16300A817AD /* MasterViewController.m */,
+				27B0B8261492C16300A817AD /* DetailViewController.h */,
+				27B0B8271492C16300A817AD /* DetailViewController.m */,
+				27B0B8121492C16300A817AD /* Supporting Files */,
+			);
+			name = "iOS Demo";
+			path = "Demo-iOS";
+			sourceTree = "<group>";
+		};
+		27B0B8121492C16300A817AD /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				27B0B8131492C16300A817AD /* iOS Demo-Info.plist */,
+				27B0B8141492C16300A817AD /* InfoPlist.strings */,
+				27B0B8171492C16300A817AD /* main.m */,
+				27B0B8191492C16300A817AD /* iOS Demo-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -499,7 +575,10 @@
 				270B3DFC1489359000E0A926 /* SenTestingKit.framework */,
 				27B0B7B81492B83C00A817AD /* UIKit.framework */,
 				27B0B7E81492BB6B00A817AD /* CoreFoundation.framework */,
+				27B0B80F1492C16300A817AD /* CoreGraphics.framework */,
 				27C70699148864BA00F0F099 /* Other Frameworks */,
+				27B0B7F81492BC8000A817AD /* libsqlite3.dylib */,
+				27B0B7F61492BC7A00A817AD /* Foundation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -514,7 +593,7 @@
 			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
-		27C706CA1488679500F0F099 /* Mac Demo */ = {
+		27C706CA1488679500F0F099 /* Demo-Mac */ = {
 			isa = PBXGroup;
 			children = (
 				27C706CB1488679500F0F099 /* DemoAppController.h */,
@@ -526,8 +605,7 @@
 				27C706D11488679500F0F099 /* ShoppingItem.h */,
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
 			);
-			name = "Mac Demo";
-			path = Demo;
+			path = "Demo-Mac";
 			sourceTree = "<group>";
 		};
 		27F0746C11CD51A200E9A2AB /* FMDB */ = {
@@ -586,6 +664,7 @@
 				27B0B798149290AB00A817AD /* TDConnectionChangeTracker.h in Headers */,
 				27B0B79A149290AB00A817AD /* TDSocketChangeTracker.h in Headers */,
 				27B0B79E1492932800A817AD /* TDBase64.h in Headers */,
+				27731EFF1493FA3100815D67 /* TDContentStore.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -710,6 +789,23 @@
 			productReference = 27B0B7E71492BB6B00A817AD /* TouchDB.framework */;
 			productType = "com.apple.product-type.bundle";
 		};
+		27B0B80A1492C16300A817AD /* iOS Demo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "iOS Demo" */;
+			buildPhases = (
+				27B0B8071492C16300A817AD /* Sources */,
+				27B0B8081492C16300A817AD /* Frameworks */,
+				27B0B8091492C16300A817AD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "iOS Demo";
+			productName = "iOS Demo";
+			productReference = 27B0B80B1492C16300A817AD /* TouchDB Demo.app */;
+			productType = "com.apple.product-type.application";
+		};
 		27C70693148864BA00F0F099 /* TouchDB Demo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "TouchDB Demo" */;
@@ -772,6 +868,7 @@
 				27B0B7A81492B83B00A817AD /* iOS Library */,
 				27B0B7B51492B83B00A817AD /* TouchDBiOSTests */,
 				27B0B7E61492BB6B00A817AD /* iOS Framework */,
+				27B0B80A1492C16300A817AD /* iOS Demo */,
 			);
 		};
 /* End PBXProject section */
@@ -797,6 +894,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				27B0B7C31492B83C00A817AD /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27B0B8091492C16300A817AD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27B0B8161492C16300A817AD /* InfoPlist.strings in Resources */,
+				27B0B81F1492C16300A817AD /* MainStoryboard_iPhone.storyboard in Resources */,
+				27B0B8221492C16300A817AD /* MainStoryboard_iPad.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -899,6 +1006,7 @@
 				27B0B799149290AB00A817AD /* TDConnectionChangeTracker.m in Sources */,
 				27B0B79B149290AB00A817AD /* TDSocketChangeTracker.m in Sources */,
 				27B0B79F1492932800A817AD /* TDBase64.m in Sources */,
+				27731F001493FA3100815D67 /* TDContentStore.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -935,6 +1043,7 @@
 				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
 				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
 				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
+				27731F061495335B00815D67 /* TDContentStore.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -953,6 +1062,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27B0B8071492C16300A817AD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27B0B8181492C16300A817AD /* main.m in Sources */,
+				27B0B81C1492C16300A817AD /* AppDelegate.m in Sources */,
+				27B0B8251492C16300A817AD /* MasterViewController.m in Sources */,
+				27B0B8281492C16300A817AD /* DetailViewController.m in Sources */,
+				27B0B8541492D09B00A817AD /* TDRouter_Tests.m in Sources */,
+				27B0B8551492D0A000A817AD /* TDView_Tests.m in Sources */,
+				27B0B8561492D0A400A817AD /* TDDatabase_Tests.m in Sources */,
+				27B0B8571492D0AA00A817AD /* TDPuller_Tests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27C70690148864BA00F0F099 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -967,7 +1091,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27F0744811CD4B6D00E9A2AB /* TDDatabase.m in Sources */,
 				27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */,
 				27F0747711CD51A200E9A2AB /* FMResultSet.m in Sources */,
 				27F0749F11CD5B4F00E9A2AB /* CollectionUtils.m in Sources */,
@@ -1018,6 +1141,30 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
+		27B0B8141492C16300A817AD /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				27B0B8151492C16300A817AD /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		27B0B81D1492C16300A817AD /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				27B0B81E1492C16300A817AD /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		27B0B8201492C16300A817AD /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				27B0B8211492C16300A817AD /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
@@ -1032,6 +1179,7 @@
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				INFOPLIST_FILE = "ShoppingDemo-Info.plist";
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TouchDB;
@@ -1047,6 +1195,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
 				);
+				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				INFOPLIST_FILE = "ShoppingDemo-Info.plist";
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TouchDB;
@@ -1282,6 +1431,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Source/TouchDB-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				MACH_O_TYPE = mh_dylib;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = TouchDB;
 				SDKROOT = iphoneos;
@@ -1305,11 +1455,72 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Source/TouchDB-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				MACH_O_TYPE = mh_dylib;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = TouchDB;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		27B0B82A1492C16300A817AD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				PRODUCT_NAME = "TouchDB Demo";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		27B0B82B1492C16300A817AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				PRODUCT_NAME = "TouchDB Demo";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
 		};
@@ -1329,7 +1540,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo/ShoppingDemo-Info.plist";
+				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
 				PRODUCT_NAME = "TouchDB Demo";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1350,7 +1561,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo/ShoppingDemo-Info.plist";
+				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
 				PRODUCT_NAME = "TouchDB Demo";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1402,6 +1613,7 @@
 				27B0B7C91492B83C00A817AD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		27B0B7CA1492B83C00A817AD /* Build configuration list for PBXNativeTarget "TouchDBiOSTests" */ = {
 			isa = XCConfigurationList;
@@ -1410,6 +1622,7 @@
 				27B0B7CC1492B83C00A817AD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		27B0B7F11492BB6C00A817AD /* Build configuration list for PBXNativeTarget "iOS Framework" */ = {
 			isa = XCConfigurationList;
@@ -1418,6 +1631,16 @@
 				27B0B7F31492BB6C00A817AD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "iOS Demo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27B0B82A1492C16300A817AD /* Debug */,
+				27B0B82B1492C16300A817AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "TouchDB Demo" */ = {
 			isa = XCConfigurationList;

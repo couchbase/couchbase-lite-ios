@@ -108,10 +108,7 @@ static NSCharacterSet* kIllegalNameChars;
 - (NSArray*) allDatabaseNames {
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: nil];
     files = [files pathsMatchingExtensions: $array(kDBExtension)];
-    NSMutableArray* names = $marray();
-    for (NSString* filename in files)
-        [names addObject: [filename stringByDeletingPathExtension]];
-    return names;
+    return [files my_map: ^(id filename) {return [filename stringByDeletingPathExtension];}];
 }
 
 

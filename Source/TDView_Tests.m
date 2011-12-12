@@ -8,6 +8,7 @@
 
 #import "TDView.h"
 #import "TDInternal.h"
+#import "Test.h"
 
 
 #if DEBUG

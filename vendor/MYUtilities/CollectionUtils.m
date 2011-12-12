@@ -305,7 +305,7 @@ BOOL kvRemoveFromSet( id owner, NSString *property, NSMutableSet *set, id objToR
     return result;
 }
 
-- (NSArray*) my_filter: (BOOL (^)(id obj))block {
+- (NSArray*) my_filter: (int (^)(id obj))block {
     NSMutableArray* filtered = [[NSMutableArray alloc] initWithCapacity: self.count];
     for (id obj in self) {
         if (block(obj))

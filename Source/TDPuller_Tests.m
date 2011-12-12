@@ -10,6 +10,7 @@
 #import "TDServer.h"
 #import "TDDatabase.h"
 #import "TDInternal.h"
+#import "Test.h"
 
 
 #if DEBUG

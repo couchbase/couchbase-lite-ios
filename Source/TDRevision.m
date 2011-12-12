@@ -48,6 +48,10 @@
     return [self initWithBody: body];
 }
 
++ (TDRevision*) revisionWithProperties: (NSDictionary*)properties {
+    return [[[self alloc] initWithProperties: properties] autorelease];
+}
+
 - (void)dealloc {
     [_docID release];
     [_revID release];

@@ -8,7 +8,7 @@
  */
 
 #import "TDRevision.h"
-@class FMDatabase, TDRevision, TDRevisionList, TDView;
+@class FMDatabase, TDRevision, TDRevisionList, TDView, TDContentStore;
 
 struct TDQueryOptions;
 
@@ -32,6 +32,7 @@ extern NSString* const TDDatabaseChangeNotification;
     NSInteger _transactionLevel;
     BOOL _transactionFailed;
     NSMutableDictionary* _views;
+    TDContentStore* _attachments;
 }    
         
 - (id) initWithPath: (NSString*)path;
@@ -53,6 +54,7 @@ extern NSString* const TDDatabaseChangeNotification;
 @property BOOL transactionFailed;
 
 - (TDStatus) compact;
+- (NSInteger) garbageCollectAttachments;
 
 // DOCUMENTS:
 
@@ -76,6 +78,13 @@ extern NSString* const TDDatabaseChangeNotification;
                  status: (TDStatus*)outStatus;
 - (TDStatus) forceInsert: (TDRevision*)rev
             revisionHistory: (NSArray*)history;
+
+- (BOOL) insertAttachment: (NSData*)contents
+              forSequence: (SequenceNumber)sequence
+                    named: (NSString*)filename;
+- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
+                               named: (NSString*)filename
+                              status: (TDStatus*)outStatus;
 
 - (NSArray*) changesSinceSequence: (int)lastSequence
                           options: (const struct TDQueryOptions*)options;

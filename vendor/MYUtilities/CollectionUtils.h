@@ -72,7 +72,7 @@ BOOL kvRemoveFromSet( id owner, NSString *property, NSMutableSet *set, id objToR
 - (NSArray*) my_arrayByApplyingSelector: (SEL)selector withObject: (id)object;
 #if NS_BLOCKS_AVAILABLE
 - (NSArray*) my_map: (id (^)(id obj))block;
-- (NSArray*) my_filter: (BOOL (^)(id obj))block;
+- (NSArray*) my_filter: (int (^)(id obj))block;
 #endif
 @end
 

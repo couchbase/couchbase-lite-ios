@@ -13,6 +13,7 @@
 #import "TDRevision.h"
 #import "TDServer.h"
 #import "Logging.h"
+#import "CollectionUtils.h"
 
 
 NSString* const kTDVersionString =  @"0.1";
@@ -89,12 +90,8 @@ NSString* const kTDVersionString =  @"0.1";
 
 
 static NSArray* splitPath( NSString* path ) {
-    NSMutableArray* items = $marray();
-    for (NSString* item in [path componentsSeparatedByString: @"/"]) {
-        if (item.length > 0)
-            [items addObject: item];
-    }
-    return items;
+    return [[path componentsSeparatedByString: @"/"]
+                        my_filter: ^(id component) {return [component length] > 0;}];
 }
 
 

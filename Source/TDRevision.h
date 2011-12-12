@@ -21,7 +21,7 @@ typedef SInt64 SequenceNumber;
     NSString* _docID, *_revID;
     BOOL _deleted;
     TDBody* _body;
-    SInt64 _sequence;
+    SequenceNumber _sequence;
 }
 
 - (id) initWithDocID: (NSString*)docID 
@@ -29,6 +29,8 @@ typedef SInt64 SequenceNumber;
              deleted: (BOOL)deleted;
 - (id) initWithBody: (TDBody*)body;
 - (id) initWithProperties: (NSDictionary*)properties;
+
++ (TDRevision*) revisionWithProperties: (NSDictionary*)properties;
 
 @property (readonly) NSString* docID;
 @property (readonly) NSString* revID;

@@ -1,6 +1,7 @@
 # Symbols exported by the framework
 .objc_class_name_TDDatabase
 .objc_class_name_TDView
+.objc_class_name_TDContentStore
 .objc_class_name_TDBody
 .objc_class_name_TDRev
 .objc_class_name_TDRevList

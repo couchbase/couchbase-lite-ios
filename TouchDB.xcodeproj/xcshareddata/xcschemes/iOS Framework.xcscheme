@@ -14,7 +14,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "27B0B7E61492BB6B00A817AD"
-               BuildableName = "iTouchDB.bundle"
+               BuildableName = "TouchDB.framework"
                BlueprintName = "iOS Framework"
                ReferencedContainer = "container:TouchDB.xcodeproj">
             </BuildableReference>

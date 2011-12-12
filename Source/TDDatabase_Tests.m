@@ -10,6 +10,9 @@
 #import "TDDatabase.h"
 #import "TDBody.h"
 #import "TDRevision.h"
+#import "TDContentStore.h"
+#import "TDInternal.h"
+#import "Test.h"
 
 
 
@@ -153,9 +156,64 @@ TestCase(TDDatabase_RevTree) {
 }
 
 
+TestCase(TDDatabase_Attachments) {
+    RequireTestCase(TDDatabase_CRUD);
+    // Start with a fresh database in /tmp:
+    TDDatabase* db = createDB();
+    TDContentStore* attachments = db.attachmentStore;
+
+    CAssertEq(attachments.count, 0u);
+    CAssertEqual(attachments.allKeys, $array());
+    
+    // Add a revision and an attachment to it:
+    TDRevision* rev1;
+    TDStatus status;
+    rev1 = [db putRevision: [TDRevision revisionWithProperties:$mdict({@"foo", $object(1)},
+                                                                      {@"bar", $false})]
+            prevRevisionID: nil status: &status];
+    CAssertEq(status, 201);
+    
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    CAssert([db insertAttachment: attach1 forSequence: rev1.sequence named: @"attach"]);
+    
+    CAssertEqual([db getAttachmentForSequence: rev1.sequence
+                                        named: @"attach"
+                                       status: &status], attach1);
+    CAssertEq(status, 200);
+
+    // Add a second revision of the same document:
+    TDRevision* rev2;
+    rev2 = [db putRevision: [TDRevision revisionWithProperties:$mdict({@"_id", rev1.docID},
+                                                                      {@"foo", $object(2)},
+                                                                      {@"bazz", $false})]
+            prevRevisionID: rev1.revID status: &status];
+    CAssertEq(status, 201);
+    
+    NSData* attach2 = [@"And this is attach2's body" dataUsingEncoding: NSUTF8StringEncoding];
+    CAssert([db insertAttachment: attach2 forSequence: rev2.sequence named: @"attach"]);
+    
+    CAssertEqual([db getAttachmentForSequence: rev2.sequence
+                                        named: @"attach"
+                                       status: &status], attach2);
+    CAssertEq(status, 200);
+    
+    // Examine the attachment store:
+    CAssertEq(attachments.count, 2u);
+    NSSet* expected = [NSSet setWithObjects: [TDContentStore keyDataForContents: attach1],
+                                             [TDContentStore keyDataForContents: attach2], nil];
+    CAssertEqual([NSSet setWithArray: attachments.allKeys], expected);
+    
+    CAssertEq([db compact], 200);
+    CAssertEq([db garbageCollectAttachments], 1);
+    CAssertEq(attachments.count, 1u);
+    CAssertEqual(attachments.allKeys, $array([TDContentStore keyDataForContents: attach2]));
+}
+
+
 TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_CRUD);
     RequireTestCase(TDDatabase_RevTree);
+    RequireTestCase(TDDatabase_Attachments);
 }
 
 
