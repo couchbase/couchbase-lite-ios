@@ -13,7 +13,7 @@
 
 @interface TDDatabase ()
 @property (readonly) FMDatabase* fmdb;
-@property (readonly) TDContentStore* attachmentStore;
+@property (readonly) TDBlobStore* attachmentStore;
 - (TDStatus) deleteViewNamed: (NSString*)name;
 @end
 

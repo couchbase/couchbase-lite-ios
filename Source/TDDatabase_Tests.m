@@ -10,7 +10,7 @@
 #import "TDDatabase.h"
 #import "TDBody.h"
 #import "TDRevision.h"
-#import "TDContentStore.h"
+#import "TDBlobStore.h"
 #import "TDInternal.h"
 #import "Test.h"
 
@@ -160,7 +160,7 @@ TestCase(TDDatabase_Attachments) {
     RequireTestCase(TDDatabase_CRUD);
     // Start with a fresh database in /tmp:
     TDDatabase* db = createDB();
-    TDContentStore* attachments = db.attachmentStore;
+    TDBlobStore* attachments = db.attachmentStore;
 
     CAssertEq(attachments.count, 0u);
     CAssertEqual(attachments.allKeys, $array());
@@ -199,14 +199,14 @@ TestCase(TDDatabase_Attachments) {
     
     // Examine the attachment store:
     CAssertEq(attachments.count, 2u);
-    NSSet* expected = [NSSet setWithObjects: [TDContentStore keyDataForContents: attach1],
-                                             [TDContentStore keyDataForContents: attach2], nil];
+    NSSet* expected = [NSSet setWithObjects: [TDBlobStore keyDataForBlob: attach1],
+                                             [TDBlobStore keyDataForBlob: attach2], nil];
     CAssertEqual([NSSet setWithArray: attachments.allKeys], expected);
     
     CAssertEq([db compact], 200);
     CAssertEq([db garbageCollectAttachments], 1);
     CAssertEq(attachments.count, 1u);
-    CAssertEqual(attachments.allKeys, $array([TDContentStore keyDataForContents: attach2]));
+    CAssertEqual(attachments.allKeys, $array([TDBlobStore keyDataForBlob: attach2]));
 }
 
 

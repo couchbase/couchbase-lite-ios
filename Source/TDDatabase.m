@@ -12,7 +12,7 @@
 #import "TDRevision.h"
 #import "TDView.h"
 #import "TDCollateJSON.h"
-#import "TDContentStore.h"
+#import "TDBlobStore.h"
 
 #import "FMDatabase.h"
 
@@ -82,6 +82,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         CREATE TABLE IF NOT EXISTS docs ( \
             doc_id INTEGER PRIMARY KEY, \
             docid TEXT UNIQUE NOT NULL); \
+        CREATE INDEX IF NOT EXISTS docs_docid ON docs(docid); \
         CREATE TABLE IF NOT EXISTS revs ( \
             sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
             doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE, \
@@ -90,20 +91,26 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             current BOOLEAN, \
             deleted BOOLEAN DEFAULT 0, \
             json BLOB); \
+        CREATE INDEX IF NOT EXISTS revs_by_id ON revs(revid, doc_id); \
+        CREATE INDEX IF NOT EXISTS revs_current ON revs(doc_id, current); \
+        CREATE INDEX IF NOT EXISTS revs_parent ON revs(parent); \
         CREATE TABLE IF NOT EXISTS views ( \
             view_id INTEGER PRIMARY KEY, \
             name TEXT UNIQUE NOT NULL,\
             version TEXT, \
             lastsequence INTEGER DEFAULT 0); \
+        CREATE INDEX IF NOT EXISTS views_by_name ON views(name); \
         CREATE TABLE IF NOT EXISTS maps ( \
             view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
             sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
             key TEXT NOT NULL COLLATE JSON, \
             value TEXT); \
+        CREATE INDEX IF NOT EXISTS maps_keys on maps(view_id, key COLLATE JSON); \
         CREATE TABLE IF NOT EXISTS attachments ( \
             sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
             filename TEXT NOT NULL, \
-            key BLOB NOT NULL);";
+            key BLOB NOT NULL); \
+        CREATE INDEX IF NOT EXISTS attachments_by_sequence on attachments(sequence, filename)";
     // Declaring revs.sequence as AUTOINCREMENT means the values will always be
     // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
     for (NSString* statement in [sql componentsSeparatedByString: @";"]) {
@@ -115,7 +122,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     
     NSString* attachmentsPath = self.attachmentStorePath;
     NSError* error;
-    _attachments = [[TDContentStore alloc] initWithPath: attachmentsPath error: &error];
+    _attachments = [[TDBlobStore alloc] initWithPath: attachmentsPath error: &error];
     if (!_attachments) {
         Warn(@"%@: Couldn't open attachment store at %@", self, attachmentsPath);
         [_fmdb close];
@@ -663,8 +670,8 @@ exit:
               forSequence: (SequenceNumber)sequence
                     named: (NSString*)filename
 {
-    TDContentKey key;
-    if (![_attachments storeContents: contents creatingKey: &key])
+    TDBlobKey key;
+    if (![_attachments storeBlob: contents creatingKey: &key])
         return NO;
     NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
     return [_fmdb executeUpdate: @"INSERT INTO attachments (sequence, filename, key) "
@@ -691,13 +698,13 @@ exit:
         return nil;
     }
     NSData* keyData = [r dataForColumnIndex: 0];
-    if (keyData.length != sizeof(TDContentKey)) {
+    if (keyData.length != sizeof(TDBlobKey)) {
         Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
              self, sequence, filename, keyData.length);
         *outStatus = 500;
         return nil;
     }
-    NSData* contents = [_attachments contentsForKey: *(TDContentKey*)keyData.bytes];
+    NSData* contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
     if (!contents) {
         Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
         *outStatus = 500;
@@ -721,7 +728,7 @@ exit:
     while ([r next]) {
         [allKeys addObject: [r dataForColumnIndex: 0]];
     }
-    return [_attachments deleteContentsExceptWithKeys: allKeys];
+    return [_attachments deleteBlobsExceptWithKeys: allKeys];
 }
 
 

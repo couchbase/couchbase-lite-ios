@@ -8,7 +8,7 @@
  */
 
 #import "TDRevision.h"
-@class FMDatabase, TDRevision, TDRevisionList, TDView, TDContentStore;
+@class FMDatabase, TDRevision, TDRevisionList, TDView, TDBlobStore;
 
 struct TDQueryOptions;
 
@@ -32,7 +32,7 @@ extern NSString* const TDDatabaseChangeNotification;
     NSInteger _transactionLevel;
     BOOL _transactionFailed;
     NSMutableDictionary* _views;
-    TDContentStore* _attachments;
+    TDBlobStore* _attachments;
 }    
         
 - (id) initWithPath: (NSString*)path;
