@@ -126,6 +126,8 @@
     return _revs.count;
 }
 
+@synthesize allRevisions=_revs;
+
 - (void) addRev: (TDRevision*)rev {
     [_revs addObject: rev];
 }

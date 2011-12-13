@@ -12,8 +12,7 @@
 #import "TDBody.h"
 #import "TDRevision.h"
 #import "TDServer.h"
-#import "Logging.h"
-#import "CollectionUtils.h"
+#import "TDReplicator.h"
 
 
 NSString* const kTDVersionString =  @"0.1";
@@ -129,7 +128,7 @@ static NSArray* splitPath( NSString* path ) {
     
     NSString* docID = nil;
     if (_db && pathLen > 1) {
-        // Interpret doc name:
+        // Make sure database exists, then interpret doc name:
         TDStatus status = [self openDB];
         if (status >= 300) {
             _response.status = status;
@@ -203,6 +202,59 @@ static NSArray* splitPath( NSString* path ) {
 - (TDStatus) do_GET_all_dbs {
     NSArray* dbs = _server.allDatabaseNames ?: $array();
     _response.body = [[[TDBody alloc] initWithArray: dbs] autorelease];
+    return 200;
+}
+
+- (TDStatus) do_POST_replicate {
+    // Extract the parameters from the JSON request body:
+    // http://wiki.apache.org/couchdb/Replication
+    id body = [NSJSONSerialization JSONObjectWithData: _request.HTTPBody options: 0 error: nil];
+    if (![body isKindOfClass: [NSDictionary class]])
+        return 400;
+    NSString* source = $castIf(NSString, [body objectForKey: @"source"]);
+    NSString* target = $castIf(NSString, [body objectForKey: @"target"]);
+    BOOL createTarget = [$castIf(NSNumber, [body objectForKey: @"create_target"]) boolValue];
+    BOOL continuous = [$castIf(NSNumber, [body objectForKey: @"continuous"]) boolValue];
+    BOOL cancel = [$castIf(NSNumber, [body objectForKey: @"cancel"]) boolValue];
+    
+    // Map the 'source' and 'target' JSON params to a local database and remote URL:
+    if (!source || !target)
+        return 400;
+    BOOL push = NO;
+    TDDatabase* db = [_server existingDatabaseNamed: source];
+    NSString* remoteStr;
+    if (db) {
+        remoteStr = target;
+        push = YES;
+    } else {
+        remoteStr = source;
+        if (createTarget && !cancel) {
+            db = [_server databaseNamed: target];
+            if (![db open])
+                return 500;
+        } else {
+            db = [_server existingDatabaseNamed: target];
+        }
+        if (!db)
+            return 404;
+    }
+    NSURL* remote = [NSURL URLWithString: remoteStr];
+    if (!remote || ![remote.scheme hasPrefix: @"http"])
+        return 400;
+    
+    if (!cancel) {
+        // Start replication:
+        TDReplicator* repl = [db replicateWithRemoteURL: remote push: push continuous: continuous];
+        if (!repl)
+            return 500;
+        _response.bodyObject = $dict({@"session_id", repl.sessionID});
+    } else {
+        // Cancel replication:
+        TDReplicator* repl = [db activeReplicatorWithRemoteURL: remote push: push];
+        if (!repl)
+            return 404;
+        [repl stop];
+    }
     return 200;
 }
 
@@ -328,7 +380,7 @@ static NSArray* splitPath( NSString* path ) {
         return 400;
     int since = [[self query: @"since"] intValue];
     
-    NSArray* changes = [db changesSinceSequence: since options: &options];
+    TDRevisionList* changes = [db changesSinceSequence: since options: &options];
     if (!changes)
         return 500;
     
@@ -350,7 +402,7 @@ static NSArray* splitPath( NSString* path ) {
         _waiting = YES;
         return 0;
     } else {
-        _response.bodyObject = [self responseBodyForChanges: changes since: since];
+        _response.bodyObject = [self responseBodyForChanges: changes.allRevisions since: since];
         return 200;
     }
 }

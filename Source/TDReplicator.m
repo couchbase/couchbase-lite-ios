@@ -7,28 +7,45 @@
 //
 
 #import "TDReplicator.h"
+#import "TDPusher.h"
+#import "TDPuller.h"
 #import "TDDatabase.h"
+#import "TDInternal.h"
 
 
 
 #define kProcessDelay 0.5
+#define kInboxCapacity 100
 
 
 @interface TDReplicator ()
-@property (readwrite) BOOL running;
+@property (readwrite) BOOL running, active;
 @end
 
 
 @implementation TDReplicator
 
-- (id) initWithDB: (TDDatabase*)db remote: (NSURL*)remote continuous: (BOOL)continuous {
+- (id) initWithDB: (TDDatabase*)db
+           remote: (NSURL*)remote
+             push: (BOOL)push
+       continuous: (BOOL)continuous
+{
     NSParameterAssert(db);
     NSParameterAssert(remote);
+    
+    // TDReplicator is an abstract class; instantiating one actually instantiates a subclass.
+    if ([self class] == [TDReplicator class]) {
+        [self release];
+        Class klass = push ? [TDPusher class] : [TDPuller class];
+        return [[klass alloc] initWithDB: db remote: remote push: push continuous: continuous];
+    }
+    
     self = [super init];
     if (self) {
         _db = [db retain];
         _remote = [remote retain];
         _continuous = continuous;
+        Assert(push == self.isPush);
     }
     return self;
 }
@@ -40,19 +57,50 @@
     [_remote release];
     [_lastSequence release];
     [_inbox release];
+    [_sessionID release];
     [super dealloc];
 }
 
 
-@synthesize db=_db, remote=_remote, lastSequence=_lastSequence, running=_running;
+- (NSString*) description {
+    return $sprintf(@"%@[%@]", [self class], _remote.absoluteString);
+}
+
+
+@synthesize db=_db, remote=_remote, running=_running, active=_active, sessionID=_sessionID;
+
+
+- (BOOL) isPush {
+    return NO;  // guess who overrides this?
+}
+
+
+- (NSString*) lastSequence {
+    return _lastSequence;
+}
+
+- (void) setLastSequence:(NSString*)lastSequence {
+    if (!$equal(lastSequence, _lastSequence)) {
+        [_lastSequence release];
+        _lastSequence = [lastSequence copy];
+        LogTo(Sync, @"%@ checkpointing sequence=%@", self, lastSequence);
+        [_db setLastSequence: lastSequence withRemoteURL: _remote push: self.isPush];
+    }
+}
 
 
 - (void) start {
+    static int sLastSessionID = 0;
+    [_lastSequence release];
+    _lastSequence = [[_db lastSequenceWithRemoteURL: _remote push: self.isPush] copy];
+    _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
+    LogTo(Sync, @"%@ STARTING from sequence %@", self, _lastSequence);
     self.running = YES;
 }
 
 
 - (void) stop {
+    LogTo(Sync, @"%@ STOPPING", self);
     if (_inbox) {
         [_inbox release];
         _inbox = nil;
@@ -60,18 +108,23 @@
                                                  selector: @selector(flushInbox) object: nil];
     }
     self.running = NO;
+    [_db replicatorDidStop: self];
 }
 
 
-- (void) addToInbox: (NSDictionary*)change {
+- (void) addToInbox: (TDRevision*)rev {
     Assert(_running);
     if (!_inbox) {
-        _inbox = [[NSMutableArray alloc] init];
+        _inbox = [[TDRevisionList alloc] init];
         [self performSelector: @selector(flushInbox) withObject: nil afterDelay: kProcessDelay];
+        self.active = YES;
+    } else if (_inbox.count >= kInboxCapacity) {
+        [self flushInbox];
+        _inbox = [[TDRevisionList alloc] init];
     }
-    [_inbox addObject: change];
-    LogTo(Sync, @"%@: Received #%@ (%@)",
-          self, [change objectForKey: @"seq"], [change objectForKey: @"id"]);
+    [_inbox addRev: rev];
+    LogTo(SyncVerbose, @"%@: Received #%lld (%@)",
+          self, rev.sequence, rev.docID);
 }
 
 
@@ -84,16 +137,17 @@
         return;
     
     LogTo(Sync, @"*** %@: BEGIN processInbox (%i sequences)", self, _inbox.count);
-    NSArray* inbox = [_inbox autorelease];
+    TDRevisionList* inbox = [_inbox autorelease];
     _inbox = nil;
     [self processInbox: inbox];
     LogTo(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
+    self.active = NO;
 }
 
 
 - (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
 {
-    LogTo(Sync, @"%@: %@ %@", self, method, relativePath);
+    LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: [NSURL URLWithString: urlStr]];
     request.HTTPMethod = method;
@@ -108,7 +162,7 @@
                                          returningResponse: (NSURLResponse**)&response
                                                      error: &error];
     if (!data || error || response.statusCode >= 300) {
-        Warn(@"%@: %@ %@ failed (%@)", self, method, relativePath, 
+        Warn(@"%@: %@ .%@ failed (%@)", self, method, relativePath, 
              (error ? error : $object(response.statusCode)));
         return nil;
     }

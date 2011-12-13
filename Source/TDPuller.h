@@ -7,6 +7,7 @@
 //
 
 #import "TDReplicator.h"
+@class TDChangeTracker;
 
 
 /** Replicator that pulls from a remote CouchDB. */

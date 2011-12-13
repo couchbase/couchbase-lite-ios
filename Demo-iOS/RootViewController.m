@@ -282,30 +282,36 @@
 
 
 - (void)updateSyncURL {
-#if 0 // TEMP
     if (!self.database)
         return;
     NSURL* newRemoteURL = nil;
     NSString *syncpoint = [[NSUserDefaults standardUserDefaults] objectForKey:@"syncpoint"];
-    if (syncpoint.length > 0)
+    if (syncpoint.length > 0) {
         newRemoteURL = [NSURL URLWithString:syncpoint];
+        if ([newRemoteURL isEqual: _pull.remoteURL])
+            return;  // no-op
+    }
     
     [self forgetSync];
+    if (newRemoteURL) {
+        _pull = [[self.database pullFromDatabaseAtURL: newRemoteURL
+                                              options: kCouchReplicationContinuous] retain];
+        _push = [[self.database pushToDatabaseAtURL: newRemoteURL
+                                            options: kCouchReplicationContinuous] retain];
 
-    NSArray* repls = [self.database replicateWithURL: newRemoteURL exclusively: YES];
-    _pull = [[repls objectAtIndex: 0] retain];
-    _push = [[repls objectAtIndex: 1] retain];
-    [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-    [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-#endif
+        [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+        [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+    }
 }
 
 
 - (void) forgetSync {
     [_pull removeObserver: self forKeyPath: @"completed"];
+    [_pull stop];
     [_pull release];
     _pull = nil;
     [_push removeObserver: self forKeyPath: @"completed"];
+    [_push stop];
     [_push release];
     _push = nil;
 }

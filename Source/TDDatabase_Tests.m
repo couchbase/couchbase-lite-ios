@@ -91,7 +91,7 @@ TestCase(TDDatabase_CRUD) {
     readRev = [db getDocumentWithID: revD.docID];
     CAssertNil(readRev);
     
-    NSArray* changes = [db changesSinceSequence: 0 options: NULL];
+    TDRevisionList* changes = [db changesSinceSequence: 0 options: NULL];
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
     
@@ -127,7 +127,7 @@ TestCase(TDDatabase_RevTree) {
     TDRevision* rev = [[[TDRevision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO] autorelease];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     NSArray* history = $array(rev.revID, @"3-thrice", @"2-too", @"1-won");
-    TDStatus status = [db forceInsert: rev revisionHistory: history];
+    TDStatus status = [db forceInsert: rev revisionHistory: history source: nil];
     CAssertEq(status, 201);
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, rev, history);
@@ -136,7 +136,7 @@ TestCase(TDDatabase_RevTree) {
     conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
                                 {@"message", @"yo"});
     history = $array(conflict.revID, @"4-delta", @"3-gamma", @"2-too", @"1-won");
-    status = [db forceInsert: conflict revisionHistory: history];
+    status = [db forceInsert: conflict revisionHistory: history source: nil];
     CAssertEq(status, 201);
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, conflict, history);
@@ -210,10 +210,29 @@ TestCase(TDDatabase_Attachments) {
 }
 
 
+TestCase(TDDatabase_ReplicatorSequences) {
+    RequireTestCase(TDDatabase_CRUD);
+    TDDatabase* db = createDB();
+    NSURL* remote = [NSURL URLWithString: @"http://iriscouch.com/"];
+    CAssertNil([db lastSequenceWithRemoteURL: remote push: NO]);
+    CAssertNil([db lastSequenceWithRemoteURL: remote push: YES]);
+    [db setLastSequence: @"lastpull" withRemoteURL: remote push: NO];
+    CAssertEqual([db lastSequenceWithRemoteURL: remote push: NO], @"lastpull");
+    CAssertNil([db lastSequenceWithRemoteURL: remote push: YES]);
+    [db setLastSequence: @"newerpull" withRemoteURL: remote push: NO];
+    CAssertEqual([db lastSequenceWithRemoteURL: remote push: NO], @"newerpull");
+    CAssertNil([db lastSequenceWithRemoteURL: remote push: YES]);
+    [db setLastSequence: @"lastpush" withRemoteURL: remote push: YES];
+    CAssertEqual([db lastSequenceWithRemoteURL: remote push: NO], @"newerpull");
+    CAssertEqual([db lastSequenceWithRemoteURL: remote push: YES], @"lastpush");
+}
+
+
 TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_CRUD);
     RequireTestCase(TDDatabase_RevTree);
     RequireTestCase(TDDatabase_Attachments);
+    RequireTestCase(TDDatabase_ReplicatorSequences);
 }
 
 

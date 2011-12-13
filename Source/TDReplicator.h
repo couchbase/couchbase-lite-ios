@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class TDDatabase, TDChangeTracker;
+@class TDDatabase, TDRevisionList;
 
 
 /** Abstract base class for push or pull replications. */
@@ -18,30 +18,31 @@
     TDDatabase* _db;
     NSURL* _remote;
     BOOL _continuous;
-    id _lastSequence;
-    BOOL _running;
-    NSMutableArray* _inbox;
+    NSString* _lastSequence;
+    BOOL _running, _active;
+    NSString* _sessionID;
+    TDRevisionList* _inbox;
 }
 
 - (id) initWithDB: (TDDatabase*)db
            remote: (NSURL*)remote
+             push: (BOOL)push
        continuous: (BOOL)continuous;
 
 @property (readonly) TDDatabase* db;
 @property (readonly) NSURL* remote;
-
-@property (copy) id lastSequence;
+@property (readonly) BOOL isPush;
 
 - (void) start;
 - (void) stop;
+
+/** Has the replicator been started? (Observable) */
 @property (readonly) BOOL running;
 
-// protected:
-- (void) addToInbox: (NSDictionary*)change;
-- (void) processInbox: (NSArray*)inbox;  // override this
-- (void) flushInbox;  // optionally call this to flush the inbox
-- (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body;
+/** Is the replicator actively sending/receiving revisions? (Observable) */
+@property (readonly) BOOL active;
 
+@property (readonly) NSString* sessionID;
 @end
 
 

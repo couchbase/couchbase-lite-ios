@@ -136,29 +136,29 @@ TestCase(TDRouter_Docs) {
     Send(server, @"GET", @"/db/doc1", 404, nil);
     
     // _changes:
-    result = Send(server, @"GET", @"/db/_changes", 200,
-                  $dict({@"last_seq", $object(5)},
-                        {@"results", $array($dict({@"id", @"doc3"},
-                                                  {@"changes", $array($dict({@"rev", revID3}))},
-                                                  {@"seq", $object(3)}),
-                                            $dict({@"id", @"doc2"},
-                                                  {@"changes", $array($dict({@"rev", revID2}))},
-                                                  {@"seq", $object(4)}),
-                                            $dict({@"id", @"doc1"},
-                                                  {@"changes", $array($dict({@"rev", revID}))},
-                                                  {@"seq", $object(5)},
-                                                  {@"deleted", $true}))}));
+    Send(server, @"GET", @"/db/_changes", 200,
+         $dict({@"last_seq", $object(5)},
+               {@"results", $array($dict({@"id", @"doc3"},
+                                         {@"changes", $array($dict({@"rev", revID3}))},
+                                         {@"seq", $object(3)}),
+                                   $dict({@"id", @"doc2"},
+                                         {@"changes", $array($dict({@"rev", revID2}))},
+                                         {@"seq", $object(4)}),
+                                   $dict({@"id", @"doc1"},
+                                         {@"changes", $array($dict({@"rev", revID}))},
+                                         {@"seq", $object(5)},
+                                         {@"deleted", $true}))}));
     
     // _changes with ?since:
-    result = Send(server, @"GET", @"/db/_changes?since=4", 200,
-                  $dict({@"last_seq", $object(5)},
-                        {@"results", $array($dict({@"id", @"doc1"},
-                                                  {@"changes", $array($dict({@"rev", revID}))},
-                                                  {@"seq", $object(5)},
-                                                  {@"deleted", $true}))}));
-    result = Send(server, @"GET", @"/db/_changes?since=5", 200,
-                  $dict({@"last_seq", $object(5)},
-                        {@"results", $array()}));
+    Send(server, @"GET", @"/db/_changes?since=4", 200,
+         $dict({@"last_seq", $object(5)},
+               {@"results", $array($dict({@"id", @"doc1"},
+                                         {@"changes", $array($dict({@"rev", revID}))},
+                                         {@"seq", $object(5)},
+                                         {@"deleted", $true}))}));
+    Send(server, @"GET", @"/db/_changes?since=5", 200,
+         $dict({@"last_seq", $object(5)},
+               {@"results", $array()}));
 }
 
 

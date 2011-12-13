@@ -13,6 +13,8 @@
 #import "TDView.h"
 #import "TDCollateJSON.h"
 #import "TDBlobStore.h"
+#import "TDPuller.h"
+#import "TDPusher.h"
 
 #import "FMDatabase.h"
 
@@ -110,7 +112,12 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
             filename TEXT NOT NULL, \
             key BLOB NOT NULL); \
-        CREATE INDEX IF NOT EXISTS attachments_by_sequence on attachments(sequence, filename)";
+        CREATE INDEX IF NOT EXISTS attachments_by_sequence on attachments(sequence, filename); \
+        CREATE TABLE IF NOT EXISTS replicators ( \
+            remote TEXT NOT NULL, \
+            push BOOLEAN, \
+            last_sequence TEXT, \
+            UNIQUE (remote, push))";
     // Declaring revs.sequence as AUTOINCREMENT means the values will always be
     // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
     for (NSString* statement in [sql componentsSeparatedByString: @";"]) {
@@ -150,6 +157,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     [_fmdb release];
     [_path release];
     [_views release];
+    [_activeReplicators release];
     [super dealloc];
 }
 
@@ -325,9 +333,11 @@ static NSString* createUUID() {
 }
 
 
-- (void) notifyChange: (TDRevision*)rev
+- (void) notifyChange: (TDRevision*)rev source: (NSURL*)source
 {
-    NSDictionary* userInfo = $dict({@"rev", rev}, {@"seq", $object(rev.sequence)});
+    NSDictionary* userInfo = $dict({@"rev", rev},
+                                   {@"seq", $object(rev.sequence)},
+                                   {@"source", source});
     [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseChangeNotification
                                                         object: self
                                                       userInfo: userInfo];
@@ -493,12 +503,15 @@ exit:
         return nil;
     
     // Send a change notification:
-    [self notifyChange: rev];
+    [self notifyChange: rev source: nil];
     return rev;
 }
 
 
-- (TDStatus) forceInsert: (TDRevision*)rev revisionHistory: (NSArray*)history {
+- (TDStatus) forceInsert: (TDRevision*)rev
+         revisionHistory: (NSArray*)history
+                  source: (NSURL*)source
+{
     // First look up all locally-known revisions of this document:
     NSString* docID = rev.docID;
     SInt64 docNumericID = [self getOrInsertDocNumericID: docID];
@@ -550,7 +563,7 @@ exit:
     
     // Record its sequence and send a change notification:
     rev.sequence = parentSequence;
-    [self notifyChange: rev];
+    [self notifyChange: rev source: source];
     
     return 201;
 }
@@ -559,8 +572,8 @@ exit:
 #pragma mark - CHANGES:
 
 
-- (NSArray*) changesSinceSequence: (int)lastSequence
-                          options: (const TDQueryOptions*)options
+- (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
+                                 options: (const TDQueryOptions*)options
 {
     if (!options) options = &kDefaultTDQueryOptions;
 
@@ -571,13 +584,13 @@ exit:
                                           $object(lastSequence), $object(options->limit)];
     if (!r)
         return nil;
-    NSMutableArray* changes = $marray();
+    TDRevisionList* changes = [[[TDRevisionList alloc] init] autorelease];
     while ([r next]) {
         TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 1]
                                               revID: [r stringForColumnIndex: 2]
                                             deleted: [r boolForColumnIndex: 3]];
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        [changes addObject: rev];
+        [changes addRev: rev];
         [rev release];
     }
     [r close];
@@ -733,6 +746,59 @@ exit:
 
 
 #pragma mark - FOR REPLICATION
+
+
+- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
+                                           push: (BOOL)push {
+    TDReplicator* repl;
+    for (repl in _activeReplicators) {
+        if ($equal(repl.remote, remote) && repl.isPush == push)
+            return repl;
+    }
+    return nil;
+}
+
+- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
+                                    push: (BOOL)push
+                              continuous: (BOOL)continuous {
+    TDReplicator* repl = [self activeReplicatorWithRemoteURL: remote push: push];
+    if (repl)
+        return repl;
+    repl = [[TDReplicator alloc] initWithDB: self
+                                     remote: remote 
+                                       push: push
+                                 continuous: continuous];
+    if (!repl)
+        return nil;
+    if (!_activeReplicators)
+        _activeReplicators = [[NSMutableArray alloc] init];
+    [_activeReplicators addObject: repl];
+    [repl start];
+    [repl release];
+    return repl;
+}
+
+- (void) replicatorDidStop: (TDReplicator*)repl {
+    [_activeReplicators removeObjectIdenticalTo: repl];
+}
+
+
+- (NSString*) lastSequenceWithRemoteURL: (NSURL*)url push: (BOOL)push {
+    FMResultSet* r = [_fmdb executeQuery:
+                      @"SELECT last_sequence FROM replicators WHERE remote=? AND push=?",
+                      url.absoluteString, $object(push)];
+    NSString* lastSequence = nil;
+    if ([r next])
+        lastSequence = [r stringForColumnIndex: 0];
+    [r close];
+    return lastSequence;
+}
+
+- (BOOL) setLastSequence: (NSString*)lastSequence withRemoteURL: (NSURL*)url push: (BOOL)push {
+    return [_fmdb executeUpdate: 
+            @"INSERT OR REPLACE INTO replicators (remote, push, last_sequence) VALUES (?, ?, ?)",
+            url.absoluteString, $object(push), lastSequence];
+}
 
 
 static NSString* quote(NSString* str) {

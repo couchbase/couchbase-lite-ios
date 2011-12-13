@@ -51,6 +51,7 @@ typedef enum TDChangeTrackerMode {
 @property (readonly, nonatomic) NSString* databaseName;
 @property (readonly, nonatomic) TDChangeTrackerMode mode;
 @property (readonly, nonatomic) NSUInteger lastSequenceNumber;
+@property (nonatomic, assign) id<TDChangeTrackerClient> client;
 
 - (BOOL) start;
 - (void) stop;

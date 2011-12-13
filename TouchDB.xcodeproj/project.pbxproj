@@ -137,7 +137,6 @@
 		27B0B8561492D0A400A817AD /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
 		27B0B8571492D0AA00A817AD /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; };
 		27C706421486BBD500F0F099 /* TDServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* TDServer.m */; };
-		27C706451486BE7100F0F099 /* TDRouter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706441486BE7100F0F099 /* TDRouter.m */; };
 		27C706481487584300F0F099 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
 		27C706621488625C00F0F099 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
 		27C706701488634300F0F099 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7066F1488634300F0F099 /* AppKit.framework */; };
@@ -1185,7 +1184,6 @@
 				27F0751311CDC7F900E9A2AB /* Logging.m in Sources */,
 				27F0751811CDC80A00E9A2AB /* ExceptionUtils.m in Sources */,
 				27C706421486BBD500F0F099 /* TDServer.m in Sources */,
-				27C706451486BE7100F0F099 /* TDRouter.m in Sources */,
 				27C706481487584300F0F099 /* TDURLProtocol.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -10,6 +10,7 @@
 #import "TDDatabase.h"
 #import "TDRevision.h"
 #import "TDChangeTracker.h"
+#import "TDInternal.h"
 
 
 
@@ -46,6 +47,7 @@
 
 
 - (void) stop {
+    _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
     [_changeTracker stop];
     [_changeTracker release];
     _changeTracker = nil;
@@ -54,7 +56,20 @@
 
 
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
-    [self addToInbox: change];
+    SequenceNumber lastSequence = [[change objectForKey: @"seq"] longLongValue];
+    NSString* docID = [change objectForKey: @"id"];
+    if (!docID)
+        return;
+    BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
+    for (NSDictionary* changeDict in $castIf(NSArray, [change objectForKey: @"changes"])) {
+        NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
+        if (!revID)
+            continue;
+        TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
+        rev.sequence = lastSequence;
+        [self addToInbox: rev];
+        [rev release];
+    }
 }
 
 
@@ -68,49 +83,42 @@
 }
 
 
-- (void) processInbox: (NSArray*)inbox {
-    // Parse the _changes-feed entries into a list of TDRevs:
-    id lastSequence = _lastSequence;
-    TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
-    for (NSDictionary* change in inbox) {
-        lastSequence = [change objectForKey: @"seq"];
-        NSString* docID = [change objectForKey: @"id"];
-        if (!docID)
-            continue;
-        BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
-        for (NSDictionary* changeDict in $castIf(NSArray, [change objectForKey: @"changes"])) {
-            NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
-            if (!revID)
-                continue;
-            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
-            [revs addRev: rev];
-            [rev release];
-        }
-    }
-    
+- (void) processInbox: (TDRevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
-    LogTo(Sync, @"TDPuller: Looking up %@", revs);
-    if (![_db findMissingRevisions: revs]) {
+    LogTo(SyncVerbose, @"TDPuller: Looking up %@", inbox);
+    if (![_db findMissingRevisions: inbox]) {
         Warn(@"TDPuller failed to look up local revs");
         return;
     }
+    if (inbox.count == 0)
+        return;
+    LogTo(Sync, @"%@ fetching %u remote revisions...", self, inbox.count);
+    
+    [_db beginTransaction];
     
     // Fetch and add each of the new revs:
-    for (TDRevision* rev in revs) {
+    SequenceNumber lastSequence;
+    for (TDRevision* rev in inbox) {
+        if (_db.transactionFailed)
+            break;
+        lastSequence = rev.sequence;
         NSArray* history;
         if (![self pullRemoteRevision: rev history: &history]) {
             Warn(@"%@ failed to download %@", self, rev);
             continue;
         }
-        int status = [_db forceInsert: rev revisionHistory: history];
+        int status = [_db forceInsert: rev revisionHistory: history source: _remote];
         if (status >= 300) {
             Warn(@"%@ failed to write %@: status=%d", self, rev, status);
             continue;
         }
-        LogTo(Sync, @"%@ added %@", self, rev);
+        LogTo(SyncVerbose, @"%@ added %@", self, rev);
     }
     
-    self.lastSequence = lastSequence;
+    if (!_db.transactionFailed)
+        self.lastSequence = $sprintf(@"%lld", lastSequence);
+    
+    [_db endTransaction];
 }
 
 

@@ -23,6 +23,7 @@
 @property (readonly) NSString* directory;
 
 - (TDDatabase*) databaseNamed: (NSString*)name;
+- (TDDatabase*) existingDatabaseNamed: (NSString*)name;
 
 - (BOOL) deleteDatabaseNamed: (NSString*)name;
 

@@ -8,7 +8,7 @@
  */
 
 #import "TDRevision.h"
-@class FMDatabase, TDRevision, TDRevisionList, TDView, TDBlobStore;
+@class FMDatabase, TDRevision, TDRevisionList, TDView, TDBlobStore, TDReplicator;
 
 struct TDQueryOptions;
 
@@ -33,6 +33,7 @@ extern NSString* const TDDatabaseChangeNotification;
     BOOL _transactionFailed;
     NSMutableDictionary* _views;
     TDBlobStore* _attachments;
+    NSMutableArray* _activeReplicators;
 }    
         
 - (id) initWithPath: (NSString*)path;
@@ -77,7 +78,8 @@ extern NSString* const TDDatabaseChangeNotification;
          prevRevisionID: (NSString*)revID
                  status: (TDStatus*)outStatus;
 - (TDStatus) forceInsert: (TDRevision*)rev
-            revisionHistory: (NSArray*)history;
+         revisionHistory: (NSArray*)history
+                  source: (NSURL*)source;
 
 - (BOOL) insertAttachment: (NSData*)contents
               forSequence: (SequenceNumber)sequence
@@ -86,8 +88,8 @@ extern NSString* const TDDatabaseChangeNotification;
                                named: (NSString*)filename
                               status: (TDStatus*)outStatus;
 
-- (NSArray*) changesSinceSequence: (int)lastSequence
-                          options: (const struct TDQueryOptions*)options;
+- (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
+                                 options: (const struct TDQueryOptions*)options;
 
 // VIEWS & QUERIES:
 
@@ -98,6 +100,11 @@ extern NSString* const TDDatabaseChangeNotification;
 
 // FOR REPLICATION:
 
+- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
+                                           push: (BOOL)push;
+- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
+                                    push: (BOOL)push
+                              continuous: (BOOL)continuous;
 - (BOOL) findMissingRevisions: (TDRevisionList*)revs;
 
 @end

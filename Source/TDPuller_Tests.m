@@ -17,8 +17,7 @@
 
 static id pull(TDDatabase* db, NSString* urlStr, id lastSequence) {
     NSURL* remote = [NSURL URLWithString: urlStr];
-    TDPuller* puller = [[[TDPuller alloc] initWithDB: db remote: remote continuous: NO] autorelease];
-    puller.lastSequence = lastSequence;
+    TDReplicator* puller = [[[TDReplicator alloc] initWithDB: db remote: remote push: NO continuous: NO] autorelease];
     [puller start];
     
     CAssert(puller.running);

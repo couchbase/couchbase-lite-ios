@@ -23,33 +23,34 @@
 @implementation TDChangeTracker
 
 @synthesize lastSequenceNumber=_lastSequenceNumber, databaseURL=_databaseURL, mode=_mode;
+@synthesize client=_client;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
              lastSequence: (NSUInteger)lastSequence
                    client: (id<TDChangeTrackerClient>)client {
-    if ([self class] == [TDChangeTracker class]) {
-        [self release];
-        // TDConnectionChangeTracker doesn't work in continuous due to some bug in CFNetwork.
-        if (_mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"]) {
-            return (id) [[TDSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                         mode: mode
-                                                                 lastSequence: lastSequence
-                                                                       client: client];
-        } else {
-            return (id) [[TDConnectionChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                             mode: mode
-                                                                     lastSequence: lastSequence
-                                                                           client: client];
-        }
-    }
-    
     NSParameterAssert(databaseURL);
     NSParameterAssert(client);
     self = [super init];
     if (self) {
+        if ([self class] == [TDChangeTracker class]) {
+            [self release];
+            // TDConnectionChangeTracker doesn't work in continuous due to some bug in CFNetwork.
+            if (mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"]) {
+                return (id) [[TDSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
+                                                                          mode: mode
+                                                                  lastSequence: lastSequence
+                                                                        client: client];
+            } else {
+                return (id) [[TDConnectionChangeTracker alloc] initWithDatabaseURL: databaseURL
+                                                                              mode: mode
+                                                                      lastSequence: lastSequence
+                                                                            client: client];
+            }
+        }
+    
         _databaseURL = [databaseURL retain];
-        _client = [client retain];
+        _client = client;
         _mode = mode;
         _lastSequenceNumber = lastSequence;
     }
@@ -79,7 +80,6 @@
 - (void)dealloc {
     [self stop];
     [_databaseURL release];
-    [_client release];
     [super dealloc];
 }
 

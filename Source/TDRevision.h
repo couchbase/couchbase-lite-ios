@@ -61,6 +61,7 @@ typedef SInt64 SequenceNumber;
 
 - (NSEnumerator*) objectEnumerator;
 
+@property (readonly) NSArray* allRevisions;
 @property (readonly) NSArray* allDocIDs;
 @property (readonly) NSArray* allRevIDs;
 

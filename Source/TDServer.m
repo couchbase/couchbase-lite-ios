@@ -79,17 +79,29 @@ static NSCharacterSet* kIllegalNameChars;
     return [_dir stringByAppendingPathComponent:[name stringByAppendingPathExtension:kDBExtension]];
 }
 
-- (TDDatabase*) databaseNamed: (NSString*)name {
+- (TDDatabase*) databaseNamed: (NSString*)name create: (BOOL)create {
     TDDatabase* db = [_databases objectForKey: name];
     if (!db) {
         NSString* path = [self pathForName: name];
         if (!path)
             return nil;
         db = [[TDDatabase alloc] initWithPath: path];
+        if (!create && !db.exists) {
+            [db release];
+            return nil;
+        }
         [_databases setObject: db forKey: name];
         [db release];
     }
     return db;
+}
+
+- (TDDatabase*) databaseNamed: (NSString*)name {
+    return [self databaseNamed: name create: YES];
+}
+
+- (TDDatabase*) existingDatabaseNamed: (NSString*)name {
+    return [self databaseNamed: name create: NO];
 }
 
 - (BOOL) deleteDatabaseNamed: (NSString*)name {

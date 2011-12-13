@@ -9,6 +9,7 @@
 #import "TDPusher.h"
 #import "TDDatabase.h"
 #import "TDRevision.h"
+#import "TDInternal.h"
 
 
 static NSDictionary* makeCouchRevisionList( NSArray* history );
@@ -17,13 +18,19 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
 @implementation TDPusher
 
 
+- (BOOL) isPush {
+    return YES;
+}
+
+
 - (void) start {
     if (_running)
         return;
     [super start];
     
     // Process existing changes since the last push:
-    NSArray* changes = [_db changesSinceSequence: [_lastSequence intValue] options: nil];
+    TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
+                                                options: nil];
     if (changes.count > 0)
         [self processInbox: changes];
     
@@ -40,11 +47,15 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
 }
 
 - (void) dbChanged: (NSNotification*)n {
-    [self addToInbox: [n.userInfo objectForKey: @"rev"]];
+    NSDictionary* userInfo = n.userInfo;
+    // Skip revisions that came from the database I'm syncing to:
+    if ([[userInfo objectForKey: @"source"] isEqual: _remote])
+        return;
+    [self addToInbox: [userInfo objectForKey: @"rev"]];
 }
 
 
-- (void) processInbox: (NSArray*)changes {
+- (void) processInbox: (TDRevisionList*)changes {
     // Generate a set of doc/rev IDs in the JSON format that _revs_diff wants:
     NSMutableDictionary* diffs = $mdict();
     for (TDRevision* rev in changes) {
@@ -62,7 +73,7 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
     if (results.count) {
         // Go through the list of local changes again, selecting the ones the destination server
         // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
-        NSArray* docsToSend = [changes my_map: ^(id rev) {
+        NSArray* docsToSend = [changes.allRevisions my_map: ^(id rev) {
             NSArray* revs = [[results objectForKey: [rev docID]] objectForKey: @"missing"];
             if (![revs containsObject: [rev revID]])
                 return (id)nil;
@@ -86,13 +97,14 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
         
         // Post the revisions to the destination. "new_edits":false means that the server should
         // use the given _rev IDs instead of making up new ones.
+        LogTo(Sync, @"%@: Sending %u revisions", self, docsToSend.count);
         [self sendRequest: @"POST"
                      path: @"/_bulk_docs"
                      body: $dict({@"docs", docsToSend},
                                  {@"new_edits", $false})];
     }
     
-    self.lastSequence = $object([changes.lastObject sequence]);
+    self.lastSequence = $sprintf(@"%lld", [changes.allRevisions.lastObject sequence]);
 }
 
 

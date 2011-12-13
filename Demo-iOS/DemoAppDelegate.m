@@ -39,8 +39,8 @@
     NSLog(@"TDServer is at %@", path);
     [TDURLProtocol setServer: tdServer];
     
-    gRESTLogLevel = kRESTLogRequestHeaders;
-    gCouchLogLevel = 2;
+    //gRESTLogLevel = kRESTLogRequestHeaders;
+    //gCouchLogLevel = 2;
     NSURL* url = [NSURL URLWithString: @"touchdb:///grocery-sync"];
     self.database = [[CouchDatabase databaseWithURL: url] retain];
     

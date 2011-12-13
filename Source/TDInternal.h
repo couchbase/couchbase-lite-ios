@@ -9,12 +9,19 @@
 #import "TDDatabase.h"
 #import "TDView.h"
 #import "TDServer.h"
+#import "TDReplicator.h"
 
 
 @interface TDDatabase ()
 @property (readonly) FMDatabase* fmdb;
 @property (readonly) TDBlobStore* attachmentStore;
 - (TDStatus) deleteViewNamed: (NSString*)name;
+- (NSString*) lastSequenceWithRemoteURL: (NSURL*)url
+                                   push: (BOOL)push;
+- (BOOL) setLastSequence: (NSString*)lastSequence
+           withRemoteURL: (NSURL*)url
+                    push: (BOOL)push;
+- (void) replicatorDidStop: (TDReplicator*)repl;
 @end
 
 
@@ -29,4 +36,14 @@
 #if DEBUG
 + (TDServer*) createEmptyAtPath: (NSString*)path;  // for testing
 #endif
+@end
+
+
+@interface TDReplicator ()
+// protected:
+@property (copy) NSString* lastSequence;
+- (void) addToInbox: (TDRevision*)rev;
+- (void) processInbox: (TDRevisionList*)inbox;  // override this
+- (void) flushInbox;  // optionally call this to flush the inbox
+- (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body;
 @end

@@ -83,8 +83,8 @@ int main (int argc, const char * argv[]) {
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
 #if 1
     TDDatabase* db = [[TDURLProtocol server] databaseNamed: _database.relativePath];
-    _puller = [[TDPuller alloc] initWithDB: db remote: otherDbURL continuous: NO];
-    _pusher = [[TDPusher alloc] initWithDB: db remote: otherDbURL continuous: NO];
+    _puller = [[TDReplicator alloc] initWithDB: db remote: otherDbURL push: NO continuous: NO];
+    _pusher = [[TDReplicator alloc] initWithDB: db remote: otherDbURL push: YES continuous: NO];
 #else
     _pull = [[_database pullFromDatabaseAtURL: otherDbURL
                                       options: kCouchReplicationContinuous] retain];
