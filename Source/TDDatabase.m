@@ -902,7 +902,7 @@ static NSString* joinQuoted(NSArray* strings) {
     NSString* sql = $sprintf(@"SELECT docid, revid FROM revs, docs "
                               "WHERE revid in (%@) AND docid IN (%@) "
                               "AND revs.doc_id == docs.doc_id",
-                             joinQuoted(revs.allDocIDs), joinQuoted(revs.allRevIDs));
+                             joinQuoted(revs.allRevIDs), joinQuoted(revs.allDocIDs));
     // ?? Not sure sqlite will optimize this fully. May need a first query that looks up all
     // the numeric doc_ids from the docids.
     FMResultSet* r = [_fmdb executeQuery: sql];

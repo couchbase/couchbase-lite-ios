@@ -101,7 +101,10 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 - (TDDatabase*) existingDatabaseNamed: (NSString*)name {
-    return [self databaseNamed: name create: NO];
+    TDDatabase* db = [self databaseNamed: name create: NO];
+    if (db && ![db open])
+        db = nil;
+    return db;
 }
 
 - (BOOL) deleteDatabaseNamed: (NSString*)name {
