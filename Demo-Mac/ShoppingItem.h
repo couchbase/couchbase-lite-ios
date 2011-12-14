@@ -12,5 +12,6 @@
 
 @property bool check;       // bool is better than BOOL: it maps to true/false in JSON, not 0/1.
 @property (copy) NSString* text;
+@property (retain) NSDate* created_at;
 
 @end

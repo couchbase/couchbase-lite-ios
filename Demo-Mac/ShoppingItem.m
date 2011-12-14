@@ -10,6 +10,12 @@
 
 @implementation ShoppingItem
 
-@dynamic check, text;
+@dynamic check, text, created_at;
+
+- (NSDictionary*) propertiesToSave {
+    if (self.created_at == nil)
+        self.created_at = [NSDate date];
+    return [super propertiesToSave];
+}
 
 @end

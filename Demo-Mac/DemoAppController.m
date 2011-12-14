@@ -16,11 +16,7 @@
 #import "DemoAppController.h"
 #import "DemoQuery.h"
 #import "Test.h"
-#import "TDDatabase.h"
-#import "TDServer.h"
-#import "TDURLProtocol.h"
-#import "TDPuller.h"
-#import "TDPusher.h"
+#import "TouchDB.h"
 #import <CouchCocoa/CouchCocoa.h>
 
 
@@ -50,16 +46,13 @@ int main (int argc, const char * argv[]) {
         exit(1);
     }
 
-#if 0
-    CouchServer *server = [[CouchServer alloc] init];
-#else
-    TDServer* tdServer = [[TDServer alloc] initWithDirectory: @"/tmp/ShoppingDemo" error: nil];
+    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: @"/tmp/ShoppingDemo" error: nil] autorelease];
     NSAssert(tdServer, @"Couldn't create TDServer");
     [TDURLProtocol setServer: tdServer];
-    [tdServer release];
+    
     NSURL* url = [NSURL URLWithString: @"touchdb:///"];
     CouchServer *server = [[CouchServer alloc] initWithURL: url];
-#endif
+
     _database = [[server databaseNamed: dbName] retain];
     [server release];
     
@@ -68,7 +61,29 @@ int main (int argc, const char * argv[]) {
         NSAssert(op.error.code == 412, @"Error creating db: %@", op.error);
     }
     
-    CouchQuery* q = [_database getAllDocuments];
+    
+    // Create a CouchDB 'view' containing list items sorted by date
+    TDDatabase* tdb = [tdServer existingDatabaseNamed: dbName];
+    [[tdb viewNamed: @"byDate"] setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        id date = [doc objectForKey: @"created_at"];
+        if (date) emit(date, doc);
+    } version: @"1"];
+        
+    // ...and a validation function requiring parseable dates:
+    [tdb addValidation: ^(TDRevision* newRevision, id<TDValidationContext>context) {
+        if (newRevision.deleted)
+            return YES;
+        id date = [newRevision.properties objectForKey: @"created_at"];
+        if (date && ! [RESTBody dateWithJSONObject: date]) {
+            NSLog(@"Invalid date: %@", date);//TEMP
+            context.errorMessage = [@"invalid date " stringByAppendingString: date];
+            return NO;
+        }
+        return YES;
+    }];
+
+    
+    CouchQuery* q = [[_database designDocumentWithName: @"default"] queryViewNamed: @"byDate"];
     q.descending = YES;
     self.query = [[[DemoQuery alloc] initWithQuery: q] autorelease];
     self.query.modelClass =_tableController.objectClass;
@@ -81,25 +96,17 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
-#if 1
-    TDDatabase* db = [[TDURLProtocol server] databaseNamed: _database.relativePath];
-    _puller = [[TDReplicator alloc] initWithDB: db remote: otherDbURL push: NO continuous: NO];
-    _pusher = [[TDReplicator alloc] initWithDB: db remote: otherDbURL push: YES continuous: NO];
-#else
-    _pull = [[_database pullFromDatabaseAtURL: otherDbURL
-                                      options: kCouchReplicationContinuous] retain];
-    _push = [[_database pushToDatabaseAtURL: otherDbURL
-                                    options: kCouchReplicationContinuous] retain];
-#endif
+    _pull = [[_database pullFromDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous] retain];
+    _push = [[_database pushToDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous] retain];
 }
 
 
 - (IBAction) pull:(id)sender {
-    [_puller start];
+    //[_puller start];
 }
 
 - (IBAction) push:(id)sender {
-    [_pusher start];
+    //[_pusher start];
 }
 
 
