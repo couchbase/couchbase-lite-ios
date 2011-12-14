@@ -26,6 +26,9 @@
     IBOutlet NSTableView* _table;
     IBOutlet NSArrayController* _tableController;
     
+    IBOutlet NSPanel* _syncConfigSheet;
+    IBOutlet NSTextField* _syncURLField;
+    
     CouchDatabase* _database;
     DemoQuery* _query;
     CouchReplication *_pull, *_push;
@@ -34,8 +37,10 @@
 
 @property (retain) DemoQuery* query;
 
-- (IBAction) pull:(id)sender;
-- (IBAction) push:(id)sender;
+- (IBAction) configureSync: (id)sender;
+- (IBAction) dismissSyncConfigSheet:(id)sender;
+
+@property (retain) NSURL* syncURL;
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL;
 

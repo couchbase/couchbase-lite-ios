@@ -37,7 +37,7 @@ int main (int argc, const char * argv[]) {
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
     gRESTLogLevel = kRESTLogRequestURLs;
-    gCouchLogLevel = 1;
+    //gCouchLogLevel = 1;
     
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
@@ -46,8 +46,13 @@ int main (int argc, const char * argv[]) {
         exit(1);
     }
 
-    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: @"/tmp/ShoppingDemo" error: nil] autorelease];
-    NSAssert(tdServer, @"Couldn't create TDServer");
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                                         NSUserDomainMask, YES);
+    NSString* path = [[[paths objectAtIndex:0] stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]] stringByAppendingPathComponent: @"TouchDB"];
+    [[NSFileManager defaultManager] createDirectoryAtPath: path withIntermediateDirectories: YES attributes: nil error: nil];
+    NSError* error;
+    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: path error: &error] autorelease];
+    NSAssert(tdServer, @"Couldn't create TDServer: %@", error);
     [TDURLProtocol setServer: tdServer];
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///"];
@@ -89,24 +94,75 @@ int main (int argc, const char * argv[]) {
     self.query.modelClass =_tableController.objectClass;
     
     // Enable continuous sync:
-    NSString* otherDbURL = [bundleInfo objectForKey: @"SyncDatabaseURL"];
-    if (otherDbURL.length > 0)
-        [self startContinuousSyncWith: [NSURL URLWithString: otherDbURL]];
+    [self startContinuousSyncWith: self.syncURL];
+}
+
+
+#pragma mark - SYNC:
+
+
+- (NSURL*) syncURL {
+    NSString* urlStr = [[NSUserDefaults standardUserDefaults] stringForKey: @"SyncURL"];
+    return urlStr ? [NSURL URLWithString: urlStr] : nil;
+}
+
+- (void) setSyncURL:(NSURL *)url {
+    NSURL* currentURL = self.syncURL;
+    if (url != currentURL && ![url isEqual: currentURL]) {
+        [[NSUserDefaults standardUserDefaults] setObject: url.absoluteString
+                                                  forKey: @"SyncURL"];
+        [self startContinuousSyncWith: url];
+    }
+}
+
+
+- (NSURL*) currentURLFromField {
+    NSString* urlStr = _syncURLField.stringValue;
+    NSURL* url = nil;
+    if (urlStr.length > 0) {
+        url = [NSURL URLWithString: urlStr];
+        if (![url.scheme hasPrefix: @"http"]) 
+            url = nil;
+    }
+    return url;
+}
+
+
+- (IBAction) configureSync: (id)sender {
+    [NSApp beginSheet: _syncConfigSheet modalForWindow: _window
+        modalDelegate: self
+       didEndSelector:@selector(configureSyncFinished:returnCode:)
+          contextInfo: NULL];
+}
+
+- (IBAction) dismissSyncConfigSheet:(id)sender {
+    NSInteger returnCode = [sender tag];
+    if (returnCode == NSOKButton 
+            && _syncURLField.stringValue.length > 0 && !self.currentURLFromField) {
+        NSBeep();
+        return;
+    }
+    [NSApp endSheet: _syncConfigSheet returnCode: returnCode];
+}
+
+- (void) configureSyncFinished:(NSWindow *)sheet returnCode:(NSInteger)returnCode {
+    [sheet orderOut: self];
+    if (returnCode == NSOKButton)
+        self.syncURL = self.currentURLFromField;
 }
 
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
-    _pull = [[_database pullFromDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous] retain];
-    _push = [[_database pushToDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous] retain];
-}
-
-
-- (IBAction) pull:(id)sender {
-    //[_puller start];
-}
-
-- (IBAction) push:(id)sender {
-    //[_pusher start];
+    [_pull stop];
+    [_pull release];
+    if (otherDbURL)
+        _pull = [[_database pullFromDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
+                    retain];
+    [_push stop];
+    [_push release];
+    if (otherDbURL)
+        _push = [[_database pushToDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
+                    retain];
 }
 
 

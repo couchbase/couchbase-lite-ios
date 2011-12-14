@@ -74,7 +74,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_All"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>
