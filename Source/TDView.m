@@ -183,8 +183,9 @@ static id fromJSON( NSData* json ) {
     
     // Now scan every revision added since the last time the view was indexed:
     r = [fmdb executeQuery: @"SELECT sequence, parent, current, deleted, json FROM revs "
-                             "WHERE sequence>?",
-                             $object(lastSequence)];
+                             "WHERE sequence>? "
+                             "AND ((parent>0 AND parent<?) OR (current!=0 AND deleted=0))",
+                             $object(lastSequence), $object(lastSequence)];
     if (!r)
         goto exit;
     while ([r next]) {

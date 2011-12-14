@@ -151,6 +151,7 @@
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: [NSURL URLWithString: urlStr]];
     request.HTTPMethod = method;
+    request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
     if (body) {
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
         [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
