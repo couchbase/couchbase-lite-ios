@@ -97,7 +97,7 @@
     [_db beginTransaction];
     
     // Fetch and add each of the new revs:
-    SequenceNumber lastSequence;
+    SequenceNumber lastSequence = _lastSequence.longLongValue;
     for (TDRevision* rev in inbox) {
         if (_db.transactionFailed)
             break;
@@ -109,7 +109,10 @@
         }
         int status = [_db forceInsert: rev revisionHistory: history source: _remote];
         if (status >= 300) {
-            Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+            if (status == 403)
+                LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
+            else
+                Warn(@"%@ failed to write %@: status=%d", self, rev, status);
             continue;
         }
         LogTo(SyncVerbose, @"%@ added %@", self, rev);

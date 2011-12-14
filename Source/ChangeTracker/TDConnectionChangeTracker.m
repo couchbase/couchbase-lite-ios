@@ -30,13 +30,18 @@
 }
 
 
-- (void) stopped {
-    LogTo(ChangeTracker, @"%@: Stopped", self);
+- (void) clearConnection {
     [_connection autorelease];
     _connection = nil;
     [_inputBuffer release];
     _inputBuffer = nil;
     _status = 0;
+}
+
+
+- (void) stopped {
+    LogTo(ChangeTracker, @"%@: Stopped", self);
+    [self clearConnection];
     [super stopped];
 }
 
@@ -106,9 +111,11 @@
         BOOL responseOK = [self receivedPollResponse: input];
         [input release];
         
-        [self stopped];
+        [self clearConnection];
         if (_mode == kLongPoll && status == 200 && responseOK)
             [self start];       // Next poll...
+        else
+            [self stopped];
     } else {
         [self stopped];
     }

@@ -107,14 +107,18 @@
     } version: @"1"];
         
     // ...and a validation function requiring parseable dates:
-//    design.validationBlock = VALIDATIONBLOCK({
-//        id date = [doc objectForKey: @"created_at"];
-//        if (date && ! [RESTBody dateWithJSONObject: date]) {
-//            context.errorMessage = [@"invalid date " stringByAppendingString: date];
-//            return NO;
-//        }
-//        return YES;
-//    });
+    [delegate.touchDatabase addValidation: ^(TDRevision* newRevision,
+                                             id<TDValidationContext>context) {
+        if (newRevision.deleted)
+            return YES;
+        id date = [newRevision.properties objectForKey: @"created_at"];
+        if (date && ! [RESTBody dateWithJSONObject: date]) {
+            NSLog(@"Invalid date: %@", date);//TEMP
+            context.errorMessage = [@"invalid date " stringByAppendingString: date];
+            return NO;
+        }
+        return YES;
+    }];
 }
 
 

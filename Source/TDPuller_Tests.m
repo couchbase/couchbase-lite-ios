@@ -39,7 +39,7 @@ TestCase(TDPuller) {
     [db open];
     
     id lastSeq = pull(db, @"http://127.0.0.1:5984/revs_test_1", nil);
-    CAssertEqual(lastSeq, $object(6));
+    CAssertEqual(lastSeq, @"6");
     
     CAssertEq(db.documentCount, 1u);
     CAssertEq(db.lastSequence, 5);

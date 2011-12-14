@@ -9,7 +9,7 @@
 
 #import "TDRevision.h"
 @class FMDatabase, TDRevision, TDRevisionList, TDView, TDBlobStore, TDReplicator;
-
+@protocol TDValidationContext;
 struct TDQueryOptions;
 
 
@@ -22,6 +22,11 @@ typedef int TDStatus;
 extern NSString* const TDDatabaseChangeNotification;
 
 
+/** Validation block, used to approve revisions being added to the database. */
+typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
+                                   id<TDValidationContext> context);
+
+
 /** A TouchDB database. */
 @interface TDDatabase : NSObject
 {
@@ -32,6 +37,7 @@ extern NSString* const TDDatabaseChangeNotification;
     NSInteger _transactionLevel;
     BOOL _transactionFailed;
     NSMutableDictionary* _views;
+    NSMutableArray* _validations;
     TDBlobStore* _attachments;
     NSMutableArray* _activeReplicators;
 }    
@@ -91,6 +97,8 @@ extern NSString* const TDDatabaseChangeNotification;
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const struct TDQueryOptions*)options;
 
+- (void) addValidation: (TDValidationBlock)validationBlock;
+
 // VIEWS & QUERIES:
 
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
@@ -107,4 +115,23 @@ extern NSString* const TDDatabaseChangeNotification;
                               continuous: (BOOL)continuous;
 - (BOOL) findMissingRevisions: (TDRevisionList*)revs;
 
+@end
+
+
+
+
+
+
+/** Context passed into a TDValidationBlock. */
+@protocol TDValidationContext <NSObject>
+/** The contents of the current revision of the document, or nil if this is a new document. */
+@property (readonly) TDRevision* currentRevision;
+
+/** The type of HTTP status to report, if the validate block returns NO.
+    The default value is 403 ("Forbidden"). */
+@property TDStatus errorType;
+
+/** The error message to return in the HTTP response, if the validate block returns NO.
+    The default value is "invalid document". */
+@property (copy) NSString* errorMessage;
 @end

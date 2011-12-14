@@ -22,8 +22,24 @@
 NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
+@interface TDValidationContext : NSObject <TDValidationContext>
+{
+    @private
+    TDDatabase* _db;
+    TDRevision* _currentRevision;
+    TDStatus _errorType;
+    NSString* _errorMessage;
+}
+- (id) initWithDatabase: (TDDatabase*)db revision: (TDRevision*)currentRevision;
+@property (readonly) TDRevision* currentRevision;
+@property TDStatus errorType;
+@property (copy) NSString* errorMessage;
+@end
+
+
 @interface TDDatabase ()
 - (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID numericID: (SInt64)docNumericID;
+- (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev;
 @end
 
 
@@ -424,6 +440,18 @@ static NSString* createUUID() {
         [r close];
         r = nil;
         
+        if (_validations.count > 0) {
+            // Fetch the previous revision and validate the new one against it:
+            TDRevision* prevRev = [[TDRevision alloc] initWithDocID: docID revID: prevRevID
+                                                            deleted: NO];
+            TDStatus status = [self validateRevision: rev previousRevision: prevRev];
+            [prevRev release];
+            if (status >= 300) {
+                *outStatus = status;
+                goto exit;
+            }
+        }
+        
         // Make replaced rev non-current:
         if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                                    $object(parentSequence)])
@@ -431,6 +459,10 @@ static NSString* createUUID() {
     } else if (docID) {
         // Inserting first revision, with docID given: make sure docID doesn't exist,
         // or exists but is currently deleted
+        if (![self validateRevision: rev previousRevision: nil]) {
+            *outStatus = 403;
+            goto exit;
+        }
         docNumericID = [self getOrInsertDocNumericID: docID];
         if (docNumericID <= 0)
             goto exit;
@@ -509,7 +541,7 @@ exit:
 
 
 - (TDStatus) forceInsert: (TDRevision*)rev
-         revisionHistory: (NSArray*)history
+         revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
                   source: (NSURL*)source
 {
     // First look up all locally-known revisions of this document:
@@ -518,12 +550,27 @@ exit:
     TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID numericID: docNumericID];
     if (!localRevs)
         return 500;
+    NSUInteger historyCount = history.count;
+    Assert(historyCount >= 1);
+    
+    // Validate against the latest common ancestor:
+    if (_validations.count > 0) {
+        TDRevision* oldRev = nil;
+        for (NSUInteger i = 1; i<historyCount; ++i) {
+            oldRev = [localRevs revWithDocID: docID revID: [history objectAtIndex: i]];
+            if (oldRev)
+                break;
+        }
+        TDStatus status = [self validateRevision: rev previousRevision: oldRev];
+        if (status >= 300)
+            return status;
+    }
     
     // Walk through the remote history in chronological order, matching each revision ID to
     // a local revision. When the list diverges, start creating blank local revisions to fill
     // in the local history:
     SequenceNumber parentSequence = 0;
-    for (NSInteger i = history.count - 1; i>=0; --i) {
+    for (NSInteger i = historyCount - 1; i>=0; --i) {
         NSString* revID = [history objectAtIndex: i];
         TDRevision* localRev = [localRevs revWithDocID: docID revID: revID];
         if (localRev) {
@@ -566,6 +613,33 @@ exit:
     [self notifyChange: rev source: source];
     
     return 201;
+}
+
+
+- (void) addValidation:(TDValidationBlock)validationBlock {
+    Assert(validationBlock);
+    if (!_validations)
+        _validations = [[NSMutableArray alloc] init];
+    id copiedBlock = [validationBlock copy];
+    [_validations addObject: copiedBlock];
+    [copiedBlock release];
+}
+
+
+- (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev {
+    if (_validations.count == 0)
+        return 200;
+    TDValidationContext* context = [[TDValidationContext alloc] initWithDatabase: self
+                                                                        revision: oldRev];
+    TDStatus status = 200;
+    for (TDValidationBlock validation in _validations) {
+        if (!validation(newRev, context)) {
+            status = context.errorType;
+            break;
+        }
+    }
+    [context release];
+    return status;
 }
 
 
@@ -918,5 +992,38 @@ static NSString* joinQuoted(NSArray* strings) {
     return history;
 }
 
+
+@end
+
+
+
+
+
+
+@implementation TDValidationContext
+
+- (id) initWithDatabase: (TDDatabase*)db revision: (TDRevision*)currentRevision {
+    self = [super init];
+    if (self) {
+        _db = db;
+        _currentRevision = currentRevision;
+        _errorType = 403;
+        _errorMessage = [@"invalid document" retain];
+    }
+    return self;
+}
+
+- (void)dealloc {
+    [_errorMessage release];
+    [super dealloc];
+}
+
+- (TDRevision*) currentRevision {
+    if (_currentRevision)
+        [_db loadRevisionBody: _currentRevision];
+    return _currentRevision;
+}
+
+@synthesize errorType=_errorType, errorMessage=_errorMessage;
 
 @end

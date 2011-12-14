@@ -28,12 +28,12 @@
     NSError* error;
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
                                                          NSUserDomainMask, YES);
-    NSString* path = [[[paths objectAtIndex:0] stringByAppendingPathComponent: @"TouchDB"] copy];
+    NSString* path = [[paths objectAtIndex:0] stringByAppendingPathComponent: @"TouchDB"];
     TDServer* tdServer = nil;
     if ([[NSFileManager defaultManager] createDirectoryAtPath: path
                                   withIntermediateDirectories: YES
                                                    attributes: nil error: &error]) {
-        tdServer = [[TDServer alloc] initWithDirectory: path error: &error];
+        tdServer = [[[TDServer alloc] initWithDirectory: path error: &error] autorelease];
     }
     NSAssert(tdServer, @"Couldn't create TDServer: %@", error);
     NSLog(@"TDServer is at %@", path);
@@ -42,7 +42,7 @@
     //gRESTLogLevel = kRESTLogRequestHeaders;
     //gCouchLogLevel = 2;
     NSURL* url = [NSURL URLWithString: @"touchdb:///grocery-sync"];
-    self.database = [[CouchDatabase databaseWithURL: url] retain];
+    self.database = [CouchDatabase databaseWithURL: url];
     
     // Create the database on the first run of the app.
     if (![self.database ensureCreated: &error]) {
@@ -53,7 +53,6 @@
     NSLog(@"...Created CouchDatabase at <%@>", url);
     
     self.touchDatabase = [tdServer databaseNamed: @"grocery-sync"];
-    [tdServer release];
     
     // Tell the RootViewController:
     RootViewController* root = (RootViewController*)navigationController.topViewController;
