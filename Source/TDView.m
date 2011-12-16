@@ -151,6 +151,8 @@ static id fromJSON( NSData* json ) {
     
     __block SequenceNumber sequence = 0;
     __block BOOL emitFailed = NO;
+    unsigned deleted = 0;
+    __block unsigned inserted = 0;
     FMDatabase* fmdb = _db.fmdb;
     FMResultSet* r = nil;
     
@@ -167,9 +169,11 @@ static id fromJSON( NSData* json ) {
         NSString* keyJSON = toJSONString(key);
         NSString* valueJSON = toJSONString(value);
         LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
-        if (![fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
+        if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
                                     "(?, ?, ?, ?)",
                                     $object(viewID), $object(sequence), keyJSON, valueJSON])
+            ++inserted;
+        else
             emitFailed = YES;
     };
     
@@ -180,6 +184,7 @@ static id fromJSON( NSData* json ) {
             goto exit;
     }
 
+    SequenceNumber dbMaxSequence = _db.lastSequence;
     
     // Now scan every revision added since the last time the view was indexed:
     r = [fmdb executeQuery: @"SELECT sequence, parent, current, deleted, json FROM revs "
@@ -203,6 +208,7 @@ static id fromJSON( NSData* json ) {
                 if (![fmdb executeUpdate: @"DELETE FROM maps WHERE sequence=? AND view_id=?",
                                            $object(parentSequence), $object(viewID)])
                     goto exit;
+                deleted += fmdb.changes;
             }
             if (current && !deleted) {
                 // Call the user-defined map() to emit new key/value pairs from this revision:
@@ -221,13 +227,14 @@ static id fromJSON( NSData* json ) {
     r = nil;
     
     // Finally, record the last revision sequence number that was indexed:
-    if (sequence > lastSequence) {
+    if (sequence > dbMaxSequence) {
         if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
-                                   $object(sequence), $object(viewID)])
+                                   $object(dbMaxSequence), $object(viewID)])
             goto exit;
     }
     
-    LogTo(View, @"...Finished re-indexing view %@ up to sequence %lld", _name, sequence);
+    LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
+          _name, dbMaxSequence, deleted, inserted);
     status = 200;
     
 exit:
