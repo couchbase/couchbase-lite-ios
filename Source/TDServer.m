@@ -127,6 +127,11 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+- (NSArray*) allOpenDatabases {
+    return _databases.allValues;
+}
+
+
 - (void) close {
     for (TDDatabase* db in _databases.allValues) {
         [db close];

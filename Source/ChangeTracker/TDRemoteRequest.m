@@ -69,7 +69,7 @@
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     LogTo(RemoteRequest, @"%@: Got %lu bytes", self, (unsigned long)data.length);
     if (!_inputBuffer)
-        _inputBuffer = [[NSMutableData alloc] initWithCapacity: MAX(data.length, 8192)];
+        _inputBuffer = [[NSMutableData alloc] initWithCapacity: MAX(data.length, 8192u)];
     [_inputBuffer appendData: data];
 }
 

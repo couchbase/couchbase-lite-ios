@@ -53,7 +53,7 @@
                                           lastSequence: [_lastSequence intValue]
                                                 client: self];
     [_changeTracker start];
-    // TODO: In non-continuous mode, only get the existing changes; don't listen for new ones
+    [self asyncTaskStarted];
 }
 
 
@@ -63,6 +63,9 @@
     [_changeTracker release];
     _changeTracker = nil;
     [super stop];
+
+    if (_asyncTaskCount == 0)
+        [self stopped];
 }
 
 
@@ -72,7 +75,8 @@
     if (!docID)
         return;
     BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
-    for (NSDictionary* changeDict in $castIf(NSArray, [change objectForKey: @"changes"])) {
+    NSArray* changes = $castIf(NSArray, [change objectForKey: @"changes"]);
+    for (NSDictionary* changeDict in changes) {
         NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
         if (!revID)
             continue;
@@ -81,6 +85,7 @@
         [self addToInbox: rev];
         [rev release];
     }
+    self.changesTotal += changes.count;
 }
 
 
@@ -89,18 +94,22 @@
     [_changeTracker release];
     _changeTracker = nil;
     
-    [self flushInbox];
-    [self stop];
+    [_batcher flush];
+    [self asyncTasksFinished: 1];
 }
 
 
 - (void) processInbox: (TDRevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"TDPuller: Looking up %@", inbox);
+    NSUInteger total = _changesTotal - inbox.count;
     if (![_db findMissingRevisions: inbox]) {
         Warn(@"TDPuller failed to look up local revs");
-        return;
+        inbox = nil;
     }
+    if (_changesTotal != total + inbox.count)
+        self.changesTotal = total + inbox.count;
+    
     if (inbox.count == 0)
         return;
     LogTo(Sync, @"%@ fetching %u remote revisions...", self, inbox.count);
@@ -108,6 +117,7 @@
     // Fetch and add each of the new revs:
     for (TDRevision* rev in inbox) {
         [self pullRemoteRevision: rev];
+        [self asyncTaskStarted];
     }
 }
 
@@ -119,29 +129,32 @@
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
     [self sendAsyncRequest: @"GET" path: path body: nil
           onCompletion: ^(NSDictionary *properties, NSError *error) {
-              if (!properties)
-                  return;  // GET failed
-              
-              NSArray* history = nil;
-              NSDictionary* revisions = $castIf(NSDictionary,
-                                                [properties objectForKey: @"_revisions"]);
-              if (revisions) {
-                  // Extract the history, expanding the numeric prefixes:
-                  __block int start = [[revisions objectForKey: @"start"] intValue];
-                  NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
-                  history = [revIDs my_map: ^(id revID) {
-                      return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
-                  }];
-                  
-                  // Now remove the _revisions dict so it doesn't get stored in the local db:
-                  NSMutableDictionary* editedProperties = [[properties mutableCopy] autorelease];
-                  [editedProperties removeObjectForKey: @"_revisions"];
-                  properties = editedProperties;
-              }
-              rev.properties = properties;
+              if (properties) {
+                  NSArray* history = nil;
+                  NSDictionary* revisions = $castIf(NSDictionary,
+                                                    [properties objectForKey: @"_revisions"]);
+                  if (revisions) {
+                      // Extract the history, expanding the numeric prefixes:
+                      __block int start = [[revisions objectForKey: @"start"] intValue];
+                      NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
+                      history = [revIDs my_map: ^(id revID) {
+                          return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
+                      }];
+                      
+                      // Now remove the _revisions dict so it doesn't get stored in the local db:
+                      NSMutableDictionary* editedProperties = [[properties mutableCopy] autorelease];
+                      [editedProperties removeObjectForKey: @"_revisions"];
+                      properties = editedProperties;
+                  }
+                  rev.properties = properties;
 
-              // Add to batcher ... eventually it will be fed to -insertRevisions:.
-              [_revsToInsert queueObject: $array(rev, history)];
+                  // Add to batcher ... eventually it will be fed to -insertRevisions:.
+                  [_revsToInsert queueObject: $array(rev, history)];
+                  [self asyncTaskStarted];
+              } else {
+                  self.changesProcessed++;
+              }
+              [self asyncTasksFinished: 1];
           }
      ];
 }
@@ -173,6 +186,9 @@
     
     [_db endTransaction];
     LogTo(Sync, @"%@ finished inserting %u revisions", self, revs.count);
+    
+    [self asyncTasksFinished: revs.count];
+    self.changesProcessed += revs.count;
 }
 
 

@@ -22,9 +22,9 @@ static id pull(TDDatabase* db, NSString* urlStr, id lastSequence) {
     
     CAssert(puller.running);
     Log(@"Waiting for puller to finish...");
-    NSDate* timeout = [[NSDate date] dateByAddingTimeInterval: 5.0];
     while (puller.running) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
     }
     CAssert(!puller.running);

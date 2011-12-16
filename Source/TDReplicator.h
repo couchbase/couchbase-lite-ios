@@ -11,6 +11,10 @@
 @class TDDatabase, TDRevisionList, TDBatcher;
 
 
+/** Posted when changesProcessed or changesTotal changes. */
+extern NSString* TDReplicatorProgressChangedNotification;
+
+
 /** Abstract base class for push or pull replications. */
 @interface TDReplicator : NSObject
 {
@@ -22,7 +26,8 @@
     BOOL _running, _active;
     NSString* _sessionID;
     TDBatcher* _batcher;
-    NSOperationQueue* _requestQueue;
+    int _asyncTaskCount;
+    NSUInteger _changesProcessed, _changesTotal;
 }
 
 - (id) initWithDB: (TDDatabase*)db
@@ -44,6 +49,8 @@
 @property (readonly) BOOL active;
 
 @property (readonly) NSString* sessionID;
+@property (readonly, nonatomic) NSUInteger changesProcessed;
+@property (readonly, nonatomic) NSUInteger changesTotal;
 @end
 
 

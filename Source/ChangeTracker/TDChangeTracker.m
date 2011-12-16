@@ -101,6 +101,7 @@
 - (void) stopped {
     if ([_client respondsToSelector: @selector(changeTrackerStopped:)])
         [_client changeTrackerStopped: self];
+    _client = nil;  // don't call client anymore even if -stopped is called again (i.e. on dealloc)
 }
 
 - (BOOL) receivedChange: (NSDictionary*)change {

@@ -259,6 +259,36 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
+- (TDStatus) do_GET_active_tasks {
+    // http://wiki.apache.org/couchdb/HttpGetActiveTasks
+    NSMutableArray* activity = $marray();
+    for (TDDatabase* db in _server.allOpenDatabases) {
+        for (TDReplicator* repl in db.activeReplicators) {
+            NSString* source = repl.remote.absoluteString;
+            NSString* target = db.name;
+            if (repl.isPush) {
+                NSString* temp = source;
+                source = target;
+                target = temp;
+            }
+            NSUInteger processed = repl.changesProcessed;
+            NSUInteger total = repl.changesTotal;
+            NSString* status = $sprintf(@"Processed %u / %u changes",
+                                        (unsigned)processed, (unsigned)total);
+            int progress = (total > 0) ? lroundf(100*(processed / (float)total)) : 0;
+            [activity addObject: $dict({@"type", @"Replication"},
+                                       {@"task", repl.sessionID},
+                                       {@"source", source},
+                                       {@"target", target},
+                                       {@"status", status},
+                                       {@"progress", $object(progress)})];
+        }
+    }
+    _response.body = [[[TDBody alloc] initWithArray: activity] autorelease];
+    return 200;
+}
+
+
 #pragma mark - DATABASE REQUESTS:
 
 

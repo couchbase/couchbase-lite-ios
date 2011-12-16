@@ -78,6 +78,11 @@
     
     self.dataSource.query = query;
     self.dataSource.labelProperty = @"text";    // Document property to display in the cell label
+
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(replicationProgressChanged:)
+                                                 name: TDReplicatorProgressChangedNotification
+                                               object: nil];
     [self updateSyncURL];
 }
 
@@ -113,7 +118,6 @@
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
         if (date && ! [RESTBody dateWithJSONObject: date]) {
-            NSLog(@"Invalid date: %@", date);//TEMP
             context.errorMessage = [@"invalid date " stringByAppendingString: date];
             return NO;
         }
@@ -321,6 +325,13 @@
 }
 
 
+- (void) replicationProgressChanged: (NSNotification*)n {
+    // This is called on the TouchDB background thread, so redispatch to the main thread:
+    [database.server performSelectorOnMainThread: @selector(checkActiveTasks)
+                                      withObject: nil waitUntilDone: NO];
+}
+
+
 - (void)showSyncButton {
     if (!showingSyncButton) {
         showingSyncButton = YES;
@@ -360,11 +371,10 @@
         if (total > 0 && completed < total) {
             [self showSyncStatus];
             [progress setProgress:(completed / (float)total)];
-            database.server.activityPollInterval = 0.5;   // poll often while progress is showing
         } else {
             [self showSyncButton];
-            database.server.activityPollInterval = 2.0;   // poll less often at other times
         }
+        database.server.activityPollInterval = 0.0;   // I use notifications, not polling
     }
 }
 

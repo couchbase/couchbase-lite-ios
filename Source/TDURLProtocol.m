@@ -89,12 +89,12 @@ static TDServer* sServer;
         [response release];
     };
     _router.onDataAvailable = ^(NSData* content) {
-        LogTo(TDURLProtocol, @"data available from <%@>", self.request.URL);//TEMP
+        LogTo(TDURLProtocol, @"data available from <%@>", self.request.URL);
         if (content.length)
             [client URLProtocol: self didLoadData: content];
     };
     _router.onFinished = ^{
-        LogTo(TDURLProtocol, @"finished response <%@>", self.request.URL);//TEMP
+        LogTo(TDURLProtocol, @"finished response <%@>", self.request.URL);
         [client URLProtocolDidFinishLoading: self];
     };
     [_router start];

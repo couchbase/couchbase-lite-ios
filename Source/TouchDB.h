@@ -11,4 +11,6 @@
 #import <TouchDB/TDView.h>
 #import <TouchDB/TDRevision.h>
 
+#import <TouchDB/TDReplicator.h>
+
 #import <TouchDB/TDURLProtocol.h>

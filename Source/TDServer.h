@@ -28,6 +28,7 @@
 - (BOOL) deleteDatabaseNamed: (NSString*)name;
 
 @property (readonly) NSArray* allDatabaseNames;
+@property (readonly) NSArray* allOpenDatabases;
 
 - (void) close;
 

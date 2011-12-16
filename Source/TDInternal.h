@@ -43,10 +43,12 @@
 @interface TDReplicator ()
 // protected:
 @property (copy) NSString* lastSequence;
+@property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
 - (void) addToInbox: (TDRevision*)rev;
 - (void) processInbox: (TDRevisionList*)inbox;  // override this
-- (void) flushInbox;  // optionally call this to flush the inbox
-- (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body;
 - (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
              onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
+- (void) asyncTaskStarted;
+- (void) asyncTasksFinished: (NSUInteger)numTasks;
+- (void) stopped;
 @end

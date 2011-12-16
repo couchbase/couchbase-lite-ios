@@ -68,43 +68,51 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
         [revs addObject: rev.revID];
     }
     
-    NSDictionary* results = [self sendRequest: @"POST" path: @"/_revs_diff" body: diffs];
-    
-    if (results.count) {
-        // Go through the list of local changes again, selecting the ones the destination server
-        // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
-        NSArray* docsToSend = [changes.allRevisions my_map: ^(id rev) {
-            NSArray* revs = [[results objectForKey: [rev docID]] objectForKey: @"missing"];
-            if (![revs containsObject: [rev revID]])
-                return (id)nil;
-            // Get the revision's properties:
-            NSMutableDictionary* properties;
-            if ([rev deleted])
-                properties = $mdict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, {@"_deleted", $true});
-            else {
-                if (![_db loadRevisionBody: rev]) {
-                    Warn(@"%@: Couldn't get local contents of %@", self, rev);
-                    return nil;
+    [self sendAsyncRequest: @"POST" path: @"/_revs_diff" body: diffs
+              onCompletion:^(NSDictionary* results, NSError* error) {
+        if (results.count) {
+            // Go through the list of local changes again, selecting the ones the destination server
+            // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
+            NSArray* docsToSend = [changes.allRevisions my_map: ^(id rev) {
+                NSArray* revs = [[results objectForKey: [rev docID]] objectForKey: @"missing"];
+                if (![revs containsObject: [rev revID]])
+                    return (id)nil;
+                // Get the revision's properties:
+                NSMutableDictionary* properties;
+                if ([rev deleted])
+                    properties = $mdict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, {@"_deleted", $true});
+                else {
+                    if (![_db loadRevisionBody: rev]) {
+                        Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                        return nil;
+                    }
+                    properties = [[[rev properties] mutableCopy] autorelease];
                 }
-                properties = [[[rev properties] mutableCopy] autorelease];
-            }
+                
+                // Add the _revisions list:
+                [properties setValue: makeCouchRevisionList([_db getRevisionHistory: rev])
+                              forKey: @"_revisions"];
+                return properties;
+            }];
             
-            // Add the _revisions list:
-            [properties setValue: makeCouchRevisionList([_db getRevisionHistory: rev])
-                          forKey: @"_revisions"];
-            return properties;
-        }];
-        
-        // Post the revisions to the destination. "new_edits":false means that the server should
-        // use the given _rev IDs instead of making up new ones.
-        LogTo(Sync, @"%@: Sending %u revisions", self, docsToSend.count);
-        [self sendRequest: @"POST"
-                     path: @"/_bulk_docs"
-                     body: $dict({@"docs", docsToSend},
-                                 {@"new_edits", $false})];
-    }
-    
-    self.lastSequence = $sprintf(@"%lld", [changes.allRevisions.lastObject sequence]);
+            // Post the revisions to the destination. "new_edits":false means that the server should
+            // use the given _rev IDs instead of making up new ones.
+            NSUInteger numDocsToSend = docsToSend.count;
+            LogTo(Sync, @"%@: Sending %u revisions", self, numDocsToSend);
+            self.changesTotal += numDocsToSend;
+            [self sendAsyncRequest: @"POST"
+                         path: @"/_bulk_docs"
+                         body: $dict({@"docs", docsToSend},
+                                     {@"new_edits", $false})
+                 onCompletion: ^(NSDictionary* response, NSError *error) {
+                     if (!error)
+                         self.lastSequence = $sprintf(@"%lld",
+                                                      [changes.allRevisions.lastObject sequence]);
+                     self.changesProcessed += numDocsToSend;
+                 }
+             ];
+        }
+    }];
 }
 
 

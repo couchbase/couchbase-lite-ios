@@ -20,6 +20,9 @@
 #define kInboxCapacity 100
 
 
+NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChanged";
+
+
 @interface TDReplicator ()
 @property (readwrite) BOOL running, active;
 @end
@@ -82,6 +85,7 @@
 
 
 @synthesize db=_db, remote=_remote, running=_running, active=_active, sessionID=_sessionID;
+@synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 
 
 - (BOOL) isPush {
@@ -103,7 +107,22 @@
 }
 
 
+- (void) setChangesProcessed: (NSUInteger)processed {
+    _changesProcessed = processed;
+    [[NSNotificationCenter defaultCenter]
+            postNotificationName: TDReplicatorProgressChangedNotification object: self];
+}
+
+- (void) setChangesTotal: (NSUInteger)total {
+    _changesTotal = total;
+    [[NSNotificationCenter defaultCenter]
+            postNotificationName: TDReplicatorProgressChangedNotification object: self];
+}
+
+
 - (void) start {
+    if (_running)
+        return;
     static int sLastSessionID = 0;
     [_lastSequence release];
     _lastSequence = [[_db lastSequenceWithRemoteURL: _remote push: self.isPush] copy];
@@ -114,10 +133,34 @@
 
 
 - (void) stop {
-    LogTo(Sync, @"%@ STOPPING", self);
+    if (!_running)
+        return;
+    LogTo(Sync, @"%@ STOPPING...", self);
     [_batcher flush];
-    self.running = NO;
+    if (_asyncTaskCount == 0)
+        [self stopped];
+}
+
+
+- (void) stopped {
+    LogTo(Sync, @"%@ STOPPED", self);
     [_db replicatorDidStop: self];
+    self.running = NO;
+    self.changesProcessed = self.changesTotal = 0;
+}
+
+
+- (void) asyncTaskStarted {
+    ++_asyncTaskCount;
+}
+
+
+- (void) asyncTasksFinished: (NSUInteger)numTasks {
+    _asyncTaskCount -= numTasks;
+    Assert(_asyncTaskCount >= 0);
+    if (_asyncTaskCount == 0) {
+        [self stopped];
+    }
 }
 
 
@@ -132,42 +175,6 @@
 
 
 - (void) processInbox: (NSArray*)inbox {
-}
-
-
-- (void) flushInbox {
-    [_batcher flush];
-}
-
-
-- (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
-{
-    LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
-    NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: [NSURL URLWithString: urlStr]];
-    request.HTTPMethod = method;
-    request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-    if (body) {
-        request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
-        [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
-    }
-    
-    NSHTTPURLResponse* response;
-    NSError* error = nil;
-    NSData* data = [NSURLConnection sendSynchronousRequest: request
-                                         returningResponse: (NSURLResponse**)&response
-                                                     error: &error];
-    if (!data || error || response.statusCode >= 300) {
-        Warn(@"%@: %@ .%@ failed (%@)", self, method, relativePath, 
-             (error ? error : $object(response.statusCode)));
-        return nil;
-    }
-    
-    NSDictionary* results = [NSJSONSerialization JSONObjectWithData: data options: 0 error:nil];
-    if (!results)
-        Warn(@"%@: %@ %@ returned unparseable data '%@'",
-             self, method, relativePath, [data my_UTF8ToString]);
-    return results;
 }
 
 

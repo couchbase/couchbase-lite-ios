@@ -856,6 +856,8 @@ exit:
     [_activeReplicators removeObjectIdenticalTo: repl];
 }
 
+@synthesize activeReplicators=_activeReplicators;
+
 
 - (NSString*) lastSequenceWithRemoteURL: (NSURL*)url push: (BOOL)push {
     FMResultSet* r = [_fmdb executeQuery:

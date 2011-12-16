@@ -113,6 +113,9 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 - (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
                                     push: (BOOL)push
                               continuous: (BOOL)continuous;
+
+@property (readonly) NSArray* activeReplicators;
+
 - (BOOL) findMissingRevisions: (TDRevisionList*)revs;
 
 @end

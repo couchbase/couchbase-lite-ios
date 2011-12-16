@@ -36,8 +36,8 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
-    gRESTLogLevel = kRESTLogRequestURLs;
-    //gCouchLogLevel = 1;
+    //gRESTLogLevel = kRESTLogRequestURLs;
+    gCouchLogLevel = 1;
     
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
@@ -80,7 +80,6 @@ int main (int argc, const char * argv[]) {
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
         if (date && ! [RESTBody dateWithJSONObject: date]) {
-            NSLog(@"Invalid date: %@", date);//TEMP
             context.errorMessage = [@"invalid date " stringByAppendingString: date];
             return NO;
         }
@@ -95,6 +94,10 @@ int main (int argc, const char * argv[]) {
     
     // Enable continuous sync:
     [self startContinuousSyncWith: self.syncURL];
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(replicationProgressChanged:)
+                                                 name: TDReplicatorProgressChangedNotification
+                                               object: nil];
 }
 
 
@@ -155,14 +158,42 @@ int main (int argc, const char * argv[]) {
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
     [_pull stop];
     [_pull release];
-    if (otherDbURL)
+    if (otherDbURL) {
         _pull = [[_database pullFromDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
                     retain];
+        [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+    }
     [_push stop];
     [_push release];
-    if (otherDbURL)
+    if (otherDbURL) {
         _push = [[_database pushToDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
                     retain];
+        [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+    }
+}
+
+
+- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
+                         change:(NSDictionary *)change context:(void *)context
+{
+    if (object == _pull || object == _push) {
+        unsigned completed = _pull.completed + _push.completed;
+        unsigned total = _pull.total + _push.total;
+        NSLog(@"SYNC progress: %u / %u", completed, total);
+        if (total > 0 && completed < total) {
+            [_syncProgress setDoubleValue: (completed / (double)total)];
+        } else {
+            [_syncProgress setDoubleValue: 0.0];
+        }
+        _database.server.activityPollInterval = 0;   // I use notifications instead
+    }
+}
+
+
+- (void) replicationProgressChanged: (NSNotification*)n {
+    // This is called on the TouchDB background thread, so redispatch to the main thread:
+    [_database.server performSelectorOnMainThread: @selector(checkActiveTasks)
+                                       withObject: nil waitUntilDone: NO];
 }
 
 
