@@ -113,6 +113,15 @@
     return self;
 }
 
+- (id) initWithArray: (NSArray*)revs {
+    Assert(revs);
+    self = [super init];
+    if (self) {
+        _revs = [revs mutableCopy];
+    }
+    return self;
+}
+
 - (void)dealloc {
     [_revs release];
     [super dealloc];

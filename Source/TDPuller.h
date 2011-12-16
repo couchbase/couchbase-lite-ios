@@ -15,6 +15,8 @@
 {
     @private
     TDChangeTracker* _changeTracker;
+    NSThread* _thread;
+    TDBatcher* _revsToInsert;
 }
 
 @end

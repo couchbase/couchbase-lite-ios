@@ -10,6 +10,8 @@
 #import "TDPusher.h"
 #import "TDPuller.h"
 #import "TDDatabase.h"
+#import "TDRemoteRequest.h"
+#import "TDBatcher.h"
 #import "TDInternal.h"
 
 
@@ -46,6 +48,18 @@
         _remote = [remote retain];
         _continuous = continuous;
         Assert(push == self.isPush);
+        
+        _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
+                     processor:^(NSArray *inbox) {
+                         LogTo(Sync, @"*** %@: BEGIN processInbox (%i sequences)",
+                               self, inbox.count);
+                         TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
+                         [self processInbox: revs];
+                         [revs release];
+                         LogTo(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
+                         self.active = NO;
+                     }
+                    ];
     }
     return self;
 }
@@ -56,7 +70,7 @@
     [_db release];
     [_remote release];
     [_lastSequence release];
-    [_inbox release];
+    [_batcher release];
     [_sessionID release];
     [super dealloc];
 }
@@ -101,12 +115,7 @@
 
 - (void) stop {
     LogTo(Sync, @"%@ STOPPING", self);
-    if (_inbox) {
-        [_inbox release];
-        _inbox = nil;
-        [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(flushInbox) object: nil];
-    }
+    [_batcher flush];
     self.running = NO;
     [_db replicatorDidStop: self];
 }
@@ -114,15 +123,9 @@
 
 - (void) addToInbox: (TDRevision*)rev {
     Assert(_running);
-    if (!_inbox) {
-        _inbox = [[TDRevisionList alloc] init];
-        [self performSelector: @selector(flushInbox) withObject: nil afterDelay: kProcessDelay];
+    if (_batcher.count == 0)
         self.active = YES;
-    } else if (_inbox.count >= kInboxCapacity) {
-        [self flushInbox];
-        _inbox = [[TDRevisionList alloc] init];
-    }
-    [_inbox addRev: rev];
+    [_batcher queueObject: rev];
     LogTo(SyncVerbose, @"%@: Received #%lld (%@)",
           self, rev.sequence, rev.docID);
 }
@@ -133,15 +136,7 @@
 
 
 - (void) flushInbox {
-    if (_inbox.count == 0)
-        return;
-    
-    LogTo(Sync, @"*** %@: BEGIN processInbox (%i sequences)", self, _inbox.count);
-    TDRevisionList* inbox = [_inbox autorelease];
-    _inbox = nil;
-    [self processInbox: inbox];
-    LogTo(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
-    self.active = NO;
+    [_batcher flush];
 }
 
 
@@ -174,5 +169,20 @@
              self, method, relativePath, [data my_UTF8ToString]);
     return results;
 }
+
+
+- (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
+             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
+{
+    LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
+    NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
+    NSURL* url = [NSURL URLWithString: urlStr];
+    TDRemoteRequest* request = [[TDRemoteRequest alloc] initWithMethod: method
+                                                                   URL: url
+                                                                  body: body
+                                                          onCompletion: onCompletion];
+    [request autorelease];
+}
+
 
 @end

@@ -10,6 +10,7 @@
 #import "TDView.h"
 #import "TDServer.h"
 #import "TDReplicator.h"
+#import "TDRemoteRequest.h"
 
 
 @interface TDDatabase ()
@@ -46,4 +47,6 @@
 - (void) processInbox: (TDRevisionList*)inbox;  // override this
 - (void) flushInbox;  // optionally call this to flush the inbox
 - (id) sendRequest: (NSString*)method path: (NSString*)relativePath body: (id)body;
+- (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
+             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 @end

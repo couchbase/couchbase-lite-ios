@@ -10,13 +10,14 @@
 #import "TDDatabase.h"
 #import "TDRevision.h"
 #import "TDChangeTracker.h"
+#import "TDBatcher.h"
 #import "TDInternal.h"
 
 
 
 @interface TDPuller () <TDChangeTrackerClient>
-- (BOOL) pullRemoteRevision: (TDRevision*)rev
-                    history: (NSArray**)outHistory;
+- (void) pullRemoteRevision: (TDRevision*)rev;
+- (void) insertRevisions: (NSArray*)revs;
 @end
 
 
@@ -26,6 +27,7 @@
 - (void)dealloc {
     [_changeTracker stop];
     [_changeTracker release];
+    [_revsToInsert release];
     [super dealloc];
 }
 
@@ -36,6 +38,15 @@
     Assert(!_changeTracker);
     [super start];
     LogTo(Sync, @"*** STARTING PULLER to <%@> from #%@", _remote, _lastSequence);
+    
+    if (!_revsToInsert) {
+        _revsToInsert = [[TDBatcher alloc] initWithCapacity: 100 delay: 0.25
+                                                  processor: ^(NSArray *revs) {
+                                                      [self insertRevisions: revs];
+                                                  }];
+    }
+    
+    _thread = [NSThread currentThread];
     _changeTracker = [[TDChangeTracker alloc]
                                    initWithDatabaseURL: _remote
                                                   mode: (_continuous ? kLongPoll :kOneShot)
@@ -94,65 +105,74 @@
         return;
     LogTo(Sync, @"%@ fetching %u remote revisions...", self, inbox.count);
     
+    // Fetch and add each of the new revs:
+    for (TDRevision* rev in inbox) {
+        [self pullRemoteRevision: rev];
+    }
+}
+
+
+// Fetches the contents of a revision from the remote db, including its parent revision ID.
+// The contents are stored into rev.properties.
+- (void) pullRemoteRevision: (TDRevision*)rev
+{
+    NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
+    [self sendAsyncRequest: @"GET" path: path body: nil
+          onCompletion: ^(NSDictionary *properties, NSError *error) {
+              if (!properties)
+                  return;  // GET failed
+              
+              NSArray* history = nil;
+              NSDictionary* revisions = $castIf(NSDictionary,
+                                                [properties objectForKey: @"_revisions"]);
+              if (revisions) {
+                  // Extract the history, expanding the numeric prefixes:
+                  __block int start = [[revisions objectForKey: @"start"] intValue];
+                  NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
+                  history = [revIDs my_map: ^(id revID) {
+                      return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
+                  }];
+                  
+                  // Now remove the _revisions dict so it doesn't get stored in the local db:
+                  NSMutableDictionary* editedProperties = [[properties mutableCopy] autorelease];
+                  [editedProperties removeObjectForKey: @"_revisions"];
+                  properties = editedProperties;
+              }
+              rev.properties = properties;
+
+              // Add to batcher ... eventually it will be fed to -insertRevisions:.
+              [_revsToInsert queueObject: $array(rev, history)];
+          }
+     ];
+}
+
+
+// This will be called when _revsToInsert fills up:
+- (void) insertRevisions:(NSArray *)revs {
+    LogTo(Sync, @"%@ inserting %u revisions...", self, revs.count);
+    SequenceNumber maxSequence = self.lastSequence.longLongValue;
     [_db beginTransaction];
     
-    // Fetch and add each of the new revs:
-    SequenceNumber lastSequence = _lastSequence.longLongValue;
-    for (TDRevision* rev in inbox) {
-        if (_db.transactionFailed)
-            break;
-        lastSequence = rev.sequence;
-        NSArray* history;
-        if (![self pullRemoteRevision: rev history: &history]) {
-            Warn(@"%@ failed to download %@", self, rev);
-            continue;
-        }
+    for (NSArray* revAndHistory in revs) {
+        TDRevision* rev = [revAndHistory objectAtIndex: 0];
+        NSArray* history = [revAndHistory objectAtIndex: 1];
+        // Insert the revision:
+        maxSequence = MAX(maxSequence, rev.sequence);
         int status = [_db forceInsert: rev revisionHistory: history source: _remote];
         if (status >= 300) {
             if (status == 403)
                 LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
             else
                 Warn(@"%@ failed to write %@: status=%d", self, rev, status);
-            continue;
         }
-        LogTo(SyncVerbose, @"%@ added %@", self, rev);
     }
     
-    if (!_db.transactionFailed)
-        self.lastSequence = $sprintf(@"%lld", lastSequence);
+    // Remember we've received this sequence:
+    if (maxSequence > self.lastSequence.longLongValue)
+        self.lastSequence = $sprintf(@"%lld", maxSequence);
     
     [_db endTransaction];
-}
-
-
-// Fetches the contents of a revision from the remote db, including its parent revision ID.
-// The contents are stored into rev.properties.
-- (BOOL) pullRemoteRevision: (TDRevision*)rev
-                    history: (NSArray**)outHistory
-{
-    NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
-    NSDictionary* properties = [self sendRequest: @"GET" path: path body: nil];
-    if (!properties)
-        return NO;  // GET failed
-    
-    NSArray* history = nil;
-    NSDictionary* revisions = $castIf(NSDictionary, [properties objectForKey: @"_revisions"]);
-    if (revisions) {
-        // Extract the history, expanding the numeric prefixes:
-        __block int start = [[revisions objectForKey: @"start"] intValue];
-        NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
-        history = [revIDs my_map: ^(id revID) {
-            return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
-        }];
-
-        // Now remove the _revisions dict so it doesn't get stored in the local db:
-        NSMutableDictionary* editedProperties = [[properties mutableCopy] autorelease];
-        [editedProperties removeObjectForKey: @"_revisions"];
-        properties = editedProperties;
-    }
-    rev.properties = properties;
-    *outHistory = history;
-    return YES;
+    LogTo(Sync, @"%@ finished inserting %u revisions", self, revs.count);
 }
 
 

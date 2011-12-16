@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class TDDatabase, TDRevisionList;
+@class TDDatabase, TDRevisionList, TDBatcher;
 
 
 /** Abstract base class for push or pull replications. */
@@ -21,7 +21,8 @@
     NSString* _lastSequence;
     BOOL _running, _active;
     NSString* _sessionID;
-    TDRevisionList* _inbox;
+    TDBatcher* _batcher;
+    NSOperationQueue* _requestQueue;
 }
 
 - (id) initWithDB: (TDDatabase*)db

@@ -55,6 +55,9 @@ typedef SInt64 SequenceNumber;
     NSMutableArray* _revs;
 }
 
+- (id) init;
+- (id) initWithArray: (NSArray*)revs;
+
 @property (readonly) NSUInteger count;
 
 - (TDRevision*) revWithDocID: (NSString*)docID revID: (NSString*)revID;
