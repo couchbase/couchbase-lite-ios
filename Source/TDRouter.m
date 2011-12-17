@@ -275,7 +275,7 @@ static NSArray* splitPath( NSString* path ) {
             NSUInteger total = repl.changesTotal;
             NSString* status = $sprintf(@"Processed %u / %u changes",
                                         (unsigned)processed, (unsigned)total);
-            int progress = (total > 0) ? lroundf(100*(processed / (float)total)) : 0;
+            long progress = (total > 0) ? lroundf(100*(processed / (float)total)) : 0;
             [activity addObject: $dict({@"type", @"Replication"},
                                        {@"task", repl.sessionID},
                                        {@"source", source},

@@ -14,3 +14,4 @@
 .objc_class_name_TDServer
 
 _TDDatabaseChangeNotification
+_TDReplicatorProgressChangedNotification

@@ -14,8 +14,12 @@
 #import "TDInternal.h"
 
 
+// Maximum number of revisions to fetch simultaneously
+#define kMaxOpenHTTPConnections 8
+
 
 @interface TDPuller () <TDChangeTrackerClient>
+- (void) pullRemoteRevisions;
 - (void) pullRemoteRevision: (TDRevision*)rev;
 - (void) insertRevisions: (NSArray*)revs;
 @end
@@ -27,6 +31,7 @@
 - (void)dealloc {
     [_changeTracker stop];
     [_changeTracker release];
+    [_revsToPull release];
     [_revsToInsert release];
     [super dealloc];
 }
@@ -62,6 +67,8 @@
     [_changeTracker stop];
     [_changeTracker release];
     _changeTracker = nil;
+    [_revsToPull release];
+    _revsToPull = nil;
     [super stop];
 
     if (_asyncTaskCount == 0)
@@ -69,6 +76,7 @@
 }
 
 
+// Got a _changes feed entry from the TDChangeTracker.
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
     SequenceNumber lastSequence = [[change objectForKey: @"seq"] longLongValue];
     NSString* docID = [change objectForKey: @"id"];
@@ -77,13 +85,16 @@
     BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
     NSArray* changes = $castIf(NSArray, [change objectForKey: @"changes"]);
     for (NSDictionary* changeDict in changes) {
-        NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
-        if (!revID)
-            continue;
-        TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
-        rev.sequence = lastSequence;
-        [self addToInbox: rev];
-        [rev release];
+        @autoreleasepool {
+            NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
+            if (!revID)
+                continue;
+            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
+            rev.sequence = lastSequence;
+            // Push each revision info to the inbox
+            [self addToInbox: rev];
+            [rev release];
+        }
     }
     self.changesTotal += changes.count;
 }
@@ -99,6 +110,7 @@
 }
 
 
+// Process a bunch of remote revisions from the _changes feed at once
 - (void) processInbox: (TDRevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"TDPuller: Looking up %@", inbox);
@@ -114,10 +126,20 @@
         return;
     LogTo(Sync, @"%@ fetching %u remote revisions...", self, inbox.count);
     
-    // Fetch and add each of the new revs:
-    for (TDRevision* rev in inbox) {
-        [self pullRemoteRevision: rev];
-        [self asyncTaskStarted];
+    // Dump the revs into the queue of revs to pull from the remote db:
+    if (!_revsToPull)
+        _revsToPull = [[NSMutableArray alloc] initWithCapacity: 100];
+    [_revsToPull addObjectsFromArray: inbox.allRevisions];
+    
+    [self pullRemoteRevisions];
+}
+
+
+// Start up some HTTP GETs, within our limit on the maximum simultaneous number
+- (void) pullRemoteRevisions {
+    while (_httpConnectionCount < kMaxOpenHTTPConnections && _revsToPull.count > 0) {
+        [self pullRemoteRevision: [_revsToPull objectAtIndex: 0]];
+        [_revsToPull removeObjectAtIndex: 0];
     }
 }
 
@@ -126,6 +148,8 @@
 // The contents are stored into rev.properties.
 - (void) pullRemoteRevision: (TDRevision*)rev
 {
+    [self asyncTaskStarted];
+    ++_httpConnectionCount;
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
     [self sendAsyncRequest: @"GET" path: path body: nil
           onCompletion: ^(NSDictionary *properties, NSError *error) {
@@ -154,7 +178,12 @@
               } else {
                   self.changesProcessed++;
               }
+              
+              // Note that we've finished this task; then start another one if there
+              // are still revisions waiting to be pulled:
               [self asyncTasksFinished: 1];
+              --_httpConnectionCount;
+              [self pullRemoteRevisions];
           }
      ];
 }
@@ -167,16 +196,18 @@
     [_db beginTransaction];
     
     for (NSArray* revAndHistory in revs) {
-        TDRevision* rev = [revAndHistory objectAtIndex: 0];
-        NSArray* history = [revAndHistory objectAtIndex: 1];
-        // Insert the revision:
-        maxSequence = MAX(maxSequence, rev.sequence);
-        int status = [_db forceInsert: rev revisionHistory: history source: _remote];
-        if (status >= 300) {
-            if (status == 403)
-                LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
-            else
-                Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+        @autoreleasepool {
+            TDRevision* rev = [revAndHistory objectAtIndex: 0];
+            NSArray* history = [revAndHistory objectAtIndex: 1];
+            // Insert the revision:
+            maxSequence = MAX(maxSequence, rev.sequence);
+            int status = [_db forceInsert: rev revisionHistory: history source: _remote];
+            if (status >= 300) {
+                if (status == 403)
+                    LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
+                else
+                    Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+            }
         }
     }
     

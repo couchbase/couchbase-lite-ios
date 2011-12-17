@@ -911,10 +911,12 @@ static NSString* joinQuoted(NSArray* strings) {
     if (!r)
         return NO;
     while ([r next]) {
-        TDRevision* rev = [revs revWithDocID: [r stringForColumnIndex: 0]
-                                      revID: [r stringForColumnIndex: 1]];
-        if (rev)
-            [revs removeRev: rev];
+        @autoreleasepool {
+            TDRevision* rev = [revs revWithDocID: [r stringForColumnIndex: 0]
+                                           revID: [r stringForColumnIndex: 1]];
+            if (rev)
+                [revs removeRev: rev];
+        }
     }
     [r close];
     return YES;
