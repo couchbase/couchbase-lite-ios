@@ -76,6 +76,7 @@
 		279906EF149ABFC2003D4338 /* TDBatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906EC149ABFC1003D4338 /* TDBatcher.h */; };
 		279906F0149ABFC2003D4338 /* TDBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* TDBatcher.m */; };
 		279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* TDBatcher.m */; };
+		27990703149D2576003D4338 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
 		279EB2CB14913BBE00E74185 /* TDRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* TDRouter_Tests.m */; };
 		279EB2CE149140DE00E74185 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* TDView.h */; };
 		279EB2CF149140DE00E74185 /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* TDView.m */; };
@@ -146,12 +147,8 @@
 		27B0B8571492D0AA00A817AD /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; };
 		27C706421486BBD500F0F099 /* TDServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* TDServer.m */; };
 		27C706481487584300F0F099 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
-		27C706621488625C00F0F099 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
 		27C706701488634300F0F099 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7066F1488634300F0F099 /* AppKit.framework */; };
-		27C706711488637A00F0F099 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
 		27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
-		27C706C31488665A00F0F099 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
-		27C706C61488669100F0F099 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27C706611488625C00F0F099 /* CouchCocoa.framework */; };
 		27C706D31488679500F0F099 /* DemoAppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CC1488679500F0F099 /* DemoAppController.m */; };
 		27C706D41488679500F0F099 /* DemoQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CE1488679500F0F099 /* DemoQuery.m */; };
 		27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27C706D01488679500F0F099 /* ShoppingDemo.xib */; };
@@ -198,7 +195,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				27C706C61488669100F0F099 /* CouchCocoa.framework in CopyFiles */,
 				270B3E27148939C500E0A926 /* TouchDB.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -209,7 +205,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				27C706711488637A00F0F099 /* CouchCocoa.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,6 +252,7 @@
 		279906E2149A65B8003D4338 /* TDRemoteRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDRemoteRequest.m; path = ChangeTracker/TDRemoteRequest.m; sourceTree = "<group>"; };
 		279906EC149ABFC1003D4338 /* TDBatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBatcher.h; sourceTree = "<group>"; };
 		279906ED149ABFC2003D4338 /* TDBatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBatcher.m; sourceTree = "<group>"; };
+		27990702149D2576003D4338 /* CouchCocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchCocoa.framework; path = Frameworks/CouchCocoa.framework; sourceTree = "<group>"; };
 		279EB2CC149140DE00E74185 /* TDView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDView.h; sourceTree = "<group>"; };
 		279EB2CD149140DE00E74185 /* TDView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDView.m; sourceTree = "<group>"; };
 		279EB2D01491442500E74185 /* TDInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDInternal.h; sourceTree = "<group>"; };
@@ -297,7 +293,6 @@
 		27C706461487584300F0F099 /* TDURLProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDURLProtocol.h; sourceTree = "<group>"; };
 		27C706471487584300F0F099 /* TDURLProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDURLProtocol.m; sourceTree = "<group>"; };
 		27C7064A1488311100F0F099 /* TDRouter_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDRouter_Tests.m; sourceTree = "<group>"; };
-		27C706611488625C00F0F099 /* CouchCocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchCocoa.framework; path = "../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug/CouchCocoa.framework"; sourceTree = "<group>"; };
 		27C7066F1488634300F0F099 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		27C70694148864BA00F0F099 /* TouchDB Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TouchDB Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C70697148864BA00F0F099 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -414,8 +409,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */,
-				27C706C31488665A00F0F099 /* CouchCocoa.framework in Frameworks */,
 				270B3E26148939BD00E0A926 /* TouchDB.framework in Frameworks */,
+				27990703149D2576003D4338 /* CouchCocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -426,7 +421,6 @@
 				27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */,
 				27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */,
 				27C706701488634300F0F099 /* AppKit.framework in Frameworks */,
-				27C706621488625C00F0F099 /* CouchCocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -628,7 +622,6 @@
 				27C7066F1488634300F0F099 /* AppKit.framework */,
 				27F0745C11CD50A600E9A2AB /* Foundation.framework */,
 				27C70697148864BA00F0F099 /* Cocoa.framework */,
-				27C706611488625C00F0F099 /* CouchCocoa.framework */,
 				27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */,
 				270B3DFC1489359000E0A926 /* SenTestingKit.framework */,
 				27B0B7B81492B83C00A817AD /* UIKit.framework */,
@@ -662,6 +655,7 @@
 				27C706D01488679500F0F099 /* ShoppingDemo.xib */,
 				27C706D11488679500F0F099 /* ShoppingItem.h */,
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
+				27990702149D2576003D4338 /* CouchCocoa.framework */,
 			);
 			path = "Demo-Mac";
 			sourceTree = "<group>";
@@ -1433,7 +1427,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "iOS Empty App-Info.plist";
+				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = "TouchDB Empty App";
 				PROVISIONING_PROFILE = "";
@@ -1459,7 +1453,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "iOS Empty App-Info.plist";
+				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				PRODUCT_NAME = "TouchDB Empty App";
@@ -1687,6 +1681,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+					"\"$(SRCROOT)/Demo-Mac/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -1710,6 +1705,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
+					"\"$(SRCROOT)/Demo-Mac/Frameworks\"",
 				);
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
