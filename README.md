@@ -31,20 +31,20 @@ More documentation is available on the [wiki][2].
 
 ## Building TouchDB ##
 
-	1. Clone the TouchDB repository to your local disk.
-	2. In that directory run "`git submodule init`". This will clone the [FMDB][5] library (an Objective-C wrapper for sqlite) into vendor/FMDB.
-	2. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
-	3. You should now have a "TouchDB.framework" in your build output directory.
+ 1. Clone the TouchDB repository to your local disk.
+ 2. In that directory run "`git submodule init`". This will clone the [FMDB][5] library (an Objective-C wrapper for sqlite) into vendor/FMDB.
+ 3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
+ 4. You should now have a "TouchDB.framework" in your build output directory.
 
 ### Building The Demo Apps ###
 
 The demo apps use the CouchCocoa framework, which you'll need to check out and build separately:
 
-	3. Clone the [CouchCocoa repository][4] to your local disk.
-	4. Check out the "touchdb" branch.
-	5. Open the Xcode project and build the appropriate scheme ("Mac Framework" and/or "iOS Framework").
-	6. Copy or symlink the built "CouchCocoa.framework" into the "Frameworks" subdirectory of the appropriate TouchDB demo subdirectory.
-	7. Now you can open the TouchDB Xcode project and build and run the demo app(s).
+ 1. Clone the [CouchCocoa repository][4] to your local disk.
+ 2. Check out the "touchdb" branch.
+ 3. Open the Xcode project and build the appropriate scheme ("Mac Framework" and/or "iOS Framework").
+ 4. Copy or symlink the built "CouchCocoa.framework" into the "Frameworks" subdirectory of the appropriate TouchDB demo subdirectory.
+ 5. Now you can open the TouchDB Xcode project and build and run the demo app(s).
 
 [1]: http://couchdb.apache.org
 [2]: https://github.com/couchbaselabs/TouchDB-iOS/wiki
