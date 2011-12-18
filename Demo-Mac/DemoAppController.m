@@ -132,6 +132,7 @@ int main (int argc, const char * argv[]) {
 
 
 - (IBAction) configureSync: (id)sender {
+    _syncURLField.objectValue = self.syncURL.absoluteString;
     [NSApp beginSheet: _syncConfigSheet modalForWindow: _window
         modalDelegate: self
        didEndSelector:@selector(configureSyncFinished:returnCode:)
@@ -155,17 +156,22 @@ int main (int argc, const char * argv[]) {
 }
 
 
+- (void) stopReplication: (CouchReplication**)repl {
+    [*repl removeObserver: self forKeyPath: @"completed"];
+    [*repl stop];
+    [*repl release];
+    *repl = nil;
+}
+
+
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
-    [_pull stop];
-    [_pull release];
+    [self stopReplication: &_pull];
+    [self stopReplication: &_push];
     if (otherDbURL) {
         _pull = [[_database pullFromDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
                     retain];
         [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-    }
-    [_push stop];
-    [_push release];
-    if (otherDbURL) {
+
         _push = [[_database pushToDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
                     retain];
         [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];

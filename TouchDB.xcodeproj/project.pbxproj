@@ -77,6 +77,7 @@
 		279906F0149ABFC2003D4338 /* TDBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* TDBatcher.m */; };
 		279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* TDBatcher.m */; };
 		27990703149D2576003D4338 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
+		27990704149E58B0003D4338 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
 		279EB2CB14913BBE00E74185 /* TDRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* TDRouter_Tests.m */; };
 		279EB2CE149140DE00E74185 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* TDView.h */; };
 		279EB2CF149140DE00E74185 /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* TDView.m */; };
@@ -196,6 +197,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				270B3E27148939C500E0A926 /* TouchDB.framework in CopyFiles */,
+				27990704149E58B0003D4338 /* CouchCocoa.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
