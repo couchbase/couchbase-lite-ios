@@ -331,7 +331,13 @@ static NSArray* splitPath( NSString* path ) {
     TDStatus status = [self openDB];
     if (status >= 300)
         return status;
-    return [self update: db docID: [db generateDocumentID] json: _request.HTTPBody];
+    NSString* docID = [db generateDocumentID];
+    status =  [self update: db docID: docID json: _request.HTTPBody];
+    if (status == 201) {
+        NSURL* url = [_request.URL URLByAppendingPathComponent: docID];
+        [_response.headers setObject: url.absoluteString forKey: @"Location"];
+    }
+    return status;
 }
 
 
