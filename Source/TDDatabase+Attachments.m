@@ -1,0 +1,188 @@
+//
+//  TDDatabase+Attachments.m
+//  TouchDB
+//
+//  Created by Jens Alfke on 12/19/11.
+//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//
+//  http://wiki.apache.org/couchdb/HTTP_Document_API#Attachments
+
+/*
+    Here's what an actual _attachments object from CouchDB 1.2 looks like.
+    The "revpos" and "digest" attributes aren't documented in the wiki (yet).
+ 
+    "_attachments":{
+        "index.txt":{"content_type":"text/plain", "revpos":1,
+                     "digest":"md5-muNoTiLXyJYP9QkvPukNng==", "length":9, "stub":true}}
+*/
+
+#import "TDDatabase.h"
+#import "TDBlobStore.h"
+#import "TDBase64.h"
+#import "TDInternal.h"
+#import "FMDatabase.h"
+#import "FMResultSet.h"
+#import "CollectionUtils.h"
+
+
+@implementation TDDatabase (Attachments)
+
+
+- (NSInteger) garbageCollectAttachments {
+    // First delete attachment rows for already-cleared revisions:
+    // OPT: Could start after last sequence# we GC'd up to
+    [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
+                            "(SELECT sequence from revs WHERE json IS null)"];
+    
+    // Now collect all remaining attachment IDs and tell the store to delete all but these:
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
+    if (!r)
+        return -1;
+    NSMutableSet* allKeys = [NSMutableSet set];
+    while ([r next]) {
+        [allKeys addObject: [r dataForColumnIndex: 0]];
+    }
+    return [_attachments deleteBlobsExceptWithKeys: allKeys];
+}
+
+
+- (BOOL) insertAttachment: (NSData*)contents
+              forSequence: (SequenceNumber)sequence
+                    named: (NSString*)name
+                     type: (NSString*)contentType
+{
+    Assert(contents);
+    Assert(sequence > 0);
+    Assert(name);
+    TDBlobKey key;
+    if (![_attachments storeBlob: contents creatingKey: &key])
+        return NO;
+    NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
+    return [_fmdb executeUpdate: @"INSERT INTO attachments (sequence, filename, key, type, length) "
+                                  "VALUES (?, ?, ?, ?, ?)",
+                                 $object(sequence), name, keyData,
+                                 contentType, $object(contents.length)];
+}
+
+
+- (TDStatus) copyAttachmentNamed: (NSString*)name
+                    fromSequence: (SequenceNumber)fromSequence
+                      toSequence: (SequenceNumber)toSequence
+{
+    Assert(name);
+    Assert(toSequence > 0);
+    if (fromSequence <= 0)
+        return 404;
+    if (![_fmdb executeUpdate: @"INSERT INTO attachments (sequence, filename, key, type, length) "
+                                  "SELECT ?, ?, key, type, length FROM attachments "
+                                    "WHERE sequence=? AND filename=?",
+                                $object(toSequence), name,
+                                $object(fromSequence), name]) {
+        return 500;
+    }
+    if (_fmdb.changes == 0)
+        return 404;         // Fail if there is no such attachment on fromSequence
+    return 200;
+}
+
+
+/** Returns the content and MIME type of an attachment */
+- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
+                               named: (NSString*)filename
+                                type: (NSString**)outType
+                              status: (TDStatus*)outStatus
+{
+    Assert(sequence > 0);
+    Assert(filename);
+    FMResultSet* r = [_fmdb executeQuery:
+                      @"SELECT key, type FROM attachments WHERE sequence=? AND filename=?",
+                      $object(sequence), filename];
+    if (!r) {
+        *outStatus = 500;
+        return nil;
+    }
+    if (![r next]) {
+        *outStatus = 404;
+        return nil;
+    }
+    NSData* keyData = [r dataForColumnIndex: 0];
+    if (keyData.length != sizeof(TDBlobKey)) {
+        Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
+             self, sequence, filename, keyData.length);
+        *outStatus = 500;
+        return nil;
+    }
+    NSData* contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
+    if (!contents) {
+        Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
+        *outStatus = 500;
+    } else {
+        *outStatus = 200;
+    }
+    if (outType)
+        *outType = [r stringForColumnIndex: 1];
+    return contents;
+}
+
+
+/** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
+- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence {
+    Assert(sequence > 0);
+    FMResultSet* r = [_fmdb executeQuery:
+                      @"SELECT filename, key, type, length FROM attachments WHERE sequence=?",
+                      $object(sequence)];
+    if (!r)
+        return nil;
+    NSMutableDictionary* attachments = $mdict();
+    while ([r next]) {
+        NSData* keyData = [r dataForColumnIndex: 1];
+        NSString* digestStr = [@"sha1-" stringByAppendingString: [TDBase64 encode: keyData]];
+        [attachments setObject: $dict({@"stub", $true},
+                                      {@"digest", digestStr},
+                                      {@"content_type", [r stringForColumnIndex: 2]},
+                                      {@"length", $object([r longLongIntForColumnIndex: 3])})
+                        forKey: [r stringForColumnIndex: 0]];
+    }
+    return attachments;
+}
+
+
+- (TDStatus) processAttachmentsDict: (NSDictionary*)newAttachments
+                     forNewSequence: (SequenceNumber)newSequence
+                 withParentSequence: (SequenceNumber)parentSequence
+{
+    Assert(newSequence > 0);
+    Assert(newSequence > parentSequence);
+    
+    // If there are no attachments in the new rev, there's nothing to do:
+    if (newAttachments.count == 0)
+        return 200;
+    
+    for (NSString* name in newAttachments) {
+        NSDictionary* newAttach = [newAttachments objectForKey: name];
+        NSString* newContentsBase64 = [newAttach objectForKey: @"data"];
+        if (newContentsBase64) {
+            // New item contains data, so insert it:
+            NSData* newContents = [TDBase64 decode: newContentsBase64];
+            if (!newContents)
+                return 400;
+            if (![self insertAttachment: newContents
+                            forSequence: newSequence
+                                  named: name
+                                   type: [newAttach objectForKey: @"content_type"]])
+                return 500;
+        } else {
+            // It's just a stub, so copy the previous revision's attachment entry:
+            //? Should I enforce that the type and digest (if any) match?
+            TDStatus status = [self copyAttachmentNamed: name
+                                           fromSequence: parentSequence
+                                             toSequence: newSequence];
+            if (status >= 300)
+                return status;
+        }
+    }
+    return 200;
+}
+
+
+@end

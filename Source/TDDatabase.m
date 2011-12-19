@@ -133,7 +133,9 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         CREATE TABLE IF NOT EXISTS attachments ( \
             sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
             filename TEXT NOT NULL, \
-            key BLOB NOT NULL); \
+            key BLOB NOT NULL, \
+            type TEXT, \
+            length INTEGER NOT NULL); \
         CREATE INDEX IF NOT EXISTS attachments_by_sequence on attachments(sequence, filename); \
         CREATE TABLE IF NOT EXISTS replicators ( \
             remote TEXT NOT NULL, \
@@ -753,75 +755,6 @@ exit:
                  {@"total_rows", $object(totalRows)},
                  {@"offset", $object(options->skip)},
                  {@"update_seq", update_seq ? $object(update_seq) : nil});
-}
-
-
-#pragma mark - ATTACHMENTS
-
-
-- (BOOL) insertAttachment: (NSData*)contents
-              forSequence: (SequenceNumber)sequence
-                    named: (NSString*)filename
-{
-    TDBlobKey key;
-    if (![_attachments storeBlob: contents creatingKey: &key])
-        return NO;
-    NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
-    return [_fmdb executeUpdate: @"INSERT INTO attachments (sequence, filename, key) "
-                                  "VALUES (?, ?, ?)",
-                                 $object(sequence), filename, keyData];
-}
-
-
-- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
-                               named: (NSString*)filename
-                              status: (TDStatus*)outStatus
-{
-    Assert(sequence > 0);
-    Assert(filename);
-    FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT key FROM attachments WHERE sequence=? AND filename=?",
-                      $object(sequence), filename];
-    if (!r) {
-        *outStatus = 500;
-        return nil;
-    }
-    if (![r next]) {
-        *outStatus = 404;
-        return nil;
-    }
-    NSData* keyData = [r dataForColumnIndex: 0];
-    if (keyData.length != sizeof(TDBlobKey)) {
-        Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
-             self, sequence, filename, keyData.length);
-        *outStatus = 500;
-        return nil;
-    }
-    NSData* contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
-    if (!contents) {
-        Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
-        *outStatus = 500;
-    } else {
-        *outStatus = 200;
-    }
-    return contents;
-}
-
-
-- (NSInteger) garbageCollectAttachments {
-    // First delete attachment rows for already-cleared revisions:
-    [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
-                            "(SELECT sequence from revs WHERE json IS null)"];
-    
-    // Now compile all remaining attachment IDs and tell the store to delete all but these:
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
-    if (!r)
-        return -1;
-    NSMutableSet* allKeys = [NSMutableSet set];
-    while ([r next]) {
-        [allKeys addObject: [r dataForColumnIndex: 0]];
-    }
-    return [_attachments deleteBlobsExceptWithKeys: allKeys];
 }
 
 

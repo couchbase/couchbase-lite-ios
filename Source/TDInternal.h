@@ -25,6 +25,12 @@
 - (void) replicatorDidStop: (TDReplicator*)repl;
 @end
 
+@interface TDDatabase (Attachments_Internal)
+- (TDStatus) copyAttachmentNamed: (NSString*)name
+                    fromSequence: (SequenceNumber)fromSequence
+                      toSequence: (SequenceNumber)toSequence;
+@end
+
 
 @interface TDView ()
 - (id) initWithDatabase: (TDDatabase*)db name: (NSString*)name;

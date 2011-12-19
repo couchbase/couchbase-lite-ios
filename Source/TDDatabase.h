@@ -61,7 +61,6 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 @property BOOL transactionFailed;
 
 - (TDStatus) compact;
-- (NSInteger) garbageCollectAttachments;
 
 // DOCUMENTS:
 
@@ -87,13 +86,6 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
          revisionHistory: (NSArray*)history
                   source: (NSURL*)source;
 
-- (BOOL) insertAttachment: (NSData*)contents
-              forSequence: (SequenceNumber)sequence
-                    named: (NSString*)filename;
-- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
-                               named: (NSString*)filename
-                              status: (TDStatus*)outStatus;
-
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const struct TDQueryOptions*)options;
 
@@ -117,6 +109,35 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 @property (readonly) NSArray* activeReplicators;
 
 - (BOOL) findMissingRevisions: (TDRevisionList*)revs;
+
+@end
+
+
+
+@interface TDDatabase (Attachments)
+
+/** Given the "_attachments" property of a newly-added revision, adds the necessary attachment rows to the database and stores inline attachments into the blob store. */
+- (TDStatus) processAttachmentsDict: (NSDictionary*)newAttachments
+                     forNewSequence: (SequenceNumber)newSequence
+                 withParentSequence: (SequenceNumber)parentSequence;
+
+/** Inserts a single new attachment for a revision. */
+- (BOOL) insertAttachment: (NSData*)contents
+              forSequence: (SequenceNumber)sequence
+                    named: (NSString*)filename
+                     type: (NSString*)contentType;
+
+/** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
+- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence;
+
+/** Returns the content and MIME type of an attachment */
+- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
+                               named: (NSString*)filename
+                                type: (NSString**)outType
+                              status: (TDStatus*)outStatus;
+
+/** Deletes obsolete attachments from the database and blob store. */
+- (NSInteger) garbageCollectAttachments;
 
 @end
 

@@ -46,14 +46,14 @@ TestCase(TDPuller) {
     [db open];
     
     id lastSeq = pull(db, @"http://127.0.0.1:5984/revs_test_1", nil);
-    CAssertEqual(lastSeq, @"6");
+    CAssertEqual(lastSeq, @"7");
     
-    CAssertEq(db.documentCount, 1u);
-    CAssertEq(db.lastSequence, 5);
+    CAssertEq(db.documentCount, 2u);
+    CAssertEq(db.lastSequence, 6);
     
     pull(db, @"http://127.0.0.1:5984/revs_test_1", lastSeq);
     
-    CAssertEq(db.lastSequence, 5);
+    CAssertEq(db.lastSequence, 6);
 }
 
 #endif

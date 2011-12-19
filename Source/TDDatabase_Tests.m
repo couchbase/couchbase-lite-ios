@@ -181,14 +181,22 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 201);
     
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssert([db insertAttachment: attach1 forSequence: rev1.sequence named: @"attach"]);
+    CAssert([db insertAttachment: attach1 forSequence: rev1.sequence
+                           named: @"attach" type: @"text/plain"]);
     
-    CAssertEqual([db getAttachmentForSequence: rev1.sequence
-                                        named: @"attach"
-                                       status: &status], attach1);
+    NSString* type;
+    CAssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
+                                         type: &type status: &status], attach1);
     CAssertEq(status, 200);
-
-    // Add a second revision of the same document:
+    CAssertEqual(type, @"text/plain");
+    
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence],
+                 $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                         {@"length", $object(27)},
+                                         {@"stub", $true})}));
+    
+    // Add a second revision that doesn't update the attachment:
     TDRevision* rev2;
     rev2 = [db putRevision: [TDRevision revisionWithProperties:$mdict({@"_id", rev1.docID},
                                                                       {@"foo", $object(2)},
@@ -196,13 +204,34 @@ TestCase(TDDatabase_Attachments) {
             prevRevisionID: rev1.revID status: &status];
     CAssertEq(status, 201);
     
-    NSData* attach2 = [@"And this is attach2's body" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssert([db insertAttachment: attach2 forSequence: rev2.sequence named: @"attach"]);
+    [db copyAttachmentNamed: @"attach" fromSequence: rev1.sequence toSequence: rev2.sequence];
+
+    // Add a third revision of the same document:
+    TDRevision* rev3;
+    rev3 = [db putRevision: [TDRevision revisionWithProperties:$mdict({@"_id", rev2.docID},
+                                                                      {@"foo", $object(2)},
+                                                                      {@"bazz", $false})]
+            prevRevisionID: rev2.revID status: &status];
+    CAssertEq(status, 201);
     
+    NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
+    CAssert([db insertAttachment: attach2 forSequence: rev3.sequence
+                           named: @"attach" type: @"text/html"]);
+    
+    type = nil;
     CAssertEqual([db getAttachmentForSequence: rev2.sequence
                                         named: @"attach"
+                                         type: &type
+                                       status: &status], attach1);
+    CAssertEq(status, 200);
+    CAssertEqual(type, @"text/plain");
+    
+    CAssertEqual([db getAttachmentForSequence: rev3.sequence
+                                        named: @"attach"
+                                         type: &type
                                        status: &status], attach2);
     CAssertEq(status, 200);
+    CAssertEqual(type, @"text/html");
     
     // Examine the attachment store:
     CAssertEq(attachments.count, 2u);
@@ -210,7 +239,7 @@ TestCase(TDDatabase_Attachments) {
                                              [TDBlobStore keyDataForBlob: attach2], nil];
     CAssertEqual([NSSet setWithArray: attachments.allKeys], expected);
     
-    CAssertEq([db compact], 200);
+    CAssertEq([db compact], 200);  // This clears the body of the first revision
     CAssertEq([db garbageCollectAttachments], 1);
     CAssertEq(attachments.count, 1u);
     CAssertEqual(attachments.allKeys, $array([TDBlobStore keyDataForBlob: attach2]));

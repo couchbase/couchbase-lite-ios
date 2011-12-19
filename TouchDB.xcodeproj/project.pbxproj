@@ -41,6 +41,8 @@
 		270B3E3F148D7F0000E0A926 /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
 		2714CF521496AE5B00E03341 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
+		274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
+		274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
 		27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* TDBlobStore.h */; };
 		27731F001493FA3100815D67 /* TDBlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* TDBlobStore.m */; };
 		27731F061495335B00815D67 /* TDBlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* TDBlobStore.m */; };
@@ -231,6 +233,7 @@
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
 		274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmptyAppDelegate.m; sourceTree = "<group>"; };
+		274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TDDatabase+Attachments.m"; sourceTree = "<group>"; };
 		27731EFD1493FA3100815D67 /* TDBlobStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBlobStore.h; sourceTree = "<group>"; };
 		27731EFE1493FA3100815D67 /* TDBlobStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBlobStore.m; sourceTree = "<group>"; };
 		27731F2A1495CFEF00815D67 /* TouchDB Empty App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TouchDB Empty App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -268,8 +271,8 @@
 		27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDConnectionChangeTracker.m; sourceTree = "<group>"; };
 		27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDSocketChangeTracker.h; sourceTree = "<group>"; };
 		27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDSocketChangeTracker.m; sourceTree = "<group>"; };
-		27B0B79C1492932700A817AD /* TDBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBase64.h; sourceTree = "<group>"; };
-		27B0B79D1492932700A817AD /* TDBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBase64.m; sourceTree = "<group>"; };
+		27B0B79C1492932700A817AD /* TDBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TDBase64.h; path = ChangeTracker/TDBase64.h; sourceTree = "<group>"; };
+		27B0B79D1492932700A817AD /* TDBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDBase64.m; path = ChangeTracker/TDBase64.m; sourceTree = "<group>"; };
 		27B0B7A91492B83B00A817AD /* libTouchDB.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTouchDB.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B7B61492B83B00A817AD /* TouchDBiOSTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBiOSTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B7B81492B83C00A817AD /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -452,6 +455,7 @@
 			children = (
 				27F0744611CD4B6D00E9A2AB /* TDDatabase.h */,
 				27F0744711CD4B6D00E9A2AB /* TDDatabase.m */,
+				274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */,
 				279EB2CC149140DE00E74185 /* TDView.h */,
 				279EB2CD149140DE00E74185 /* TDView.m */,
 				27F074A911CD5D7A00E9A2AB /* TDBody.h */,
@@ -534,6 +538,8 @@
 			isa = PBXGroup;
 			children = (
 				279EB2D01491442500E74185 /* TDInternal.h */,
+				27B0B79C1492932700A817AD /* TDBase64.h */,
+				27B0B79D1492932700A817AD /* TDBase64.m */,
 				279EB2D91491C34300E74185 /* TDCollateJSON.h */,
 				279EB2DA1491C34300E74185 /* TDCollateJSON.m */,
 				279906EC149ABFC1003D4338 /* TDBatcher.h */,
@@ -561,8 +567,6 @@
 				27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */,
 				27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */,
 				27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */,
-				27B0B79C1492932700A817AD /* TDBase64.h */,
-				27B0B79D1492932700A817AD /* TDBase64.m */,
 			);
 			path = ChangeTracker;
 			sourceTree = "<group>";
@@ -1100,6 +1104,7 @@
 				27731F001493FA3100815D67 /* TDBlobStore.m in Sources */,
 				279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
 				279906F0149ABFC2003D4338 /* TDBatcher.m in Sources */,
+				274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1151,6 +1156,7 @@
 				27731F061495335B00815D67 /* TDBlobStore.m in Sources */,
 				279906E6149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
 				279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */,
+				274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
