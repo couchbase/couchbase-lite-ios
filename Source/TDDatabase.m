@@ -252,15 +252,32 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     CAssertEq(*(const char*)json.bytes, '{');
     if (jsonLength == 2)  // Original JSON was empty
         return extraJson;
-    NSMutableData* expanded = [NSMutableData dataWithLength: jsonLength + extraLength - 1];
-    if (!expanded)
+    NSMutableData* newJson = [NSMutableData dataWithLength: jsonLength + extraLength - 1];
+    if (!newJson)
         return nil;
-    uint8_t* dst = expanded.mutableBytes;
-    memcpy(dst, json.bytes, jsonLength - 1);                        // Copy json w/o trailing '}'
+    uint8_t* dst = newJson.mutableBytes;
+    memcpy(dst, json.bytes, jsonLength - 1);                          // Copy json w/o trailing '}'
     dst += jsonLength - 1;
-    *dst++ = ',';                                                   // Add a ','
+    *dst++ = ',';                                                     // Add a ','
     memcpy(dst, (const uint8_t*)extraJson.bytes + 1, extraLength - 1);  // Add extra after '{'
-    return expanded;
+    return newJson;
+}
+
+
+/** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
+    Rev must already have its revID and sequence properties set. */
+- (void) expandStoredJSON: (NSData*)json intoRevision: (TDRevision*)rev {
+    if (!json)
+        return;
+    NSString* docID = rev.docID;
+    NSString* revID = rev.revID;
+    SequenceNumber sequence = rev.sequence;
+    Assert(revID);
+    Assert(sequence > 0);
+    NSDictionary* extra = $dict({@"_id", docID},
+                                {@"_rev", revID},
+                                {@"_attachments", [self getAttachmentDictForSequence: sequence]});
+    rev.asJSON = appendDictToJSON(json, extra);
 }
 
 
@@ -286,10 +303,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         NSData* json = [r dataForColumnIndex: 2];
         result = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted] autorelease];
         result.sequence = [r longLongIntForColumnIndex: 3];
-        if (json) {
-            NSDictionary* attachmentDict = [self getAttachmentDictForSequence: result.sequence];
-            result.asJSON = appendDictToJSON(json, attachmentDict);
-        }
+        [self expandStoredJSON: json intoRevision: result];
     }
     [r close];
     return result;
@@ -310,11 +324,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
         status = 200;
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        NSData* json = [r dataForColumnIndex: 1];
-        if (json) {
-            NSDictionary* attachmentDict = [self getAttachmentDictForSequence: rev.sequence];
-            rev.asJSON = appendDictToJSON(json, attachmentDict);
-        }
+        [self expandStoredJSON: [r dataForColumnIndex: 1] intoRevision: rev];
     }
     [r close];
     return status;
@@ -541,26 +551,26 @@ static NSString* createUUID() {
             *outStatus = 400;  // bad or missing JSON
             goto exit;
         }
-        [props setObject: docID forKey: @"_id"];
-        [props setObject: newRevID forKey: @"_rev"];
+        // Remove special properties to save room; we'll reconstitute them on read.
+        [props removeObjectForKey: @"_id"];
+        [props removeObjectForKey: @"_rev"];
         attachmentDict = [[[props objectForKey: @"_attachments"] retain] autorelease];
         if (attachmentDict)
             [props removeObjectForKey: @"_attachments"];
         json = [NSJSONSerialization dataWithJSONObject: props options: 0 error: nil];
         NSAssert(json!=nil, @"Couldn't serialize document");
     }
+    rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
     
     // Now insert the rev itself:
-    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
-                                "VALUES (?, ?, ?, 1, ?, ?)",
-                               $object(docNumericID),
-                               newRevID,
-                               (parentSequence ? $object(parentSequence) : nil),
-                               $object(deleted),
-                               json])
+    SequenceNumber sequence = [self insertRevision: rev
+                                      docNumericID: docNumericID
+                                    parentSequence: parentSequence
+                                           current: YES
+                                              JSON: json];
+    if (!sequence)
         goto exit;
-    SequenceNumber sequence = _fmdb.lastInsertRowId;
-    Assert(sequence > 0);
+    rev.sequence = sequence;
     
     // Store any attachments:
     if (attachmentDict) {
@@ -573,9 +583,7 @@ static NSString* createUUID() {
         }
     }
     
-    // Success! Create a new TDRevision to return, with the new revID and sequence:
-    rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
-    rev.sequence = sequence;
+    // Success!
     *outStatus = deleted ? 200 : 201;
     
 exit:
@@ -638,9 +646,14 @@ exit:
                 // Hey, this is the leaf revision we're inserting:
                 newRev = rev;
                 if (!rev.deleted) {
-                    json = rev.asJSON;
-                    if (!json)
+                    NSMutableDictionary* properties = [[rev.properties mutableCopy] autorelease];
+                    if (!properties)
                         return 400;
+                    [properties removeObjectForKey: @"_id"];
+                    [properties removeObjectForKey: @"_rev"];
+                    [properties removeObjectForKey: @"_attachments"];
+                    json = [NSJSONSerialization dataWithJSONObject: properties options:0 error:nil];
+                    Assert(json);
                 }
                 current = YES;
             } else {
@@ -760,6 +773,7 @@ exit:
 }
 
 
+//FIX: This has a lot of code in common with -[TDView queryWithOptions:status:]. Unify the two!
 - (NSDictionary*) getAllDocs: (const TDQueryOptions*)options {
     if (!options)
         options = &kDefaultTDQueryOptions;
@@ -784,13 +798,15 @@ exit:
         NSString* revID = [r stringForColumnIndex: 1];
         NSMutableDictionary* docContents = nil;
         if (options->includeDocs) {
+            // Fill in the document contents:
             docContents = [NSJSONSerialization JSONObjectWithData: [r dataForColumnIndex: 2]
                                                           options: NSJSONReadingMutableContainers
                                                             error: nil];
+            [docContents setObject: docID forKey: @"_id"];
+            [docContents setObject: revID forKey: @"_rev"];
             SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
-            NSDictionary* attachmentDict = [self getAttachmentDictForSequence: sequence];
-            if (attachmentDict)
-                [docContents addEntriesFromDictionary: attachmentDict];
+            [docContents setValue: [self getAttachmentDictForSequence: sequence]
+                           forKey: @"_attachments"];
         }
         NSDictionary* change = $dict({@"id",  docID},
                                      {@"key", docID},

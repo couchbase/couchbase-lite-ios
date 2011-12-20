@@ -57,17 +57,25 @@
 - (NSData*) asJSON {
     if (!_json && !_error) {
         _json = [[NSJSONSerialization dataWithJSONObject: _object options: 0 error: nil] copy];
-        if (!_json)
+        if (!_json) {
+            Warn(@"TDBody: couldn't convert to JSON");
             _error = YES;
+        }
     }
     return _json;
+}
+
+- (NSString*) asJSONString {
+    return self.asJSON.my_UTF8ToString;
 }
 
 - (id) asObject {
     if (!_object && !_error) {
         _object = [[NSJSONSerialization JSONObjectWithData: _json options: 0 error: nil] copy];
-        if (!_object)
+        if (!_object) {
+            Warn(@"TDBody: couldn't parse JSON");
             _error = YES;
+        }
     }
     return _object;
 }

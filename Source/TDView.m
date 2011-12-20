@@ -258,6 +258,7 @@ exit:
 #pragma mark - QUERYING:
 
 
+//FIX: This has a lot of code in common with -[TDDatabase getAllDocs:]. Unify the two!
 - (NSDictionary*) queryWithOptions: (const TDQueryOptions*)options
                             status: (TDStatus*)outStatus
 {
@@ -274,7 +275,7 @@ exit:
     
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid"];
     if (options->includeDocs)
-        [sql appendString: @", json, revs.sequence"];
+        [sql appendString: @", revid, json, revs.sequence"];
     [sql appendString: @" FROM maps, revs, docs "
                         "WHERE maps.view_id=? AND revs.sequence = maps.sequence "
                         "AND docs.doc_id = revs.doc_id "
@@ -297,13 +298,15 @@ exit:
         NSString* docID = [r stringForColumnIndex: 2];
         NSMutableDictionary* docContents = nil;
         if (options->includeDocs) {
-            docContents = [NSJSONSerialization JSONObjectWithData: [r dataForColumnIndex: 3]
+            NSString* revID = [r stringForColumnIndex: 3];
+            docContents = [NSJSONSerialization JSONObjectWithData: [r dataForColumnIndex: 4]
                                                           options: NSJSONReadingMutableContainers
                                                             error: nil];
-            SequenceNumber sequence = [r longLongIntForColumnIndex: 4];
-            NSDictionary* attachmentDict = [_db getAttachmentDictForSequence: sequence];
-            if (attachmentDict)
-                [docContents addEntriesFromDictionary: attachmentDict];
+            SequenceNumber sequence = [r longLongIntForColumnIndex: 5];
+            [docContents setObject: docID forKey: @"_id"];
+            [docContents setObject: revID forKey: @"_rev"];
+            [docContents setValue: [_db getAttachmentDictForSequence: sequence]
+                           forKey: @"_attachments"];
         }
         NSDictionary* change = $dict({@"id",  docID},
                                      {@"key", key},

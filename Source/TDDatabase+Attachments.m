@@ -145,7 +145,7 @@
                                       {@"length", $object([r longLongIntForColumnIndex: 3])})
                         forKey: [r stringForColumnIndex: 0]];
     } while ([r next]);
-    return $dict({@"_attachments", attachments});
+    return attachments;
 }
 
 

@@ -26,6 +26,7 @@
 + (TDBody*) bodyWithJSON: (NSData*)json;
 
 @property (readonly) NSData* asJSON;
+@property (readonly) NSString* asJSONString;
 @property (readonly) id asObject;
 @property (readonly) BOOL error;
 
