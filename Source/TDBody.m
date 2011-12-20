@@ -54,6 +54,17 @@
 
 @synthesize error=_error;
 
+- (BOOL) isValidJSON {
+    // Yes, this is just like asObject except it doesn't warn.
+    if (!_object && !_error) {
+        _object = [[NSJSONSerialization JSONObjectWithData: _json options: 0 error: nil] copy];
+        if (!_object) {
+            _error = YES;
+        }
+    }
+    return _object != nil;
+}
+
 - (NSData*) asJSON {
     if (!_json && !_error) {
         _json = [[NSJSONSerialization dataWithJSONObject: _object options: 0 error: nil] copy];

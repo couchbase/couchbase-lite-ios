@@ -17,6 +17,7 @@
 #import "TDDatabase.h"
 #import "TDBody.h"
 #import "TDServer.h"
+#import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
 
@@ -24,8 +25,8 @@
 #if DEBUG
 #pragma mark - TESTS
 
-static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyObj,
-               int expectedStatus, id expectedResult) {
+
+static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* path, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"touchdb://" stringByAppendingString: path]];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = method;
@@ -34,10 +35,15 @@ static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyOb
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject: bodyObj options:0 error:&error];
         CAssertNil(error);
     }
-    TDRouter* router = [[TDRouter alloc] initWithServer: server request: request];
+    TDRouter* router = [[[TDRouter alloc] initWithServer: server request: request] autorelease];
     CAssert(router!=nil);
     [router start];
-    TDResponse* response = router.response;
+    return router.response;
+}
+
+static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyObj,
+               int expectedStatus, id expectedResult) {
+    TDResponse* response = SendRequest(server, method, path, bodyObj);
     NSData* json = response.body.asJSON;
     NSString* jsonStr = nil;
     id result = nil;
@@ -54,7 +60,6 @@ static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyOb
 
     if (expectedResult)
         CAssertEqual(result, expectedResult);
-    [router release];
     return result;
 }
 
@@ -263,12 +268,45 @@ TestCase(TDRouter_ContinuousChanges) {
 }
 
 
+TestCase(TDRouter_GetAttachment) {
+    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    Send(server, @"PUT", @"/db", 201, nil);
+
+    // Create a document with an attachment:
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* base64 = [TDBase64 encode: attach1];
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"data", base64})});
+    NSDictionary* props = $dict({@"message", @"hello"},
+                                {@"_attachments", attachmentDict});
+
+    NSDictionary* result;
+    result = SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
+    
+    // Now get the attachment via its URL:
+    TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil);
+    CAssertEq(response.status, 200);
+    CAssertEqual(response.body.asJSON, attach1);
+    CAssertEqual([response.headers objectForKey: @"Content-Type"], @"text/plain");
+    NSString* eTag = [response.headers objectForKey: @"Etag"];
+    CAssert(eTag.length > 0);
+    
+    // A nonexistent attachment should result in a 404:
+    response = SendRequest(server, @"GET", @"/db/doc1/bogus", nil);
+    CAssertEq(response.status, 404);
+    
+    response = SendRequest(server, @"GET", @"/db/missingdoc/bogus", nil);
+    CAssertEq(response.status, 404);
+}
+
+
 TestCase(TDRouter) {
     RequireTestCase(TDRouter_Server);
     RequireTestCase(TDRouter_Databases);
     RequireTestCase(TDRouter_Docs);
     RequireTestCase(TDRouter_AllDocs);
     RequireTestCase(TDRouter_ContinuousChanges);
+    RequireTestCase(TDRouter_GetAttachment);
 }
 
 #endif

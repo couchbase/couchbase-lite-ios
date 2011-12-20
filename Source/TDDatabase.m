@@ -259,7 +259,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     memcpy(dst, json.bytes, jsonLength - 1);                          // Copy json w/o trailing '}'
     dst += jsonLength - 1;
     *dst++ = ',';                                                     // Add a ','
-    memcpy(dst, (const uint8_t*)extraJson.bytes + 1, extraLength - 1);  // Add extra after '{'
+    memcpy(dst, (const uint8_t*)extraJson.bytes + 1, extraLength - 1);  // Add "extra" after '{'
     return newJson;
 }
 

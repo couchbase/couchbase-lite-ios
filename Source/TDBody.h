@@ -25,6 +25,7 @@
 + (TDBody*) bodyWithProperties: (id)properties;
 + (TDBody*) bodyWithJSON: (NSData*)json;
 
+@property (readonly) BOOL isValidJSON;
 @property (readonly) NSData* asJSON;
 @property (readonly) NSString* asJSONString;
 @property (readonly) id asObject;

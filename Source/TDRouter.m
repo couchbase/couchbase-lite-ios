@@ -50,6 +50,7 @@ NSString* const kTDVersionString =  @"0.1";
     [_request release];
     [_response release];
     [_queries release];
+    [_path release];
     [_onResponseReady release];
     [_onDataAvailable release];
     [_onFinished release];
@@ -116,10 +117,10 @@ static NSArray* splitPath( NSString* path ) {
     NSMutableString* message = [NSMutableString stringWithFormat: @"do_%@", _request.HTTPMethod];
     
     // First interpret the components of the request:
-    NSArray* path = splitPath(_request.URL.path);
-    NSUInteger pathLen = path.count;
+    _path = [splitPath(_request.URL.path) copy];
+    NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
-        NSString* dbName = [path objectAtIndex: 0];
+        NSString* dbName = [_path objectAtIndex: 0];
         if ([dbName hasPrefix: @"_"]) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else {
@@ -141,14 +142,14 @@ static NSArray* splitPath( NSString* path ) {
             _response.status = status;
             return;
         }
-        NSString* name = [path objectAtIndex: 1];
+        NSString* name = [_path objectAtIndex: 1];
         if (![TDDatabase isValidDocumentID: name]) {
             _response.status = 400;
             return;
         } else if ([name hasPrefix: @"_"]) {
             [message appendString: name];
             if (pathLen > 2)
-                docID = [[path subarrayWithRange: NSMakeRange(2, path.count-2)]
+                docID = [[_path subarrayWithRange: NSMakeRange(2, _path.count-2)]
                                      componentsJoinedByString: @"/"];
         } else {
             docID = name;
@@ -167,7 +168,7 @@ static NSArray* splitPath( NSString* path ) {
         sel = @selector(do_UNKNOWN);
     TDStatus status = (TDStatus) [self performSelector: sel withObject: _db withObject: docID];
     
-    if (_response.bodyObject)
+    if (_response.body.isValidJSON)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
     //TODO: Add 'Date:' header
     
@@ -462,9 +463,9 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID {
-    TDRevision* rev = [db getDocumentWithID: docID revisionID: [self query: @"rev"]];
-    TDBody* body = rev.body;
-    if (!body)
+    NSString* revID = [self query: @"rev"];  // often nil
+    TDRevision* rev = [db getDocumentWithID: docID revisionID: revID];
+    if (!rev)
         return 404;
     
     // Check for conditional GET:
@@ -472,9 +473,26 @@ static NSArray* splitPath( NSString* path ) {
     if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
         return 304;
     
-    _response.body = body;
+    if (_path.count <= 2) {
+        _response.body = rev.body;
+        //TODO: Handle ?_revs_info query
+    } else {
+        // Request for an attachment
+        NSString* name = [[_path subarrayWithRange: NSMakeRange(2, _path.count-2)]
+                                                            componentsJoinedByString: @"/"];
+        NSString* type = nil;
+        TDStatus status;
+        NSData* contents = [_db getAttachmentForSequence: rev.sequence
+                                                   named: name
+                                                    type: &type
+                                                  status: &status];
+        if (!contents)
+            return status;
+        if (type)
+            [_response setValue: type ofHeader: @"Content-Type"];
+        _response.body = [TDBody bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
+    }
     return 200;
-    //TODO: Handle ?_revs_info query
 }
 
 
