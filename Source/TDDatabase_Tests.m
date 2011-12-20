@@ -18,6 +18,7 @@
 #import "TDBody.h"
 #import "TDRevision.h"
 #import "TDBlobStore.h"
+#import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
 
@@ -175,8 +176,8 @@ TestCase(TDDatabase_Attachments) {
     // Add a revision and an attachment to it:
     TDRevision* rev1;
     TDStatus status;
-    rev1 = [db putRevision: [TDRevision revisionWithProperties:$mdict({@"foo", $object(1)},
-                                                                      {@"bar", $false})]
+    rev1 = [db putRevision: [TDRevision revisionWithProperties:$dict({@"foo", $object(1)},
+                                                                     {@"bar", $false})]
             prevRevisionID: nil status: &status];
     CAssertEq(status, 201);
     
@@ -190,15 +191,19 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 200);
     CAssertEqual(type, @"text/plain");
     
+    // Check the attachment dict:
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                                           {@"length", $object(27)},
+                                                           {@"stub", $true})});
     CAssertEqual([db getAttachmentDictForSequence: rev1.sequence],
-                 $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
-                                         {@"length", $object(27)},
-                                         {@"stub", $true})}));
+                 $dict({@"_attachments", attachmentDict}));
+    TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
+    CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
     
     // Add a second revision that doesn't update the attachment:
     TDRevision* rev2;
-    rev2 = [db putRevision: [TDRevision revisionWithProperties:$mdict({@"_id", rev1.docID},
+    rev2 = [db putRevision: [TDRevision revisionWithProperties:$dict({@"_id", rev1.docID},
                                                                       {@"foo", $object(2)},
                                                                       {@"bazz", $false})]
             prevRevisionID: rev1.revID status: &status];
@@ -208,7 +213,7 @@ TestCase(TDDatabase_Attachments) {
 
     // Add a third revision of the same document:
     TDRevision* rev3;
-    rev3 = [db putRevision: [TDRevision revisionWithProperties:$mdict({@"_id", rev2.docID},
+    rev3 = [db putRevision: [TDRevision revisionWithProperties:$dict({@"_id", rev2.docID},
                                                                       {@"foo", $object(2)},
                                                                       {@"bazz", $false})]
             prevRevisionID: rev2.revID status: &status];
@@ -218,6 +223,7 @@ TestCase(TDDatabase_Attachments) {
     CAssert([db insertAttachment: attach2 forSequence: rev3.sequence
                            named: @"attach" type: @"text/html"]);
     
+    // Check the 2nd revision's attachment:
     type = nil;
     CAssertEqual([db getAttachmentForSequence: rev2.sequence
                                         named: @"attach"
@@ -226,6 +232,7 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 200);
     CAssertEqual(type, @"text/plain");
     
+    // Check the 3rd revision's attachment:
     CAssertEqual([db getAttachmentForSequence: rev3.sequence
                                         named: @"attach"
                                          type: &type
@@ -243,6 +250,36 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq([db garbageCollectAttachments], 1);
     CAssertEq(attachments.count, 1u);
     CAssertEqual(attachments.allKeys, $array([TDBlobStore keyDataForBlob: attach2]));
+}
+
+
+TestCase(TDDatabase_PutAttachment) {
+    RequireTestCase(TDDatabase_Attachments);
+    // Start with a fresh database in /tmp:
+    TDDatabase* db = createDB();
+    
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* base64 = [TDBase64 encode: attach1];
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"data", base64})});
+    NSDictionary* props = $dict({@"foo", $object(1)},
+                                {@"bar", $false},
+                                {@"_attachments", attachmentDict});
+    TDRevision* rev1;
+    TDStatus status;
+    rev1 = [db putRevision: [TDRevision revisionWithProperties: props]
+            prevRevisionID: nil status: &status];
+    CAssertEq(status, 201);
+
+    // Examine the attachment store:
+    CAssertEq(db.attachmentStore.count, 1u);
+    
+    TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
+    attachmentDict = [gotRev1.properties objectForKey: @"_attachments"];
+    CAssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                                         {@"length", $object(27)},
+                                                         {@"stub", $true})}));
 }
 
 
@@ -268,6 +305,7 @@ TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_CRUD);
     RequireTestCase(TDDatabase_RevTree);
     RequireTestCase(TDDatabase_Attachments);
+    RequireTestCase(TDDatabase_PutAttachment);
     RequireTestCase(TDDatabase_ReplicatorSequences);
 }
 

@@ -133,8 +133,10 @@
                       $object(sequence)];
     if (!r)
         return nil;
+    if (![r next])
+        return nil;
     NSMutableDictionary* attachments = $mdict();
-    while ([r next]) {
+    do {
         NSData* keyData = [r dataForColumnIndex: 1];
         NSString* digestStr = [@"sha1-" stringByAppendingString: [TDBase64 encode: keyData]];
         [attachments setObject: $dict({@"stub", $true},
@@ -142,8 +144,8 @@
                                       {@"content_type", [r stringForColumnIndex: 2]},
                                       {@"length", $object([r longLongIntForColumnIndex: 3])})
                         forKey: [r stringForColumnIndex: 0]];
-    }
-    return attachments;
+    } while ([r next]);
+    return $dict({@"_attachments", attachments});
 }
 
 

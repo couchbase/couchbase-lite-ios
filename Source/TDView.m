@@ -274,7 +274,7 @@ exit:
     
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid"];
     if (options->includeDocs)
-        [sql appendString: @", json"];
+        [sql appendString: @", json, revs.sequence"];
     [sql appendString: @" FROM maps, revs, docs "
                         "WHERE maps.view_id=? AND revs.sequence = maps.sequence "
                         "AND docs.doc_id = revs.doc_id "
@@ -295,9 +295,16 @@ exit:
         NSData* key = fromJSON([r dataForColumnIndex: 0]);
         NSData* value = fromJSON([r dataForColumnIndex: 1]);
         NSString* docID = [r stringForColumnIndex: 2];
-        NSDictionary* docContents = nil;
-        if (options->includeDocs)
-            docContents = fromJSON([r dataForColumnIndex: 3]);
+        NSMutableDictionary* docContents = nil;
+        if (options->includeDocs) {
+            docContents = [NSJSONSerialization JSONObjectWithData: [r dataForColumnIndex: 3]
+                                                          options: NSJSONReadingMutableContainers
+                                                            error: nil];
+            SequenceNumber sequence = [r longLongIntForColumnIndex: 4];
+            NSDictionary* attachmentDict = [_db getAttachmentDictForSequence: sequence];
+            if (attachmentDict)
+                [docContents addEntriesFromDictionary: attachmentDict];
+        }
         NSDictionary* change = $dict({@"id",  docID},
                                      {@"key", key},
                                      {@"value", value},
