@@ -37,7 +37,7 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
-    //gRESTLogLevel = kRESTLogRequestURLs;
+    gRESTLogLevel = kRESTLogRequestURLs;
     gCouchLogLevel = 1;
     
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
@@ -60,6 +60,7 @@ int main (int argc, const char * argv[]) {
     
     // Create a CouchDB 'view' containing list items sorted by date
     TDDatabase* tdb = [server.touchServer existingDatabaseNamed: dbName];
+    NSAssert(tdb, @"Failed to open or create TouchDB database");
     [[tdb viewNamed: @"byDate"] setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);

@@ -14,15 +14,68 @@
 //  and limitations under the License.
 
 #import "ShoppingItem.h"
+#import <AppKit/NSImage.h>
+
+
+static NSData* ImageJPEGData(NSImage* image);
+
+
 
 @implementation ShoppingItem
 
+
+- (void)dealloc {
+    [_picture release];
+    [super dealloc];
+}
+
+    
 @dynamic check, text, created_at;
 
+
 - (NSDictionary*) propertiesToSave {
+    // Initialize created_at the first time the document is saved:
     if (self.created_at == nil)
         self.created_at = [NSDate date];
     return [super propertiesToSave];
 }
 
+
+- (NSImage*) picture {
+    if (!_picture) {
+        NSData* pictureData = [[self attachmentNamed: @"picture"] body];
+        if (pictureData)
+            _picture = [[NSImage alloc] initWithData: pictureData];
+    }
+    return _picture;
+}
+
+
+- (void) setPicture:(NSImage *)picture {
+    if (_picture && picture == _picture)
+        return;
+    
+    [self createAttachmentWithName: @"picture"
+                              type: @"image/jpeg"
+                              body: ImageJPEGData(picture)];
+    [_picture release];
+    _picture = [picture retain];
+}
+
+
 @end
+
+
+static NSData* ImageJPEGData(NSImage* image) {
+    if (!image)
+        return nil;
+    NSBitmapImageRep* bitmapRep = nil;
+    for (NSImageRep* rep in image.representations) {
+        if ([rep isKindOfClass: [NSBitmapImageRep class]]) {
+            bitmapRep = (NSBitmapImageRep*) rep;
+            break;
+        }
+    }
+    NSCAssert(bitmapRep != nil, @"No bitmap rep");
+    return [bitmapRep representationUsingType: NSJPEGFileType properties: nil];
+}
