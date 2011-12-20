@@ -115,15 +115,12 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 - (BOOL) deleteDatabaseNamed: (NSString*)name {
-    TDDatabase* db = [_databases objectForKey: name];
-    if (db) {
-        [db close];
-        [_databases removeObjectForKey: name];
-    }
-    NSString* path = [self pathForName: name];
-    if (!path)
+    TDDatabase* db = [self databaseNamed: name];
+    if (!db)
         return NO;
-    return [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
+    [db deleteDatabase: NULL];
+    [_databases removeObjectForKey: name];
+    return YES;
 }
 
 

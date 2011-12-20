@@ -246,7 +246,6 @@ TestCase(TDDatabase_Attachments) {
     CAssertEqual([NSSet setWithArray: attachments.allKeys], expected);
     
     CAssertEq([db compact], 200);  // This clears the body of the first revision
-    CAssertEq([db garbageCollectAttachments], 1);
     CAssertEq(attachments.count, 1u);
     CAssertEqual(attachments.allKeys, $array([TDBlobStore keyDataForBlob: attach2]));
 }

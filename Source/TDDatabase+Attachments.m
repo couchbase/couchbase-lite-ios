@@ -28,24 +28,6 @@
 @implementation TDDatabase (Attachments)
 
 
-- (NSInteger) garbageCollectAttachments {
-    // First delete attachment rows for already-cleared revisions:
-    // OPT: Could start after last sequence# we GC'd up to
-    [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
-                            "(SELECT sequence from revs WHERE json IS null)"];
-    
-    // Now collect all remaining attachment IDs and tell the store to delete all but these:
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
-    if (!r)
-        return -1;
-    NSMutableSet* allKeys = [NSMutableSet set];
-    while ([r next]) {
-        [allKeys addObject: [r dataForColumnIndex: 0]];
-    }
-    return [_attachments deleteBlobsExceptWithKeys: allKeys];
-}
-
-
 - (BOOL) insertAttachment: (NSData*)contents
               forSequence: (SequenceNumber)sequence
                     named: (NSString*)name
@@ -94,6 +76,7 @@
 {
     Assert(sequence > 0);
     Assert(filename);
+    NSData* contents = nil;
     FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT key, type FROM attachments WHERE sequence=? AND filename=?",
                       $object(sequence), filename];
@@ -103,16 +86,16 @@
     }
     if (![r next]) {
         *outStatus = 404;
-        return nil;
+        goto exit;
     }
     NSData* keyData = [r dataForColumnIndex: 0];
     if (keyData.length != sizeof(TDBlobKey)) {
         Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
              self, sequence, filename, keyData.length);
         *outStatus = 500;
-        return nil;
+        goto exit;
     }
-    NSData* contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
+    contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
     if (!contents) {
         Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
         *outStatus = 500;
@@ -121,6 +104,8 @@
     }
     if (outType)
         *outType = [r stringForColumnIndex: 1];
+exit:
+    [r close];
     return contents;
 }
 
@@ -133,8 +118,10 @@
                       $object(sequence)];
     if (!r)
         return nil;
-    if (![r next])
+    if (![r next]) {
+        [r close];
         return nil;
+    }
     NSMutableDictionary* attachments = $mdict();
     do {
         NSData* keyData = [r dataForColumnIndex: 1];
@@ -145,6 +132,7 @@
                                       {@"length", $object([r longLongIntForColumnIndex: 3])})
                         forKey: [r stringForColumnIndex: 0]];
     } while ([r next]);
+    [r close];
     return attachments;
 }
 
@@ -183,6 +171,29 @@
                 return status;
         }
     }
+    return 200;
+}
+
+
+- (TDStatus) garbageCollectAttachments {
+    // First delete attachment rows for already-cleared revisions:
+    // OPT: Could start after last sequence# we GC'd up to
+    [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
+                            "(SELECT sequence from revs WHERE json IS null)"];
+    
+    // Now collect all remaining attachment IDs and tell the store to delete all but these:
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
+    if (!r)
+        return 500;
+    NSMutableSet* allKeys = [NSMutableSet set];
+    while ([r next]) {
+        [allKeys addObject: [r dataForColumnIndex: 0]];
+    }
+    [r close];
+    NSInteger numDeleted = [_attachments deleteBlobsExceptWithKeys: allKeys];
+    if (numDeleted < 0)
+        return 500;
+    Log(@"Deleted %d attachments", numDeleted);
     return 200;
 }
 

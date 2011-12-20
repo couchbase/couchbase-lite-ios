@@ -85,6 +85,10 @@
 		279EB2D11491442500E74185 /* TDInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D01491442500E74185 /* TDInternal.h */; };
 		279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* TDCollateJSON.h */; };
 		279EB2DC1491C34300E74185 /* TDCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2DA1491C34300E74185 /* TDCollateJSON.m */; };
+		27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
+		27A82E3714A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
+		27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; };
+		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; };
 		27B0B7801491E76200A817AD /* TDView_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* TDView_Tests.m */; };
 		27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B790149290AB00A817AD /* TDChangeTracker.h */; };
 		27B0B797149290AB00A817AD /* TDChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* TDChangeTracker.m */; };
@@ -264,6 +268,8 @@
 		279EB2D01491442500E74185 /* TDInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDInternal.h; sourceTree = "<group>"; };
 		279EB2D91491C34300E74185 /* TDCollateJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDCollateJSON.h; sourceTree = "<group>"; };
 		279EB2DA1491C34300E74185 /* TDCollateJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDCollateJSON.m; sourceTree = "<group>"; };
+		27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseAdditions.h; sourceTree = "<group>"; };
+		27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseAdditions.m; sourceTree = "<group>"; };
 		27B0B77F1491E73400A817AD /* TDView_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDView_Tests.m; sourceTree = "<group>"; };
 		27B0B790149290AB00A817AD /* TDChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDChangeTracker.h; sourceTree = "<group>"; };
 		27B0B791149290AB00A817AD /* TDChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDChangeTracker.m; sourceTree = "<group>"; };
@@ -674,6 +680,8 @@
 			children = (
 				27F0746F11CD51A200E9A2AB /* FMDatabase.h */,
 				27F0747011CD51A200E9A2AB /* FMDatabase.m */,
+				27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */,
+				27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */,
 				27F0747111CD51A200E9A2AB /* FMResultSet.h */,
 				27F0747211CD51A200E9A2AB /* FMResultSet.m */,
 			);
@@ -728,6 +736,7 @@
 				27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */,
 				279906E3149A65B8003D4338 /* TDRemoteRequest.h in Headers */,
 				279906EE149ABFC2003D4338 /* TDBatcher.h in Headers */,
+				27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -737,6 +746,7 @@
 			files = (
 				279906E4149A65B8003D4338 /* TDRemoteRequest.h in Headers */,
 				279906EF149ABFC2003D4338 /* TDBatcher.h in Headers */,
+				27A82E3714A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1105,6 +1115,7 @@
 				279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
 				279906F0149ABFC2003D4338 /* TDBatcher.m in Sources */,
 				274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
+				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1157,6 +1168,7 @@
 				279906E6149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
 				279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */,
 				274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
+				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

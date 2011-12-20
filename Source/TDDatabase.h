@@ -44,10 +44,8 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
         
 - (id) initWithPath: (NSString*)path;
 - (BOOL) open;
-#if SQLITE_VERSION_NUMBER >= 3005000
-- (BOOL) openWithFlags:(int)flags;
-#endif
 - (BOOL) close;
+- (BOOL) deleteDatabase: (NSError**)outError;
 
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path;
 
@@ -137,7 +135,7 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
                               status: (TDStatus*)outStatus;
 
 /** Deletes obsolete attachments from the database and blob store. */
-- (NSInteger) garbageCollectAttachments;
+- (TDStatus) garbageCollectAttachments;
 
 @end
 

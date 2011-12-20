@@ -17,6 +17,7 @@
 #import "TDInternal.h"
 
 #import "FMDatabase.h"
+#import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
 
 
@@ -52,14 +53,8 @@ const TDQueryOptions kDefaultTDQueryOptions = {
 
 
 - (int) viewID {
-    if (_viewID < 0) {
-        FMResultSet* r = [_db.fmdb executeQuery: @"SELECT view_id FROM views WHERE name=?", _name];
-        if ([r next])
-            _viewID = [r intForColumnIndex: 0];
-        else
-            _viewID = 0;
-        [r close];
-    }
+    if (_viewID < 0)
+        _viewID = [_db.fmdb intForQuery: @"SELECT view_id FROM views WHERE name=?", _name];
     return _viewID;
 }
 

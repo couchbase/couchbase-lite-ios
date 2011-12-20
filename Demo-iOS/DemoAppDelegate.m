@@ -50,6 +50,7 @@
     NSLog(@"...Created CouchDatabase at <%@>", self.database.URL);
     
     self.touchDatabase = [server.touchServer existingDatabaseNamed: @"grocery-sync"];
+    NSAssert(self.touchDatabase, @"Failed to open or create TouchDB database");
     
     // Tell the RootViewController:
     RootViewController* root = (RootViewController*)navigationController.topViewController;

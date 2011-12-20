@@ -370,6 +370,11 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
+- (TDStatus) do_POST_compact: (TDDatabase*)db {
+    return [db compact];
+}
+
+
 #pragma mark - CHANGES:
 
 

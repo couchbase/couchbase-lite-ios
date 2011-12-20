@@ -280,8 +280,7 @@ TestCase(TDRouter_GetAttachment) {
     NSDictionary* props = $dict({@"message", @"hello"},
                                 {@"_attachments", attachmentDict});
 
-    NSDictionary* result;
-    result = SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
+    SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
     
     // Now get the attachment via its URL:
     TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil);

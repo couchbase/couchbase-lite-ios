@@ -23,6 +23,7 @@
 #import "TDPusher.h"
 
 #import "FMDatabase.h"
+#import "FMDatabaseAdditions.h"
 
 
 NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
@@ -74,7 +75,6 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         _fmdb.busyRetryTimeout = 10;
 #if DEBUG
         _fmdb.logsErrors = YES;
-        _fmdb.crashOnErrors = YES;
 #else
         _fmdb.logsErrors = WillLogTo(TouchDB);
 #endif
@@ -91,6 +91,19 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     return [[NSFileManager defaultManager] fileExistsAtPath: _path];
 }
 
+
+- (BOOL) initialize: (NSString*)statements {
+    for (NSString* statement in [statements componentsSeparatedByString: @";"]) {
+        if (statement.length && ![_fmdb executeUpdate: statement]) {
+            Warn(@"TDDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
+                  "SQLite error: %@", _path, _fmdb.lastErrorMessage);
+            [_fmdb close];
+            return NO;
+        }
+    }
+    return YES;
+}
+
 - (BOOL) open {
     if (_open)
         return YES;
@@ -100,57 +113,74 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     // Register CouchDB-compatible JSON collation function:
     sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8, self, TDCollateJSON);
     
-    // ***** THIS IS THE SQL DATABASE SCHEMA! *****
-    NSString *sql = @"\
-        PRAGMA foreign_keys = ON; \
-        CREATE TABLE IF NOT EXISTS docs ( \
-            doc_id INTEGER PRIMARY KEY, \
-            docid TEXT UNIQUE NOT NULL); \
-        CREATE INDEX IF NOT EXISTS docs_docid ON docs(docid); \
-        CREATE TABLE IF NOT EXISTS revs ( \
-            sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
-            doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE, \
-            revid TEXT NOT NULL, \
-            parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL, \
-            current BOOLEAN, \
-            deleted BOOLEAN DEFAULT 0, \
-            json BLOB); \
-        CREATE INDEX IF NOT EXISTS revs_by_id ON revs(revid, doc_id); \
-        CREATE INDEX IF NOT EXISTS revs_current ON revs(doc_id, current); \
-        CREATE INDEX IF NOT EXISTS revs_parent ON revs(parent); \
-        CREATE TABLE IF NOT EXISTS views ( \
-            view_id INTEGER PRIMARY KEY, \
-            name TEXT UNIQUE NOT NULL,\
-            version TEXT, \
-            lastsequence INTEGER DEFAULT 0); \
-        CREATE INDEX IF NOT EXISTS views_by_name ON views(name); \
-        CREATE TABLE IF NOT EXISTS maps ( \
-            view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
-            sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
-            key TEXT NOT NULL COLLATE JSON, \
-            value TEXT); \
-        CREATE INDEX IF NOT EXISTS maps_keys on maps(view_id, key COLLATE JSON); \
-        CREATE TABLE IF NOT EXISTS attachments ( \
-            sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
-            filename TEXT NOT NULL, \
-            key BLOB NOT NULL, \
-            type TEXT, \
-            length INTEGER NOT NULL); \
-        CREATE INDEX IF NOT EXISTS attachments_by_sequence on attachments(sequence, filename); \
-        CREATE TABLE IF NOT EXISTS replicators ( \
-            remote TEXT NOT NULL, \
-            push BOOLEAN, \
-            last_sequence TEXT, \
-            UNIQUE (remote, push))";
-    // Declaring revs.sequence as AUTOINCREMENT means the values will always be
-    // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>
-    for (NSString* statement in [sql componentsSeparatedByString: @";"]) {
-        if (statement.length && ![_fmdb executeUpdate: statement]) {
-            [self close];
-            return NO;
-        }
+    // Stuff we need to initialize every time the database opens:
+    if (![self initialize: @"PRAGMA foreign_keys = ON;"])
+        return NO;
+    
+    // Check the user_version number we last stored in the database:
+    int dbVersion = [_fmdb intForQuery: @"PRAGMA user_version"];
+    
+    // Incompatible version changes increment the hundreds' place:
+    if (dbVersion >= 100) {
+        Warn(@"TDDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
+        [_fmdb close];
+        return NO;
     }
     
+    if (dbVersion < 1) {
+        // First-time initialization:
+        // (Note: Declaring revs.sequence as AUTOINCREMENT means the values will always be
+        // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>)
+        NSString *schema = @"\
+            CREATE TABLE docs ( \
+                doc_id INTEGER PRIMARY KEY, \
+                docid TEXT UNIQUE NOT NULL); \
+            CREATE INDEX docs_docid ON docs(docid); \
+            CREATE TABLE revs ( \
+                sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
+                doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE, \
+                revid TEXT NOT NULL, \
+                parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL, \
+                current BOOLEAN, \
+                deleted BOOLEAN DEFAULT 0, \
+                json BLOB); \
+            CREATE INDEX revs_by_id ON revs(revid, doc_id); \
+            CREATE INDEX revs_current ON revs(doc_id, current); \
+            CREATE INDEX revs_parent ON revs(parent); \
+            CREATE TABLE views ( \
+                view_id INTEGER PRIMARY KEY, \
+                name TEXT UNIQUE NOT NULL,\
+                version TEXT, \
+                lastsequence INTEGER DEFAULT 0); \
+            CREATE INDEX views_by_name ON views(name); \
+            CREATE TABLE maps ( \
+                view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
+                sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
+                key TEXT NOT NULL COLLATE JSON, \
+                value TEXT); \
+            CREATE INDEX maps_keys on maps(view_id, key COLLATE JSON); \
+            CREATE TABLE attachments ( \
+                sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
+                filename TEXT NOT NULL, \
+                key BLOB NOT NULL, \
+                type TEXT, \
+                length INTEGER NOT NULL); \
+            CREATE INDEX attachments_by_sequence on attachments(sequence, filename); \
+            CREATE TABLE replicators ( \
+                remote TEXT NOT NULL, \
+                push BOOLEAN, \
+                last_sequence TEXT, \
+                UNIQUE (remote, push)); \
+            PRAGMA user_version = 1";             // at the end, update user_version
+        if (![self initialize: schema])
+            return NO;
+    }
+
+#if DEBUG
+    _fmdb.crashOnErrors = YES;
+#endif
+    
+    // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
     NSError* error;
     _attachments = [[TDBlobStore alloc] initWithPath: attachmentsPath error: &error];
@@ -164,17 +194,23 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     return YES;
 }
 
-#if SQLITE_VERSION_NUMBER >= 3005000
-- (BOOL) openWithFlags:(int)flags {
-    return [_fmdb openWithFlags: flags];
-}
-#endif
-
 - (BOOL) close {
     if (!_open || ![_fmdb close])
         return NO;
     _open = NO;
     return YES;
+}
+
+- (BOOL) deleteDatabase: (NSError**)outError {
+    if (_open) {
+        if (![self close])
+            return NO;
+    } else if (!self.exists) {
+        return YES;
+    }
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    return [fmgr removeItemAtPath: _path error: outError] 
+        && [fmgr removeItemAtPath: self.attachmentStorePath error: outError];
 }
 
 - (void) dealloc {
@@ -334,7 +370,19 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 - (TDStatus) compact {
     // Can't delete any rows because that would lose revision tree history.
     // But we can remove the JSON of non-current revisions, which is most of the space.
-    return [_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"] ? 200 : 500;
+    Log(@"TDDatabase: Deleting JSON of old revisions...");
+    if (![_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"])
+        return 500;
+    
+    Log(@"Deleting old attachments...");
+    TDStatus status = [self garbageCollectAttachments];
+
+    Log(@"Vacuuming SQLite database...");
+    if (![_fmdb executeUpdate: @"VACUUM"])
+        return 500;
+    
+    Log(@"...Finished database compaction.");
+    return status;
 }
 
 
@@ -864,14 +912,8 @@ exit:
 
 
 - (NSString*) lastSequenceWithRemoteURL: (NSURL*)url push: (BOOL)push {
-    FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT last_sequence FROM replicators WHERE remote=? AND push=?",
-                      url.absoluteString, $object(push)];
-    NSString* lastSequence = nil;
-    if ([r next])
-        lastSequence = [r stringForColumnIndex: 0];
-    [r close];
-    return lastSequence;
+    return [_fmdb stringForQuery:@"SELECT last_sequence FROM replicators WHERE remote=? AND push=?",
+                                 url.absoluteString, $object(push)];
 }
 
 - (BOOL) setLastSequence: (NSString*)lastSequence withRemoteURL: (NSURL*)url push: (BOOL)push {
