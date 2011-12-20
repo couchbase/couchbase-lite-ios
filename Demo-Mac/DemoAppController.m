@@ -18,6 +18,7 @@
 #import "Test.h"
 #import "TouchDB.h"
 #import <CouchCocoa/CouchCocoa.h>
+#import <CouchCocoa/CouchTouchDBServer.h>
 
 
 #define kChangeGlowDuration 3.0
@@ -37,7 +38,7 @@ int main (int argc, const char * argv[]) {
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
     //gRESTLogLevel = kRESTLogRequestURLs;
-    //gCouchLogLevel = 1;
+    gCouchLogLevel = 1;
     
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
@@ -45,18 +46,9 @@ int main (int argc, const char * argv[]) {
         NSLog(@"FATAL: Please specify a CouchDB database name in the app's Info.plist under the 'DemoDatabase' key");
         exit(1);
     }
-
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
-                                                         NSUserDomainMask, YES);
-    NSString* path = [[[paths objectAtIndex:0] stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]] stringByAppendingPathComponent: @"TouchDB"];
-    [[NSFileManager defaultManager] createDirectoryAtPath: path withIntermediateDirectories: YES attributes: nil error: nil];
-    NSError* error;
-    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: path error: &error] autorelease];
-    NSAssert(tdServer, @"Couldn't create TDServer: %@", error);
-    [TDURLProtocol setServer: tdServer];
     
-    NSURL* url = [NSURL URLWithString: @"touchdb:///"];
-    CouchServer *server = [[CouchServer alloc] initWithURL: url];
+    CouchTouchDBServer* server = [CouchTouchDBServer sharedInstance];
+    NSAssert(!server.error, @"Error initializing TouchDB: %@", server.error);
 
     _database = [[server databaseNamed: dbName] retain];
     [server release];
@@ -66,9 +58,8 @@ int main (int argc, const char * argv[]) {
         NSAssert(op.error.code == 412, @"Error creating db: %@", op.error);
     }
     
-    
     // Create a CouchDB 'view' containing list items sorted by date
-    TDDatabase* tdb = [tdServer existingDatabaseNamed: dbName];
+    TDDatabase* tdb = [server.touchServer existingDatabaseNamed: dbName];
     [[tdb viewNamed: @"byDate"] setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);

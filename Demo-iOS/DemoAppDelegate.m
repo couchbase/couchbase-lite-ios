@@ -17,6 +17,7 @@
 #import "RootViewController.h"
 #import <TouchDB/TouchDB.h>
 #import <CouchCocoa/CouchCocoa.h>
+#import <CouchCocoa/CouchTouchDBServer.h>
 
 
 @implementation DemoAppDelegate
@@ -31,35 +32,24 @@
 	[window addSubview:navigationController.view];
 	[window makeKeyAndVisible];
     
-    NSLog(@"Creating database...");
-    NSError* error;
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
-                                                         NSUserDomainMask, YES);
-    NSString* path = [[paths objectAtIndex:0] stringByAppendingPathComponent: @"TouchDB"];
-    TDServer* tdServer = nil;
-    if ([[NSFileManager defaultManager] createDirectoryAtPath: path
-                                  withIntermediateDirectories: YES
-                                                   attributes: nil error: &error]) {
-        tdServer = [[[TDServer alloc] initWithDirectory: path error: &error] autorelease];
-    }
-    NSAssert(tdServer, @"Couldn't create TDServer: %@", error);
-    NSLog(@"TDServer is at %@", path);
-    [TDURLProtocol setServer: tdServer];
-    
     //gRESTLogLevel = kRESTLogRequestHeaders;
-    //gCouchLogLevel = 2;
-    NSURL* url = [NSURL URLWithString: @"touchdb:///grocery-sync"];
-    self.database = [CouchDatabase databaseWithURL: url];
+    gCouchLogLevel = 1;
+    
+    NSLog(@"Creating database...");
+    CouchTouchDBServer* server = [CouchTouchDBServer sharedInstance];
+    NSAssert(!server.error, @"Error initializing TouchDB: %@", server.error);
     
     // Create the database on the first run of the app.
+    self.database = [server databaseNamed: @"grocery-sync"];
+    NSError* error;
     if (![self.database ensureCreated: &error]) {
         [self showAlert: @"Couldn't create local database." error: error fatal: YES];
         return YES;
     }
     database.tracksChanges = YES;
-    NSLog(@"...Created CouchDatabase at <%@>", url);
+    NSLog(@"...Created CouchDatabase at <%@>", self.database.URL);
     
-    self.touchDatabase = [tdServer databaseNamed: @"grocery-sync"];
+    self.touchDatabase = [server.touchServer existingDatabaseNamed: @"grocery-sync"];
     
     // Tell the RootViewController:
     RootViewController* root = (RootViewController*)navigationController.topViewController;

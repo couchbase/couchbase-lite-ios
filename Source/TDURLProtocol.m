@@ -34,8 +34,8 @@ static TDServer* sServer;
 }
 
 
-+ (NSString*) scheme {
-    return kScheme;
++ (NSURL*) rootURL {
+    return [NSURL URLWithString: kScheme ":///"];
 }
 
 

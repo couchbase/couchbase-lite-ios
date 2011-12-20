@@ -15,8 +15,8 @@
     TDRouter* _router;
 }
 
-/** The URL scheme handled by this protocol, "touchdb". */
-+ (NSString*) scheme;
+/** The root URL served by this protocol, "touchdb:///". */
++ (NSURL*) rootURL;
 
 + (void) setServer: (TDServer*)server;
 + (TDServer*) server;
