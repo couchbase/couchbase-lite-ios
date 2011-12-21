@@ -32,7 +32,7 @@ More documentation is available on the [wiki][2].
 ## Building TouchDB ##
 
  1. Clone the TouchDB repository to your local disk.
- 2. In that directory run "`git submodule init`". This will clone the [FMDB][5] library (an Objective-C wrapper for sqlite) into vendor/FMDB.
+ 2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the [FMDB][5] library (an Objective-C wrapper for sqlite) into vendor/FMDB.
  3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
  4. You should now have a "TouchDB.framework" in your build output directory.
 
