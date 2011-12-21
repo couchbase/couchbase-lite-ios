@@ -300,7 +300,8 @@ exit:
             SequenceNumber sequence = [r longLongIntForColumnIndex: 5];
             [docContents setObject: docID forKey: @"_id"];
             [docContents setObject: revID forKey: @"_rev"];
-            [docContents setValue: [_db getAttachmentDictForSequence: sequence]
+            [docContents setValue: [_db getAttachmentDictForSequence: sequence
+                                                         withContent: NO]
                            forKey: @"_attachments"];
         }
         NSDictionary* change = $dict({@"id",  docID},

@@ -75,31 +75,36 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
         [revs addObject: rev.revID];
     }
     
+    // Call _revs_diff on the target db:
     [self sendAsyncRequest: @"POST" path: @"/_revs_diff" body: diffs
               onCompletion:^(NSDictionary* results, NSError* error) {
         if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
             NSArray* docsToSend = [changes.allRevisions my_map: ^(id rev) {
-                NSArray* revs = [[results objectForKey: [rev docID]] objectForKey: @"missing"];
-                if (![revs containsObject: [rev revID]])
-                    return (id)nil;
-                // Get the revision's properties:
                 NSMutableDictionary* properties;
-                if ([rev deleted])
-                    properties = $mdict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, {@"_deleted", $true});
-                else {
-                    if (![_db loadRevisionBody: rev]) {
-                        Warn(@"%@: Couldn't get local contents of %@", self, rev);
-                        return nil;
+                @autoreleasepool {
+                    NSArray* revs = [[results objectForKey: [rev docID]] objectForKey: @"missing"];
+                    if (![revs containsObject: [rev revID]])
+                        return (id)nil;
+                    // Get the revision's properties:
+                    if ([rev deleted])
+                        properties = [$mdict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, {@"_deleted", $true}) retain];
+                    else {
+                        // OPT: Shouldn't include all attachment bodies, just ones that have changed
+                        // OPT: Should send docs with many or big attachments as multipart/related
+                        if (![_db loadRevisionBody: rev andAttachments: YES]) {
+                            Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                            return nil;
+                        }
+                        properties = [[rev properties] mutableCopy];
                     }
-                    properties = [[[rev properties] mutableCopy] autorelease];
+                    
+                    // Add the _revisions list:
+                    [properties setValue: makeCouchRevisionList([_db getRevisionHistory: rev])
+                                  forKey: @"_revisions"];
                 }
-                
-                // Add the _revisions list:
-                [properties setValue: makeCouchRevisionList([_db getRevisionHistory: rev])
-                              forKey: @"_revisions"];
-                return properties;
+                return [properties autorelease];
             }];
             
             // Post the revisions to the destination. "new_edits":false means that the server should
@@ -123,6 +128,7 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
 }
 
 
+// Splits a revision ID into its generation number and opaque suffix string
 static BOOL parseRevID( NSString* revID, int* outNum, NSString** outSuffix) {
     NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
     scanner.charactersToBeSkipped = nil;

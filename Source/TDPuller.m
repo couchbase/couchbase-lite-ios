@@ -160,6 +160,7 @@
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
     [self sendAsyncRequest: @"GET" path: path body: nil
           onCompletion: ^(NSDictionary *properties, NSError *error) {
+              // OK, now we've got the response revision:
               if (properties) {
                   NSArray* history = nil;
                   NSDictionary* revisions = $castIf(NSDictionary,

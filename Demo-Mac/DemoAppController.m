@@ -51,7 +51,6 @@ int main (int argc, const char * argv[]) {
     NSAssert(!server.error, @"Error initializing TouchDB: %@", server.error);
 
     _database = [[server databaseNamed: dbName] retain];
-    [server release];
     
     RESTOperation* op = [_database create];
     if (![op wait]) {

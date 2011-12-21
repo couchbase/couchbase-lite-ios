@@ -111,7 +111,9 @@ exit:
 
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
-- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence {
+- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
+                                   withContent: (BOOL)withContent
+{
     Assert(sequence > 0);
     FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT filename, key, type, length FROM attachments WHERE sequence=?",
@@ -126,7 +128,16 @@ exit:
     do {
         NSData* keyData = [r dataForColumnIndex: 1];
         NSString* digestStr = [@"sha1-" stringByAppendingString: [TDBase64 encode: keyData]];
-        [attachments setObject: $dict({@"stub", $true},
+        NSString* dataBase64 = nil;
+        if (withContent) {
+            NSData* data = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
+            if (data)
+                dataBase64 = [TDBase64 encode: data];
+            else
+                Warn(@"TDDatabase: Failed to get attachment for key %@", keyData);
+        }
+        [attachments setObject: $dict({@"stub", (dataBase64 ? nil : $true)},
+                                      {@"data", dataBase64},
                                       {@"digest", digestStr},
                                       {@"content_type", [r stringForColumnIndex: 2]},
                                       {@"length", $object([r longLongIntForColumnIndex: 3])})

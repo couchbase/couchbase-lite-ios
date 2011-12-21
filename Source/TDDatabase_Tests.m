@@ -196,7 +196,7 @@ TestCase(TDDatabase_Attachments) {
                                                            {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                            {@"length", $object(27)},
                                                            {@"stub", $true})});
-    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence], attachmentDict);
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: NO], attachmentDict);
     TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
     

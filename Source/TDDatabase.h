@@ -70,16 +70,24 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 
 - (TDRevision*) getDocumentWithID: (NSString*)docID;
 - (TDRevision*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID;
-- (TDStatus) loadRevisionBody: (TDRevision*)rev;
+- (TDStatus) loadRevisionBody: (TDRevision*)rev
+               andAttachments: (BOOL)andAttachments;
 
 /** Returns an array of TDRevs in reverse chronological order,
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (TDRevision*)rev;
 - (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID;
 
+/** Stores a new (or initial) revision of a document. This is what's invoked by a PUT or POST. As with those, the previous revision ID must be supplied when necessary and the call will fail if it doesn't match.
+    @param revision  The revision to add. If the docID is nil, a new UUID will be assigned. Its revID must be nil. It must have a JSON body.
+    @param prevRevID  The ID of the revision to replace (same as the "?rev=" parameter to a PUT), or nil if this is a new document.
+    @param status  On return, an HTTP status code indicating success or failure.
+    @return  A new TDRevision with the docID, revID and sequence filled in (but no body). */
 - (TDRevision*) putRevision: (TDRevision*)revision
-         prevRevisionID: (NSString*)revID
-                 status: (TDStatus*)outStatus;
+             prevRevisionID: (NSString*)prevRevID
+                     status: (TDStatus*)outStatus;
+
+/** Inserts an already-existing revision replicated from a remote database. It must already have a revision ID. This may create a conflict! The revision's history must be given; ancestor revision IDs that don't already exist locally will create phantom revisions with no content. */
 - (TDStatus) forceInsert: (TDRevision*)rev
          revisionHistory: (NSArray*)history
                   source: (NSURL*)source;
@@ -126,7 +134,8 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
                      type: (NSString*)contentType;
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
-- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence;
+- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
+                                   withContent: (BOOL)withContent;
 
 /** Returns the content and MIME type of an attachment */
 - (NSData*) getAttachmentForSequence: (SequenceNumber)sequence

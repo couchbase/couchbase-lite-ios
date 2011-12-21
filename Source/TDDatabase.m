@@ -302,7 +302,10 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
     Rev must already have its revID and sequence properties set. */
-- (void) expandStoredJSON: (NSData*)json intoRevision: (TDRevision*)rev {
+- (void) expandStoredJSON: (NSData*)json
+             intoRevision: (TDRevision*)rev
+          withAttachments: (BOOL)withAttachments
+{
     if (!json)
         return;
     NSString* docID = rev.docID;
@@ -310,9 +313,11 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     SequenceNumber sequence = rev.sequence;
     Assert(revID);
     Assert(sequence > 0);
+    NSDictionary* attachmentsDict = [self getAttachmentDictForSequence: sequence
+                                                           withContent: withAttachments];
     NSDictionary* extra = $dict({@"_id", docID},
                                 {@"_rev", revID},
-                                {@"_attachments", [self getAttachmentDictForSequence: sequence]});
+                                {@"_attachments", attachmentsDict});
     rev.asJSON = appendDictToJSON(json, extra);
 }
 
@@ -339,14 +344,16 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         NSData* json = [r dataForColumnIndex: 2];
         result = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted] autorelease];
         result.sequence = [r longLongIntForColumnIndex: 3];
-        [self expandStoredJSON: json intoRevision: result];
+        [self expandStoredJSON: json intoRevision: result withAttachments: NO];
     }
     [r close];
     return result;
 }
 
 
-- (TDStatus) loadRevisionBody: (TDRevision*)rev {
+- (TDStatus) loadRevisionBody: (TDRevision*)rev
+               andAttachments: (BOOL)withAttachments
+{
     if (rev.body)
         return 200;
     Assert(rev.docID && rev.revID);
@@ -360,7 +367,9 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
         status = 200;
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        [self expandStoredJSON: [r dataForColumnIndex: 1] intoRevision: rev];
+        [self expandStoredJSON: [r dataForColumnIndex: 1] 
+                  intoRevision: rev
+               withAttachments: withAttachments];
     }
     [r close];
     return status;
@@ -853,7 +862,8 @@ exit:
             [docContents setObject: docID forKey: @"_id"];
             [docContents setObject: revID forKey: @"_rev"];
             SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
-            [docContents setValue: [self getAttachmentDictForSequence: sequence]
+            [docContents setValue: [self getAttachmentDictForSequence: sequence
+                                                          withContent: NO]
                            forKey: @"_attachments"];
         }
         NSDictionary* change = $dict({@"id",  docID},
@@ -1070,7 +1080,7 @@ static NSString* joinQuoted(NSArray* strings) {
 
 - (TDRevision*) currentRevision {
     if (_currentRevision)
-        [_db loadRevisionBody: _currentRevision];
+        [_db loadRevisionBody: _currentRevision andAttachments: NO];
     return _currentRevision;
 }
 
