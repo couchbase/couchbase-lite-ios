@@ -112,7 +112,7 @@ static inline struct foreachstate _initforeach( NSArray *arr ) {
 
 
 // Internals (don't use directly)
-struct _dictpair { id key; id value; };
+struct _dictpair { __unsafe_unretained id key; __unsafe_unretained id value; };
 NSDictionary* _dictof(const struct _dictpair*, size_t count);
 NSMutableDictionary* _mdictof(const struct _dictpair*, size_t count);
 NSValue* _box(const void *value, const char *encoding);

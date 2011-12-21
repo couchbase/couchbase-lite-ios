@@ -83,7 +83,8 @@ void _RequireTestCase( const char *name );
                                 }while(0)
 
 #define AssertNil(VAL)          AssertEq((VAL),nil)
-#define CAssertNil(VAL)         CAssertEq((VAL),nil)
+#define CAssertNil(VAL)         CAssertEq((VAL),(id)nil)  // ARC is picky about the type of nil here
+#define CAssertNull(VAL)        CAssertEq((VAL),NULL)
 
 #define AssertAbstractMethod()  _AssertAbstractMethodFailed(self,_cmd);
 

@@ -28,7 +28,7 @@ TestCase(TDView_Create) {
     CAssert(view);
     CAssertEq(view.database, db);
     CAssertEqual(view.name, @"aview");
-    CAssertNil(view.mapBlock);
+    CAssertNull(view.mapBlock);
     
     BOOL changed = [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) { } version: @"1"];
     CAssert(changed);

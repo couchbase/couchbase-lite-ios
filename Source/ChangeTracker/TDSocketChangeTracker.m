@@ -67,13 +67,15 @@ enum {
     _trackingInput = (NSInputStream*)cfInputStream;
     _trackingOutput = (NSOutputStream*)cfOutputStream;
 #else
+    NSInputStream* input;
+    NSOutputStream* output;
     [NSStream getStreamsToHost: [NSHost hostWithName: _databaseURL.host]
                           port: _databaseURL.port.intValue
-                   inputStream: &_trackingInput outputStream: &_trackingOutput];
-    if (!_trackingOutput)
+                   inputStream: &input outputStream: &output];
+    if (!output)
         return NO;
-    [_trackingInput retain];
-    [_trackingOutput retain];
+    _trackingInput = [input retain];
+    _trackingOutput = [output retain];
 #endif
     
     _state = kStateStatus;
