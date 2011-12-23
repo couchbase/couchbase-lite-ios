@@ -351,7 +351,7 @@
         if (!progress) {
             progress = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleBar];
             CGRect frame = progress.frame;
-            frame.size.width = self.view.frame.size.width / 4.0;
+            frame.size.width = self.view.frame.size.width / 4.0f;
             progress.frame = frame;
         }
         UIBarButtonItem* progressItem = [[UIBarButtonItem alloc] initWithCustomView:progress];

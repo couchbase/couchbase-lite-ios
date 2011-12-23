@@ -85,7 +85,7 @@
             unichar digit2 = [filename characterAtIndex: 2*i+1];
             if (!isxdigit(digit1) || !isxdigit(digit2))
                 return NO;
-            *dst++ = 16*digittoint(digit1) + digittoint(digit2);
+            *dst++ = (uint8_t)( 16*digittoint(digit1) + digittoint(digit2) );
         }
     }
     return YES;

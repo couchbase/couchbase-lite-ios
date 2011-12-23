@@ -90,7 +90,7 @@ BOOL EnableLog( BOOL enable )
 {
     if( _gShouldLog == -1 )
         InitLogging();
-    BOOL old = _gShouldLog;
+    BOOL old = _gShouldLog != 0;
     _gShouldLog = enable;
     return old;
 }

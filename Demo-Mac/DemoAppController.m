@@ -216,7 +216,7 @@ int main (int argc, const char * argv[]) {
     CouchModel* item = [items objectAtIndex: row];
     NSTimeInterval changedFor = item.timeSinceExternallyChanged;
     if (changedFor > 0 && changedFor < kChangeGlowDuration) {
-        float fraction = 1.0 - changedFor / kChangeGlowDuration;
+        double fraction = 1.0 - changedFor / kChangeGlowDuration;
         if (YES || [cell isKindOfClass: [NSButtonCell class]])
             bg = [[NSColor controlBackgroundColor] blendedColorWithFraction: fraction 
                                                         ofColor: [NSColor yellowColor]];

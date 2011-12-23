@@ -29,7 +29,7 @@ static int8_t kDecodingTable[256];
     if (self == [TDBase64 class]) {
         memset(kDecodingTable, 0xFF, sizeof(kDecodingTable));
         for (NSUInteger i = 0; i < sizeof(kEncodingTable); i++) {
-            kDecodingTable[kEncodingTable[i]] = i;
+            kDecodingTable[kEncodingTable[i]] = (int8_t)i;
         }
     }
 }
@@ -93,12 +93,12 @@ static int8_t kDecodingTable[256];
                 || kDecodingTable[i2] < 0 || kDecodingTable[i3] < 0)
             return nil;
                 
-        output[outputPoint++] = (kDecodingTable[i0] << 2) | (kDecodingTable[i1] >> 4);
+        output[outputPoint++] = (uint8_t)((kDecodingTable[i0] << 2) | (kDecodingTable[i1] >> 4));
         if (outputPoint < outputLength) {
-            output[outputPoint++] = ((kDecodingTable[i1] & 0xf) << 4) | (kDecodingTable[i2] >> 2);
+            output[outputPoint++] = (uint8_t)(((kDecodingTable[i1] & 0xf) << 4) | (kDecodingTable[i2] >> 2));
         }
         if (outputPoint < outputLength) {
-            output[outputPoint++] = ((kDecodingTable[i2] & 0x3) << 6) | kDecodingTable[i3];
+            output[outputPoint++] = (uint8_t)(((kDecodingTable[i2] & 0x3) << 6) | kDecodingTable[i3]);
         }
     }
     
