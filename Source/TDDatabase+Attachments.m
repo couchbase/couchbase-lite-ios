@@ -148,15 +148,17 @@ exit:
 }
 
 
-- (TDStatus) processAttachmentsDict: (NSDictionary*)newAttachments
-                     forNewSequence: (SequenceNumber)newSequence
-                 withParentSequence: (SequenceNumber)parentSequence
+- (TDStatus) processAttachmentsForRevision: (TDRevision*)rev
+                        withParentSequence: (SequenceNumber)parentSequence
 {
+    Assert(rev);
+    SequenceNumber newSequence = rev.sequence;
     Assert(newSequence > 0);
     Assert(newSequence > parentSequence);
     
     // If there are no attachments in the new rev, there's nothing to do:
-    if (newAttachments.count == 0)
+    NSDictionary* newAttachments = [rev.properties objectForKey: @"_attachments"];
+    if (newAttachments.count == 0 || rev.deleted)
         return 200;
     
     for (NSString* name in newAttachments) {

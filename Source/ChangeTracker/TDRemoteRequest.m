@@ -28,6 +28,7 @@
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
         _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+        [_request setValue: @"application/json" forHTTPHeaderField: @"Accept"];
         if (body) {
             _request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
             [_request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];

@@ -76,7 +76,10 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 /** Returns an array of TDRevs in reverse chronological order,
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (TDRevision*)rev;
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID;
+
+/** Returns all the known revisions (or all current/conflicting revisions) of a document. */
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                    onlyCurrent: (BOOL)onlyCurrent;
 
 /** Stores a new (or initial) revision of a document. This is what's invoked by a PUT or POST. As with those, the previous revision ID must be supplied when necessary and the call will fail if it doesn't match.
     @param revision  The revision to add. If the docID is nil, a new UUID will be assigned. Its revID must be nil. It must have a JSON body.
@@ -122,10 +125,9 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 
 @interface TDDatabase (Attachments)
 
-/** Given the "_attachments" property of a newly-added revision, adds the necessary attachment rows to the database and stores inline attachments into the blob store. */
-- (TDStatus) processAttachmentsDict: (NSDictionary*)newAttachments
-                     forNewSequence: (SequenceNumber)newSequence
-                 withParentSequence: (SequenceNumber)parentSequence;
+/** Given a newly-added revision, adds the necessary attachment rows to the database and stores inline attachments into the blob store. */
+- (TDStatus) processAttachmentsForRevision: (TDRevision*)rev
+                        withParentSequence: (SequenceNumber)parentSequence;
 
 /** Inserts a single new attachment for a revision. */
 - (BOOL) insertAttachment: (NSData*)contents

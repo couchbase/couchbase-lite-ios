@@ -45,7 +45,9 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
 @interface TDDatabase ()
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID numericID: (SInt64)docNumericID;
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                      numericID: (SInt64)docNumericID
+                                    onlyCurrent: (BOOL)onlyCurrent;
 - (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev;
 @end
 
@@ -488,6 +490,21 @@ static NSString* createUUID() {
 }
 
 
+- (NSData*) encodeDocumentJSON: (TDRevision*)rev {
+    NSMutableDictionary* properties = [rev.properties mutableCopy];
+    if (!properties)
+        return nil;
+    [properties removeObjectForKey: @"_id"];
+    [properties removeObjectForKey: @"_rev"];
+    [properties removeObjectForKey: @"_attachments"];
+    NSError* error;
+    NSData* json = [NSJSONSerialization dataWithJSONObject: properties options:0 error: &error];
+    [properties release];
+    Assert(json, @"Unable to serialize %@ to JSON: %@", rev, error);
+    return json;
+}
+
+
 // Raw row insertion. Returns new sequence, or 0 on error
 - (SequenceNumber) insertRevision: (TDRevision*)rev
                      docNumericID: (SInt64)docNumericID
@@ -504,7 +521,7 @@ static NSString* createUUID() {
                                $object(rev.deleted),
                                json])
         return 0;
-    return _fmdb.lastInsertRowId;
+    return rev.sequence = _fmdb.lastInsertRowId;
 }
 
 
@@ -599,23 +616,13 @@ static NSString* createUUID() {
     
     // Bump the revID and update the JSON:
     NSString* newRevID = [self generateNextRevisionID: prevRevID];
-    NSMutableDictionary* props = nil;
-    NSDictionary* attachmentDict = nil;
     NSData* json = nil;
     if (!rev.deleted) {
-        props = [[rev.properties mutableCopy] autorelease];
-        if (!props) {
+        json = [self encodeDocumentJSON: rev];
+        if (!json) {
             *outStatus = 400;  // bad or missing JSON
             goto exit;
         }
-        // Remove special properties to save room; we'll reconstitute them on read.
-        [props removeObjectForKey: @"_id"];
-        [props removeObjectForKey: @"_rev"];
-        attachmentDict = [[[props objectForKey: @"_attachments"] retain] autorelease];
-        if (attachmentDict)
-            [props removeObjectForKey: @"_attachments"];
-        json = [NSJSONSerialization dataWithJSONObject: props options: 0 error: nil];
-        NSAssert(json!=nil, @"Couldn't serialize document");
     }
     rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
     
@@ -627,17 +634,13 @@ static NSString* createUUID() {
                                               JSON: json];
     if (!sequence)
         goto exit;
-    rev.sequence = sequence;
     
     // Store any attachments:
-    if (attachmentDict) {
-        TDStatus status = [self processAttachmentsDict: attachmentDict
-                                        forNewSequence: sequence
-                                    withParentSequence: parentSequence];
-        if (status >= 300) {
-            *outStatus = status;
-            goto exit;
-        }
+    TDStatus status = [self processAttachmentsForRevision: rev
+                                       withParentSequence: parentSequence];
+    if (status >= 300) {
+        *outStatus = status;
+        goto exit;
     }
     
     // Success!
@@ -664,7 +667,9 @@ exit:
     // First look up all locally-known revisions of this document:
     NSString* docID = rev.docID;
     SInt64 docNumericID = [self getOrInsertDocNumericID: docID];
-    TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID numericID: docNumericID];
+    TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID
+                                                        numericID: docNumericID
+                                                      onlyCurrent: NO];
     if (!localRevs)
         return 500;
     NSUInteger historyCount = history.count;
@@ -686,14 +691,16 @@ exit:
     // Walk through the remote history in chronological order, matching each revision ID to
     // a local revision. When the list diverges, start creating blank local revisions to fill
     // in the local history:
+    SequenceNumber sequence = 0;
     SequenceNumber parentSequence = 0;
     for (NSInteger i = historyCount - 1; i>=0; --i) {
+        parentSequence = sequence;
         NSString* revID = [history objectAtIndex: i];
         TDRevision* localRev = [localRevs revWithDocID: docID revID: revID];
         if (localRev) {
             // This revision is known locally. Remember its sequence as the parent of the next one:
-            parentSequence = localRev.sequence;
-            Assert(parentSequence > 0);
+            sequence = localRev.sequence;
+            Assert(sequence > 0);
         } else {
             // This revision isn't known, so add it:
             TDRevision* newRev;
@@ -703,14 +710,9 @@ exit:
                 // Hey, this is the leaf revision we're inserting:
                 newRev = rev;
                 if (!rev.deleted) {
-                    NSMutableDictionary* properties = [[rev.properties mutableCopy] autorelease];
-                    if (!properties)
+                    json = [self encodeDocumentJSON: rev];
+                    if (!json)
                         return 400;
-                    [properties removeObjectForKey: @"_id"];
-                    [properties removeObjectForKey: @"_rev"];
-                    [properties removeObjectForKey: @"_attachments"];
-                    json = [NSJSONSerialization dataWithJSONObject: properties options:0 error:nil];
-                    Assert(json);
                 }
                 current = YES;
             } else {
@@ -720,20 +722,26 @@ exit:
             }
 
             // Insert it:
-            parentSequence = [self insertRevision: newRev
-                                     docNumericID: docNumericID
-                                   parentSequence: parentSequence
-                                          current: current 
-                                             JSON: json];
-            if (parentSequence <= 0)
+            sequence = [self insertRevision: newRev
+                               docNumericID: docNumericID
+                             parentSequence: sequence
+                                    current: current 
+                                       JSON: json];
+            if (sequence <= 0)
                 return 500;
+            
+            if (i==0) {
+                // Write any changed attachments for the new revision:
+                TDStatus status = [self processAttachmentsForRevision: rev
+                                                   withParentSequence: parentSequence];
+                if (status >= 300) 
+                    return status;
+            }
         }
     }
-    
-    // Record its sequence and send a change notification:
-    rev.sequence = parentSequence;
+
+    // Notify and return:
     [self notifyChange: rev source: source];
-    
     return 201;
 }
 
@@ -981,10 +989,16 @@ static NSString* joinQuoted(NSArray* strings) {
 
 - (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       numericID: (SInt64)docNumericID
+                                    onlyCurrent: (BOOL)onlyCurrent
 {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, revid, deleted FROM revs "
-                                           "WHERE doc_id=? ORDER BY sequence DESC",
-                                          $object(docNumericID)];
+    NSString* sql;
+    if (onlyCurrent)
+        sql = @"SELECT sequence, revid, deleted FROM revs "
+               "WHERE doc_id=? AND current ORDER BY sequence DESC";
+    else
+        sql = @"SELECT sequence, revid, deleted FROM revs "
+               "WHERE doc_id=? ORDER BY sequence DESC";
+    FMResultSet* r = [_fmdb executeQuery: sql, $object(docNumericID)];
     if (!r)
         return nil;
     TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
@@ -1000,14 +1014,18 @@ static NSString* joinQuoted(NSArray* strings) {
     return revs;
 }
 
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID {
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                    onlyCurrent: (BOOL)onlyCurrent
+{
     SInt64 docNumericID = [self getDocNumericID: docID];
     if (docNumericID < 0)
         return nil;
     else if (docNumericID == 0)
         return [[[TDRevisionList alloc] init] autorelease];  // no such document
     else
-        return [self getAllRevisionsOfDocumentID: docID numericID: docNumericID];
+        return [self getAllRevisionsOfDocumentID: docID
+                                       numericID: docNumericID
+                                     onlyCurrent: onlyCurrent];
 }
     
 
