@@ -159,7 +159,7 @@ static id fromJSON( NSData* json ) {
     FMResultSet* r = nil;
     
     const SequenceNumber lastSequence = self.lastSequenceIndexed;
-    if (!lastSequence < 0)
+    if (lastSequence < 0)
         goto exit;
     sequence = lastSequence;
     
