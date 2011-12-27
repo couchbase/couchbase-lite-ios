@@ -63,7 +63,9 @@ TestCase(TDView_Index) {
     putDoc(db, $dict({@"clef", @"quatre"}));
     
     TDView* view = [db viewNamed: @"aview"];
-    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) { 
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
+        CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
         emit([doc objectForKey: @"key"], nil);
     } version: @"1"];
     CAssertEq(view.viewID, 1);

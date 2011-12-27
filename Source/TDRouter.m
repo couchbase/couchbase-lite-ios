@@ -26,7 +26,8 @@ NSString* const kTDVersionString =  @"0.1";
 
 
 @interface TDRouter ()
-- (TDStatus) update: (TDDatabase*)db docID: (NSString*)docID json: (NSData*)json;
+- (TDStatus) update: (TDDatabase*)db docID: (NSString*)docID json: (NSData*)json
+           deleting: (BOOL)deleting;
 @end
 
 
@@ -333,7 +334,7 @@ static NSArray* splitPath( NSString* path ) {
     if (status >= 300)
         return status;
     NSString* docID = [db generateDocumentID];
-    status =  [self update: db docID: docID json: _request.HTTPBody];
+    status =  [self update: db docID: docID json: _request.HTTPBody deleting: NO];
     if (status == 201) {
         NSURL* url = [_request.URL URLByAppendingPathComponent: docID];
         [_response.headers setObject: url.absoluteString forKey: @"Location"];
@@ -504,13 +505,17 @@ static NSArray* splitPath( NSString* path ) {
 - (TDStatus) update: (TDDatabase*)db
               docID: (NSString*)docID
                json: (NSData*)json
+           deleting: (BOOL)deleting
 {
     TDBody* body = json ? [TDBody bodyWithJSON: json] : nil;
     
     NSString* revID;
-    if (body) {
+    if (!deleting) {
         // PUT's revision ID comes from the JSON body.
         revID = [body propertyForKey: @"_rev"];
+        deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
+        if (deleting && !docID)
+            return 400;         // POST and _deleted don't mix
     } else {
         // DELETE's revision ID can come either from the ?rev= query param or an If-Match header.
         revID = [self query: @"rev"];
@@ -526,7 +531,8 @@ static NSArray* splitPath( NSString* path ) {
         }
     }
     
-    TDRevision* rev = [[[TDRevision alloc] initWithDocID: docID revID: nil deleted: !body] autorelease];
+    TDRevision* rev = [[[TDRevision alloc] initWithDocID: docID revID: nil deleted: deleting]
+                            autorelease];
     if (!rev)
         return 400;
     rev.body = body;
@@ -547,12 +553,12 @@ static NSArray* splitPath( NSString* path ) {
     NSData* json = _request.HTTPBody;
     if (!json)
         return 400;
-    return [self update: db docID: docID json: json];
+    return [self update: db docID: docID json: json deleting: NO];
 }
 
 
 - (TDStatus) do_DELETE: (TDDatabase*)db docID: (NSString*)docID {
-    return [self update: db docID: docID json: nil];
+    return [self update: db docID: docID json: nil deleting: YES];
 }
 
 

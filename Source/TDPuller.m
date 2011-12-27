@@ -160,6 +160,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 {
     [self asyncTaskStarted];
     ++_httpConnectionCount;
+    
+    // Construct a query. We want the revision history, and the bodies of attachments that have
+    // been added since the latest revisions we have locally.
+    // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true&attachments=true",
                               rev.docID, rev.revID);
     NSArray* knownRevs = [self knownCurrentRevIDsOf: rev];

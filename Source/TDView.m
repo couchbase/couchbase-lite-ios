@@ -151,17 +151,30 @@ static id fromJSON( NSData* json ) {
     [_db beginTransaction];
     TDStatus status = 500;
     
-    __block SequenceNumber sequence = 0;
     __block BOOL emitFailed = NO;
-    unsigned deleted = 0;
     __block unsigned inserted = 0;
     FMDatabase* fmdb = _db.fmdb;
     FMResultSet* r = nil;
     
+    // First remove obsolete emitted results from the 'maps' table:
     const SequenceNumber lastSequence = self.lastSequenceIndexed;
+    __block SequenceNumber sequence = lastSequence;
     if (lastSequence < 0)
         goto exit;
-    sequence = lastSequence;
+    BOOL ok;
+    if (lastSequence == 0) {
+        // If the lastSequence has been reset to 0, make sure to remove all map results:
+        ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?", $object(_viewID)];
+    } else {
+        // Delete all obsolete map results (ones from since-replaced revisions):
+        ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence IN ("
+                                        "SELECT parent FROM revs WHERE sequence>? "
+                                            "AND parent>0 AND parent<=?)",
+                                  $object(_viewID), $object(lastSequence), $object(lastSequence)];
+    }
+    if (!ok)
+        goto exit;
+    unsigned deleted = fmdb.changes;
     
     // This is the emit() block, which gets called from within the user-defined map() block
     // that's called down below.
@@ -179,46 +192,35 @@ static id fromJSON( NSData* json ) {
             emitFailed = YES;
     };
     
-    // If the lastSequence has been reset to 0, make sure to remove any leftover rows:
-    if (lastSequence == 0) {
-        if (![fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?",
-                                  $object(_viewID)])
-            goto exit;
-    }
-
-    SequenceNumber dbMaxSequence = _db.lastSequence;
-    
     // Now scan every revision added since the last time the view was indexed:
-    r = [fmdb executeQuery: @"SELECT sequence, parent, current, deleted, json FROM revs "
-                             "WHERE sequence>? "
-                             "AND ((parent>0 AND parent<?) OR (current!=0 AND deleted=0))",
-                             $object(lastSequence), $object(lastSequence)];
+    r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json FROM revs, docs "
+                             "WHERE sequence>? AND current!=0 AND deleted=0 "
+                             "AND revs.doc_id = docs.doc_id "
+                             "ORDER BY revs.doc_id, revid DESC",
+                             $object(lastSequence)];
     if (!r)
         goto exit;
+
+    int64_t lastDocID = 0;
     while ([r next]) {
         @autoreleasepool {
-            sequence = [r longLongIntForColumnIndex: 0];
-            SequenceNumber parentSequence = [r longLongIntForColumnIndex: 1];
-            BOOL current = [r boolForColumnIndex: 2];
-            BOOL deleted = [r boolForColumnIndex: 3];
-            NSData* json = [r dataForColumnIndex: 4];
-            LogTo(View, @"Seq# %lld:", sequence);
-            
-            if (parentSequence && parentSequence <= lastSequence) {
-                // Delete any map results emitted from now-obsolete revisions:
-                LogTo(View, @"  delete maps for sequence=%lld", parentSequence);
-                if (![fmdb executeUpdate: @"DELETE FROM maps WHERE sequence=? AND view_id=?",
-                                           $object(parentSequence), $object(viewID)])
-                    goto exit;
-                deleted += fmdb.changes;
-            }
-            if (current && !deleted) {
-                //FIX: If a doc has conflicts this will process *each* conflicting revision, not just the winner
-                // Call the user-defined map() to emit new key/value pairs from this revision:
-                LogTo(View, @"  call map for sequence=%lld...", sequence);
-                NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: json
-                                                                           options: 0 error: nil];
+            int64_t doc_id = [r longLongIntForColumnIndex: 0];
+            if (doc_id != lastDocID) {
+                // Only look at the first-iterated revision of any document, because this is the
+                // one with the highest revid, hence the "winning" revision of a conflict.
+                lastDocID = doc_id;
+                
+                // Reconstitute the document as a dictionary:
+                sequence = [r longLongIntForColumnIndex: 1];
+                NSString* docID = [r stringForColumnIndex: 2];
+                NSString* revID = [r stringForColumnIndex: 3];
+                NSData* json = [r dataForColumnIndex: 4];
+                NSDictionary* properties = [_db documentPropertiesFromJSON: json
+                                                                     docID: docID revID:revID
+                                                                  sequence: sequence];
                 if (properties) {
+                    // Call the user-defined map() to emit new key/value pairs from this revision:
+                    LogTo(View, @"  call map for sequence=%lld...", sequence);
                     _mapBlock(properties, emit);
                     if (emitFailed)
                         goto exit;
@@ -230,11 +232,10 @@ static id fromJSON( NSData* json ) {
     r = nil;
     
     // Finally, record the last revision sequence number that was indexed:
-    if (sequence > dbMaxSequence) {
-        if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
-                                   $object(dbMaxSequence), $object(viewID)])
-            goto exit;
-    }
+    SequenceNumber dbMaxSequence = _db.lastSequence;
+    if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
+                               $object(dbMaxSequence), $object(viewID)])
+        goto exit;
     
     LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
           _name, dbMaxSequence, deleted, inserted);
@@ -292,18 +293,12 @@ exit:
         NSData* key = fromJSON([r dataForColumnIndex: 0]);
         NSData* value = fromJSON([r dataForColumnIndex: 1]);
         NSString* docID = [r stringForColumnIndex: 2];
-        NSMutableDictionary* docContents = nil;
+        NSDictionary* docContents = nil;
         if (options->includeDocs) {
-            NSString* revID = [r stringForColumnIndex: 3];
-            docContents = [NSJSONSerialization JSONObjectWithData: [r dataForColumnIndex: 4]
-                                                          options: NSJSONReadingMutableContainers
-                                                            error: nil];
-            SequenceNumber sequence = [r longLongIntForColumnIndex: 5];
-            [docContents setObject: docID forKey: @"_id"];
-            [docContents setObject: revID forKey: @"_rev"];
-            [docContents setValue: [_db getAttachmentDictForSequence: sequence
-                                                         withContent: NO]
-                           forKey: @"_attachments"];
+            docContents = [_db documentPropertiesFromJSON: [r dataForColumnIndex: 4]
+                                                    docID: docID
+                                                    revID: [r stringForColumnIndex: 3]
+                                                 sequence: [r longLongIntForColumnIndex: 5]];
         }
         NSDictionary* change = $dict({@"id",  docID},
                                      {@"key", key},

@@ -17,6 +17,10 @@
 @property (readonly) FMDatabase* fmdb;
 @property (readonly) TDBlobStore* attachmentStore;
 - (TDStatus) deleteViewNamed: (NSString*)name;
+- (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
+                                       docID: (NSString*)docID
+                                       revID: (NSString*)revID
+                                    sequence: (SequenceNumber)sequence;
 - (NSString*) lastSequenceWithRemoteURL: (NSURL*)url
                                    push: (BOOL)push;
 - (BOOL) setLastSequence: (NSString*)lastSequence

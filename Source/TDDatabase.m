@@ -227,6 +227,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     [_path release];
     [_views release];
     [_activeReplicators release];
+    [_validations release];
     [super dealloc];
 }
 
@@ -326,8 +327,26 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
                                                            withContent: withAttachments];
     NSDictionary* extra = $dict({@"_id", docID},
                                 {@"_rev", revID},
+                                {@"_deleted", (rev.deleted ? $true : nil)},
                                 {@"_attachments", attachmentsDict});
     rev.asJSON = appendDictToJSON(json, extra);
+}
+
+
+- (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
+                                       docID: (NSString*)docID
+                                       revID: (NSString*)revID
+                                    sequence: (SequenceNumber)sequence
+{
+    NSMutableDictionary* docProperties;
+    docProperties = [NSJSONSerialization JSONObjectWithData: json
+                                                    options: NSJSONReadingMutableContainers
+                                                      error: nil];
+    [docProperties setObject: docID forKey: @"_id"];
+    [docProperties setObject: revID forKey: @"_rev"];
+    [docProperties setValue: [self getAttachmentDictForSequence: sequence withContent: NO]
+                     forKey: @"_attachments"];
+    return docProperties;
 }
 
 
@@ -502,6 +521,7 @@ static NSString* createUUID() {
     [properties removeObjectForKey: @"_id"];
     [properties removeObjectForKey: @"_rev"];
     [properties removeObjectForKey: @"_attachments"];
+    [properties removeObjectForKey: @"_deleted"];
     NSError* error;
     NSData* json = [NSJSONSerialization dataWithJSONObject: properties options:0 error: &error];
     [properties release];
@@ -862,38 +882,44 @@ exit:
     if (options->updateSeq)
         update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
     
-    NSString* sql = $sprintf(@"SELECT docid, revid %@ FROM revs, docs "
+    NSString* sql = $sprintf(@"SELECT revs.doc_id, docid, revid %@ FROM revs, docs "
                               "WHERE current=1 AND deleted=0 "
                               "AND docs.doc_id = revs.doc_id "
-                              "ORDER BY docid %@ LIMIT ? OFFSET ?",
+                              "ORDER BY docid %@, revid DESC LIMIT ? OFFSET ?",
                              (options->includeDocs ? @", json, sequence" : @""),
                              (options->descending ? @"DESC" : @"ASC"));
     FMResultSet* r = [_fmdb executeQuery: sql, $object(options->limit), $object(options->skip)];
     if (!r)
         return nil;
     
+    int64_t lastDocID = 0;
     NSMutableArray* rows = $marray();
     while ([r next]) {
-        NSString* docID = [r stringForColumnIndex: 0];
-        NSString* revID = [r stringForColumnIndex: 1];
-        NSMutableDictionary* docContents = nil;
-        if (options->includeDocs) {
-            // Fill in the document contents:
-            docContents = [NSJSONSerialization JSONObjectWithData: [r dataForColumnIndex: 2]
-                                                          options: NSJSONReadingMutableContainers
-                                                            error: nil];
-            [docContents setObject: docID forKey: @"_id"];
-            [docContents setObject: revID forKey: @"_rev"];
-            SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
-            [docContents setValue: [self getAttachmentDictForSequence: sequence
-                                                          withContent: NO]
-                           forKey: @"_attachments"];
+        @autoreleasepool {
+            // Only count the first rev for a given doc (the rest will be losing conflicts):
+            int64_t docNumericID = [r longLongIntForColumnIndex: 0];
+            if (docNumericID == lastDocID)
+                continue;
+            lastDocID = docNumericID;
+            
+            NSString* docID = [r stringForColumnIndex: 1];
+            NSString* revID = [r stringForColumnIndex: 2];
+            NSDictionary* docContents = nil;
+            if (options->includeDocs) {
+                // Fill in the document contents:
+                NSData* json = [r dataForColumnIndex: 3];
+                SequenceNumber sequence = [r longLongIntForColumnIndex: 4];
+                docContents = [self documentPropertiesFromJSON: json
+                                                         docID: docID
+                                                         revID: revID
+                                                      sequence: sequence];
+            }
+            NSDictionary* change = $dict({@"id",  docID},
+                                         {@"key", docID},
+                                         {@"value", $dict({@"rev", revID})},
+                                         {@"doc", docContents});
+            [rows addObject: change];
         }
-        NSDictionary* change = $dict({@"id",  docID},
-                                     {@"key", docID},
-                                     {@"value", $dict({@"rev", revID})},
-                                     {@"doc", docContents});
-        [rows addObject: change];
     }
     [r close];
     NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
