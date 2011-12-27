@@ -68,6 +68,25 @@
 
 @synthesize docID=_docID, revID=_revID, deleted=_deleted, body=_body, sequence=_sequence;
 
+- (unsigned) generation {
+    return [[self class] generationFromRevID: _revID];
+}
+
++ (unsigned) generationFromRevID: (NSString*)revID {
+    unsigned generation = 0;
+    NSUInteger length = revID.length;
+    for (NSUInteger i=0; i<length; ++i) {
+        unichar c = [revID characterAtIndex: i];
+        if (isdigit(c))
+            generation = 10*generation + digittoint(c);
+        else if (c == '-')
+            return generation;
+        else
+            break;
+    }
+    return 0;
+}
+
 - (NSDictionary*) properties {
     return _body.properties;
 }

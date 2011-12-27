@@ -42,6 +42,12 @@ typedef SInt64 SequenceNumber;
 
 @property SequenceNumber sequence;
 
+/** Generation number: 1 for a new document, 2 for the 2nd revision, ...
+    Extracted from the numeric prefix of the revID. */
+@property (readonly) unsigned generation;
+
++ (unsigned) generationFromRevID: (NSString*)revID;
+
 - (TDRevision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID;
 
 @end

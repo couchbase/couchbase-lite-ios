@@ -183,7 +183,8 @@ TestCase(TDDatabase_Attachments) {
     
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     CAssert([db insertAttachment: attach1 forSequence: rev1.sequence
-                           named: @"attach" type: @"text/plain"]);
+                           named: @"attach" type: @"text/plain"
+                          revpos: rev1.generation]);
     
     NSString* type;
     CAssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
@@ -195,7 +196,8 @@ TestCase(TDDatabase_Attachments) {
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                            {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                            {@"length", $object(27)},
-                                                           {@"stub", $true})});
+                                                           {@"stub", $true},
+                                                           {@"revpos", $object(1)})});
     CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: NO], attachmentDict);
     TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
@@ -220,7 +222,7 @@ TestCase(TDDatabase_Attachments) {
     
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
     CAssert([db insertAttachment: attach2 forSequence: rev3.sequence
-                           named: @"attach" type: @"text/html"]);
+                           named: @"attach" type: @"text/html" revpos: rev2.generation]);
     
     // Check the 2nd revision's attachment:
     type = nil;
@@ -277,7 +279,8 @@ TestCase(TDDatabase_PutAttachment) {
     CAssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                          {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                          {@"length", $object(27)},
-                                                         {@"stub", $true})}));
+                                                         {@"stub", $true},
+                                                         {@"revpos", $object(1)})}));
 }
 
 

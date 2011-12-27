@@ -21,6 +21,7 @@
 #import "TDBase64.h"
 #import "TDInternal.h"
 #import "FMDatabase.h"
+#import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
 #import "CollectionUtils.h"
 
@@ -32,6 +33,7 @@
               forSequence: (SequenceNumber)sequence
                     named: (NSString*)name
                      type: (NSString*)contentType
+                   revpos: (unsigned)revpos
 {
     Assert(contents);
     Assert(sequence > 0);
@@ -40,10 +42,11 @@
     if (![_attachments storeBlob: contents creatingKey: &key])
         return NO;
     NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
-    return [_fmdb executeUpdate: @"INSERT INTO attachments (sequence, filename, key, type, length) "
-                                  "VALUES (?, ?, ?, ?, ?)",
-                                 $object(sequence), name, keyData,
-                                 contentType, $object(contents.length)];
+    return [_fmdb executeUpdate: @"INSERT INTO attachments "
+                                  "(sequence, filename, key, type, length, revpos) "
+                                  "VALUES (?, ?, ?, ?, ?, ?)",
+                                 $object(sequence), name, keyData, contentType,
+                                 $object(contents.length), $object(revpos)];
 }
 
 
@@ -53,17 +56,24 @@
 {
     Assert(name);
     Assert(toSequence > 0);
+    Assert(toSequence > fromSequence);
     if (fromSequence <= 0)
         return 404;
-    if (![_fmdb executeUpdate: @"INSERT INTO attachments (sequence, filename, key, type, length) "
-                                  "SELECT ?, ?, key, type, length FROM attachments "
+    if (![_fmdb executeUpdate: @"INSERT INTO attachments "
+                                "(sequence, filename, key, type, length, revpos) "
+                                  "SELECT ?, ?, key, type, length, revpos FROM attachments "
                                     "WHERE sequence=? AND filename=?",
                                 $object(toSequence), name,
                                 $object(fromSequence), name]) {
         return 500;
     }
-    if (_fmdb.changes == 0)
+    if (_fmdb.changes == 0) {
+        // Oops. This means a glitch in our attachment-management or pull code,
+        // or else a bug in the upstream server.
+        Warn(@"Can't find inherited attachment '%@' from seq#%lld to copy to #%lld",
+             name, fromSequence, toSequence);
         return 404;         // Fail if there is no such attachment on fromSequence
+    }
     return 200;
 }
 
@@ -116,7 +126,8 @@ exit:
 {
     Assert(sequence > 0);
     FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT filename, key, type, length FROM attachments WHERE sequence=?",
+                      @"SELECT filename, key, type, length, revpos FROM attachments "
+                       "WHERE sequence=?",
                       $object(sequence)];
     if (!r)
         return nil;
@@ -140,7 +151,8 @@ exit:
                                       {@"data", dataBase64},
                                       {@"digest", digestStr},
                                       {@"content_type", [r stringForColumnIndex: 2]},
-                                      {@"length", $object([r longLongIntForColumnIndex: 3])})
+                                      {@"length", $object([r longLongIntForColumnIndex: 3])},
+                                      {@"revpos", $object([r intForColumnIndex: 4])})
                         forKey: [r stringForColumnIndex: 0]];
     } while ([r next]);
     [r close];
@@ -165,14 +177,26 @@ exit:
         NSDictionary* newAttach = [newAttachments objectForKey: name];
         NSString* newContentsBase64 = [newAttach objectForKey: @"data"];
         if (newContentsBase64) {
-            // New item contains data, so insert it:
+            // New item contains data, so insert it. First decode the data:
             NSData* newContents = [TDBase64 decode: newContentsBase64];
             if (!newContents)
                 return 400;
+            
+            // Now determine the revpos, i.e. generation # this was added in. Usually this is
+            // implicit, but a rev being pulled in replication will have it set already.
+            unsigned generation = rev.generation;
+            Assert(generation > 0, @"Missing generation in rev %@", rev);
+            NSNumber* revposObj = $castIf(NSNumber, [newAttach objectForKey: @"revpos"]);
+            unsigned revpos = revposObj ? (unsigned)revposObj.intValue : generation;
+            if (revpos > generation)
+                return 400;
+
+            // Finally insert the attachment:
             if (![self insertAttachment: newContents
                             forSequence: newSequence
                                   named: name
-                                   type: [newAttach objectForKey: @"content_type"]])
+                                   type: [newAttach objectForKey: @"content_type"]
+                                 revpos: revpos])
                 return 500;
         } else {
             // It's just a stub, so copy the previous revision's attachment entry:

@@ -29,7 +29,10 @@
 - (void) pullRemoteRevisions;
 - (void) pullRemoteRevision: (TDRevision*)rev;
 - (void) insertRevisions: (NSArray*)revs;
+- (NSArray*) knownCurrentRevIDsOf: (TDRevision*)rev;
 @end
+
+static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 @implementation TDPuller
@@ -157,7 +160,12 @@
 {
     [self asyncTaskStarted];
     ++_httpConnectionCount;
-    NSString* path = $sprintf(@"/%@?rev=%@&revs=true", rev.docID, rev.revID);
+    NSString* path = $sprintf(@"/%@?rev=%@&revs=true&attachments=true",
+                              rev.docID, rev.revID);
+    NSArray* knownRevs = [self knownCurrentRevIDsOf: rev];
+    if (knownRevs.count > 0)
+        path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
+    
     [self sendAsyncRequest: @"GET" path: path body: nil
           onCompletion: ^(NSDictionary *properties, NSError *error) {
               // OK, now we've got the response revision:
@@ -231,4 +239,17 @@
 }
 
 
+- (NSArray*) knownCurrentRevIDsOf: (TDRevision*)rev {
+    return [_db getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES].allRevIDs;
+}
+
+
 @end
+
+
+static NSString* joinQuotedEscaped(NSArray* strings) {
+    if (strings.count == 0)
+        return @"[]";
+    NSData* json = [NSJSONSerialization dataWithJSONObject: strings options: 0 error: NULL];
+    return [[json my_UTF8ToString] stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+}

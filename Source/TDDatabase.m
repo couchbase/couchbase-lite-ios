@@ -166,15 +166,22 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                 filename TEXT NOT NULL, \
                 key BLOB NOT NULL, \
                 type TEXT, \
-                length INTEGER NOT NULL); \
+                length INTEGER NOT NULL, \
+                revpos INTEGER DEFAULT 0); \
             CREATE INDEX attachments_by_sequence on attachments(sequence, filename); \
             CREATE TABLE replicators ( \
                 remote TEXT NOT NULL, \
                 push BOOLEAN, \
                 last_sequence TEXT, \
                 UNIQUE (remote, push)); \
-            PRAGMA user_version = 1";             // at the end, update user_version
+            PRAGMA user_version = 2";             // at the end, update user_version
         if (![self initialize: schema])
+            return NO;
+    } else if (dbVersion < 2) {
+        // Version 2: added attachments.revpos
+        NSString* sql = @"ALTER TABLE attachments ADD COLUMN revpos INTEGER DEFAULT 0; \
+                          PRAGMA user_version = 2";
+        if (![self initialize: sql])
             return NO;
     }
 
@@ -443,16 +450,14 @@ static NSString* createUUID() {
 
 - (NSString*) generateNextRevisionID: (NSString*)revID {
     // Revision IDs have a generation count, a hyphen, and a UUID.
-    int generation = 0;
+    unsigned generation = 0;
     if (revID) {
-        NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
-        bool ok = [scanner scanInt: &generation] && generation > 0;
-        [scanner release];
-        if (!ok)
+        generation = [TDRevision generationFromRevID: revID];
+        if (generation == 0)
             return nil;
     }
     NSString* digest = createUUID();  //TODO: Generate canonical digest of body
-    return [NSString stringWithFormat: @"%i-%@", ++generation, digest];
+    return [NSString stringWithFormat: @"%u-%@", generation+1, digest];
 }
 
 
@@ -692,15 +697,16 @@ exit:
     // a local revision. When the list diverges, start creating blank local revisions to fill
     // in the local history:
     SequenceNumber sequence = 0;
-    SequenceNumber parentSequence = 0;
+    SequenceNumber localParentSequence = 0;
     for (NSInteger i = historyCount - 1; i>=0; --i) {
-        parentSequence = sequence;
         NSString* revID = [history objectAtIndex: i];
         TDRevision* localRev = [localRevs revWithDocID: docID revID: revID];
         if (localRev) {
             // This revision is known locally. Remember its sequence as the parent of the next one:
             sequence = localRev.sequence;
             Assert(sequence > 0);
+            localParentSequence = sequence;
+            
         } else {
             // This revision isn't known, so add it:
             TDRevision* newRev;
@@ -729,15 +735,24 @@ exit:
                                        JSON: json];
             if (sequence <= 0)
                 return 500;
+            newRev.sequence = sequence;
             
             if (i==0) {
-                // Write any changed attachments for the new revision:
+                // Write any changed attachments for the new revision. As the parent sequence use
+                // the latest local revision (this is to copy attachments from):
                 TDStatus status = [self processAttachmentsForRevision: rev
-                                                   withParentSequence: parentSequence];
+                                                   withParentSequence: localParentSequence];
                 if (status >= 300) 
                     return status;
             }
         }
+    }
+
+    // Mark the latest local rev as no longer current:
+    if (localParentSequence > 0 && localParentSequence != sequence) {
+        if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
+              $object(localParentSequence)])
+            return 500;
     }
 
     // Notify and return:

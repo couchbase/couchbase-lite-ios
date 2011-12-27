@@ -133,7 +133,8 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 - (BOOL) insertAttachment: (NSData*)contents
               forSequence: (SequenceNumber)sequence
                     named: (NSString*)filename
-                     type: (NSString*)contentType;
+                     type: (NSString*)contentType
+                   revpos: (unsigned)revpos;
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence

@@ -213,6 +213,7 @@ static id fromJSON( NSData* json ) {
                 deleted += fmdb.changes;
             }
             if (current && !deleted) {
+                //FIX: If a doc has conflicts this will process *each* conflicting revision, not just the winner
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 LogTo(View, @"  call map for sequence=%lld...", sequence);
                 NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: json
