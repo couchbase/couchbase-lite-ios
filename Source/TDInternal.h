@@ -16,23 +16,30 @@
 @interface TDDatabase ()
 @property (readonly) FMDatabase* fmdb;
 @property (readonly) TDBlobStore* attachmentStore;
+- (SInt64) getDocNumericID: (NSString*)docID;
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                      numericID: (SInt64)docNumericID
+                                    onlyCurrent: (BOOL)onlyCurrent;
 - (TDStatus) deleteViewNamed: (NSString*)name;
 - (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
                                        docID: (NSString*)docID
                                        revID: (NSString*)revID
                                     sequence: (SequenceNumber)sequence;
-- (NSString*) lastSequenceWithRemoteURL: (NSURL*)url
-                                   push: (BOOL)push;
-- (BOOL) setLastSequence: (NSString*)lastSequence
-           withRemoteURL: (NSURL*)url
-                    push: (BOOL)push;
-- (void) replicatorDidStop: (TDReplicator*)repl;
 @end
 
 @interface TDDatabase (Attachments_Internal)
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence
                       toSequence: (SequenceNumber)toSequence;
+@end
+
+@interface TDDatabase (Replication_Internal)
+- (NSString*) lastSequenceWithRemoteURL: (NSURL*)url
+                                   push: (BOOL)push;
+- (BOOL) setLastSequence: (NSString*)lastSequence
+           withRemoteURL: (NSURL*)url
+                    push: (BOOL)push;
+- (void) replicatorDidStop: (TDReplicator*)repl;
 @end
 
 

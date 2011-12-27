@@ -89,6 +89,10 @@
 		27A82E3714A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
 		27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; };
+		27AA409D14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */; };
+		27AA409E14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */; };
+		27AA40A314AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */; };
+		27AA40A414AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */; };
 		27B0B7801491E76200A817AD /* TDView_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* TDView_Tests.m */; };
 		27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B790149290AB00A817AD /* TDChangeTracker.h */; };
 		27B0B797149290AB00A817AD /* TDChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* TDChangeTracker.m */; };
@@ -270,6 +274,8 @@
 		279EB2DA1491C34300E74185 /* TDCollateJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDCollateJSON.m; sourceTree = "<group>"; };
 		27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseAdditions.h; sourceTree = "<group>"; };
 		27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseAdditions.m; sourceTree = "<group>"; };
+		27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TDDatabase+Insertion.m"; sourceTree = "<group>"; };
+		27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TDDatabase+Replication.m"; sourceTree = "<group>"; };
 		27B0B77F1491E73400A817AD /* TDView_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDView_Tests.m; sourceTree = "<group>"; };
 		27B0B790149290AB00A817AD /* TDChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDChangeTracker.h; sourceTree = "<group>"; };
 		27B0B791149290AB00A817AD /* TDChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDChangeTracker.m; sourceTree = "<group>"; };
@@ -462,6 +468,8 @@
 				27F0744611CD4B6D00E9A2AB /* TDDatabase.h */,
 				27F0744711CD4B6D00E9A2AB /* TDDatabase.m */,
 				274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */,
+				27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */,
+				27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */,
 				279EB2CC149140DE00E74185 /* TDView.h */,
 				279EB2CD149140DE00E74185 /* TDView.m */,
 				27F074A911CD5D7A00E9A2AB /* TDBody.h */,
@@ -1116,6 +1124,8 @@
 				279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
 				279906F0149ABFC2003D4338 /* TDBatcher.m in Sources */,
 				274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
+				27AA409D14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */,
+				27AA40A314AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1169,6 +1179,8 @@
 				279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */,
 				274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
 				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				27AA409E14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */,
+				27AA40A414AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

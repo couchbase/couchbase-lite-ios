@@ -16,7 +16,6 @@
 #import "TDDatabase.h"
 #import "TDInternal.h"
 #import "TDRevision.h"
-#import "TDView.h"
 #import "TDCollateJSON.h"
 #import "TDBlobStore.h"
 #import "TDPuller.h"
@@ -24,32 +23,6 @@
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
-
-
-NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
-
-
-@interface TDValidationContext : NSObject <TDValidationContext>
-{
-    @private
-    TDDatabase* _db;
-    TDRevision* _currentRevision;
-    TDStatus _errorType;
-    NSString* _errorMessage;
-}
-- (id) initWithDatabase: (TDDatabase*)db revision: (TDRevision*)currentRevision;
-@property (readonly) TDRevision* currentRevision;
-@property TDStatus errorType;
-@property (copy) NSString* errorMessage;
-@end
-
-
-@interface TDDatabase ()
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                      numericID: (SInt64)docNumericID
-                                    onlyCurrent: (BOOL)onlyCurrent;
-- (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev;
-@end
 
 
 @implementation TDDatabase
@@ -282,7 +255,43 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 }
 
 
+- (TDStatus) compact {
+    // Can't delete any rows because that would lose revision tree history.
+    // But we can remove the JSON of non-current revisions, which is most of the space.
+    Log(@"TDDatabase: Deleting JSON of old revisions...");
+    if (![_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"])
+        return 500;
+    
+    Log(@"Deleting old attachments...");
+    TDStatus status = [self garbageCollectAttachments];
+
+    Log(@"Vacuuming SQLite database...");
+    if (![_fmdb executeUpdate: @"VACUUM"])
+        return 500;
+    
+    Log(@"...Finished database compaction.");
+    return status;
+}
+
+
 #pragma mark - GETTING DOCUMENTS:
+
+
+- (NSUInteger) documentCount {
+    NSUInteger result = NSNotFound;
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT COUNT(DISTINCT doc_id) FROM revs "
+                                           "WHERE current=1 AND deleted=0"];
+    if ([r next]) {
+        result = [r intForColumnIndex: 0];
+    }
+    [r close];
+    return result;    
+}
+
+
+- (SequenceNumber) lastSequence {
+    return [_fmdb longLongForQuery: @"SELECT MAX(sequence) FROM revs"];
+}
 
 
 /** Splices the contents of an NSDictionary into JSON data (that already represents a dict), without parsing the JSON. */
@@ -404,395 +413,97 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 }
 
 
-- (TDStatus) compact {
-    // Can't delete any rows because that would lose revision tree history.
-    // But we can remove the JSON of non-current revisions, which is most of the space.
-    Log(@"TDDatabase: Deleting JSON of old revisions...");
-    if (![_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"])
-        return 500;
-    
-    Log(@"Deleting old attachments...");
-    TDStatus status = [self garbageCollectAttachments];
-
-    Log(@"Vacuuming SQLite database...");
-    if (![_fmdb executeUpdate: @"VACUUM"])
-        return 500;
-    
-    Log(@"...Finished database compaction.");
-    return status;
-}
-
-
-#pragma mark - PUTTING DOCUMENTS:
-
-
-+ (BOOL) isValidDocumentID: (NSString*)str {
-    // http://wiki.apache.org/couchdb/HTTP_Document_API#Documents
-    return (str.length > 0);
-}
-
-
-- (NSUInteger) documentCount {
-    NSUInteger result = NSNotFound;
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT COUNT(DISTINCT doc_id) FROM revs "
-                                           "WHERE current=1 AND deleted=0"];
-    if ([r next]) {
-        result = [r intForColumnIndex: 0];
-    }
-    [r close];
-    return result;    
-}
-
-
-- (SequenceNumber) lastSequence {
-    return [_fmdb longLongForQuery: @"SELECT MAX(sequence) FROM revs"];
-}
-
-
-static NSString* createUUID() {
-    CFUUIDRef uuid = CFUUIDCreate(NULL);
-    NSString* str = NSMakeCollectable(CFUUIDCreateString(NULL, uuid));
-    CFRelease(uuid);
-    return [str autorelease];
-}
-
-- (NSString*) generateDocumentID {
-    return createUUID();
-}
-
-- (NSString*) generateNextRevisionID: (NSString*)revID {
-    // Revision IDs have a generation count, a hyphen, and a UUID.
-    unsigned generation = 0;
-    if (revID) {
-        generation = [TDRevision generationFromRevID: revID];
-        if (generation == 0)
-            return nil;
-    }
-    NSString* digest = createUUID();  //TODO: Generate canonical digest of body
-    return [NSString stringWithFormat: @"%u-%@", generation+1, digest];
-}
-
-
-- (void) notifyChange: (TDRevision*)rev source: (NSURL*)source
-{
-    NSDictionary* userInfo = $dict({@"rev", rev},
-                                   {@"seq", $object(rev.sequence)},
-                                   {@"source", source});
-    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseChangeNotification
-                                                        object: self
-                                                      userInfo: userInfo];
-}
-
-
-- (SInt64) insertDocumentID: (NSString*)docID {
-    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
-        return -1;
-    return _fmdb.lastInsertRowId;
-}
-
 - (SInt64) getDocNumericID: (NSString*)docID {
     Assert(docID);
     return [_fmdb longLongForQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
 }
 
-- (SInt64) getOrInsertDocNumericID: (NSString*)docID {
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID == 0)
-        docNumericID = [self insertDocumentID: docID];
-    return docNumericID;
-}
+
+#pragma mark - HISTORY:
 
 
-- (NSData*) encodeDocumentJSON: (TDRevision*)rev {
-    NSMutableDictionary* properties = [rev.properties mutableCopy];
-    if (!properties)
-        return nil;
-    [properties removeObjectForKey: @"_id"];
-    [properties removeObjectForKey: @"_rev"];
-    [properties removeObjectForKey: @"_attachments"];
-    [properties removeObjectForKey: @"_deleted"];
-    NSError* error;
-    NSData* json = [NSJSONSerialization dataWithJSONObject: properties options:0 error: &error];
-    [properties release];
-    Assert(json, @"Unable to serialize %@ to JSON: %@", rev, error);
-    return json;
-}
-
-
-// Raw row insertion. Returns new sequence, or 0 on error
-- (SequenceNumber) insertRevision: (TDRevision*)rev
-                     docNumericID: (SInt64)docNumericID
-                   parentSequence: (SequenceNumber)parentSequence
-                          current: (BOOL)current
-                             JSON: (NSData*)json
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                      numericID: (SInt64)docNumericID
+                                    onlyCurrent: (BOOL)onlyCurrent
 {
-    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
-                                "VALUES (?, ?, ?, ?, ?, ?)",
-                               $object(docNumericID),
-                               rev.revID,
-                               (parentSequence ? $object(parentSequence) : nil ),
-                               $object(current),
-                               $object(rev.deleted),
-                               json])
-        return 0;
-    return rev.sequence = _fmdb.lastInsertRowId;
-}
-
-
-- (TDRevision*) putRevision: (TDRevision*)rev
-             prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
-                     status: (TDStatus*)outStatus
-{
-    Assert(!rev.revID);
-    Assert(outStatus);
-    NSString* docID = rev.docID;
-    SInt64 docNumericID;
-    BOOL deleted = rev.deleted;
-    if (!rev || (prevRevID && !docID) || (deleted && !prevRevID)) {
-        *outStatus = 400;
+    NSString* sql;
+    if (onlyCurrent)
+        sql = @"SELECT sequence, revid, deleted FROM revs "
+               "WHERE doc_id=? AND current ORDER BY sequence DESC";
+    else
+        sql = @"SELECT sequence, revid, deleted FROM revs "
+               "WHERE doc_id=? ORDER BY sequence DESC";
+    FMResultSet* r = [_fmdb executeQuery: sql, $object(docNumericID)];
+    if (!r)
         return nil;
+    TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
+    while ([r next]) {
+        TDRevision* rev = [[TDRevision alloc] initWithDocID: docID
+                                              revID: [r stringForColumnIndex: 1]
+                                            deleted: [r boolForColumnIndex: 2]];
+        rev.sequence = [r longLongIntForColumnIndex: 0];
+        [revs addRev: rev];
+        [rev release];
     }
-    
-    *outStatus = 500;
-    [self beginTransaction];
-    FMResultSet* r = nil;
-    SequenceNumber parentSequence = 0;
-    if (prevRevID) {
-        // Replacing: make sure given prevRevID is current & find its sequence number:
-        docNumericID = [self getOrInsertDocNumericID: docID];
-        if (docNumericID <= 0)
-            goto exit;
-        parentSequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
-                                                "WHERE doc_id=? AND revid=? and current=1 LIMIT 1",
-                                                $object(docNumericID), prevRevID];
-        if (parentSequence == 0) {
-            // Not found: either a 404 or a 409, depending on whether there is any current revision
-            *outStatus = [self getDocumentWithID: docID] ? 409 : 404;
-            goto exit;
-        }
-        
-        if (_validations.count > 0) {
-            // Fetch the previous revision and validate the new one against it:
-            TDRevision* prevRev = [[TDRevision alloc] initWithDocID: docID revID: prevRevID
-                                                            deleted: NO];
-            TDStatus status = [self validateRevision: rev previousRevision: prevRev];
-            [prevRev release];
-            if (status >= 300) {
-                *outStatus = status;
-                goto exit;
-            }
-        }
-        
-        // Make replaced rev non-current:
-        if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                   $object(parentSequence)])
-            goto exit;
-    } else if (docID) {
-        // Inserting first revision, with docID given: make sure docID doesn't exist,
-        // or exists but is currently deleted
-        if (![self validateRevision: rev previousRevision: nil]) {
-            *outStatus = 403;
-            goto exit;
-        }
-        docNumericID = [self getOrInsertDocNumericID: docID];
-        if (docNumericID <= 0)
-            goto exit;
-        r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
-                                  "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
-                                 $object(docNumericID)];
-        if (!r)
-            goto exit;
-        if ([r next]) {
-            if ([r boolForColumnIndex: 1]) {
-                // Make the deleted revision no longer current:
-                if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                           $object([r longLongIntForColumnIndex: 0])])
-                    goto exit;
-            } else {
-                *outStatus = 409;
-                goto exit;
-            }
-        }
-        [r close];
-        r = nil;
-    } else {
-        // Inserting first revision, with no docID given: generate a unique docID:
-        docID = [self generateDocumentID];
-        docNumericID = [self insertDocumentID: docID];
-        if (docNumericID <= 0)
-            goto exit;
-    }
-    
-    // Bump the revID and update the JSON:
-    NSString* newRevID = [self generateNextRevisionID: prevRevID];
-    NSData* json = nil;
-    if (!rev.deleted) {
-        json = [self encodeDocumentJSON: rev];
-        if (!json) {
-            *outStatus = 400;  // bad or missing JSON
-            goto exit;
-        }
-    }
-    rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
-    
-    // Now insert the rev itself:
-    SequenceNumber sequence = [self insertRevision: rev
-                                      docNumericID: docNumericID
-                                    parentSequence: parentSequence
-                                           current: YES
-                                              JSON: json];
-    if (!sequence)
-        goto exit;
-    
-    // Store any attachments:
-    TDStatus status = [self processAttachmentsForRevision: rev
-                                       withParentSequence: parentSequence];
-    if (status >= 300) {
-        *outStatus = status;
-        goto exit;
-    }
-    
-    // Success!
-    *outStatus = deleted ? 200 : 201;
-    
-exit:
     [r close];
-    if (*outStatus >= 300)
-        self.transactionFailed = YES;
-    [self endTransaction];
-    if (*outStatus >= 300) 
-        return nil;
-    
-    // Send a change notification:
-    [self notifyChange: rev source: nil];
-    return rev;
+    return revs;
 }
 
-
-- (TDStatus) forceInsert: (TDRevision*)rev
-         revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
-                  source: (NSURL*)source
+- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                    onlyCurrent: (BOOL)onlyCurrent
 {
-    // First look up all locally-known revisions of this document:
-    NSString* docID = rev.docID;
-    SInt64 docNumericID = [self getOrInsertDocNumericID: docID];
-    TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID
-                                                        numericID: docNumericID
-                                                      onlyCurrent: NO];
-    if (!localRevs)
-        return 500;
-    NSUInteger historyCount = history.count;
-    Assert(historyCount >= 1);
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID < 0)
+        return nil;
+    else if (docNumericID == 0)
+        return [[[TDRevisionList alloc] init] autorelease];  // no such document
+    else
+        return [self getAllRevisionsOfDocumentID: docID
+                                       numericID: docNumericID
+                                     onlyCurrent: onlyCurrent];
+}
     
-    // Validate against the latest common ancestor:
-    if (_validations.count > 0) {
-        TDRevision* oldRev = nil;
-        for (NSUInteger i = 1; i<historyCount; ++i) {
-            oldRev = [localRevs revWithDocID: docID revID: [history objectAtIndex: i]];
-            if (oldRev)
+
+- (NSArray*) getRevisionHistory: (TDRevision*)rev {
+    NSString* docID = rev.docID;
+    NSString* revID = rev.revID;
+    Assert(revID && docID);
+
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID < 0)
+        return nil;
+    else if (docNumericID == 0)
+        return $array();
+    
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted FROM revs "
+                                           "WHERE doc_id=? ORDER BY sequence DESC",
+                                          $object(docNumericID)];
+    if (!r)
+        return nil;
+    SequenceNumber lastSequence = 0;
+    NSMutableArray* history = $marray();
+    while ([r next]) {
+        SequenceNumber sequence = [r longLongIntForColumnIndex: 0];
+        BOOL matches;
+        if (lastSequence == 0)
+            matches = ($equal(revID, [r stringForColumnIndex: 2]));
+        else
+            matches = (sequence == lastSequence);
+        if (matches) {
+            NSString* revID = [r stringForColumnIndex: 2];
+            BOOL deleted = [r boolForColumnIndex: 3];
+            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
+            rev.sequence = sequence;
+            [history addObject: rev];
+            [rev release];
+            lastSequence = [r longLongIntForColumnIndex: 1];
+            if (lastSequence == 0)
                 break;
         }
-        TDStatus status = [self validateRevision: rev previousRevision: oldRev];
-        if (status >= 300)
-            return status;
     }
-    
-    // Walk through the remote history in chronological order, matching each revision ID to
-    // a local revision. When the list diverges, start creating blank local revisions to fill
-    // in the local history:
-    SequenceNumber sequence = 0;
-    SequenceNumber localParentSequence = 0;
-    for (NSInteger i = historyCount - 1; i>=0; --i) {
-        NSString* revID = [history objectAtIndex: i];
-        TDRevision* localRev = [localRevs revWithDocID: docID revID: revID];
-        if (localRev) {
-            // This revision is known locally. Remember its sequence as the parent of the next one:
-            sequence = localRev.sequence;
-            Assert(sequence > 0);
-            localParentSequence = sequence;
-            
-        } else {
-            // This revision isn't known, so add it:
-            TDRevision* newRev;
-            NSData* json = nil;
-            BOOL current = NO;
-            if (i==0) {
-                // Hey, this is the leaf revision we're inserting:
-                newRev = rev;
-                if (!rev.deleted) {
-                    json = [self encodeDocumentJSON: rev];
-                    if (!json)
-                        return 400;
-                }
-                current = YES;
-            } else {
-                // It's an intermediate parent, so insert a stub:
-                newRev = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: NO]
-                                autorelease];
-            }
-
-            // Insert it:
-            sequence = [self insertRevision: newRev
-                               docNumericID: docNumericID
-                             parentSequence: sequence
-                                    current: current 
-                                       JSON: json];
-            if (sequence <= 0)
-                return 500;
-            newRev.sequence = sequence;
-            
-            if (i==0) {
-                // Write any changed attachments for the new revision. As the parent sequence use
-                // the latest local revision (this is to copy attachments from):
-                TDStatus status = [self processAttachmentsForRevision: rev
-                                                   withParentSequence: localParentSequence];
-                if (status >= 300) 
-                    return status;
-            }
-        }
-    }
-
-    // Mark the latest local rev as no longer current:
-    if (localParentSequence > 0 && localParentSequence != sequence) {
-        if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-              $object(localParentSequence)])
-            return 500;
-    }
-
-    // Notify and return:
-    [self notifyChange: rev source: source];
-    return 201;
+    [r close];
+    return history;
 }
-
-
-- (void) addValidation:(TDValidationBlock)validationBlock {
-    Assert(validationBlock);
-    if (!_validations)
-        _validations = [[NSMutableArray alloc] init];
-    id copiedBlock = [validationBlock copy];
-    [_validations addObject: copiedBlock];
-    [copiedBlock release];
-}
-
-
-- (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev {
-    if (_validations.count == 0)
-        return 200;
-    TDValidationContext* context = [[TDValidationContext alloc] initWithDatabase: self
-                                                                        revision: oldRev];
-    TDStatus status = 200;
-    for (TDValidationBlock validation in _validations) {
-        if (!validation(newRev, context)) {
-            status = context.errorType;
-            break;
-        }
-    }
-    [context release];
-    return status;
-}
-
-
-#pragma mark - CHANGES:
 
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
@@ -913,220 +624,5 @@ exit:
                  {@"update_seq", update_seq ? $object(update_seq) : nil});
 }
 
-
-#pragma mark - FOR REPLICATION
-
-
-- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
-                                           push: (BOOL)push {
-    TDReplicator* repl;
-    for (repl in _activeReplicators) {
-        if ($equal(repl.remote, remote) && repl.isPush == push)
-            return repl;
-    }
-    return nil;
-}
-
-- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
-                                    push: (BOOL)push
-                              continuous: (BOOL)continuous {
-    TDReplicator* repl = [self activeReplicatorWithRemoteURL: remote push: push];
-    if (repl)
-        return repl;
-    repl = [[TDReplicator alloc] initWithDB: self
-                                     remote: remote 
-                                       push: push
-                                 continuous: continuous];
-    if (!repl)
-        return nil;
-    if (!_activeReplicators)
-        _activeReplicators = [[NSMutableArray alloc] init];
-    [_activeReplicators addObject: repl];
-    [repl start];
-    [repl release];
-    return repl;
-}
-
-- (void) replicatorDidStop: (TDReplicator*)repl {
-    [_activeReplicators removeObjectIdenticalTo: repl];
-}
-
-@synthesize activeReplicators=_activeReplicators;
-
-
-- (NSString*) lastSequenceWithRemoteURL: (NSURL*)url push: (BOOL)push {
-    return [_fmdb stringForQuery:@"SELECT last_sequence FROM replicators WHERE remote=? AND push=?",
-                                 url.absoluteString, $object(push)];
-}
-
-- (BOOL) setLastSequence: (NSString*)lastSequence withRemoteURL: (NSURL*)url push: (BOOL)push {
-    return [_fmdb executeUpdate: 
-            @"INSERT OR REPLACE INTO replicators (remote, push, last_sequence) VALUES (?, ?, ?)",
-            url.absoluteString, $object(push), lastSequence];
-}
-
-
-static NSString* quote(NSString* str) {
-    return [str stringByReplacingOccurrencesOfString: @"'" withString: @"''"];
-}
-
-static NSString* joinQuoted(NSArray* strings) {
-    if (strings.count == 0)
-        return @"";
-    NSMutableString* result = [NSMutableString stringWithString: @"'"];
-    BOOL first = YES;
-    for (NSString* str in strings) {
-        if (first)
-            first = NO;
-        else
-            [result appendString: @"','"];
-        [result appendString: quote(str)];
-    }
-    [result appendString: @"'"];
-    return result;
-}
-
-
-- (BOOL) findMissingRevisions: (TDRevisionList*)revs {
-    if (revs.count == 0)
-        return YES;
-    NSString* sql = $sprintf(@"SELECT docid, revid FROM revs, docs "
-                              "WHERE revid in (%@) AND docid IN (%@) "
-                              "AND revs.doc_id == docs.doc_id",
-                             joinQuoted(revs.allRevIDs), joinQuoted(revs.allDocIDs));
-    // ?? Not sure sqlite will optimize this fully. May need a first query that looks up all
-    // the numeric doc_ids from the docids.
-    FMResultSet* r = [_fmdb executeQuery: sql];
-    if (!r)
-        return NO;
-    while ([r next]) {
-        @autoreleasepool {
-            TDRevision* rev = [revs revWithDocID: [r stringForColumnIndex: 0]
-                                           revID: [r stringForColumnIndex: 1]];
-            if (rev)
-                [revs removeRev: rev];
-        }
-    }
-    [r close];
-    return YES;
-}
-
-
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                      numericID: (SInt64)docNumericID
-                                    onlyCurrent: (BOOL)onlyCurrent
-{
-    NSString* sql;
-    if (onlyCurrent)
-        sql = @"SELECT sequence, revid, deleted FROM revs "
-               "WHERE doc_id=? AND current ORDER BY sequence DESC";
-    else
-        sql = @"SELECT sequence, revid, deleted FROM revs "
-               "WHERE doc_id=? ORDER BY sequence DESC";
-    FMResultSet* r = [_fmdb executeQuery: sql, $object(docNumericID)];
-    if (!r)
-        return nil;
-    TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
-    while ([r next]) {
-        TDRevision* rev = [[TDRevision alloc] initWithDocID: docID
-                                              revID: [r stringForColumnIndex: 1]
-                                            deleted: [r boolForColumnIndex: 2]];
-        rev.sequence = [r longLongIntForColumnIndex: 0];
-        [revs addRev: rev];
-        [rev release];
-    }
-    [r close];
-    return revs;
-}
-
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                    onlyCurrent: (BOOL)onlyCurrent
-{
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID < 0)
-        return nil;
-    else if (docNumericID == 0)
-        return [[[TDRevisionList alloc] init] autorelease];  // no such document
-    else
-        return [self getAllRevisionsOfDocumentID: docID
-                                       numericID: docNumericID
-                                     onlyCurrent: onlyCurrent];
-}
-    
-
-- (NSArray*) getRevisionHistory: (TDRevision*)rev {
-    NSString* docID = rev.docID;
-    NSString* revID = rev.revID;
-    Assert(revID && docID);
-
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID < 0)
-        return nil;
-    else if (docNumericID == 0)
-        return $array();
-    
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted FROM revs "
-                                           "WHERE doc_id=? ORDER BY sequence DESC",
-                                          $object(docNumericID)];
-    if (!r)
-        return nil;
-    SequenceNumber lastSequence = 0;
-    NSMutableArray* history = $marray();
-    while ([r next]) {
-        SequenceNumber sequence = [r longLongIntForColumnIndex: 0];
-        BOOL matches;
-        if (lastSequence == 0)
-            matches = ($equal(revID, [r stringForColumnIndex: 2]));
-        else
-            matches = (sequence == lastSequence);
-        if (matches) {
-            NSString* revID = [r stringForColumnIndex: 2];
-            BOOL deleted = [r boolForColumnIndex: 3];
-            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
-            rev.sequence = sequence;
-            [history addObject: rev];
-            [rev release];
-            lastSequence = [r longLongIntForColumnIndex: 1];
-            if (lastSequence == 0)
-                break;
-        }
-    }
-    [r close];
-    return history;
-}
-
-
-@end
-
-
-
-
-
-
-@implementation TDValidationContext
-
-- (id) initWithDatabase: (TDDatabase*)db revision: (TDRevision*)currentRevision {
-    self = [super init];
-    if (self) {
-        _db = db;
-        _currentRevision = currentRevision;
-        _errorType = 403;
-        _errorMessage = [@"invalid document" retain];
-    }
-    return self;
-}
-
-- (void)dealloc {
-    [_errorMessage release];
-    [super dealloc];
-}
-
-- (TDRevision*) currentRevision {
-    if (_currentRevision)
-        [_db loadRevisionBody: _currentRevision andAttachments: NO];
-    return _currentRevision;
-}
-
-@synthesize errorType=_errorType, errorMessage=_errorMessage;
 
 @end

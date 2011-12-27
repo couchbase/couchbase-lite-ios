@@ -62,9 +62,6 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 
 // DOCUMENTS:
 
-+ (BOOL) isValidDocumentID: (NSString*)str;
-- (NSString*) generateDocumentID;
-
 @property (readonly) NSUInteger documentCount;
 @property (readonly) SequenceNumber lastSequence;
 
@@ -81,6 +78,25 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 - (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                     onlyCurrent: (BOOL)onlyCurrent;
 
+// VIEWS & QUERIES:
+
+- (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
+
+- (TDView*) viewNamed: (NSString*)name;
+@property (readonly) NSArray* allViews;
+
+- (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
+                                 options: (const struct TDQueryOptions*)options;
+
+@end
+
+
+
+@interface TDDatabase (Insertion)
+
++ (BOOL) isValidDocumentID: (NSString*)str;
+- (NSString*) generateDocumentID;
+
 /** Stores a new (or initial) revision of a document. This is what's invoked by a PUT or POST. As with those, the previous revision ID must be supplied when necessary and the call will fail if it doesn't match.
     @param revision  The revision to add. If the docID is nil, a new UUID will be assigned. Its revID must be nil. It must have a JSON body.
     @param prevRevID  The ID of the revision to replace (same as the "?rev=" parameter to a PUT), or nil if this is a new document.
@@ -95,29 +111,7 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
          revisionHistory: (NSArray*)history
                   source: (NSURL*)source;
 
-- (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
-                                 options: (const struct TDQueryOptions*)options;
-
 - (void) addValidation: (TDValidationBlock)validationBlock;
-
-// VIEWS & QUERIES:
-
-- (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
-
-- (TDView*) viewNamed: (NSString*)name;
-@property (readonly) NSArray* allViews;
-
-// FOR REPLICATION:
-
-- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
-                                           push: (BOOL)push;
-- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
-                                    push: (BOOL)push
-                              continuous: (BOOL)continuous;
-
-@property (readonly) NSArray* activeReplicators;
-
-- (BOOL) findMissingRevisions: (TDRevisionList*)revs;
 
 @end
 
@@ -149,6 +143,20 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 /** Deletes obsolete attachments from the database and blob store. */
 - (TDStatus) garbageCollectAttachments;
 
+@end
+
+
+
+@interface TDDatabase (Replication)
+@property (readonly) NSArray* activeReplicators;
+
+- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
+                                           push: (BOOL)push;
+- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
+                                    push: (BOOL)push
+                              continuous: (BOOL)continuous;
+
+- (BOOL) findMissingRevisions: (TDRevisionList*)revs;
 @end
 
 
