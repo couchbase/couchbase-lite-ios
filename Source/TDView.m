@@ -60,15 +60,7 @@ const TDQueryOptions kDefaultTDQueryOptions = {
 
 
 - (SequenceNumber) lastSequenceIndexed {
-    FMResultSet* r = [_db.fmdb executeQuery: @"SELECT lastSequence FROM views WHERE name=?",
-                                             _name];
-    if (!r)
-        return -1;
-    SequenceNumber lastSequence = 0;
-    if ([r next])
-        lastSequence = [r longLongIntForColumnIndex: 0];
-    [r close];
-    return lastSequence;
+    return [_db.fmdb longLongForQuery: @"SELECT lastSequence FROM views WHERE name=?", _name];
 }
 
 

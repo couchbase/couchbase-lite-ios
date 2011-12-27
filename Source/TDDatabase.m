@@ -445,14 +445,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 
 - (SequenceNumber) lastSequence {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence FROM revs ORDER BY sequence DESC LIMIT 1"];
-    if (!r)
-        return NSNotFound;
-    SequenceNumber result = 0;
-    if ([r next])
-        result = [r longLongIntForColumnIndex: 0];
-    [r close];
-    return result;    
+    return [_fmdb longLongForQuery: @"SELECT MAX(sequence) FROM revs"];
 }
 
 
@@ -498,12 +491,8 @@ static NSString* createUUID() {
 }
 
 - (SInt64) getDocNumericID: (NSString*)docID {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
-    if (!r)
-        return -1;
-    SInt64 result = [r next] ? [r longLongIntForColumnIndex: 0] : 0;
-    [r close];
-    return result;
+    Assert(docID);
+    return [_fmdb longLongForQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
 }
 
 - (SInt64) getOrInsertDocNumericID: (NSString*)docID {
@@ -573,19 +562,14 @@ static NSString* createUUID() {
         docNumericID = [self getOrInsertDocNumericID: docID];
         if (docNumericID <= 0)
             goto exit;
-        r = [_fmdb executeQuery: @"SELECT sequence FROM revs "
-                                  "WHERE doc_id=? AND revid=? and current=1",
-                                 $object(docNumericID), prevRevID];
-        if (!r)
-            goto exit;
-        if (![r next]) {
+        parentSequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
+                                                "WHERE doc_id=? AND revid=? and current=1 LIMIT 1",
+                                                $object(docNumericID), prevRevID];
+        if (parentSequence == 0) {
             // Not found: either a 404 or a 409, depending on whether there is any current revision
             *outStatus = [self getDocumentWithID: docID] ? 409 : 404;
             goto exit;
         }
-        parentSequence = [r longLongIntForColumnIndex: 0];
-        [r close];
-        r = nil;
         
         if (_validations.count > 0) {
             // Fetch the previous revision and validate the new one against it:
