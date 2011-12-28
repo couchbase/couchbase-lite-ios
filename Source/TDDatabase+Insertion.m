@@ -39,7 +39,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 @end
 
 
-@interface TDDatabase ()
+@interface TDDatabase (Insertion_Internal)
 - (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev;
 @end
 
