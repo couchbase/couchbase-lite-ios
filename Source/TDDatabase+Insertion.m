@@ -157,110 +157,114 @@ static NSString* createUUID() {
     *outStatus = 500;
     [self beginTransaction];
     FMResultSet* r = nil;
-    SequenceNumber parentSequence = 0;
-    if (prevRevID) {
-        // Replacing: make sure given prevRevID is current & find its sequence number:
-        docNumericID = [self getOrInsertDocNumericID: docID];
-        if (docNumericID <= 0)
-            goto exit;
-        parentSequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
-                                                "WHERE doc_id=? AND revid=? and current=1 LIMIT 1",
-                                                $object(docNumericID), prevRevID];
-        if (parentSequence == 0) {
-            // Not found: either a 404 or a 409, depending on whether there is any current revision
-            *outStatus = [self getDocumentWithID: docID] ? 409 : 404;
-            goto exit;
+    @try {
+        SequenceNumber parentSequence = 0;
+        if (prevRevID) {
+            // Replacing: make sure given prevRevID is current & find its sequence number:
+            docNumericID = [self getOrInsertDocNumericID: docID];
+            if (docNumericID <= 0)
+                return nil;
+            parentSequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
+                                                    "WHERE doc_id=? AND revid=? and current=1 LIMIT 1",
+                                                    $object(docNumericID), prevRevID];
+            if (parentSequence == 0) {
+                // Not found: either a 404 or a 409, depending on whether there is any current revision
+                *outStatus = [self getDocumentWithID: docID] ? 409 : 404;
+                return nil;
+            }
+            
+            if (_validations.count > 0) {
+                // Fetch the previous revision and validate the new one against it:
+                TDRevision* prevRev = [[TDRevision alloc] initWithDocID: docID revID: prevRevID
+                                                                deleted: NO];
+                TDStatus status = [self validateRevision: rev previousRevision: prevRev];
+                [prevRev release];
+                if (status >= 300) {
+                    *outStatus = status;
+                    return nil;
+                }
+            }
+            
+            // Make replaced rev non-current:
+            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
+                                       $object(parentSequence)])
+                return nil;
+        } else if (docID) {
+            // Inserting first revision, with docID given: make sure docID doesn't exist,
+            // or exists but is currently deleted
+            if (![self validateRevision: rev previousRevision: nil]) {
+                *outStatus = 403;
+                return nil;
+            }
+            docNumericID = [self getOrInsertDocNumericID: docID];
+            if (docNumericID <= 0)
+                return nil;
+            r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
+                                      "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
+                                     $object(docNumericID)];
+            if (!r)
+                return nil;
+            if ([r next]) {
+                if ([r boolForColumnIndex: 1]) {
+                    // Make the deleted revision no longer current:
+                    if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
+                                               $object([r longLongIntForColumnIndex: 0])])
+                        return nil;
+                } else {
+                    *outStatus = 409;
+                    return nil;
+                }
+            }
+            [r close];
+            r = nil;
+        } else {
+            // Inserting first revision, with no docID given: generate a unique docID:
+            docID = [self generateDocumentID];
+            docNumericID = [self insertDocumentID: docID];
+            if (docNumericID <= 0)
+                return nil;
         }
         
-        if (_validations.count > 0) {
-            // Fetch the previous revision and validate the new one against it:
-            TDRevision* prevRev = [[TDRevision alloc] initWithDocID: docID revID: prevRevID
-                                                            deleted: NO];
-            TDStatus status = [self validateRevision: rev previousRevision: prevRev];
-            [prevRev release];
-            if (status >= 300) {
-                *outStatus = status;
-                goto exit;
+        // Bump the revID and update the JSON:
+        NSString* newRevID = [self generateNextRevisionID: prevRevID];
+        NSData* json = nil;
+        if (!rev.deleted) {
+            json = [self encodeDocumentJSON: rev];
+            if (!json) {
+                *outStatus = 400;  // bad or missing JSON
+                return nil;
             }
+        }
+        rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
+        
+        // Now insert the rev itself:
+        SequenceNumber sequence = [self insertRevision: rev
+                                          docNumericID: docNumericID
+                                        parentSequence: parentSequence
+                                               current: YES
+                                                  JSON: json];
+        if (!sequence)
+            return nil;
+        
+        // Store any attachments:
+        TDStatus status = [self processAttachmentsForRevision: rev
+                                           withParentSequence: parentSequence];
+        if (status >= 300) {
+            *outStatus = status;
+            return nil;
         }
         
-        // Make replaced rev non-current:
-        if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                   $object(parentSequence)])
-            goto exit;
-    } else if (docID) {
-        // Inserting first revision, with docID given: make sure docID doesn't exist,
-        // or exists but is currently deleted
-        if (![self validateRevision: rev previousRevision: nil]) {
-            *outStatus = 403;
-            goto exit;
-        }
-        docNumericID = [self getOrInsertDocNumericID: docID];
-        if (docNumericID <= 0)
-            goto exit;
-        r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
-                                  "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
-                                 $object(docNumericID)];
-        if (!r)
-            goto exit;
-        if ([r next]) {
-            if ([r boolForColumnIndex: 1]) {
-                // Make the deleted revision no longer current:
-                if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                           $object([r longLongIntForColumnIndex: 0])])
-                    goto exit;
-            } else {
-                *outStatus = 409;
-                goto exit;
-            }
-        }
+        // Success!
+        *outStatus = deleted ? 200 : 201;
+        
+    } @finally {
+        // Remember, we could have gotten here via a 'return' inside the @try block above.
         [r close];
-        r = nil;
-    } else {
-        // Inserting first revision, with no docID given: generate a unique docID:
-        docID = [self generateDocumentID];
-        docNumericID = [self insertDocumentID: docID];
-        if (docNumericID <= 0)
-            goto exit;
+        if (*outStatus >= 300)
+            self.transactionFailed = YES;
+        [self endTransaction];
     }
     
-    // Bump the revID and update the JSON:
-    NSString* newRevID = [self generateNextRevisionID: prevRevID];
-    NSData* json = nil;
-    if (!rev.deleted) {
-        json = [self encodeDocumentJSON: rev];
-        if (!json) {
-            *outStatus = 400;  // bad or missing JSON
-            goto exit;
-        }
-    }
-    rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
-    
-    // Now insert the rev itself:
-    SequenceNumber sequence = [self insertRevision: rev
-                                      docNumericID: docNumericID
-                                    parentSequence: parentSequence
-                                           current: YES
-                                              JSON: json];
-    if (!sequence)
-        goto exit;
-    
-    // Store any attachments:
-    TDStatus status = [self processAttachmentsForRevision: rev
-                                       withParentSequence: parentSequence];
-    if (status >= 300) {
-        *outStatus = status;
-        goto exit;
-    }
-    
-    // Success!
-    *outStatus = deleted ? 200 : 201;
-    
-exit:
-    [r close];
-    if (*outStatus >= 300)
-        self.transactionFailed = YES;
-    [self endTransaction];
     if (*outStatus >= 300) 
         return nil;
     

@@ -88,35 +88,34 @@
     Assert(sequence > 0);
     Assert(filename);
     NSData* contents = nil;
+    *outStatus = 500;
     FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT key, type FROM attachments WHERE sequence=? AND filename=?",
                       $object(sequence), filename];
-    if (!r) {
-        *outStatus = 500;
+    if (!r)
         return nil;
-    }
-    if (![r next]) {
-        *outStatus = 404;
-        goto exit;
-    }
-    NSData* keyData = [r dataForColumnIndex: 0];
-    if (keyData.length != sizeof(TDBlobKey)) {
-        Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
-             self, sequence, filename, keyData.length);
-        *outStatus = 500;
-        goto exit;
-    }
-    contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
-    if (!contents) {
-        Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
-        *outStatus = 500;
-    } else {
+    @try {
+        if (![r next]) {
+            *outStatus = 404;
+            return nil;
+        }
+        NSData* keyData = [r dataNoCopyForColumnIndex: 0];
+        if (keyData.length != sizeof(TDBlobKey)) {
+            Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
+                 self, sequence, filename, keyData.length);
+            return nil;
+        }
+        contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
+        if (!contents) {
+            Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
+            return nil;
+        }
         *outStatus = 200;
+        if (outType)
+            *outType = [r stringForColumnIndex: 1];
+    } @finally {
+        [r close];
     }
-    if (outType)
-        *outType = [r stringForColumnIndex: 1];
-exit:
-    [r close];
     return contents;
 }
 
