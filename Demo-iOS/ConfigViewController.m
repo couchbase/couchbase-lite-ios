@@ -35,7 +35,7 @@ extern double GrocerySyncVersionNumber;
                                                                 style:UIBarButtonItemStyleDone
                                                                target: self 
                                                                action: @selector(done:)];
-        self.navigationItem.leftBarButtonItem = [purgeButton autorelease];
+        self.navigationItem.leftBarButtonItem = purgeButton;
     }
     return self;
 }
@@ -86,7 +86,6 @@ extern double GrocerySyncVersionNumber;
                                                   cancelButtonTitle: @"Fix It"
                                                   otherButtonTitles: @"Revert", nil];
             [alert show];
-            [alert release];
             return;
         }
         

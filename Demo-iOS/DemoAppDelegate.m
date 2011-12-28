@@ -60,14 +60,6 @@
 }
 
 
-- (void)dealloc
-{
-	[navigationController release];
-	[window release];
-    [database release];
-    [touchDatabase release];
-	[super dealloc];
-}
 
 
 // Display an error alert, without blocking.
@@ -82,7 +74,6 @@
                                           cancelButtonTitle: (fatal ? @"Quit" : @"Sorry")
                                           otherButtonTitles: nil];
     [alert show];
-    [alert release];
 }
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {

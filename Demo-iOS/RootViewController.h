@@ -37,8 +37,8 @@
     IBOutlet UIImageView *addItemBackground;
 }
 
-@property(nonatomic, retain) IBOutlet UITableView *tableView;
-@property(nonatomic, retain) IBOutlet CouchUITableSource* dataSource;
+@property(nonatomic, strong) IBOutlet UITableView *tableView;
+@property(nonatomic, strong) IBOutlet CouchUITableSource* dataSource;
 
 -(void)useDatabase:(CouchDatabase*)theDatabase;
 

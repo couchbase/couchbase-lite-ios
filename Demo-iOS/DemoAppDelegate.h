@@ -12,11 +12,11 @@
 
 @interface DemoAppDelegate : UIResponder <UIApplicationDelegate>
 
-@property (nonatomic, retain) CouchDatabase *database;
-@property (nonatomic, retain) TDDatabase *touchDatabase;
+@property (nonatomic, strong) CouchDatabase *database;
+@property (nonatomic, strong) TDDatabase *touchDatabase;
 
 @property (strong, nonatomic) IBOutlet UIWindow *window;
-@property (nonatomic, retain) IBOutlet UINavigationController *navigationController;
+@property (nonatomic, strong) IBOutlet UINavigationController *navigationController;
 
 - (void)showAlert: (NSString*)message error: (NSError*)error fatal: (BOOL)fatal;
 
