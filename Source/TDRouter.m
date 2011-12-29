@@ -87,6 +87,11 @@ NSString* const kTDVersionString =  @"0.1";
     return [self.queries objectForKey: param];
 }
 
+- (BOOL) boolQuery: (NSString*)param {
+    NSString* value = [self.queries objectForKey: param];
+    return value && !$equal(value, @"false") && !$equal(value, @"0");
+}
+
 
 - (TDStatus) openDB {
     if (!_db.exists)
@@ -352,9 +357,9 @@ static NSArray* splitPath( NSString* path ) {
     param = [self query: @"skip"];
     if (param)
         options->skip = param.intValue;
-    options->descending = $equal([self query: @"descending"], @"true");
-    options->includeDocs = $equal([self query: @"include_docs"], @"true");
-    options->updateSeq = $equal([self query: @"update_seq"], @"true");
+    options->descending = [self boolQuery: @"descending"];
+    options->includeDocs = [self boolQuery: @"include_docs"];
+    options->updateSeq = [self boolQuery: @"update_seq"];
     return YES;
 }
 
@@ -469,8 +474,9 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID {
-    NSString* revID = [self query: @"rev"];  // often nil
-    TDRevision* rev = [db getDocumentWithID: docID revisionID: revID];
+    TDRevision* rev = [db getDocumentWithID: docID
+                                 revisionID: [self query: @"rev"]  // often nil
+                            withAttachments: [self boolQuery: @"attachments"]];
     if (!rev)
         return 404;
     

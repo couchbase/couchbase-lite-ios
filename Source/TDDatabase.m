@@ -343,11 +343,10 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 }
 
 
-- (TDRevision*) getDocumentWithID: (NSString*)docID {
-    return [self getDocumentWithID: docID revisionID: nil];
-}
-
-- (TDRevision*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
+- (TDRevision*) getDocumentWithID: (NSString*)docID
+                       revisionID: (NSString*)revID
+                  withAttachments: (BOOL)withAttachments
+{
     TDRevision* result = nil;
     NSString* sql;
     if (revID)
@@ -365,7 +364,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         NSData* json = [r dataForColumnIndex: 2];
         result = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted] autorelease];
         result.sequence = [r longLongIntForColumnIndex: 3];
-        [self expandStoredJSON: json intoRevision: result withAttachments: NO];
+        [self expandStoredJSON: json intoRevision: result withAttachments: withAttachments];
     }
     [r close];
     return result;
@@ -373,7 +372,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
-               andAttachments: (BOOL)withAttachments
+              withAttachments: (BOOL)withAttachments
 {
     if (rev.body)
         return 200;

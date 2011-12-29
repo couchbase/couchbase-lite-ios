@@ -296,6 +296,16 @@ TestCase(TDRouter_GetAttachment) {
     
     response = SendRequest(server, @"GET", @"/db/missingdoc/bogus", nil);
     CAssertEq(response.status, 404);
+    
+    // Get the document with attachment data:
+    response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil);
+    CAssertEq(response.status, 200);
+    CAssertEqual([response.body.properties objectForKey: @"_attachments"],
+                 $dict({@"attach", $dict({@"data", [TDBase64 encode: attach1]}, 
+                                        {@"content_type", @"text/plain"},
+                                        {@"length", $object(attach1.length)},
+                                        {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                         {@"revpos", $object(1)})}));
 }
 
 

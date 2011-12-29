@@ -62,7 +62,7 @@ TestCase(TDDatabase_CRUD) {
     CAssert([rev1.revID hasPrefix: @"1-"]);
     
     // Read it back:
-    TDRevision* readRev = [db getDocumentWithID: rev1.docID];
+    TDRevision* readRev = [db getDocumentWithID: rev1.docID revisionID: nil withAttachments: NO];
     CAssert(readRev != nil);
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
@@ -79,7 +79,7 @@ TestCase(TDDatabase_CRUD) {
     CAssert([rev2.revID hasPrefix: @"2-"]);
     
     // Read it back:
-    readRev = [db getDocumentWithID: rev2.docID];
+    readRev = [db getDocumentWithID: rev2.docID revisionID: nil withAttachments: NO];
     CAssert(readRev != nil);
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
@@ -95,7 +95,7 @@ TestCase(TDDatabase_CRUD) {
     CAssert([revD.revID hasPrefix: @"3-"]);
     
     // Read it back (should fail):
-    readRev = [db getDocumentWithID: revD.docID];
+    readRev = [db getDocumentWithID: revD.docID revisionID: nil withAttachments: NO];
     CAssertNil(readRev);
     
     TDRevisionList* changes = [db changesSinceSequence: 0 options: NULL];
@@ -111,7 +111,7 @@ TestCase(TDDatabase_CRUD) {
 
 
 static void verifyHistory(TDDatabase* db, TDRevision* rev, NSArray* history) {
-    TDRevision* gotRev = [db getDocumentWithID: rev.docID];
+    TDRevision* gotRev = [db getDocumentWithID: rev.docID revisionID: nil withAttachments: NO];
     CAssertEqual(gotRev, rev);
     CAssertEqual(gotRev.properties, rev.properties);
     
@@ -149,7 +149,7 @@ TestCase(TDDatabase_RevTree) {
     verifyHistory(db, conflict, history);
     
     // Fetch one of those phantom revisions with no body:
-    TDRevision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too"];
+    TDRevision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too" withAttachments: NO];
     CAssertEqual(rev2.docID, rev.docID);
     CAssertEqual(rev2.revID, @"2-too");
     CAssertEqual(rev2.body, nil);
@@ -158,7 +158,7 @@ TestCase(TDDatabase_RevTree) {
     CAssertEq(db.lastSequence, 7u);
     
     // Make sure the revision with the higher revID wins the conflict:
-    TDRevision* current = [db getDocumentWithID: rev.docID];
+    TDRevision* current = [db getDocumentWithID: rev.docID revisionID: nil withAttachments: NO];
     CAssertEqual(current, conflict);
 }
 
@@ -192,13 +192,23 @@ TestCase(TDDatabase_Attachments) {
     CAssertEqual(type, @"text/plain");
     
     // Check the attachment dict:
-    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                                           {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
-                                                           {@"length", $object(27)},
-                                                           {@"stub", $true},
-                                                           {@"revpos", $object(1)})});
+    NSMutableDictionary* itemDict = $mdict({@"content_type", @"text/plain"},
+                                           {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                           {@"length", $object(27)},
+                                           {@"stub", $true},
+                                           {@"revpos", $object(1)});
+    NSDictionary* attachmentDict = $dict({@"attach", itemDict});
     CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: NO], attachmentDict);
-    TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
+    TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
+                                withAttachments: NO];
+    CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
+    
+    // Check the attachment dict, with attachments included:
+    [itemDict removeObjectForKey: @"stub"];
+    [itemDict setObject: [TDBase64 encode: attach1] forKey: @"data"];
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: YES], attachmentDict);
+    gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
+                    withAttachments: YES];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
     
     // Add a second revision that doesn't update the attachment:
@@ -273,7 +283,8 @@ TestCase(TDDatabase_PutAttachment) {
     // Examine the attachment store:
     CAssertEq(db.attachmentStore.count, 1u);
     
-    TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
+    TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
+                                withAttachments: NO];
     attachmentDict = [gotRev1.properties objectForKey: @"_attachments"];
     CAssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                          {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},

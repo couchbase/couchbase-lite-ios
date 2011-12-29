@@ -67,10 +67,11 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 @property (readonly) NSUInteger documentCount;
 @property (readonly) SequenceNumber lastSequence;
 
-- (TDRevision*) getDocumentWithID: (NSString*)docID;
-- (TDRevision*) getDocumentWithID: (NSString*)docID revisionID: (NSString*)revID;
+- (TDRevision*) getDocumentWithID: (NSString*)docID 
+                       revisionID: (NSString*)revID
+                  withAttachments: (BOOL)withAttachments;
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
-               andAttachments: (BOOL)andAttachments;
+              withAttachments: (BOOL)andAttachments;
 
 /** Returns an array of TDRevs in reverse chronological order,
     starting with the given revision. */

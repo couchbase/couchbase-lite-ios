@@ -165,11 +165,13 @@ static NSString* createUUID() {
             if (docNumericID <= 0)
                 return nil;
             parentSequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
-                                                    "WHERE doc_id=? AND revid=? and current=1 LIMIT 1",
-                                                    $object(docNumericID), prevRevID];
+                                                "WHERE doc_id=? AND revid=? and current=1 LIMIT 1",
+                                                 $object(docNumericID), prevRevID];
             if (parentSequence == 0) {
-                // Not found: either a 404 or a 409, depending on whether there is any current revision
-                *outStatus = [self getDocumentWithID: docID] ? 409 : 404;
+                // Not found: 404 or a 409, depending on whether there is any current revision
+                TDRevision* cur = [self getDocumentWithID: docID revisionID: nil
+                                          withAttachments: NO];
+                *outStatus = cur ? 409 : 404;
                 return nil;
             }
             
@@ -430,7 +432,7 @@ static NSString* createUUID() {
 
 - (TDRevision*) currentRevision {
     if (_currentRevision)
-        [_db loadRevisionBody: _currentRevision andAttachments: NO];
+        [_db loadRevisionBody: _currentRevision withAttachments: NO];
     return _currentRevision;
 }
 
