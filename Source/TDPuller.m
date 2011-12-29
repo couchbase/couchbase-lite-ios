@@ -235,7 +235,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (maxSequence > self.lastSequence.longLongValue)
         self.lastSequence = $sprintf(@"%lld", maxSequence);
     
-    [_db endTransaction];
+    [_db endTransaction: YES];
     LogTo(Sync, @"%@ finished inserting %u revisions", self, revs.count);
     
     [self asyncTasksFinished: revs.count];

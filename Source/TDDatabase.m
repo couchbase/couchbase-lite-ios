@@ -214,44 +214,28 @@
     return _fmdb.databasePath.lastPathComponent.stringByDeletingPathExtension;
 }
 
-- (int) error {
-    return _fmdb.lastErrorCode;
+
+- (BOOL) beginTransaction {
+    if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)])
+        return NO;
+    ++_transactionLevel;
+    LogTo(TDDatabase, @"Begin transaction (level %d)...", _transactionLevel);
+    return YES;
 }
 
-- (NSString*) errorMessage {
-    return _fmdb.lastErrorMessage;
-}
-
-
-- (void) beginTransaction {
-    if (++_transactionLevel == 1) {
-        LogTo(TDDatabase, @"Begin transaction...");
-        [_fmdb beginTransaction];
-        _transactionFailed = NO;
-    }
-}
-
-- (void) endTransaction {
+- (BOOL) endTransaction: (BOOL)commit {
     Assert(_transactionLevel > 0);
-    if (--_transactionLevel == 0) {
-        if (_transactionFailed) {
-            LogTo(TDDatabase, @"Rolling back failed transaction!");
-            [_fmdb rollback];
-        } else {
-            LogTo(TDDatabase, @"Committing transaction");
-            [_fmdb commit];
-        }
+    if (commit) {
+        LogTo(TDDatabase, @"Commit transaction (level %d)", _transactionLevel);
+    } else {
+        LogTo(TDDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
+        if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)])
+            return NO;
     }
-    _transactionFailed = NO;
-}
-
-- (BOOL) transactionFailed { return _transactionFailed; }
-
-- (void) setTransactionFailed: (BOOL)failed {
-    Assert(_transactionLevel > 0);
-    Assert(failed, @"Can't clear the transactionFailed property!");
-    LogTo(TDDatabase, @"Current transaction failed, will abort!");
-    _transactionFailed = failed;
+    if (![_fmdb executeUpdate: $sprintf(@"RELEASE tdb%d", _transactionLevel)])
+        return NO;
+    --_transactionLevel;
+    return YES;
 }
 
 

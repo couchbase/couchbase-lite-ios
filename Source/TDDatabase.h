@@ -35,7 +35,6 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
     FMDatabase *_fmdb;
     BOOL _open;
     NSInteger _transactionLevel;
-    BOOL _transactionFailed;
     NSMutableDictionary* _views;
     NSMutableArray* _validations;
     TDBlobStore* _attachments;
@@ -52,12 +51,15 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 @property (readonly) NSString* path;
 @property (readonly) NSString* name;
 @property (readonly) BOOL exists;
-@property (readonly) int error;
 
-- (void) beginTransaction;
-- (void) endTransaction;
-@property BOOL transactionFailed;
+/** Begins a database transaction. Transactions can nest. Every -beginTransaction must be balanced by a later -endTransaction:. */
+- (BOOL) beginTransaction;
 
+/** Commits or aborts (rolls back) a transaction.
+    @param commit  If YES, commits; if NO, aborts and rolls back, undoing all changes made since the matching -beginTransaction call, *including* any committed nested transactions. */
+- (BOOL) endTransaction: (BOOL)commit;
+
+/** Compacts the database storage by removing the bodies and attachments of obsolete revisions. */
 - (TDStatus) compact;
 
 // DOCUMENTS:

@@ -33,7 +33,6 @@ NSString* kPath = @"/tmp/touchdb_test.sqlite3";
 static TDDatabase* createDB(void) {
     TDDatabase *db = [TDDatabase createEmptyDBAtPath: kPath];
     CAssert([db open]);
-    CAssert(![db error]);
     return db;
 }
 

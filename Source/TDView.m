@@ -94,7 +94,7 @@ const TDQueryOptions kDefaultTDQueryOptions = {
                              $object(_viewID)];
     [_db.fmdb executeUpdate: @"UPDATE views SET lastsequence=0 WHERE view_id=?",
                              $object(_viewID)];
-    [_db endTransaction];
+    [_db endTransaction: YES];
 }
 
 
@@ -234,11 +234,9 @@ static id fromJSON( NSData* json ) {
         
     } @finally {
         [r close];
-        if (status >= 300) {
+        if (status >= 300)
             Warn(@"TouchDB: Failed to rebuild view '%@': %d", _name, status);
-            _db.transactionFailed = YES;
-        }
-        [_db endTransaction];
+        [_db endTransaction: (status < 300)];
     }
     return status;
 }
