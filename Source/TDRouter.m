@@ -120,7 +120,10 @@ static NSArray* splitPath( NSString* path ) {
 - (void) start {
     // Refer to: http://wiki.apache.org/couchdb/Complete_HTTP_API_Reference
     
-    NSMutableString* message = [NSMutableString stringWithFormat: @"do_%@", _request.HTTPMethod];
+    NSString* method = _request.HTTPMethod;
+    if ($equal(method, @"HEAD"))
+        method = @"GET";
+    NSMutableString* message = [NSMutableString stringWithFormat: @"do_%@", method];
     
     // First interpret the components of the request:
     _path = [splitPath(_request.URL.path) copy];
@@ -173,11 +176,14 @@ static NSArray* splitPath( NSString* path ) {
     if (!sel || ![self respondsToSelector: sel])
         sel = @selector(do_UNKNOWN);
     TDStatus status = (TDStatus) [self performSelector: sel withObject: _db withObject: docID];
-    
+
+    // Configure response headers:
     if (_response.body.isValidJSON)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
-    //TODO: Add 'Date:' header
-    
+
+    [_response.headers setObject: $sprintf(@"TouchDB %@", kTDVersionString)
+                          forKey: @"Server"];
+
     // If response is ready (nonzero status), tell my client about it:
     if (status > 0) {
         _response.status = status;

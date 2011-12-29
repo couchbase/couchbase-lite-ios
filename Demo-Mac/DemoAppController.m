@@ -17,6 +17,7 @@
 #import "DemoQuery.h"
 #import "Test.h"
 #import "TouchDB.h"
+#import <TouchDBListener/TDListener.h>
 #import <CouchCocoa/CouchCocoa.h>
 #import <CouchCocoa/CouchTouchDBServer.h>
 
@@ -37,8 +38,8 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
-    gRESTLogLevel = kRESTLogRequestURLs;
-    gCouchLogLevel = 1;
+    //gRESTLogLevel = kRESTLogRequestURLs;
+    //gCouchLogLevel = 1;
     
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
@@ -89,6 +90,9 @@ int main (int argc, const char * argv[]) {
                                              selector: @selector(replicationProgressChanged:)
                                                  name: TDReplicatorProgressChangedNotification
                                                object: nil];
+    
+    // Start a listener socket:
+    [[[TDListener alloc] initWithTDServer: server.touchServer port: 8888] start];
 }
 
 

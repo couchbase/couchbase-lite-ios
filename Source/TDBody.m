@@ -76,6 +76,21 @@
     return _json;
 }
 
+- (NSData*) asPrettyJSON {
+    id props = self.properties;
+    if (props) {
+        NSData* json = [NSJSONSerialization dataWithJSONObject: props
+                                                       options: NSJSONWritingPrettyPrinted
+                                                         error: nil];
+        if (json) {
+            NSMutableData* mjson = [[json mutableCopy] autorelease];
+            [mjson appendBytes: "\n" length: 1];
+            return mjson;
+        }
+    }
+    return self.asJSON;
+}
+
 - (NSString*) asJSONString {
     return self.asJSON.my_UTF8ToString;
 }

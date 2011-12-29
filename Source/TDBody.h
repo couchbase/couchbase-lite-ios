@@ -27,6 +27,7 @@
 
 @property (readonly) BOOL isValidJSON;
 @property (readonly) NSData* asJSON;
+@property (readonly) NSData* asPrettyJSON;
 @property (readonly) NSString* asJSONString;
 @property (readonly) id asObject;
 @property (readonly) BOOL error;

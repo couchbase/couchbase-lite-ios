@@ -37,6 +37,9 @@ typedef void (^OnFinishedBlock)();
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;
 
+- (NSString*) query: (NSString*)param;
+- (BOOL) boolQuery: (NSString*)param;
+
 @property (copy) OnResponseReadyBlock onResponseReady;
 @property (copy) OnDataAvailableBlock onDataAvailable;
 @property (copy) OnFinishedBlock onFinished;
