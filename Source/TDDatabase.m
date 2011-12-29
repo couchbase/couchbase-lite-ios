@@ -577,13 +577,40 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     if (options->updateSeq)
         update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
     
-    NSString* sql = $sprintf(@"SELECT revs.doc_id, docid, revid %@ FROM revs, docs "
+    // Generate the SELECT statement, based on the options:
+    NSMutableString* sql = [NSMutableString stringWithFormat:
+                            @"SELECT revs.doc_id, docid, revid %@ FROM revs, docs "
                               "WHERE current=1 AND deleted=0 "
-                              "AND docs.doc_id = revs.doc_id "
-                              "ORDER BY docid %@, revid DESC LIMIT ? OFFSET ?",
-                             (options->includeDocs ? @", json, sequence" : @""),
-                             (options->descending ? @"DESC" : @"ASC"));
-    FMResultSet* r = [_fmdb executeQuery: sql, $object(options->limit), $object(options->skip)];
+                              "AND docs.doc_id = revs.doc_id",
+                             (options->includeDocs ? @", json, sequence" : @"")];
+    NSMutableArray* args = $marray();
+    
+    id minKey = options->startKey, maxKey = options->endKey;
+    BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
+    if (options->descending) {
+        minKey = maxKey;
+        maxKey = options->startKey;
+        inclusiveMin = inclusiveMax;
+        inclusiveMax = YES;
+    }
+    if (minKey) {
+        Assert([minKey isKindOfClass: [NSString class]]);
+        [sql appendString: (inclusiveMin ? @" AND docid >= ?" :  @" AND docid > ?")];
+        [args addObject: minKey];
+    }
+    if (maxKey) {
+        Assert([maxKey isKindOfClass: [NSString class]]);
+        [sql appendString: (inclusiveMax ? @" AND docid <= ?" :  @" AND docid < ?")];
+        [args addObject: maxKey];
+    }
+    
+    [sql appendFormat: @" ORDER BY docid %@, revid DESC LIMIT ? OFFSET ?",
+                       (options->descending ? @"DESC" : @"ASC")];
+    [args addObject: $object(options->limit)];
+    [args addObject: $object(options->skip)];
+    
+    // Now run the database query:
+    FMResultSet* r = [_fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r)
         return nil;
     

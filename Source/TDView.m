@@ -22,7 +22,7 @@
 
 
 const TDQueryOptions kDefaultTDQueryOptions = {
-    nil, nil, 0, INT_MAX, NO, NO, NO
+    nil, nil, 0, INT_MAX, NO, NO, NO, YES
 };
 
 
@@ -265,16 +265,35 @@ static id fromJSON( NSData* json ) {
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid"];
     if (options->includeDocs)
         [sql appendString: @", revid, json, revs.sequence"];
-    [sql appendString: @" FROM maps, revs, docs "
-                        "WHERE maps.view_id=? AND revs.sequence = maps.sequence "
-                        "AND docs.doc_id = revs.doc_id "
+    [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
+    NSMutableArray* args = $marray($object(_viewID));
+
+    id minKey = options->startKey, maxKey = options->endKey;
+    BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
+    if (options->descending) {
+        minKey = maxKey;
+        maxKey = options->startKey;
+        inclusiveMin = inclusiveMax;
+        inclusiveMax = YES;
+    }
+    if (minKey) {
+        [sql appendString: (inclusiveMin ? @" AND key >= ?" : @" AND key > ?")];
+        [args addObject: toJSONString(minKey)];
+    }
+    if (maxKey) {
+        [sql appendString: (inclusiveMax ? @" AND key <= ?" :  @" AND key < ?")];
+        [args addObject: toJSONString(maxKey)];
+    }
+    
+    [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
                         "ORDER BY key"];
     if (options->descending)
         [sql appendString: @" DESC"];
     [sql appendString: @" LIMIT ? OFFSET ?"];
+    [args addObject: $object(options->limit)];
+    [args addObject: $object(options->skip)];
     
-    FMResultSet* r = [_db.fmdb executeQuery: sql, $object(_viewID),
-                                             $object(options->limit), $object(options->skip)];
+    FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r) {
         *outStatus = 500;
         return nil;
@@ -301,7 +320,7 @@ static id fromJSON( NSData* json ) {
     [r close];
     *outStatus = 200;
     NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
-    return $dict({@"rows", $object(rows)},
+    return $dict({@"rows", rows},
                  {@"total_rows", $object(totalRows)},
                  {@"offset", $object(options->skip)},
                  {@"update_seq", update_seq ? $object(update_seq) : nil});

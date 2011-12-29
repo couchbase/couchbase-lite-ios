@@ -20,13 +20,14 @@ typedef void (^TDMapBlock)(NSDictionary* doc, TDMapEmitBlock emit);
 
 /** Standard query options for views. */
 typedef struct TDQueryOptions {
-    __unsafe_unretained NSString* startKey;
-    __unsafe_unretained NSString* endKey;
+    __unsafe_unretained id startKey;
+    __unsafe_unretained id endKey;
     int skip;
     int limit;
     BOOL descending;
     BOOL includeDocs;
     BOOL updateSeq;
+    BOOL inclusiveEnd;
 } TDQueryOptions;
 
 extern const TDQueryOptions kDefaultTDQueryOptions;

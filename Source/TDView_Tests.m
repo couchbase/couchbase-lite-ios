@@ -54,6 +54,28 @@ static TDRevision* putDoc(TDDatabase* db, NSDictionary* props) {
 }
 
 
+static NSArray* putDocs(TDDatabase* db) {
+    NSMutableArray* docs = $marray();
+    [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"key", @"four"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"key", @"one"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"key", @"three"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"key", @"five"}))];
+    return docs;
+}
+
+
+static TDView* createView(TDDatabase* db) {
+    TDView* view = [db viewNamed: @"aview"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
+        CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
+        emit([doc objectForKey: @"key"], nil);
+    } version: @"1"];
+    return view;
+}
+
+
 TestCase(TDView_Index) {
     RequireTestCase(TDView_Create);
     TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
@@ -62,12 +84,7 @@ TestCase(TDView_Index) {
     TDRevision* rev3 = putDoc(db, $dict({@"key", @"three"}));
     putDoc(db, $dict({@"clef", @"quatre"}));
     
-    TDView* view = [db viewNamed: @"aview"];
-    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
-        CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
-        emit([doc objectForKey: @"key"], nil);
-    } version: @"1"];
+    TDView* view = createView(db);
     CAssertEq(view.viewID, 1);
     
     CAssertEq([view updateIndex], 200);
@@ -116,5 +133,108 @@ TestCase(TDView_Index) {
     
     [db close];
 }
+
+
+TestCase(TDView_Query) {
+    RequireTestCase(TDView_Index);
+    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    putDocs(db);
+    TDView* view = createView(db);
+    CAssertEq([view updateIndex], 200);
+    
+    // Query all rows:
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    TDStatus status;
+    NSDictionary* query = [view queryWithOptions: &options status: &status];
+    NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                                   $dict({@"id",  @"44444"}, {@"key", @"four"}),
+                                   $dict({@"id",  @"11111"}, {@"key", @"one"}),
+                                   $dict({@"id",  @"33333"}, {@"key", @"three"}),
+                                   $dict({@"id",  @"22222"}, {@"key", @"two"}));
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(5)},
+                              {@"offset", $object(0)}));
+
+    // Start/end key query:
+    options = kDefaultTDQueryOptions;
+    options.startKey = @"a";
+    options.endKey = @"one";
+    query = [view queryWithOptions: &options status: &status];
+    expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                          $dict({@"id",  @"44444"}, {@"key", @"four"}),
+                          $dict({@"id",  @"11111"}, {@"key", @"one"}));
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(3)},
+                              {@"offset", $object(0)}));
+
+    // Start/end query without inclusive end:
+    options.inclusiveEnd = NO;
+    query = [view queryWithOptions: &options status: &status];
+    expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                          $dict({@"id",  @"44444"}, {@"key", @"four"}));
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(2)},
+                              {@"offset", $object(0)}));
+
+    // Reversed:
+    options.descending = YES;
+    options.startKey = @"o";
+    options.endKey = @"five";
+    options.inclusiveEnd = YES;
+    query = [view queryWithOptions: &options status: &status];
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
+                          $dict({@"id",  @"55555"}, {@"key", @"five"}));
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(2)},
+                              {@"offset", $object(0)}));
+
+    // Reversed, no inclusive end:
+    options.inclusiveEnd = NO;
+    query = [view queryWithOptions: &options status: &status];
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}));
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(1)},
+                              {@"offset", $object(0)}));
+}    
+
+
+TestCase(TDView_AllDocsQuery) {
+    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    NSArray* docs = putDocs(db);
+    NSDictionary* expectedRow[docs.count];
+    int i = 0;
+    for (TDRevision* rev in docs) {
+        expectedRow[i++] = $dict({@"id",  rev.docID},
+                                 {@"key", rev.docID},
+                                 {@"value", $dict({@"rev", rev.revID})});
+    }
+    
+    // Query all rows:
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    NSDictionary* query = [db getAllDocs: &options];
+    NSArray* expectedRows = $array(expectedRow[2], expectedRow[0], expectedRow[3], expectedRow[1],
+                                   expectedRow[4]);
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(5)},
+                              {@"offset", $object(0)}));
+
+    // Start/end key query:
+    options = kDefaultTDQueryOptions;
+    options.startKey = @"2";
+    options.endKey = @"44444";
+    query = [db getAllDocs: &options];
+    expectedRows = $array(expectedRow[0], expectedRow[3], expectedRow[1]);
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(3)},
+                              {@"offset", $object(0)}));
+
+    // Start/end query without inclusive end:
+    options.inclusiveEnd = NO;
+    query = [db getAllDocs: &options];
+    expectedRows = $array(expectedRow[0], expectedRow[3]);
+    CAssertEqual(query, $dict({@"rows", expectedRows},
+                              {@"total_rows", $object(2)},
+                              {@"offset", $object(0)}));
+}    
 
 #endif
