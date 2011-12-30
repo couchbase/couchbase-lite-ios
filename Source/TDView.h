@@ -17,17 +17,27 @@ typedef void (^TDMapEmitBlock)(id key, id value);
     @param emit  A block to be called to add a key/value pair to the view. Your block can call it zero, one or multiple times. */
 typedef void (^TDMapBlock)(NSDictionary* doc, TDMapEmitBlock emit);
 
+/** A "reduce" function called to summarize the results of a view.
+	@param keys  An array of keys to be reduced (or nil if this is a rereduce).
+	@param values  A parallel array of values to be reduced, corresponding 1::1 with the keys.
+	@param rereduce  YES if the input values are the results of previous reductions.
+	@return  The reduced value; almost always a scalar or small fixed-size object. */
+typedef id (^TDReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
+
 
 /** Standard query options for views. */
 typedef struct TDQueryOptions {
     __unsafe_unretained id startKey;
     __unsafe_unretained id endKey;
-    int skip;
-    int limit;
+    unsigned skip;
+    unsigned limit;
+    unsigned groupLevel;
     BOOL descending;
     BOOL includeDocs;
     BOOL updateSeq;
     BOOL inclusiveEnd;
+    BOOL reduce;
+    BOOL group;
 } TDQueryOptions;
 
 extern const TDQueryOptions kDefaultTDQueryOptions;
@@ -41,6 +51,7 @@ extern const TDQueryOptions kDefaultTDQueryOptions;
     NSString* _name;
     int _viewID;
     TDMapBlock _mapBlock;
+    TDReduceBlock _reduceBlock;
 }
 
 - (void) deleteView;
@@ -49,12 +60,21 @@ extern const TDQueryOptions kDefaultTDQueryOptions;
 @property (readonly) NSString* name;
 
 @property (readonly) TDMapBlock mapBlock;
-- (BOOL) setMapBlock: (TDMapBlock)mapBlock version: (NSString*)version;
+@property (readonly) TDReduceBlock reduceBlock;
+
+- (BOOL) setMapBlock: (TDMapBlock)mapBlock
+         reduceBlock: (TDReduceBlock)reduceBlock
+             version: (NSString*)version;
 
 - (void) removeIndex;
 - (TDStatus) updateIndex;
 
-- (NSDictionary*) queryWithOptions: (const TDQueryOptions*)options
-                            status: (TDStatus*)outStatus;
+@property (readonly) SequenceNumber lastSequenceIndexed;
+
+/** Queries the view.
+    @param options  The options to use.
+    @return  An array of result rows -- each is a dictionary with "key" and "value" keys, and possibly "id" and "doc". */
+- (NSArray*) queryWithOptions: (const TDQueryOptions*)options
+                       status: (TDStatus*)outStatus;
 
 @end

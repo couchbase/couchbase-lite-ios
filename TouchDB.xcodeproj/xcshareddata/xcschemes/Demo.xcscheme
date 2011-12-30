@@ -82,7 +82,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_All"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>

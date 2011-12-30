@@ -588,10 +588,14 @@ static NSArray* splitPath( NSString* path ) {
     
     TDView* view = [db viewNamed: viewName];
     TDStatus status;
-    NSDictionary* result = [view queryWithOptions: &options status: &status];
-    if (!result)
+    NSArray* rows = [view queryWithOptions: &options status: &status];
+    if (!rows)
         return status;
-    _response.bodyObject = result;
+    id updateSeq = options.updateSeq ? $object(view.lastSequenceIndexed) : nil;
+    _response.bodyObject = $dict({@"rows", rows},
+                                 {@"total_rows", $object(rows.count)},
+                                 {@"offset", $object(options.skip)},
+                                 {@"update_seq", updateSeq});;
     return 200;
 }
 

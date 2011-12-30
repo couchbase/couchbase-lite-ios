@@ -64,7 +64,7 @@ int main (int argc, const char * argv[]) {
     [[tdb viewNamed: @"byDate"] setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);
-    } version: @"1"];
+    } reduceBlock: NULL version: @"1"];
         
     // ...and a validation function requiring parseable dates:
     [tdb addValidation: ^(TDRevision* newRevision, id<TDValidationContext>context) {

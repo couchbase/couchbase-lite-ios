@@ -21,8 +21,13 @@
 #import "FMResultSet.h"
 
 
+#define kReduceBatchSize 100
+
+
 const TDQueryOptions kDefaultTDQueryOptions = {
-    nil, nil, 0, INT_MAX, NO, NO, NO, YES
+    nil, nil, 0,
+    UINT_MAX, 0,
+    NO, NO, NO, YES, NO, NO
 };
 
 
@@ -45,11 +50,13 @@ const TDQueryOptions kDefaultTDQueryOptions = {
 - (void)dealloc {
     [_db release];
     [_name release];
+    [_mapBlock release];
+    [_reduceBlock release];
     [super dealloc];
 }
 
 
-@synthesize database=_db, name=_name, mapBlock=_mapBlock;
+@synthesize database=_db, name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock;
 
 
 - (int) viewID {
@@ -64,11 +71,16 @@ const TDQueryOptions kDefaultTDQueryOptions = {
 }
 
 
-- (BOOL) setMapBlock: (TDMapBlock)mapBlock version:(NSString *)version {
+- (BOOL) setMapBlock: (TDMapBlock)mapBlock
+         reduceBlock: (TDReduceBlock)reduceBlock
+             version: (NSString *)version
+{
     Assert(mapBlock);
     Assert(version);
-    [_mapBlock release];
+    [_mapBlock autorelease];
     _mapBlock = [mapBlock copy];
+    [_reduceBlock autorelease];
+    _reduceBlock = [reduceBlock copy];
 
     // Update the version column in the db. This is a little weird looking because we want to
     // avoid modifying the db if the version didn't change, and because the row might not exist yet.
@@ -245,21 +257,26 @@ static id fromJSON( NSData* json ) {
 #pragma mark - QUERYING:
 
 
-//FIX: This has a lot of code in common with -[TDDatabase getAllDocs:]. Unify the two!
-- (NSDictionary*) queryWithOptions: (const TDQueryOptions*)options
-                            status: (TDStatus*)outStatus
+- (FMResultSet*) resultSetWithOptions: (const TDQueryOptions*)options
+                               status: (TDStatus*)outStatus
 {
     if (!options)
         options = &kDefaultTDQueryOptions;
+    
+    if (!options->group) {
+        if (options->reduce && !_reduceBlock) {
+            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
+            *outStatus = 400;
+            return nil;
+        }
+        if (options->groupLevel > 0)
+            Warn(@"Setting groupLevel without group makes no sense");
+    }
     
     *outStatus = [self updateIndex];
     if (*outStatus >= 300)
         return nil;
 
-    SequenceNumber update_seq = 0;
-    if (options->updateSeq)
-        update_seq = self.lastSequenceIndexed; // TODO: needs to be atomic with the following SELECT
-    
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid"];
     if (options->includeDocs)
         [sql appendString: @", revid, json, revs.sequence"];
@@ -287,44 +304,120 @@ static id fromJSON( NSData* json ) {
                         "ORDER BY key"];
     if (options->descending)
         [sql appendString: @" DESC"];
-    [sql appendString: @" LIMIT ? OFFSET ?"];
-    [args addObject: $object(options->limit)];
-    [args addObject: $object(options->skip)];
+    if (options->limit != kDefaultTDQueryOptions.limit) {
+        [sql appendString: @" LIMIT ?"];
+        [args addObject: $object(options->limit)];
+    }
+    if (options->skip > 0) {
+        [sql appendString: @" OFFSET ?"];
+        [args addObject: $object(options->skip)];
+    }
     
     FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
-    if (!r) {
+    if (!r)
         *outStatus = 500;
-        return nil;
-    }
-    
-    NSMutableArray* rows = $marray();
-    while ([r next]) {
-        NSData* key = fromJSON([r dataForColumnIndex: 0]);
-        NSData* value = fromJSON([r dataForColumnIndex: 1]);
-        NSString* docID = [r stringForColumnIndex: 2];
-        NSDictionary* docContents = nil;
-        if (options->includeDocs) {
-            docContents = [_db documentPropertiesFromJSON: [r dataForColumnIndex: 4]
-                                                    docID: docID
-                                                    revID: [r stringForColumnIndex: 3]
-                                                 sequence: [r longLongIntForColumnIndex: 5]];
-        }
-        NSDictionary* change = $dict({@"id",  docID},
-                                     {@"key", key},
-                                     {@"value", value},
-                                     {@"doc", docContents});
-        [rows addObject: change];
-    }
-    [r close];
-    *outStatus = 200;
-    NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
-    return $dict({@"rows", rows},
-                 {@"total_rows", $object(totalRows)},
-                 {@"offset", $object(options->skip)},
-                 {@"update_seq", update_seq ? $object(update_seq) : nil});
+    return r;
 }
 
 
+// Are key1 and key2 grouped together at this groupLevel?
+static bool groupTogether(id key1, id key2, unsigned groupLevel) {
+    if (groupLevel == 0 || ![key1 isKindOfClass: [NSArray class]]
+                        || ![key2 isKindOfClass: [NSArray class]])
+        return [key1 isEqual: key2];
+    unsigned end = MIN(groupLevel, MIN([key1 count], [key2 count]));
+    for (unsigned i = 0; i< end; ++i) {
+        if (![[key1 objectAtIndex: i] isEqual: [key2 objectAtIndex: i]])
+            return false;
+    }
+    return true;
+}
+
+// Returns the prefix of the key to use in the result row, at this groupLevel
+static id groupKey(id key, unsigned groupLevel) {
+    if (groupLevel > 0 && [key isKindOfClass: [NSArray class]] && [key count] > groupLevel)
+        return [key subarrayWithRange: NSMakeRange(0, groupLevel)];
+    else
+        return key;
+}
+
+
+- (NSArray*) queryWithOptions: (const TDQueryOptions*)options
+                       status: (TDStatus*)outStatus
+{
+    if (!options)
+        options = &kDefaultTDQueryOptions;
+    
+    FMResultSet* r = [self resultSetWithOptions: options status: outStatus];
+    if (!r)
+        return nil;
+    
+    bool reduce = options->reduce;
+    bool group = options->group;
+    unsigned groupLevel = options->groupLevel;
+    NSMutableArray* rows = $marray();
+    NSMutableArray* keysToReduce=nil, *valuesToReduce=nil;
+    id lastKey = nil;
+    if (reduce) {
+        keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
+        valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
+    }
+    
+    while ([r next]) {
+        @autoreleasepool {
+            id key = fromJSON([r dataForColumnIndex: 0]);
+            id value = fromJSON([r dataForColumnIndex: 1]);
+            Assert(key);
+            if (reduce) {
+                // Reduced or grouped query:
+                if (group && !groupTogether(key, lastKey, groupLevel) && lastKey) {
+                    // This pair starts a new group, so reduce & record the last one:
+                    id reduced = _reduceBlock(keysToReduce, valuesToReduce, NO) ?: $null;
+                    [rows addObject: $dict({@"key", groupKey(lastKey, groupLevel)},
+                                           {@"value", reduced})];
+                    [keysToReduce removeAllObjects];
+                    [valuesToReduce removeAllObjects];
+                }
+                [keysToReduce addObject: key];
+                [valuesToReduce addObject: value ?: $null];
+                lastKey = key;
+
+            } else {
+                // Regular query:
+                NSString* docID = [r stringForColumnIndex: 2];
+                NSDictionary* docContents = nil;
+                if (options->includeDocs) {
+                    docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 4]
+                                                            docID: docID
+                                                            revID: [r stringForColumnIndex: 3]
+                                                         sequence: [r longLongIntForColumnIndex:5]];
+                }
+                [rows addObject: $dict({@"id",  docID},
+                                       {@"key", key},
+                                       {@"value", value},
+                                       {@"doc", docContents})];
+            }
+        }
+    }
+    
+    if (reduce) {
+        if (keysToReduce.count > 0) {
+            // Finish the last group (or the entire list, if no grouping):
+            id key = group ? groupKey(lastKey, groupLevel) : $null;
+            id reduced = _reduceBlock(keysToReduce, valuesToReduce, NO) ?: $null;
+            [rows addObject: $dict({@"key", key}, {@"value", reduced})];
+        }
+        [keysToReduce release];
+        [valuesToReduce release];
+    }
+    
+    [r close];
+    *outStatus = 200;
+    return rows;
+}
+
+
+// This is really just for unit tests & debugging
 - (NSArray*) dump {
     if (self.viewID <= 0)
         return nil;

@@ -60,6 +60,7 @@ BOOL kvRemoveFromSet( id owner, NSString *property, NSMutableSet *set, id objToR
 
 #define $true   ((NSNumber*)kCFBooleanTrue)
 #define $false  ((NSNumber*)kCFBooleanFalse)
+#define $null   [NSNull null]
 
 
 @interface NSObject (MYUtils)
