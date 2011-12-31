@@ -24,11 +24,15 @@ TestCase(TDView_Create) {
     RequireTestCase(TDDatabase);
     TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
     
+    CAssertNil([db existingViewNamed: @"aview"]);
+    
     TDView* view = [db viewNamed: @"aview"];
     CAssert(view);
     CAssertEq(view.database, db);
     CAssertEqual(view.name, @"aview");
     CAssertNull(view.mapBlock);
+    CAssertEq([db existingViewNamed: @"aview"], view);
+
     
     BOOL changed = [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) { }
                          reduceBlock: NULL version: @"1"];

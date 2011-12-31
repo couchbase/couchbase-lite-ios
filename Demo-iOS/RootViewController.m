@@ -104,7 +104,8 @@
     
     // Create a CouchDB 'view' containing list items sorted by date
     DemoAppDelegate* delegate = [[UIApplication sharedApplication] delegate];
-    [[delegate.touchDatabase viewNamed: @"byDate"] setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+    [[delegate.touchDatabase viewNamed: @"default/byDate"] 
+     setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);
     } reduceBlock: NULL version: @"1"];

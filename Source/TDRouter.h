@@ -23,7 +23,7 @@ typedef void (^OnFinishedBlock)();
     @private
     TDServer* _server;
     NSURLRequest* _request;
-    NSArray* _path;
+    NSMutableArray* _path;
     NSDictionary* _queries;
     TDResponse* _response;
     TDDatabase* _db;

@@ -86,6 +86,7 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
 
 - (TDView*) viewNamed: (NSString*)name;
+- (TDView*) existingViewNamed: (NSString*)name;
 @property (readonly) NSArray* allViews;
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence

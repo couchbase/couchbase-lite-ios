@@ -518,17 +518,32 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 #pragma mark - VIEWS:
 
 
+- (TDView*) registerView: (TDView*)view {
+    if (!view)
+        return nil;
+    if (!_views)
+        _views = [[NSMutableDictionary alloc] init];
+    [_views setObject: view forKey: view.name];
+    return view;
+}
+
+
 - (TDView*) viewNamed: (NSString*)name {
     TDView* view = [_views objectForKey: name];
-    if (!view) {
-        view = [[[TDView alloc] initWithDatabase: self name: name] autorelease];
-        if (!view)
-            return nil;
-        if (!_views)
-            _views = [[NSMutableDictionary alloc] init];
-        [_views setObject: view forKey: name];
-    }
-    return view;
+    if (view)
+        return view;
+    return [self registerView: [[[TDView alloc] initWithDatabase: self name: name] autorelease]];
+}
+
+
+- (TDView*) existingViewNamed: (NSString*)name {
+    TDView* view = [_views objectForKey: name];
+    if (view)
+        return view;
+    view = [[[TDView alloc] initWithDatabase: self name: name] autorelease];
+    if (!view.viewID)
+        return nil;
+    return [self registerView: view];
 }
 
 
