@@ -25,6 +25,15 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
 @implementation TDPusher
 
 
+@synthesize filter=_filter;
+
+
+- (void)dealloc {
+    [_filter release];
+    [super dealloc];
+}
+
+
 - (BOOL) isPush {
     return YES;
 }
@@ -37,7 +46,7 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
     
     // Process existing changes since the last push:
     TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
-                                                options: nil];
+                                                options: nil filter: _filter];
     if (changes.count > 0)
         [self processInbox: changes];
     
@@ -55,10 +64,12 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
 
 - (void) dbChanged: (NSNotification*)n {
     NSDictionary* userInfo = n.userInfo;
-    // Skip revisions that came from the database I'm syncing to:
+    // Skip revisions that originally came from the database I'm syncing to:
     if ([[userInfo objectForKey: @"source"] isEqual: _remote])
         return;
-    [self addToInbox: [userInfo objectForKey: @"rev"]];
+    TDRevision* rev = [userInfo objectForKey: @"rev"];
+    if (!_filter || _filter(rev))
+        [self addToInbox: rev];
 }
 
 

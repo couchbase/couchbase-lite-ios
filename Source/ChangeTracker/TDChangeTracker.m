@@ -23,7 +23,7 @@
 @implementation TDChangeTracker
 
 @synthesize lastSequenceNumber=_lastSequenceNumber, databaseURL=_databaseURL, mode=_mode;
-@synthesize client=_client;
+@synthesize client=_client, filterName=_filterName;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
@@ -63,9 +63,13 @@
 
 - (NSString*) changesFeedPath {
     static NSString* const kModeNames[3] = {@"normal", @"longpoll", @"continuous"};
-    return [NSString stringWithFormat: @"_changes?feed=%@&heartbeat=300000&since=%u",
-            kModeNames[_mode],
-            _lastSequenceNumber];
+    NSMutableString* path;
+    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=300000&since=%u",
+                                    kModeNames[_mode],
+                                    _lastSequenceNumber];
+    if (_filterName)
+        [path appendFormat: @"&filter=%@", _filterName];
+    return path;
 }
 
 - (NSURL*) changesFeedURL {

@@ -25,8 +25,8 @@
 
 
 const TDQueryOptions kDefaultTDQueryOptions = {
-    nil, nil, 0,
-    UINT_MAX, 0,
+    nil, nil,
+    0, UINT_MAX, 0,
     NO, NO, NO, YES, NO, NO
 };
 

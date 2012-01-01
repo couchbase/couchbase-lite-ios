@@ -87,6 +87,21 @@ TestCase(TDDatabase_CRUD) {
     CAssertNil([db putRevision: rev2Input prevRevisionID: rev1.revID status: &status]);
     CAssertEq(status, 409);
     
+    // Check the changes feed, with and without filters:
+    TDRevisionList* changes = [db changesSinceSequence: 0 options: NULL filter: NULL];
+    Log(@"Changes = %@", changes);
+    CAssertEq(changes.count, 1u);
+    
+    changes = [db changesSinceSequence: 0 options: NULL filter:^BOOL(TDRevision *revision) {
+        return [[revision.properties objectForKey: @"status"] isEqual: @"updated!"];
+    }];
+    CAssertEq(changes.count, 1u);
+    
+    changes = [db changesSinceSequence: 0 options: NULL filter:^BOOL(TDRevision *revision) {
+        return [[revision.properties objectForKey: @"status"] isEqual: @"not updated!"];
+    }];
+    CAssertEq(changes.count, 0u);
+    
     // Delete it:
     TDRevision* revD = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
     revD = [db putRevision: revD prevRevisionID: rev2.revID status: &status];
@@ -98,7 +113,8 @@ TestCase(TDDatabase_CRUD) {
     readRev = [db getDocumentWithID: revD.docID revisionID: nil withAttachments: NO];
     CAssertNil(readRev);
     
-    TDRevisionList* changes = [db changesSinceSequence: 0 options: NULL];
+    // Check the changes feed again after the deletion:
+    changes = [db changesSinceSequence: 0 options: NULL filter: NULL];
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
     

@@ -491,14 +491,17 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDQueryOptions*)options
+                                  filter: (TDFilterBlock)filter
 {
     if (!options) options = &kDefaultTDQueryOptions;
+    BOOL includeDocs = options->includeDocs || (filter != NULL);
 
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, docid, revid, deleted FROM revs, docs "
-                                           "WHERE sequence > ? AND current=1 "
-                                           "AND revs.doc_id = docs.doc_id "
-                                           "ORDER BY sequence LIMIT ?",
-                                          $object(lastSequence), $object(options->limit)];
+    NSString* sql = $sprintf(@"SELECT sequence, docid, revid, deleted %@ FROM revs, docs "
+                             "WHERE sequence > ? AND current=1 "
+                             "AND revs.doc_id = docs.doc_id "
+                             "ORDER BY sequence LIMIT ?",
+                             (includeDocs ? @", json" : @""));
+    FMResultSet* r = [_fmdb executeQuery: sql, $object(lastSequence), $object(options->limit)];
     if (!r)
         return nil;
     TDRevisionList* changes = [[[TDRevisionList alloc] init] autorelease];
@@ -507,7 +510,13 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
                                               revID: [r stringForColumnIndex: 2]
                                             deleted: [r boolForColumnIndex: 3]];
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        [changes addRev: rev];
+        if (includeDocs) {
+            [self expandStoredJSON: [r dataForColumnIndex: 4]
+                      intoRevision: rev
+                   withAttachments: NO];
+        }
+        if (!filter || filter(rev))
+            [changes addRev: rev];
         [rev release];
     }
     [r close];

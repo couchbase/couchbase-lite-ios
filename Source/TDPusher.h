@@ -7,9 +7,15 @@
 //
 
 #import "TDPuller.h"
+#import "TDDatabase.h"
 
 
 /** Replicator that pushes to a remote CouchDB. */
 @interface TDPusher : TDReplicator
+{
+    TDFilterBlock _filter;
+}
+
+@property (copy) TDFilterBlock filter;
 
 @end

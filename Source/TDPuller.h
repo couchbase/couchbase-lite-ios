@@ -19,6 +19,9 @@
     NSMutableArray* _revsToPull;
     NSUInteger _httpConnectionCount;
     TDBatcher* _revsToInsert;
+    NSString* _filterName;
 }
+
+@property (copy) NSString* filterName;
 
 @end

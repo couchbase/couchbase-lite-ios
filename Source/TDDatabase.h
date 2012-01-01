@@ -26,6 +26,9 @@ extern NSString* const TDDatabaseChangeNotification;
 typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
                                    id<TDValidationContext> context);
 
+/** Filter block, used in changes feeds and replication. */
+typedef BOOL (^TDFilterBlock) (TDRevision* revision);
+
 
 /** A TouchDB database. */
 @interface TDDatabase : NSObject
@@ -90,7 +93,8 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 @property (readonly) NSArray* allViews;
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
-                                 options: (const struct TDQueryOptions*)options;
+                                 options: (const struct TDQueryOptions*)options
+                                  filter: (TDFilterBlock)filter;
 
 @end
 

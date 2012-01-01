@@ -474,7 +474,7 @@ static NSArray* splitPath( NSString* path ) {
         return 400;
     int since = [[self query: @"since"] intValue];
     
-    TDRevisionList* changes = [db changesSinceSequence: since options: &options];
+    TDRevisionList* changes = [db changesSinceSequence: since options: &options filter: NULL];
     if (!changes)
         return 500;
     
