@@ -352,9 +352,9 @@ static id groupKey(id key, unsigned groupLevel) {
     if (!r)
         return nil;
     
-    bool reduce = options->reduce;
-    bool group = options->group;
     unsigned groupLevel = options->groupLevel;
+    bool group = options->group || groupLevel > 0;
+    bool reduce = options->reduce || group;
     NSMutableArray* rows = $marray();
     NSMutableArray* keysToReduce=nil, *valuesToReduce=nil;
     id lastKey = nil;
