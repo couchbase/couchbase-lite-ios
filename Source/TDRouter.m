@@ -451,6 +451,9 @@ static NSArray* splitPath( NSString* path ) {
 
 - (void) dbChanged: (NSNotification*)n {
     TDRevision* rev = [n.userInfo objectForKey: @"rev"];
+    
+    if (_changesFilter && !_changesFilter(rev))
+        return;
 
     if (_longpoll) {
         Log(@"TDRouter: Sending longpoll response");
@@ -474,7 +477,16 @@ static NSArray* splitPath( NSString* path ) {
         return 400;
     int since = [[self query: @"since"] intValue];
     
-    TDRevisionList* changes = [db changesSinceSequence: since options: &options filter: NULL];
+    NSString* filterName = [self query: @"filter"];
+    if (filterName) {
+        _changesFilter = [[_db filterNamed: filterName] retain];
+        if (!_changesFilter)
+            return 404;
+    }
+    
+    TDRevisionList* changes = [db changesSinceSequence: since
+                                               options: &options
+                                                filter: _changesFilter];
     if (!changes)
         return 500;
     

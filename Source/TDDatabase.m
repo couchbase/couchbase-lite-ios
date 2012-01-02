@@ -201,6 +201,8 @@
     [_views release];
     [_activeReplicators release];
     [_validations release];
+    [_filters release];
+    [_attachments release];
     [super dealloc];
 }
 
@@ -521,6 +523,17 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     }
     [r close];
     return changes;
+}
+
+
+- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock {
+    if (!_filters)
+        _filters = [[NSMutableDictionary alloc] init];
+    [_filters setValue: [[filterBlock copy] autorelease] forKey: filterName];
+}
+
+- (TDFilterBlock) filterNamed: (NSString*)filterName {
+    return [_filters objectForKey: filterName];
 }
 
 

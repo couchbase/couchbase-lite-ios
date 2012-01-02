@@ -6,8 +6,8 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-@class TDDatabase, TDServer, TDResponse, TDBody;
+#import "TDDatabase.h"
+@class TDServer, TDResponse, TDBody;
 
 
 extern NSString* const kTDVersionString;
@@ -33,6 +33,7 @@ typedef void (^OnFinishedBlock)();
     OnDataAvailableBlock _onDataAvailable;
     OnFinishedBlock _onFinished;
     BOOL _longpoll;
+    TDFilterBlock _changesFilter;
 }
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;

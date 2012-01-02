@@ -40,6 +40,7 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
     NSInteger _transactionLevel;
     NSMutableDictionary* _views;
     NSMutableArray* _validations;
+    NSMutableDictionary* _filters;
     TDBlobStore* _attachments;
     NSMutableArray* _activeReplicators;
 }    
@@ -95,6 +96,10 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const struct TDQueryOptions*)options
                                   filter: (TDFilterBlock)filter;
+
+/** Define a named filter function. These aren't used directly by TDDatabase, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
+- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
+- (TDFilterBlock) filterNamed: (NSString*)filterName;
 
 @end
 

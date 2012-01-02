@@ -77,6 +77,12 @@ int main (int argc, const char * argv[]) {
         }
         return YES;
     }];
+    
+    // And why not a filter, just to allow some simple testing of filtered _changes.
+    // For example, try curl -i 'http://localhost:8888/demo-shopping/_changes?filter=checked'
+    [tdb defineFilter: @"checked" asBlock: ^BOOL(TDRevision *revision) {
+        return [revision.properties objectForKey: @"check"] == $true;
+    }];
 
     
     CouchQuery* q = [[_database designDocumentWithName: @"default"] queryViewNamed: @"byDate"];
