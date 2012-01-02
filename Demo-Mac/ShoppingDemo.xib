@@ -888,7 +888,7 @@
 							<reference key="NSNextResponder" ref="930771090"/>
 							<int key="NSvFlags">1290</int>
 							<object class="NSPSMatrix" key="NSDrawMatrix"/>
-							<string key="NSFrame">{{-1, 317}, {256, 12}}</string>
+							<string key="NSFrame">{{-1, 317}, {500, 12}}</string>
 							<reference key="NSSuperview" ref="930771090"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="582544734"/>
@@ -970,7 +970,6 @@
 							<string key="NSFrame">{{260, 17}, {234, 304}}</string>
 							<reference key="NSSuperview" ref="930771090"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<string key="NSReuseIdentifierKey">_NS:2141</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSImageCell" key="NSCell" id="393756549">
@@ -1092,7 +1091,6 @@
 							<string key="NSFrame">{{312, 12}, {59, 32}}</string>
 							<reference key="NSSuperview" ref="776369873"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<string key="NSReuseIdentifierKey">_NS:687</string>
 							<int key="NSTag">1</int>
 							<bool key="NSEnabled">YES</bool>
