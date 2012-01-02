@@ -23,7 +23,7 @@
 #import <objc/message.h>
 
 
-NSString* const kTDVersionString =  @"0.1";
+NSString* const kTDVersionString =  @"0.2";
 
 
 @interface TDRouter ()

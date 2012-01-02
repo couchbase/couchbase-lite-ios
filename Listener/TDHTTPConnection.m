@@ -54,9 +54,10 @@
     [((TDHTTPServer*)config.server).listener onServerThread: ^{[router start];}];
     NSAssert(finished, @"Router didn't finish");
     
-    BOOL pretty = [router boolQuery: @"pretty"];
 #if DEBUG
-    pretty = YES;
+    BOOL pretty = YES;
+#else
+    BOOL pretty = [router boolQuery: @"pretty"];
 #endif
     TDHTTPResponse* response = [[[TDHTTPResponse alloc] initWithTDResponse: routerResponse
                                                                     pretty: pretty] autorelease];

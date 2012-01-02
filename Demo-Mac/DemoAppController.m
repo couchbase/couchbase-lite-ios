@@ -31,6 +31,9 @@ int main (int argc, const char * argv[]) {
 }
 
 
+static TDListener* sListener;
+
+
 @implementation DemoAppController
 
 
@@ -98,8 +101,10 @@ int main (int argc, const char * argv[]) {
                                                object: nil];
     
     // Start a listener socket:
-    [[[TDListener alloc] initWithTDServer: server.touchServer port: 8888] start];
+    sListener = [[TDListener alloc] initWithTDServer: server.touchServer port: 8888];
+    [sListener start];
 }
+
 
 
 #pragma mark - SYNC:

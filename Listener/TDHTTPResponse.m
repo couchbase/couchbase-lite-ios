@@ -15,7 +15,17 @@
 
 
 - (id) initWithTDResponse: (TDResponse*)response pretty: (BOOL)pretty {
-    self = [super initWithData: (pretty ? response.body.asPrettyJSON : response.body.asJSON)];
+    NSData* responseBody = (pretty ? response.body.asPrettyJSON : response.body.asJSON);
+    int status = response.status;
+    if (!responseBody && status >= 300) {
+        // Put a generic error message in the body:
+        responseBody = [[NSString stringWithFormat: @"%d %@\n",
+                                status, [NSHTTPURLResponse localizedStringForStatusCode: status]]
+                            dataUsingEncoding: NSUTF8StringEncoding];
+        [response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];
+    }
+    
+    self = [super initWithData: responseBody];
     if (self) {
         _response = [response retain];
     }

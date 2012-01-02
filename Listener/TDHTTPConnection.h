@@ -11,9 +11,5 @@
 
 
 @interface TDHTTPConnection : HTTPConnection
-{
-    @private
-    TDRouter* _router;
-}
 
 @end
