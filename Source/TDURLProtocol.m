@@ -141,7 +141,7 @@ TestCase(TDURLProtocol) {
     CAssertNil(error);
     CAssertEq(response.statusCode, 200);
     CAssertEqual([response.allHeaderFields objectForKey: @"Content-Type"], @"application/json");
-    CAssert([bodyStr rangeOfString: @"\"TouchDB\":\"welcome\""].length > 0);
+    CAssert([bodyStr rangeOfString: @"\"TouchDB\":\"Welcome\""].length > 0);
 }
 
 #endif

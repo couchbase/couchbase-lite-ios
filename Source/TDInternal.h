@@ -14,6 +14,7 @@
 
 
 @interface TDDatabase ()
+@property (readwrite, copy) NSString* name;  // make it settable
 @property (readonly) FMDatabase* fmdb;
 @property (readonly) TDBlobStore* attachmentStore;
 - (SInt64) getDocNumericID: (NSString*)docID;

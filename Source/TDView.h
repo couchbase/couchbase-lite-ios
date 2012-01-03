@@ -43,6 +43,13 @@ typedef struct TDQueryOptions {
 extern const TDQueryOptions kDefaultTDQueryOptions;
 
 
+/** An external object that knows how to map source code of some sort into executable functions. */
+@protocol TDViewCompiler <NSObject>
+- (TDMapBlock) compileMapFunction: (NSString*)mapSource language: (NSString*)language;
+- (TDReduceBlock) compileReduceFunction: (NSString*)reduceSource language: (NSString*)language;
+@end
+
+
 /** Represents a view available in a database. */
 @interface TDView : NSObject
 {
@@ -76,5 +83,11 @@ extern const TDQueryOptions kDefaultTDQueryOptions;
     @return  An array of result rows -- each is a dictionary with "key" and "value" keys, and possibly "id" and "doc". */
 - (NSArray*) queryWithOptions: (const TDQueryOptions*)options
                        status: (TDStatus*)outStatus;
+
+/** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
++ (NSNumber*) totalValues: (NSArray*)values;
+
++ (void) setCompiler: (id<TDViewCompiler>)compiler;
++ (id<TDViewCompiler>) compiler;
 
 @end

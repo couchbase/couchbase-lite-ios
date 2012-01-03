@@ -7,7 +7,6 @@
 //
 
 #import "HTTPConnection.h"
-@class TDRouter;
 
 
 @interface TDHTTPConnection : HTTPConnection

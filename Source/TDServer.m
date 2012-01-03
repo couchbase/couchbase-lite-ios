@@ -15,6 +15,7 @@
 
 #import "TDServer.h"
 #import "TDDatabase.h"
+#import "TDInternal.h"
 
 
 @implementation TDServer
@@ -23,7 +24,7 @@
 #define kDBExtension @"touchdb"
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
-#define kLegalChars @"abcdefghijklmnopqrstuvwxyz0123456789_$()+-"
+#define kLegalChars @"abcdefghijklmnopqrstuvwxyz0123456789_$()+-/"
 static NSCharacterSet* kIllegalNameChars;
 
 + (void) initialize {
@@ -83,6 +84,7 @@ static NSCharacterSet* kIllegalNameChars;
     if (name.length == 0 || [name rangeOfCharacterFromSet: kIllegalNameChars].length > 0
                          || !islower([name characterAtIndex: 0]))
         return nil;
+    name = [name stringByReplacingOccurrencesOfString: @"/" withString: @":"];
     return [_dir stringByAppendingPathComponent:[name stringByAppendingPathExtension:kDBExtension]];
 }
 
@@ -97,6 +99,7 @@ static NSCharacterSet* kIllegalNameChars;
             [db release];
             return nil;
         }
+        db.name = name;
         [_databases setObject: db forKey: name];
         [db release];
     }

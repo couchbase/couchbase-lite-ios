@@ -97,9 +97,10 @@
 
 - (id) asObject {
     if (!_object && !_error) {
-        _object = [[NSJSONSerialization JSONObjectWithData: _json options: 0 error: nil] copy];
+        NSError* error = nil;
+        _object = [[NSJSONSerialization JSONObjectWithData: _json options: 0 error: &error] copy];
         if (!_object) {
-            Warn(@"TDBody: couldn't parse JSON");
+            Warn(@"TDBody: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
             _error = YES;
         }
     }

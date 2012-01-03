@@ -19,7 +19,7 @@
     int status = response.status;
     if (!responseBody && status >= 300) {
         // Put a generic error message in the body:
-        responseBody = [[NSString stringWithFormat: @"%d %@\n",
+        responseBody = [[NSString stringWithFormat: @"{\"status\": %i, \"error\":\"%@\"}\n",
                                 status, [NSHTTPURLResponse localizedStringForStatusCode: status]]
                             dataUsingEncoding: NSUTF8StringEncoding];
         [response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];

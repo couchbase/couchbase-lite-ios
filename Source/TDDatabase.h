@@ -35,6 +35,7 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 {
     @private
     NSString* _path;
+    NSString* _name;
     FMDatabase *_fmdb;
     BOOL _open;
     NSInteger _transactionLevel;
@@ -53,7 +54,7 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path;
 
 @property (readonly) NSString* path;
-@property (readonly) NSString* name;
+@property (readonly, copy) NSString* name;
 @property (readonly) BOOL exists;
 
 /** Begins a database transaction. Transactions can nest. Every -beginTransaction must be balanced by a later -endTransaction:. */
@@ -74,6 +75,8 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 - (TDRevision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID
                   withAttachments: (BOOL)withAttachments;
+- (BOOL) existsDocumentWithID: (NSString*)docID
+                   revisionID: (NSString*)revID;
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
               withAttachments: (BOOL)andAttachments;
 
@@ -108,7 +111,7 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 @interface TDDatabase (Insertion)
 
 + (BOOL) isValidDocumentID: (NSString*)str;
-- (NSString*) generateDocumentID;
++ (NSString*) generateDocumentID;
 
 /** Stores a new (or initial) revision of a document. This is what's invoked by a PUT or POST. As with those, the previous revision ID must be supplied when necessary and the call will fail if it doesn't match.
     @param revision  The revision to add. If the docID is nil, a new UUID will be assigned. Its revID must be nil. It must have a JSON body.

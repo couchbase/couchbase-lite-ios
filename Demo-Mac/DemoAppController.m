@@ -34,6 +34,10 @@ int main (int argc, const char * argv[]) {
 static TDListener* sListener;
 
 
+@interface DemoAppController () <TDViewCompiler>
+@end
+
+
 @implementation DemoAppController
 
 
@@ -101,6 +105,7 @@ static TDListener* sListener;
                                                object: nil];
     
     // Start a listener socket:
+    [TDView setCompiler: self];
     sListener = [[TDListener alloc] initWithTDServer: server.touchServer port: 8888];
     [sListener start];
 }
@@ -206,6 +211,33 @@ static TDListener* sListener;
     // This is called on the TouchDB background thread, so redispatch to the main thread:
     [_database.server performSelectorOnMainThread: @selector(checkActiveTasks)
                                        withObject: nil waitUntilDone: NO];
+}
+
+
+- (TDMapBlock) compileMapFunction: (NSString*)mapSource language:(NSString *)language {
+    if (!$equal(language, @"javascript"))
+        return NULL;
+    TDMapBlock mapBlock = NULL;
+    if ($equal(mapSource, @"(function (doc) {if (doc.a == 4) {emit(null, doc.b);}})")) {
+        mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
+            if ($equal([doc objectForKey: @"a"], $object(4)))
+                emit(nil, [doc objectForKey: @"b"]);
+        };
+    }
+    return [[mapBlock copy] autorelease];
+}
+
+
+- (TDReduceBlock) compileReduceFunction: (NSString*)reduceSource language:(NSString *)language {
+    if (!$equal(language, @"javascript"))
+        return NULL;
+    TDReduceBlock reduceBlock = NULL;
+    if ($equal(reduceSource, @"(function (keys, values) {return sum(values);})")) {
+        reduceBlock = ^(NSArray* keys, NSArray* values, BOOL rereduce) {
+            return [TDView totalValues: values];
+        };
+    }
+    return [[reduceBlock copy] autorelease];
 }
 
 

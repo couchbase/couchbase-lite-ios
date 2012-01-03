@@ -31,6 +31,9 @@ const TDQueryOptions kDefaultTDQueryOptions = {
 };
 
 
+static id<TDViewCompiler> sCompiler;
+
+
 @implementation TDView
 
 
@@ -185,7 +188,7 @@ static id fromJSON( NSData* json ) {
         // that's called down below.
         TDMapEmitBlock emit = ^(id key, id value) {
             if (!key)
-                return;
+                key = $null;
             NSString* keyJSON = toJSONString(key);
             NSString* valueJSON = toJSONString(value);
             LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
@@ -435,6 +438,24 @@ static id groupKey(id key, unsigned groupLevel) {
     }
     [r close];
     return result;
+}
+
+
++ (NSNumber*) totalValues: (NSArray*)values {
+    double total = 0;
+    for (NSNumber* value in values)
+        total += value.doubleValue;
+    return [NSNumber numberWithDouble: total];
+}
+
+
++ (void) setCompiler: (id<TDViewCompiler>)compiler {
+    [sCompiler autorelease];
+    sCompiler = [compiler retain];
+}
+
++ (id<TDViewCompiler>) compiler {
+    return sCompiler;
 }
 
 

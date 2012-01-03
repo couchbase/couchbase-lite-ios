@@ -72,7 +72,8 @@ static id Send(TDServer* server, NSString* method, NSString* path,
 TestCase(TDRouter_Server) {
     RequireTestCase(TDServer);
     TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
-    Send(server, @"GET", @"/", 200, $dict({@"TouchDB", @"welcome"},
+    Send(server, @"GET", @"/", 200, $dict({@"TouchDB", @"Welcome"},
+                                          {@"couchdb", @"Welcome"},
                                           {@"version", kTDVersionString}));
     Send(server, @"GET", @"/_all_dbs", 200, $array());
     Send(server, @"GET", @"/non-existent", 404, nil);
@@ -87,14 +88,19 @@ TestCase(TDRouter_Databases) {
     TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
     Send(server, @"PUT", @"/database", 201, nil);
     Send(server, @"GET", @"/database", 200,
-         $dict({@"db_name", @"database"}, {@"num_docs", $object(0)}, {@"update_seq", $object(0)}));
+         $dict({@"db_name", @"database"}, {@"doc_count", $object(0)}, {@"update_seq", $object(0)}));
     Send(server, @"PUT", @"/database", 412, nil);
     Send(server, @"PUT", @"/database2", 201, nil);
     Send(server, @"GET", @"/_all_dbs", 200, $array(@"database", @"database2"));
     Send(server, @"GET", @"/database2", 200,
-         $dict({@"db_name", @"database2"}, {@"num_docs", $object(0)}, {@"update_seq", $object(0)}));
+         $dict({@"db_name", @"database2"}, {@"doc_count", $object(0)}, {@"update_seq", $object(0)}));
     Send(server, @"DELETE", @"/database2", 200, nil);
     Send(server, @"GET", @"/_all_dbs", 200, $array(@"database"));
+
+    Send(server, @"PUT", @"/database%2Fwith%2Fslashes", 201, nil);
+    Send(server, @"GET", @"/database%2Fwith%2Fslashes", 200,
+         $dict({@"db_name", @"database/with/slashes"},
+               {@"doc_count", $object(0)}, {@"update_seq", $object(0)}));
 }
 
 

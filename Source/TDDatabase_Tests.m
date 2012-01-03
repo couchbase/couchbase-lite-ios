@@ -101,13 +101,20 @@ TestCase(TDDatabase_CRUD) {
         return [[revision.properties objectForKey: @"status"] isEqual: @"not updated!"];
     }];
     CAssertEq(changes.count, 0u);
-    
+        
     // Delete it:
     TDRevision* revD = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
+    CAssertEq([db putRevision: revD prevRevisionID: nil status: &status], nil);
+    CAssertEq(status, 409);
     revD = [db putRevision: revD prevRevisionID: rev2.revID status: &status];
     CAssertEq(status, 200);
     CAssertEqual(revD.docID, rev2.docID);
     CAssert([revD.revID hasPrefix: @"3-"]);
+    
+    // Delete nonexistent doc:
+    TDRevision* revFake = [[[TDRevision alloc] initWithDocID: @"fake" revID: nil deleted: YES] autorelease];
+    [db putRevision: revFake prevRevisionID: nil status: &status];
+    CAssertEq(status, 404);
     
     // Read it back (should fail):
     readRev = [db getDocumentWithID: revD.docID revisionID: nil withAttachments: NO];

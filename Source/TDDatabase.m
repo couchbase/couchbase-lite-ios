@@ -45,7 +45,9 @@
 
 - (id) initWithPath: (NSString*)path {
     if (self = [super init]) {
+        Assert([path hasPrefix: @"/"], @"Path must be absolute");
         _path = [path copy];
+        _name = [path.lastPathComponent.stringByDeletingPathExtension copy];
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = 10;
 #if DEBUG
@@ -59,7 +61,7 @@
 }
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], _fmdb.databasePath);
+    return $sprintf(@"%@[%@]", [self class], _path);
 }
 
 - (BOOL) exists {
@@ -206,15 +208,7 @@
     [super dealloc];
 }
 
-@synthesize fmdb=_fmdb, attachmentStore=_attachments;
-
-- (NSString*) path {
-    return _fmdb.databasePath;
-}
-
-- (NSString*) name {
-    return _fmdb.databasePath.lastPathComponent.stringByDeletingPathExtension;
-}
+@synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments;
 
 
 - (BOOL) beginTransaction {
@@ -370,6 +364,12 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     }
     [r close];
     return result;
+}
+
+
+- (BOOL) existsDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
+    return [self getDocumentWithID: docID revisionID: revID withAttachments: NO] != nil;
+    //OPT: Do this without loading the data
 }
 
 

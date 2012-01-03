@@ -93,6 +93,20 @@ NSString* const kTDVersionString =  @"0.2";
     return value && !$equal(value, @"false") && !$equal(value, @"0");
 }
 
+- (int) intQuery: (NSString*)param defaultValue: (int)defaultValue {
+    NSString* value = [self.queries objectForKey: param];
+    return value ? value.intValue : defaultValue;
+}
+
+- (id) jsonQuery: (NSString*)param error: (NSError**)outError {
+    *outError = nil;
+    NSString* value = [self query: @"startkey"];
+    if (!value)
+        return nil;
+    return [NSJSONSerialization JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
+                                           options: NSJSONReadingAllowFragments error: outError];
+}
+
 
 - (TDStatus) openDB {
     if (!_db.exists)
@@ -103,9 +117,20 @@ NSString* const kTDVersionString =  @"0.2";
 }
 
 
-static NSArray* splitPath( NSString* path ) {
-    return [[path componentsSeparatedByString: @"/"]
-                        my_filter: ^(id component) {return [component length] > 0;}];
+static NSArray* splitPath( NSURL* url ) {
+    // Unfortunately can't just call url.path because that converts %2F to a '/'.
+    NSString* pathString = NSMakeCollectable(CFURLCopyPath((CFURLRef)url));
+    NSMutableArray* path = $marray();
+    for (NSString* comp in [pathString componentsSeparatedByString: @"/"]) {
+        if ([comp length] > 0) {
+            comp = [comp stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            if (!comp)
+                return nil;     // bad URL
+            [path addObject: comp];
+        }
+    }
+    [pathString release];
+    return path;
 }
 
 
@@ -129,7 +154,12 @@ static NSArray* splitPath( NSString* path ) {
     NSMutableString* message = [NSMutableString stringWithFormat: @"do_%@", method];
     
     // First interpret the components of the request:
-    _path = [splitPath(_request.URL.path) mutableCopy];
+    _path = [splitPath(_request.URL) mutableCopy];
+    if (!_path) {
+        _response.status = 400;
+        return;
+    }
+        
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = [_path objectAtIndex: 0];
@@ -211,6 +241,9 @@ static NSArray* splitPath( NSString* path ) {
     TDStatus status = (TDStatus) objc_msgSend(self, sel, _db, docID, attachmentName);
 
     // Configure response headers:
+    if (status < 300 && !_response.body && ![_response.headers objectForKey: @"Content-Type"]) {
+        _response.body = [TDBody bodyWithJSON: [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
+    }
     if (_response.body.isValidJSON)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
 
@@ -247,7 +280,9 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (TDStatus) do_GETRoot {
-    NSDictionary* info = $dict({@"TouchDB", @"welcome"}, {@"version", kTDVersionString});
+    NSDictionary* info = $dict({@"TouchDB", @"Welcome"},
+                               {@"couchdb", @"Welcome"},        // for compatibility
+                               {@"version", kTDVersionString});
     _response.body = [TDBody bodyWithProperties: info];
     return 200;
 }
@@ -312,6 +347,16 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
+- (TDStatus) do_GET_uuids {
+    int count = MIN(1000, [self intQuery: @"count" defaultValue: 1]);
+    NSMutableArray* uuids = [NSMutableArray arrayWithCapacity: count];
+    for (int i=0; i<count; i++)
+        [uuids addObject: [TDDatabase generateDocumentID]];
+    _response.bodyObject = $dict({@"uuids", uuids});
+    return 200;
+}
+
+
 - (TDStatus) do_GET_active_tasks {
     // http://wiki.apache.org/couchdb/HttpGetActiveTasks
     NSMutableArray* activity = $marray();
@@ -355,7 +400,7 @@ static NSArray* splitPath( NSString* path ) {
     if (num_docs == NSNotFound || update_seq == NSNotFound)
         return 500;
     _response.bodyObject = $dict({@"db_name", db.name},
-                                 {@"num_docs", $object(num_docs)},
+                                 {@"doc_count", $object(num_docs)},
                                  {@"update_seq", $object(update_seq)});
     return 200;
 }
@@ -364,11 +409,16 @@ static NSArray* splitPath( NSString* path ) {
 - (TDStatus) do_PUT: (TDDatabase*)db {
     if (db.exists)
         return 412;
-    return [db open] ? 201 : 500;
+    if (![db open])
+        return 500;
+    [_response setValue: _request.URL.absoluteString ofHeader: @"Location"];
+    return 201;
 }
 
 
 - (TDStatus) do_DELETE: (TDDatabase*)db {
+    if ([self query: @"rev"])
+        return 400;  // CouchDB checks for this; probably meant to be a document deletion
     return [_server deleteDatabaseNamed: db.name] ? 200 : 404;
 }
 
@@ -377,29 +427,30 @@ static NSArray* splitPath( NSString* path ) {
     TDStatus status = [self openDB];
     if (status >= 300)
         return status;
-    NSString* docID = [db generateDocumentID];
-    status =  [self update: db docID: docID json: _request.HTTPBody deleting: NO];
-    if (status == 201) {
-        NSURL* url = [_request.URL URLByAppendingPathComponent: docID];
-        [_response.headers setObject: url.absoluteString forKey: @"Location"];
-    }
-    return status;
+    return [self update: db docID: nil json: _request.HTTPBody deleting: NO];
 }
 
 
 - (BOOL) getQueryOptions: (TDQueryOptions*)options {
     // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
     *options = kDefaultTDQueryOptions;
-    NSString* param = [self query: @"limit"];
-    if (param)
-        options->limit = param.intValue;
-    param = [self query: @"skip"];
-    if (param)
-        options->skip = param.intValue;
+    options->skip = [self intQuery: @"skip" defaultValue: options->skip];
+    options->limit = [self intQuery: @"limit" defaultValue: options->limit];
+    options->groupLevel = [self intQuery: @"group_level" defaultValue: options->groupLevel];
     options->descending = [self boolQuery: @"descending"];
     options->includeDocs = [self boolQuery: @"include_docs"];
     options->updateSeq = [self boolQuery: @"update_seq"];
-    return YES;
+    if ([self query: @"inclusive_end"])
+        options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
+    options->reduce = [self boolQuery: @"reduce"];
+    options->group = [self boolQuery: @"group"];
+    NSError* error = nil;
+    options->startKey = [self jsonQuery: @"startkey" error: &error];
+    if (error)
+        return NO;
+    if (!error)
+        options->endKey = [self jsonQuery: @"endkey" error: &error];
+    return !error;
 }
 
 
@@ -417,6 +468,10 @@ static NSArray* splitPath( NSString* path ) {
 
 - (TDStatus) do_POST_compact: (TDDatabase*)db {
     return [db compact];
+}
+
+- (TDStatus) do_POST_ensure_full_commit: (TDDatabase*)db {
+    return 200;
 }
 
 
@@ -525,6 +580,7 @@ static NSArray* splitPath( NSString* path ) {
 
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID {
+    // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     TDRevision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
                             withAttachments: [self boolQuery: @"attachments"]];
@@ -536,8 +592,34 @@ static NSArray* splitPath( NSString* path ) {
     if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
         return 304;
     
-    _response.body = rev.body;
-    //TODO: Handle ?_revs_info query
+    NSMutableDictionary* extra = $mdict();
+    
+    if ([self boolQuery: @"local_seq"])
+        [extra setObject: $object(rev.sequence) forKey: @"_local_seq"];
+
+    if ([self boolQuery: @"revs_info"]) {
+        NSArray* info = [_db getRevisionHistory: rev];
+        if (!info)
+            return 500;
+        info = [info my_map: ^id(id rev) {
+            NSString* status = @"available";
+            if ([rev deleted])
+                status = @"deleted";
+            // TODO: Detect missing revisions, set status="missing"
+            return $dict({@"rev", [rev revID]}, {@"status", status});
+        }];
+        
+        [extra setObject: info forKey: @"_revs_info"];
+    }
+    
+    TDBody* responseBody = rev.body;
+    if (extra.count) {
+        NSMutableDictionary* props = [responseBody.properties mutableCopy];
+        [props addEntriesFromDictionary: extra];
+        responseBody = [TDBody bodyWithProperties: props];
+        // OPT: More efficient to use appendDictToJSON, like TDDocument
+    }
+    _response.body = responseBody;
     return 200;
 }
 
@@ -575,15 +657,23 @@ static NSArray* splitPath( NSString* path ) {
                json: (NSData*)json
            deleting: (BOOL)deleting
 {
+    BOOL posting = (docID == nil);
     TDBody* body = json ? [TDBody bodyWithJSON: json] : nil;
     
     NSString* revID;
     if (!deleting) {
+        deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
+        if (!docID) {
+            // POST's doc ID may come from the _id field of the JSON body, else generate a random one.
+            docID = [body propertyForKey: @"_id"];
+            if (!docID) {
+                if (deleting)
+                    return 400;
+                docID = [TDDatabase generateDocumentID];
+            }
+        }
         // PUT's revision ID comes from the JSON body.
         revID = [body propertyForKey: @"_rev"];
-        deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
-        if (deleting && !docID)
-            return 400;         // POST and _deleted don't mix
     } else {
         // DELETE's revision ID can come either from the ?rev= query param or an If-Match header.
         revID = [self query: @"rev"];
@@ -609,6 +699,12 @@ static NSArray* splitPath( NSString* path ) {
     rev = [db putRevision: rev prevRevisionID: revID status: &status];
     if (status < 300) {
         [self setResponseEtag: rev];
+        if (!deleting) {
+            NSURL* url = _request.URL;
+            if (posting)
+                url = [url URLByAppendingPathComponent: docID];
+            [_response.headers setObject: url.absoluteString forKey: @"Location"];
+        }
         _response.bodyObject = $dict({@"ok", $true},
                                      {@"id", rev.docID},
                                      {@"rev", rev.revID});
@@ -630,7 +726,7 @@ static NSArray* splitPath( NSString* path ) {
 }
 
 
-#pragma mark - DESIGN DOCS:
+#pragma mark - VIEW QUERIES:
 
 
 - (TDStatus) do_GET: (TDDatabase*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
@@ -653,6 +749,59 @@ static NSArray* splitPath( NSString* path ) {
                                  {@"offset", $object(options.skip)},
                                  {@"update_seq", updateSeq});
     return 200;
+}
+
+
+- (TDStatus) do_POST_temp_view: (TDDatabase*)db {
+    if (![[_request valueForHTTPHeaderField: @"Content-Type"] hasPrefix: @"application/json"])
+        return 415;
+    TDBody* requestBody = [TDBody bodyWithJSON: _request.HTTPBody];
+    NSDictionary* props = requestBody.properties;
+    if (!props)
+        return 400;
+    
+    TDQueryOptions options;
+    if (![self getQueryOptions: &options])
+        return 400;
+    
+    TDView* view = [_db viewNamed: @"@@TEMP@@"];
+    if (!view)
+        return 500;
+    @try {
+        NSString* language = [props objectForKey: @"language"] ?: @"javascript";
+        NSString* mapSource = [props objectForKey: @"map"];
+        TDMapBlock mapBlock = [[TDView compiler] compileMapFunction: mapSource language: language];
+        if (!mapBlock) {
+            Warn(@"Unknown map function source: %@", mapSource);
+            return 500;
+        }
+        NSString* reduceSource = [props objectForKey: @"reduce"];
+        TDReduceBlock reduceBlock = NULL;
+        if (reduceSource) {
+            reduceBlock =[[TDView compiler] compileReduceFunction: reduceSource language: language];
+            if (!reduceBlock) {
+                Warn(@"Unknown reduce function source: %@", reduceSource);
+                return 500;
+            }
+        }
+        
+        [view setMapBlock: mapBlock reduceBlock: reduceBlock version: @"1"];
+        if (reduceBlock)
+            options.reduce = YES;
+        
+        TDStatus status;
+        NSArray* rows = [view queryWithOptions: &options status: &status];
+        if (!rows)
+            return status;
+        id updateSeq = options.updateSeq ? $object(view.lastSequenceIndexed) : nil;
+        _response.bodyObject = $dict({@"rows", rows},
+                                     {@"total_rows", $object(rows.count)},
+                                     {@"offset", $object(options.skip)},
+                                     {@"update_seq", updateSeq});
+        return 200;
+    } @finally {
+        [view deleteView];
+    }
 }
 
 

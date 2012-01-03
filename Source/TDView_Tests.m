@@ -77,17 +77,10 @@ static TDView* createView(TDDatabase* db) {
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
         CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
-        emit([doc objectForKey: @"key"], nil);
+        if ([doc objectForKey: @"key"])
+            emit([doc objectForKey: @"key"], nil);
     } reduceBlock: NULL version: @"1"];
     return view;
-}
-
-
-static id total(NSArray* keys, NSArray* values) {
-    double total = 0;
-    for (NSNumber* value in values)
-        total += value.doubleValue;
-    return $object(total);
 }
 
 
@@ -255,7 +248,7 @@ TestCase(TDView_Reduce) {
         if (cost)
             emit([doc objectForKey: @"_id"], cost);
     } reduceBlock: ^(NSArray* keys, NSArray* values, BOOL rereduce) {
-        return total(keys, values);
+        return [TDView totalValues: values];
     } version: @"1"];
 
     CAssertEq([view updateIndex], 200);
@@ -297,7 +290,7 @@ TestCase(TDView_Grouped) {
                     [doc objectForKey: @"track"]),
              [doc objectForKey: @"time"]);
     } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
-        return total(keys, values);
+        return [TDView totalValues: values];
     } version: @"1"];
     
     TDQueryOptions options = kDefaultTDQueryOptions;

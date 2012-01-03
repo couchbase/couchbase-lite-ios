@@ -62,7 +62,7 @@ static NSString* createUUID() {
     return [str autorelease];
 }
 
-- (NSString*) generateDocumentID {
++ (NSString*) generateDocumentID {
     return createUUID();
 }
 
@@ -105,13 +105,30 @@ static NSString* createUUID() {
 
 
 - (NSData*) encodeDocumentJSON: (TDRevision*)rev {
-    NSMutableDictionary* properties = [rev.properties mutableCopy];
-    if (!properties)
+    static NSSet* sKnownSpecialKeys;
+    if (!sKnownSpecialKeys) {
+        sKnownSpecialKeys = [[NSSet alloc] initWithObjects: @"_id", @"_rev",
+                                         @"_attachments", @"_deleted", nil];
+    }
+
+    NSDictionary* origProps = rev.properties;
+    if (!origProps)
         return nil;
-    [properties removeObjectForKey: @"_id"];
-    [properties removeObjectForKey: @"_rev"];
-    [properties removeObjectForKey: @"_attachments"];
-    [properties removeObjectForKey: @"_deleted"];
+    
+    // Don't allow any "_"-prefixed keys. Known ones we'll ignore, unknown ones are an error.
+    NSMutableDictionary* properties = [[NSMutableDictionary alloc] initWithCapacity: origProps.count];
+    for (NSString* key in origProps) {
+        if ([key hasPrefix: @"_"]) {
+            if (![sKnownSpecialKeys member: key]) {
+                Log(@"TDDatabase: Invalid top-level key '%@' in document to be inserted", key);
+                [properties release];
+                return nil;
+            }
+        } else {
+            [properties setObject: [origProps objectForKey: key] forKey: key];
+        }
+    }
+    
     NSError* error;
     NSData* json = [NSJSONSerialization dataWithJSONObject: properties options:0 error: &error];
     [properties release];
@@ -149,7 +166,7 @@ static NSString* createUUID() {
     NSString* docID = rev.docID;
     SInt64 docNumericID;
     BOOL deleted = rev.deleted;
-    if (!rev || (prevRevID && !docID) || (deleted && !prevRevID)) {
+    if (!rev || (prevRevID && !docID) || (deleted && !docID)) {
         *outStatus = 400;
         return nil;
     }
@@ -169,9 +186,7 @@ static NSString* createUUID() {
                                                  $object(docNumericID), prevRevID];
             if (parentSequence == 0) {
                 // Not found: 404 or a 409, depending on whether there is any current revision
-                TDRevision* cur = [self getDocumentWithID: docID revisionID: nil
-                                          withAttachments: NO];
-                *outStatus = cur ? 409 : 404;
+                *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? 409 : 404;
                 return nil;
             }
             
@@ -192,6 +207,11 @@ static NSString* createUUID() {
                                        $object(parentSequence)])
                 return nil;
         } else if (docID) {
+            if (deleted) {
+                // Didn't specify a revision to delete: 404 or a 409, depending
+                *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? 409 : 404;
+                return nil;
+            }
             // Inserting first revision, with docID given: make sure docID doesn't exist,
             // or exists but is currently deleted
             if (![self validateRevision: rev previousRevision: nil]) {
@@ -221,7 +241,7 @@ static NSString* createUUID() {
             r = nil;
         } else {
             // Inserting first revision, with no docID given: generate a unique docID:
-            docID = [self generateDocumentID];
+            docID = [[self class] generateDocumentID];
             docNumericID = [self insertDocumentID: docID];
             if (docNumericID <= 0)
                 return nil;

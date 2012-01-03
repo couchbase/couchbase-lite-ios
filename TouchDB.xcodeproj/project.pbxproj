@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
 		270B3DFD1489359000E0A926 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DFC1489359000E0A926 /* SenTestingKit.framework */; };
 		270B3DFE1489359000E0A926 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
 		270B3E011489359000E0A926 /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
@@ -91,11 +92,7 @@
 		275315E814ACF1130065964D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; };
 		275315E914ACF1130065964D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; };
 		275315EA14ACF1130065964D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; };
-		275315EB14ACF1130065964D /* HTTPAsyncFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156314ACEFC90065964D /* HTTPAsyncFileResponse.m */; };
 		275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; };
-		275315ED14ACF1130065964D /* HTTPDynamicFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156714ACEFC90065964D /* HTTPDynamicFileResponse.m */; };
-		275315EE14ACF1130065964D /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
-		275315EF14ACF1130065964D /* HTTPRedirectResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156B14ACEFC90065964D /* HTTPRedirectResponse.m */; };
 		275315F014ACF1130065964D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; };
 		275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; };
 		275315F214ACF1130065964D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; };
@@ -1510,24 +1507,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				275315E414ACF1130065964D /* DDData.m in Sources */,
-				275315E514ACF1130065964D /* DDNumber.m in Sources */,
-				275315E614ACF1130065964D /* DDRange.m in Sources */,
-				275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */,
-				275315E814ACF1130065964D /* HTTPConnection.m in Sources */,
-				275315E914ACF1130065964D /* HTTPMessage.m in Sources */,
-				275315EA14ACF1130065964D /* HTTPServer.m in Sources */,
-				275315EB14ACF1130065964D /* HTTPAsyncFileResponse.m in Sources */,
-				275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */,
-				275315ED14ACF1130065964D /* HTTPDynamicFileResponse.m in Sources */,
-				275315EE14ACF1130065964D /* HTTPFileResponse.m in Sources */,
-				275315EF14ACF1130065964D /* HTTPRedirectResponse.m in Sources */,
-				275315F014ACF1130065964D /* WebSocket.m in Sources */,
-				275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */,
-				275315F214ACF1130065964D /* DDLog.m in Sources */,
 				275315E014ACF0A20065964D /* TDListener.m in Sources */,
 				2753160D14ACFC2A0065964D /* TDHTTPConnection.m in Sources */,
 				27E11F1114AD15940006B340 /* TDHTTPResponse.m in Sources */,
+				275315E414ACF1130065964D /* DDData.m in Sources */,
+				275315F214ACF1130065964D /* DDLog.m in Sources */,
+				275315E514ACF1130065964D /* DDNumber.m in Sources */,
+				275315E614ACF1130065964D /* DDRange.m in Sources */,
+				275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */,
+				275315EA14ACF1130065964D /* HTTPServer.m in Sources */,
+				275315E914ACF1130065964D /* HTTPMessage.m in Sources */,
+				275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */,
+				275315E814ACF1130065964D /* HTTPConnection.m in Sources */,
+				275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */,
+				2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */,
+				275315F014ACF1130065964D /* WebSocket.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
