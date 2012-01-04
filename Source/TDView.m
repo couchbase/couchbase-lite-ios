@@ -265,17 +265,7 @@ static id fromJSON( NSData* json ) {
 {
     if (!options)
         options = &kDefaultTDQueryOptions;
-    
-    if (!options->group) {
-        if (options->reduce && !_reduceBlock) {
-            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
-            *outStatus = 400;
-            return nil;
-        }
-        if (options->groupLevel > 0)
-            Warn(@"Setting groupLevel without group makes no sense");
-    }
-    
+
     *outStatus = [self updateIndex];
     if (*outStatus >= 300)
         return nil;
@@ -358,6 +348,13 @@ static id groupKey(id key, unsigned groupLevel) {
     unsigned groupLevel = options->groupLevel;
     bool group = options->group || groupLevel > 0;
     bool reduce = options->reduce || group;
+
+    if (reduce && !_reduceBlock && !group) {
+        Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
+        *outStatus = 400;
+        return nil;
+    }
+    
     NSMutableArray* rows = $marray();
     NSMutableArray* keysToReduce=nil, *valuesToReduce=nil;
     id lastKey = nil;

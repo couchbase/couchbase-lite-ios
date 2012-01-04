@@ -337,5 +337,33 @@ TestCase(TDView_Grouped) {
 }
 
 
+TestCase(TDView_GroupedStrings) {
+    RequireTestCase(TDView_Grouped);
+    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    putDoc(db, $dict({@"name", @"Alice"}));
+    putDoc(db, $dict({@"name", @"Albert"}));
+    putDoc(db, $dict({@"name", @"Naomi"}));
+    putDoc(db, $dict({@"name", @"Jens"}));
+    putDoc(db, $dict({@"name", @"Jed"}));
+    
+    TDView* view = [db viewNamed: @"default/names"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+         NSString *name = [doc objectForKey: @"name"];
+         if (name)
+             emit([name substringToIndex:1], [NSNumber numberWithInt:1]);
+     } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
+         return [NSNumber numberWithInt:[values count]];
+     } version:@"1.0"];
+    
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    options.groupLevel = 1;
+    TDStatus status;
+    NSArray* rows = [view queryWithOptions: &options status: &status];
+    CAssertEq(status, 200);
+    CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", $object(2)}),
+                              $dict({@"key", @"J"}, {@"value", $object(2)}),
+                              $dict({@"key", @"N"}, {@"value", $object(1)})));
+}
+
 
 #endif
