@@ -508,17 +508,39 @@ static NSArray* splitPath( NSURL* url ) {
 - (NSDictionary*) changeDictForRev: (TDRevision*)rev {
     return $dict({@"seq", $object(rev.sequence)},
                  {@"id",  rev.docID},
-                 {@"changes", $array($dict({@"rev", rev.revID}))},
+                 {@"changes", $marray($dict({@"rev", rev.revID}))},
                  {@"deleted", rev.deleted ? $true : nil},
                  {@"doc", (_changesIncludeDocs ? rev.properties : nil)});
 }
-
 
 - (NSDictionary*) responseBodyForChanges: (NSArray*)changes since: (UInt64)since {
     NSArray* results = [changes my_map: ^(id rev) {return [self changeDictForRev: rev];}];
     if (changes.count > 0)
         since = [[changes lastObject] sequence];
     return $dict({@"results", results}, {@"last_seq", $object(since)});
+}
+
+
+- (NSDictionary*) responseBodyForChangesWithConflicts: (NSArray*)changes since: (UInt64)since {
+    // Assumes the changes are grouped by docID so that conflicts will be adjacent.
+    NSMutableArray* entries = [NSMutableArray arrayWithCapacity: changes.count];
+    NSString* lastDocID = nil;
+    NSDictionary* lastEntry = nil;
+    for (TDRevision* rev in changes) {
+        NSString* docID = rev.docID;
+        if ($equal(docID, lastDocID)) {
+            [[lastEntry objectForKey: @"changes"] addObject: $dict({@"rev", rev.revID})];
+        } else {
+            lastEntry = [self changeDictForRev: rev];
+            [entries addObject: lastEntry];
+            lastDocID = docID;
+        }
+    }
+    // After collecting revisions, sort by sequence:
+    [entries sortUsingComparator: ^NSComparisonResult(id e1, id e2) {
+        return [[e1 objectForKey: @"seq"] longLongValue] - [[e2 objectForKey: @"seq"] longLongValue];
+    }];
+    return $dict({@"results", entries}, {@"last_seq", $object(since)});
 }
 
 
@@ -559,6 +581,7 @@ static NSArray* splitPath( NSURL* url ) {
     _changesIncludeDocs = [self boolQuery: @"include_docs"];
     options.includeDocs = _changesIncludeDocs;
     options.includeConflicts = $equal([self query: @"style"], @"all_docs");
+    options.sortBySequence = !options.includeConflicts;
     options.limit = [self intQuery: @"limit" defaultValue: options.limit];
     int since = [[self query: @"since"] intValue];
     
@@ -593,7 +616,11 @@ static NSArray* splitPath( NSURL* url ) {
         _waiting = YES;
         return 0;
     } else {
-        _response.bodyObject = [self responseBodyForChanges: changes.allRevisions since: since];
+        if (options.includeConflicts)
+            _response.bodyObject = [self responseBodyForChangesWithConflicts: changes.allRevisions
+                                                                       since: since];
+        else
+            _response.bodyObject = [self responseBodyForChanges: changes.allRevisions since: since];
         return 200;
     }
 }
