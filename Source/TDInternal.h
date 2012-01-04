@@ -25,7 +25,8 @@
 - (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
                                               docID: (NSString*)docID
                                               revID: (NSString*)revID
-                                           sequence: (SequenceNumber)sequence;
+                                           sequence: (SequenceNumber)sequence
+                                            options: (TDContentOptions)options;
 @end
 
 @interface TDDatabase (Attachments_Internal)

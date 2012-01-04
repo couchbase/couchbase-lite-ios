@@ -32,6 +32,7 @@ typedef struct TDQueryOptions {
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
+    TDContentOptions content;
     BOOL descending;
     BOOL includeDocs;
     BOOL updateSeq;

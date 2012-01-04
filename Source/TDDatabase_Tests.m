@@ -62,7 +62,7 @@ TestCase(TDDatabase_CRUD) {
     CAssert([rev1.revID hasPrefix: @"1-"]);
     
     // Read it back:
-    TDRevision* readRev = [db getDocumentWithID: rev1.docID revisionID: nil withAttachments: NO];
+    TDRevision* readRev = [db getDocumentWithID: rev1.docID revisionID: nil options: 0];
     CAssert(readRev != nil);
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
@@ -79,7 +79,7 @@ TestCase(TDDatabase_CRUD) {
     CAssert([rev2.revID hasPrefix: @"2-"]);
     
     // Read it back:
-    readRev = [db getDocumentWithID: rev2.docID revisionID: nil withAttachments: NO];
+    readRev = [db getDocumentWithID: rev2.docID revisionID: nil options: 0];
     CAssert(readRev != nil);
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
@@ -117,7 +117,7 @@ TestCase(TDDatabase_CRUD) {
     CAssertEq(status, 404);
     
     // Read it back (should fail):
-    readRev = [db getDocumentWithID: revD.docID revisionID: nil withAttachments: NO];
+    readRev = [db getDocumentWithID: revD.docID revisionID: nil options: 0];
     CAssertNil(readRev);
     
     // Check the changes feed again after the deletion:
@@ -134,7 +134,7 @@ TestCase(TDDatabase_CRUD) {
 
 
 static void verifyHistory(TDDatabase* db, TDRevision* rev, NSArray* history) {
-    TDRevision* gotRev = [db getDocumentWithID: rev.docID revisionID: nil withAttachments: NO];
+    TDRevision* gotRev = [db getDocumentWithID: rev.docID revisionID: nil options: 0];
     CAssertEqual(gotRev, rev);
     CAssertEqual(gotRev.properties, rev.properties);
     
@@ -178,7 +178,7 @@ TestCase(TDDatabase_RevTree) {
     CAssertEq(status, 201);
     
     // Fetch one of those phantom revisions with no body:
-    TDRevision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too" withAttachments: NO];
+    TDRevision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too" options: 0];
     CAssertEqual(rev2.docID, rev.docID);
     CAssertEqual(rev2.revID, @"2-too");
     //CAssertEqual(rev2.body, nil);
@@ -187,7 +187,7 @@ TestCase(TDDatabase_RevTree) {
     CAssertEq(db.lastSequence, 8u);
     
     // Make sure the revision with the higher revID wins the conflict:
-    TDRevision* current = [db getDocumentWithID: rev.docID revisionID: nil withAttachments: NO];
+    TDRevision* current = [db getDocumentWithID: rev.docID revisionID: nil options: 0];
     CAssertEqual(current, conflict);
     
     // Get the _changes feed and verify only the winner is in it:
@@ -237,7 +237,7 @@ TestCase(TDDatabase_Attachments) {
     NSDictionary* attachmentDict = $dict({@"attach", itemDict});
     CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: NO], attachmentDict);
     TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
-                                withAttachments: NO];
+                                options: 0];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
     
     // Check the attachment dict, with attachments included:
@@ -245,7 +245,7 @@ TestCase(TDDatabase_Attachments) {
     [itemDict setObject: [TDBase64 encode: attach1] forKey: @"data"];
     CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: YES], attachmentDict);
     gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
-                    withAttachments: YES];
+                            options: kTDIncludeAttachments];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
     
     // Add a second revision that doesn't update the attachment:
@@ -321,7 +321,7 @@ TestCase(TDDatabase_PutAttachment) {
     CAssertEq(db.attachmentStore.count, 1u);
     
     TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
-                                withAttachments: NO];
+                                options: 0];
     attachmentDict = [gotRev1.properties objectForKey: @"_attachments"];
     CAssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                          {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},

@@ -30,10 +30,20 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 
 
+/** Options for what metadata to include in document bodies */
+typedef unsigned TDContentOptions;
+enum {
+    kTDIncludeAttachments = 1,
+    kTDIncludeConflicts = 2,
+    kTDIncludeRevsInfo = 4,
+    kTDIncludeLocalSeq = 8
+};
+
 
 /** Options for _changes feed (-changesSinceSequence:). */
 typedef struct TDChangesOptions {
     unsigned limit;
+    TDContentOptions contentOptions;
     BOOL includeDocs;
     BOOL includeConflicts;
     BOOL sortBySequence;
@@ -87,11 +97,11 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 - (TDRevision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID
-                  withAttachments: (BOOL)withAttachments;
+                          options: (TDContentOptions)options;
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
-              withAttachments: (BOOL)andAttachments;
+                      options: (TDContentOptions)options;
 
 /** Returns an array of TDRevs in reverse chronological order,
     starting with the given revision. */

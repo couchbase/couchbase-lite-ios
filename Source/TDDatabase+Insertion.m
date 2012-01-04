@@ -467,7 +467,7 @@ static NSString* createUUID() {
 
 - (TDRevision*) currentRevision {
     if (_currentRevision)
-        [_db loadRevisionBody: _currentRevision withAttachments: NO];
+        [_db loadRevisionBody: _currentRevision options: 0];
     return _currentRevision;
 }
 

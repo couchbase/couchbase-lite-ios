@@ -301,21 +301,61 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
     Rev must already have its revID and sequence properties set. */
-- (void) expandStoredJSON: (NSData*)json
-             intoRevision: (TDRevision*)rev
-          withAttachments: (BOOL)withAttachments
+- (NSDictionary*) extraPropertiesForRevision: (TDRevision*)rev options: (TDContentOptions)options
 {
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     SequenceNumber sequence = rev.sequence;
     Assert(revID);
     Assert(sequence > 0);
+    
+    // Get attachment metadata, and optionally the contents:
+    BOOL withAttachments = (options & kTDIncludeAttachments) != 0;
     NSDictionary* attachmentsDict = [self getAttachmentDictForSequence: sequence
                                                            withContent: withAttachments];
-    NSDictionary* extra = $dict({@"_id", docID},
-                                {@"_rev", revID},
-                                {@"_deleted", (rev.deleted ? $true : nil)},
-                                {@"_attachments", attachmentsDict});
+    
+    // Get more optional stuff to put in the properties:
+    //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
+    id localSeq=nil, revsInfo=nil, conflicts=nil;
+    if (options & kTDIncludeLocalSeq)
+        localSeq = $object(sequence);
+    
+    if (options & kTDIncludeRevsInfo) {
+        revsInfo = [[self getRevisionHistory: rev] my_map: ^id(id rev) {
+            NSString* status = @"available";
+            if ([rev deleted])
+                status = @"deleted";
+            // TODO: Detect missing revisions, set status="missing"
+            return $dict({@"rev", [rev revID]}, {@"status", status});
+        }];
+    }
+    
+    if (options & kTDIncludeConflicts) {
+        TDRevisionList* revs = [self getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
+        if (revs.count > 1) {
+            conflicts = [revs.allRevisions my_map: ^(id aRev) {
+                return $equal(aRev, rev) ? nil : [aRev revID];
+            }];
+        }
+    }
+
+    return $dict({@"_id", docID},
+                 {@"_rev", revID},
+                 {@"_deleted", (rev.deleted ? $true : nil)},
+                 {@"_attachments", attachmentsDict},
+                 {@"_local_seq", localSeq},
+                 {@"_revs_info", revsInfo},
+                 {@"_conflicts", conflicts});
+}
+
+
+/** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
+ Rev must already have its revID and sequence properties set. */
+- (void) expandStoredJSON: (NSData*)json
+             intoRevision: (TDRevision*)rev
+                  options: (TDContentOptions)options
+{
+    NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
     if (json)
         rev.asJSON = appendDictToJSON(json, extra);
     else
@@ -323,30 +363,29 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 }
 
 
-- (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
-                                              docID: (NSString*)docID
-                                              revID: (NSString*)revID
-                                           sequence: (SequenceNumber)sequence
+- (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
+                                       docID: (NSString*)docID
+                                       revID: (NSString*)revID
+                                    sequence: (SequenceNumber)sequence
+                                     options: (TDContentOptions)options
 {
-    NSMutableDictionary* docProperties;
-    if (json) {
-        docProperties = [NSJSONSerialization JSONObjectWithData: json
-                                                        options: NSJSONReadingMutableContainers
-                                                          error: nil];
-    } else {
-        docProperties = $mdict();
-    }
-    [docProperties setObject: docID forKey: @"_id"];
-    [docProperties setObject: revID forKey: @"_rev"];
-    [docProperties setValue: [self getAttachmentDictForSequence: sequence withContent: NO]
-                     forKey: @"_attachments"];
+    TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: NO];
+    rev.sequence = sequence;
+    NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
+    [rev release];
+    if (!json)
+        return extra;
+    NSMutableDictionary* docProperties = [NSJSONSerialization JSONObjectWithData: json
+                                                            options: NSJSONReadingMutableContainers
+                                                              error: nil];
+    [docProperties addEntriesFromDictionary: extra];
     return docProperties;
 }
 
 
 - (TDRevision*) getDocumentWithID: (NSString*)docID
                        revisionID: (NSString*)revID
-                  withAttachments: (BOOL)withAttachments
+                          options: (TDContentOptions)options
 {
     TDRevision* result = nil;
     NSString* sql;
@@ -365,7 +404,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         NSData* json = [r dataForColumnIndex: 2];
         result = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted] autorelease];
         result.sequence = [r longLongIntForColumnIndex: 3];
-        [self expandStoredJSON: json intoRevision: result withAttachments: withAttachments];
+        [self expandStoredJSON: json intoRevision: result options: options];
     }
     [r close];
     return result;
@@ -373,13 +412,13 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 
 - (BOOL) existsDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
-    return [self getDocumentWithID: docID revisionID: revID withAttachments: NO] != nil;
+    return [self getDocumentWithID: docID revisionID: revID options: 0] != nil;
     //OPT: Do this without loading the data
 }
 
 
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
-              withAttachments: (BOOL)withAttachments
+                      options: (TDContentOptions)options
 {
     if (rev.body)
         return 200;
@@ -394,9 +433,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
         status = 200;
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        [self expandStoredJSON: [r dataForColumnIndex: 1] 
-                  intoRevision: rev
-               withAttachments: withAttachments];
+        [self expandStoredJSON: [r dataForColumnIndex: 1] intoRevision: rev options: options];
     }
     [r close];
     return status;
@@ -452,6 +489,22 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
                                        numericID: docNumericID
                                      onlyCurrent: onlyCurrent];
 }
+
+
+- (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID {
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID < 0)
+        return nil;
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid FROM revs WHERE doc_id=? AND current "
+                                           "ORDER BY revid DESC OFFSET 1", docNumericID];
+    if (!r)
+        return nil;
+    NSMutableArray* revIDs = $marray();
+    while ([r next])
+        [revIDs addObject: [r stringForColumnIndex: 0]];
+    [r close];
+    return revIDs;
+}
     
 
 - (NSArray*) getRevisionHistory: (TDRevision*)rev {
@@ -496,7 +549,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 }
 
 
-const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, NO, NO, YES};
+const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
@@ -533,7 +586,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, NO, NO, YES};
         if (includeDocs) {
             [self expandStoredJSON: [r dataForColumnIndex: 5]
                       intoRevision: rev
-                   withAttachments: NO];
+                           options: options->contentOptions];
         }
         if (!filter || filter(rev))
             [changes addRev: rev];
@@ -672,7 +725,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, NO, NO, YES};
             NSString* docID = [r stringForColumnIndex: 1];
             NSString* revID = [r stringForColumnIndex: 2];
             BOOL deleted = [r boolForColumnIndex: 3];
-            NSMutableDictionary* docContents = nil;
+            NSDictionary* docContents = nil;
             if (options->includeDocs && !deleted) {
                 // Fill in the document contents:
                 NSData* json = [r dataForColumnIndex: 4];
@@ -680,7 +733,8 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, NO, NO, YES};
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID
                                                          revID: revID
-                                                      sequence: sequence];
+                                                      sequence: sequence
+                                                       options: options->content];
             }
             NSDictionary* change = $dict({@"id",  docID},
                                          {@"key", docID},

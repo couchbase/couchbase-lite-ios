@@ -113,6 +113,44 @@ NSString* const kTDVersionString =  @"0.2";
 }
 
 
+- (TDContentOptions) contentOptions {
+    TDContentOptions options = 0;
+    if ([self boolQuery: @"attachments"])
+        options |= kTDIncludeAttachments;
+    if ([self boolQuery: @"local_seq"])
+        options |= kTDIncludeLocalSeq;
+    if ([self boolQuery: @"conflicts"])
+        options |= kTDIncludeConflicts;
+    if ([self boolQuery: @"revs_info"])
+        options |= kTDIncludeRevsInfo;
+    return options;
+}
+
+
+- (BOOL) getQueryOptions: (TDQueryOptions*)options {
+    // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
+    *options = kDefaultTDQueryOptions;
+    options->skip = [self intQuery: @"skip" defaultValue: options->skip];
+    options->limit = [self intQuery: @"limit" defaultValue: options->limit];
+    options->groupLevel = [self intQuery: @"group_level" defaultValue: options->groupLevel];
+    options->descending = [self boolQuery: @"descending"];
+    options->includeDocs = [self boolQuery: @"include_docs"];
+    options->updateSeq = [self boolQuery: @"update_seq"];
+    if ([self query: @"inclusive_end"])
+        options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
+    options->reduce = [self boolQuery: @"reduce"];
+    options->group = [self boolQuery: @"group"];
+    options->content = [self contentOptions];
+    NSError* error = nil;
+    options->startKey = [self jsonQuery: @"startkey" error: &error];
+    if (error)
+        return NO;
+    if (!error)
+        options->endKey = [self jsonQuery: @"endkey" error: &error];
+    return !error;
+}
+
+
 - (TDStatus) openDB {
     if (!_db.exists)
         return 404;
@@ -436,29 +474,6 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
-- (BOOL) getQueryOptions: (TDQueryOptions*)options {
-    // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
-    *options = kDefaultTDQueryOptions;
-    options->skip = [self intQuery: @"skip" defaultValue: options->skip];
-    options->limit = [self intQuery: @"limit" defaultValue: options->limit];
-    options->groupLevel = [self intQuery: @"group_level" defaultValue: options->groupLevel];
-    options->descending = [self boolQuery: @"descending"];
-    options->includeDocs = [self boolQuery: @"include_docs"];
-    options->updateSeq = [self boolQuery: @"update_seq"];
-    if ([self query: @"inclusive_end"])
-        options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
-    options->reduce = [self boolQuery: @"reduce"];
-    options->group = [self boolQuery: @"group"];
-    NSError* error = nil;
-    options->startKey = [self jsonQuery: @"startkey" error: &error];
-    if (error)
-        return NO;
-    if (!error)
-        options->endKey = [self jsonQuery: @"endkey" error: &error];
-    return !error;
-}
-
-
 - (TDStatus) do_GET_all_docs: (TDDatabase*)db {
     TDQueryOptions options;
     if (![self getQueryOptions: &options])
@@ -581,6 +596,7 @@ static NSArray* splitPath( NSURL* url ) {
     _changesIncludeDocs = [self boolQuery: @"include_docs"];
     options.includeDocs = _changesIncludeDocs;
     options.includeConflicts = $equal([self query: @"style"], @"all_docs");
+    options.contentOptions = [self contentOptions];
     options.sortBySequence = !options.includeConflicts;
     options.limit = [self intQuery: @"limit" defaultValue: options.limit];
     int since = [[self query: @"since"] intValue];
@@ -640,7 +656,7 @@ static NSArray* splitPath( NSURL* url ) {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     TDRevision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
-                            withAttachments: [self boolQuery: @"attachments"]];
+                                    options: [self contentOptions]];
     if (!rev)
         return 404;
     
@@ -649,34 +665,7 @@ static NSArray* splitPath( NSURL* url ) {
     if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
         return 304;
     
-    NSMutableDictionary* extra = $mdict();
-    
-    if ([self boolQuery: @"local_seq"])
-        [extra setObject: $object(rev.sequence) forKey: @"_local_seq"];
-
-    if ([self boolQuery: @"revs_info"]) {
-        NSArray* info = [_db getRevisionHistory: rev];
-        if (!info)
-            return 500;
-        info = [info my_map: ^id(id rev) {
-            NSString* status = @"available";
-            if ([rev deleted])
-                status = @"deleted";
-            // TODO: Detect missing revisions, set status="missing"
-            return $dict({@"rev", [rev revID]}, {@"status", status});
-        }];
-        
-        [extra setObject: info forKey: @"_revs_info"];
-    }
-    
-    TDBody* responseBody = rev.body;
-    if (extra.count) {
-        NSMutableDictionary* props = [responseBody.properties mutableCopy];
-        [props addEntriesFromDictionary: extra];
-        responseBody = [TDBody bodyWithProperties: props];
-        // OPT: More efficient to use appendDictToJSON, like TDDocument
-    }
-    _response.body = responseBody;
+    _response.body = rev.body;
     return 200;
 }
 
@@ -685,7 +674,7 @@ static NSArray* splitPath( NSURL* url ) {
     //OPT: This gets the JSON body too, which is a waste. Could add a 'withBody:' attribute?
     TDRevision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
-                            withAttachments: NO];
+                                    options: 0];
     if (!rev)
         return 404;
     
