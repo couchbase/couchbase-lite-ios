@@ -85,26 +85,31 @@ NSString* const kTDVersionString =  @"0.2";
 
 
 - (NSString*) query: (NSString*)param {
-    return [self.queries objectForKey: param];
+    return [[self.queries objectForKey: param]
+                    stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
 }
 
 - (BOOL) boolQuery: (NSString*)param {
-    NSString* value = [self.queries objectForKey: param];
+    NSString* value = [self query: param];
     return value && !$equal(value, @"false") && !$equal(value, @"0");
 }
 
 - (int) intQuery: (NSString*)param defaultValue: (int)defaultValue {
-    NSString* value = [self.queries objectForKey: param];
+    NSString* value = [self query: param];
     return value ? value.intValue : defaultValue;
 }
 
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError {
     *outError = nil;
-    NSString* value = [self query: @"startkey"];
+    NSString* value = [self query: param];
     if (!value)
         return nil;
-    return [NSJSONSerialization JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
-                                           options: NSJSONReadingAllowFragments error: outError];
+    id result = [NSJSONSerialization
+                            JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
+                                       options: NSJSONReadingAllowFragments error: outError];
+    if (!result)
+        Warn(@"TDRouter: invalid JSON in query param ?%@=%@", param, value);
+    return result;
 }
 
 
@@ -466,6 +471,28 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
+- (TDStatus) do_POST_all_docs: (TDDatabase*)db {
+    // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
+    TDQueryOptions options;
+    if (![self getQueryOptions: &options])
+        return 400;
+    
+    NSDictionary* body = [NSJSONSerialization JSONObjectWithData: _request.HTTPBody
+                                                         options: 0 error: nil];
+    if (![body isKindOfClass: [NSDictionary class]])
+        return 400;
+    NSArray* docIDs = [body objectForKey: @"keys"];
+    if (![docIDs isKindOfClass: [NSArray class]])
+        return 400;
+    
+    NSDictionary* result = [db getDocsWithIDs: docIDs options: &options];
+    if (!result)
+        return 500;
+    _response.bodyObject = result;
+    return 200;
+}
+
+
 - (TDStatus) do_POST_compact: (TDDatabase*)db {
     return [db compact];
 }
@@ -482,7 +509,8 @@ static NSArray* splitPath( NSURL* url ) {
     return $dict({@"seq", $object(rev.sequence)},
                  {@"id",  rev.docID},
                  {@"changes", $array($dict({@"rev", rev.revID}))},
-                 {@"deleted", rev.deleted ? $true : nil});
+                 {@"deleted", rev.deleted ? $true : nil},
+                 {@"doc", (_changesIncludeDocs ? rev.properties : nil)});
 }
 
 
@@ -527,9 +555,11 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (TDStatus) do_GET_changes: (TDDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
-    TDQueryOptions options;
-    if (![self getQueryOptions: &options])
-        return 400;
+    TDChangesOptions options = kDefaultTDChangesOptions;
+    _changesIncludeDocs = [self boolQuery: @"include_docs"];
+    options.includeDocs = _changesIncludeDocs;
+    options.includeConflicts = $equal([self query: @"style"], @"all_docs");
+    options.limit = [self intQuery: @"limit" defaultValue: options.limit];
     int since = [[self query: @"since"] intValue];
     
     NSString* filterName = [self query: @"filter"];
@@ -660,7 +690,7 @@ static NSArray* splitPath( NSURL* url ) {
     BOOL posting = (docID == nil);
     TDBody* body = json ? [TDBody bodyWithJSON: json] : nil;
     
-    NSString* revID;
+    NSString* prevRevID;
     if (!deleting) {
         deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
         if (!docID) {
@@ -673,16 +703,16 @@ static NSArray* splitPath( NSURL* url ) {
             }
         }
         // PUT's revision ID comes from the JSON body.
-        revID = [body propertyForKey: @"_rev"];
+        prevRevID = [body propertyForKey: @"_rev"];
     } else {
         // DELETE's revision ID can come either from the ?rev= query param or an If-Match header.
-        revID = [self query: @"rev"];
-        if (!revID) {
+        prevRevID = [self query: @"rev"];
+        if (!prevRevID) {
             NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
             if (ifMatch) {
                 // Value of If-Match is an ETag, so have to trim the quotes around it:
                 if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
-                    revID = [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
+                    prevRevID = [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
                 else
                     return 400;
             }
@@ -696,7 +726,7 @@ static NSArray* splitPath( NSURL* url ) {
     rev.body = body;
     
     TDStatus status;
-    rev = [db putRevision: rev prevRevisionID: revID status: &status];
+    rev = [db putRevision: rev prevRevisionID: prevRevID status: &status];
     if (status < 300) {
         [self setResponseEtag: rev];
         if (!deleting) {
@@ -717,7 +747,21 @@ static NSArray* splitPath( NSURL* url ) {
     NSData* json = _request.HTTPBody;
     if (!json)
         return 400;
-    return [self update: db docID: docID json: json deleting: NO];
+    
+    if (![self query: @"new_edits"] || [self boolQuery: @"new_edits"]) {
+        // Regular PUT:
+        return [self update: db docID: docID json: json deleting: NO];
+    } else {
+        // PUT with new_edits=false -- forcible insertion of existing revision:
+        TDBody* body =  [TDBody bodyWithJSON: json];
+        TDRevision* rev = [[[TDRevision alloc] initWithBody: body] autorelease];
+        if (!rev || !$equal(rev.docID, docID) || !rev.revID)
+            return 400;
+        NSArray* history = [TDDatabase parseCouchDBRevisionHistory: body.properties];
+        if (!history)
+            history = $array(rev.revID);
+        return [_db forceInsert: rev revisionHistory: history source: nil];
+    }
 }
 
 

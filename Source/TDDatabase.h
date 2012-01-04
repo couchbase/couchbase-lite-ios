@@ -30,6 +30,19 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 
 
+
+/** Options for _changes feed (-changesSinceSequence:). */
+typedef struct TDChangesOptions {
+    unsigned limit;
+    BOOL includeDocs;
+    BOOL includeConflicts;
+    BOOL sortBySequence;
+} TDChangesOptions;
+
+extern const TDChangesOptions kDefaultTDChangesOptions;
+
+
+
 /** A TouchDB database. */
 @interface TDDatabase : NSObject
 {
@@ -91,13 +104,14 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 // VIEWS & QUERIES:
 
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
+- (NSDictionary*) getDocsWithIDs: (NSArray*)docIDs options: (const struct TDQueryOptions*)options;
 
 - (TDView*) viewNamed: (NSString*)name;
 - (TDView*) existingViewNamed: (NSString*)name;
 @property (readonly) NSArray* allViews;
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
-                                 options: (const struct TDQueryOptions*)options
+                                 options: (const TDChangesOptions*)options
                                   filter: (TDFilterBlock)filter;
 
 /** Define a named filter function. These aren't used directly by TDDatabase, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
@@ -126,6 +140,9 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 - (TDStatus) forceInsert: (TDRevision*)rev
          revisionHistory: (NSArray*)history
                   source: (NSURL*)source;
+
+/** Parses the _revisions dict from a document into an array of revision ID strings */
++ (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;
 
 - (void) addValidation: (TDValidationBlock)validationBlock;
 

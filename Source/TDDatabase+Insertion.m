@@ -107,8 +107,8 @@ static NSString* createUUID() {
 - (NSData*) encodeDocumentJSON: (TDRevision*)rev {
     static NSSet* sKnownSpecialKeys;
     if (!sKnownSpecialKeys) {
-        sKnownSpecialKeys = [[NSSet alloc] initWithObjects: @"_id", @"_rev",
-                                         @"_attachments", @"_deleted", nil];
+        sKnownSpecialKeys = [[NSSet alloc] initWithObjects: @"_id", @"_rev", @"_attachments",
+            @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts", nil];
     }
 
     NSDictionary* origProps = rev.properties;
@@ -161,7 +161,6 @@ static NSString* createUUID() {
              prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
                      status: (TDStatus*)outStatus
 {
-    Assert(!rev.revID);
     Assert(outStatus);
     NSString* docID = rev.docID;
     SInt64 docNumericID;
@@ -298,6 +297,10 @@ static NSString* createUUID() {
          revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
                   source: (NSURL*)source
 {
+    NSUInteger historyCount = history.count;
+    if (historyCount < 1 || !$equal([history objectAtIndex: 0], rev.revID))
+        return 400;
+    
     BOOL success = NO;
     [self beginTransaction];
     @try {
@@ -309,8 +312,6 @@ static NSString* createUUID() {
                                                           onlyCurrent: NO];
         if (!localRevs)
             return 500;
-        NSUInteger historyCount = history.count;
-        Assert(historyCount >= 1);
         
         // Validate against the latest common ancestor:
         if (_validations.count > 0) {
@@ -395,6 +396,20 @@ static NSString* createUUID() {
     // Notify and return:
     [self notifyChange: rev source: source];
     return 201;
+}
+
+
++ (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties {
+    NSDictionary* revisions = $castIf(NSDictionary,
+                                      [docProperties objectForKey: @"_revisions"]);
+    if (!revisions)
+        return nil;
+    // Extract the history, expanding the numeric prefixes:
+    __block int start = [$castIf(NSNumber, [revisions objectForKey: @"start"]) intValue];
+    NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
+    return [revIDs my_map: ^(id revID) {
+        return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
+    }];
 }
 
 

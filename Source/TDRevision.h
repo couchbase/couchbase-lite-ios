@@ -77,4 +77,7 @@ typedef SInt64 SequenceNumber;
 - (void) addRev: (TDRevision*)rev;
 - (void) removeRev: (TDRevision*)rev;
 
+- (void) limit: (NSUInteger)limit;
+- (void) sortBySequence;
+
 @end

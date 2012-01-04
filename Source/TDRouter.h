@@ -34,6 +34,7 @@ typedef void (^OnFinishedBlock)();
     OnFinishedBlock _onFinished;
     BOOL _longpoll;
     TDFilterBlock _changesFilter;
+    BOOL _changesIncludeDocs;
 }
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;

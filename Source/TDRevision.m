@@ -39,7 +39,9 @@
 
 - (id) initWithBody: (TDBody*)body {
     Assert(body);
-    self = [self initWithDocID: [body propertyForKey: @"_id"] revID: nil deleted: NO];
+    self = [self initWithDocID: [body propertyForKey: @"_id"]
+                         revID: [body propertyForKey: @"_rev"]
+                       deleted: [body propertyForKey: @"_deleted"] == $true];
     if (self) {
         self.body = body;
     }
@@ -197,5 +199,17 @@
 - (NSArray*) allRevIDs {
     return [_revs my_map: ^(id rev) {return [rev revID];}];
 }
+
+- (void) limit: (NSUInteger)limit {
+    if (_revs.count > limit)
+        [_revs removeObjectsInRange: NSMakeRange(limit, _revs.count - limit)];
+}
+
+- (void) sortBySequence {
+    [_revs sortUsingComparator:^NSComparisonResult(id rev1, id rev2) {
+        return [rev1 sequence] - [rev2 sequence];
+    }];
+}
+
 
 @end

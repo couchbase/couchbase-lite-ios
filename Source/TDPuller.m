@@ -179,24 +179,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
           onCompletion: ^(NSDictionary *properties, NSError *error) {
               // OK, now we've got the response revision:
               if (properties) {
-                  NSArray* history = nil;
-                  NSDictionary* revisions = $castIf(NSDictionary,
-                                                    [properties objectForKey: @"_revisions"]);
-                  if (revisions) {
-                      // Extract the history, expanding the numeric prefixes:
-                      __block int start = [[revisions objectForKey: @"start"] intValue];
-                      NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
-                      history = [revIDs my_map: ^(id revID) {
-                          return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
-                      }];
-                      
-                      // Now remove the _revisions dict so it doesn't get stored in the local db:
-                      NSMutableDictionary* editedProperties = [[properties mutableCopy] autorelease];
-                      [editedProperties removeObjectForKey: @"_revisions"];
-                      properties = editedProperties;
-                  }
+                  NSArray* history = [TDDatabase parseCouchDBRevisionHistory: properties];
                   rev.properties = properties;
-
                   // Add to batcher ... eventually it will be fed to -insertRevisions:.
                   [_revsToInsert queueObject: $array(rev, history)];
                   [self asyncTaskStarted];

@@ -305,8 +305,6 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
              intoRevision: (TDRevision*)rev
           withAttachments: (BOOL)withAttachments
 {
-    if (!json)
-        return;
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     SequenceNumber sequence = rev.sequence;
@@ -318,19 +316,26 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
                                 {@"_rev", revID},
                                 {@"_deleted", (rev.deleted ? $true : nil)},
                                 {@"_attachments", attachmentsDict});
-    rev.asJSON = appendDictToJSON(json, extra);
+    if (json)
+        rev.asJSON = appendDictToJSON(json, extra);
+    else
+        rev.properties = extra;
 }
 
 
-- (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
-                                       docID: (NSString*)docID
-                                       revID: (NSString*)revID
-                                    sequence: (SequenceNumber)sequence
+- (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
+                                              docID: (NSString*)docID
+                                              revID: (NSString*)revID
+                                           sequence: (SequenceNumber)sequence
 {
     NSMutableDictionary* docProperties;
-    docProperties = [NSJSONSerialization JSONObjectWithData: json
-                                                    options: NSJSONReadingMutableContainers
-                                                      error: nil];
+    if (json) {
+        docProperties = [NSJSONSerialization JSONObjectWithData: json
+                                                        options: NSJSONReadingMutableContainers
+                                                          error: nil];
+    } else {
+        docProperties = $mdict();
+    }
     [docProperties setObject: docID forKey: @"_id"];
     [docProperties setObject: revID forKey: @"_rev"];
     [docProperties setValue: [self getAttachmentDictForSequence: sequence withContent: NO]
@@ -491,29 +496,42 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 }
 
 
+const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, NO, NO, YES};
+
+
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
-                                 options: (const TDQueryOptions*)options
+                                 options: (const TDChangesOptions*)options
                                   filter: (TDFilterBlock)filter
 {
-    if (!options) options = &kDefaultTDQueryOptions;
+    // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
+    if (!options) options = &kDefaultTDChangesOptions;
     BOOL includeDocs = options->includeDocs || (filter != NULL);
 
-    NSString* sql = $sprintf(@"SELECT sequence, docid, revid, deleted %@ FROM revs, docs "
+    NSString* sql = $sprintf(@"SELECT sequence, revs.doc_id, docid, revid, deleted %@ FROM revs, docs "
                              "WHERE sequence > ? AND current=1 "
                              "AND revs.doc_id = docs.doc_id "
-                             "ORDER BY sequence LIMIT ?",
+                             "ORDER BY revs.doc_id, revid DESC",
                              (includeDocs ? @", json" : @""));
-    FMResultSet* r = [_fmdb executeQuery: sql, $object(lastSequence), $object(options->limit)];
+    FMResultSet* r = [_fmdb executeQuery: sql, $object(lastSequence)];
     if (!r)
         return nil;
     TDRevisionList* changes = [[[TDRevisionList alloc] init] autorelease];
+    int64_t lastDocID = 0;
     while ([r next]) {
-        TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 1]
-                                              revID: [r stringForColumnIndex: 2]
-                                            deleted: [r boolForColumnIndex: 3]];
+        if (!options->includeConflicts) {
+            // Only count the first rev for a given doc (the rest will be losing conflicts):
+            int64_t docNumericID = [r longLongIntForColumnIndex: 1];
+            if (docNumericID == lastDocID)
+                continue;
+            lastDocID = docNumericID;
+        }
+
+        TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
+                                              revID: [r stringForColumnIndex: 3]
+                                            deleted: [r boolForColumnIndex: 4]];
         rev.sequence = [r longLongIntForColumnIndex: 0];
         if (includeDocs) {
-            [self expandStoredJSON: [r dataForColumnIndex: 4]
+            [self expandStoredJSON: [r dataForColumnIndex: 5]
                       intoRevision: rev
                    withAttachments: NO];
         }
@@ -522,6 +540,10 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         [rev release];
     }
     [r close];
+    
+    if (options->sortBySequence)
+        [changes sortBySequence];
+    [changes limit: options->limit];
     return changes;
 }
 
@@ -589,7 +611,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 
 //FIX: This has a lot of code in common with -[TDView queryWithOptions:status:]. Unify the two!
-- (NSDictionary*) getAllDocs: (const TDQueryOptions*)options {
+- (NSDictionary*) getDocsWithIDs: (NSArray*)docIDs options: (const TDQueryOptions*)options {
     if (!options)
         options = &kDefaultTDQueryOptions;
     
@@ -599,12 +621,15 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     
     // Generate the SELECT statement, based on the options:
     NSMutableString* sql = [NSMutableString stringWithFormat:
-                            @"SELECT revs.doc_id, docid, revid %@ FROM revs, docs "
-                              "WHERE current=1 AND deleted=0 "
-                              "AND docs.doc_id = revs.doc_id",
+                            @"SELECT revs.doc_id, docid, revid, deleted %@ FROM revs, docs WHERE",
                              (options->includeDocs ? @", json, sequence" : @"")];
-    NSMutableArray* args = $marray();
+    if (docIDs)
+        [sql appendFormat: @" docid IN (%@)", [TDDatabase joinQuotedStrings: docIDs]];
+    else
+        [sql appendString: @" deleted=0"];
+    [sql appendString: @" AND current=1 AND docs.doc_id = revs.doc_id"];
     
+    NSMutableArray* args = $marray();
     id minKey = options->startKey, maxKey = options->endKey;
     BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
@@ -646,11 +671,12 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
             
             NSString* docID = [r stringForColumnIndex: 1];
             NSString* revID = [r stringForColumnIndex: 2];
-            NSDictionary* docContents = nil;
-            if (options->includeDocs) {
+            BOOL deleted = [r boolForColumnIndex: 3];
+            NSMutableDictionary* docContents = nil;
+            if (options->includeDocs && !deleted) {
                 // Fill in the document contents:
-                NSData* json = [r dataForColumnIndex: 3];
-                SequenceNumber sequence = [r longLongIntForColumnIndex: 4];
+                NSData* json = [r dataForColumnIndex: 4];
+                SequenceNumber sequence = [r longLongIntForColumnIndex: 5];
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID
                                                          revID: revID
@@ -658,7 +684,8 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
             }
             NSDictionary* change = $dict({@"id",  docID},
                                          {@"key", docID},
-                                         {@"value", $dict({@"rev", revID})},
+                                         {@"value", $dict({@"rev", revID},
+                                                          {@"deleted", (deleted ? $true : nil)})},
                                          {@"doc", docContents});
             [rows addObject: change];
         }
@@ -669,6 +696,11 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
                  {@"total_rows", $object(totalRows)},
                  {@"offset", $object(options->skip)},
                  {@"update_seq", update_seq ? $object(update_seq) : nil});
+}
+
+
+- (NSDictionary*) getAllDocs: (const TDQueryOptions*)options {
+    return [self getDocsWithIDs: nil options: options];
 }
 
 

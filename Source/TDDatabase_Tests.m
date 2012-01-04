@@ -171,18 +171,32 @@ TestCase(TDDatabase_RevTree) {
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, conflict, history);
     
+    // Add an unrelated document:
+    TDRevision* other = [[[TDRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO] autorelease];
+    other.properties = $dict({@"language", @"jp"});
+    status = [db forceInsert: other revisionHistory: $array(other.revID) source: nil];
+    CAssertEq(status, 201);
+    
     // Fetch one of those phantom revisions with no body:
     TDRevision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too" withAttachments: NO];
     CAssertEqual(rev2.docID, rev.docID);
     CAssertEqual(rev2.revID, @"2-too");
-    CAssertEqual(rev2.body, nil);
+    //CAssertEqual(rev2.body, nil);
     
     // Make sure no duplicate rows were inserted for the common revisions:
-    CAssertEq(db.lastSequence, 7u);
+    CAssertEq(db.lastSequence, 8u);
     
     // Make sure the revision with the higher revID wins the conflict:
     TDRevision* current = [db getDocumentWithID: rev.docID revisionID: nil withAttachments: NO];
     CAssertEqual(current, conflict);
+    
+    // Get the _changes feed and verify only the winner is in it:
+    TDChangesOptions options = kDefaultTDChangesOptions;
+    TDRevisionList* changes = [db changesSinceSequence: 0 options: &options filter: NULL];
+    CAssertEqual(changes.allRevisions, $array(conflict, other));
+    options.includeConflicts = YES;
+    changes = [db changesSinceSequence: 0 options: &options filter: NULL];
+    CAssertEqual(changes.allRevisions, $array(rev, conflict, other));
 }
 
 

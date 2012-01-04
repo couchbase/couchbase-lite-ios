@@ -107,7 +107,7 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    Warn(@"%@: Got error %@", self, error);
+    LogTo(ChangeTracker, @"%@: Got error %@", self, error);
     [self stopped];
 }
 

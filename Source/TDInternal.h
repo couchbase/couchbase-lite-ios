@@ -22,10 +22,10 @@
                                       numericID: (SInt64)docNumericID
                                     onlyCurrent: (BOOL)onlyCurrent;
 - (TDStatus) deleteViewNamed: (NSString*)name;
-- (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
-                                       docID: (NSString*)docID
-                                       revID: (NSString*)revID
-                                    sequence: (SequenceNumber)sequence;
+- (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
+                                              docID: (NSString*)docID
+                                              revID: (NSString*)revID
+                                           sequence: (SequenceNumber)sequence;
 @end
 
 @interface TDDatabase (Attachments_Internal)
@@ -41,6 +41,7 @@
            withRemoteURL: (NSURL*)url
                     push: (BOOL)push;
 - (void) replicatorDidStop: (TDReplicator*)repl;
++ (NSString*) joinQuotedStrings: (NSArray*)strings;
 @end
 
 
