@@ -571,26 +571,28 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     TDRevisionList* changes = [[[TDRevisionList alloc] init] autorelease];
     int64_t lastDocID = 0;
     while ([r next]) {
-        if (!options->includeConflicts) {
-            // Only count the first rev for a given doc (the rest will be losing conflicts):
-            int64_t docNumericID = [r longLongIntForColumnIndex: 1];
-            if (docNumericID == lastDocID)
-                continue;
-            lastDocID = docNumericID;
-        }
+        @autoreleasepool {
+            if (!options->includeConflicts) {
+                // Only count the first rev for a given doc (the rest will be losing conflicts):
+                int64_t docNumericID = [r longLongIntForColumnIndex: 1];
+                if (docNumericID == lastDocID)
+                    continue;
+                lastDocID = docNumericID;
+            }
 
-        TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
-                                              revID: [r stringForColumnIndex: 3]
-                                            deleted: [r boolForColumnIndex: 4]];
-        rev.sequence = [r longLongIntForColumnIndex: 0];
-        if (includeDocs) {
-            [self expandStoredJSON: [r dataForColumnIndex: 5]
-                      intoRevision: rev
-                           options: options->contentOptions];
+            TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
+                                                  revID: [r stringForColumnIndex: 3]
+                                                deleted: [r boolForColumnIndex: 4]];
+            rev.sequence = [r longLongIntForColumnIndex: 0];
+            if (includeDocs) {
+                [self expandStoredJSON: [r dataForColumnIndex: 5]
+                          intoRevision: rev
+                               options: options->contentOptions];
+            }
+            if (!filter || filter(rev))
+                [changes addRev: rev];
+            [rev release];
         }
-        if (!filter || filter(rev))
-            [changes addRev: rev];
-        [rev release];
     }
     [r close];
     

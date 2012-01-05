@@ -63,7 +63,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     BOOL _open;
     NSInteger _transactionLevel;
     NSMutableDictionary* _views;
-    NSMutableArray* _validations;
+    NSMutableDictionary* _validations;
     NSMutableDictionary* _filters;
     TDBlobStore* _attachments;
     NSMutableArray* _activeReplicators;
@@ -124,7 +124,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
                                  options: (const TDChangesOptions*)options
                                   filter: (TDFilterBlock)filter;
 
-/** Define a named filter function. These aren't used directly by TDDatabase, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
+/** Define or clear a named filter function. These aren't used directly by TDDatabase, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
 - (TDFilterBlock) filterNamed: (NSString*)filterName;
 
@@ -154,7 +154,9 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 /** Parses the _revisions dict from a document into an array of revision ID strings */
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;
 
-- (void) addValidation: (TDValidationBlock)validationBlock;
+/** Define or clear a named document validation function.  */
+- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock;
+- (TDValidationBlock) validationNamed: (NSString*)validationName;
 
 @end
 

@@ -413,13 +413,15 @@ static NSString* createUUID() {
 }
 
 
-- (void) addValidation:(TDValidationBlock)validationBlock {
+- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock {
     Assert(validationBlock);
     if (!_validations)
-        _validations = [[NSMutableArray alloc] init];
-    id copiedBlock = [validationBlock copy];
-    [_validations addObject: copiedBlock];
-    [copiedBlock release];
+        _validations = [[NSMutableDictionary alloc] init];
+    [_validations setValue: [[validationBlock copy] autorelease] forKey: validationName];
+}
+
+- (TDValidationBlock) validationNamed: (NSString*)validationName {
+    return [_validations objectForKey: validationName];
 }
 
 
@@ -429,7 +431,8 @@ static NSString* createUUID() {
     TDValidationContext* context = [[TDValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev];
     TDStatus status = 200;
-    for (TDValidationBlock validation in _validations) {
+    for (TDValidationBlock validationName in _validations) {
+        TDValidationBlock validation = [self validationNamed: validationName];
         if (!validation(newRev, context)) {
             status = context.errorType;
             break;

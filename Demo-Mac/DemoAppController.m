@@ -16,10 +16,17 @@
 #import "DemoAppController.h"
 #import "DemoQuery.h"
 #import "Test.h"
-#import "TouchDB.h"
-#import <TouchDBListener/TDListener.h>
 #import <CouchCocoa/CouchCocoa.h>
 #import <CouchCocoa/CouchTouchDBServer.h>
+#import <CouchCocoa/CouchDesignDocument_Embedded.h>
+
+#define FOR_TESTING_PURPOSES
+#ifdef FOR_TESTING_PURPOSES
+#import <TouchDBListener/TDListener.h>
+@interface DemoAppController () <TDViewCompiler>
+@end
+static TDListener* sListener;
+#endif
 
 
 #define kChangeGlowDuration 3.0
@@ -29,13 +36,6 @@ int main (int argc, const char * argv[]) {
     RunTestCases(argc,argv);
     return NSApplicationMain(argc, argv);
 }
-
-
-static TDListener* sListener;
-
-
-@interface DemoAppController () <TDViewCompiler>
-@end
 
 
 @implementation DemoAppController
@@ -65,16 +65,15 @@ static TDListener* sListener;
         NSAssert(op.error.code == 412, @"Error creating db: %@", op.error);
     }
     
-    // Create a CouchDB 'view' containing list items sorted by date
-    TDDatabase* tdb = [server.touchServer existingDatabaseNamed: dbName];
-    NSAssert(tdb, @"Failed to open or create TouchDB database");
-    [[tdb viewNamed: @"default/byDate"] setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+    // Create a 'view' containing list items sorted by date:
+    CouchDesignDocument* design = [_database designDocumentWithName: @"default"];
+    [design defineViewNamed: @"byDate" mapBlock: MAPBLOCK({
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);
-    } reduceBlock: NULL version: @"1"];
-        
-    // ...and a validation function requiring parseable dates:
-    [tdb addValidation: ^(TDRevision* newRevision, id<TDValidationContext>context) {
+    }) version: @"1.0"];
+    
+    // and a validation function requiring parseable dates:
+    design.validationBlock = VALIDATIONBLOCK({
         if (newRevision.deleted)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
@@ -83,31 +82,31 @@ static TDListener* sListener;
             return NO;
         }
         return YES;
-    }];
+    });
     
     // And why not a filter, just to allow some simple testing of filtered _changes.
-    // For example, try curl -i 'http://localhost:8888/demo-shopping/_changes?filter=checked'
-    [tdb defineFilter: @"checked" asBlock: ^BOOL(TDRevision *revision) {
+    // For example, try curl 'http://localhost:8888/demo-shopping/_changes?filter=default/checked'
+    [design defineFilterNamed: @"checked" block: FILTERBLOCK({
         return [revision.properties objectForKey: @"check"] == $true;
-    }];
+    })];
 
     
-    CouchQuery* q = [[_database designDocumentWithName: @"default"] queryViewNamed: @"byDate"];
+    CouchQuery* q = [design queryViewNamed: @"byDate"];
     q.descending = YES;
     self.query = [[[DemoQuery alloc] initWithQuery: q] autorelease];
     self.query.modelClass =_tableController.objectClass;
     
     // Enable continuous sync:
     [self startContinuousSyncWith: self.syncURL];
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(replicationProgressChanged:)
-                                                 name: TDReplicatorProgressChangedNotification
-                                               object: nil];
     
+#ifdef FOR_TESTING_PURPOSES
     // Start a listener socket:
-    [TDView setCompiler: self];
     sListener = [[TDListener alloc] initWithTDServer: server.touchServer port: 8888];
     [sListener start];
+
+    // Register support for handling certain JS functions used in the CouchDB unit tests:
+    [TDView setCompiler: self];
+#endif
 }
 
 
@@ -207,12 +206,12 @@ static TDListener* sListener;
 }
 
 
-- (void) replicationProgressChanged: (NSNotification*)n {
-    // This is called on the TouchDB background thread, so redispatch to the main thread:
-    [_database.server performSelectorOnMainThread: @selector(checkActiveTasks)
-                                       withObject: nil waitUntilDone: NO];
-}
+#pragma mark - JS MAP/REDUCE FUNCTIONS:
 
+#ifdef FOR_TESTING_PURPOSES
+
+// These map/reduce functions are used in the CouchDB 'basics.js' unit tests. By recognizing them
+// here and returning equivalent native blocks, we can run those tests.
 
 - (TDMapBlock) compileMapFunction: (NSString*)mapSource language:(NSString *)language {
     if (!$equal(language, @"javascript"))
@@ -239,6 +238,8 @@ static TDListener* sListener;
     }
     return [[reduceBlock copy] autorelease];
 }
+
+#endif
 
 
 #pragma mark HIGHLIGHTING NEW ITEMS:

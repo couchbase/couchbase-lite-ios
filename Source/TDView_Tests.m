@@ -366,7 +366,7 @@ TestCase(TDView_GroupedStrings) {
          if (name)
              emit([name substringToIndex:1], [NSNumber numberWithInt:1]);
      } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
-         return [NSNumber numberWithInt:[values count]];
+         return [NSNumber numberWithUnsignedInteger:[values count]];
      } version:@"1.0"];
     
     TDQueryOptions options = kDefaultTDQueryOptions;

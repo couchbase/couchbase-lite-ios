@@ -15,7 +15,6 @@
 
 #import "DemoAppDelegate.h"
 #import "RootViewController.h"
-#import <TouchDB/TouchDB.h>
 #import <CouchCocoa/CouchCocoa.h>
 #import <CouchCocoa/CouchTouchDBServer.h>
 
@@ -23,7 +22,7 @@
 @implementation DemoAppDelegate
 
 
-@synthesize window, navigationController, database, touchDatabase;
+@synthesize window, navigationController, database;
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -48,9 +47,6 @@
     }
     database.tracksChanges = YES;
     NSLog(@"...Created CouchDatabase at <%@>", self.database.URL);
-    
-    self.touchDatabase = [server.touchServer existingDatabaseNamed: @"grocery-sync"];
-    NSAssert(self.touchDatabase, @"Failed to open or create TouchDB database");
     
     // Tell the RootViewController:
     RootViewController* root = (RootViewController*)navigationController.topViewController;

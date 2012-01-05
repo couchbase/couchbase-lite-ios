@@ -23,7 +23,7 @@
 #import "DemoAppDelegate.h"
 
 #import <CouchCocoa/CouchCocoa.h>
-#import <TouchDB/TouchDB.h>
+#import <CouchCocoa/CouchDesignDocument_Embedded.h>
 
 
 @interface RootViewController ()
@@ -79,10 +79,6 @@
     self.dataSource.query = query;
     self.dataSource.labelProperty = @"text";    // Document property to display in the cell label
 
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(replicationProgressChanged:)
-                                                 name: TDReplicatorProgressChangedNotification
-                                               object: nil];
     [self updateSyncURL];
 }
 
@@ -102,17 +98,15 @@
 - (void)useDatabase:(CouchDatabase*)theDatabase {
     self.database = theDatabase;
     
-    // Create a CouchDB 'view' containing list items sorted by date
-    DemoAppDelegate* delegate = [[UIApplication sharedApplication] delegate];
-    [[delegate.touchDatabase viewNamed: @"default/byDate"] 
-     setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+    // Create a 'view' containing list items sorted by date:
+    CouchDesignDocument* design = [database designDocumentWithName: @"default"];
+    [design defineViewNamed: @"byDate" mapBlock: MAPBLOCK({
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);
-    } reduceBlock: NULL version: @"1"];
-        
-    // ...and a validation function requiring parseable dates:
-    [delegate.touchDatabase addValidation: ^(TDRevision* newRevision,
-                                             id<TDValidationContext>context) {
+    }) version: @"1.0"];
+    
+    // and a validation function requiring parseable dates:
+    design.validationBlock = VALIDATIONBLOCK({
         if (newRevision.deleted)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
@@ -121,7 +115,7 @@
             return NO;
         }
         return YES;
-    }];
+    });
 }
 
 
@@ -317,13 +311,6 @@
     [_push removeObserver: self forKeyPath: @"completed"];
     [_push stop];
     _push = nil;
-}
-
-
-- (void) replicationProgressChanged: (NSNotification*)n {
-    // This is called on the TouchDB background thread, so redispatch to the main thread:
-    [database.server performSelectorOnMainThread: @selector(checkActiveTasks)
-                                      withObject: nil waitUntilDone: NO];
 }
 
 
