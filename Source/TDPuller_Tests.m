@@ -45,15 +45,17 @@ TestCase(TDPuller) {
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
     
-    id lastSeq = pull(db, @"http://127.0.0.1:5984/revs_test_1", nil);
-    CAssertEqual(lastSeq, @"7");
+    NSString* remoteURLStr = @"http://snej.iriscouch.com/tdpuller_test1";
     
-    CAssertEq(db.documentCount, 2u);
-    CAssertEq(db.lastSequence, 6);
+    id lastSeq = pull(db, remoteURLStr, nil);
+    CAssertEqual(lastSeq, @"6");
     
-    pull(db, @"http://127.0.0.1:5984/revs_test_1", lastSeq);
+    CAssertEq(db.documentCount, 3u);
+    CAssertEq(db.lastSequence, 10);
     
-    CAssertEq(db.lastSequence, 6);
+    pull(db, remoteURLStr, lastSeq);
+    
+    CAssertEq(db.lastSequence, 10);
 }
 
 #endif
