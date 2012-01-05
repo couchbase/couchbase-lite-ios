@@ -39,9 +39,6 @@ typedef void (^OnFinishedBlock)();
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;
 
-- (NSString*) query: (NSString*)param;
-- (BOOL) boolQuery: (NSString*)param;
-
 @property (copy) OnResponseReadyBlock onResponseReady;
 @property (copy) OnDataAvailableBlock onDataAvailable;
 @property (copy) OnFinishedBlock onFinished;
@@ -51,6 +48,18 @@ typedef void (^OnFinishedBlock)();
 - (void) start;
 - (void) stop;
 
+@end
+
+
+@interface TDRouter (Internal)
+- (NSString*) query: (NSString*)param;
+- (BOOL) boolQuery: (NSString*)param;
+- (int) intQuery: (NSString*)param defaultValue: (int)defaultValue;
+- (id) jsonQuery: (NSString*)param error: (NSError**)outError;
+- (TDContentOptions) contentOptions;
+- (BOOL) getQueryOptions: (struct TDQueryOptions*)options;
+- (TDStatus) openDB;
+- (void) sendResponse;
 @end
 
 

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
+		2700BC5E14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */; };
+		2700BC5F14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */; };
 		270B3DFD1489359000E0A926 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DFC1489359000E0A926 /* SenTestingKit.framework */; };
 		270B3DFE1489359000E0A926 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
 		270B3E011489359000E0A926 /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
@@ -311,6 +313,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TDRouter+Handlers.m"; sourceTree = "<group>"; };
 		270B3DEA1489359000E0A926 /* TouchDB.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TouchDB.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DEE1489359000E0A926 /* TouchDB-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TouchDB-Info.plist"; sourceTree = "<group>"; };
 		270B3DFB1489359000E0A926 /* TouchDBTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -825,6 +828,7 @@
 			children = (
 				27C706431486BE7100F0F099 /* TDRouter.h */,
 				27C706441486BE7100F0F099 /* TDRouter.m */,
+				2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */,
 				27C706461487584300F0F099 /* TDURLProtocol.h */,
 				27C706471487584300F0F099 /* TDURLProtocol.m */,
 			);
@@ -1492,6 +1496,7 @@
 				2753160014ACF9330065964D /* Logging.m in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
+				2700BC5E14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1569,6 +1574,7 @@
 				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
 				27AA409E14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */,
 				27AA40A414AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */,
+				2700BC5F14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
