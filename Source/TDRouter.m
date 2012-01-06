@@ -106,6 +106,12 @@ NSString* const kTDVersionString =  @"0.2";
 }
 
 
+- (NSDictionary*) bodyAsDictionary {
+    return $castIf(NSDictionary, [NSJSONSerialization JSONObjectWithData: _request.HTTPBody
+                                                                 options: 0 error: nil]);
+}
+
+
 - (TDContentOptions) contentOptions {
     TDContentOptions options = 0;
     if ([self boolQuery: @"attachments"])
@@ -114,6 +120,8 @@ NSString* const kTDVersionString =  @"0.2";
         options |= kTDIncludeLocalSeq;
     if ([self boolQuery: @"conflicts"])
         options |= kTDIncludeConflicts;
+    if ([self boolQuery: @"revs"])
+        options |= kTDIncludeRevs;
     if ([self boolQuery: @"revs_info"])
         options |= kTDIncludeRevsInfo;
     return options;
@@ -222,11 +230,12 @@ static NSArray* splitPath( NSURL* url ) {
             return;
         }
         NSString* name = [_path objectAtIndex: 1];
-        if (![TDDatabase isValidDocumentID: name]) {
-            _response.status = 400;
-            return;
-        } else if (![name hasPrefix: @"_"]) {
+        if (![name hasPrefix: @"_"]) {
             // Regular document
+            if (![TDDatabase isValidDocumentID: name]) {
+                _response.status = 400;
+                return;
+            }
             docID = name;
         } else if ([name isEqualToString: @"_design"]) {
             // "_design/____" is a document name
@@ -238,6 +247,9 @@ static NSArray* splitPath( NSURL* url ) {
             [_path replaceObjectAtIndex: 1 withObject: docID];
             [_path removeObjectAtIndex: 2];
             --pathLen;
+        } else if ([name hasPrefix: @"_design/"]) {
+            // This is also a design document, just with a URL-encoded "/"
+            docID = name;
         } else {
             // Special document name like "_all_docs":
             [message insertString: name atIndex: message.length-1]; // add to 1st component of msg

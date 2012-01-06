@@ -16,7 +16,15 @@
 
 
 @interface TDRouter ()
-- (TDStatus) update: (TDDatabase*)db docID: (NSString*)docID json: (NSData*)json
+- (TDStatus) update: (TDDatabase*)db
+              docID: (NSString*)docID
+               body: (TDBody*)body
+           deleting: (BOOL)deleting
+      allowConflict: (BOOL)allowConflict
+         createdRev: (TDRevision**)outRev;
+- (TDStatus) update: (TDDatabase*)db
+              docID: (NSString*)docID
+               json: (NSData*)json
            deleting: (BOOL)deleting;
 @end
 
@@ -44,8 +52,8 @@
 - (TDStatus) do_POST_replicate {
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
-    id body = [NSJSONSerialization JSONObjectWithData: _request.HTTPBody options: 0 error: nil];
-    if (![body isKindOfClass: [NSDictionary class]])
+    id body = self.bodyAsDictionary;
+    if (!body)
         return 400;
     NSString* source = $castIf(NSString, [body objectForKey: @"source"]);
     NSString* target = $castIf(NSString, [body objectForKey: @"target"]);
@@ -197,9 +205,8 @@
     if (![self getQueryOptions: &options])
         return 400;
     
-    NSDictionary* body = [NSJSONSerialization JSONObjectWithData: _request.HTTPBody
-                                                         options: 0 error: nil];
-    if (![body isKindOfClass: [NSDictionary class]])
+    NSDictionary* body = self.bodyAsDictionary;
+    if (!body)
         return 400;
     NSArray* docIDs = [body objectForKey: @"keys"];
     if (![docIDs isKindOfClass: [NSArray class]])
@@ -210,6 +217,56 @@
         return 500;
     _response.bodyObject = result;
     return 200;
+}
+
+
+- (TDStatus) do_POST_bulk_docs: (TDDatabase*)db {
+    // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
+    NSDictionary* body = self.bodyAsDictionary;
+    NSArray* docs = $castIf(NSArray, [body objectForKey: @"docs"]);
+    Log(@"_bulk_docs: Got %@", body); //TEMP
+    if (!docs)
+        return 400;
+    id allObj = [body objectForKey: @"all_or_nothing"];
+    BOOL allOrNothing = (allObj && allObj != $false);
+    //BOOL noNewEdits = ([body objectForKey: @"new_edits"] == $false);
+
+    BOOL ok = NO;
+    NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
+    [_db beginTransaction];
+    @try{
+        for (NSDictionary* doc in docs) {
+            NSString* docID = [doc objectForKey: @"_id"];
+            TDRevision* rev;
+            TDStatus status = [self update: db
+                                     docID: docID
+                                      body: [TDBody bodyWithProperties: doc]
+                                  deleting: NO
+                             allowConflict: allOrNothing
+                                createdRev: &rev];
+            NSDictionary* result;
+            if (status < 300) {
+                Assert(rev.revID);
+                result = $dict({@"id", rev.docID}, {@"rev", rev.revID}, {@"ok", $true});
+            } else if (allOrNothing) {
+                return status;  // all_or_nothing backs out if there's any error
+            } else if (status == 403) {
+                result = $dict({@"id", docID}, {@"error", @"validation failed"});
+            } else if (status == 409) {
+                result = $dict({@"id", docID}, {@"error", @"conflict"});
+            } else {
+                return status;  // abort the whole thing if something goes badly wrong
+            }
+            [results addObject: result];
+        }
+        ok = YES;
+    } @finally {
+        [_db endTransaction: ok];
+    }
+    
+    Log(@"_bulk_docs: Returning %@", results); //TEMP
+    _response.bodyObject = results;
+    return 201;
 }
 
 
@@ -405,13 +462,13 @@
 
 - (TDStatus) update: (TDDatabase*)db
               docID: (NSString*)docID
-               json: (NSData*)json
+               body: (TDBody*)body
            deleting: (BOOL)deleting
+      allowConflict: (BOOL)allowConflict
+         createdRev: (TDRevision**)outRev
 {
-    BOOL posting = (docID == nil);
-    TDBody* body = json ? [TDBody bodyWithJSON: json] : nil;
-    
     NSString* prevRevID;
+    
     if (!deleting) {
         deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
         if (!docID) {
@@ -447,13 +504,30 @@
     rev.body = body;
     
     TDStatus status;
-    rev = [db putRevision: rev prevRevisionID: prevRevID status: &status];
+    *outRev = [db putRevision: rev prevRevisionID: prevRevID
+                allowConflict: allowConflict
+                       status: &status];
+    return status;
+}
+
+
+- (TDStatus) update: (TDDatabase*)db
+              docID: (NSString*)docID
+               json: (NSData*)json
+           deleting: (BOOL)deleting
+{
+    TDBody* body = json ? [TDBody bodyWithJSON: json] : nil;
+    TDRevision* rev;
+    TDStatus status = [self update: db docID: docID body: body
+                          deleting: deleting
+                     allowConflict: NO
+                        createdRev: &rev];
     if (status < 300) {
         [self setResponseEtag: rev];
         if (!deleting) {
             NSURL* url = _request.URL;
-            if (posting)
-                url = [url URLByAppendingPathComponent: docID];
+            if (!docID)
+                url = [url URLByAppendingPathComponent: rev.docID];
             [_response.headers setObject: url.absoluteString forKey: @"Location"];
         }
         _response.bodyObject = $dict({@"ok", $true},
@@ -462,7 +536,6 @@
     }
     return status;
 }
-
 
 - (TDStatus) do_PUT: (TDDatabase*)db docID: (NSString*)docID {
     NSData* json = _request.HTTPBody;

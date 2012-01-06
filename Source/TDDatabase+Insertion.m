@@ -49,9 +49,12 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 @implementation TDDatabase (Insertion)
 
 
+#pragma mark - DOCUMENT & REV IDS:
+
+
 + (BOOL) isValidDocumentID: (NSString*)str {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#Documents
-    return (str.length > 0);
+    return str.length > 0 && ([str characterAtIndex: 0] != '_' || [str hasPrefix: @"_design/"]);
 }
 
 
@@ -62,10 +65,13 @@ static NSString* createUUID() {
     return [str autorelease];
 }
 
+/** Generates a new document ID at random. */
 + (NSString*) generateDocumentID {
     return createUUID();
 }
 
+
+/** Given an existing revision ID, generates an ID for the next revision. */
 - (NSString*) generateNextRevisionID: (NSString*)revID {
     // Revision IDs have a generation count, a hyphen, and a UUID.
     unsigned generation = 0;
@@ -79,23 +85,16 @@ static NSString* createUUID() {
 }
 
 
-- (void) notifyChange: (TDRevision*)rev source: (NSURL*)source
-{
-    NSDictionary* userInfo = $dict({@"rev", rev},
-                                   {@"seq", $object(rev.sequence)},
-                                   {@"source", source});
-    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseChangeNotification
-                                                        object: self
-                                                      userInfo: userInfo];
-}
-
-
+/** Adds a new document ID to the 'docs' table. */
 - (SInt64) insertDocumentID: (NSString*)docID {
+    Assert([TDDatabase isValidDocumentID: docID]);  // this should be caught before I get here
     if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
         return -1;
     return _fmdb.lastInsertRowId;
 }
 
+
+/** Maps a document ID to a numeric ID (row # in 'docs'), creating a new row if needed. */
 - (SInt64) getOrInsertDocNumericID: (NSString*)docID {
     SInt64 docNumericID = [self getDocNumericID: docID];
     if (docNumericID == 0)
@@ -104,6 +103,26 @@ static NSString* createUUID() {
 }
 
 
+/** Extracts the history of revision IDs (in reverse chronological order) from the _revisions key */
++ (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties {
+    NSDictionary* revisions = $castIf(NSDictionary,
+                                      [docProperties objectForKey: @"_revisions"]);
+    if (!revisions)
+        return nil;
+    // Extract the history, expanding the numeric prefixes:
+    __block int start = [$castIf(NSNumber, [revisions objectForKey: @"start"]) intValue];
+    NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
+    return [revIDs my_map: ^(id revID) {
+        return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
+    }];
+}
+
+
+#pragma mark - INSERTION:
+
+
+/** Returns the JSON to be stored into the 'json' column for a given TDRevision.
+    This has all the special keys like "_id" stripped out. */
 - (NSData*) encodeDocumentJSON: (TDRevision*)rev {
     static NSSet* sKnownSpecialKeys;
     if (!sKnownSpecialKeys) {
@@ -137,6 +156,18 @@ static NSString* createUUID() {
 }
 
 
+/** Posts a local NSNotification of a new revision of a document. */
+- (void) notifyChange: (TDRevision*)rev source: (NSURL*)source
+{
+    NSDictionary* userInfo = $dict({@"rev", rev},
+                                   {@"seq", $object(rev.sequence)},
+                                   {@"source", source});
+    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseChangeNotification
+                                                        object: self
+                                                      userInfo: userInfo];
+}
+
+
 // Raw row insertion. Returns new sequence, or 0 on error
 - (SequenceNumber) insertRevision: (TDRevision*)rev
                      docNumericID: (SInt64)docNumericID
@@ -157,15 +188,26 @@ static NSString* createUUID() {
 }
 
 
+/** Public method to add a new revision of a document. */
 - (TDRevision*) putRevision: (TDRevision*)rev
              prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
                      status: (TDStatus*)outStatus
 {
+    return [self putRevision: rev prevRevisionID: prevRevID allowConflict: NO status: outStatus];
+}
+
+
+/** Public method to add a new revision of a document. */
+- (TDRevision*) putRevision: (TDRevision*)rev
+             prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
+              allowConflict: (BOOL)allowConflict
+                     status: (TDStatus*)outStatus
+{
     Assert(outStatus);
     NSString* docID = rev.docID;
-    SInt64 docNumericID;
     BOOL deleted = rev.deleted;
-    if (!rev || (prevRevID && !docID) || (deleted && !docID)) {
+    if (!rev || (prevRevID && !docID) || (deleted && !docID)
+             || (docID && ![TDDatabase isValidDocumentID: docID])) {
         *outStatus = 400;
         return nil;
     }
@@ -174,18 +216,24 @@ static NSString* createUUID() {
     [self beginTransaction];
     FMResultSet* r = nil;
     @try {
+        SInt64 docNumericID = docID ? [self getDocNumericID: docID] : 0;
         SequenceNumber parentSequence = 0;
         if (prevRevID) {
             // Replacing: make sure given prevRevID is current & find its sequence number:
-            docNumericID = [self getOrInsertDocNumericID: docID];
-            if (docNumericID <= 0)
+            if (docNumericID <= 0) {
+                *outStatus = 404;
                 return nil;
-            parentSequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
-                                                "WHERE doc_id=? AND revid=? and current=1 LIMIT 1",
-                                                 $object(docNumericID), prevRevID];
+            }
+            NSString* sql = $sprintf(@"SELECT sequence FROM revs "
+                                      "WHERE doc_id=? AND revid=? %@ LIMIT 1",
+                                     (allowConflict ? @"" : @"AND current=1"));
+            parentSequence = [_fmdb longLongForQuery: sql, $object(docNumericID), prevRevID];
             if (parentSequence == 0) {
                 // Not found: 404 or a 409, depending on whether there is any current revision
-                *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? 409 : 404;
+                if (!allowConflict && [self existsDocumentWithID: docID revisionID: nil])
+                    *outStatus = 409;
+                else
+                    *outStatus = 404;
                 return nil;
             }
             
@@ -211,35 +259,41 @@ static NSString* createUUID() {
                 *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? 409 : 404;
                 return nil;
             }
-            // Inserting first revision, with docID given: make sure docID doesn't exist,
-            // or exists but is currently deleted
+            // Inserting first revision, with docID given. First validate:
             if (![self validateRevision: rev previousRevision: nil]) {
                 *outStatus = 403;
                 return nil;
             }
-            docNumericID = [self getOrInsertDocNumericID: docID];
-            if (docNumericID <= 0)
-                return nil;
-            r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
-                                      "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
-                                     $object(docNumericID)];
-            if (!r)
-                return nil;
-            if ([r next]) {
-                if ([r boolForColumnIndex: 1]) {
-                    // Make the deleted revision no longer current:
-                    if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                               $object([r longLongIntForColumnIndex: 0])])
-                        return nil;
-                } else {
-                    *outStatus = 409;
+            
+            if (docNumericID <= 0) {
+                // Doc doesn't exist at all; create it:
+                docNumericID = [self insertDocumentID: docID];
+                if (docNumericID <= 0)
                     return nil;
+            } else {
+                // Doc exists; check whether current winning revision is deleted:
+                r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
+                                          "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
+                                         $object(docNumericID)];
+                if (!r)
+                    return nil;
+                if ([r next]) {
+                    if ([r boolForColumnIndex: 1]) {
+                        // Make the deleted revision no longer current:
+                        if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
+                                                   $object([r longLongIntForColumnIndex: 0])])
+                            return nil;
+                    } else if (!allowConflict) {
+                        // The current winning revision is not deleted, so this is a conflict
+                        *outStatus = 409;
+                        return nil;
+                    }
                 }
+                [r close];
+                r = nil;
             }
-            [r close];
-            r = nil;
         } else {
-            // Inserting first revision, with no docID given: generate a unique docID:
+            // Inserting first revision, with no docID given (POST): generate a unique docID:
             docID = [[self class] generateDocumentID];
             docNumericID = [self insertDocumentID: docID];
             if (docNumericID <= 0)
@@ -293,6 +347,7 @@ static NSString* createUUID() {
 }
 
 
+/** Public method to add an existing revision of a document (probably being pulled). */
 - (TDStatus) forceInsert: (TDRevision*)rev
          revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
                   source: (NSURL*)source
@@ -300,12 +355,14 @@ static NSString* createUUID() {
     NSUInteger historyCount = history.count;
     if (historyCount < 1 || !$equal([history objectAtIndex: 0], rev.revID))
         return 400;
+    NSString* docID = rev.docID;
+    if (![TDDatabase isValidDocumentID: docID])
+        return 400;
     
     BOOL success = NO;
     [self beginTransaction];
     @try {
         // First look up all locally-known revisions of this document:
-        NSString* docID = rev.docID;
         SInt64 docNumericID = [self getOrInsertDocNumericID: docID];
         TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID
                                                             numericID: docNumericID
@@ -399,18 +456,7 @@ static NSString* createUUID() {
 }
 
 
-+ (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties {
-    NSDictionary* revisions = $castIf(NSDictionary,
-                                      [docProperties objectForKey: @"_revisions"]);
-    if (!revisions)
-        return nil;
-    // Extract the history, expanding the numeric prefixes:
-    __block int start = [$castIf(NSNumber, [revisions objectForKey: @"start"]) intValue];
-    NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
-    return [revIDs my_map: ^(id revID) {
-        return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
-    }];
-}
+#pragma mark - VALIDATION:
 
 
 - (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock {

@@ -58,6 +58,7 @@ typedef void (^OnFinishedBlock)();
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
 - (TDContentOptions) contentOptions;
 - (BOOL) getQueryOptions: (struct TDQueryOptions*)options;
+@property (readonly) NSDictionary* bodyAsDictionary;
 - (TDStatus) openDB;
 - (void) sendResponse;
 @end

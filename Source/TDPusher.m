@@ -19,9 +19,6 @@
 #import "TDInternal.h"
 
 
-static NSDictionary* makeCouchRevisionList( NSArray* history );
-
-
 @implementation TDPusher
 
 
@@ -112,8 +109,7 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
                     }
                     
                     // Add the _revisions list:
-                    [properties setValue: makeCouchRevisionList([_db getRevisionHistory: rev])
-                                  forKey: @"_revisions"];
+                    [properties setValue: [_db getRevisionHistoryDict: rev] forKey: @"_revisions"];
                 }
                 return [properties autorelease];
             }];
@@ -139,92 +135,4 @@ static NSDictionary* makeCouchRevisionList( NSArray* history );
 }
 
 
-// Splits a revision ID into its generation number and opaque suffix string
-static BOOL parseRevID( NSString* revID, int* outNum, NSString** outSuffix) {
-    NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
-    scanner.charactersToBeSkipped = nil;
-    BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: nil];
-    *outSuffix = [revID substringFromIndex: scanner.scanLocation];
-    [scanner release];
-    return parsed && *outNum > 0 && (*outSuffix).length > 0;
-}
-
-
-static NSDictionary* makeCouchRevisionList( NSArray* history ) {
-    if (!history)
-        return nil;
-    
-    // Try to extract descending numeric prefixes:
-    NSMutableArray* suffixes = $marray();
-    id start = nil;
-    int lastRevNo = -1;
-    for (TDRevision* rev in history) {
-        int revNo;
-        NSString* suffix;
-        if (parseRevID(rev.revID, &revNo, &suffix)) {
-            if (!start)
-                start = $object(revNo);
-            else if (revNo != lastRevNo - 1) {
-                start = nil;
-                break;
-            }
-            lastRevNo = revNo;
-            [suffixes addObject: suffix];
-        } else {
-            start = nil;
-            break;
-        }
-    }
-    
-    NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
-    return $dict({@"ids", revIDs}, {@"start", start});
-}
-
-
 @end
-
-
-
-
-#if DEBUG
-
-static TDRevision* mkrev(NSString* revID) {
-    return [[[TDRevision alloc] initWithDocID: @"docid" revID: revID deleted: NO] autorelease];
-}
-
-TestCase(TDPusher_ParseRevID) {
-    RequireTestCase(TDDatabase);
-    int num;
-    NSString* suffix;
-    CAssert(parseRevID(@"1-utiopturoewpt", &num, &suffix));
-    CAssertEq(num, 1);
-    CAssertEqual(suffix, @"utiopturoewpt");
-    
-    CAssert(parseRevID(@"321-fdjfdsj-e", &num, &suffix));
-    CAssertEq(num, 321);
-    CAssertEqual(suffix, @"fdjfdsj-e");
-    
-    CAssert(!parseRevID(@"0-fdjfdsj-e", &num, &suffix));
-    CAssert(!parseRevID(@"-4-fdjfdsj-e", &num, &suffix));
-    CAssert(!parseRevID(@"5_fdjfdsj-e", &num, &suffix));
-    CAssert(!parseRevID(@" 5-fdjfdsj-e", &num, &suffix));
-    CAssert(!parseRevID(@"7 -foo", &num, &suffix));
-    CAssert(!parseRevID(@"7-", &num, &suffix));
-    CAssert(!parseRevID(@"7", &num, &suffix));
-    CAssert(!parseRevID(@"eiuwtiu", &num, &suffix));
-    CAssert(!parseRevID(@"", &num, &suffix));
-}
-
-TestCase(TDPusher_RevisionList) {
-    NSArray* revs = $array(mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def"));
-    CAssertEqual(makeCouchRevisionList(revs), $dict({@"ids", $array(@"jkl", @"ghi", @"def")},
-                                                    {@"start", $object(4)}));
-    
-    revs = $array(mkrev(@"4-jkl"), mkrev(@"2-def"));
-    CAssertEqual(makeCouchRevisionList(revs), $dict({@"ids", $array(@"4-jkl", @"2-def")}));
-    
-    revs = $array(mkrev(@"12345"), mkrev(@"6789"));
-    CAssertEqual(makeCouchRevisionList(revs), $dict({@"ids", $array(@"12345", @"6789")}));
-}
-
-#endif
