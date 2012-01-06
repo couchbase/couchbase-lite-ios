@@ -110,11 +110,11 @@ static NSString* createUUID() {
     if (!revisions)
         return nil;
     // Extract the history, expanding the numeric prefixes:
-    __block int start = [$castIf(NSNumber, [revisions objectForKey: @"start"]) intValue];
     NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
-    return [revIDs my_map: ^(id revID) {
-        return (start ? $sprintf(@"%d-%@", start--, revID) : revID);
-    }];
+    __block int start = [$castIf(NSNumber, [revisions objectForKey: @"start"]) intValue];
+    if (start)
+        revIDs = [revIDs my_map: ^(id revID) {return $sprintf(@"%d-%@", start--, revID);}];
+    return revIDs;
 }
 
 
@@ -352,11 +352,16 @@ static NSString* createUUID() {
          revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
                   source: (NSURL*)source
 {
-    NSUInteger historyCount = history.count;
-    if (historyCount < 1 || !$equal([history objectAtIndex: 0], rev.revID))
-        return 400;
     NSString* docID = rev.docID;
-    if (![TDDatabase isValidDocumentID: docID])
+    NSString* revID = rev.revID;
+    if (![TDDatabase isValidDocumentID: docID] || !revID)
+        return 400;
+    
+    NSUInteger historyCount = history.count;
+    if (historyCount == 0) {
+        history = $array(revID);
+        historyCount = 1;
+    } else if (!$equal([history objectAtIndex: 0], revID))
         return 400;
     
     BOOL success = NO;

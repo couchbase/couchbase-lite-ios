@@ -229,35 +229,47 @@
         return 400;
     id allObj = [body objectForKey: @"all_or_nothing"];
     BOOL allOrNothing = (allObj && allObj != $false);
-    //BOOL noNewEdits = ([body objectForKey: @"new_edits"] == $false);
+    BOOL noNewEdits = ([body objectForKey: @"new_edits"] == $false);
 
     BOOL ok = NO;
     NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
     [_db beginTransaction];
     @try{
         for (NSDictionary* doc in docs) {
-            NSString* docID = [doc objectForKey: @"_id"];
-            TDRevision* rev;
-            TDStatus status = [self update: db
-                                     docID: docID
-                                      body: [TDBody bodyWithProperties: doc]
-                                  deleting: NO
-                             allowConflict: allOrNothing
-                                createdRev: &rev];
-            NSDictionary* result;
-            if (status < 300) {
-                Assert(rev.revID);
-                result = $dict({@"id", rev.docID}, {@"rev", rev.revID}, {@"ok", $true});
-            } else if (allOrNothing) {
-                return status;  // all_or_nothing backs out if there's any error
-            } else if (status == 403) {
-                result = $dict({@"id", docID}, {@"error", @"validation failed"});
-            } else if (status == 409) {
-                result = $dict({@"id", docID}, {@"error", @"conflict"});
-            } else {
-                return status;  // abort the whole thing if something goes badly wrong
+            @autoreleasepool {
+                NSString* docID = [doc objectForKey: @"_id"];
+                TDRevision* rev;
+                TDStatus status;
+                TDBody* docBody = [TDBody bodyWithProperties: doc];
+                if (noNewEdits) {
+                    rev = [[[TDRevision alloc] initWithBody: docBody] autorelease];
+                    NSArray* history = [TDDatabase parseCouchDBRevisionHistory: doc];
+                    status = rev ? [db forceInsert: rev revisionHistory: history source: nil] : 400;
+                } else {
+                    status = [self update: db
+                                    docID: docID
+                                     body: docBody
+                                 deleting: NO
+                            allowConflict: allOrNothing
+                               createdRev: &rev];
+                }
+                NSDictionary* result = nil;
+                if (status < 300) {
+                    Assert(rev.revID);
+                    if (!noNewEdits)
+                        result = $dict({@"id", rev.docID}, {@"rev", rev.revID}, {@"ok", $true});
+                } else if (allOrNothing) {
+                    return status;  // all_or_nothing backs out if there's any error
+                } else if (status == 403) {
+                    result = $dict({@"id", docID}, {@"error", @"validation failed"});
+                } else if (status == 409) {
+                    result = $dict({@"id", docID}, {@"error", @"conflict"});
+                } else {
+                    return status;  // abort the whole thing if something goes badly wrong
+                }
+                if (result)
+                    [results addObject: result];
             }
-            [results addObject: result];
         }
         ok = YES;
     } @finally {
@@ -552,8 +564,6 @@
         if (!rev || !$equal(rev.docID, docID) || !rev.revID)
             return 400;
         NSArray* history = [TDDatabase parseCouchDBRevisionHistory: body.properties];
-        if (!history)
-            history = $array(rev.revID);
         return [_db forceInsert: rev revisionHistory: history source: nil];
     }
 }
