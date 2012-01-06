@@ -211,6 +211,14 @@
 @synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments;
 
 
+- (UInt64) totalDataSize {
+    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: nil];
+    if (!attrs)
+        return 0;
+    return attrs.fileSize + _attachments.totalDataSize;
+}
+
+
 - (BOOL) beginTransaction {
     if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)])
         return NO;

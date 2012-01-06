@@ -138,6 +138,21 @@
 }
 
 
+- (UInt64) totalDataSize {
+    UInt64 total = 0;
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    for (NSString* filename in [fmgr contentsOfDirectoryAtPath: _path error: nil]) {
+        if ([[self class] getKey: NULL forFilename: filename]) {
+            NSString* itemPath = [_path stringByAppendingPathComponent: filename];
+            NSDictionary* attrs = [fmgr attributesOfItemAtPath: itemPath error: nil];
+            if (attrs)
+                total += attrs.fileSize;
+        }
+    }
+    return total;
+}
+
+
 - (NSUInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSArray* blob = [fmgr contentsOfDirectoryAtPath: _path error: nil];

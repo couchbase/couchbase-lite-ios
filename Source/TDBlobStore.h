@@ -32,6 +32,7 @@ typedef struct {
 
 @property (readonly) NSUInteger count;
 @property (readonly) NSArray* allKeys;
+@property (readonly) UInt64 totalDataSize;
 
 - (NSUInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep;
 

@@ -87,20 +87,23 @@ TestCase(TDRouter_Databases) {
     RequireTestCase(TDRouter_Server);
     TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
     Send(server, @"PUT", @"/database", 201, nil);
-    Send(server, @"GET", @"/database", 200,
-         $dict({@"db_name", @"database"}, {@"doc_count", $object(0)}, {@"update_seq", $object(0)}));
+    
+    NSDictionary* dbInfo = Send(server, @"GET", @"/database", 200, nil);
+    CAssertEq([[dbInfo objectForKey: @"doc_count"] intValue], 0);
+    CAssertEq([[dbInfo objectForKey: @"update_seq"] intValue], 0);
+    CAssert([[dbInfo objectForKey: @"disk_size"] intValue] > 8000);
+    
     Send(server, @"PUT", @"/database", 412, nil);
     Send(server, @"PUT", @"/database2", 201, nil);
     Send(server, @"GET", @"/_all_dbs", 200, $array(@"database", @"database2"));
-    Send(server, @"GET", @"/database2", 200,
-         $dict({@"db_name", @"database2"}, {@"doc_count", $object(0)}, {@"update_seq", $object(0)}));
+    dbInfo = Send(server, @"GET", @"/database2", 200, nil);
+    CAssertEqual([dbInfo objectForKey: @"db_name"], @"database2");
     Send(server, @"DELETE", @"/database2", 200, nil);
     Send(server, @"GET", @"/_all_dbs", 200, $array(@"database"));
 
     Send(server, @"PUT", @"/database%2Fwith%2Fslashes", 201, nil);
-    Send(server, @"GET", @"/database%2Fwith%2Fslashes", 200,
-         $dict({@"db_name", @"database/with/slashes"},
-               {@"doc_count", $object(0)}, {@"update_seq", $object(0)}));
+    dbInfo = Send(server, @"GET", @"/database%2Fwith%2Fslashes", 200, nil);
+    CAssertEqual([dbInfo objectForKey: @"db_name"], @"database/with/slashes");
 }
 
 

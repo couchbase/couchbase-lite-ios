@@ -157,7 +157,8 @@
         return 500;
     _response.bodyObject = $dict({@"db_name", db.name},
                                  {@"doc_count", $object(num_docs)},
-                                 {@"update_seq", $object(update_seq)});
+                                 {@"update_seq", $object(update_seq)},
+                                 {@"disk_size", $object(db.totalDataSize)});
     return 200;
 }
 

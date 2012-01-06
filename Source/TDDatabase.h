@@ -80,6 +80,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 @property (readonly) NSString* path;
 @property (readonly, copy) NSString* name;
 @property (readonly) BOOL exists;
+@property (readonly) UInt64 totalDataSize;
 
 /** Begins a database transaction. Transactions can nest. Every -beginTransaction must be balanced by a later -endTransaction:. */
 - (BOOL) beginTransaction;
