@@ -373,9 +373,9 @@ static id groupKey(id key, unsigned groupLevel) {
                 // Reduced or grouped query:
                 if (group && !groupTogether(key, lastKey, groupLevel) && lastKey) {
                     // This pair starts a new group, so reduce & record the last one:
-                    id reduced = _reduceBlock(keysToReduce, valuesToReduce, NO) ?: $null;
+                    id reduced = _reduceBlock ? _reduceBlock(keysToReduce, valuesToReduce,NO) : nil;
                     [rows addObject: $dict({@"key", groupKey(lastKey, groupLevel)},
-                                           {@"value", reduced})];
+                                           {@"value", (reduced ?: $null)})];
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
                 }
@@ -406,8 +406,9 @@ static id groupKey(id key, unsigned groupLevel) {
         if (keysToReduce.count > 0) {
             // Finish the last group (or the entire list, if no grouping):
             id key = group ? groupKey(lastKey, groupLevel) : $null;
-            id reduced = _reduceBlock(keysToReduce, valuesToReduce, NO) ?: $null;
-            [rows addObject: $dict({@"key", key}, {@"value", reduced})];
+            id reduced = _reduceBlock ? _reduceBlock(keysToReduce, valuesToReduce,NO) : nil;
+            [rows addObject: $dict({@"key", key},
+                                   {@"value", (reduced ?: $null)})];
         }
         [keysToReduce release];
         [valuesToReduce release];

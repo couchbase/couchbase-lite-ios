@@ -472,6 +472,18 @@
 }
 
 
+- (NSString*) revIDFromIfMatchHeader {
+    NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
+    if (!ifMatch)
+        return nil;
+    // Value of If-Match is an ETag, so have to trim the quotes around it:
+    if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
+        return [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
+    else
+        return nil;
+}
+
+
 - (TDStatus) update: (TDDatabase*)db
               docID: (NSString*)docID
                body: (TDBody*)body
@@ -495,20 +507,14 @@
         // PUT's revision ID comes from the JSON body.
         prevRevID = [body propertyForKey: @"_rev"];
     } else {
-        // DELETE's revision ID can come either from the ?rev= query param or an If-Match header.
+        // DELETE's revision ID comes from the ?rev= query param
         prevRevID = [self query: @"rev"];
-        if (!prevRevID) {
-            NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
-            if (ifMatch) {
-                // Value of If-Match is an ETag, so have to trim the quotes around it:
-                if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
-                    prevRevID = [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
-                else
-                    return 400;
-            }
-        }
     }
-    
+
+    // A backup source of revision ID is an If-Match header:
+    if (!prevRevID)
+        prevRevID = [self revIDFromIfMatchHeader];
+
     TDRevision* rev = [[[TDRevision alloc] initWithDocID: docID revID: nil deleted: deleting]
                             autorelease];
     if (!rev)

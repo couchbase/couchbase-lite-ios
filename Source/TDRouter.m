@@ -93,7 +93,8 @@ NSString* const kTDVersionString =  @"0.2";
 }
 
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError {
-    *outError = nil;
+    if (outError)
+        *outError = nil;
     NSString* value = [self query: param];
     if (!value)
         return nil;
@@ -168,8 +169,10 @@ static NSArray* splitPath( NSURL* url ) {
     for (NSString* comp in [pathString componentsSeparatedByString: @"/"]) {
         if ([comp length] > 0) {
             comp = [comp stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-            if (!comp)
-                return nil;     // bad URL
+            if (!comp) {
+                path = nil;     // bad URL
+                break;
+            }
             [path addObject: comp];
         }
     }
