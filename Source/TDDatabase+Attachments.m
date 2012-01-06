@@ -17,8 +17,9 @@
 */
 
 #import "TDDatabase.h"
-#import "TDBlobStore.h"
 #import "TDBase64.h"
+#import "TDBlobStore.h"
+#import "TDBody.h"
 #import "TDInternal.h"
 
 #import "FMDatabase.h"
@@ -209,6 +210,81 @@
         }
     }
     return 200;
+}
+
+
+- (TDRevision*) updateAttachment: (NSString*)filename
+                            body: (NSData*)body
+                            type: (NSString*)contentType
+                         ofDocID: (NSString*)docID
+                           revID: (NSString*)oldRevID
+                          status: (TDStatus*)outStatus
+{
+    *outStatus = 400;
+    if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID))
+        return nil;
+    
+    [self beginTransaction];
+    @try {
+        TDRevision* oldRev = [[TDRevision alloc] initWithDocID: docID revID: oldRevID deleted: NO];
+        if (oldRevID) {
+            // Load existing revision if this is a replacement:
+            *outStatus = [self loadRevisionBody: oldRev options: 0];
+            if (*outStatus >= 300) {
+                if (*outStatus == 404 && [self existsDocumentWithID: docID revisionID: nil])
+                    *outStatus = 409;   // if some other revision exists, it's a conflict
+                return nil;
+            }
+            NSDictionary* attachments = [oldRev.properties objectForKey: @"_attachments"];
+            if (!body && ![attachments objectForKey: filename]) {
+                *outStatus = 404;
+                return nil;
+            }
+            // Remove the _attachments stubs so putRevision: doesn't copy the rows for me
+            // OPT: Would be better if I could tell loadRevisionBody: not to add it
+            if (attachments) {
+                NSMutableDictionary* properties = [oldRev.properties mutableCopy];
+                [properties removeObjectForKey: @"_attachments"];
+                oldRev.body = [TDBody bodyWithProperties: properties];
+                [properties release];
+            }
+        } else {
+            // If this creates a new doc, it needs a body:
+            oldRev.body = [TDBody bodyWithProperties: $dict()];
+        }
+        
+        // Create a new revision:
+        TDRevision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID status: outStatus];
+        if (!newRev)
+            return nil;
+        
+        if (oldRevID) {
+            // Copy all attachment rows _except_ for the one being updated:
+            if (![_fmdb executeUpdate: @"INSERT INTO attachments "
+                                        "(sequence, filename, key, type, length, revpos) "
+                                          "SELECT ?, filename, key, type, length, revpos FROM attachments "
+                                            "WHERE sequence=? AND filename != ?",
+                                        $object(newRev.sequence), $object(oldRev.sequence),
+                                        filename]) {
+                *outStatus = 500;
+                return nil;
+            }
+        }
+        
+        if (body) {
+            // If not deleting, add a new attachment entry:
+            *outStatus = [self insertAttachment: body forSequence: newRev.sequence
+                                      named: filename type: contentType
+                                     revpos: newRev.generation];
+            if (*outStatus >= 300)
+                return nil;
+        }
+        
+        *outStatus = body ? 201 : 200;
+        return newRev;
+    } @finally {
+        [self endTransaction: (*outStatus < 300)];
+    }
 }
 
 

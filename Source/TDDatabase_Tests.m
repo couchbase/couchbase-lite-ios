@@ -304,6 +304,7 @@ TestCase(TDDatabase_PutAttachment) {
     // Start with a fresh database in /tmp:
     TDDatabase* db = createDB();
     
+    // Put a revision that includes an _attachments dict:
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSString* base64 = [TDBase64 encode: attach1];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
@@ -320,6 +321,7 @@ TestCase(TDDatabase_PutAttachment) {
     // Examine the attachment store:
     CAssertEq(db.attachmentStore.count, 1u);
     
+    // Get the revision:
     TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
                                 options: 0];
     attachmentDict = [gotRev1.properties objectForKey: @"_attachments"];
@@ -328,6 +330,54 @@ TestCase(TDDatabase_PutAttachment) {
                                                          {@"length", $object(27)},
                                                          {@"stub", $true},
                                                          {@"revpos", $object(1)})}));
+    
+    // Update the attachment directly:
+    NSData* attachv2 = [@"Replaced body of attach" dataUsingEncoding: NSUTF8StringEncoding];
+    [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+                 ofDocID: rev1.docID revID: nil
+                  status: &status];
+    CAssertEq(status, 409);
+    [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+                 ofDocID: rev1.docID revID: @"1-bogus"
+                  status: &status];
+    CAssertEq(status, 409);
+    TDRevision* rev2 = [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+                                    ofDocID: rev1.docID revID: rev1.revID
+                                     status: &status];
+    CAssertEq(status, 201);
+    CAssertEqual(rev2.docID, rev1.docID);
+    CAssertEq(rev2.generation, 2u);
+
+    // Get the updated revision:
+    TDRevision* gotRev2 = [db getDocumentWithID: rev2.docID revisionID: rev2.revID
+                                        options: 0];
+    attachmentDict = [gotRev2.properties objectForKey: @"_attachments"];
+    CAssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"application/foo"},
+                                                         {@"digest", @"sha1-mbT3208HI3PZgbG4zYWbDW2HsPk="},
+                                                         {@"length", $object(23)},
+                                                         {@"stub", $true},
+                                                         {@"revpos", $object(2)})}));
+    
+    // Delete the attachment:
+    [db updateAttachment: @"nosuchattach" body: nil type: nil
+                 ofDocID: rev2.docID revID: rev2.revID
+                  status: &status];
+    CAssertEq(status, 404);
+    [db updateAttachment: @"nosuchattach" body: nil type: nil
+                 ofDocID: @"nosuchdoc" revID: @"nosuchrev"
+                  status: &status];
+    CAssertEq(status, 404);
+    TDRevision* rev3 = [db updateAttachment: @"attach" body: nil type: nil
+                                    ofDocID: rev2.docID revID: rev2.revID
+                                     status: &status];
+    CAssertEq(status, 200);
+    CAssertEqual(rev2.docID, rev1.docID);
+    CAssertEq(rev2.generation, 2u);
+    
+    // Get the updated revision:
+    TDRevision* gotRev3 = [db getDocumentWithID: rev3.docID revisionID: rev3.revID
+                                        options: 0];
+    CAssertNil([gotRev3.properties objectForKey: @"_attachments"]);
 }
 
 

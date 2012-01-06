@@ -32,6 +32,25 @@
 @implementation TDRouter (Handlers)
 
 
+- (void) setResponseLocation: (NSURL*)url {
+    // Strip anything after the URL's path (i.e. the query string)
+    CFURLRef cfURL = (CFURLRef)url;
+    CFRange range = CFURLGetByteRangeForComponent(cfURL, kCFURLComponentResourceSpecifier, NULL);
+    if (range.length == 0) {
+        [_response setValue: url.absoluteString ofHeader: @"Location"];
+    } else {
+        CFIndex size = CFURLGetBytes(cfURL, NULL, 0);
+        if (size > 8000)
+            return;
+        UInt8 bytes[size];
+        CFURLGetBytes(cfURL, bytes, size);
+        cfURL = CFURLCreateWithBytes(NULL, bytes, range.location - 1, kCFStringEncodingUTF8, NULL);
+        [_response setValue: (id)CFURLGetString(cfURL) ofHeader: @"Location"];
+        CFRelease(cfURL);
+    }
+}
+
+
 #pragma mark - SERVER REQUESTS:
 
 
@@ -168,7 +187,7 @@
         return 412;
     if (![db open])
         return 500;
-    [_response setValue: _request.URL.absoluteString ofHeader: @"Location"];
+    [self setResponseLocation: _request.URL];
     return 201;
 }
 
@@ -284,7 +303,8 @@
 
 
 - (TDStatus) do_POST_compact: (TDDatabase*)db {
-    return [db compact];
+    TDStatus status = [db compact];
+    return status<300 ? 202 : status;       // CouchDB returns 202 'cause it's an async operation
 }
 
 - (TDStatus) do_POST_ensure_full_commit: (TDDatabase*)db {
@@ -420,6 +440,18 @@
 #pragma mark - DOCUMENT REQUESTS:
 
 
+- (NSString*) revIDFromIfMatchHeader {
+    NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
+    if (!ifMatch)
+        return nil;
+    // Value of If-Match is an ETag, so have to trim the quotes around it:
+    if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
+        return [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
+    else
+        return nil;
+}
+
+
 - (NSString*) setResponseEtag: (TDRevision*)rev {
     NSString* eTag = $sprintf(@"\"%@\"", rev.revID);
     [_response setValue: eTag ofHeader: @"Etag"];
@@ -446,7 +478,7 @@
 
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    //OPT: This gets the JSON body too, which is a waste. Could add a 'withBody:' attribute?
+    //OPT: This gets the JSON body too, which is a waste. Could add a kNoBody option?
     TDRevision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
                                     options: 0];
@@ -470,18 +502,6 @@
         [_response setValue: type ofHeader: @"Content-Type"];
     _response.body = [TDBody bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
     return 200;
-}
-
-
-- (NSString*) revIDFromIfMatchHeader {
-    NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
-    if (!ifMatch)
-        return nil;
-    // Value of If-Match is an ETag, so have to trim the quotes around it:
-    if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
-        return [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
-    else
-        return nil;
 }
 
 
@@ -547,7 +567,7 @@
             NSURL* url = _request.URL;
             if (!docID)
                 url = [url URLByAppendingPathComponent: rev.docID];
-            [_response.headers setObject: url.absoluteString forKey: @"Location"];
+            [self setResponseLocation: url];
         }
         _response.bodyObject = $dict({@"ok", $true},
                                      {@"id", rev.docID},
@@ -578,6 +598,38 @@
 
 - (TDStatus) do_DELETE: (TDDatabase*)db docID: (NSString*)docID {
     return [self update: db docID: docID json: nil deleting: YES];
+}
+
+
+- (TDStatus) updateAttachment: (NSString*)attachment docID: (NSString*)docID body: (NSData*)body {
+    TDStatus status;
+    TDRevision* rev = [_db updateAttachment: attachment 
+                                       body: body
+                                       type: [_request valueForHTTPHeaderField: @"Content-Type"]
+                                    ofDocID: docID
+                                      revID: ([self query: @"rev"] ?: [self revIDFromIfMatchHeader])
+                                     status: &status];
+    if (status < 300) {
+        _response.bodyObject = $dict({@"ok", $true}, {@"id", rev.docID}, {@"rev", rev.revID});
+        [self setResponseEtag: rev];
+        if (body)
+            [self setResponseLocation: _request.URL];
+    }
+    return status;
+}
+
+
+- (TDStatus) do_PUT: (TDDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
+    return [self updateAttachment: attachment
+                            docID: docID
+                             body: (_request.HTTPBody ?: [NSData data])];
+}
+
+
+- (TDStatus) do_DELETE: (TDDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
+    return [self updateAttachment: attachment
+                            docID: docID
+                             body: nil];
 }
 
 
