@@ -97,6 +97,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSString* docID = [change objectForKey: @"id"];
     if (!docID)
         return;
+    if (![TDDatabase isValidDocumentID: docID]) {
+        Warn(@"%@: Received invalid doc ID from _changes: %@", self, change);
+        return;
+    }
     BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
     NSArray* changes = $castIf(NSArray, [change objectForKey: @"changes"]);
     for (NSDictionary* changeDict in changes) {
@@ -180,10 +184,15 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               // OK, now we've got the response revision:
               if (properties) {
                   NSArray* history = [TDDatabase parseCouchDBRevisionHistory: properties];
-                  rev.properties = properties;
-                  // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                  [_revsToInsert queueObject: $array(rev, history)];
-                  [self asyncTaskStarted];
+                  if (history) {
+                      rev.properties = properties;
+                      // Add to batcher ... eventually it will be fed to -insertRevisions:.
+                      [_revsToInsert queueObject: $array(rev, history)];
+                      [self asyncTaskStarted];
+                  } else {
+                      Warn(@"TDPuller: Missing revision history in response from %@", path);
+                      self.changesProcessed++;
+                  }
               } else {
                   self.changesProcessed++;
               }

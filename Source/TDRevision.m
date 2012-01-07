@@ -1,5 +1,5 @@
 //
-//  TDRev.m
+//  TDRevision.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/2/11.

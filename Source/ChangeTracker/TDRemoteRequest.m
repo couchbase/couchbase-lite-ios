@@ -58,8 +58,13 @@
 }
 
 
+- (NSString*) description {
+    return $sprintf(@"%@[%@ %@]", [self class], _request.HTTPMethod, _request.URL);
+}
+
+
 - (void) respondWithResult: (id)result error: (NSError*)error {
-    LogTo(RemoteRequest, @"%@: Calling completion block...");
+    LogTo(RemoteRequest, @"%@: Calling completion block...", self);
     _onCompletion(result, error);
 }
 

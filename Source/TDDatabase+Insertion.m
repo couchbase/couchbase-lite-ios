@@ -342,6 +342,7 @@ static NSString* createUUID() {
         return nil;
     
     // Send a change notification:
+    rev.body = nil;     // body is not up to date (no current _rev, likely no _id) so avoid confusion
     [self notifyChange: rev source: nil];
     return rev;
 }

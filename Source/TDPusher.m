@@ -97,7 +97,8 @@
                         return (id)nil;
                     // Get the revision's properties:
                     if ([rev deleted])
-                        properties = [$mdict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, {@"_deleted", $true}) retain];
+                        properties = [$mdict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, 
+                                             {@"_deleted", $true}) retain];
                     else {
                         // OPT: Shouldn't include all attachment bodies, just ones that have changed
                         // OPT: Should send docs with many or big attachments as multipart/related
@@ -111,6 +112,7 @@
                     // Add the _revisions list:
                     [properties setValue: [_db getRevisionHistoryDict: rev] forKey: @"_revisions"];
                 }
+                Assert([properties objectForKey: @"_id"]);
                 return [properties autorelease];
             }];
             
