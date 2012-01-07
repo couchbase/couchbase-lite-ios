@@ -356,7 +356,6 @@
         } else {
             [self showSyncButton];
         }
-        database.server.activityPollInterval = 0.0;   // I use notifications, not polling
     }
 }
 

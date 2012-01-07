@@ -201,7 +201,6 @@ int main (int argc, const char * argv[]) {
         } else {
             [_syncProgress setDoubleValue: 0.0];
         }
-        _database.server.activityPollInterval = 0;   // I use notifications instead
     }
 }
 
