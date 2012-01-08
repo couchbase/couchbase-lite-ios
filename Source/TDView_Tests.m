@@ -190,7 +190,15 @@ TestCase(TDView_Query) {
     rows = [view queryWithOptions: &options status: &status];
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
-}    
+    
+    // Specific keys:
+    options = kDefaultTDQueryOptions;
+    options.keys = $array(@"two", @"four");
+    rows = [view queryWithOptions: &options status: &status];
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
+                          $dict({@"id",  @"22222"}, {@"key", @"two"}));
+    CAssertEqual(rows, expectedRows);
+}
 
 
 TestCase(TDView_AllDocsQuery) {

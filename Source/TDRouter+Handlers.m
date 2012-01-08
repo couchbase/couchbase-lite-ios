@@ -636,15 +636,16 @@
 #pragma mark - VIEW QUERIES:
 
 
-- (TDStatus) do_GET: (TDDatabase*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
+- (TDStatus) queryDesignDoc: (NSString*)designDoc view: (NSString*)viewName keys: (NSArray*)keys {
     viewName = $sprintf(@"%@/%@", designDoc, viewName);
-    TDView* view = [db existingViewNamed: viewName];
+    TDView* view = [_db existingViewNamed: viewName];
     if (!view)
         return 404;
     
     TDQueryOptions options;
     if (![self getQueryOptions: &options])
         return 400;
+    options.keys = keys;
 
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
@@ -656,6 +657,19 @@
                                  {@"offset", $object(options.skip)},
                                  {@"update_seq", updateSeq});
     return 200;
+}
+
+
+- (TDStatus) do_GET: (TDDatabase*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
+    return [self queryDesignDoc: designDoc view: viewName keys: nil];
+}
+
+
+- (TDStatus) do_POST: (TDDatabase*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
+    NSArray* keys = $castIf(NSArray, [self.bodyAsDictionary objectForKey: @"keys"]);
+    if (!keys)
+        return 400;
+    return [self queryDesignDoc: designDoc view: viewName keys: keys];
 }
 
 

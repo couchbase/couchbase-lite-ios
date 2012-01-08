@@ -25,9 +25,9 @@
 
 
 const TDQueryOptions kDefaultTDQueryOptions = {
-    nil, nil,
-    0, UINT_MAX, 0, 0,
-    NO, NO, NO, YES, NO, NO
+    .limit = UINT_MAX,
+    .inclusiveEnd = YES
+    // everything else will default to nil/0/NO
 };
 
 
@@ -277,6 +277,17 @@ static id fromJSON( NSData* json ) {
     [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
     NSMutableArray* args = $marray($object(_viewID));
 
+    if (options->keys) {
+        [sql appendString:@" AND key in ("];
+        NSString* item = @"?";
+        for (NSString * key in options->keys) {
+            [sql appendString: item];
+            item = @",?";
+            [args addObject: toJSONString(key)];
+        }
+        [sql appendString:@")"];
+    }
+    
     id minKey = options->startKey, maxKey = options->endKey;
     BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
