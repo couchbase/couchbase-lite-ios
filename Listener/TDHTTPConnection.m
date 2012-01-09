@@ -79,8 +79,11 @@
 
 
 - (BOOL)expectsRequestBodyFromMethod:(NSString *)method atPath:(NSString *)path {
-	return $equal(method, @"POST") || $equal(method, @"PUT")
-		|| [super expectsRequestBodyFromMethod:method atPath:path];
+    if ($equal(method, @"PUT")) {
+        // Allow PUT to /newdbname without a request body.
+        return ! $equal([path stringByDeletingLastPathComponent], @"/");
+    }
+    return $equal(method, @"POST") || [super expectsRequestBodyFromMethod:method atPath:path];
 }
 
 - (void)prepareForBodyWithSize:(UInt64)contentLength {
