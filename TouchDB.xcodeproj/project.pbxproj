@@ -26,17 +26,17 @@
 		270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		270B3E201489390000E0A926 /* TouchDB.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* TouchDB.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E211489390F00E0A926 /* TDURLProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* TDURLProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		270B3E221489391E00E0A926 /* TDDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* TDDatabase.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		270B3E231489392100E0A926 /* TDBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* TDBody.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		270B3E241489392600E0A926 /* TDServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706401486BBD500F0F099 /* TDServer.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		270B3E251489392C00E0A926 /* TDRouter.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* TDRouter.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E221489391E00E0A926 /* TDDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* TDDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E231489392100E0A926 /* TDBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* TDBody.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E241489392600E0A926 /* TDServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706401486BBD500F0F099 /* TDServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E251489392C00E0A926 /* TDRouter.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* TDRouter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E26148939BD00E0A926 /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
 		270B3E27148939C500E0A926 /* TouchDB.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
-		270B3E2B1489581E00E0A926 /* TDPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* TDPuller.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E2B1489581E00E0A926 /* TDPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* TDPuller.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E2C1489581E00E0A926 /* TDPuller.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E2A1489581E00E0A926 /* TDPuller.m */; };
-		270B3E3914898DF200E0A926 /* TDRevision.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* TDRevision.h */; };
+		270B3E3914898DF200E0A926 /* TDRevision.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* TDRevision.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E3A14898DF200E0A926 /* TDRevision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* TDRevision.m */; };
-		270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; };
+		270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E3F148D7F0000E0A926 /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
 		2714CF521496AE5B00E03341 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
@@ -130,7 +130,7 @@
 		27731F3E14967A8400815D67 /* ConfigViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3B14967A8400815D67 /* ConfigViewController.xib */; };
 		27731F41149685A100815D67 /* list_area___checkbox___checked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3F149685A000815D67 /* list_area___checkbox___checked.png */; };
 		27731F42149685A100815D67 /* list_area___checkbox___unchecked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27731F40149685A100815D67 /* list_area___checkbox___unchecked.png */; };
-		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; };
+		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27821BB8148E7D6F0099B373 /* TDReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* TDReplicator.m */; };
 		27821BBA148FF56D0099B373 /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
 		27821BBC149001B30099B373 /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; };
@@ -146,7 +146,7 @@
 		27990703149D2576003D4338 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
 		27990704149E58B0003D4338 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
 		279EB2CB14913BBE00E74185 /* TDRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* TDRouter_Tests.m */; };
-		279EB2CE149140DE00E74185 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* TDView.h */; };
+		279EB2CE149140DE00E74185 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* TDView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		279EB2CF149140DE00E74185 /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* TDView.m */; };
 		279EB2D11491442500E74185 /* TDInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D01491442500E74185 /* TDInternal.h */; };
 		279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* TDCollateJSON.h */; };
@@ -1009,18 +1009,18 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				270B3E201489390000E0A926 /* TouchDB.h in Headers */,
-				270B3E211489390F00E0A926 /* TDURLProtocol.h in Headers */,
-				270B3E221489391E00E0A926 /* TDDatabase.h in Headers */,
 				270B3E231489392100E0A926 /* TDBody.h in Headers */,
-				270B3E241489392600E0A926 /* TDServer.h in Headers */,
-				270B3E251489392C00E0A926 /* TDRouter.h in Headers */,
+				270B3E221489391E00E0A926 /* TDDatabase.h in Headers */,
 				270B3E2B1489581E00E0A926 /* TDPuller.h in Headers */,
-				270B3E3914898DF200E0A926 /* TDRevision.h in Headers */,
 				270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */,
 				27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */,
-				27821BBE14906FB60099B373 /* TouchDBPrefix.h in Headers */,
+				270B3E3914898DF200E0A926 /* TDRevision.h in Headers */,
+				270B3E251489392C00E0A926 /* TDRouter.h in Headers */,
+				270B3E241489392600E0A926 /* TDServer.h in Headers */,
+				270B3E211489390F00E0A926 /* TDURLProtocol.h in Headers */,
 				279EB2CE149140DE00E74185 /* TDView.h in Headers */,
+				270B3E201489390000E0A926 /* TouchDB.h in Headers */,
+				27821BBE14906FB60099B373 /* TouchDBPrefix.h in Headers */,
 				279EB2D11491442500E74185 /* TDInternal.h in Headers */,
 				279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */,
 				27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */,
@@ -1787,6 +1787,7 @@
 				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "Source/TouchDB-Info.plist";
+				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = TouchDB;
 				WRAPPER_EXTENSION = framework;
@@ -1808,6 +1809,7 @@
 				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "Source/TouchDB-Info.plist";
+				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = TouchDB;
 				STRIP_INSTALLED_PRODUCT = YES;

@@ -7,7 +7,7 @@
  *
  */
 
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 @class FMDatabase, TDRevision, TDRevisionList, TDView, TDBlobStore, TDReplicator;
 @protocol TDValidationContext;
 struct TDQueryOptions;
