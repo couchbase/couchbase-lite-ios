@@ -287,6 +287,8 @@ static NSArray* splitPath( NSURL* url ) {
     if (!sel || ![self respondsToSelector: sel]) {
         Log(@"TDRouter: unknown request type: %@ %@ (mapped to %@)",
              _request.HTTPMethod, _request.URL.path, message);
+        Assert([self respondsToSelector: @selector(do_GETRoot)],
+               @"TDRouter(Handlers) is missing -- app may be linked without -ObjC linker flag.");
         sel = @selector(do_UNKNOWN);
     }
     TDStatus status = (TDStatus) objc_msgSend(self, sel, _db, docID, attachmentName);
