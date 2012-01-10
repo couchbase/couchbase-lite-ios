@@ -350,7 +350,8 @@
     [entries sortUsingComparator: ^NSComparisonResult(id e1, id e2) {
         return [[e1 objectForKey: @"seq"] longLongValue] - [[e2 objectForKey: @"seq"] longLongValue];
     }];
-    return $dict({@"results", entries}, {@"last_seq", $object(since)});
+    id lastSeq = [entries.lastObject objectForKey: @"seq"] ?: $object(since);
+    return $dict({@"results", entries}, {@"last_seq", lastSeq});
 }
 
 

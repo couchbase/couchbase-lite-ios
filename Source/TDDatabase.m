@@ -643,10 +643,14 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                     continue;
                 lastDocID = docNumericID;
             }
+            
+            NSString* docID = [r stringForColumnIndex: 2];
+            if ([docID hasPrefix: @"_local/"])
+                continue;       // Local docs do not appear in the _changes feed
 
-            TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
-                                                  revID: [r stringForColumnIndex: 3]
-                                                deleted: [r boolForColumnIndex: 4]];
+            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID
+                                                          revID: [r stringForColumnIndex: 3]
+                                                        deleted: [r boolForColumnIndex: 4]];
             rev.sequence = [r longLongIntForColumnIndex: 0];
             if (includeDocs) {
                 [self expandStoredJSON: [r dataForColumnIndex: 5]

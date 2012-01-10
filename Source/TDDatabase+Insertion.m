@@ -54,7 +54,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 + (BOOL) isValidDocumentID: (NSString*)str {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#Documents
-    return str.length > 0 && ([str characterAtIndex: 0] != '_' || [str hasPrefix: @"_design/"]);
+    if (str.length == 0)
+        return NO;
+    if ([str characterAtIndex: 0] == '_')
+        return [str hasPrefix: @"_design/"] || [str hasPrefix: @"_local/"];
+    return YES;
 }
 
 

@@ -251,18 +251,18 @@ static NSArray* splitPath( NSURL* url ) {
                 return;
             }
             docID = name;
-        } else if ([name isEqualToString: @"_design"]) {
-            // "_design/____" is a document name
+        } else if ([name isEqualToString: @"_design"] || [name isEqualToString: @"_local"]) {
+            // "_design/____" and "_local/____" are document names
             if (pathLen <= 2) {
                 _response.status = 404;
                 return;
             }
-            docID = [@"_design/" stringByAppendingString: [_path objectAtIndex: 2]];
+            docID = [name stringByAppendingPathComponent: [_path objectAtIndex: 2]];
             [_path replaceObjectAtIndex: 1 withObject: docID];
             [_path removeObjectAtIndex: 2];
             --pathLen;
-        } else if ([name hasPrefix: @"_design/"]) {
-            // This is also a design document, just with a URL-encoded "/"
+        } else if ([name hasPrefix: @"_design/"] || [name hasPrefix: @"_local/"]) {
+            // This is also a document, just with a URL-encoded "/"
             docID = name;
         } else {
             // Special document name like "_all_docs":

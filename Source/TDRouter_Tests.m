@@ -183,6 +183,29 @@ TestCase(TDRouter_Docs) {
 }
 
 
+TestCase(TDRouter_LocalDocs) {
+    RequireTestCase(TDRouter_Docs);
+    // PUT a local doc:
+    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    Send(server, @"PUT", @"/db", 201, nil);
+    NSDictionary* result = SendBody(server, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}), 
+                                    201, nil);
+    NSString* revID = [result objectForKey: @"rev"];
+    CAssert([revID hasPrefix: @"1-"]);
+    
+    // GET it:
+    Send(server, @"GET", @"/db/_local/doc1", 200,
+         $dict({@"_id", @"_local/doc1"},
+               {@"_rev", revID},
+               {@"message", @"hello"}));
+
+    // Local doc should not appear in _changes feed:
+    Send(server, @"GET", @"/db/_changes", 200,
+         $dict({@"last_seq", $object(0)},
+               {@"results", $array()}));
+}
+
+
 TestCase(TDRouter_AllDocs) {
     // PUT:
     TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];

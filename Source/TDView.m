@@ -85,6 +85,9 @@ static id<TDViewCompiler> sCompiler;
     _mapBlock = [mapBlock copy];
     [_reduceBlock autorelease];
     _reduceBlock = [reduceBlock copy];
+    
+    if (![_db open])
+        return NO;
 
     // Update the version column in the db. This is a little weird looking because we want to
     // avoid modifying the db if the version didn't change, and because the row might not exist yet.

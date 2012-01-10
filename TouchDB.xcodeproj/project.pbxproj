@@ -648,9 +648,10 @@
 				27C706411486BBD500F0F099 /* TDServer.m */,
 				27731EFD1493FA3100815D67 /* TDBlobStore.h */,
 				27731EFE1493FA3100815D67 /* TDBlobStore.m */,
-				279EB2D7149192C700E74185 /* HTTP */,
+				279EB2D7149192C700E74185 /* Router */,
 				27821BB4148E7D590099B373 /* Replicator */,
 				279EB2D8149192DF00E74185 /* Support */,
+				2713789014BCCA7B0058C5CD /* Tests */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -672,6 +673,17 @@
 				DA147C3614BCAC3B0052DA4D /* TouchDBListener.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2713789014BCCA7B0058C5CD /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */,
+				27B0B77F1491E73400A817AD /* TDView_Tests.m */,
+				27C7064A1488311100F0F099 /* TDRouter_Tests.m */,
+				27821BBB149001B20099B373 /* TDPuller_Tests.m */,
+			);
+			name = Tests;
 			sourceTree = "<group>";
 		};
 		2753154D14ACEF350065964D /* vendor */ = {
@@ -813,7 +825,7 @@
 			name = Replicator;
 			sourceTree = "<group>";
 		};
-		279EB2D7149192C700E74185 /* HTTP */ = {
+		279EB2D7149192C700E74185 /* Router */ = {
 			isa = PBXGroup;
 			children = (
 				27C706431486BE7100F0F099 /* TDRouter.h */,
@@ -822,7 +834,7 @@
 				27C706461487584300F0F099 /* TDURLProtocol.h */,
 				27C706471487584300F0F099 /* TDURLProtocol.m */,
 			);
-			name = HTTP;
+			name = Router;
 			sourceTree = "<group>";
 		};
 		279EB2D8149192DF00E74185 /* Support */ = {
@@ -837,10 +849,6 @@
 				279906ED149ABFC2003D4338 /* TDBatcher.m */,
 				279906E1149A65B7003D4338 /* TDRemoteRequest.h */,
 				279906E2149A65B8003D4338 /* TDRemoteRequest.m */,
-				27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */,
-				27B0B77F1491E73400A817AD /* TDView_Tests.m */,
-				27C7064A1488311100F0F099 /* TDRouter_Tests.m */,
-				27821BBB149001B20099B373 /* TDPuller_Tests.m */,
 				270B3DEE1489359000E0A926 /* TouchDB-Info.plist */,
 				270B3E1F148938D800E0A926 /* TouchDB.h */,
 				27821BBD14906FB50099B373 /* TouchDBPrefix.h */,
