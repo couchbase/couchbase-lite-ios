@@ -28,6 +28,7 @@
 
 static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* path, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"touchdb://" stringByAppendingString: path]];
+    CAssert(url, @"Invalid URL: <%@>", path);
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = method;
     if (bodyObj) {
@@ -338,6 +339,42 @@ TestCase(TDRouter_GetAttachment) {
                                         {@"length", $object(attach1.length)},
                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                          {@"revpos", $object(1)})}));
+}
+
+
+TestCase(TDRouter_OpenRevs) {
+    RequireTestCase(TDRouter_Databases);
+    // PUT:
+    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    Send(server, @"PUT", @"/db", 201, nil);
+    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
+                                    201, nil);
+    NSString* revID1 = [result objectForKey: @"rev"];
+    
+    // PUT to update:
+    result = SendBody(server, @"PUT", @"/db/doc1",
+                      $dict({@"message", @"goodbye"}, {@"_rev", revID1}), 
+                      201, nil);
+    NSString* revID2 = [result objectForKey: @"rev"];
+    
+    Send(server, @"GET", @"/db/doc1?open_revs=all", 200,
+         $array( $dict({@"ok", $dict({@"_id", @"doc1"},
+                                     {@"_rev", revID2},
+                                     {@"message", @"goodbye"})}) ));
+    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, revID2), 200,
+         $array($dict({@"ok", $dict({@"_id", @"doc1"},
+                                    {@"_rev", revID1},
+                                    {@"message", @"hello"})}),
+                $dict({@"ok", $dict({@"_id", @"doc1"},
+                                    {@"_rev", revID2},
+                                    {@"message", @"goodbye"})})
+                ));
+    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"bogus"), 200,
+         $array($dict({@"ok", $dict({@"_id", @"doc1"},
+                                    {@"_rev", revID1},
+                                    {@"message", @"hello"})}),
+                $dict({@"missing", @"bogus"})
+                ));
 }
 
 

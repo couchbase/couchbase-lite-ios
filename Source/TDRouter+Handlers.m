@@ -462,18 +462,55 @@
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
-    TDRevision* rev = [db getDocumentWithID: docID
-                                 revisionID: [self query: @"rev"]  // often nil
-                                    options: [self contentOptions]];
-    if (!rev)
-        return 404;
-    
-    // Check for conditional GET:
-    NSString* eTag = [self setResponseEtag: rev];
-    if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
-        return 304;
-    
-    _response.body = rev.body;
+    TDContentOptions options = [self contentOptions];
+    NSString* openRevsParam = [self query: @"open_revs"];
+    if (openRevsParam == nil) {
+        // Regular GET:
+        TDRevision* rev = [db getDocumentWithID: docID
+                                     revisionID: [self query: @"rev"]  // often nil
+                                        options: options];
+        if (!rev)
+            return 404;
+        
+        // Check for conditional GET:
+        NSString* eTag = [self setResponseEtag: rev];
+        if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
+            return 304;
+        
+        _response.body = rev.body;
+        
+    } else if ($equal(openRevsParam, @"all")) {
+        // Get all conflicting revisions:
+        TDRevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: allRevs.count];
+        for (TDRevision* rev in allRevs.allRevisions) {
+            TDStatus status = [_db loadRevisionBody: rev options: options];
+            if (status < 300)
+                [result addObject: $dict({@"ok", rev.properties})];
+            else if (status == 404)
+                [result addObject: $dict({@"missing", rev.revID})];
+            else
+                return status;
+        }
+        _response.bodyObject = result;
+            
+    } else {
+        // ?open_revs=[...] returns an array of revisions of the document:
+        NSArray* openRevs = $castIf(NSArray, [self jsonQuery: @"open_revs" error: nil]);
+        if (!openRevs)
+            return 400;
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: openRevs.count];
+        for (NSString* revID in openRevs) {
+            if (![revID isKindOfClass: [NSString class]])
+                return 400;
+            TDRevision* rev = [db getDocumentWithID: docID revisionID: revID options: options];
+            if (rev)
+                [result addObject: $dict({@"ok", rev.properties})];
+            else
+                [result addObject: $dict({@"missing", revID})];
+        }
+        _response.bodyObject = result;
+    }
     return 200;
 }
 
