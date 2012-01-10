@@ -45,6 +45,13 @@ typedef struct TDQueryOptions {
 extern const TDQueryOptions kDefaultTDQueryOptions;
 
 
+typedef enum {
+    kTDViewCollationUnicode,
+    kTDViewCollationRaw,
+    kTDViewCollationASCII
+} TDViewCollation;
+
+
 /** An external object that knows how to map source code of some sort into executable functions. */
 @protocol TDViewCompiler <NSObject>
 - (TDMapBlock) compileMapFunction: (NSString*)mapSource language: (NSString*)language;
@@ -61,6 +68,7 @@ extern const TDQueryOptions kDefaultTDQueryOptions;
     int _viewID;
     TDMapBlock _mapBlock;
     TDReduceBlock _reduceBlock;
+    TDViewCollation _collation;
 }
 
 - (void) deleteView;
@@ -70,6 +78,8 @@ extern const TDQueryOptions kDefaultTDQueryOptions;
 
 @property (readonly) TDMapBlock mapBlock;
 @property (readonly) TDReduceBlock reduceBlock;
+
+@property TDViewCollation collation;
 
 - (BOOL) setMapBlock: (TDMapBlock)mapBlock
          reduceBlock: (TDReduceBlock)reduceBlock

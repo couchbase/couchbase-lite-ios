@@ -87,8 +87,13 @@
     if (![_fmdb open])
         return NO;
     
-    // Register CouchDB-compatible JSON collation function:
-    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8, self, TDCollateJSON);
+    // Register CouchDB-compatible JSON collation functions:
+    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8,
+                             kTDCollateJSON_Unicode, TDCollateJSON);
+    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON_RAW", SQLITE_UTF8,
+                             kTDCollateJSON_Raw, TDCollateJSON);
+    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON_ASCII", SQLITE_UTF8,
+                             kTDCollateJSON_ASCII, TDCollateJSON);
     
     // Stuff we need to initialize every time the database opens:
     if (![self initialize: @"PRAGMA foreign_keys = ON;"])

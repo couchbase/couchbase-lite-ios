@@ -59,7 +59,8 @@ static id<TDViewCompiler> sCompiler;
 }
 
 
-@synthesize database=_db, name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock;
+@synthesize database=_db, name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock,
+            collation=_collation;
 
 
 - (int) viewID {
@@ -221,6 +222,8 @@ static id fromJSON( NSData* json ) {
                     // Reconstitute the document as a dictionary:
                     sequence = [r longLongIntForColumnIndex: 1];
                     NSString* docID = [r stringForColumnIndex: 2];
+                    if ([docID hasPrefix: @"_design/"])     // design docs don't get indexed!
+                        continue;
                     NSString* revID = [r stringForColumnIndex: 3];
                     NSData* json = [r dataForColumnIndex: 4];
                     NSDictionary* properties = [_db documentPropertiesFromJSON: json
@@ -270,6 +273,14 @@ static id fromJSON( NSData* json ) {
     *outStatus = [self updateIndex];
     if (*outStatus >= 300)
         return nil;
+    
+    // OPT: It would be faster to use separate tables for raw-or ascii-collated views so that
+    // they could be indexed with the right collation, instead of having to specify it here.
+    NSString* collationStr = @"";
+    if (_collation == kTDViewCollationASCII)
+        collationStr = @" COLLATE JSON_ASCII";
+    else if (_collation == kTDViewCollationRaw)
+        collationStr = @" COLLATE JSON_RAW";
 
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid"];
     if (options->includeDocs)
@@ -298,15 +309,18 @@ static id fromJSON( NSData* json ) {
     }
     if (minKey) {
         [sql appendString: (inclusiveMin ? @" AND key >= ?" : @" AND key > ?")];
+        [sql appendString: collationStr];
         [args addObject: toJSONString(minKey)];
     }
     if (maxKey) {
         [sql appendString: (inclusiveMax ? @" AND key <= ?" :  @" AND key < ?")];
+        [sql appendString: collationStr];
         [args addObject: toJSONString(maxKey)];
     }
     
     [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
                         "ORDER BY key"];
+    [sql appendString: collationStr];
     if (options->descending)
         [sql appendString: @" DESC"];
     if (options->limit != kDefaultTDQueryOptions.limit) {
@@ -317,6 +331,8 @@ static id fromJSON( NSData* json ) {
         [sql appendString: @" OFFSET ?"];
         [args addObject: $object(options->skip)];
     }
+    
+    LogTo(View, @"Query %@: %@", _name, sql);
     
     FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r)

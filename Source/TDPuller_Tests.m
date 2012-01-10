@@ -20,7 +20,7 @@
 #import "Test.h"
 
 
-#if DEBUG
+#if XXXDEBUG
 
 static id pull(TDDatabase* db, NSString* urlStr, id lastSequence) {
     NSURL* remote = [NSURL URLWithString: urlStr];

@@ -388,4 +388,92 @@ TestCase(TDView_GroupedStrings) {
 }
 
 
+TestCase(TDView_Collation) {
+    // Based on CouchDB's "view_collation.js" test
+    NSArray* testKeys = [NSArray arrayWithObjects: $null,
+                                                   $false,
+                                                   $true,
+                                                   $object(0),
+                                                   $object(2.5),
+                                                   $object(10),
+                                                   @" ", @"_", @"~", 
+                                                   @"a",
+                                                   @"A",
+                                                   @"aa",
+                                                   @"b",
+                                                   @"B",
+                                                   @"ba",
+                                                   @"bb",
+                                                   $array(@"a"),
+                                                   $array(@"b"),
+                                                   $array(@"b", @"c"),
+                                                   $array(@"b", @"c", @"a"),
+                                                   $array(@"b", @"d"),
+                                                   $array(@"b", @"d", @"e"), nil];
+    RequireTestCase(TDView_Query);
+    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    int i = 0;
+    for (id key in testKeys)
+        putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
+
+    TDView* view = [db viewNamed: @"default/names"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        emit([doc objectForKey: @"name"], nil);
+    } reduceBlock: NULL version:@"1.0"];
+    
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    TDStatus status;
+    NSArray* rows = [view queryWithOptions: &options status: &status];
+    CAssertEq(status, 200);
+    i = 0;
+    for (NSDictionary* row in rows)
+        CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);
+}
+
+
+TestCase(TDView_CollationRaw) {
+    NSArray* testKeys = [NSArray arrayWithObjects: $object(0),
+                                                   $object(2.5),
+                                                   $object(10),
+                                                   $false,
+                                                   $null,
+                                                   $true,
+                                                   $array(@"a"),
+                                                   $array(@"b"),
+                                                   $array(@"b", @"c"),
+                                                   $array(@"b", @"c", @"a"),
+                                                   $array(@"b", @"d"),
+                                                   $array(@"b", @"d", @"e"),
+                                                   @" ",
+                                                   @"A",
+                                                   @"B",
+                                                   @"_",
+                                                   @"a",
+                                                   @"aa",
+                                                   @"b",
+                                                   @"ba",
+                                                   @"bb",
+                                                   @"~", nil];
+    RequireTestCase(TDView_Query);
+    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    int i = 0;
+    for (id key in testKeys)
+        putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
+
+    TDView* view = [db viewNamed: @"default/names"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        emit([doc objectForKey: @"name"], nil);
+    } reduceBlock: NULL version:@"1.0"];
+    view.collation = kTDViewCollationRaw;
+    
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    TDStatus status;
+    NSArray* rows = [view queryWithOptions: &options status: &status];
+    CAssertEq(status, 200);
+    i = 0;
+    for (NSDictionary* row in rows)
+        CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);
+}
+
+
 #endif
