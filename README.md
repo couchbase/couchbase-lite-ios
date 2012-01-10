@@ -20,25 +20,26 @@ More documentation is available on the [wiki][2].
 ## Requirements ##
 
  * It's written in Objective-C.
- * Xcode 4.2 is required to build it.
+ * Xcode 4.2+ is required to build it.
  * Runtime system requirements are iOS 5+, or Mac OS X 10.7.2+.
 
 ## License ##
 
  * TouchDB is under the Apache License 2.0.
  * [FMDB][5], by [Gus Mueller][8], is under the MIT License.
+ * [CocoaHTTPServer][9], by Robbie Hanson, is under the BSD License.
  * [MYUtilities][6] (portions of which are copied into the vendor/MYUtilities directory) is under the BSD License. (But note that I, Jens, wrote MYUtilities and would have no problem re-licensing it under Apache for use here.)
 
 ## Development Status ##
 
-Currently [Dec. 2011] pre-alpha, but undergoing full-time development. I hope to have a beta release in early 2012.
+Currently [Jan. 2012] undergoing full-time development, nearing alpha. I hope to have a beta release in early 2012.
 
 ## Building TouchDB ##
 
 For full details see the [wiki page][7]. The gist of it is:
 
  1. Clone the TouchDB repository to your local disk.
- 2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the [FMDB][5] library (an Objective-C wrapper for sqlite) into vendor/FMDB.
+ 2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the [FMDB][5] and [CocoaHTTPServer][9] repos into the vendor/ subdirectory.
  3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
 
 
@@ -50,4 +51,4 @@ For full details see the [wiki page][7]. The gist of it is:
 [6]: https://bitbucket.org/snej/myutilities/overview
 [7]: https://github.com/couchbaselabs/TouchDB-iOS/wiki/Building-TouchDB
 [8]: https://github.com/ccgus/
-
+[9]: https://github.com/robbiehanson/CocoaHTTPServer

@@ -10,9 +10,6 @@
 @class TDServer, TDResponse, TDBody;
 
 
-extern NSString* const kTDVersionString;
-
-
 typedef void (^OnResponseReadyBlock)(TDResponse*);
 typedef void (^OnDataAvailableBlock)(NSData*);
 typedef void (^OnFinishedBlock)();
@@ -47,6 +44,8 @@ typedef void (^OnFinishedBlock)();
 
 - (void) start;
 - (void) stop;
+
++ (NSString*) versionString;
 
 @end
 

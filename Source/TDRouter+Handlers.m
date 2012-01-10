@@ -57,7 +57,7 @@
 - (TDStatus) do_GETRoot {
     NSDictionary* info = $dict({@"TouchDB", @"Welcome"},
                                {@"couchdb", @"Welcome"},        // for compatibility
-                               {@"version", kTDVersionString});
+                               {@"version", [[self class] versionString]});
     _response.body = [TDBody bodyWithProperties: info];
     return 200;
 }

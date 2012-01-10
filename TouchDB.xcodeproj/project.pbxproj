@@ -13,8 +13,6 @@
 		270B3DFD1489359000E0A926 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DFC1489359000E0A926 /* SenTestingKit.framework */; };
 		270B3DFE1489359000E0A926 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
 		270B3E011489359000E0A926 /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
-		270B3E071489359000E0A926 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 270B3E051489359000E0A926 /* InfoPlist.strings */; };
-		270B3E0A1489359100E0A926 /* ToyCouchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E091489359100E0A926 /* ToyCouchTests.m */; };
 		270B3E111489382F00E0A926 /* TDDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* TDDatabase.m */; };
 		270B3E121489382F00E0A926 /* TDBody.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* TDBody.m */; };
 		270B3E131489382F00E0A926 /* TDServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* TDServer.m */; };
@@ -74,7 +72,6 @@
 		275315A314ACEFC90065964D /* WebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156C14ACEFC90065964D /* WebSocket.h */; };
 		275315AB14ACF00B0065964D /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315A814ACF00B0065964D /* GCDAsyncSocket.h */; };
 		275315AC14ACF00B0065964D /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315A814ACF00B0065964D /* GCDAsyncSocket.h */; };
-		275315BB14ACF0330065964D /* About.txt in Resources */ = {isa = PBXBuildFile; fileRef = 275315B014ACF0330065964D /* About.txt */; };
 		275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */; };
 		275315BD14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */; };
 		275315C014ACF0330065964D /* DDASLLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B314ACF0330065964D /* DDASLLogger.h */; };
@@ -173,8 +170,6 @@
 		27B0B7B91492B83C00A817AD /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7B81492B83C00A817AD /* UIKit.framework */; };
 		27B0B7BA1492B83C00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27B0B7BD1492B83C00A817AD /* libTouchDB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libTouchDB.a */; };
-		27B0B7C31492B83C00A817AD /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 27B0B7C11492B83C00A817AD /* InfoPlist.strings */; };
-		27B0B7C61492B83C00A817AD /* TouchDBiOSTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B7C51492B83C00A817AD /* TouchDBiOSTests.m */; };
 		27B0B7CD1492B86C00A817AD /* TDDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* TDDatabase.m */; };
 		27B0B7CE1492B86F00A817AD /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* TDView.m */; };
 		27B0B7CF1492B87200A817AD /* TDBody.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* TDBody.m */; };
@@ -318,10 +313,6 @@
 		270B3DEE1489359000E0A926 /* TouchDB-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TouchDB-Info.plist"; sourceTree = "<group>"; };
 		270B3DFB1489359000E0A926 /* TouchDBTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DFC1489359000E0A926 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
-		270B3E041489359000E0A926 /* ToyCouchTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ToyCouchTests-Info.plist"; sourceTree = "<group>"; };
-		270B3E061489359000E0A926 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		270B3E081489359100E0A926 /* ToyCouchTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ToyCouchTests.h; sourceTree = "<group>"; };
-		270B3E091489359100E0A926 /* ToyCouchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToyCouchTests.m; sourceTree = "<group>"; };
 		270B3E1F148938D800E0A926 /* TouchDB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TouchDB.h; sourceTree = "<group>"; };
 		270B3E28148940C000E0A926 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		270B3E291489581E00E0A926 /* TDPuller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDPuller.h; sourceTree = "<group>"; };
@@ -431,10 +422,6 @@
 		27B0B7A91492B83B00A817AD /* libTouchDB.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTouchDB.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B7B61492B83B00A817AD /* TouchDBiOSTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBiOSTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B7B81492B83C00A817AD /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		27B0B7C01492B83C00A817AD /* TouchDBiOSTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TouchDBiOSTests-Info.plist"; sourceTree = "<group>"; };
-		27B0B7C21492B83C00A817AD /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		27B0B7C41492B83C00A817AD /* TouchDBiOSTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TouchDBiOSTests.h; sourceTree = "<group>"; };
-		27B0B7C51492B83C00A817AD /* TouchDBiOSTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TouchDBiOSTests.m; sourceTree = "<group>"; };
 		27B0B7E71492BB6B00A817AD /* TouchDB.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDB.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B7E81492BB6B00A817AD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		27B0B7F61492BC7A00A817AD /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -606,16 +593,12 @@
 		08FB7794FE84155DC02AAC07 /* CouchLite */ = {
 			isa = PBXGroup;
 			children = (
-				275315F714ACF2500065964D /* CoreServices.framework */,
-				275315F414ACF1CC0065964D /* Security.framework */,
 				270B3E28148940C000E0A926 /* README.md */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				275315D714ACF0A20065964D /* Listener */,
 				27C706CA1488679500F0F099 /* Demo-Mac */,
 				27B0B8111492C16300A817AD /* Demo-iOS */,
 				2753154D14ACEF350065964D /* vendor */,
-				270B3E021489359000E0A926 /* ToyCouchTests */,
-				27B0B7BE1492B83C00A817AD /* TouchDBiOSTests */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -662,26 +645,6 @@
 				275315D514ACF0A10065964D /* TouchDBListener.framework */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		270B3E021489359000E0A926 /* ToyCouchTests */ = {
-			isa = PBXGroup;
-			children = (
-				270B3E081489359100E0A926 /* ToyCouchTests.h */,
-				270B3E091489359100E0A926 /* ToyCouchTests.m */,
-				270B3E031489359000E0A926 /* Supporting Files */,
-			);
-			name = ToyCouchTests;
-			path = Tests;
-			sourceTree = "<group>";
-		};
-		270B3E031489359000E0A926 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				270B3E041489359000E0A926 /* ToyCouchTests-Info.plist */,
-				270B3E051489359000E0A926 /* InfoPlist.strings */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		2753154D14ACEF350065964D /* vendor */ = {
@@ -872,25 +835,6 @@
 			path = ChangeTracker;
 			sourceTree = "<group>";
 		};
-		27B0B7BE1492B83C00A817AD /* TouchDBiOSTests */ = {
-			isa = PBXGroup;
-			children = (
-				27B0B7C41492B83C00A817AD /* TouchDBiOSTests.h */,
-				27B0B7C51492B83C00A817AD /* TouchDBiOSTests.m */,
-				27B0B7BF1492B83C00A817AD /* Supporting Files */,
-			);
-			path = TouchDBiOSTests;
-			sourceTree = "<group>";
-		};
-		27B0B7BF1492B83C00A817AD /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				27B0B7C01492B83C00A817AD /* TouchDBiOSTests-Info.plist */,
-				27B0B7C11492B83C00A817AD /* InfoPlist.strings */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
 		27B0B8111492C16300A817AD /* Demo-iOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -940,6 +884,8 @@
 				27C70699148864BA00F0F099 /* Other Frameworks */,
 				27B0B7F81492BC8000A817AD /* libsqlite3.dylib */,
 				27B0B7F61492BC7A00A817AD /* Foundation.framework */,
+				275315F714ACF2500065964D /* CoreServices.framework */,
+				275315F414ACF1CC0065964D /* Security.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1340,7 +1286,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				275315BB14ACF0330065964D /* About.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1348,7 +1293,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				270B3E071489359000E0A926 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1372,7 +1316,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27B0B7C31492B83C00A817AD /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1504,7 +1447,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				270B3E0A1489359100E0A926 /* ToyCouchTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1582,7 +1524,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27B0B7C61492B83C00A817AD /* TouchDBiOSTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1670,26 +1611,10 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		270B3E051489359000E0A926 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				270B3E061489359000E0A926 /* en */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 		275315DA14ACF0A20065964D /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
 				275315DB14ACF0A20065964D /* en */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		27B0B7C11492B83C00A817AD /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				27B0B7C21492B83C00A817AD /* en */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -1745,6 +1670,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CURRENT_PROJECT_VERSION = 0.3;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
@@ -1754,6 +1680,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_FILE = "$(PRODUCT_NAME)_vers.c";
 			};
 			name = Debug;
 		};
@@ -1763,6 +1691,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CURRENT_PROJECT_VERSION = 0.3;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1770,6 +1699,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_FILE = "$(PRODUCT_NAME)_vers.c";
 			};
 			name = Release;
 		};

@@ -74,7 +74,7 @@ TestCase(TDRouter_Server) {
     TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
     Send(server, @"GET", @"/", 200, $dict({@"TouchDB", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
-                                          {@"version", kTDVersionString}));
+                                          {@"version", [TDRouter versionString]}));
     Send(server, @"GET", @"/_all_dbs", 200, $array());
     Send(server, @"GET", @"/non-existent", 404, nil);
     Send(server, @"GET", @"/BadName", 400, nil);

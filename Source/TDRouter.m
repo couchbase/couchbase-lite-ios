@@ -21,10 +21,15 @@
 #import <objc/message.h>
 
 
-NSString* const kTDVersionString =  @"0.2";
+extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 
 
 @implementation TDRouter
+
+
++ (NSString*) versionString {
+    return $sprintf(@"%g", TouchDBVersionNumber);
+}
 
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request {
@@ -306,7 +311,7 @@ static NSArray* splitPath( NSURL* url ) {
     if (_response.body.isValidJSON)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
 
-    [_response.headers setObject: $sprintf(@"TouchDB %@", kTDVersionString)
+    [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
                           forKey: @"Server"];
 
     // If response is ready (nonzero status), tell my client about it:
