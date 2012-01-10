@@ -147,9 +147,15 @@ NSString* const kTDVersionString =  @"0.2";
     options->startKey = [self jsonQuery: @"startkey" error: &error];
     if (error)
         return NO;
-    if (!error)
-        options->endKey = [self jsonQuery: @"endkey" error: &error];
-    return !error;
+    options->endKey = [self jsonQuery: @"endkey" error: &error];
+    if (error)
+        return NO;
+    id key = [self jsonQuery: @"key" error: &error];
+    if (error)
+        return NO;
+    if (key)
+        options->keys = $array(key);
+    return YES;
 }
 
 

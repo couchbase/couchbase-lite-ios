@@ -645,7 +645,8 @@
     TDQueryOptions options;
     if (![self getQueryOptions: &options])
         return 400;
-    options.keys = keys;
+    if (keys)
+        options.keys = keys;
 
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
