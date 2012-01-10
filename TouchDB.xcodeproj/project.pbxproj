@@ -41,47 +41,26 @@
 		274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
 		2753156E14ACEFC90065964D /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155114ACEFC90065964D /* DDData.h */; };
-		2753156F14ACEFC90065964D /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155114ACEFC90065964D /* DDData.h */; };
 		2753157214ACEFC90065964D /* DDNumber.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155314ACEFC90065964D /* DDNumber.h */; };
-		2753157314ACEFC90065964D /* DDNumber.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155314ACEFC90065964D /* DDNumber.h */; };
 		2753157614ACEFC90065964D /* DDRange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155514ACEFC90065964D /* DDRange.h */; };
-		2753157714ACEFC90065964D /* DDRange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155514ACEFC90065964D /* DDRange.h */; };
 		2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155714ACEFC90065964D /* HTTPAuthenticationRequest.h */; };
-		2753157B14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155714ACEFC90065964D /* HTTPAuthenticationRequest.h */; };
 		2753157E14ACEFC90065964D /* HTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155914ACEFC90065964D /* HTTPConnection.h */; };
-		2753157F14ACEFC90065964D /* HTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155914ACEFC90065964D /* HTTPConnection.h */; };
 		2753158214ACEFC90065964D /* HTTPLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155B14ACEFC90065964D /* HTTPLogging.h */; };
-		2753158314ACEFC90065964D /* HTTPLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155B14ACEFC90065964D /* HTTPLogging.h */; };
 		2753158414ACEFC90065964D /* HTTPMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155C14ACEFC90065964D /* HTTPMessage.h */; };
-		2753158514ACEFC90065964D /* HTTPMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155C14ACEFC90065964D /* HTTPMessage.h */; };
 		2753158814ACEFC90065964D /* HTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155E14ACEFC90065964D /* HTTPResponse.h */; };
-		2753158914ACEFC90065964D /* HTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155E14ACEFC90065964D /* HTTPResponse.h */; };
 		2753158A14ACEFC90065964D /* HTTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155F14ACEFC90065964D /* HTTPServer.h */; };
-		2753158B14ACEFC90065964D /* HTTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155F14ACEFC90065964D /* HTTPServer.h */; };
 		2753158E14ACEFC90065964D /* HTTPAsyncFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156214ACEFC90065964D /* HTTPAsyncFileResponse.h */; };
-		2753158F14ACEFC90065964D /* HTTPAsyncFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156214ACEFC90065964D /* HTTPAsyncFileResponse.h */; };
 		2753159214ACEFC90065964D /* HTTPDataResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156414ACEFC90065964D /* HTTPDataResponse.h */; };
-		2753159314ACEFC90065964D /* HTTPDataResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156414ACEFC90065964D /* HTTPDataResponse.h */; };
 		2753159614ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156614ACEFC90065964D /* HTTPDynamicFileResponse.h */; };
-		2753159714ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156614ACEFC90065964D /* HTTPDynamicFileResponse.h */; };
 		2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156814ACEFC90065964D /* HTTPFileResponse.h */; };
-		2753159B14ACEFC90065964D /* HTTPFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156814ACEFC90065964D /* HTTPFileResponse.h */; };
 		2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156A14ACEFC90065964D /* HTTPRedirectResponse.h */; };
-		2753159F14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156A14ACEFC90065964D /* HTTPRedirectResponse.h */; };
 		275315A214ACEFC90065964D /* WebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156C14ACEFC90065964D /* WebSocket.h */; };
-		275315A314ACEFC90065964D /* WebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156C14ACEFC90065964D /* WebSocket.h */; };
 		275315AB14ACF00B0065964D /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315A814ACF00B0065964D /* GCDAsyncSocket.h */; };
-		275315AC14ACF00B0065964D /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315A814ACF00B0065964D /* GCDAsyncSocket.h */; };
 		275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */; };
-		275315BD14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */; };
 		275315C014ACF0330065964D /* DDASLLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B314ACF0330065964D /* DDASLLogger.h */; };
-		275315C114ACF0330065964D /* DDASLLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B314ACF0330065964D /* DDASLLogger.h */; };
 		275315C414ACF0330065964D /* DDFileLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B514ACF0330065964D /* DDFileLogger.h */; };
-		275315C514ACF0330065964D /* DDFileLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B514ACF0330065964D /* DDFileLogger.h */; };
 		275315C814ACF0330065964D /* DDLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B714ACF0330065964D /* DDLog.h */; };
-		275315C914ACF0330065964D /* DDLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B714ACF0330065964D /* DDLog.h */; };
 		275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B914ACF0330065964D /* DDTTYLogger.h */; };
-		275315CD14ACF0330065964D /* DDTTYLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B914ACF0330065964D /* DDTTYLogger.h */; };
 		275315DC14ACF0A20065964D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 275315DA14ACF0A20065964D /* InfoPlist.strings */; };
 		275315E014ACF0A20065964D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; };
 		275315E414ACF1130065964D /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155214ACEFC90065964D /* DDData.m */; };
@@ -133,11 +112,9 @@
 		27821BBC149001B30099B373 /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; };
 		27821BBE14906FB60099B373 /* TouchDBPrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BBD14906FB50099B373 /* TouchDBPrefix.h */; };
 		279906E3149A65B8003D4338 /* TDRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* TDRemoteRequest.h */; };
-		279906E4149A65B8003D4338 /* TDRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* TDRemoteRequest.h */; };
 		279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* TDRemoteRequest.m */; };
 		279906E6149A65B8003D4338 /* TDRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* TDRemoteRequest.m */; };
 		279906EE149ABFC2003D4338 /* TDBatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906EC149ABFC1003D4338 /* TDBatcher.h */; };
-		279906EF149ABFC2003D4338 /* TDBatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906EC149ABFC1003D4338 /* TDBatcher.h */; };
 		279906F0149ABFC2003D4338 /* TDBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* TDBatcher.m */; };
 		279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* TDBatcher.m */; };
 		27990703149D2576003D4338 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
@@ -149,7 +126,6 @@
 		279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* TDCollateJSON.h */; };
 		279EB2DC1491C34300E74185 /* TDCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2DA1491C34300E74185 /* TDCollateJSON.m */; };
 		27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
-		27A82E3714A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
 		27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; };
 		27AA409D14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */; };
@@ -237,6 +213,26 @@
 		27F074AB11CD5D7A00E9A2AB /* TDBody.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* TDBody.m */; };
 		27F0751311CDC7F900E9A2AB /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		27F0751811CDC80A00E9A2AB /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
+		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
+		DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; };
+		DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
+		DA147C0E14BCA98A0052DA4D /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; };
+		DA147C1314BCAA870052DA4D /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155214ACEFC90065964D /* DDData.m */; };
+		DA147C1414BCAA870052DA4D /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155414ACEFC90065964D /* DDNumber.m */; };
+		DA147C1514BCAA870052DA4D /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155614ACEFC90065964D /* DDRange.m */; };
+		DA147C1614BCAA8F0052DA4D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; };
+		DA147C1714BCAA9C0052DA4D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; };
+		DA147C1814BCAAAD0052DA4D /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155814ACEFC90065964D /* HTTPAuthenticationRequest.m */; };
+		DA147C1914BCAAAD0052DA4D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; };
+		DA147C1A14BCAAAD0052DA4D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; };
+		DA147C1B14BCAAAD0052DA4D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; };
+		DA147C1C14BCAABE0052DA4D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; };
+		DA147C1D14BCAABE0052DA4D /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
+		DA147C1E14BCAABE0052DA4D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; };
+		DA147C2514BCAC3B0052DA4D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F61492BC7A00A817AD /* Foundation.framework */; };
+		DA147C3C14BCAC780052DA4D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */; };
+		DA147C3D14BCAC780052DA4D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3B14BCAC780052DA4D /* Security.framework */; };
+		DA147C3E14BCAC9D0052DA4D /* TDListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315DE14ACF0A20065964D /* TDListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -281,6 +277,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 275315D414ACF0A10065964D;
 			remoteInfo = TouchDBListener;
+		};
+		DA147C3814BCAC670052DA4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA023B2614BCA94C008184BB;
+			remoteInfo = "Listener iOS Library";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -480,6 +483,10 @@
 		27F0751611CDC80A00E9A2AB /* ExceptionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionUtils.h; sourceTree = "<group>"; };
 		27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExceptionUtils.m; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* TouchDB */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TouchDB; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA023B6414BCA94C008184BB /* libTouchDBListener.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTouchDBListener.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA147C3614BCAC3B0052DA4D /* TouchDBListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
+		DA147C3B14BCAC780052DA4D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -587,6 +594,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DA023B4514BCA94C008184BB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA147C2314BCAC3B0052DA4D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA147C3C14BCAC780052DA4D /* MobileCoreServices.framework in Frameworks */,
+				DA147C3D14BCAC780052DA4D /* Security.framework in Frameworks */,
+				DA147C2514BCAC3B0052DA4D /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -643,6 +668,8 @@
 				27B0B80B1492C16300A817AD /* TouchDB Demo.app */,
 				27731F2A1495CFEF00815D67 /* TouchDB Empty App.app */,
 				275315D514ACF0A10065964D /* TouchDBListener.framework */,
+				DA023B6414BCA94C008184BB /* libTouchDBListener.a */,
+				DA147C3614BCAC3B0052DA4D /* TouchDBListener.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -886,6 +913,10 @@
 				27B0B7F61492BC7A00A817AD /* Foundation.framework */,
 				275315F714ACF2500065964D /* CoreServices.framework */,
 				275315F414ACF1CC0065964D /* Security.framework */,
+				DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */,
+				DA147C3B14BCAC780052DA4D /* Security.framework */,
+				275315F714ACF2500065964D /* CoreServices.framework */,
+				275315F414ACF1CC0065964D /* Security.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1012,37 +1043,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		27B0B7A71492B83B00A817AD /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				279906E4149A65B8003D4338 /* TDRemoteRequest.h in Headers */,
-				279906EF149ABFC2003D4338 /* TDBatcher.h in Headers */,
-				27A82E3714A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
-				2753156F14ACEFC90065964D /* DDData.h in Headers */,
-				2753157314ACEFC90065964D /* DDNumber.h in Headers */,
-				2753157714ACEFC90065964D /* DDRange.h in Headers */,
-				2753157B14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
-				2753157F14ACEFC90065964D /* HTTPConnection.h in Headers */,
-				2753158314ACEFC90065964D /* HTTPLogging.h in Headers */,
-				2753158514ACEFC90065964D /* HTTPMessage.h in Headers */,
-				2753158914ACEFC90065964D /* HTTPResponse.h in Headers */,
-				2753158B14ACEFC90065964D /* HTTPServer.h in Headers */,
-				2753158F14ACEFC90065964D /* HTTPAsyncFileResponse.h in Headers */,
-				2753159314ACEFC90065964D /* HTTPDataResponse.h in Headers */,
-				2753159714ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */,
-				2753159B14ACEFC90065964D /* HTTPFileResponse.h in Headers */,
-				2753159F14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */,
-				275315A314ACEFC90065964D /* WebSocket.h in Headers */,
-				275315AC14ACF00B0065964D /* GCDAsyncSocket.h in Headers */,
-				275315BD14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */,
-				275315C114ACF0330065964D /* DDASLLogger.h in Headers */,
-				275315C514ACF0330065964D /* DDFileLogger.h in Headers */,
-				275315C914ACF0330065964D /* DDLog.h in Headers */,
-				275315CD14ACF0330065964D /* DDTTYLogger.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		27B0B7FA1492BC9600A817AD /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -1058,6 +1058,14 @@
 				27B0B8031492BDE800A817AD /* TDPuller.h in Headers */,
 				27B0B8041492BDE800A817AD /* TDPusher.h in Headers */,
 				27B0B8051492BDE800A817AD /* TouchDB.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA147C2614BCAC3B0052DA4D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA147C3E14BCAC9D0052DA4D /* TDListener.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1143,7 +1151,6 @@
 			buildPhases = (
 				27B0B7A51492B83B00A817AD /* Sources */,
 				27B0B7A61492B83B00A817AD /* Frameworks */,
-				27B0B7A71492B83B00A817AD /* Headers */,
 				27B0B7E21492BA5900A817AD /* Build Fat Library */,
 			);
 			buildRules = (
@@ -1248,6 +1255,42 @@
 			productReference = 8DD76F6C0486A84900D96B5E /* TouchDB */;
 			productType = "com.apple.product-type.tool";
 		};
+		DA023B2614BCA94C008184BB /* Listener iOS Library */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA023B6114BCA94C008184BB /* Build configuration list for PBXNativeTarget "Listener iOS Library" */;
+			buildPhases = (
+				DA023B2714BCA94C008184BB /* Sources */,
+				DA023B4514BCA94C008184BB /* Frameworks */,
+				DA023B6014BCA94C008184BB /* Build Fat Library */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Listener iOS Library";
+			productName = TouchDBiOS;
+			productReference = DA023B6414BCA94C008184BB /* libTouchDBListener.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		DA147C1F14BCAC3B0052DA4D /* Listener iOS Framework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA147C3314BCAC3B0052DA4D /* Build configuration list for PBXNativeTarget "Listener iOS Framework" */;
+			buildPhases = (
+				DA147C2214BCAC3B0052DA4D /* Sources */,
+				DA147C2314BCAC3B0052DA4D /* Frameworks */,
+				DA147C2614BCAC3B0052DA4D /* Headers */,
+				DA147C3214BCAC3B0052DA4D /* Copy Library */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DA147C3914BCAC670052DA4D /* PBXTargetDependency */,
+			);
+			name = "Listener iOS Framework";
+			productName = iTouchDB;
+			productReference = DA147C3614BCAC3B0052DA4D /* TouchDBListener.framework */;
+			productType = "com.apple.product-type.bundle";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1277,6 +1320,8 @@
 				27B0B7E61492BB6B00A817AD /* iOS Framework */,
 				27B0B80A1492C16300A817AD /* iOS Demo */,
 				27731F131495CFEF00815D67 /* iOS Empty App */,
+				DA023B2614BCA94C008184BB /* Listener iOS Library */,
+				DA147C1F14BCAC3B0052DA4D /* Listener iOS Framework */,
 			);
 		};
 /* End PBXProject section */
@@ -1398,6 +1443,36 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cp \"${CONFIGURATION_BUILD_DIR}/libTouchDB.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
+			showEnvVarsInLog = 0;
+		};
+		DA023B6014BCA94C008184BB /* Build Fat Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Build Fat Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Version 2.0 (updated for Xcode 4, with some fixes)\n# Changes:\n#    - Works with xcode 4, even when running xcode 3 projects (Workarounds for apple bugs)\n#    - Faster / better: only runs lipo once, instead of once per recursion\n#    - Added some debugging statemetns that can be switched on/off by changing the DEBUG_THIS_SCRIPT variable to \"true\"\n#    - Fixed some typos\n# \n# Purpose:\n#   Create a static library for iPhone from within XCode\n#   Because Apple staff DELIBERATELY broke Xcode to make this impossible from the GUI (Xcode 3.2.3 specifically states this in the Release notes!)\n#   ...no, I don't understand why they did this!\n#\n# Author: Adam Martin - http://twitter.com/redglassesapps\n# Based on: original script from Eonil (main changes: Eonil's script WILL NOT WORK in Xcode GUI - it WILL CRASH YOUR COMPUTER)\n#\n# More info: see this Stack Overflow question: http://stackoverflow.com/questions/3520977/build-fat-static-library-device-simulator-using-xcode-and-sdk-4\n\n#################[ Tests: helps workaround any future bugs in Xcode ]########\n#\nDEBUG_THIS_SCRIPT=\"false\"\n\nif [ $DEBUG_THIS_SCRIPT = \"true\" ]\nthen\necho \"########### TESTS #############\"\necho \"Use the following variables when debugging this script; note that they may change on recursions\"\necho \"BUILD_DIR = $BUILD_DIR\"\necho \"BUILD_ROOT = $BUILD_ROOT\"\necho \"CONFIGURATION_BUILD_DIR = $CONFIGURATION_BUILD_DIR\"\necho \"BUILT_PRODUCTS_DIR = $BUILT_PRODUCTS_DIR\"\necho \"CONFIGURATION_TEMP_DIR = $CONFIGURATION_TEMP_DIR\"\necho \"TARGET_BUILD_DIR = $TARGET_BUILD_DIR\"\nfi\n\n#####################[ part 1 ]##################\n# First, work out the BASESDK version number (NB: Apple ought to report this, but they hide it)\n#    (incidental: searching for substrings in sh is a nightmare! Sob)\n\nSDK_VERSION=$(echo ${SDK_NAME} | grep -o '.\\{3\\}$')\n\n# Next, work out if we're in SIM or DEVICE\n\nif [ ${PLATFORM_NAME} = \"iphonesimulator\" ]\nthen\nOTHER_SDK_TO_BUILD=iphoneos${SDK_VERSION}\nelse\nOTHER_SDK_TO_BUILD=iphonesimulator${SDK_VERSION}\nfi\n\necho \"XCode has selected SDK: ${PLATFORM_NAME} with version: ${SDK_VERSION} (although back-targetting: ${IPHONEOS_DEPLOYMENT_TARGET})\"\necho \"...therefore, OTHER_SDK_TO_BUILD = ${OTHER_SDK_TO_BUILD}\"\n#\n#####################[ end of part 1 ]##################\n\n#####################[ part 2 ]##################\n#\n# IF this is the original invocation, invoke WHATEVER other builds are required\n#\n# Xcode is already building ONE target...\n#\n# ...but this is a LIBRARY, so Apple is wrong to set it to build just one.\n# ...we need to build ALL targets\n# ...we MUST NOT re-build the target that is ALREADY being built: Xcode WILL CRASH YOUR COMPUTER if you try this (infinite recursion!)\n#\n#\n# So: build ONLY the missing platforms/configurations.\n\nif [ \"true\" == ${ALREADYINVOKED:-false} ]\nthen\necho \"RECURSION: I am NOT the root invocation, so I'm NOT going to recurse\"\nelse\n# CRITICAL:\n# Prevent infinite recursion (Xcode sucks)\nexport ALREADYINVOKED=\"true\"\n\necho \"RECURSION: I am the root ... recursing all missing build targets NOW...\"\necho \"RECURSION: ...about to invoke: xcodebuild -configuration \\\"${CONFIGURATION}\\\" -target \\\"${TARGET_NAME}\\\" -sdk \\\"${OTHER_SDK_TO_BUILD}\\\" ${ACTION} RUN_CLANG_STATIC_ANALYZER=NO\"\nxcodebuild -configuration \"${CONFIGURATION}\" -target \"${TARGET_NAME}\" -sdk \"${OTHER_SDK_TO_BUILD}\" ${ACTION} RUN_CLANG_STATIC_ANALYZER=NO BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" || exit 1\n\nACTION=\"build\"\n\n#Merge all platform binaries as a fat binary for each configurations.\n\n# Calculate where the (multiple) built files are coming from:\nCURRENTCONFIG_DEVICE_DIR=${SYMROOT}/${CONFIGURATION}-iphoneos\nCURRENTCONFIG_SIMULATOR_DIR=${SYMROOT}/${CONFIGURATION}-iphonesimulator\n\necho \"Taking device build from: ${CURRENTCONFIG_DEVICE_DIR}\"\necho \"Taking simulator build from: ${CURRENTCONFIG_SIMULATOR_DIR}\"\n\nCREATING_UNIVERSAL_DIR=${SYMROOT}/${CONFIGURATION}-ios-universal\necho \"...I will output a universal build to: ${CREATING_UNIVERSAL_DIR}\"\n\n# ... remove the products of previous runs of this script\n#      NB: this directory is ONLY created by this script - it should be safe to delete!\n\nrm -rf \"${CREATING_UNIVERSAL_DIR}\"\nmkdir \"${CREATING_UNIVERSAL_DIR}\"\n\n#\necho \"lipo: for current configuration (${CONFIGURATION}) creating output file: ${CREATING_UNIVERSAL_DIR}/${EXECUTABLE_NAME}\"\nlipo -create -output \"${CREATING_UNIVERSAL_DIR}/${EXECUTABLE_NAME}\" \"${CURRENTCONFIG_DEVICE_DIR}/${EXECUTABLE_NAME}\" \"${CURRENTCONFIG_SIMULATOR_DIR}/${EXECUTABLE_NAME}\" || exit 1\n\n#########\n#\n# Added: StackOverflow suggestion to also copy \"include\" files\n#    (untested, but should work OK)\n#\nif [ -d \"${CURRENTCONFIG_DEVICE_DIR}/usr/local/include\" ]\nthen\nmkdir -p \"${CREATING_UNIVERSAL_DIR}/usr/local/include\"\n# * needs to be outside the double quotes?\ncp \"${CURRENTCONFIG_DEVICE_DIR}/usr/local/include/\"* \"${CREATING_UNIVERSAL_DIR}/usr/local/include\"\nfi\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		DA147C3214BCAC3B0052DA4D /* Copy Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp \"${CONFIGURATION_BUILD_DIR}/libTouchDBListener.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1575,6 +1650,35 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DA023B2714BCA94C008184BB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA147C1C14BCAABE0052DA4D /* HTTPDataResponse.m in Sources */,
+				DA147C1D14BCAABE0052DA4D /* HTTPFileResponse.m in Sources */,
+				DA147C1E14BCAABE0052DA4D /* WebSocket.m in Sources */,
+				DA147C1814BCAAAD0052DA4D /* HTTPAuthenticationRequest.m in Sources */,
+				DA147C1914BCAAAD0052DA4D /* HTTPConnection.m in Sources */,
+				DA147C1A14BCAAAD0052DA4D /* HTTPMessage.m in Sources */,
+				DA147C1B14BCAAAD0052DA4D /* HTTPServer.m in Sources */,
+				DA147C1714BCAA9C0052DA4D /* GCDAsyncSocket.m in Sources */,
+				DA147C1614BCAA8F0052DA4D /* DDLog.m in Sources */,
+				DA147C1314BCAA870052DA4D /* DDData.m in Sources */,
+				DA147C1414BCAA870052DA4D /* DDNumber.m in Sources */,
+				DA147C1514BCAA870052DA4D /* DDRange.m in Sources */,
+				DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */,
+				DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */,
+				DA147C0E14BCA98A0052DA4D /* TDHTTPResponse.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA147C2214BCAC3B0052DA4D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1607,6 +1711,11 @@
 			isa = PBXTargetDependency;
 			target = 275315D414ACF0A10065964D /* TouchDBListener */;
 			targetProxy = 27E11F1C14AD25570006B340 /* PBXContainerItemProxy */;
+		};
+		DA147C3914BCAC670052DA4D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA023B2614BCA94C008184BB /* Listener iOS Library */;
+			targetProxy = DA147C3814BCAC670052DA4D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2169,6 +2278,104 @@
 			};
 			name = Release;
 		};
+		DA023B6214BCA94C008184BB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = /tmp/TouchDBiOS.dst;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
+				GCC_WARN_SIGN_COMPARE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = TouchDBListener;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		DA023B6314BCA94C008184BB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				COPY_PHASE_STRIP = YES;
+				DSTROOT = /tmp/TouchDBiOS.dst;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
+				GCC_WARN_SIGN_COMPARE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = TouchDBListener;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DA147C3414BCAC3B0052DA4D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-ios-universal";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "iTouchDB/iTouchDB-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				MACH_O_TYPE = mh_dylib;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = TouchDBListener;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Debug;
+		};
+		DA147C3514BCAC3B0052DA4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-ios-universal";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "iTouchDB/iTouchDB-Prefix.pch";
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				MACH_O_TYPE = mh_dylib;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = TouchDBListener;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2267,6 +2474,24 @@
 			buildConfigurations = (
 				27C706B0148864BA00F0F099 /* Debug */,
 				27C706B1148864BA00F0F099 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DA023B6114BCA94C008184BB /* Build configuration list for PBXNativeTarget "Listener iOS Library" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA023B6214BCA94C008184BB /* Debug */,
+				DA023B6314BCA94C008184BB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DA147C3314BCAC3B0052DA4D /* Build configuration list for PBXNativeTarget "Listener iOS Framework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA147C3414BCAC3B0052DA4D /* Debug */,
+				DA147C3514BCAC3B0052DA4D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
