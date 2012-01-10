@@ -15,6 +15,7 @@
 
 #import "TDDatabase+Replication.h"
 #import "TDInternal.h"
+#import "TDPuller.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -40,6 +41,14 @@
 - (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
                                     push: (BOOL)push
                               continuous: (BOOL)continuous {
+    return [self replicateWithRemoteURL: remote push: push continuous: continuous filter: nil filterParameters: nil];
+}
+
+- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
+                                    push: (BOOL)push
+                              continuous: (BOOL)continuous
+                                  filter: (NSString*)filterName
+                        filterParameters: (NSDictionary*)filterParams {
     TDReplicator* repl = [self activeReplicatorWithRemoteURL: remote push: push];
     if (repl)
         return repl;
@@ -47,6 +56,12 @@
                                      remote: remote 
                                        push: push
                                  continuous: continuous];
+
+    if (!push) {
+        [(TDPuller *)repl setFilterName: filterName];
+        [(TDPuller *)repl setFilterParameters: filterParams];
+    }
+
     if (!repl)
         return nil;
     if (!_activeReplicators)

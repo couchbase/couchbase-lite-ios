@@ -22,9 +22,11 @@
     NSUInteger _httpConnectionCount;
     TDBatcher* _revsToInsert;
     NSString* _filterName;
+    NSDictionary* _filterParameters;
 }
 
 @property (copy) NSString* filterName;
+@property (copy) NSDictionary* filterParameters;
 
 @end
 

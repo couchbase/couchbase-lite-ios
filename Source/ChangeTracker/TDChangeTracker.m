@@ -29,7 +29,7 @@
 @implementation TDChangeTracker
 
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
-@synthesize error=_error, client=_client, filterName=_filterName;
+@synthesize error=_error, client=_client, filterName=_filterName, filterParameters=_filterParameters;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
@@ -76,6 +76,14 @@
         [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
     if (_filterName)
         [path appendFormat: @"&filter=%@", TDEscapeURLParam(_filterName)];
+    if (_filterParameters) {
+        [_filterParameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop){
+            NSString *str = [NSString stringWithFormat: @"&%@=%@", key, obj];
+            NSString *escapedString = (NSString *)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)str, NULL, (CFStringRef)@"&", kCFStringEncodingUTF8);
+            [path appendString:escapedString];
+        }];
+    }
+
     return path;
 }
 
@@ -93,6 +101,7 @@
 
 - (void)dealloc {
     [self stop];
+    [_filterParameters release];
     [_databaseURL release];
     [_lastSequenceID release];
     [_error release];
