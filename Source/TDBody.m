@@ -77,7 +77,7 @@
 }
 
 - (NSData*) asPrettyJSON {
-    id props = self.properties;
+    id props = self.asObject;
     if (props) {
         NSData* json = [NSJSONSerialization dataWithJSONObject: props
                                                        options: NSJSONWritingPrettyPrinted
