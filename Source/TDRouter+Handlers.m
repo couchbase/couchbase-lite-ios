@@ -636,11 +636,55 @@
 #pragma mark - VIEW QUERIES:
 
 
+- (TDView*) compileView: (NSString*)viewName fromProperties: (NSDictionary*)viewProps {
+    NSString* language = [viewProps objectForKey: @"language"] ?: @"javascript";
+    NSString* mapSource = [viewProps objectForKey: @"map"];
+    if (!mapSource)
+        return nil;
+    TDMapBlock mapBlock = [[TDView compiler] compileMapFunction: mapSource language: language];
+    if (!mapBlock) {
+        Warn(@"View %@ has unknown map function: %@", viewName, mapSource);
+        return nil;
+    }
+    NSString* reduceSource = [viewProps objectForKey: @"reduce"];
+    TDReduceBlock reduceBlock = NULL;
+    if (reduceSource) {
+        reduceBlock =[[TDView compiler] compileReduceFunction: reduceSource language: language];
+        if (!reduceBlock) {
+            Warn(@"View %@ has unknown reduce function: %@", viewName, reduceSource);
+            return nil;
+        }
+    }
+    
+    TDView* view = [_db viewNamed: viewName];
+    [view setMapBlock: mapBlock reduceBlock: reduceBlock version: @"1"];
+    
+    NSDictionary* options = $castIf(NSDictionary, [viewProps objectForKey: @"options"]);
+    if ($equal([options objectForKey: @"collation"], @"raw"))
+        view.collation = kTDViewCollationRaw;
+    return view;
+}
+
+
 - (TDStatus) queryDesignDoc: (NSString*)designDoc view: (NSString*)viewName keys: (NSArray*)keys {
-    viewName = $sprintf(@"%@/%@", designDoc, viewName);
-    TDView* view = [_db existingViewNamed: viewName];
-    if (!view)
-        return 404;
+    NSString* tdViewName = $sprintf(@"%@/%@", designDoc, viewName);
+    TDView* view = [_db existingViewNamed: tdViewName];
+    if (!view || !view.mapBlock) {
+        // No TouchDB view is defined, or it hasn't had a map block assigned;
+        // see if there's a CouchDB view definition we can compile:
+        TDRevision* rev = [_db getDocumentWithID: [@"_design/" stringByAppendingString: designDoc]
+                                      revisionID: nil options: 0];
+        if (!rev)
+            return 404;
+        NSDictionary* views = $castIf(NSDictionary, [rev.properties objectForKey: @"views"]);
+        NSDictionary* viewProps = $castIf(NSDictionary, [views objectForKey: viewName]);
+        if (!viewProps)
+            return 404;
+        // If there is a CouchDB view, see if it can be compiled from source:
+        view = [self compileView: tdViewName fromProperties: viewProps];
+        if (!view)
+            return 500;
+    }
     
     TDQueryOptions options;
     if (![self getQueryOptions: &options])
@@ -686,31 +730,12 @@
     if (![self getQueryOptions: &options])
         return 400;
     
-    TDView* view = [_db viewNamed: @"@@TEMP@@"];
+    TDView* view = [self compileView: @"@@TEMP@@" fromProperties: props];
     if (!view)
         return 500;
     @try {
-        NSString* language = [props objectForKey: @"language"] ?: @"javascript";
-        NSString* mapSource = [props objectForKey: @"map"];
-        TDMapBlock mapBlock = [[TDView compiler] compileMapFunction: mapSource language: language];
-        if (!mapBlock) {
-            Warn(@"Unknown map function source: %@", mapSource);
-            return 500;
-        }
-        NSString* reduceSource = [props objectForKey: @"reduce"];
-        TDReduceBlock reduceBlock = NULL;
-        if (reduceSource) {
-            reduceBlock =[[TDView compiler] compileReduceFunction: reduceSource language: language];
-            if (!reduceBlock) {
-                Warn(@"Unknown reduce function source: %@", reduceSource);
-                return 500;
-            }
-        }
-        
-        [view setMapBlock: mapBlock reduceBlock: reduceBlock version: @"1"];
-        if (reduceBlock)
+        if (view.reduceBlock)
             options.reduce = YES;
-        
         TDStatus status;
         NSArray* rows = [view queryWithOptions: &options status: &status];
         if (!rows)

@@ -221,6 +221,11 @@ int main (int argc, const char * argv[]) {
             if ($equal([doc objectForKey: @"a"], $object(4)))
                 emit(nil, [doc objectForKey: @"b"]);
         };
+    } else if ($equal(mapSource, @"(function (doc) {emit(doc.foo, null);})") ||
+               $equal(mapSource, @"function(doc) { emit(doc.foo, null); }")) {
+        mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
+            emit([doc objectForKey: @"foo"], nil);
+        };
     }
     return [[mapBlock copy] autorelease];
 }
