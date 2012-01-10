@@ -150,7 +150,7 @@ static CFStringRef createCFStringFromJSON(const char** in) {
 static int compareStringsUnicode(const char** in1, const char** in2) {
     CFStringRef str1 = createCFStringFromJSON(in1);
     CFStringRef str2 = createCFStringFromJSON(in2);
-    int result =  CFStringCompare(str1, str2, kCFCompareAnchored | kCFCompareLocalized);
+    int result = (int) CFStringCompare(str1, str2, kCFCompareAnchored | kCFCompareLocalized);
     CFRelease(str1);
     CFRelease(str2);
     return result;
