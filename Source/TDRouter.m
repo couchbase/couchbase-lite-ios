@@ -18,6 +18,7 @@
 #import "TDServer.h"
 #import "TDView.h"
 #import "TDBody.h"
+#import "TDMultipartWriter.h"
 #import <objc/message.h>
 
 
@@ -161,6 +162,14 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
     if (key)
         options->keys = $array(key);
     return YES;
+}
+
+
+- (NSString*) multipartRequestType {
+    NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
+    if ([accept hasPrefix: @"multipart/"])
+        return accept;
+    return nil;
 }
 
 
@@ -310,6 +319,18 @@ static NSArray* splitPath( NSURL* url ) {
     }
     if (_response.body.isValidJSON)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
+    
+    // Check for a mismatch between the Accept request header and the response type:
+    NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
+    if (accept && !$equal(accept, @"*/*")) {
+        NSString* responseType = _response.baseContentType;
+        if (responseType && [accept rangeOfString: responseType].length == 0) {
+            LogTo(TDRouter, @"Error 406: Can't satisfy request Accept: %@", accept);
+            status = 406;
+            _response.headers = [NSMutableDictionary dictionary];
+            _response.body = nil;
+        }
+    }
 
     [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
                           forKey: @"Server"];
@@ -369,12 +390,34 @@ static NSArray* splitPath( NSURL* url ) {
     [_headers setValue: value forKey: header];
 }
 
+- (NSString*) baseContentType {
+    NSString* type = [_headers objectForKey: @"Content-Type"];
+    if (!type)
+        return nil;
+    NSRange r = [type rangeOfString: @";"];
+    if (r.length > 0)
+        type = [type substringToIndex: r.location];
+    return type;
+}
+
 - (id) bodyObject {
     return self.body.asObject;
 }
 
 - (void) setBodyObject:(id)bodyObject {
     self.body = bodyObject ? [TDBody bodyWithProperties: bodyObject] : nil;
+}
+
+- (void) setMultipartBody: (NSArray*)parts type: (NSString*)type {
+    TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: type];
+    for (id part in parts) {
+        if (![part isKindOfClass: [NSData class]])
+            part = [NSJSONSerialization dataWithJSONObject: part options: 0 error: nil];
+        [mp addPart: part withHeaders: nil];
+    }
+    self.body = [TDBody bodyWithJSON: mp.body];
+    [self setValue: mp.contentType ofHeader: @"Content-Type"];
+    [mp release];
 }
 
 @end

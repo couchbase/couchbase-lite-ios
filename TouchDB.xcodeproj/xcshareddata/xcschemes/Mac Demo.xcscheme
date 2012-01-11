@@ -61,6 +61,10 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "-LogTDRouter YES"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-LogTDListener YES"
             isEnabled = "YES">
          </CommandLineArgument>

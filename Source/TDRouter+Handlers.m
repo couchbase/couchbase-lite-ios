@@ -479,37 +479,43 @@
         
         _response.body = rev.body;
         
-    } else if ($equal(openRevsParam, @"all")) {
-        // Get all conflicting revisions:
-        TDRevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
-        NSMutableArray* result = [NSMutableArray arrayWithCapacity: allRevs.count];
-        for (TDRevision* rev in allRevs.allRevisions) {
-            TDStatus status = [_db loadRevisionBody: rev options: options];
-            if (status < 300)
-                [result addObject: $dict({@"ok", rev.properties})];
-            else if (status == 404)
-                [result addObject: $dict({@"missing", rev.revID})];
-            else
-                return status;
-        }
-        _response.bodyObject = result;
-            
     } else {
-        // ?open_revs=[...] returns an array of revisions of the document:
-        NSArray* openRevs = $castIf(NSArray, [self jsonQuery: @"open_revs" error: nil]);
-        if (!openRevs)
-            return 400;
-        NSMutableArray* result = [NSMutableArray arrayWithCapacity: openRevs.count];
-        for (NSString* revID in openRevs) {
-            if (![revID isKindOfClass: [NSString class]])
+        NSMutableArray* result;
+        if ($equal(openRevsParam, @"all")) {
+            // Get all conflicting revisions:
+            TDRevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
+            result = [NSMutableArray arrayWithCapacity: allRevs.count];
+            for (TDRevision* rev in allRevs.allRevisions) {
+                TDStatus status = [_db loadRevisionBody: rev options: options];
+                if (status < 300)
+                    [result addObject: $dict({@"ok", rev.properties})];
+                else if (status < 500)
+                    [result addObject: $dict({@"missing", rev.revID})];
+                else
+                    return status;  // internal error getting revision
+            }
+                
+        } else {
+            // ?open_revs=[...] returns an array of revisions of the document:
+            NSArray* openRevs = $castIf(NSArray, [self jsonQuery: @"open_revs" error: nil]);
+            if (!openRevs)
                 return 400;
-            TDRevision* rev = [db getDocumentWithID: docID revisionID: revID options: options];
-            if (rev)
-                [result addObject: $dict({@"ok", rev.properties})];
-            else
-                [result addObject: $dict({@"missing", revID})];
+            result = [NSMutableArray arrayWithCapacity: openRevs.count];
+            for (NSString* revID in openRevs) {
+                if (![revID isKindOfClass: [NSString class]])
+                    return 400;
+                TDRevision* rev = [db getDocumentWithID: docID revisionID: revID options: options];
+                if (rev)
+                    [result addObject: $dict({@"ok", rev.properties})];
+                else
+                    [result addObject: $dict({@"missing", revID})];
+            }
         }
-        _response.bodyObject = result;
+        NSString* acceptMultipart = self.multipartRequestType;
+        if (acceptMultipart)
+            [_response setMultipartBody: result type: acceptMultipart];
+        else
+            _response.bodyObject = result;
     }
     return 200;
 }

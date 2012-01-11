@@ -57,6 +57,7 @@ typedef void (^OnFinishedBlock)();
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
 - (TDContentOptions) contentOptions;
 - (BOOL) getQueryOptions: (struct TDQueryOptions*)options;
+@property (readonly) NSString* multipartRequestType;
 @property (readonly) NSDictionary* bodyAsDictionary;
 - (TDStatus) openDB;
 - (void) sendResponse;
@@ -73,10 +74,13 @@ typedef void (^OnFinishedBlock)();
 }
 
 @property int status;
-@property (copy) NSMutableDictionary* headers;
+@property (retain) NSMutableDictionary* headers;
 @property (retain) TDBody* body;
 @property (copy) id bodyObject;
+@property (readonly) NSString* baseContentType;
 
 - (void) setValue: (NSString*)value ofHeader: (NSString*)header;
+
+- (void) setMultipartBody: (NSArray*)parts type: (NSString*)type;
 
 @end
