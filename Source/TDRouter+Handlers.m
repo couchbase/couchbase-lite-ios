@@ -302,6 +302,45 @@
 }
 
 
+- (TDStatus) do_POST_revs_diff: (TDDatabase*)db {
+    // http://wiki.apache.org/couchdb/HttpPostRevsDiff
+    // Collect all of the input doc/revision IDs as TDRevisions:
+    TDRevisionList* revs = [[TDRevisionList alloc] init];
+    NSDictionary* body = self.bodyAsDictionary;
+    if (!body)
+        return 400;
+    for (NSString* docID in body) {
+        NSArray* revIDs = [body objectForKey: docID];
+        if (![revIDs isKindOfClass: [NSArray class]])
+            return 400;
+        for (NSString* revID in revIDs) {
+            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: NO];
+            [revs addRev: rev];
+            [rev release];
+        }
+    }
+    
+    // Look them up, removing the existing ones from revs:
+    if (![db findMissingRevisions: revs])
+        return 500;
+    
+    // Return the missing revs in a somewhat different format:
+    NSMutableDictionary* diffs = $mdict();
+    for (TDRevision* rev in revs) {
+        NSString* docID = rev.docID;
+        NSMutableArray* revs = [[diffs objectForKey: docID] objectForKey: @"missing"];
+        if (!revs) {
+            revs = $marray();
+            [diffs setObject: $dict({@"missing", revs}) forKey: docID];
+        }
+        [revs addObject: rev.revID];
+    }
+                                    
+    _response.bodyObject = diffs;
+    return 200;
+}
+
+
 - (TDStatus) do_POST_compact: (TDDatabase*)db {
     TDStatus status = [db compact];
     return status<300 ? 202 : status;       // CouchDB returns 202 'cause it's an async operation
