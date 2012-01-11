@@ -306,7 +306,7 @@
 - (TDStatus) do_POST_revs_diff: (TDDatabase*)db {
     // http://wiki.apache.org/couchdb/HttpPostRevsDiff
     // Collect all of the input doc/revision IDs as TDRevisions:
-    TDRevisionList* revs = [[TDRevisionList alloc] init];
+    TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
     NSDictionary* body = self.bodyAsDictionary;
     if (!body)
         return 400;
