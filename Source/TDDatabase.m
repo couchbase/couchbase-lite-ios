@@ -129,6 +129,11 @@
             CREATE INDEX revs_by_id ON revs(revid, doc_id); \
             CREATE INDEX revs_current ON revs(doc_id, current); \
             CREATE INDEX revs_parent ON revs(parent); \
+            CREATE TABLE localdocs ( \
+                docid TEXT UNIQUE NOT NULL, \
+                revid TEXT NOT NULL, \
+                json BLOB); \
+            CREATE INDEX localdocs_by_docid ON localdocs(docid); \
             CREATE TABLE views ( \
                 view_id INTEGER PRIMARY KEY, \
                 name TEXT UNIQUE NOT NULL,\
@@ -154,12 +159,21 @@
                 push BOOLEAN, \
                 last_sequence TEXT, \
                 UNIQUE (remote, push)); \
-            PRAGMA user_version = 2";             // at the end, update user_version
+            PRAGMA user_version = 3";             // at the end, update user_version
         if (![self initialize: schema])
             return NO;
     } else if (dbVersion < 2) {
         // Version 2: added attachments.revpos
         NSString* sql = @"ALTER TABLE attachments ADD COLUMN revpos INTEGER DEFAULT 0; \
+                          PRAGMA user_version = 2";
+        if (![self initialize: sql])
+            return NO;
+    } else if (dbVersion < 3) {
+        NSString* sql = @"CREATE TABLE localdocs ( \
+                            docid TEXT UNIQUE NOT NULL, \
+                            revid TEXT NOT NULL, \
+                            json BLOB); \
+                            CREATE INDEX localdocs_by_docid ON localdocs(docid); \
                           PRAGMA user_version = 2";
         if (![self initialize: sql])
             return NO;
@@ -644,11 +658,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 lastDocID = docNumericID;
             }
             
-            NSString* docID = [r stringForColumnIndex: 2];
-            if ([docID hasPrefix: @"_local/"])
-                continue;       // Local docs do not appear in the _changes feed
-
-            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID
+            TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
                                                           revID: [r stringForColumnIndex: 3]
                                                         deleted: [r boolForColumnIndex: 4]];
             rev.sequence = [r longLongIntForColumnIndex: 0];

@@ -29,6 +29,11 @@
                                             options: (TDContentOptions)options;
 @end
 
+@interface TDDatabase (Insertion_Internal)
+- (NSData*) encodeDocumentJSON: (TDRevision*)rev;
+- (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev;
+@end
+
 @interface TDDatabase (Attachments_Internal)
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence

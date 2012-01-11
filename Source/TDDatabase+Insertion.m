@@ -39,12 +39,6 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 @end
 
 
-@interface TDDatabase (Insertion_Internal)
-- (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev;
-@end
-
-
-
 
 @implementation TDDatabase (Insertion)
 
@@ -57,8 +51,9 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     if (str.length == 0)
         return NO;
     if ([str characterAtIndex: 0] == '_')
-        return [str hasPrefix: @"_design/"] || [str hasPrefix: @"_local/"];
+        return [str hasPrefix: @"_design/"];
     return YES;
+    // "_local/*" is not a valid document ID. Local docs have their own API and shouldn't get here.
 }
 
 

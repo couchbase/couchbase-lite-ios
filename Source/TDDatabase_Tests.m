@@ -15,6 +15,7 @@
 
 
 #import "TDDatabase.h"
+#import "TDDatabase+LocalDocs.h"
 #import "TDBody.h"
 #import "TDRevision.h"
 #import "TDBlobStore.h"
@@ -399,12 +400,77 @@ TestCase(TDDatabase_ReplicatorSequences) {
 }
 
 
+TestCase(TDDatabase_LocalDocs) {
+    // Start with a fresh database in /tmp:
+    TDDatabase* db = createDB();
+    
+    // Create a document:
+    NSMutableDictionary* props = $mdict({@"_id", @"_local/doc1"},
+                                        {@"foo", $object(1)}, {@"bar", $false});
+    TDBody* doc = [[[TDBody alloc] initWithProperties: props] autorelease];
+    TDRevision* rev1 = [[[TDRevision alloc] initWithBody: doc] autorelease];
+    TDStatus status;
+    rev1 = [db putLocalRevision: rev1 prevRevisionID: nil status: &status];
+    CAssertEq(status, 201);
+    Log(@"Created: %@", rev1);
+    CAssertEqual(rev1.docID, @"_local/doc1");
+    CAssert([rev1.revID hasPrefix: @"1-"]);
+    
+    // Read it back:
+    TDRevision* readRev = [db getLocalDocumentWithID: rev1.docID revisionID: nil];
+    CAssert(readRev != nil);
+    CAssertEqual([readRev.properties objectForKey: @"_id"], rev1.docID);
+    CAssertEqual([readRev.properties objectForKey: @"_rev"], rev1.revID);
+    CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
+    
+    // Now update it:
+    props = [[readRev.properties mutableCopy] autorelease];
+    [props setObject: @"updated!" forKey: @"status"];
+    doc = [TDBody bodyWithProperties: props];
+    TDRevision* rev2 = [[[TDRevision alloc] initWithBody: doc] autorelease];
+    TDRevision* rev2Input = rev2;
+    rev2 = [db putLocalRevision: rev2 prevRevisionID: rev1.revID status: &status];
+    CAssertEq(status, 201);
+    Log(@"Updated: %@", rev2);
+    CAssertEqual(rev2.docID, rev1.docID);
+    CAssert([rev2.revID hasPrefix: @"2-"]);
+    
+    // Read it back:
+    readRev = [db getLocalDocumentWithID: rev2.docID revisionID: nil];
+    CAssert(readRev != nil);
+    CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
+    
+    // Try to update the first rev, which should fail:
+    CAssertNil([db putLocalRevision: rev2Input prevRevisionID: rev1.revID status: &status]);
+    CAssertEq(status, 409);
+    
+    // Delete it:
+    TDRevision* revD = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
+    CAssertEq([db putLocalRevision: revD prevRevisionID: nil status: &status], nil);
+    CAssertEq(status, 409);
+    revD = [db putLocalRevision: revD prevRevisionID: rev2.revID status: &status];
+    CAssertEq(status, 200);
+    
+    // Delete nonexistent doc:
+    TDRevision* revFake = [[[TDRevision alloc] initWithDocID: @"_local/fake" revID: nil deleted: YES] autorelease];
+    [db putLocalRevision: revFake prevRevisionID: nil status: &status];
+    CAssertEq(status, 404);
+    
+    // Read it back (should fail):
+    readRev = [db getLocalDocumentWithID: revD.docID revisionID: nil];
+    CAssertNil(readRev);
+    
+    CAssert([db close]);
+}
+
+
 TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_CRUD);
     RequireTestCase(TDDatabase_RevTree);
     RequireTestCase(TDDatabase_Attachments);
     RequireTestCase(TDDatabase_PutAttachment);
     RequireTestCase(TDDatabase_ReplicatorSequences);
+    RequireTestCase(TDDatabase_LocalDocs);
 }
 
 

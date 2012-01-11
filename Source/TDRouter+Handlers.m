@@ -8,6 +8,7 @@
 
 #import "TDRouter.h"
 #import "TDDatabase.h"
+#import "TDDatabase+LocalDocs.h"
 #import "TDView.h"
 #import "TDBody.h"
 #import "TDRevision.h"
@@ -501,13 +502,17 @@
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
+    BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
     TDContentOptions options = [self contentOptions];
     NSString* openRevsParam = [self query: @"open_revs"];
-    if (openRevsParam == nil) {
+    if (openRevsParam == nil || isLocalDoc) {
         // Regular GET:
-        TDRevision* rev = [db getDocumentWithID: docID
-                                     revisionID: [self query: @"rev"]  // often nil
-                                        options: options];
+        NSString* revID = [self query: @"rev"];  // often nil
+        TDRevision* rev;
+        if (isLocalDoc)
+            rev = [db getLocalDocumentWithID: docID revisionID: revID];
+        else
+            rev = [db getDocumentWithID: docID revisionID: revID options: options];
         if (!rev)
             return 404;
         
@@ -595,11 +600,14 @@
       allowConflict: (BOOL)allowConflict
          createdRev: (TDRevision**)outRev
 {
+    BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
     NSString* prevRevID;
     
     if (!deleting) {
         deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
         if (!docID) {
+            if (isLocalDoc)
+                return 405;  // method not allowed
             // POST's doc ID may come from the _id field of the JSON body, else generate a random one.
             docID = [body propertyForKey: @"_id"];
             if (!docID) {
@@ -626,9 +634,12 @@
     rev.body = body;
     
     TDStatus status;
-    *outRev = [db putRevision: rev prevRevisionID: prevRevID
-                allowConflict: allowConflict
-                       status: &status];
+    if (isLocalDoc)
+        *outRev = [db putLocalRevision: rev prevRevisionID: prevRevID status: &status];
+    else
+        *outRev = [db putRevision: rev prevRevisionID: prevRevID
+                    allowConflict: allowConflict
+                           status: &status];
     return status;
 }
 

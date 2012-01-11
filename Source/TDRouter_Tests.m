@@ -185,6 +185,7 @@ TestCase(TDRouter_Docs) {
 
 
 TestCase(TDRouter_LocalDocs) {
+    RequireTestCase(TDDatabase_LocalDocs);
     RequireTestCase(TDRouter_Docs);
     // PUT a local doc:
     TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
