@@ -162,19 +162,24 @@
             PRAGMA user_version = 3";             // at the end, update user_version
         if (![self initialize: schema])
             return NO;
-    } else if (dbVersion < 2) {
+        dbVersion = 3;
+    }
+    if (dbVersion < 2) {
         // Version 2: added attachments.revpos
         NSString* sql = @"ALTER TABLE attachments ADD COLUMN revpos INTEGER DEFAULT 0; \
                           PRAGMA user_version = 2";
         if (![self initialize: sql])
             return NO;
-    } else if (dbVersion < 3) {
-        NSString* sql = @"CREATE TABLE localdocs ( \
+        dbVersion = 2;
+    }
+    if (dbVersion < 3) {
+        // Version 3: added localdocs table
+        NSString* sql = @"CREATE TABLE IF NOT EXISTS localdocs ( \
                             docid TEXT UNIQUE NOT NULL, \
                             revid TEXT NOT NULL, \
                             json BLOB); \
-                            CREATE INDEX localdocs_by_docid ON localdocs(docid); \
-                          PRAGMA user_version = 2";
+                            CREATE INDEX IF NOT EXISTS localdocs_by_docid ON localdocs(docid); \
+                          PRAGMA user_version = 3";
         if (![self initialize: sql])
             return NO;
     }
