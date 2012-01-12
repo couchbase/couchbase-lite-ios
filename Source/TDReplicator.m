@@ -176,8 +176,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     if (_batcher.count == 0)
         self.active = YES;
     [_batcher queueObject: rev];
-    LogTo(SyncVerbose, @"%@: Received #%lld (%@)",
-          self, rev.sequence, rev.docID);
+    LogTo(SyncVerbose, @"%@: Received #%lld %@", self, rev.sequence, rev);
 }
 
 

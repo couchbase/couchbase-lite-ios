@@ -141,8 +141,23 @@ int main (int argc, const char * argv[]) {
 }
 
 
+- (void) setSyncConfiguringDefault: (BOOL)configuringDefault {
+    _syncConfiguringDefault = configuringDefault;
+    _syncPushCheckbox.controlView.hidden = configuringDefault;
+}
+
+
 - (IBAction) configureSync: (id)sender {
+    [self setSyncConfiguringDefault: YES];
     _syncURLField.objectValue = self.syncURL.absoluteString;
+    [NSApp beginSheet: _syncConfigSheet modalForWindow: _window
+        modalDelegate: self
+       didEndSelector:@selector(configureSyncFinished:returnCode:)
+          contextInfo: NULL];
+}
+
+- (IBAction) oneShotSync: (id)sender {
+    [self setSyncConfiguringDefault: NO];
     [NSApp beginSheet: _syncConfigSheet modalForWindow: _window
         modalDelegate: self
        didEndSelector:@selector(configureSyncFinished:returnCode:)
@@ -151,18 +166,33 @@ int main (int argc, const char * argv[]) {
 
 - (IBAction) dismissSyncConfigSheet:(id)sender {
     NSInteger returnCode = [sender tag];
-    if (returnCode == NSOKButton 
-            && _syncURLField.stringValue.length > 0 && !self.currentURLFromField) {
-        NSBeep();
-        return;
+    if (returnCode == NSOKButton) {
+        if (_syncURLField.stringValue.length > 0 && !self.currentURLFromField) {
+            NSBeep();
+            return;
+        }
     }
     [NSApp endSheet: _syncConfigSheet returnCode: returnCode];
 }
 
 - (void) configureSyncFinished:(NSWindow *)sheet returnCode:(NSInteger)returnCode {
     [sheet orderOut: self];
-    if (returnCode == NSOKButton)
-        self.syncURL = self.currentURLFromField;
+    NSURL* url = self.currentURLFromField;
+    if (returnCode != NSOKButton || !url)
+        return;
+    
+    if (_syncConfiguringDefault) {
+        self.syncURL = url;
+    } else {
+        if (_syncPushCheckbox.state) {
+            NSLog(@"**** Pushing to <%@> ...", url);
+            [_database pushToDatabaseAtURL: url options: 0];
+        }
+        if (_syncPullCheckbox.state) {
+            NSLog(@"**** Pulling from <%@> ...", url);
+            [_database pullFromDatabaseAtURL: url options: 0];
+        }
+    }
 }
 
 

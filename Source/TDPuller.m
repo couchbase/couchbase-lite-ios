@@ -144,6 +144,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (inbox.count == 0)
         return;
     LogTo(Sync, @"%@ fetching %u remote revisions...", self, inbox.count);
+    LogTo(SyncVerbose, @"%@ fetching remote revisions %@", self, inbox.allRevisions);
     
     // Dump the revs into the queue of revs to pull from the remote db:
     if (!_revsToPull)
@@ -210,6 +211,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 // This will be called when _revsToInsert fills up:
 - (void) insertRevisions:(NSArray *)revs {
     LogTo(Sync, @"%@ inserting %u revisions...", self, revs.count);
+    LogTo(SyncVerbose, @"%@ inserting %@", self, revs);
     SequenceNumber maxSequence = self.lastSequence.longLongValue;
     [_db beginTransaction];
     

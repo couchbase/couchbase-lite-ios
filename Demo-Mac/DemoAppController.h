@@ -29,9 +29,11 @@
     
     IBOutlet NSPanel* _syncConfigSheet;
     IBOutlet NSTextField* _syncURLField;
+    IBOutlet NSButtonCell* _syncPushCheckbox, *_syncPullCheckbox;
     
     CouchDatabase* _database;
     DemoQuery* _query;
+    BOOL _syncConfiguringDefault;
     CouchReplication *_pull, *_push;
     BOOL _glowing;
 }
