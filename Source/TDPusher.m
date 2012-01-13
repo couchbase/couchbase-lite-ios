@@ -120,7 +120,7 @@
             // use the given _rev IDs instead of making up new ones.
             NSUInteger numDocsToSend = docsToSend.count;
             LogTo(Sync, @"%@: Sending %u revisions", self, numDocsToSend);
-            LogTo(SyncVerbose, @"%@: Sending %@", changes.allRevisions);
+            LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
             self.changesTotal += numDocsToSend;
             [self sendAsyncRequest: @"POST"
                          path: @"/_bulk_docs"
@@ -128,7 +128,7 @@
                                      {@"new_edits", $false})
                  onCompletion: ^(NSDictionary* response, NSError *error) {
                      if (!error) {
-                         LogTo(SyncVerbose, @"%@: Sent %@", changes.allRevisions);
+                         LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
                          self.lastSequence = $sprintf(@"%lld",
                                                       [changes.allRevisions.lastObject sequence]);
                      }
