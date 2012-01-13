@@ -24,6 +24,11 @@
 @implementation TDHTTPConnection
 
 
+- (TDListener*) listener {
+    return ((TDHTTPServer*)config.server).listener;
+}
+
+
 - (BOOL)supportsMethod:(NSString *)method atPath:(NSString *)path {
     return $equal(method, @"POST") || $equal(method, @"PUT") || $equal(method,  @"DELETE")
         || [super supportsMethod: method atPath: path];
@@ -45,33 +50,8 @@
     // Create a TDRouter:
     TDRouter* router = [[TDRouter alloc] initWithServer: ((TDHTTPServer*)config.server).tdServer
                                                 request: urlRequest];
-    __block bool finished = false;
-    __block TDResponse* routerResponse = nil;
-    NSMutableData* data = [NSMutableData data];
-    router.onResponseReady = ^(TDResponse* r) {
-        routerResponse = r;
-    };
-    router.onDataAvailable = ^(NSData* content) {
-        [data appendData: content];
-    };
-    router.onFinished = ^{
-        finished = true;
-    };
-    
-    // Run the router, synchronously:
-    [((TDHTTPServer*)config.server).listener onServerThread: ^{[router start];}];
-    NSAssert(finished, @"Router didn't finish");
-    
-    LogTo(TDListener, @"%@ %@ --> %i", method, path, routerResponse.status);
-
-    // Return the response:
-#if DEBUG
-    BOOL pretty = YES;
-#else
-    BOOL pretty = [router boolQuery: @"pretty"];
-#endif
-    TDHTTPResponse* response = [[[TDHTTPResponse alloc] initWithTDResponse: routerResponse
-                                                                    pretty: pretty] autorelease];
+    TDHTTPResponse* response = [[[TDHTTPResponse alloc] initWithRouter: router
+                                                         forConnection: self] autorelease];
     
     [router release];
     return response;

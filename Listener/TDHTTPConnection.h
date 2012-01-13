@@ -7,8 +7,11 @@
 //
 
 #import "HTTPConnection.h"
+@class TDListener;
 
 
 @interface TDHTTPConnection : HTTPConnection
+
+@property (readonly) TDListener* listener;
 
 @end

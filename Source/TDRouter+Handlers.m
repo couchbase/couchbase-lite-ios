@@ -399,7 +399,7 @@
     NSDictionary* changeDict = [self changeDictForRev: rev];
     NSMutableData* json = [[NSJSONSerialization dataWithJSONObject: changeDict
                                                            options: 0 error: nil] mutableCopy];
-    [json appendBytes: @"\n" length: 1];
+    [json appendBytes: "\n" length: 1];
     _onDataAvailable(json);
     [json release];
 }

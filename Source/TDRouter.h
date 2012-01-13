@@ -40,6 +40,7 @@ typedef void (^OnFinishedBlock)();
 @property (copy) OnDataAvailableBlock onDataAvailable;
 @property (copy) OnFinishedBlock onFinished;
 
+@property (readonly) NSURLRequest* request;
 @property (readonly) TDResponse* response;
 
 - (void) start;

@@ -60,7 +60,7 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 
 
 @synthesize onResponseReady=_onResponseReady, onDataAvailable=_onDataAvailable,
-            onFinished=_onFinished, response=_response;
+            onFinished=_onFinished, request=_request, response=_response;
 
 
 - (NSDictionary*) queries {
