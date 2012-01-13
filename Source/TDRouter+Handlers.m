@@ -176,6 +176,7 @@
     if (num_docs == NSNotFound || update_seq == NSNotFound)
         return 500;
     _response.bodyObject = $dict({@"db_name", db.name},
+                                 {@"db_uuid", db.publicUUID},
                                  {@"doc_count", $object(num_docs)},
                                  {@"update_seq", $object(update_seq)},
                                  {@"disk_size", $object(db.totalDataSize)});

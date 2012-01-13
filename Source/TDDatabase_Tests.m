@@ -51,6 +51,11 @@ TestCase(TDDatabase_CRUD) {
     // Start with a fresh database in /tmp:
     TDDatabase* db = createDB();
     
+    NSString* privateUUID = db.privateUUID, *publicUUID = db.publicUUID;
+    NSLog(@"DB private UUID = '%@', public = '%@'", privateUUID, publicUUID);
+    CAssert(privateUUID.length >= 20, @"Invalid privateUUID: %@", privateUUID);
+    CAssert(publicUUID.length >= 20, @"Invalid publicUUID: %@", publicUUID);
+    
     // Create a document:
     NSMutableDictionary* props = $mdict({@"foo", $object(1)}, {@"bar", $false});
     TDBody* doc = [[[TDBody alloc] initWithProperties: props] autorelease];

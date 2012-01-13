@@ -96,6 +96,8 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 @property (readonly) NSUInteger documentCount;
 @property (readonly) SequenceNumber lastSequence;
+@property (readonly) NSString* privateUUID;
+@property (readonly) NSString* publicUUID;
 
 - (TDRevision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID

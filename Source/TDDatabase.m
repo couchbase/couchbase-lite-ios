@@ -20,6 +20,7 @@
 #import "TDBlobStore.h"
 #import "TDPuller.h"
 #import "TDPusher.h"
+#import "TDMisc.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -164,6 +165,7 @@
             return NO;
         dbVersion = 3;
     }
+    
     if (dbVersion < 2) {
         // Version 2: added attachments.revpos
         NSString* sql = @"ALTER TABLE attachments ADD COLUMN revpos INTEGER DEFAULT 0; \
@@ -180,6 +182,20 @@
                             json BLOB); \
                             CREATE INDEX IF NOT EXISTS localdocs_by_docid ON localdocs(docid); \
                           PRAGMA user_version = 3";
+        if (![self initialize: sql])
+            return NO;
+        dbVersion = 3;
+    }
+    
+    if (dbVersion < 4) {
+        // Version 4: added 'info' table
+        NSString* sql = $sprintf(@"CREATE TABLE info ( \
+                                     key TEXT PRIMARY KEY, \
+                                     value TEXT); \
+                                   INSERT INTO INFO (key, value) VALUES ('privateUUID', '%@');\
+                                   INSERT INTO INFO (key, value) VALUES ('publicUUID',  '%@');\
+                                   PRAGMA user_version = 4",
+                                 TDCreateUUID(), TDCreateUUID());
         if (![self initialize: sql])
             return NO;
     }
@@ -283,6 +299,15 @@
     
     Log(@"...Finished database compaction.");
     return status;
+}
+
+
+- (NSString*) privateUUID {
+    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='privateUUID'"];
+}
+
+- (NSString*) publicUUID {
+    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='publicUUID'"];
 }
 
 

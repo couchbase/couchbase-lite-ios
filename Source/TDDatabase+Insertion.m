@@ -16,6 +16,7 @@
 #import "TDDatabase.h"
 #import "TDRevision.h"
 #import "TDInternal.h"
+#import "TDMisc.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -57,16 +58,9 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 }
 
 
-static NSString* createUUID() {
-    CFUUIDRef uuid = CFUUIDCreate(NULL);
-    NSString* str = NSMakeCollectable(CFUUIDCreateString(NULL, uuid));
-    CFRelease(uuid);
-    return [str autorelease];
-}
-
 /** Generates a new document ID at random. */
 + (NSString*) generateDocumentID {
-    return createUUID();
+    return TDCreateUUID();
 }
 
 
@@ -79,7 +73,7 @@ static NSString* createUUID() {
         if (generation == 0)
             return nil;
     }
-    NSString* digest = createUUID();  //TODO: Generate canonical digest of body
+    NSString* digest = TDCreateUUID();  //TODO: Generate canonical digest of body
     return [NSString stringWithFormat: @"%u-%@", generation+1, digest];
 }
 
