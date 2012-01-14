@@ -36,11 +36,7 @@
 }
 
 
-- (void) start {
-    if (_running)
-        return;
-    [super start];
-    
+- (void) beginReplicating {
     // Process existing changes since the last push:
     TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
                                                 options: nil filter: _filter];
@@ -49,13 +45,19 @@
     
     // Now listen for future changes (in continuous mode):
     if (_continuous) {
+        _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: TDDatabaseChangeNotification object: _db];
+        [self asyncTaskStarted];  // prevents -stopped from being called when other tasks finish
     }
 }
 
 - (void) stop {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    if (_observing) {
+        _observing = NO;
+        [[NSNotificationCenter defaultCenter] removeObserver: self];
+        [self asyncTasksFinished: 1];
+    }
     [super stop];
 }
 
@@ -71,6 +73,7 @@
 
 
 - (void) processInbox: (TDRevisionList*)changes {
+    SequenceNumber lastInboxSequence = [changes.allRevisions.lastObject sequence];
     // Generate a set of doc/rev IDs in the JSON format that _revs_diff wants:
     NSMutableDictionary* diffs = $mdict();
     for (TDRevision* rev in changes) {
@@ -84,6 +87,7 @@
     }
     
     // Call _revs_diff on the target db:
+    [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST" path: @"/_revs_diff" body: diffs
               onCompletion:^(NSDictionary* results, NSError* error) {
         if (results.count) {
@@ -122,6 +126,7 @@
             LogTo(Sync, @"%@: Sending %u revisions", self, numDocsToSend);
             LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
             self.changesTotal += numDocsToSend;
+            [self asyncTaskStarted];
             [self sendAsyncRequest: @"POST"
                          path: @"/_bulk_docs"
                          body: $dict({@"docs", docsToSend},
@@ -129,13 +134,18 @@
                  onCompletion: ^(NSDictionary* response, NSError *error) {
                      if (!error) {
                          LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
-                         self.lastSequence = $sprintf(@"%lld",
-                                                      [changes.allRevisions.lastObject sequence]);
+                         self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
                      }
                      self.changesProcessed += numDocsToSend;
+                     [self asyncTasksFinished: 1];
                  }
              ];
+            
+        } else {
+            // If none of the revisions are new to the remote, just bump the lastSequence:
+            self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
         }
+        [self asyncTasksFinished: 1];
     }];
 }
 

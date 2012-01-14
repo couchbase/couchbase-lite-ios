@@ -15,7 +15,6 @@
 {
     @private
     TDChangeTracker* _changeTracker;
-    NSThread* _thread;
     NSMutableArray* _revsToPull;
     NSUInteger _httpConnectionCount;
     TDBatcher* _revsToInsert;

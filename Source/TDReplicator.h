@@ -23,6 +23,8 @@ extern NSString* TDReplicatorProgressChangedNotification;
     NSURL* _remote;
     BOOL _continuous;
     NSString* _lastSequence;
+    BOOL _lastSequenceChanged;
+    NSDictionary* _remoteCheckpoint;
     BOOL _running, _active;
     NSString* _sessionID;
     TDBatcher* _batcher;
@@ -51,6 +53,7 @@ extern NSString* TDReplicatorProgressChangedNotification;
 @property (readonly) NSString* sessionID;
 @property (readonly, nonatomic) NSUInteger changesProcessed;
 @property (readonly, nonatomic) NSUInteger changesTotal;
+
 @end
 
 

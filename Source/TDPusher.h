@@ -13,6 +13,7 @@
 /** Replicator that pushes to a remote CouchDB. */
 @interface TDPusher : TDReplicator
 {
+    BOOL _observing;
     TDFilterBlock _filter;
 }
 

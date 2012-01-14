@@ -69,6 +69,7 @@
 // protected:
 @property (copy) NSString* lastSequence;
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
+- (void) beginReplicating;
 - (void) addToInbox: (TDRevision*)rev;
 - (void) processInbox: (TDRevisionList*)inbox;  // override this
 - (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body

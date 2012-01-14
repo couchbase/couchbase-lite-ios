@@ -51,13 +51,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-- (void) start {
-    if (_running)
-        return;
+- (void) beginReplicating {
     Assert(!_changeTracker);
-    [super start];
-    LogTo(Sync, @"*** STARTING PULLER to <%@> from #%@", _remote, _lastSequence);
-    
     if (!_revsToInsert) {
         _revsToInsert = [[TDBatcher alloc] initWithCapacity: 100 delay: 0.25
                                                   processor: ^(NSArray *revs) {
@@ -65,7 +60,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                   }];
     }
     
-    _thread = [NSThread currentThread];
+    LogTo(SyncVerbose, @"%@ starting ChangeTracker with since=%@", self, _lastSequence);
     _changeTracker = [[TDChangeTracker alloc]
                                    initWithDatabaseURL: _remote
                                                   mode: (_continuous ? kLongPoll :kOneShot)
@@ -132,17 +127,23 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 // Process a bunch of remote revisions from the _changes feed at once
 - (void) processInbox: (TDRevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
-    LogTo(SyncVerbose, @"TDPuller: Looking up %@", inbox);
+    LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
+    SequenceNumber lastInboxSequence = [inbox.allRevisions.lastObject sequence];
     NSUInteger total = _changesTotal - inbox.count;
     if (![_db findMissingRevisions: inbox]) {
-        Warn(@"TDPuller failed to look up local revs");
+        Warn(@"%@ failed to look up local revs", self);
         inbox = nil;
     }
     if (_changesTotal != total + inbox.count)
         self.changesTotal = total + inbox.count;
     
-    if (inbox.count == 0)
+    if (inbox.count == 0) {
+        // Nothing to do. Just bump the lastSequence.
+        LogTo(SyncVerbose, @"%@ no new remote revisions to fetch", self);
+        self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
         return;
+    }
+    
     LogTo(Sync, @"%@ fetching %u remote revisions...", self, inbox.count);
     LogTo(SyncVerbose, @"%@ fetching remote revisions %@", self, inbox.allRevisions);
     
@@ -191,7 +192,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       [_revsToInsert queueObject: $array(rev, history)];
                       [self asyncTaskStarted];
                   } else {
-                      Warn(@"TDPuller: Missing revision history in response from %@", path);
+                      Warn(@"%@: Missing revision history in response from %@", path, self);
                       self.changesProcessed++;
                   }
               } else {

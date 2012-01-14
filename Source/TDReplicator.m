@@ -20,7 +20,7 @@
 #import "TDRemoteRequest.h"
 #import "TDBatcher.h"
 #import "TDInternal.h"
-
+#import "TDMisc.h"
 
 
 #define kProcessDelay 0.5
@@ -32,6 +32,9 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 
 @interface TDReplicator ()
 @property (readwrite) BOOL running, active;
+@property (readwrite, copy) NSDictionary* remoteCheckpoint;
+- (void) fetchRemoteCheckpointDoc;
+- (void) saveLastSequence;
 @end
 
 
@@ -80,6 +83,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     [_db release];
     [_remote release];
     [_lastSequence release];
+    [_remoteCheckpoint release];
     [_batcher release];
     [_sessionID release];
     [super dealloc];
@@ -93,6 +97,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 
 @synthesize db=_db, remote=_remote, running=_running, active=_active, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
+@synthesize remoteCheckpoint=_remoteCheckpoint;
 
 
 - (BOOL) isPush {
@@ -106,10 +111,14 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 
 - (void) setLastSequence:(NSString*)lastSequence {
     if (!$equal(lastSequence, _lastSequence)) {
+        LogTo(SyncVerbose, @"%@: Setting lastSequence to %@ (from %@)",
+              self, lastSequence, _lastSequence);
         [_lastSequence release];
         _lastSequence = [lastSequence copy];
-        LogTo(Sync, @"%@ checkpointing sequence=%@", self, lastSequence);
-        [_db setLastSequence: lastSequence withRemoteURL: _remote push: self.isPush];
+        if (!_lastSequenceChanged) {
+            _lastSequenceChanged = YES;
+            [self performSelector: @selector(saveLastSequence) withObject: nil afterDelay: 2.0];
+        }
     }
 }
 
@@ -131,11 +140,18 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     if (_running)
         return;
     static int sLastSessionID = 0;
-    [_lastSequence release];
-    _lastSequence = [[_db lastSequenceWithRemoteURL: _remote push: self.isPush] copy];
     _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
     LogTo(Sync, @"%@ STARTING from sequence %@", self, _lastSequence);
     self.running = YES;
+    [_lastSequence release];
+    _lastSequence = nil;
+
+    [self fetchRemoteCheckpointDoc];
+}
+
+
+- (void) beginReplicating {
+    // Subclasses implement this
 }
 
 
@@ -195,6 +211,76 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
                                                                   body: body
                                                           onCompletion: onCompletion];
     [request autorelease];
+}
+
+
+#pragma mark - CHECKPOINT STORAGE:
+
+
+/** This is the _local document ID stored on the remote server to keep track of state.
+    Its ID is based on the local database ID (the private one, to make the result unguessable)
+    and the remote database's URL. */
+- (NSString*) remoteCheckpointDocID {
+    NSString* input = $sprintf(@"%@\n%@\n%i", _db.privateUUID, _remote.absoluteString, self.isPush);
+    return TDHexSHA1Digest([input dataUsingEncoding: NSUTF8StringEncoding]);
+}
+
+
+- (void) fetchRemoteCheckpointDoc {
+    _lastSequenceChanged = NO;
+    NSString* localLastSequence = [_db lastSequenceWithRemoteURL: _remote push: self.isPush];
+    if (!localLastSequence) {
+        [self beginReplicating];
+        return;
+    }
+    
+    [self asyncTaskStarted];
+    [self sendAsyncRequest: @"GET"
+                      path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
+                      body: nil
+              onCompletion: ^(id response, NSError* error) {
+                  // Got the response:
+                  if (!error || error.code == 404) {
+                      response = $castIf(NSDictionary, response);
+                      self.remoteCheckpoint = response;
+                      NSString* remoteLastSequence = $castIf(NSString,
+                                                        [response objectForKey: @"lastSequence"]);
+
+                      if ($equal(remoteLastSequence, localLastSequence)) {
+                          _lastSequence = [localLastSequence retain];
+                          LogTo(Sync, @"%@: Replicating from lastSequence=%@", self, _lastSequence);
+                      } else {
+                          LogTo(Sync, @"%@: lastSequence mismatch: I had %@, remote had %@",
+                                self, localLastSequence, remoteLastSequence);
+                      }
+                      [self beginReplicating];
+                  }
+                  [self asyncTasksFinished: 1];
+          }
+     ];
+}
+
+
+- (void) saveLastSequence {
+    if (!_lastSequenceChanged)
+        return;
+    _lastSequenceChanged = NO;
+    
+    LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
+    NSMutableDictionary* body = [_remoteCheckpoint mutableCopy] ?: $mdict();
+    [body setObject: _lastSequence forKey: @"lastSequence"];
+    
+    [self sendAsyncRequest: @"PUT"
+                      path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
+                      body: body
+              onCompletion: ^(id response, NSError* error) {
+                  if (!error) {
+                      [body setObject: [response objectForKey: @"rev"] forKey: @"_rev"];
+                      self.remoteCheckpoint = body;
+                  }
+              }
+     ];
+    [_db setLastSequence: _lastSequence withRemoteURL: _remote push: self.isPush];
 }
 
 
