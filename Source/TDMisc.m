@@ -8,7 +8,11 @@
 
 #import "TDMisc.h"
 
+#import "CollectionUtils.h"
 #import <CommonCrypto/CommonDigest.h>
+
+
+NSString* const TDHTTPErrorDomain = @"TDHTTP";
 
 
 NSString* TDCreateUUID() {
@@ -29,4 +33,13 @@ NSString* TDHexSHA1Digest( NSData* input ) {
     return [[[NSString alloc] initWithBytes: hex
                                      length: 2*sizeof(digest)
                                    encoding: NSASCIIStringEncoding] autorelease];
+}
+
+
+NSError* TDHTTPError( int status, NSURL* url ) {
+    NSString* reason = [NSHTTPURLResponse localizedStringForStatusCode: status];
+    NSDictionary* info = $dict({NSURLErrorKey, url},
+                               {NSLocalizedFailureReasonErrorKey, reason},
+                               {NSLocalizedDescriptionKey, $sprintf(@"%i %@", status, reason)});
+    return [NSError errorWithDomain: TDHTTPErrorDomain code: status userInfo: info];
 }

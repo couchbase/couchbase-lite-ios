@@ -34,6 +34,7 @@ enum {
     NSAssert(!_trackingInput, @"Already started");
     NSAssert(_mode == kContinuous, @"TDSocketChangeTracker only supports continuous mode");
     
+    [super start];
     NSMutableString* request = [NSMutableString stringWithFormat:
                                      @"GET /%@/%@ HTTP/1.1\r\n"
                                      @"Host: %@\r\n",
@@ -125,6 +126,7 @@ enum {
                 // Read the HTTP response status line:
                 if (![line hasPrefix: @"HTTP/1.1 200 "]) {
                     Warn(@"_changes response: %@", line);
+                    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: 1 userInfo:nil];
                     [self stop];
                     return NO;
                 }
@@ -144,6 +146,7 @@ enum {
                 unsigned chunkLength;
                 if (![scanner scanHexInt: &chunkLength]) {
                     Warn(@"Failed to parse _changes chunk length '%@'", line);
+                    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: 2 userInfo:nil];
                     [self stop];
                     return NO;
                 }
@@ -176,6 +179,7 @@ enum {
         [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
     } else {
         Warn(@"%@: Can't connect, giving up: %@", self, error);
+        self.error = error;
     }
 }
 

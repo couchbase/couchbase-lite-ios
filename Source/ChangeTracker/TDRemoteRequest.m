@@ -14,6 +14,8 @@
 //  and limitations under the License.
 
 #import "TDRemoteRequest.h"
+#import "TDMisc.h"
+
 
 @implementation TDRemoteRequest
 
@@ -74,8 +76,7 @@
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, status);
     if (status >= 300) {
         [_connection cancel];
-        NSError* error = [NSError errorWithDomain: @"HTTP" code: status userInfo:nil];
-        [self connection: connection didFailWithError: error];
+        [self connection: connection didFailWithError: TDHTTPError(status, _request.URL)];
     }
 }
 

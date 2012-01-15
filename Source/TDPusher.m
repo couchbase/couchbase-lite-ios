@@ -90,7 +90,10 @@
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST" path: @"/_revs_diff" body: diffs
               onCompletion:^(NSDictionary* results, NSError* error) {
-        if (results.count) {
+        if (error) {
+            self.error = error;
+            [self stop];
+        } else if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
             NSArray* docsToSend = [changes.allRevisions my_map: ^(id rev) {
@@ -132,7 +135,9 @@
                          body: $dict({@"docs", docsToSend},
                                      {@"new_edits", $false})
                  onCompletion: ^(NSDictionary* response, NSError *error) {
-                     if (!error) {
+                     if (error) {
+                         self.error = error;
+                     } else {
                          LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
                          self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
                      }

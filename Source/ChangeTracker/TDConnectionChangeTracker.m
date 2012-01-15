@@ -16,11 +16,13 @@
 // <http://wiki.apache.org/couchdb/HTTP_database_API#Changes>
 
 #import "TDConnectionChangeTracker.h"
+#import "TDMisc.h"
 
 
 @implementation TDConnectionChangeTracker
 
 - (BOOL) start {
+    [super start];
     // For some reason continuous mode doesn't work with CFNetwork.
     if (_mode == kContinuous)
         _mode = kLongPoll;
@@ -43,7 +45,6 @@
     _connection = nil;
     [_inputBuffer release];
     _inputBuffer = nil;
-    _status = 0;
 }
 
 
@@ -76,10 +77,11 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    _status = (int) ((NSHTTPURLResponse*)response).statusCode;
-    LogTo(ChangeTracker, @"%@: Got response, status %d", self, _status);
-    if (_status >= 300) {
-        Warn(@"%@: Got status %i", self, _status);
+    int status = (int) ((NSHTTPURLResponse*)response).statusCode;
+    LogTo(ChangeTracker, @"%@: Got response, status %d", self, status);
+    if (status >= 300) {
+        Warn(@"%@: Got status %i", self, status);
+        self.error = TDHTTPError(status, self.changesFeedURL);
         [self stop];
     }
 }
@@ -108,19 +110,20 @@
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     LogTo(ChangeTracker, @"%@: Got error %@", self, error);
+    self.error = error;
     [self stopped];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     if (_mode != kContinuous) {
-        int status = _status;
+        // In non-continuous mode, now parse the entire response as a JSON document:
         NSData* input = [_inputBuffer retain];
         LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
         BOOL responseOK = [self receivedPollResponse: input];
         [input release];
         
         [self clearConnection];
-        if (_mode == kLongPoll && status == 200 && responseOK)
+        if (_mode == kLongPoll && responseOK)
             [self start];       // Next poll...
         else
             [self stopped];

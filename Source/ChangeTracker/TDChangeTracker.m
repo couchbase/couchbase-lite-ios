@@ -23,7 +23,7 @@
 @implementation TDChangeTracker
 
 @synthesize lastSequenceNumber=_lastSequenceNumber, databaseURL=_databaseURL, mode=_mode;
-@synthesize client=_client, filterName=_filterName;
+@synthesize error=_error, client=_client, filterName=_filterName;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
@@ -84,6 +84,7 @@
 - (void)dealloc {
     [self stop];
     [_databaseURL release];
+    [_error release];
     [super dealloc];
 }
 
@@ -95,6 +96,7 @@
 }
 
 - (BOOL) start {
+    self.error = nil;
     return NO;
 }
 

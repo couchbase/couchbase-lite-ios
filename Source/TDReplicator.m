@@ -86,6 +86,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     [_remoteCheckpoint release];
     [_batcher release];
     [_sessionID release];
+    [_error release];
     [super dealloc];
 }
 
@@ -95,7 +96,8 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 }
 
 
-@synthesize db=_db, remote=_remote, running=_running, active=_active, sessionID=_sessionID;
+@synthesize db=_db, remote=_remote;
+@synthesize running=_running, active=_active, error=_error, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 
@@ -240,7 +242,9 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
                       body: nil
               onCompletion: ^(id response, NSError* error) {
                   // Got the response:
-                  if (!error || error.code == 404) {
+                  if (error && error.code != 404) {
+                      self.error = error;
+                  } else {
                       response = $castIf(NSDictionary, response);
                       self.remoteCheckpoint = response;
                       NSString* remoteLastSequence = $castIf(NSString,
@@ -274,7 +278,10 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
                       path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
                       body: body
               onCompletion: ^(id response, NSError* error) {
-                  if (!error) {
+                  if (error) {
+                      LogTo(Sync, @"%@: Unable to save remote checkpoint: %@", self, error);
+                      // TODO: If error is 401 or 403, and this is a pull, remember that remote is read-only and don't attempt to read its checkpoint next time.
+                  } else {
                       [body setObject: [response objectForKey: @"rev"] forKey: @"_rev"];
                       self.remoteCheckpoint = body;
                   }

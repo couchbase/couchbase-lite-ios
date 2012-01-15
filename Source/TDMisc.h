@@ -8,7 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
+extern NSString* const TDHTTPErrorDomain;
 
 NSString* TDCreateUUID( void );
 
 NSString* TDHexSHA1Digest( NSData* input );
+
+NSError* TDHTTPError( int status, NSURL* url );

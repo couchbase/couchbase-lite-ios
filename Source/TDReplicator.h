@@ -26,6 +26,7 @@ extern NSString* TDReplicatorProgressChangedNotification;
     BOOL _lastSequenceChanged;
     NSDictionary* _remoteCheckpoint;
     BOOL _running, _active;
+    NSError* _error;
     NSString* _sessionID;
     TDBatcher* _batcher;
     int _asyncTaskCount;
@@ -49,6 +50,11 @@ extern NSString* TDReplicatorProgressChangedNotification;
 
 /** Is the replicator actively sending/receiving revisions? (Observable) */
 @property (readonly) BOOL active;
+
+/** Latest error encountered while replicating.
+    This is set to nil when starting. It may also be set to nil by the client if desired.
+    Not all errors are fatal; if .running is still true, the replicator will retry. */
+@property (retain) NSError* error;
 
 @property (readonly) NSString* sessionID;
 @property (readonly, nonatomic) NSUInteger changesProcessed;

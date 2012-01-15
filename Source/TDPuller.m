@@ -19,6 +19,7 @@
 #import "TDChangeTracker.h"
 #import "TDBatcher.h"
 #import "TDInternal.h"
+#import "TDMisc.h"
 
 
 // Maximum number of revisions to fetch simultaneously
@@ -116,6 +117,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 - (void) changeTrackerStopped:(TDChangeTracker *)tracker {
     LogTo(Sync, @"%@: ChangeTracker stopped", self);
+    
+    if (!_error && tracker.error)
+        self.error = tracker.error;
+    
     [_changeTracker release];
     _changeTracker = nil;
     
@@ -196,6 +201,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       self.changesProcessed++;
                   }
               } else {
+                  if (error)
+                      self.error = error;
                   self.changesProcessed++;
               }
               
@@ -226,8 +233,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             if (status >= 300) {
                 if (status == 403)
                     LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
-                else
+                else {
                     Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+                    self.error = TDHTTPError(status, nil);
+                }
             }
         }
     }

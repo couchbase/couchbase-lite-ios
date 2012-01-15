@@ -15,7 +15,6 @@
 {
     @private
     NSURLConnection* _connection;
-    int _status;
     NSMutableData* _inputBuffer;
 }
 
