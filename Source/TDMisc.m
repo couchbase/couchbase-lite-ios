@@ -43,3 +43,9 @@ NSError* TDHTTPError( int status, NSURL* url ) {
                                {NSLocalizedDescriptionKey, $sprintf(@"%i %@", status, reason)});
     return [NSError errorWithDomain: TDHTTPErrorDomain code: status userInfo: info];
 }
+
+
+int TDSequenceCompare( SequenceNumber a, SequenceNumber b) {
+    SInt64 diff = a - b;
+    return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+}

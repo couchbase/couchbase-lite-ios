@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TDRevision.h"
 
 extern NSString* const TDHTTPErrorDomain;
 
@@ -15,3 +16,5 @@ NSString* TDCreateUUID( void );
 NSString* TDHexSHA1Digest( NSData* input );
 
 NSError* TDHTTPError( int status, NSURL* url );
+
+int TDSequenceCompare( SequenceNumber a, SequenceNumber b);

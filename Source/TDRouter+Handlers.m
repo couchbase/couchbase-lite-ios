@@ -14,9 +14,10 @@
 #import "TDRevision.h"
 #import "TDServer.h"
 #import "TDReplicator.h"
+#import "TDMisc.h"
 
 
-@interface TDRouter ()
+@interface TDRouter (Handlers_Internal)
 - (TDStatus) update: (TDDatabase*)db
               docID: (NSString*)docID
                body: (TDBody*)body
@@ -389,7 +390,8 @@
     }
     // After collecting revisions, sort by sequence:
     [entries sortUsingComparator: ^NSComparisonResult(id e1, id e2) {
-        return [[e1 objectForKey: @"seq"] longLongValue] - [[e2 objectForKey: @"seq"] longLongValue];
+        return TDSequenceCompare([[e1 objectForKey: @"seq"] longLongValue],
+                                 [[e2 objectForKey: @"seq"] longLongValue]);
     }];
     id lastSeq = [entries.lastObject objectForKey: @"seq"] ?: $object(since);
     return $dict({@"results", entries}, {@"last_seq", lastSeq});

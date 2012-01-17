@@ -15,6 +15,7 @@
 
 #import "TDRevision.h"
 #import "TDBody.h"
+#import "TDMisc.h"
 
 
 @implementation TDRevision
@@ -207,7 +208,7 @@
 
 - (void) sortBySequence {
     [_revs sortUsingComparator:^NSComparisonResult(id rev1, id rev2) {
-        return [rev1 sequence] - [rev2 sequence];
+        return TDSequenceCompare([rev1 sequence], [rev2 sequence]);
     }];
 }
 
