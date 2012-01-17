@@ -36,6 +36,10 @@
 		270B3E3A14898DF200E0A926 /* TDRevision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* TDRevision.m */; };
 		270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E3F148D7F0000E0A926 /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
+		270FE0CA14C5008C005FF647 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
+		270FE0D514C50134005FF647 /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
+		270FE0D614C50134005FF647 /* TouchDBListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener.framework */; };
+		270FE0DE14C50390005FF647 /* TouchServ.m in Sources */ = {isa = PBXBuildFile; fileRef = 270FE0DC14C50382005FF647 /* TouchServ.m */; };
 		2713789314BCF6450058C5CD /* TDMultipartWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2713789114BCF6450058C5CD /* TDMultipartWriter.h */; };
 		2713789414BCF6450058C5CD /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2713789214BCF6450058C5CD /* TDMultipartWriter.m */; };
 		2713789514BCF6450058C5CD /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2713789214BCF6450058C5CD /* TDMultipartWriter.m */; };
@@ -333,6 +337,8 @@
 		270B3E3814898DF200E0A926 /* TDRevision.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDRevision.m; sourceTree = "<group>"; };
 		270B3E3C148D7F0000E0A926 /* TDPusher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDPusher.h; sourceTree = "<group>"; };
 		270B3E3D148D7F0000E0A926 /* TDPusher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDPusher.m; sourceTree = "<group>"; };
+		270FE0C814C5008C005FF647 /* TouchServ */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TouchServ; sourceTree = BUILT_PRODUCTS_DIR; };
+		270FE0DC14C50382005FF647 /* TouchServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TouchServ.m; sourceTree = "<group>"; };
 		2713789114BCF6450058C5CD /* TDMultipartWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultipartWriter.h; sourceTree = "<group>"; };
 		2713789214BCF6450058C5CD /* TDMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultipartWriter.m; sourceTree = "<group>"; };
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
@@ -524,6 +530,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		270FE0C514C5008C005FF647 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270FE0D514C50134005FF647 /* TouchDB.framework in Frameworks */,
+				270FE0D614C50134005FF647 /* TouchDBListener.framework in Frameworks */,
+				270FE0CA14C5008C005FF647 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275315D114ACF0A10065964D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -688,6 +704,7 @@
 				275315D514ACF0A10065964D /* TouchDBListener.framework */,
 				DA023B6414BCA94C008184BB /* libTouchDBListener.a */,
 				DA147C3614BCAC3B0052DA4D /* TouchDBListener.framework */,
+				270FE0C814C5008C005FF647 /* TouchServ */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -971,6 +988,7 @@
 				27C706D01488679500F0F099 /* ShoppingDemo.xib */,
 				27C706D11488679500F0F099 /* ShoppingItem.h */,
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
+				270FE0DC14C50382005FF647 /* TouchServ.m */,
 				27990702149D2576003D4338 /* CouchCocoa.framework */,
 			);
 			path = "Demo-Mac";
@@ -1140,6 +1158,22 @@
 			productName = ToyCouchTests;
 			productReference = 270B3DFB1489359000E0A926 /* TouchDBTests.octest */;
 			productType = "com.apple.product-type.bundle";
+		};
+		270FE0C714C5008C005FF647 /* TouchServ */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 270FE0D414C5008C005FF647 /* Build configuration list for PBXNativeTarget "TouchServ" */;
+			buildPhases = (
+				270FE0C414C5008C005FF647 /* Sources */,
+				270FE0C514C5008C005FF647 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TouchServ;
+			productName = TouchServ;
+			productReference = 270FE0C814C5008C005FF647 /* TouchServ */;
+			productType = "com.apple.product-type.tool";
 		};
 		275315D414ACF0A10065964D /* TouchDBListener */ = {
 			isa = PBXNativeTarget;
@@ -1354,6 +1388,7 @@
 				27731F131495CFEF00815D67 /* iOS Empty App */,
 				DA023B2614BCA94C008184BB /* Listener iOS Library */,
 				DA147C1F14BCAC3B0052DA4D /* Listener iOS Framework */,
+				270FE0C714C5008C005FF647 /* TouchServ */,
 			);
 		};
 /* End PBXProject section */
@@ -1557,6 +1592,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		270FE0C414C5008C005FF647 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				270FE0DE14C50390005FF647 /* TouchServ.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1937,6 +1980,41 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = TouchDBTests;
 				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+		270FE0D214C5008C005FF647 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		270FE0D314C5008C005FF647 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -2452,6 +2530,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		270FE0D414C5008C005FF647 /* Build configuration list for PBXNativeTarget "TouchServ" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				270FE0D214C5008C005FF647 /* Debug */,
+				270FE0D314C5008C005FF647 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		275315E114ACF0A20065964D /* Build configuration list for PBXNativeTarget "TouchDBListener" */ = {
 			isa = XCConfigurationList;
