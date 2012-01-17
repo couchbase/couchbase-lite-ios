@@ -42,6 +42,8 @@ typedef SInt64 SequenceNumber;
 
 @property SequenceNumber sequence;
 
+- (NSComparisonResult) compareSequences: (TDRevision*)rev;
+
 /** Generation number: 1 for a new document, 2 for the 2nd revision, ...
     Extracted from the numeric prefix of the revID. */
 @property (readonly) unsigned generation;

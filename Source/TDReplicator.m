@@ -143,7 +143,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
         return;
     static int sLastSessionID = 0;
     _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
-    LogTo(Sync, @"%@ STARTING from sequence %@", self, _lastSequence);
+    LogTo(Sync, @"%@ STARTING ...", self);
     self.running = YES;
     [_lastSequence release];
     _lastSequence = nil;
@@ -272,7 +272,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     
     LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
     NSMutableDictionary* body = [_remoteCheckpoint mutableCopy] ?: $mdict();
-    [body setObject: _lastSequence forKey: @"lastSequence"];
+    [body setValue: _lastSequence forKey: @"lastSequence"];
     
     [self sendAsyncRequest: @"PUT"
                       path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]

@@ -18,16 +18,22 @@
 #import "TDChangeTracker.h"
 #import "TDConnectionChangeTracker.h"
 #import "TDSocketChangeTracker.h"
+#import "TDMisc.h"
+
+
+@interface TDChangeTracker ()
+@property (readwrite, copy, nonatomic) id lastSequenceID;
+@end
 
 
 @implementation TDChangeTracker
 
-@synthesize lastSequenceNumber=_lastSequenceNumber, databaseURL=_databaseURL, mode=_mode;
+@synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
 @synthesize error=_error, client=_client, filterName=_filterName;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
-             lastSequence: (NSUInteger)lastSequence
+             lastSequence: (id)lastSequenceID
                    client: (id<TDChangeTrackerClient>)client {
     NSParameterAssert(databaseURL);
     NSParameterAssert(client);
@@ -39,12 +45,12 @@
             if (mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"]) {
                 return (id) [[TDSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
                                                                           mode: mode
-                                                                  lastSequence: lastSequence
+                                                                  lastSequence: lastSequenceID
                                                                         client: client];
             } else {
                 return (id) [[TDConnectionChangeTracker alloc] initWithDatabaseURL: databaseURL
                                                                               mode: mode
-                                                                      lastSequence: lastSequence
+                                                                      lastSequence: lastSequenceID
                                                                             client: client];
             }
         }
@@ -52,7 +58,7 @@
         _databaseURL = [databaseURL retain];
         _client = client;
         _mode = mode;
-        _lastSequenceNumber = lastSequence;
+        self.lastSequenceID = lastSequenceID;
     }
     return self;
 }
@@ -64,17 +70,21 @@
 - (NSString*) changesFeedPath {
     static NSString* const kModeNames[3] = {@"normal", @"longpoll", @"continuous"};
     NSMutableString* path;
-    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=300000&since=%u",
-                                    kModeNames[_mode],
-                                    _lastSequenceNumber];
+    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=300000",
+                                              kModeNames[_mode]];
+    if (_lastSequenceID)
+        [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
     if (_filterName)
-        [path appendFormat: @"&filter=%@", _filterName];
+        [path appendFormat: @"&filter=%@", TDEscapeURLParam(_filterName)];
     return path;
 }
 
 - (NSURL*) changesFeedURL {
-    return [NSURL URLWithString: [NSString stringWithFormat: @"%@/%@",
-                                  _databaseURL.absoluteString, self.changesFeedPath]];
+    NSMutableString* urlStr = [[_databaseURL.absoluteString mutableCopy] autorelease];
+    if (![urlStr hasSuffix: @"/"])
+        [urlStr appendString: @"/"];
+    [urlStr appendString: self.changesFeedPath];
+    return [NSURL URLWithString: urlStr];
 }
 
 - (NSString*) description {
@@ -84,6 +94,7 @@
 - (void)dealloc {
     [self stop];
     [_databaseURL release];
+    [_lastSequenceID release];
     [_error release];
     [super dealloc];
 }
@@ -117,7 +128,7 @@
     if (!seq)
         return NO;
     [_client changeTrackerReceivedChange: change];
-    _lastSequenceNumber = [seq intValue];
+    self.lastSequenceID = seq;
     return YES;
 }
 

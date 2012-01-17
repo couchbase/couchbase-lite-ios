@@ -17,4 +17,8 @@ NSString* TDHexSHA1Digest( NSData* input );
 
 NSError* TDHTTPError( int status, NSURL* url );
 
-int TDSequenceCompare( SequenceNumber a, SequenceNumber b);
+NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b);
+
+/** Escapes a string to be used as the value of a parameter in a URL.
+    This does the usual %-escaping, but makes sure that '&' is also escaped. */
+NSString* TDEscapeURLParam( NSString* param );

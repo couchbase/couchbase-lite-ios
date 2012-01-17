@@ -118,6 +118,11 @@
     return _docID.hash ^ _revID.hash;
 }
 
+- (NSComparisonResult) compareSequences: (TDRevision*)rev {
+    NSParameterAssert(rev != nil);
+    return TDSequenceCompare(_sequence, rev->_sequence);
+}
+
 - (TDRevision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID {
     Assert(docID && revID);
     Assert(!_docID || $equal(_docID, docID));
@@ -207,9 +212,7 @@
 }
 
 - (void) sortBySequence {
-    [_revs sortUsingComparator:^NSComparisonResult(id rev1, id rev2) {
-        return TDSequenceCompare([rev1 sequence], [rev2 sequence]);
-    }];
+    [_revs sortUsingSelector: @selector(compareSequences:)];
 }
 
 

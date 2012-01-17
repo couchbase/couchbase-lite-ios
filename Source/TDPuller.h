@@ -7,6 +7,7 @@
 //
 
 #import "TDReplicator.h"
+#import "TDRevision.h"
 @class TDChangeTracker;
 
 
@@ -15,6 +16,8 @@
 {
     @private
     TDChangeTracker* _changeTracker;
+    unsigned _nextFakeSequence;
+    unsigned _maxInsertedFakeSequence;
     NSMutableArray* _revsToPull;
     NSUInteger _httpConnectionCount;
     TDBatcher* _revsToInsert;
@@ -22,5 +25,18 @@
 }
 
 @property (copy) NSString* filterName;
+
+@end
+
+
+
+/** A revision received from a remote server during a pull. Tracks the opaque remote sequence ID. */
+@interface TDPulledRevision : TDRevision
+{
+@private
+    NSString* _remoteSequenceID;
+}
+
+@property (copy) NSString* remoteSequenceID;
 
 @end

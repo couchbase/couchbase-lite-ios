@@ -61,11 +61,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                   }];
     }
     
+    _nextFakeSequence = _maxInsertedFakeSequence = 0;
     LogTo(SyncVerbose, @"%@ starting ChangeTracker with since=%@", self, _lastSequence);
     _changeTracker = [[TDChangeTracker alloc]
                                    initWithDatabaseURL: _remote
                                                   mode: (_continuous ? kLongPoll :kOneShot)
-                                          lastSequence: [_lastSequence intValue]
+                                          lastSequence: _lastSequence
                                                 client: self];
     _changeTracker.filterName = _filterName;
     [_changeTracker start];
@@ -89,7 +90,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Got a _changes feed entry from the TDChangeTracker.
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
-    SequenceNumber lastSequence = [[change objectForKey: @"seq"] longLongValue];
+    NSString* lastSequence = [[change objectForKey: @"seq"] description];
     NSString* docID = [change objectForKey: @"id"];
     if (!docID)
         return;
@@ -101,12 +102,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSArray* changes = $castIf(NSArray, [change objectForKey: @"changes"]);
     for (NSDictionary* changeDict in changes) {
         @autoreleasepool {
+            // Push each revision info to the inbox
             NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
             if (!revID)
                 continue;
-            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
-            rev.sequence = lastSequence;
-            // Push each revision info to the inbox
+            TDPulledRevision* rev = [[TDPulledRevision alloc] initWithDocID: docID revID: revID
+                                                                    deleted: deleted];
+            rev.remoteSequenceID = lastSequence;
+            rev.sequence = ++_nextFakeSequence;
             [self addToInbox: rev];
             [rev release];
         }
@@ -133,7 +136,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) processInbox: (TDRevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
-    SequenceNumber lastInboxSequence = [inbox.allRevisions.lastObject sequence];
+    NSString* lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger total = _changesTotal - inbox.count;
     if (![_db findMissingRevisions: inbox]) {
         Warn(@"%@ failed to look up local revs", self);
@@ -145,7 +148,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (inbox.count == 0) {
         // Nothing to do. Just bump the lastSequence.
         LogTo(SyncVerbose, @"%@ no new remote revisions to fetch", self);
-        self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
+        self.lastSequence = lastInboxSequence;
         return;
     }
     
@@ -181,7 +184,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // been added since the latest revisions we have locally.
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true&attachments=true",
-                              rev.docID, rev.revID);
+                              TDEscapeURLParam(rev.docID), TDEscapeURLParam(rev.revID));
     NSArray* knownRevs = [self knownCurrentRevIDsOf: rev];
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
@@ -220,33 +223,52 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) insertRevisions:(NSArray *)revs {
     LogTo(Sync, @"%@ inserting %u revisions...", self, revs.count);
     LogTo(SyncVerbose, @"%@ inserting %@", self, revs);
-    SequenceNumber maxSequence = self.lastSequence.longLongValue;
-    [_db beginTransaction];
     
-    for (NSArray* revAndHistory in revs) {
-        @autoreleasepool {
-            TDRevision* rev = [revAndHistory objectAtIndex: 0];
-            NSArray* history = [revAndHistory objectAtIndex: 1];
-            // Insert the revision:
-            maxSequence = MAX(maxSequence, rev.sequence);
-            int status = [_db forceInsert: rev revisionHistory: history source: _remote];
-            if (status >= 300) {
-                if (status == 403)
-                    LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
-                else {
-                    Warn(@"%@ failed to write %@: status=%d", self, rev, status);
-                    self.error = TDHTTPError(status, nil);
+    /* Updating self.lastSequence is tricky. It needs to be the received sequence ID of the revision for which we've successfully received and inserted (or rejected) it and all previous received revisions. That way, next time we can start tracking remote changes from that sequence ID and know we haven't missed anything. */
+    /* FIX: The current code below doesn't quite achieve that: it tracks the latest sequence ID we've successfully processed, but doesn't handle failures correctly across multiple calls to -insertRevisions. I think correct behavior will require keeping an NSMutableIndexSet to track the fake-sequences of all processed revisions; then we can find the first missing index in that set and not advance lastSequence past the revision with that fake-sequence. */
+    
+    revs = [revs sortedArrayUsingSelector: @selector(compareSequences:)];
+    BOOL allGood = YES;
+    TDPulledRevision* lastGoodRev = nil;
+    
+    [_db beginTransaction];
+    BOOL success = NO;
+    @try{
+        for (NSArray* revAndHistory in revs) {
+            @autoreleasepool {
+                TDPulledRevision* rev = [revAndHistory objectAtIndex: 0];
+                NSArray* history = [revAndHistory objectAtIndex: 1];
+                // Insert the revision:
+                int status = [_db forceInsert: rev revisionHistory: history source: _remote];
+                if (status >= 300) {
+                    if (status == 403)
+                        LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
+                    else {
+                        Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+                        self.error = TDHTTPError(status, nil);
+                        allGood = NO; // stop advancing lastGoodRev
+                    }
                 }
+                
+                if (allGood)
+                    lastGoodRev = rev;
             }
         }
+    
+        // Now update self.lastSequence from the latest consecutively inserted revision:
+        unsigned lastGoodFakeSequence = (unsigned) lastGoodRev.sequence;
+        if (lastGoodFakeSequence > _maxInsertedFakeSequence) {
+            _maxInsertedFakeSequence = lastGoodFakeSequence;
+            self.lastSequence = lastGoodRev.remoteSequenceID;
+        }
+        
+        LogTo(Sync, @"%@ finished inserting %u revisions", self, revs.count);
+        success = YES;
+    } @catch (NSException *x) {
+        Warn(@"%@: Exception inserting revisions: %@", self, x);
+    } @finally {
+        [_db endTransaction: success];
     }
-    
-    // Remember we've received this sequence:
-    if (maxSequence > self.lastSequence.longLongValue)
-        self.lastSequence = $sprintf(@"%lld", maxSequence);
-    
-    [_db endTransaction: YES];
-    LogTo(Sync, @"%@ finished inserting %u revisions", self, revs.count);
     
     [self asyncTasksFinished: revs.count];
     self.changesProcessed += revs.count;
@@ -261,9 +283,23 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 @end
 
 
+
+@implementation TDPulledRevision
+
+@synthesize remoteSequenceID=_remoteSequenceID;
+
+- (void) dealloc {
+    [_remoteSequenceID release];
+    [super dealloc];
+}
+
+@end
+
+
+
 static NSString* joinQuotedEscaped(NSArray* strings) {
     if (strings.count == 0)
         return @"[]";
     NSData* json = [NSJSONSerialization dataWithJSONObject: strings options: 0 error: NULL];
-    return [[json my_UTF8ToString] stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+    return TDEscapeURLParam([json my_UTF8ToString]);
 }

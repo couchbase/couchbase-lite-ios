@@ -45,7 +45,16 @@ NSError* TDHTTPError( int status, NSURL* url ) {
 }
 
 
-int TDSequenceCompare( SequenceNumber a, SequenceNumber b) {
+NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b) {
     SInt64 diff = a - b;
     return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+}
+
+
+NSString* TDEscapeURLParam( NSString* param ) {
+    CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
+                                                                  (CFStringRef)param,
+                                                                  NULL, (CFStringRef)@"&",
+                                                                  kCFStringEncodingUTF8);
+    return [NSMakeCollectable(escaped) autorelease];
 }
