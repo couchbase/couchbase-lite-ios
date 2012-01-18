@@ -40,6 +40,7 @@
 		270FE0D514C50134005FF647 /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
 		270FE0D614C50134005FF647 /* TouchDBListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener.framework */; };
 		270FE0DE14C50390005FF647 /* TouchServ.m in Sources */ = {isa = PBXBuildFile; fileRef = 270FE0DC14C50382005FF647 /* TouchServ.m */; };
+		2711CDDE14C6584A00505D55 /* TouchDBListener.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener.framework */; };
 		2713789314BCF6450058C5CD /* TDMultipartWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2713789114BCF6450058C5CD /* TDMultipartWriter.h */; };
 		2713789414BCF6450058C5CD /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2713789214BCF6450058C5CD /* TDMultipartWriter.m */; };
 		2713789514BCF6450058C5CD /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2713789214BCF6450058C5CD /* TDMultipartWriter.m */; };
@@ -308,6 +309,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				270B3E27148939C500E0A926 /* TouchDB.framework in CopyFiles */,
+				2711CDDE14C6584A00505D55 /* TouchDBListener.framework in CopyFiles */,
 				27990704149E58B0003D4338 /* CouchCocoa.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1908,7 +1910,7 @@
 				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "Source/TouchDB-Info.plist";
-				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/$(EXECUTABLE_PATH)";
+				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = TouchDB;
 				WRAPPER_EXTENSION = framework;
@@ -1930,7 +1932,7 @@
 				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "Source/TouchDB-Info.plist";
-				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/$(EXECUTABLE_PATH)";
+				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = TouchDB;
 				STRIP_INSTALLED_PRODUCT = YES;
@@ -1998,6 +2000,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -2013,6 +2016,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -2040,6 +2044,7 @@
 				GCC_WARN_SIGN_COMPARE = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = "Listener/TouchDBListener-Info.plist";
+				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = framework;
@@ -2066,6 +2071,7 @@
 				GCC_WARN_SIGN_COMPARE = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = "Listener/TouchDBListener-Info.plist";
+				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = YES;
@@ -2367,6 +2373,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				PRODUCT_NAME = "TouchDB Demo";
 				WRAPPER_EXTENSION = app;
 			};
@@ -2389,6 +2396,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				PRODUCT_NAME = "TouchDB Demo";
 				WRAPPER_EXTENSION = app;
 			};
@@ -2538,6 +2546,7 @@
 				270FE0D314C5008C005FF647 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		275315E114ACF0A20065964D /* Build configuration list for PBXNativeTarget "TouchDBListener" */ = {
 			isa = XCConfigurationList;
