@@ -382,8 +382,8 @@ TestCase(TDDatabase_PutAttachment) {
                                     ofDocID: rev2.docID revID: rev2.revID
                                      status: &status];
     CAssertEq(status, 200);
-    CAssertEqual(rev2.docID, rev1.docID);
-    CAssertEq(rev2.generation, 2u);
+    CAssertEqual(rev3.docID, rev2.docID);
+    CAssertEq(rev3.generation, 3u);
     
     // Get the updated revision:
     TDRevision* gotRev3 = [db getDocumentWithID: rev3.docID revisionID: rev3.revID
