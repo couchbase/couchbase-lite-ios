@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "TDRouter.h"
-#import "TDDatabase.h"
+#import "TDDatabase+Insertion.h"
 #import "TDServer.h"
 #import "TDView.h"
 #import "TDBody.h"

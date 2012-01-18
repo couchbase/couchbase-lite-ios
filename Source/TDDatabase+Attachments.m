@@ -16,7 +16,8 @@
                      "digest":"md5-muNoTiLXyJYP9QkvPukNng==", "length":9, "stub":true}}
 */
 
-#import "TDDatabase.h"
+#import "TDDatabase+Attachments.h"
+#import "TDDatabase+Insertion.h"
 #import "TDBase64.h"
 #import "TDBlobStore.h"
 #import "TDBody.h"
@@ -257,7 +258,8 @@
         }
         
         // Create a new revision:
-        TDRevision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID status: outStatus];
+        TDRevision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID
+                                 allowConflict: NO status: outStatus];
         if (!newRev)
             return nil;
         

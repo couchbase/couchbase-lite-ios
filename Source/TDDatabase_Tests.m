@@ -15,7 +15,10 @@
 
 
 #import "TDDatabase.h"
+#import "TDDatabase+Attachments.h"
+#import "TDDatabase+Insertion.h"
 #import "TDDatabase+LocalDocs.h"
+#import "TDDatabase+Replication.h"
 #import "TDBody.h"
 #import "TDRevision.h"
 #import "TDBlobStore.h"
@@ -61,7 +64,7 @@ TestCase(TDDatabase_CRUD) {
     TDBody* doc = [[[TDBody alloc] initWithProperties: props] autorelease];
     TDRevision* rev1 = [[[TDRevision alloc] initWithBody: doc] autorelease];
     TDStatus status;
-    rev1 = [db putRevision: rev1 prevRevisionID: nil status: &status];
+    rev1 = [db putRevision: rev1 prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, 201);
     Log(@"Created: %@", rev1);
     CAssert(rev1.docID.length >= 10);
@@ -78,7 +81,7 @@ TestCase(TDDatabase_CRUD) {
     doc = [TDBody bodyWithProperties: props];
     TDRevision* rev2 = [[[TDRevision alloc] initWithBody: doc] autorelease];
     TDRevision* rev2Input = rev2;
-    rev2 = [db putRevision: rev2 prevRevisionID: rev1.revID status: &status];
+    rev2 = [db putRevision: rev2 prevRevisionID: rev1.revID allowConflict: NO status: &status];
     CAssertEq(status, 201);
     Log(@"Updated: %@", rev2);
     CAssertEqual(rev2.docID, rev1.docID);
@@ -90,7 +93,7 @@ TestCase(TDDatabase_CRUD) {
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Try to update the first rev, which should fail:
-    CAssertNil([db putRevision: rev2Input prevRevisionID: rev1.revID status: &status]);
+    CAssertNil([db putRevision: rev2Input prevRevisionID: rev1.revID allowConflict: NO status: &status]);
     CAssertEq(status, 409);
     
     // Check the changes feed, with and without filters:
@@ -110,16 +113,16 @@ TestCase(TDDatabase_CRUD) {
         
     // Delete it:
     TDRevision* revD = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
-    CAssertEq([db putRevision: revD prevRevisionID: nil status: &status], nil);
+    CAssertEq([db putRevision: revD prevRevisionID: nil allowConflict: NO status: &status], nil);
     CAssertEq(status, 409);
-    revD = [db putRevision: revD prevRevisionID: rev2.revID status: &status];
+    revD = [db putRevision: revD prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssertEq(status, 200);
     CAssertEqual(revD.docID, rev2.docID);
     CAssert([revD.revID hasPrefix: @"3-"]);
     
     // Delete nonexistent doc:
     TDRevision* revFake = [[[TDRevision alloc] initWithDocID: @"fake" revID: nil deleted: YES] autorelease];
-    [db putRevision: revFake prevRevisionID: nil status: &status];
+    [db putRevision: revFake prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, 404);
     
     // Read it back (should fail):
@@ -220,7 +223,7 @@ TestCase(TDDatabase_Attachments) {
     TDStatus status;
     rev1 = [db putRevision: [TDRevision revisionWithProperties:$dict({@"foo", $object(1)},
                                                                      {@"bar", $false})]
-            prevRevisionID: nil status: &status];
+            prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, 201);
     
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
@@ -260,7 +263,7 @@ TestCase(TDDatabase_Attachments) {
     rev2 = [db putRevision: [TDRevision revisionWithProperties:$dict({@"_id", rev1.docID},
                                                                       {@"foo", $object(2)},
                                                                       {@"bazz", $false})]
-            prevRevisionID: rev1.revID status: &status];
+            prevRevisionID: rev1.revID allowConflict: NO status: &status];
     CAssertEq(status, 201);
     
     [db copyAttachmentNamed: @"attach" fromSequence: rev1.sequence toSequence: rev2.sequence];
@@ -270,7 +273,7 @@ TestCase(TDDatabase_Attachments) {
     rev3 = [db putRevision: [TDRevision revisionWithProperties:$dict({@"_id", rev2.docID},
                                                                       {@"foo", $object(2)},
                                                                       {@"bazz", $false})]
-            prevRevisionID: rev2.revID status: &status];
+            prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssertEq(status, 201);
     
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
@@ -323,7 +326,7 @@ TestCase(TDDatabase_PutAttachment) {
     TDRevision* rev1;
     TDStatus status;
     rev1 = [db putRevision: [TDRevision revisionWithProperties: props]
-            prevRevisionID: nil status: &status];
+            prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, 201);
 
     // Examine the attachment store:

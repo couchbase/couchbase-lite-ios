@@ -85,8 +85,8 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-LogToyProtocol YES"
-            isEnabled = "NO">
+            argument = "-LogRemoteRequest YES"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_All"

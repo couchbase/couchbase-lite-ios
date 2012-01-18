@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDDatabase.h"
+#import "TDDatabase+Replication.h"
 #import "TDInternal.h"
 
 #import "FMDatabase.h"

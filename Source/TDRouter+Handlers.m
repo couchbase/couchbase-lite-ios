@@ -8,7 +8,10 @@
 
 #import "TDRouter.h"
 #import "TDDatabase.h"
+#import "TDDatabase+Attachments.h"
+#import "TDDatabase+Insertion.h"
 #import "TDDatabase+LocalDocs.h"
+#import "TDDatabase+Replication.h"
 #import "TDView.h"
 #import "TDBody.h"
 #import "TDRevision.h"

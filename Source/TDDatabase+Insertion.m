@@ -13,7 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDDatabase.h"
+#import "TDDatabase+Insertion.h"
+#import "TDDatabase+Attachments.h"
 #import "TDRevision.h"
 #import "TDInternal.h"
 #import "TDMisc.h"

@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "TDView.h"
+#import "TDDatabase+Insertion.h"
 #import "TDInternal.h"
 #import "Test.h"
 
@@ -55,7 +56,7 @@ TestCase(TDView_Create) {
 static TDRevision* putDoc(TDDatabase* db, NSDictionary* props) {
     TDRevision* rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
     TDStatus status;
-    TDRevision* result = [db putRevision: rev prevRevisionID: nil status: &status];
+    TDRevision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(status < 300);
     return result;
 }
@@ -109,13 +110,13 @@ TestCase(TDView_Index) {
     TDRevision* threeUpdated = [[[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
     threeUpdated.properties = $dict({@"key", @"3hree"});
     int status;
-    rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID status: &status];
+    rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
     TDRevision* rev4 = putDoc(db, $dict({@"key", @"four"}));
     
     TDRevision* twoDeleted = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted:YES] autorelease];
-    [db putRevision: twoDeleted prevRevisionID: rev2.revID status: &status];
+    [db putRevision: twoDeleted prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
     // Reindex again:

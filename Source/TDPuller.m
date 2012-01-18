@@ -14,7 +14,8 @@
 //  and limitations under the License.
 
 #import "TDPuller.h"
-#import "TDDatabase.h"
+#import "TDDatabase+Insertion.h"
+#import "TDDatabase+Replication.h"
 #import "TDRevision.h"
 #import "TDChangeTracker.h"
 #import "TDBatcher.h"

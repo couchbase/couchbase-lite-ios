@@ -8,6 +8,7 @@
 
 #import "TDDatabase.h"
 
+
 @interface TDDatabase (LocalDocs)
 
 - (TDRevision*) getLocalDocumentWithID: (NSString*)docID 

@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "TDDatabase.h"
+#import "TDDatabase+Attachments.h"
 #import "TDInternal.h"
 #import "TDRevision.h"
 #import "TDCollateJSON.h"

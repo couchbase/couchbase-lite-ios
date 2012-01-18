@@ -8,9 +8,8 @@
  */
 
 #import <TouchDB/TDRevision.h>
-@class FMDatabase, TDRevision, TDRevisionList, TDView, TDBlobStore, TDReplicator;
-@protocol TDValidationContext;
-struct TDQueryOptions;
+@class FMDatabase, TDView, TDBlobStore;
+struct TDQueryOptions;      // declared in TDView.h
 
 
 /** Same interpretation as HTTP status codes, esp. 200, 201, 404, 409, 500. */
@@ -21,10 +20,6 @@ typedef int TDStatus;
     The userInfo key "rev" has a TDRevision* as its value. */
 extern NSString* const TDDatabaseChangeNotification;
 
-
-/** Validation block, used to approve revisions being added to the database. */
-typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
-                                   id<TDValidationContext> context);
 
 /** Filter block, used in changes feeds and replication. */
 typedef BOOL (^TDFilterBlock) (TDRevision* revision);
@@ -82,6 +77,11 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 @property (readonly) BOOL exists;
 @property (readonly) UInt64 totalDataSize;
 
+@property (readonly) NSUInteger documentCount;
+@property (readonly) SequenceNumber lastSequence;
+@property (readonly) NSString* privateUUID;
+@property (readonly) NSString* publicUUID;
+
 /** Begins a database transaction. Transactions can nest. Every -beginTransaction must be balanced by a later -endTransaction:. */
 - (BOOL) beginTransaction;
 
@@ -94,16 +94,13 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 // DOCUMENTS:
 
-@property (readonly) NSUInteger documentCount;
-@property (readonly) SequenceNumber lastSequence;
-@property (readonly) NSString* privateUUID;
-@property (readonly) NSString* publicUUID;
-
 - (TDRevision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID
                           options: (TDContentOptions)options;
+
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;
+
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
                       options: (TDContentOptions)options;
 
@@ -121,10 +118,14 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 // VIEWS & QUERIES:
 
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
-- (NSDictionary*) getDocsWithIDs: (NSArray*)docIDs options: (const struct TDQueryOptions*)options;
+
+- (NSDictionary*) getDocsWithIDs: (NSArray*)docIDs
+                         options: (const struct TDQueryOptions*)options;
 
 - (TDView*) viewNamed: (NSString*)name;
+
 - (TDView*) existingViewNamed: (NSString*)name;
+
 @property (readonly) NSArray* allViews;
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
@@ -133,106 +134,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 /** Define or clear a named filter function. These aren't used directly by TDDatabase, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
+
 - (TDFilterBlock) filterNamed: (NSString*)filterName;
 
-@end
-
-
-
-@interface TDDatabase (Insertion)
-
-+ (BOOL) isValidDocumentID: (NSString*)str;
-+ (NSString*) generateDocumentID;
-
-/** Stores a new (or initial) revision of a document. This is what's invoked by a PUT or POST. As with those, the previous revision ID must be supplied when necessary and the call will fail if it doesn't match.
-    @param revision  The revision to add. If the docID is nil, a new UUID will be assigned. Its revID must be nil. It must have a JSON body.
-    @param prevRevID  The ID of the revision to replace (same as the "?rev=" parameter to a PUT), or nil if this is a new document.
-    @param allowConflict  If NO, an error status 409 will be returned if the insertion would create a conflict, i.e. if the previous revision already has a child.
-    @param status  On return, an HTTP status code indicating success or failure.
-    @return  A new TDRevision with the docID, revID and sequence filled in (but no body). */
-- (TDRevision*) putRevision: (TDRevision*)revision
-             prevRevisionID: (NSString*)prevRevID
-              allowConflict: (BOOL)allowConflict
-                     status: (TDStatus*)outStatus;
-
-- (TDRevision*) putRevision: (TDRevision*)revision
-             prevRevisionID: (NSString*)prevRevID
-                     status: (TDStatus*)outStatus;
-
-/** Inserts an already-existing revision replicated from a remote database. It must already have a revision ID. This may create a conflict! The revision's history must be given; ancestor revision IDs that don't already exist locally will create phantom revisions with no content. */
-- (TDStatus) forceInsert: (TDRevision*)rev
-         revisionHistory: (NSArray*)history
-                  source: (NSURL*)source;
-
-/** Parses the _revisions dict from a document into an array of revision ID strings */
-+ (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;
-
-/** Define or clear a named document validation function.  */
-- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock;
-- (TDValidationBlock) validationNamed: (NSString*)validationName;
-
-@end
-
-
-
-@interface TDDatabase (Attachments)
-
-/** Given a newly-added revision, adds the necessary attachment rows to the database and stores inline attachments into the blob store. */
-- (TDStatus) processAttachmentsForRevision: (TDRevision*)rev
-                        withParentSequence: (SequenceNumber)parentSequence;
-
-/** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
-- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
-                                   withContent: (BOOL)withContent;
-
-/** Returns the content and MIME type of an attachment */
-- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
-                               named: (NSString*)filename
-                                type: (NSString**)outType
-                              status: (TDStatus*)outStatus;
-
-/** Deletes obsolete attachments from the database and blob store. */
-- (TDStatus) garbageCollectAttachments;
-
-/** Updates or deletes an attachment, creating a new document revision in the process.
-    Used by the PUT / DELETE methods called on attachment URLs. */
-- (TDRevision*) updateAttachment: (NSString*)filename
-                            body: (NSData*)body
-                            type: (NSString*)contentType
-                         ofDocID: (NSString*)docID
-                           revID: (NSString*)oldRevID
-                          status: (TDStatus*)outStatus;
-@end
-
-
-
-@interface TDDatabase (Replication)
-@property (readonly) NSArray* activeReplicators;
-
-- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
-                                           push: (BOOL)push;
-- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
-                                    push: (BOOL)push
-                              continuous: (BOOL)continuous;
-
-- (BOOL) findMissingRevisions: (TDRevisionList*)revs;
-@end
-
-
-
-
-
-
-/** Context passed into a TDValidationBlock. */
-@protocol TDValidationContext <NSObject>
-/** The contents of the current revision of the document, or nil if this is a new document. */
-@property (readonly) TDRevision* currentRevision;
-
-/** The type of HTTP status to report, if the validate block returns NO.
-    The default value is 403 ("Forbidden"). */
-@property TDStatus errorType;
-
-/** The error message to return in the HTTP response, if the validate block returns NO.
-    The default value is "invalid document". */
-@property (copy) NSString* errorMessage;
 @end
