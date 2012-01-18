@@ -35,6 +35,11 @@
 @end
 
 @interface TDDatabase (Attachments_Internal)
+- (TDStatus) insertAttachment: (NSData*)contents
+                  forSequence: (SequenceNumber)sequence
+                        named: (NSString*)filename
+                         type: (NSString*)contentType
+                       revpos: (unsigned)revpos;
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence
                       toSequence: (SequenceNumber)toSequence;

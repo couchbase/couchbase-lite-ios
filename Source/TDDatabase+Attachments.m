@@ -31,24 +31,27 @@
 @implementation TDDatabase (Attachments)
 
 
-- (BOOL) insertAttachment: (NSData*)contents
-              forSequence: (SequenceNumber)sequence
-                    named: (NSString*)name
-                     type: (NSString*)contentType
-                   revpos: (unsigned)revpos
+- (TDStatus) insertAttachment: (NSData*)contents
+                  forSequence: (SequenceNumber)sequence
+                        named: (NSString*)name
+                         type: (NSString*)contentType
+                       revpos: (unsigned)revpos
 {
     Assert(contents);
     Assert(sequence > 0);
     Assert(name);
     TDBlobKey key;
     if (![_attachments storeBlob: contents creatingKey: &key])
-        return NO;
+        return 500;
     NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
-    return [_fmdb executeUpdate: @"INSERT INTO attachments "
+    if (![_fmdb executeUpdate: @"INSERT INTO attachments "
                                   "(sequence, filename, key, type, length, revpos) "
                                   "VALUES (?, ?, ?, ?, ?, ?)",
                                  $object(sequence), name, keyData, contentType,
-                                 $object(contents.length), $object(revpos)];
+                                 $object(contents.length), $object(revpos)]) {
+        return 500;
+    }
+    return 201;
 }
 
 
@@ -175,6 +178,7 @@
         return 200;
     
     for (NSString* name in newAttachments) {
+        TDStatus status;
         NSDictionary* newAttach = [newAttachments objectForKey: name];
         NSString* newContentsBase64 = [newAttach objectForKey: @"data"];
         if (newContentsBase64) {
@@ -193,21 +197,20 @@
                 return 400;
 
             // Finally insert the attachment:
-            if (![self insertAttachment: newContents
-                            forSequence: newSequence
-                                  named: name
-                                   type: [newAttach objectForKey: @"content_type"]
-                                 revpos: revpos])
-                return 500;
+            status = [self insertAttachment: newContents
+                                forSequence: newSequence
+                                      named: name
+                                       type: [newAttach objectForKey: @"content_type"]
+                                     revpos: revpos];
         } else {
             // It's just a stub, so copy the previous revision's attachment entry:
             //? Should I enforce that the type and digest (if any) match?
-            TDStatus status = [self copyAttachmentNamed: name
-                                           fromSequence: parentSequence
-                                             toSequence: newSequence];
-            if (status >= 300)
-                return status;
+            status = [self copyAttachmentNamed: name
+                                  fromSequence: parentSequence
+                                    toSequence: newSequence];
         }
+        if (status >= 300)
+            return status;
     }
     return 200;
 }
@@ -274,8 +277,8 @@
         if (body) {
             // If not deleting, add a new attachment entry:
             *outStatus = [self insertAttachment: body forSequence: newRev.sequence
-                                      named: filename type: contentType
-                                     revpos: newRev.generation];
+                                          named: filename type: contentType
+                                         revpos: newRev.generation];
             if (*outStatus >= 300)
                 return nil;
         }

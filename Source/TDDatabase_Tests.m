@@ -224,9 +224,10 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 201);
     
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssert([db insertAttachment: attach1 forSequence: rev1.sequence
-                           named: @"attach" type: @"text/plain"
-                          revpos: rev1.generation]);
+    CAssertEq([db insertAttachment: attach1 forSequence: rev1.sequence
+                             named: @"attach" type: @"text/plain"
+                            revpos: rev1.generation],
+              201);
     
     NSString* type;
     CAssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
@@ -273,8 +274,9 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 201);
     
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssert([db insertAttachment: attach2 forSequence: rev3.sequence
-                           named: @"attach" type: @"text/html" revpos: rev2.generation]);
+    CAssertEq([db insertAttachment: attach2 forSequence: rev3.sequence
+                             named: @"attach" type: @"text/html" revpos: rev2.generation],
+              201);
     
     // Check the 2nd revision's attachment:
     type = nil;
