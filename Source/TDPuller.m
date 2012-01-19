@@ -228,7 +228,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     /* Updating self.lastSequence is tricky. It needs to be the received sequence ID of the revision for which we've successfully received and inserted (or rejected) it and all previous received revisions. That way, next time we can start tracking remote changes from that sequence ID and know we haven't missed anything. */
     /* FIX: The current code below doesn't quite achieve that: it tracks the latest sequence ID we've successfully processed, but doesn't handle failures correctly across multiple calls to -insertRevisions. I think correct behavior will require keeping an NSMutableIndexSet to track the fake-sequences of all processed revisions; then we can find the first missing index in that set and not advance lastSequence past the revision with that fake-sequence. */
     
-    revs = [revs sortedArrayUsingSelector: @selector(compareSequences:)];
+    revs = [revs sortedArrayUsingComparator: ^(id array1, id array2) {
+        return TDSequenceCompare( [[array1 objectAtIndex: 0] sequence],
+                                 [[array2 objectAtIndex: 0] sequence]);
+    }];
     BOOL allGood = YES;
     TDPulledRevision* lastGoodRev = nil;
     
