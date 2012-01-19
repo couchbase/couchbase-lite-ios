@@ -790,8 +790,13 @@
     if (status >= 400)
         return status;
     SequenceNumber lastSequenceIndexed = view.lastSequenceIndexed;
-    if (!keys && [self cacheWithEtag: $sprintf(@"%lld", lastSequenceIndexed)])  // conditional GET
-        return 304;
+    
+    // Check for conditional GET and set response Etag header:
+    if (!keys) {
+        SequenceNumber eTag = options.includeDocs ? _db.lastSequence : lastSequenceIndexed;
+        if ([self cacheWithEtag: $sprintf(@"%lld", eTag)])
+            return 304;
+    }
 
     NSArray* rows = [view queryWithOptions: &options status: &status];
     if (!rows)
