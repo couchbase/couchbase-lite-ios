@@ -79,7 +79,7 @@
 
 - (void) onResponseReady: (TDResponse*)response {
     _response = [response retain];
-    LogTo(TDListener, @"%@ --> %i", self, _response.status);
+    LogTo(TDListener, @"    %@ --> %i", self, _response.status);
     if (_chunked)
         [_connection responseHasAvailableData: self];
 }

@@ -137,7 +137,7 @@ static void _Logv( NSString *prefix, NSString *msg, va_list args )
         NSString *prefixColor = (prefix==kWarningPrefix) ?COLOR(91) :COLOR(93);
         NSString *msgColor = (prefix==kWarningPrefix) ?@"" :COLOR(0);
         NSString *finalMsg = [[NSString alloc] initWithFormat: @"%@%@| %@%@%@%@%@\n", 
-                              COLOR(30),timestamp,
+                              COLOR(36),timestamp,
                               prefixColor,prefix,separator,
                               msgColor,msg];
         fputs([finalMsg UTF8String], stderr);

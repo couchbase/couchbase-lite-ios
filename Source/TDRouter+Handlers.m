@@ -253,7 +253,6 @@
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
     NSDictionary* body = self.bodyAsDictionary;
     NSArray* docs = $castIf(NSArray, [body objectForKey: @"docs"]);
-    Log(@"_bulk_docs: Got %@", body); //TEMP
     if (!docs)
         return 400;
     id allObj = [body objectForKey: @"all_or_nothing"];
@@ -305,7 +304,6 @@
         [_db endTransaction: ok];
     }
     
-    Log(@"_bulk_docs: Returning %@", results); //TEMP
     _response.bodyObject = results;
     return 201;
 }
