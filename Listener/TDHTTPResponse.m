@@ -42,7 +42,7 @@
         };
         
         // Run the router, synchronously:
-        LogTo(TDListener, @"%@: Starting...", self);
+        LogTo(TDListenerVerbose, @"%@: Starting...", self);
         [_connection.listener onServerThread: ^{[router start];}];
         _chunked = !_finished;
     }
@@ -95,7 +95,7 @@
 
 
 - (void) onDataAvailable: (NSData*)data {
-    LogTo(TDListener, @"%@ adding %u bytes", self, (unsigned)data.length);
+    LogTo(TDListenerVerbose, @"%@ adding %u bytes", self, (unsigned)data.length);
     if (_data)
         [_data appendData: data];
     else
@@ -131,7 +131,7 @@
         [_data autorelease];
         _data = nil;
     }
-    LogTo(TDListener, @"%@ sending %u bytes", self, result.length);
+    LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, result.length);
     return result;
 }
 
@@ -146,7 +146,7 @@
         return;
     _finished = true;
 
-    LogTo(TDListener, @"%@ Finished!", self);
+    LogTo(TDListenerVerbose, @"%@ Finished!", self);
     if (!_chunked) {
         // Response finished immediately, before the connection asked for any data, so we're free
         // to massage the response:

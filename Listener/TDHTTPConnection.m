@@ -36,8 +36,11 @@
 
 
 - (NSObject<HTTPResponse>*)httpResponseForMethod:(NSString *)method URI:(NSString *)path {
-    LogTo(TDListener, @"%@ %@ {+%u}", method, path, (unsigned)request.body.length);
     AssertEq(request.body.length, requestContentLength);
+    if (requestContentLength > 0)
+        LogTo(TDListener, @"%@ %@ {+%u}", method, path, (unsigned)requestContentLength);
+    else
+        LogTo(TDListener, @"%@ %@", method, path);
     
     // Construct an NSURLRequest from the HTTPRequest:
     NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: request.url];

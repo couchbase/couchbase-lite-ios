@@ -8,17 +8,23 @@
 
 #import <Foundation/Foundation.h>
 #import <TouchDB/TouchDB.h>
+#import <TouchDB/TDRouter.h>
 #import <TouchDBListener/TDListener.h>
+#import "Logging.h"
 
 
 #define kPortNumber 59840
 
 
 static NSString* GetServerPath() {
+    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    if (!bundleID)
+        bundleID = @"com.couchbase.TouchServ";
+    
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
                                                          NSUserDomainMask, YES);
     NSString* path = [paths objectAtIndex:0];
-    path = [path stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]];
+    path = [path stringByAppendingPathComponent: bundleID];
     path = [path stringByAppendingPathComponent: @"TouchDB"];
     NSError* error = nil;
     if (![[NSFileManager defaultManager] createDirectoryAtPath: path
@@ -34,10 +40,13 @@ static NSString* GetServerPath() {
 int main (int argc, const char * argv[])
 {
     @autoreleasepool {
+        EnableLog(YES);
+        EnableLogTo(TDListener, YES);
+        
         NSError* error;
         TDServer* server = [[TDServer alloc] initWithDirectory: GetServerPath() error: &error];
         if (error) {
-            NSLog(@"FATAL: Error initializing TouchDB: %@", error);
+            Warn(@"FATAL: Error initializing TouchDB: %@", error);
             exit(1);
         }
         
@@ -45,7 +54,7 @@ int main (int argc, const char * argv[])
         TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
         [listener start];
         
-        NSLog(@"TouchServ is listening on port %d ... relax!", kPortNumber);
+        Log(@"TouchServ %@ is listening on port %d ... relax!", [TDRouter versionString], kPortNumber);
         
         [[NSRunLoop currentRunLoop] run];
         
