@@ -521,10 +521,7 @@
             rev = [db getDocumentWithID: docID revisionID: revID options: options];
         if (!rev)
             return 404;
-        
-        // Check for conditional GET:
-        NSString* eTag = [self setResponseEtag: rev];
-        if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
+        if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET
             return 304;
         
         _response.body = rev.body;
@@ -578,10 +575,7 @@
                                     options: 0];
     if (!rev)
         return 404;
-    
-    // Check for conditional GET:
-    NSString* eTag = [self setResponseEtag: rev];
-    if ($equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]))
+    if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET
         return 304;
     
     NSString* type = nil;
@@ -662,7 +656,7 @@
                      allowConflict: NO
                         createdRev: &rev];
     if (status < 300) {
-        [self setResponseEtag: rev];
+        [self cacheWithEtag: rev.revID];        // set ETag
         if (!deleting) {
             NSURL* url = _request.URL;
             if (!docID)
@@ -711,7 +705,7 @@
                                      status: &status];
     if (status < 300) {
         _response.bodyObject = $dict({@"ok", $true}, {@"id", rev.docID}, {@"rev", rev.revID});
-        [self setResponseEtag: rev];
+        [self cacheWithEtag: rev.revID];
         if (body)
             [self setResponseLocation: _request.URL];
     }
@@ -791,12 +785,18 @@
         return 400;
     if (keys)
         options.keys = keys;
+    
+    TDStatus status = [view updateIndex];
+    if (status >= 400)
+        return status;
+    SequenceNumber lastSequenceIndexed = view.lastSequenceIndexed;
+    if (!keys && [self cacheWithEtag: $sprintf(@"%lld", lastSequenceIndexed)])  // conditional GET
+        return 304;
 
-    TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
     if (!rows)
         return status;
-    id updateSeq = options.updateSeq ? $object(view.lastSequenceIndexed) : nil;
+    id updateSeq = options.updateSeq ? $object(lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
                                  {@"total_rows", $object(rows.count)},
                                  {@"offset", $object(options.skip)},
@@ -830,6 +830,9 @@
     if (![self getQueryOptions: &options])
         return 400;
     
+    if ([self cacheWithEtag: $sprintf(@"%lld", _db.lastSequence)])  // conditional GET
+        return 304;
+
     TDView* view = [self compileView: @"@@TEMP@@" fromProperties: props];
     if (!view)
         return 500;

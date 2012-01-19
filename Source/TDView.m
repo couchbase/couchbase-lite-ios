@@ -151,6 +151,11 @@ static id fromJSON( NSData* json ) {
 }
 
 
+- (BOOL) stale {
+    return self.lastSequenceIndexed < _db.lastSequence;
+}
+
+
 - (TDStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
     Assert(_mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
@@ -163,13 +168,19 @@ static id fromJSON( NSData* json ) {
     FMResultSet* r = nil;
     TDStatus status = 500;
     @try {
-        
+        // Check whether we need to update at all:
+        const SequenceNumber lastSequence = self.lastSequenceIndexed;
+        const SequenceNumber dbMaxSequence = _db.lastSequence;
+        if (lastSequence == dbMaxSequence) {
+            status = 304;
+            return status;
+        }
+
         __block BOOL emitFailed = NO;
         __block unsigned inserted = 0;
         FMDatabase* fmdb = _db.fmdb;
         
         // First remove obsolete emitted results from the 'maps' table:
-        const SequenceNumber lastSequence = self.lastSequenceIndexed;
         __block SequenceNumber sequence = lastSequence;
         if (lastSequence < 0)
             return 500;
@@ -245,7 +256,6 @@ static id fromJSON( NSData* json ) {
         }
         
         // Finally, record the last revision sequence number that was indexed:
-        SequenceNumber dbMaxSequence = _db.lastSequence;
         if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
                                    $object(dbMaxSequence), $object(viewID)])
             return 500;
@@ -256,9 +266,9 @@ static id fromJSON( NSData* json ) {
         
     } @finally {
         [r close];
-        if (status >= 300)
+        if (status >= 400)
             Warn(@"TouchDB: Failed to rebuild view '%@': %d", _name, status);
-        [_db endTransaction: (status < 300)];
+        [_db endTransaction: (status < 400)];
     }
     return status;
 }
@@ -273,10 +283,6 @@ static id fromJSON( NSData* json ) {
     if (!options)
         options = &kDefaultTDQueryOptions;
 
-    *outStatus = [self updateIndex];
-    if (*outStatus >= 300)
-        return nil;
-    
     // OPT: It would be faster to use separate tables for raw-or ascii-collated views so that
     // they could be indexed with the right collation, instead of having to specify it here.
     NSString* collationStr = @"";

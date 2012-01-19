@@ -56,6 +56,7 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) boolQuery: (NSString*)param;
 - (int) intQuery: (NSString*)param defaultValue: (int)defaultValue;
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
+- (BOOL) cacheWithEtag: (NSString*)etag;
 - (TDContentOptions) contentOptions;
 - (BOOL) getQueryOptions: (struct TDQueryOptions*)options;
 @property (readonly) NSString* multipartRequestType;

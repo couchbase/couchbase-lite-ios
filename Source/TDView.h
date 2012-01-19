@@ -86,11 +86,17 @@ typedef enum {
              version: (NSString*)version;
 
 - (void) removeIndex;
+
+/** Is the view's index currently out of date? */
+@property (readonly) BOOL stale;
+
+/** Updates the view's index (incrementally) if necessary.
+    @return  200 if updated, 304 if already up-to-date, else an error code */
 - (TDStatus) updateIndex;
 
 @property (readonly) SequenceNumber lastSequenceIndexed;
 
-/** Queries the view.
+/** Queries the view. Does NOT first update the index.
     @param options  The options to use.
     @return  An array of result rows -- each is a dictionary with "key" and "value" keys, and possibly "id" and "doc". */
 - (NSArray*) queryWithOptions: (const TDQueryOptions*)options

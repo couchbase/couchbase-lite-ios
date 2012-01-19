@@ -26,11 +26,14 @@
 #pragma mark - TESTS
 
 
-static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* path, id bodyObj) {
+static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* path,
+                               NSDictionary* headers, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"touchdb://" stringByAppendingString: path]];
     CAssert(url, @"Invalid URL: <%@>", path);
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = method;
+    for (NSString* header in headers)
+        [request setValue: [headers objectForKey: header] forHTTPHeaderField: header];
     if (bodyObj) {
         NSError* error = nil;
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject: bodyObj options:0 error:&error];
@@ -42,9 +45,7 @@ static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* pat
     return router.response;
 }
 
-static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyObj,
-               int expectedStatus, id expectedResult) {
-    TDResponse* response = SendRequest(server, method, path, bodyObj);
+static id ParseJSONResponse(TDResponse* response) {
     NSData* json = response.body.asJSON;
     NSString* jsonStr = nil;
     id result = nil;
@@ -55,7 +56,14 @@ static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyOb
         result = [NSJSONSerialization JSONObjectWithData: json options: 0 error: &error];
         CAssert(result, @"Couldn't parse JSON response: %@", error);
     }
-    Log(@"%@ %@ --> %d %@", method, path, response.status, jsonStr);
+    return result;
+}
+
+static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyObj,
+               int expectedStatus, id expectedResult) {
+    TDResponse* response = SendRequest(server, method, path, nil, bodyObj);
+    id result = ParseJSONResponse(response);
+    Log(@"%@ %@ --> %d", method, path, response.status);
     
     CAssertEq(response.status, expectedStatus);
 
@@ -255,6 +263,51 @@ TestCase(TDRouter_AllDocs) {
 }
 
 
+TestCase(TDRouter_Views) {
+    // PUT:
+    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    Send(server, @"PUT", @"/db", 201, nil);
+    
+    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
+    SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), 201, nil);
+    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), 201, nil);
+    
+    TDDatabase* db = [server databaseNamed: @"db"];
+    TDView* view = [db viewNamed: @"design/view"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        if ([doc objectForKey: @"message"])
+            emit([doc objectForKey: @"message"], nil);
+    } reduceBlock: NULL version: @"1"];
+
+    // Query the view and check the result:
+    Send(server, @"GET", @"/db/_design/design/_view/view", 200,
+         $dict({@"offset", $object(0)},
+               {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
+                                $dict({@"id", @"doc2"}, {@"key", @"guten tag"}),
+                                $dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
+               {@"total_rows", $object(3)}));
+    
+    // Check the ETag:
+    TDResponse* response = SendRequest(server, @"GET", @"/db/_design/design/_view/view", nil, nil);
+    NSString* etag = [response.headers objectForKey: @"Etag"];
+    CAssertEqual(etag, $sprintf(@"\"%lld\"", view.lastSequenceIndexed));
+    
+    // Try a conditional GET:
+    response = SendRequest(server, @"GET", @"/db/_design/design/_view/view",
+                           $dict({@"If-None-Match", etag}), nil);
+    CAssertEq(response.status, 304);
+
+    // Update the database:
+    SendBody(server, @"PUT", @"/db/doc4", $dict({@"message", @"aloha"}), 201, nil);
+    
+    // Try a conditional GET:
+    response = SendRequest(server, @"GET", @"/db/_design/design/_view/view",
+                           $dict({@"If-None-Match", etag}), nil);
+    CAssertEq(response.status, 200);
+    CAssertEqual([ParseJSONResponse(response) objectForKey: @"total_rows"], $object(4));
+}
+
+
 TestCase(TDRouter_ContinuousChanges) {
     TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
     Send(server, @"PUT", @"/db", 201, nil);
@@ -317,7 +370,7 @@ TestCase(TDRouter_GetAttachment) {
     SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
     
     // Now get the attachment via its URL:
-    TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil);
+    TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil, nil);
     CAssertEq(response.status, 200);
     CAssertEqual(response.body.asJSON, attach1);
     CAssertEqual([response.headers objectForKey: @"Content-Type"], @"text/plain");
@@ -325,14 +378,14 @@ TestCase(TDRouter_GetAttachment) {
     CAssert(eTag.length > 0);
     
     // A nonexistent attachment should result in a 404:
-    response = SendRequest(server, @"GET", @"/db/doc1/bogus", nil);
+    response = SendRequest(server, @"GET", @"/db/doc1/bogus", nil, nil);
     CAssertEq(response.status, 404);
     
-    response = SendRequest(server, @"GET", @"/db/missingdoc/bogus", nil);
+    response = SendRequest(server, @"GET", @"/db/missingdoc/bogus", nil, nil);
     CAssertEq(response.status, 404);
     
     // Get the document with attachment data:
-    response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil);
+    response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil, nil);
     CAssertEq(response.status, 200);
     CAssertEqual([response.body.properties objectForKey: @"_attachments"],
                  $dict({@"attach", $dict({@"data", [TDBase64 encode: attach1]}, 

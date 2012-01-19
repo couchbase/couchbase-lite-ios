@@ -113,6 +113,13 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 }
 
 
+- (BOOL) cacheWithEtag: (NSString*)etag {
+    NSString* eTag = $sprintf(@"\"%@\"", etag);
+    [_response setValue: eTag ofHeader: @"Etag"];
+    return $equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]);
+}
+
+
 - (NSDictionary*) bodyAsDictionary {
     return $castIf(NSDictionary, [NSJSONSerialization JSONObjectWithData: _request.HTTPBody
                                                                  options: 0 error: nil]);

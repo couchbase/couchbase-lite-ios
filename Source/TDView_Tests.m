@@ -96,6 +96,7 @@ TestCase(TDView_Index) {
     TDView* view = createView(db);
     CAssertEq(view.viewID, 1);
     
+    CAssert(view.stale);
     CAssertEq([view updateIndex], 200);
     
     NSArray* dump = [view dump];
@@ -104,7 +105,8 @@ TestCase(TDView_Index) {
                               $dict({@"key", @"\"three\""}, {@"seq", $object(3)}),
                               $dict({@"key", @"\"two\""}, {@"seq", $object(2)}) ));
     // No-op reindex:
-    CAssertEq([view updateIndex], 200);
+    CAssert(!view.stale);
+    CAssertEq([view updateIndex], 304);
     
     // Now add a doc and update a doc:
     TDRevision* threeUpdated = [[[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
@@ -120,6 +122,7 @@ TestCase(TDView_Index) {
     CAssert(status < 300);
 
     // Reindex again:
+    CAssert(view.stale);
     CAssertEq([view updateIndex], 200);
 
     dump = [view dump];
@@ -316,6 +319,8 @@ TestCase(TDView_Grouped) {
         return [TDView totalValues: values];
     } version: @"1"];
     
+    CAssertEq([view updateIndex], 200);
+
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.reduce = YES;
     TDStatus status;
@@ -377,7 +382,9 @@ TestCase(TDView_GroupedStrings) {
      } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
          return [NSNumber numberWithUnsignedInteger:[values count]];
      } version:@"1.0"];
-    
+   
+    CAssertEq([view updateIndex], 200);
+
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.groupLevel = 1;
     TDStatus status;
