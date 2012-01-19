@@ -42,7 +42,7 @@ static id<TDViewCompiler> sCompiler;
     Assert(name.length);
     self = [super init];
     if (self) {
-        _db = [db retain];
+        _db = db;
         _name = [name copy];
         _viewID = -1;  // means 'unknown'
     }
@@ -51,7 +51,6 @@ static id<TDViewCompiler> sCompiler;
 
 
 - (void)dealloc {
-    [_db release];
     [_name release];
     [_mapBlock release];
     [_reduceBlock release];
@@ -119,6 +118,12 @@ static id<TDViewCompiler> sCompiler;
 
 - (void) deleteView {
     [_db deleteViewNamed: _name];
+    _viewID = 0;
+}
+
+
+- (void) databaseClosing {
+    _db = nil;
     _viewID = 0;
 }
 

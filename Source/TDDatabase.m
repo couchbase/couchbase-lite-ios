@@ -220,9 +220,20 @@
 }
 
 - (BOOL) close {
-    if (!_open || ![_fmdb close])
+    if (!_open)
+        return NO;
+    
+    for (TDView* view in _views.allValues)
+        [view databaseClosing];
+    setObj(&_views, nil);
+    for (TDReplicator* repl in _activeReplicators)
+        [repl databaseClosing];
+    setObj(&_activeReplicators, nil);
+    
+    if (![_fmdb close])
         return NO;
     _open = NO;
+    _transactionLevel = 0;
     return YES;
 }
 
@@ -239,6 +250,10 @@
 }
 
 - (void) dealloc {
+    if (_open) {
+        //Warn(@"%@ dealloced without being closed first!", self);
+        [self close];
+    }
     [_fmdb release];
     [_path release];
     [_views release];

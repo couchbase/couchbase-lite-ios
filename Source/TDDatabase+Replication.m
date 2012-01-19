@@ -58,6 +58,7 @@
 }
 
 - (void) replicatorDidStop: (TDReplicator*)repl {
+    [repl databaseClosing];     // get it to detach from me
     [_activeReplicators removeObjectIdenticalTo: repl];
 }
 

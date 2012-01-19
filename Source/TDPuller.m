@@ -76,6 +76,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (void) stop {
+    if (!_running)
+        return;
     _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
     [_changeTracker stop];
     [_changeTracker release];

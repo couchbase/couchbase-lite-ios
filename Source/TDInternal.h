@@ -60,6 +60,7 @@
 - (id) initWithDatabase: (TDDatabase*)db name: (NSString*)name;
 @property (readonly) int viewID;
 - (NSArray*) dump;
+- (void) databaseClosing;
 @end
 
 
@@ -83,4 +84,5 @@
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;
+- (void) databaseClosing;
 @end

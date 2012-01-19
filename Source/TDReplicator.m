@@ -57,7 +57,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     
     self = [super init];
     if (self) {
-        _db = [db retain];
+        _db = db;
         _remote = [remote retain];
         _continuous = continuous;
         Assert(push == self.isPush);
@@ -80,7 +80,6 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 
 - (void)dealloc {
     [self stop];
-    [_db release];
     [_remote release];
     [_lastSequence release];
     [_remoteCheckpoint release];
@@ -88,6 +87,13 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     [_sessionID release];
     [_error release];
     [super dealloc];
+}
+
+
+- (void) databaseClosing {
+    [self saveLastSequence];
+    [self stop];
+    _db = nil;
 }
 
 
@@ -169,9 +175,9 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 
 - (void) stopped {
     LogTo(Sync, @"%@ STOPPED", self);
-    [_db replicatorDidStop: self];
     self.running = NO;
     self.changesProcessed = self.changesTotal = 0;
+    [_db replicatorDidStop: self];
 }
 
 
