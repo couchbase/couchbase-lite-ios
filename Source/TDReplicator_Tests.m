@@ -23,7 +23,7 @@
 
 #if DEBUG
 
-
+// Change port to 59840 to test against TouchServ :)
 #define kRemoteDBURLStr @"http://localhost:5984/tdreplicator_test"
 
 
@@ -103,7 +103,7 @@ TestCase(TDPuller) {
     [db open];
     
     id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
-    CAssertEqual(lastSeq, @"2");
+    CAssert($equal(lastSeq, @"2") || $equal(lastSeq, @"3"), @"Unexpected lastSeq '%@'", lastSeq);
     
     CAssertEq(db.documentCount, 2u);
     CAssertEq(db.lastSequence, 3);
