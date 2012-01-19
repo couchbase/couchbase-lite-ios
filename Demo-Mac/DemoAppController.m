@@ -87,7 +87,7 @@ int main (int argc, const char * argv[]) {
     // And why not a filter, just to allow some simple testing of filtered _changes.
     // For example, try curl 'http://localhost:8888/demo-shopping/_changes?filter=default/checked'
     [design defineFilterNamed: @"checked" block: FILTERBLOCK({
-        return [revision.properties objectForKey: @"check"] == $true;
+        return [[revision.properties objectForKey: @"check"] boolValue];
     })];
 
     
@@ -243,16 +243,16 @@ int main (int argc, const char * argv[]) {
 // here and returning equivalent native blocks, we can run those tests.
 
 - (TDMapBlock) compileMapFunction: (NSString*)mapSource language:(NSString *)language {
-    if (!$equal(language, @"javascript"))
+    if (![language isEqualToString: @"javascript"])
         return NULL;
     TDMapBlock mapBlock = NULL;
-    if ($equal(mapSource, @"(function (doc) {if (doc.a == 4) {emit(null, doc.b);}})")) {
+    if ([mapSource isEqualToString: @"(function (doc) {if (doc.a == 4) {emit(null, doc.b);}})"]) {
         mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
-            if ($equal([doc objectForKey: @"a"], $object(4)))
+            if ([[doc objectForKey: @"a"] isEqual: [NSNumber numberWithInt: 4]])
                 emit(nil, [doc objectForKey: @"b"]);
         };
-    } else if ($equal(mapSource, @"(function (doc) {emit(doc.foo, null);})") ||
-               $equal(mapSource, @"function(doc) { emit(doc.foo, null); }")) {
+    } else if ([mapSource isEqualToString: @"(function (doc) {emit(doc.foo, null);})"] ||
+               [mapSource isEqualToString: @"function(doc) { emit(doc.foo, null); }"]) {
         mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
             emit([doc objectForKey: @"foo"], nil);
         };
@@ -262,10 +262,10 @@ int main (int argc, const char * argv[]) {
 
 
 - (TDReduceBlock) compileReduceFunction: (NSString*)reduceSource language:(NSString *)language {
-    if (!$equal(language, @"javascript"))
+    if (![language isEqualToString: @"javascript"])
         return NULL;
     TDReduceBlock reduceBlock = NULL;
-    if ($equal(reduceSource, @"(function (keys, values) {return sum(values);})")) {
+    if ([reduceSource isEqualToString: @"(function (keys, values) {return sum(values);})"]) {
         reduceBlock = ^(NSArray* keys, NSArray* values, BOOL rereduce) {
             return [TDView totalValues: values];
         };

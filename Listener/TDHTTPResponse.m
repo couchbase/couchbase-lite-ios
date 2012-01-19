@@ -147,6 +147,12 @@
     _finished = true;
 
     LogTo(TDListenerVerbose, @"%@ Finished!", self);
+
+    // Break cycles:
+    _router.onResponseReady = nil;
+    _router.onDataAvailable = nil;
+    _router.onFinished = nil;
+
     if (!_chunked) {
         // Response finished immediately, before the connection asked for any data, so we're free
         // to massage the response:
@@ -168,7 +174,7 @@
 #if DEBUG
             BOOL pretty = YES;
 #else
-            BOOL pretty = [router boolQuery: @"pretty"];
+            BOOL pretty = [_router boolQuery: @"pretty"];
 #endif
             if (pretty) {
                 [_data release];

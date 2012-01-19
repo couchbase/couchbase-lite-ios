@@ -36,7 +36,6 @@
 
 
 - (NSObject<HTTPResponse>*)httpResponseForMethod:(NSString *)method URI:(NSString *)path {
-    AssertEq(request.body.length, requestContentLength);
     if (requestContentLength > 0)
         LogTo(TDListener, @"%@ %@ {+%u}", method, path, (unsigned)requestContentLength);
     else

@@ -285,7 +285,9 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     _lastSequenceChanged = NO;
     
     LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
-    NSMutableDictionary* body = [_remoteCheckpoint mutableCopy] ?: $mdict();
+    NSMutableDictionary* body = [[_remoteCheckpoint mutableCopy] autorelease];
+    if (!body)
+        body = $mdict();
     [body setValue: _lastSequence forKey: @"lastSequence"];
     
     [self sendAsyncRequest: @"PUT"
