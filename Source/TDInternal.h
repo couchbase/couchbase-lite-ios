@@ -74,6 +74,7 @@
 // protected:
 @property (copy) NSString* lastSequence;
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
+- (void) maybeCreateRemoteDB;
 - (void) beginReplicating;
 - (void) addToInbox: (TDRevision*)rev;
 - (void) processInbox: (TDRevisionList*)inbox;  // override this

@@ -219,6 +219,11 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 #pragma mark - CHECKPOINT STORAGE:
 
 
+- (void) maybeCreateRemoteDB {
+    // TDPusher overrides this to implement the .createTarget option
+}
+
+
 /** This is the _local document ID stored on the remote server to keep track of state.
     Its ID is based on the local database ID (the private one, to make the result unguessable)
     and the remote database's URL. */
@@ -232,6 +237,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     _lastSequenceChanged = NO;
     NSString* localLastSequence = [_db lastSequenceWithRemoteURL: _remote push: self.isPush];
     if (!localLastSequence) {
+        [self maybeCreateRemoteDB];
         [self beginReplicating];
         return;
     }
@@ -245,6 +251,8 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
                   if (error && error.code != 404) {
                       self.error = error;
                   } else {
+                      if (error.code == 404)
+                          [self maybeCreateRemoteDB];
                       response = $castIf(NSDictionary, response);
                       self.remoteCheckpoint = response;
                       NSString* remoteLastSequence = $castIf(NSString,

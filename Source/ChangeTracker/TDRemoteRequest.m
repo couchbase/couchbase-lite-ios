@@ -88,7 +88,7 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    Warn(@"%@: Got error %@", self, error);
+    Log(@"%@: Got error %@", self, error);
     [self clearConnection];
     [self respondWithResult: nil error: error];
 }

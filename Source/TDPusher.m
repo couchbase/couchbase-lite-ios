@@ -22,7 +22,7 @@
 @implementation TDPusher
 
 
-@synthesize filter=_filter;
+@synthesize createTarget=_createTarget, filter=_filter;
 
 
 - (void)dealloc {
@@ -36,7 +36,31 @@
 }
 
 
+// This is called before beginReplicating, if the target db might not exist
+- (void) maybeCreateRemoteDB {
+    if (!_createTarget)
+        return;
+    LogTo(Sync, @"Remote db might not exist; creating it...");
+    [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
+        if (error && error.code != 412) {
+            LogTo(Sync, @"Failed to create remote db: %@", error);
+            self.error = error;
+            [self stop];
+        } else {
+            LogTo(Sync, @"Created remote db");
+            _createTarget = NO;
+            [self beginReplicating];
+        }
+    }];
+}
+
+
 - (void) beginReplicating {
+    // If we're still waiting to create the remote db, do nothing now. (This method will be
+    // re-invoked after that request finishes; see -maybeCreateRemoteDB above.)
+    if (_createTarget)
+        return;
+    
     // Process existing changes since the last push:
     TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
                                                 options: nil filter: _filter];

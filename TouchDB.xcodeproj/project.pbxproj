@@ -106,7 +106,7 @@
 		27731F191495CFEF00815D67 /* TDRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* TDRouter_Tests.m */; };
 		27731F1A1495CFEF00815D67 /* TDView_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* TDView_Tests.m */; };
 		27731F1B1495CFEF00815D67 /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
-		27731F1C1495CFEF00815D67 /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; };
+		27731F1C1495CFEF00815D67 /* TDReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDReplicator_Tests.m */; };
 		27731F1E1495CFEF00815D67 /* libTouchDB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libTouchDB.a */; };
 		27731F1F1495CFEF00815D67 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F81492BC8000A817AD /* libsqlite3.dylib */; };
 		27731F201495CFEF00815D67 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7B81492B83C00A817AD /* UIKit.framework */; };
@@ -127,7 +127,7 @@
 		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27821BB8148E7D6F0099B373 /* TDReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* TDReplicator.m */; };
 		27821BBA148FF56D0099B373 /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
-		27821BBC149001B30099B373 /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; };
+		27821BBC149001B30099B373 /* TDReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDReplicator_Tests.m */; };
 		27821BBE14906FB60099B373 /* TouchDBPrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BBD14906FB50099B373 /* TouchDBPrefix.h */; };
 		279906E3149A65B8003D4338 /* TDRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* TDRemoteRequest.h */; };
 		279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* TDRemoteRequest.m */; };
@@ -212,7 +212,7 @@
 		27B0B8541492D09B00A817AD /* TDRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* TDRouter_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27B0B8551492D0A000A817AD /* TDView_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* TDView_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27B0B8561492D0A400A817AD /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27B0B8571492D0AA00A817AD /* TDPuller_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDPuller_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27B0B8571492D0AA00A817AD /* TDReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDReplicator_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27C706421486BBD500F0F099 /* TDServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* TDServer.m */; };
 		27C706481487584300F0F099 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
 		27C706701488634300F0F099 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7066F1488634300F0F099 /* AppKit.framework */; };
@@ -427,7 +427,7 @@
 		27821BB5148E7D6F0099B373 /* TDReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDReplicator.h; sourceTree = "<group>"; };
 		27821BB6148E7D6F0099B373 /* TDReplicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDReplicator.m; sourceTree = "<group>"; };
 		27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDDatabase_Tests.m; sourceTree = "<group>"; };
-		27821BBB149001B20099B373 /* TDPuller_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDPuller_Tests.m; sourceTree = "<group>"; };
+		27821BBB149001B20099B373 /* TDReplicator_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDReplicator_Tests.m; sourceTree = "<group>"; };
 		27821BBD14906FB50099B373 /* TouchDBPrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TouchDBPrefix.h; sourceTree = "<group>"; };
 		27821BBF149078C70099B373 /* TouchDB.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = TouchDB.exp; sourceTree = "<group>"; };
 		279906E1149A65B7003D4338 /* TDRemoteRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TDRemoteRequest.h; path = ChangeTracker/TDRemoteRequest.h; sourceTree = "<group>"; };
@@ -730,7 +730,7 @@
 				27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */,
 				27B0B77F1491E73400A817AD /* TDView_Tests.m */,
 				27C7064A1488311100F0F099 /* TDRouter_Tests.m */,
-				27821BBB149001B20099B373 /* TDPuller_Tests.m */,
+				27821BBB149001B20099B373 /* TDReplicator_Tests.m */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -1584,7 +1584,7 @@
 				270B3E3F148D7F0000E0A926 /* TDPusher.m in Sources */,
 				27821BB8148E7D6F0099B373 /* TDReplicator.m in Sources */,
 				27821BBA148FF56D0099B373 /* TDDatabase_Tests.m in Sources */,
-				27821BBC149001B30099B373 /* TDPuller_Tests.m in Sources */,
+				27821BBC149001B30099B373 /* TDReplicator_Tests.m in Sources */,
 				279EB2CB14913BBE00E74185 /* TDRouter_Tests.m in Sources */,
 				279EB2CF149140DE00E74185 /* TDView.m in Sources */,
 				279EB2DC1491C34300E74185 /* TDCollateJSON.m in Sources */,
@@ -1655,7 +1655,7 @@
 				27731F191495CFEF00815D67 /* TDRouter_Tests.m in Sources */,
 				27731F1A1495CFEF00815D67 /* TDView_Tests.m in Sources */,
 				27731F1B1495CFEF00815D67 /* TDDatabase_Tests.m in Sources */,
-				27731F1C1495CFEF00815D67 /* TDPuller_Tests.m in Sources */,
+				27731F1C1495CFEF00815D67 /* TDReplicator_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1723,7 +1723,7 @@
 				27B0B8541492D09B00A817AD /* TDRouter_Tests.m in Sources */,
 				27B0B8551492D0A000A817AD /* TDView_Tests.m in Sources */,
 				27B0B8561492D0A400A817AD /* TDDatabase_Tests.m in Sources */,
-				27B0B8571492D0AA00A817AD /* TDPuller_Tests.m in Sources */,
+				27B0B8571492D0AA00A817AD /* TDReplicator_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

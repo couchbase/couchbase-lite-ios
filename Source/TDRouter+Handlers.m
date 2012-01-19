@@ -17,6 +17,7 @@
 #import "TDRevision.h"
 #import "TDServer.h"
 #import "TDReplicator.h"
+#import "TDPusher.h"
 #import "TDMisc.h"
 
 
@@ -115,6 +116,8 @@
         TDReplicator* repl = [db replicateWithRemoteURL: remote push: push continuous: continuous];
         if (!repl)
             return 500;
+        if (push && createTarget)
+            ((TDPusher*)repl).createTarget = YES;
         _response.bodyObject = $dict({@"session_id", repl.sessionID});
     } else {
         // Cancel replication:
