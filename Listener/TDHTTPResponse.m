@@ -168,7 +168,7 @@
             }
             NSString* responseStr = [NSString stringWithFormat: @"{\"status\": %i, \"error\":\"%@\"}\n",
                                                                  status, errorMsg];
-            [_data setData: [responseStr dataUsingEncoding: NSUTF8StringEncoding]];
+            [self onDataAvailable: [responseStr dataUsingEncoding: NSUTF8StringEncoding]];
             [_response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];
         } else {
 #if DEBUG

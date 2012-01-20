@@ -52,6 +52,7 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
     [_response release];
     [_queries release];
     [_path release];
+    [_db release];
     [_onResponseReady release];
     [_onDataAvailable release];
     [_onFinished release];

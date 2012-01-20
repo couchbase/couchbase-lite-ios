@@ -256,6 +256,7 @@
     }
     [_fmdb release];
     [_path release];
+    [_name release];
     [_views release];
     [_activeReplicators release];
     [_validations release];

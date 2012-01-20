@@ -849,9 +849,11 @@
     if (!view)
         return 500;
     @try {
+        TDStatus status = [view updateIndex];
+        if (status >= 400)
+            return status;
         if (view.reduceBlock)
             options.reduce = YES;
-        TDStatus status;
         NSArray* rows = [view queryWithOptions: &options status: &status];
         if (!rows)
             return status;
