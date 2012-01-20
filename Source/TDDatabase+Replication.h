@@ -16,9 +16,10 @@
 
 - (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
                                            push: (BOOL)push;
-- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
-                                    push: (BOOL)push
-                              continuous: (BOOL)continuous;
+
+- (TDReplicator*) replicatorWithRemoteURL: (NSURL*)remote
+                                     push: (BOOL)push
+                               continuous: (BOOL)continuous;
 
 - (BOOL) findMissingRevisions: (TDRevisionList*)revs;
 

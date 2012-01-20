@@ -38,17 +38,9 @@
     return nil;
 }
 
-- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
-                                    push: (BOOL)push
-                              continuous: (BOOL)continuous {
-    return [self replicateWithRemoteURL: remote push: push continuous: continuous filter: nil filterParameters: nil];
-}
-
-- (TDReplicator*) replicateWithRemoteURL: (NSURL*)remote
-                                    push: (BOOL)push
-                              continuous: (BOOL)continuous
-                                  filter: (NSString*)filterName
-                        filterParameters: (NSDictionary*)filterParams {
+- (TDReplicator*) replicatorWithRemoteURL: (NSURL*)remote
+                                     push: (BOOL)push
+                               continuous: (BOOL)continuous {
     TDReplicator* repl = [self activeReplicatorWithRemoteURL: remote push: push];
     if (repl)
         return repl;
@@ -56,18 +48,11 @@
                                      remote: remote 
                                        push: push
                                  continuous: continuous];
-
-    if (!push) {
-        [(TDPuller *)repl setFilterName: filterName];
-        [(TDPuller *)repl setFilterParameters: filterParams];
-    }
-
     if (!repl)
         return nil;
     if (!_activeReplicators)
         _activeReplicators = [[NSMutableArray alloc] init];
     [_activeReplicators addObject: repl];
-    [repl start];
     [repl release];
     return repl;
 }

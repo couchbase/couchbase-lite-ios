@@ -74,13 +74,11 @@
                                               kModeNames[_mode]];
     if (_lastSequenceID)
         [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
-    if (_filterName)
+    if (_filterName) {
         [path appendFormat: @"&filter=%@", TDEscapeURLParam(_filterName)];
-    if (_filterParameters) {
-        [_filterParameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop){
-            NSString *str = [NSString stringWithFormat: @"&%@=%@", key, obj];
-            NSString *escapedString = (NSString *)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)str, NULL, (CFStringRef)@"&", kCFStringEncodingUTF8);
-            [path appendString:escapedString];
+        [_filterParameters enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+            [path appendFormat: @"&%@=%@", TDEscapeURLParam(key), 
+                                           TDEscapeURLParam([value description])];
         }];
     }
 
@@ -101,6 +99,7 @@
 
 - (void)dealloc {
     [self stop];
+    [_filterName release];
     [_filterParameters release];
     [_databaseURL release];
     [_lastSequenceID release];

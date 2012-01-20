@@ -113,11 +113,17 @@
     
     if (!cancel) {
         // Start replication:
-        TDReplicator* repl = [db replicateWithRemoteURL: remote push: push continuous: continuous];
+        TDReplicator* repl = [db replicatorWithRemoteURL: remote push: push continuous: continuous];
         if (!repl)
             return 500;
-        if (push && createTarget)
-            ((TDPusher*)repl).createTarget = YES;
+        if (push) {
+            ((TDPusher*)repl).createTarget = createTarget;
+        } else {
+            TDPuller* pullRepl = (TDPuller*)repl;
+            pullRepl.filterName = $castIf(NSString, [body objectForKey: @"filter"]);
+            pullRepl.filterParameters = $castIf(NSDictionary, [body objectForKey: @"query_params"]);
+        }
+        [repl start];
         _response.bodyObject = $dict({@"session_id", repl.sessionID});
     } else {
         // Cancel replication:
