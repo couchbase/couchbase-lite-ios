@@ -76,29 +76,51 @@ static ValueType valueTypeOf(char c) {
 }
 
 
+static char convertEscape(const char **in) {
+    char c = *++(*in);
+    switch (c) {
+        case 'u': {
+            // \u is a Unicode escape; 4 hex digits follow.
+            const char* digits = *in + 1;
+            *in += 4;
+            int uc = (digittoint(digits[0]) << 12) | (digittoint(digits[1]) << 8) |
+                     (digittoint(digits[2]) <<  4) | (digittoint(digits[3]));
+            if (uc > 127)
+                Warn(@"TDCollateJSON can't correctly compare \\u%.4s", digits);
+            return (char)uc;
+        }
+        case 'b':   return '\b';
+        case 'n':   return '\n';
+        case 'r':   return '\r';
+        case 't':   return '\t';
+        default:    return c;
+    }
+}
+
+
 static int compareStringsASCII(const char** in1, const char** in2) {
     const char* str1 = *in1, *str2 = *in2;
     while(true) {
-        ++str1;
-        ++str2;
+        char c1 = *++str1;
+        char c2 = *++str2;
 
         // If one string ends, the other is greater; if both end, they're equal:
-        if (*str1 == '"') {
-            if (*str2 == '"')
+        if (c1 == '"') {
+            if (c2 == '"')
                 break;
             else
                 return -1;
-        } else if (*str2 == '"')
+        } else if (c2 == '"')
             return 1;
         
-        // Un-escape the next character after a backslash:
-        if (*str1 == '\\')
-            ++str1;
-        if (*str2 == '\\')
-            ++str2;
+        // Handle escape sequences:
+        if (c1 == '\\')
+            c1 = convertEscape(&str1);
+        if (c2 == '\\')
+            c2 = convertEscape(&str2);
         
         // Compare the next characters:
-        int s = cmp(*str1, *str2);
+        int s = cmp(c1, c2);
         if (s)
             return s;
     }
@@ -117,8 +139,12 @@ static CFStringRef createCFStringFromJSON(const char** in) {
     const char* str;
     for (str = start; *str != '"'; ++str) {
         if (*str == '\\') {
-            ++escapes;
             ++str;
+            if (*str == 'u') {
+                escapes += 5;  // \uxxxx adds 5 bytes
+                str += 4;
+            } else
+                escapes += 1;
         }
     }
     *in = str + 1;
@@ -129,10 +155,11 @@ static CFStringRef createCFStringFromJSON(const char** in) {
         length -= escapes;
         char* buf = malloc(length);
         char* dst = buf;
-        for (str = start; *str != '"'; ++str) {
-            if (*str == '\\')
-                ++str;
-            *dst++ = *str;
+        char c;
+        for (str = start; (c = *str) != '"'; ++str) {
+            if (c == '\\')
+                c = convertEscape(&str);
+            *dst++ = c;
         }
         CAssertEq(dst-buf, (int)length);
         start = buf;
@@ -231,8 +258,35 @@ int TDCollateJSON(void *context,
 }
 
 
+#pragma mark - UNIT TESTS:
+
+
 #if DEBUG
+// encodes an object to a C string in JSON format. JSON fragments are allowed.
+static const char* encode(id obj) {
+    NSArray* wrapped = $array(obj);
+    NSData* data = [NSJSONSerialization dataWithJSONObject: wrapped options: 0 error: nil];
+    CAssert(data);
+    data = [data subdataWithRange: NSMakeRange(1, data.length-2)];  // strip the brackets
+    return [[data my_UTF8ToString] UTF8String];
+}
+
+static void testEscape(const char* source, char decoded) {
+    const char* pos = source;
+    CAssertEq(convertEscape(&pos), decoded);
+    CAssertEq((size_t)pos, (size_t)(source + strlen(source) - 1));
+}
+
+TestCase(TDCollateConvertEscape) {
+    testEscape("\\\\",    '\\');
+    testEscape("\\t",     '\t');
+    testEscape("\\u0045", 'E');
+    testEscape("\\u0001", 1);
+    testEscape("\\u0000", 0);
+}
+
 TestCase(TDCollateScalars) {
+    RequireTestCase(TDCollateConvertEscape);
     void* mode = kTDCollateJSON_Unicode;
     CAssertEq(TDCollateJSON(mode, 0, "true", 0, "false"), 1);
     CAssertEq(TDCollateJSON(mode, 0, "false", 0, "true"), -1);
@@ -243,15 +297,16 @@ TestCase(TDCollateScalars) {
     CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"123\""), 1);
     CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1235\""), -1);
     CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"12\\q34\"", 0, "\"12q34\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"\\q1234\"", 0, "\"q1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\\q\"", 0, "\"1234q\""), 0);
+    CAssertEq(TDCollateJSON(mode, 0, "\"12\\/34\"", 0, "\"12/34\""), 0);
+    CAssertEq(TDCollateJSON(mode, 0, "\"\\/1234\"", 0, "\"/1234\""), 0);
+    CAssertEq(TDCollateJSON(mode, 0, "\"1234\\/\"", 0, "\"1234/\""), 0);
     CAssertEq(TDCollateJSON(mode, 0, "\"a\"", 0, "\"A\""), -1);
     CAssertEq(TDCollateJSON(mode, 0, "\"A\"", 0, "\"aa\""), -1);
     CAssertEq(TDCollateJSON(mode, 0, "\"B\"", 0, "\"aa\""), 1);
 }
 
 TestCase(TDCollateASCII) {
+    RequireTestCase(TDCollateConvertEscape);
     void* mode = kTDCollateJSON_ASCII;
     CAssertEq(TDCollateJSON(mode, 0, "true", 0, "false"), 1);
     CAssertEq(TDCollateJSON(mode, 0, "false", 0, "true"), -1);
@@ -262,9 +317,9 @@ TestCase(TDCollateASCII) {
     CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"123\""), 1);
     CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1235\""), -1);
     CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"12\\q34\"", 0, "\"12q34\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"\\q1234\"", 0, "\"q1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\\q\"", 0, "\"1234q\""), 0);
+    CAssertEq(TDCollateJSON(mode, 0, "\"12\\/34\"", 0, "\"12/34\""), 0);
+    CAssertEq(TDCollateJSON(mode, 0, "\"\\/1234\"", 0, "\"/1234\""), 0);
+    CAssertEq(TDCollateJSON(mode, 0, "\"1234\\/\"", 0, "\"1234/\""), 0);
     CAssertEq(TDCollateJSON(mode, 0, "\"A\"", 0, "\"a\""), -1);
     CAssertEq(TDCollateJSON(mode, 0, "\"B\"", 0, "\"a\""), -1);
 }
@@ -295,5 +350,16 @@ TestCase(TDCollateNestedArrays) {
     void* mode = kTDCollateJSON_Unicode;
     CAssertEq(TDCollateJSON(mode, 0, "[[]]", 0, "[]"), 1);
     CAssertEq(TDCollateJSON(mode, 0, "[1,[2,3],4]", 0, "[1,[2,3.1],4,5,6]"), -1);
+}
+
+TestCase(TDCollateUnicodeStrings) {
+    // Make sure that NSJSONSerialization never creates escape sequences we can't parse.
+    // That includes "\unnnn" for non-ASCII chars, and "\t", "\b", etc.
+    RequireTestCase(TDCollateConvertEscape);
+    void* mode = kTDCollateJSON_Unicode;
+    CAssertEq(TDCollateJSON(mode, 0, encode(@"fréd"), 0, encode(@"fréd")), 0);
+    CAssertEq(TDCollateJSON(mode, 0, encode(@"ømø"), 0, encode(@"omo")), 1);
+    CAssertEq(TDCollateJSON(mode, 0, encode(@"\t"), 0, encode(@" ")), -1);
+    CAssertEq(TDCollateJSON(mode, 0, encode(@"\001"), 0, encode(@" ")), -1);
 }
 #endif
