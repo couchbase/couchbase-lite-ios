@@ -50,6 +50,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     return user;
 }
 
+
 TestCase(TDDatabase_CRUD) {
     // Start with a fresh database in /tmp:
     TDDatabase* db = createDB();
@@ -137,6 +138,85 @@ TestCase(TDDatabase_CRUD) {
     NSArray* history = [db getRevisionHistory: revD];
     Log(@"History = %@", history);
     CAssertEqual(history, $array(revD, rev2, rev1));
+    
+    CAssert([db close]);
+}
+
+
+TestCase(TDDatabase_Validation) {
+    TDDatabase* db = createDB();
+    __block BOOL validationCalled = NO;
+    [db defineValidation: @"hoopy" 
+                 asBlock: ^BOOL(TDRevision *newRevision, id<TDValidationContext> context)
+    {
+        CAssert(newRevision);
+        CAssert(context);
+        CAssert(newRevision.properties || newRevision.deleted);
+        validationCalled = YES;
+        BOOL hoopy = newRevision.deleted || [newRevision.properties objectForKey: @"towel"] != nil;
+        Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
+        if (!hoopy)
+         [context setErrorMessage: @"Where's your towel?"];
+        return hoopy;
+    }];
+    
+    // POST a valid new document:
+    NSMutableDictionary* props = $mdict({@"name", @"Zaphod Beeblebrox"}, {@"towel", @"velvet"});
+    TDRevision* rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status;
+    validationCalled = NO;
+    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CAssert(validationCalled);
+    CAssertEq(status, 201);
+    
+    // PUT a valid update:
+    [props setObject: $object(3) forKey: @"head_count"];
+    rev.properties = props;
+    validationCalled = NO;
+    rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssert(validationCalled);
+    CAssertEq(status, 201);
+    
+    // PUT an invalid update:
+    [props removeObjectForKey: @"towel"];
+    rev.properties = props;
+    validationCalled = NO;
+    rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssert(validationCalled);
+    CAssertEq(status, 403);
+    
+    // POST an invalid new document:
+    props = $mdict({@"name", @"Vogon"}, {@"poetry", $true});
+    rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    validationCalled = NO;
+    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CAssert(validationCalled);
+    CAssertEq(status, 403);
+
+    // PUT a valid new document with an ID:
+    props = $mdict({@"_id", @"ford"}, {@"name", @"Ford Prefect"}, {@"towel", @"terrycloth"});
+    rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    validationCalled = NO;
+    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CAssert(validationCalled);
+    CAssertEq(status, 201);
+    CAssertEqual(rev.docID, @"ford");
+    
+    // DELETE a document:
+    rev = [[[TDRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES] autorelease];
+    CAssert(rev.deleted);
+    validationCalled = NO;
+    rev = [db putRevision: rev prevRevisionID:  rev.revID allowConflict: NO status: &status];
+    CAssertEq(status, 200);
+    CAssert(validationCalled);
+
+    // PUT an invalid new document:
+    props = $mdict({@"_id", @"petunias"}, {@"name", @"Pot of Petunias"});
+    rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    validationCalled = NO;
+    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CAssert(validationCalled);
+    CAssertEq(status, 403);
     
     CAssert([db close]);
 }

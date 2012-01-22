@@ -210,6 +210,8 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     [self beginTransaction];
     FMResultSet* r = nil;
     @try {
+        //// PART I: In which are performed lookups and validations prior to the insert...
+        
         SInt64 docNumericID = docID ? [self getDocNumericID: docID] : 0;
         SequenceNumber parentSequence = 0;
         if (prevRevID) {
@@ -247,52 +249,61 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                                        $object(parentSequence)])
                 return nil;
-        } else if (docID) {
-            if (deleted) {
+            
+        } else {
+            // Inserting first revision.
+            if (deleted && docID) {
                 // Didn't specify a revision to delete: 404 or a 409, depending
                 *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? 409 : 404;
                 return nil;
             }
-            // Inserting first revision, with docID given. First validate:
-            if (![self validateRevision: rev previousRevision: nil]) {
-                *outStatus = 403;
+            
+            // Validate:
+            TDStatus status = [self validateRevision: rev previousRevision: nil];
+            if (status >= 300) {
+                *outStatus = status;
                 return nil;
             }
             
-            if (docNumericID <= 0) {
-                // Doc doesn't exist at all; create it:
+            if (docID) {
+                // Inserting first revision, with docID given (PUT):
+                if (docNumericID <= 0) {
+                    // Doc ID doesn't exist at all; create it:
+                    docNumericID = [self insertDocumentID: docID];
+                    if (docNumericID <= 0)
+                        return nil;
+                } else {
+                    // Doc ID exists; check whether current winning revision is deleted:
+                    r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
+                                              "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
+                                             $object(docNumericID)];
+                    if (!r)
+                        return nil;
+                    if ([r next]) {
+                        if ([r boolForColumnIndex: 1]) {
+                            // Make the deleted revision no longer current:
+                            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
+                                                       $object([r longLongIntForColumnIndex: 0])])
+                                return nil;
+                        } else if (!allowConflict) {
+                            // The current winning revision is not deleted, so this is a conflict
+                            *outStatus = 409;
+                            return nil;
+                        }
+                    }
+                    [r close];
+                    r = nil;
+                }
+            } else {
+                // Inserting first revision, with no docID given (POST): generate a unique docID:
+                docID = [[self class] generateDocumentID];
                 docNumericID = [self insertDocumentID: docID];
                 if (docNumericID <= 0)
                     return nil;
-            } else {
-                // Doc exists; check whether current winning revision is deleted:
-                r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
-                                          "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
-                                         $object(docNumericID)];
-                if (!r)
-                    return nil;
-                if ([r next]) {
-                    if ([r boolForColumnIndex: 1]) {
-                        // Make the deleted revision no longer current:
-                        if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                                   $object([r longLongIntForColumnIndex: 0])])
-                            return nil;
-                    } else if (!allowConflict) {
-                        // The current winning revision is not deleted, so this is a conflict
-                        *outStatus = 409;
-                        return nil;
-                    }
-                }
-                [r close];
-                r = nil;
             }
-        } else {
-            // Inserting first revision, with no docID given (POST): generate a unique docID:
-            docID = [[self class] generateDocumentID];
-            docNumericID = [self insertDocumentID: docID];
-            if (docNumericID <= 0)
-                return nil;
         }
+        
+        //// PART II: In which insertion occurs...
         
         // Bump the revID and update the JSON:
         NSString* newRevID = [self generateNextRevisionID: prevRevID];
@@ -335,7 +346,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     if (*outStatus >= 300) 
         return nil;
     
-    // Send a change notification:
+    //// EPILOGUE: A change notification is sent...
     rev.body = nil;     // body is not up to date (no current _rev, likely no _id) so avoid confusion
     [self notifyChange: rev source: nil];
     return rev;
