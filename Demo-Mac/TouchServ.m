@@ -10,7 +10,13 @@
 #import <TouchDB/TouchDB.h>
 #import <TouchDB/TDRouter.h>
 #import <TouchDBListener/TDListener.h>
+
+#if DEBUG
 #import "Logging.h"
+#else
+#define Warn NSLog
+#define Log NSLog
+#endif
 
 
 #define kPortNumber 59840
@@ -40,8 +46,10 @@ static NSString* GetServerPath() {
 int main (int argc, const char * argv[])
 {
     @autoreleasepool {
+#if DEBUG
         EnableLog(YES);
         EnableLogTo(TDListener, YES);
+#endif
         
         NSError* error;
         TDServer* server = [[TDServer alloc] initWithDirectory: GetServerPath() error: &error];
