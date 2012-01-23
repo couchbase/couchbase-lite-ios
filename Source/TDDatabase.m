@@ -36,9 +36,11 @@
 
 
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path {
-    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
+    if (![[NSFileManager defaultManager] removeItemAtPath: path error: nil])
+        return nil;
     TDDatabase *db = [[[self alloc] initWithPath: path] autorelease];
-    [[NSFileManager defaultManager] removeItemAtPath: db.attachmentStorePath error: nil];
+    if (![[NSFileManager defaultManager] removeItemAtPath: db.attachmentStorePath error: nil])
+        return nil;
     if (![db open])
         return nil;
     return db;
@@ -68,6 +70,21 @@
 
 - (BOOL) exists {
     return [[NSFileManager defaultManager] fileExistsAtPath: _path];
+}
+
+
+- (BOOL) replaceWithDatabaseFile: (NSString*)databasePath
+                 withAttachments: (NSString*)attachmentsPath
+                           error: (NSError**)outError
+{
+    Assert(!_open, @"Already-open database cannot be replaced");
+    NSString* dstAttachmentsPath = self.attachmentStorePath;
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    return [fmgr copyItemAtPath: databasePath toPath: _path error: outError] &&
+           [fmgr removeItemAtPath: dstAttachmentsPath error: outError] &&
+           (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath 
+                                              toPath: dstAttachmentsPath
+                                               error: outError]);
 }
 
 

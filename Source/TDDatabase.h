@@ -72,6 +72,16 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path;
 
+/** Replaces the database with a copy of another database.
+    This is primarily used to install a canned database on first launch of an app, in which case you should first check .exists to avoid replacing the database if it exists already. The canned database would have been copied into your app bundle at build time.
+    @param databasePath  Path of the database file that should replace this one.
+    @param attachmentsPath  Path of the associated attachments directory, or nil if there are no attachments.
+    @param error  If an error occurs, it will be stored into this parameter on return.
+    @return  YES if the database was copied, NO if an error occurred. */
+- (BOOL) replaceWithDatabaseFile: (NSString*)databasePath
+                 withAttachments: (NSString*)attachmentsPath
+                           error: (NSError**)outError;
+
 @property (readonly) NSString* path;
 @property (readonly, copy) NSString* name;
 @property (readonly) BOOL exists;
