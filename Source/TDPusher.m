@@ -133,7 +133,7 @@
                     else {
                         // OPT: Shouldn't include all attachment bodies, just ones that have changed
                         // OPT: Should send docs with many or big attachments as multipart/related
-                        if (![_db loadRevisionBody: rev options: kTDIncludeAttachments]) {
+                        if ([_db loadRevisionBody: rev options: kTDIncludeAttachments] >= 300) {
                             Warn(@"%@: Couldn't get local contents of %@", self, rev);
                             return nil;
                         }
