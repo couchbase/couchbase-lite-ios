@@ -21,6 +21,7 @@
 #import "TDBatcher.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
+#import "ExceptionUtils.h"
 
 
 // Maximum number of revisions to fetch simultaneously
@@ -273,7 +274,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         LogTo(Sync, @"%@ finished inserting %u revisions", self, revs.count);
         success = YES;
     } @catch (NSException *x) {
-        Warn(@"%@: Exception inserting revisions: %@", self, x);
+        MYReportException(x, @"%@: Exception inserting revisions", self);
     } @finally {
         [_db endTransaction: success];
     }
