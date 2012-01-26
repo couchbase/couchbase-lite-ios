@@ -30,16 +30,22 @@
 @implementation TDDatabase
 
 
+static BOOL removeItemIfExists(NSString* path, NSError** outError) {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    return [fmgr removeItemAtPath: path error: outError] || ![fmgr fileExistsAtPath: path];
+}
+
+
 - (NSString*) attachmentStorePath {
     return [[_path stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
 }
 
 
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path {
-    if (![[NSFileManager defaultManager] removeItemAtPath: path error: nil])
+    if (!removeItemIfExists(path, nil))
         return nil;
     TDDatabase *db = [[[self alloc] initWithPath: path] autorelease];
-    if (![[NSFileManager defaultManager] removeItemAtPath: db.attachmentStorePath error: nil])
+    if (!removeItemIfExists(db.attachmentStorePath, nil))
         return nil;
     if (![db open])
         return nil;
@@ -81,7 +87,7 @@
     NSString* dstAttachmentsPath = self.attachmentStorePath;
     NSFileManager* fmgr = [NSFileManager defaultManager];
     return [fmgr copyItemAtPath: databasePath toPath: _path error: outError] &&
-           [fmgr removeItemAtPath: dstAttachmentsPath error: outError] &&
+           removeItemIfExists(dstAttachmentsPath, outError) &&
            (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath 
                                               toPath: dstAttachmentsPath
                                                error: outError]);
@@ -261,9 +267,8 @@
     } else if (!self.exists) {
         return YES;
     }
-    NSFileManager* fmgr = [NSFileManager defaultManager];
-    return [fmgr removeItemAtPath: _path error: outError] 
-        && [fmgr removeItemAtPath: self.attachmentStorePath error: outError];
+    return removeItemIfExists(_path, outError) 
+        && removeItemIfExists(self.attachmentStorePath, outError);
 }
 
 - (void) dealloc {
