@@ -110,6 +110,14 @@ enum {
 }
 
 
+- (BOOL) failUnparseable: (NSString*)line {
+    Warn(@"Couldn't parse line from _changes: %@", line);
+    [self setUpstreamError: @"Unparseable change line"];
+    [self stop];
+    return NO;
+}
+
+
 - (BOOL) readLine {
     const char* start = _inputBuffer.bytes;
     const char* crlf = strnstr(start, "\r\n", _inputBuffer.length);
@@ -125,10 +133,7 @@ enum {
             case kStateStatus: {
                 // Read the HTTP response status line:
                 if (![line hasPrefix: @"HTTP/1.1 200 "]) {
-                    Warn(@"_changes response: %@", line);
-                    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: 1 userInfo:nil];
-                    [self stop];
-                    return NO;
+                    return [self failUnparseable: line];
                 }
                 _state = kStateHeaders;
                 break;
@@ -144,12 +149,8 @@ enum {
                     break;      // There's an empty line between chunks
                 NSScanner* scanner = [NSScanner scannerWithString: line];
                 unsigned chunkLength;
-                if (![scanner scanHexInt: &chunkLength]) {
-                    Warn(@"Failed to parse _changes chunk length '%@'", line);
-                    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: 2 userInfo:nil];
-                    [self stop];
-                    return NO;
-                }
+                if (![scanner scanHexInt: &chunkLength]) 
+                    return [self failUnparseable: line];
                 if (_inputBuffer.length < (size_t)lineLength + 2 + chunkLength)
                     return NO;     // Don't read the chunk till it's complete
                 
@@ -158,12 +159,14 @@ enum {
                 [_inputBuffer replaceBytesInRange: NSMakeRange(0, lineLength + 2 + chunkLength)
                                         withBytes: NULL length: 0];
                 // Finally! Send the line to the database to parse:
-                [self receivedChunk: chunk];
-                return YES;
+                if ([self receivedChunk: chunk])
+                    return YES;
+                else 
+                    return [self failUnparseable: line];
             }
         }
     } else {
-        Warn(@"Couldn't read line from _changes");
+        return [self failUnparseable: line];
     }
     
     // Remove the parsed line:

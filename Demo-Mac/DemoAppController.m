@@ -175,6 +175,19 @@ int main (int argc, const char * argv[]) {
     [NSApp endSheet: _syncConfigSheet returnCode: returnCode];
 }
 
+- (void) observeReplication: (CouchReplication*)repl {
+    [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"running" options: 0 context: NULL];
+}
+
+- (void) stopObservingReplication: (CouchReplication*)repl {
+    [repl removeObserver: self forKeyPath: @"completed"];
+    [repl removeObserver: self forKeyPath: @"error"];
+    [repl removeObserver: self forKeyPath: @"running"];
+}
+
+
 - (void) configureSyncFinished:(NSWindow *)sheet returnCode:(NSInteger)returnCode {
     [sheet orderOut: self];
     NSURL* url = self.currentURLFromField;
@@ -186,18 +199,18 @@ int main (int argc, const char * argv[]) {
     } else {
         if (_syncPushCheckbox.state) {
             NSLog(@"**** Pushing to <%@> ...", url);
-            [_database pushToDatabaseAtURL: url options: 0];
+            [self observeReplication: [_database pushToDatabaseAtURL: url options: 0]];
         }
         if (_syncPullCheckbox.state) {
             NSLog(@"**** Pulling from <%@> ...", url);
-            [_database pullFromDatabaseAtURL: url options: 0];
+            [self observeReplication: [_database pullFromDatabaseAtURL: url options: 0]];
         }
     }
 }
 
 
 - (void) stopReplication: (CouchReplication**)repl {
-    [*repl removeObserver: self forKeyPath: @"completed"];
+    [self stopObservingReplication: *repl];
     [*repl stop];
     [*repl release];
     *repl = nil;
@@ -210,11 +223,11 @@ int main (int argc, const char * argv[]) {
     if (otherDbURL) {
         _pull = [[_database pullFromDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
                     retain];
-        [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+        [self observeReplication: _pull];
 
         _push = [[_database pushToDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
                     retain];
-        [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+        [self observeReplication: _push];
     }
 }
 
@@ -222,14 +235,33 @@ int main (int argc, const char * argv[]) {
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
-    if (object == _pull || object == _push) {
-        unsigned completed = _pull.completed + _push.completed;
-        unsigned total = _pull.total + _push.total;
-        NSLog(@"SYNC progress: %u / %u", completed, total);
-        if (total > 0 && completed < total) {
-            [_syncProgress setDoubleValue: (completed / (double)total)];
-        } else {
-            [_syncProgress setDoubleValue: 0.0];
+    CouchReplication* repl = object;
+    if ([keyPath isEqualToString: @"completed"]) {
+        if (repl == _pull || repl == _push) {
+            unsigned completed = _pull.completed + _push.completed;
+            unsigned total = _pull.total + _push.total;
+            NSLog(@"SYNC progress: %u / %u", completed, total);
+            if (total > 0 && completed < total) {
+                [_syncProgress setDoubleValue: (completed / (double)total)];
+            } else {
+                [_syncProgress setDoubleValue: 0.0];
+            }
+        }
+    } else if ([keyPath isEqualToString: @"error"]) {
+        if (repl.error) {
+            NSAlert* alert = [NSAlert alertWithMessageText: @"Replication failed"
+                                             defaultButton: nil
+                                           alternateButton: nil
+                                               otherButton: nil
+                                 informativeTextWithFormat: @"Replication with %@ failed.\n\n %@",
+                              repl.remoteURL, repl.error.localizedDescription];
+            [alert beginSheetModalForWindow: _window
+                              modalDelegate: nil didEndSelector: NULL contextInfo: NULL];
+        }
+    } else if ([keyPath isEqualToString: @"running"]) {
+        if (repl != _push && repl != _pull) {
+            // end of a 1-shot replication
+            [self stopObservingReplication: repl];
         }
     }
 }

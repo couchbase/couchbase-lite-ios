@@ -14,6 +14,9 @@
 /** Posted when changesProcessed or changesTotal changes. */
 extern NSString* TDReplicatorProgressChangedNotification;
 
+/** Posted when replicator stops running. */
+extern NSString* TDReplicatorStoppedNotification;
+
 
 /** Abstract base class for push or pull replications. */
 @interface TDReplicator : NSObject
@@ -42,10 +45,17 @@ extern NSString* TDReplicatorProgressChangedNotification;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
 
+/** Starts the replicator.
+    Replicators run asynchronously so nothing will happen until later.
+    A replicator can only be started once; don't reuse it after it stops. */
 - (void) start;
+
+/** Request to stop the replicator.
+    Any pending asynchronous operations will be finished first.
+    TDReplicatorStoppedNotification will be posted when it finally stops. */
 - (void) stop;
 
-/** Has the replicator been started? (Observable) */
+/** Is the replicator active? (Observable) */
 @property (readonly) BOOL running;
 
 /** Is the replicator actively sending/receiving revisions? (Observable) */
@@ -56,8 +66,14 @@ extern NSString* TDReplicatorProgressChangedNotification;
     Not all errors are fatal; if .running is still true, the replicator will retry. */
 @property (retain) NSError* error;
 
+/** A unique-per-process string identifying this replicator instance. */
 @property (readonly) NSString* sessionID;
+
+/** Number of changes (docs or other metadata) transferred so far. */
 @property (readonly, nonatomic) NSUInteger changesProcessed;
+
+/** Approximate total number of changes to transfer.
+    This is only an estimate and its value will change during replication. It starts at zero and returns to zero when replication stops. */
 @property (readonly, nonatomic) NSUInteger changesTotal;
 
 @end

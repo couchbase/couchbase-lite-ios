@@ -97,7 +97,7 @@
     return [NSString stringWithFormat: @"%@[%@]", [self class], self.databaseName];
 }
 
-- (void)dealloc {
+- (void) dealloc {
     [self stop];
     [_filterName release];
     [_filterParameters release];
@@ -112,6 +112,11 @@
         return _client.authCredential;
     else
         return nil;
+}
+
+- (void) setUpstreamError: (NSString*)message {
+    Warn(@"%@: Server error: %@", self, message);
+    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: 502 userInfo: nil];
 }
 
 - (BOOL) start {
@@ -140,12 +145,15 @@
     return YES;
 }
 
-- (void) receivedChunk: (NSData*)chunk {
-    if (chunk.length <= 1)
-        return;
-    id change = [NSJSONSerialization JSONObjectWithData: chunk options: 0 error: nil];
-    if (![self receivedChange: change])
-        Warn(@"Received unparseable change line from server: %@", [chunk my_UTF8ToString]);
+- (BOOL) receivedChunk: (NSData*)chunk {
+    if (chunk.length > 1) {
+        id change = [NSJSONSerialization JSONObjectWithData: chunk options: 0 error: nil];
+        if (![self receivedChange: change]) {
+            Warn(@"Received unparseable change line from server: %@", [chunk my_UTF8ToString]);
+            return NO;
+        }
+    }
+    return YES;
 }
 
 - (BOOL) receivedPollResponse: (NSData*)body {

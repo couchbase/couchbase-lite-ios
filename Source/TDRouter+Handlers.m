@@ -158,17 +158,30 @@
                 source = target;
                 target = temp;
             }
-            NSUInteger processed = repl.changesProcessed;
-            NSUInteger total = repl.changesTotal;
-            NSString* status = $sprintf(@"Processed %u / %u changes",
-                                        (unsigned)processed, (unsigned)total);
-            long progress = (total > 0) ? lroundf(100*(processed / (float)total)) : 0;
+            NSString* status;
+            id progress = nil;
+            if (repl.running) {
+                NSUInteger processed = repl.changesProcessed;
+                NSUInteger total = repl.changesTotal;
+                status = $sprintf(@"Processed %u / %u changes",
+                                  (unsigned)processed, (unsigned)total);
+                progress = (total>0) ? $object(lroundf(100*(processed / (float)total))) : nil;
+                
+            } else {
+                status = @"Stopped";
+            }
+            NSArray* error = nil;
+            NSError* errorObj = repl.error;
+            if (errorObj)
+                error = $array($object(errorObj.code), errorObj.localizedDescription);
+
             [activity addObject: $dict({@"type", @"Replication"},
                                        {@"task", repl.sessionID},
                                        {@"source", source},
                                        {@"target", target},
                                        {@"status", status},
-                                       {@"progress", $object(progress)})];
+                                       {@"progress", progress},
+                                       {@"error", error})];
         }
     }
     _response.body = [[[TDBody alloc] initWithArray: activity] autorelease];

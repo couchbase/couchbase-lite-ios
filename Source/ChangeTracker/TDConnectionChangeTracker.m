@@ -120,6 +120,8 @@
         NSData* input = [_inputBuffer retain];
         LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
         BOOL responseOK = [self receivedPollResponse: input];
+        if (!responseOK)
+            [self setUpstreamError: @"Unparseable server response"];
         [input release];
         
         [self clearConnection];

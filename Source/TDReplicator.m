@@ -28,6 +28,7 @@
 
 
 NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChanged";
+NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 @interface TDReplicator ()
@@ -147,6 +148,7 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
 - (void) start {
     if (_running)
         return;
+    Assert(_db, @"Can't restart an already stopped TDReplicator");
     static int sLastSessionID = 0;
     _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
     LogTo(Sync, @"%@ STARTING ...", self);
@@ -177,7 +179,10 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
     LogTo(Sync, @"%@ STOPPED", self);
     self.running = NO;
     self.changesProcessed = self.changesTotal = 0;
-    [_db replicatorDidStop: self];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName: TDReplicatorStoppedNotification object: self];
+    [self saveLastSequence];
+    _db = nil;  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
 
@@ -298,7 +303,9 @@ NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChange
                       LogTo(Sync, @"%@: Unable to save remote checkpoint: %@", self, error);
                       // TODO: If error is 401 or 403, and this is a pull, remember that remote is read-only and don't attempt to read its checkpoint next time.
                   } else {
-                      [body setObject: [response objectForKey: @"rev"] forKey: @"_rev"];
+                      id rev = [response objectForKey: @"rev"];
+                      if (rev)
+                          [body setObject: rev forKey: @"_rev"];
                       self.remoteCheckpoint = body;
                   }
               }

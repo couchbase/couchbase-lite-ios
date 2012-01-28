@@ -66,6 +66,7 @@
 
 
 - (void) respondWithResult: (id)result error: (NSError*)error {
+    Assert(result || error);
     LogTo(RemoteRequest, @"%@: Calling completion block...", self);
     _onCompletion(result, error);
 }
@@ -95,12 +96,14 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     id result = [NSJSONSerialization JSONObjectWithData: _inputBuffer options: 0 error:nil];
+    NSError* error = nil;
     if (!result) {
         Warn(@"%@: %@ %@ returned unparseable data '%@'",
              self, _request.HTTPMethod, _request.URL, [_inputBuffer my_UTF8ToString]);
+        error = TDHTTPError(502, _request.URL);
     }
     [self clearConnection];
-    [self respondWithResult: result error: nil];
+    [self respondWithResult: result error: error];
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection

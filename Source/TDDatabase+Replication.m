@@ -21,6 +21,9 @@
 #import "FMDatabaseAdditions.h"
 
 
+#define kActiveReplicatorCleanupDelay 10.0
+
+
 @implementation TDDatabase (Replication)
 
 
@@ -32,7 +35,7 @@
                                            push: (BOOL)push {
     TDReplicator* repl;
     for (repl in _activeReplicators) {
-        if ($equal(repl.remote, remote) && repl.isPush == push)
+        if ($equal(repl.remote, remote) && repl.isPush == push && repl.running)
             return repl;
     }
     return nil;
@@ -50,16 +53,30 @@
                                  continuous: continuous];
     if (!repl)
         return nil;
-    if (!_activeReplicators)
+    if (!_activeReplicators) {
         _activeReplicators = [[NSMutableArray alloc] init];
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector: @selector(replicatorDidStop:)
+                                                     name: TDReplicatorStoppedNotification
+                                                   object: nil];
+    }
     [_activeReplicators addObject: repl];
     [repl release];
     return repl;
 }
 
-- (void) replicatorDidStop: (TDReplicator*)repl {
-    [repl databaseClosing];     // get it to detach from me
+
+- (void) _removeReplicator: (TDReplicator*)repl {
     [_activeReplicators removeObjectIdenticalTo: repl];
+}
+
+- (void) replicatorDidStop: (NSNotification*)n {
+    TDReplicator* repl = n.object;
+    if (repl.error)     // Leave it around a while so clients can see the error
+        [self performSelector: @selector(_removeReplicator:) withObject: repl
+                   afterDelay: kActiveReplicatorCleanupDelay];
+    else
+        [self _removeReplicator: repl];
 }
 
 

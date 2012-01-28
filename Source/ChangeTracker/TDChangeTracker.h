@@ -67,7 +67,8 @@ typedef enum TDChangeTrackerMode {
 @property (readonly) NSURLCredential* authCredential;
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly) NSString* changesFeedPath;
-- (void) receivedChunk: (NSData*)chunk;
+- (void) setUpstreamError: (NSString*)message;
+- (BOOL) receivedChunk: (NSData*)chunk;
 - (BOOL) receivedPollResponse: (NSData*)body;
 - (void) stopped; // override this
 

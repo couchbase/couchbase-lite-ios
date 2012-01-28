@@ -51,7 +51,6 @@
 - (BOOL) setLastSequence: (NSString*)lastSequence
            withRemoteURL: (NSURL*)url
                     push: (BOOL)push;
-- (void) replicatorDidStop: (TDReplicator*)repl;
 + (NSString*) joinQuotedStrings: (NSArray*)strings;
 @end
 
