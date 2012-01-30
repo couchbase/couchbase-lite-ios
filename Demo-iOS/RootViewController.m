@@ -293,10 +293,9 @@
     
     [self forgetSync];
     if (newRemoteURL) {
-        _pull = [self.database pullFromDatabaseAtURL: newRemoteURL
-                                              options: kCouchReplicationContinuous];
-        _push = [self.database pushToDatabaseAtURL: newRemoteURL
-                                            options: kCouchReplicationContinuous];
+        _pull = [self.database pullFromDatabaseAtURL: newRemoteURL];
+        _push = [self.database pushToDatabaseAtURL: newRemoteURL];
+        _pull.continuous = _push.continuous = YES;
 
         [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
         [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
