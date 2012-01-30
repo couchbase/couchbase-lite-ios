@@ -247,11 +247,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 - (void) fetchRemoteCheckpointDoc {
     _lastSequenceChanged = NO;
     NSString* localLastSequence = [_db lastSequenceWithRemoteURL: _remote push: self.isPush];
-    if (!localLastSequence) {
-        [self maybeCreateRemoteDB];
-        [self beginReplicating];
-        return;
-    }
     
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"GET"
@@ -300,7 +295,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                       body: body
               onCompletion: ^(id response, NSError* error) {
                   if (error) {
-                      LogTo(Sync, @"%@: Unable to save remote checkpoint: %@", self, error);
+                      Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
                       // TODO: If error is 401 or 403, and this is a pull, remember that remote is read-only and don't attempt to read its checkpoint next time.
                   } else {
                       id rev = [response objectForKey: @"rev"];
