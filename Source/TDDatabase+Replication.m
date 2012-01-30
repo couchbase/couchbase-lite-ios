@@ -16,6 +16,7 @@
 #import "TDDatabase+Replication.h"
 #import "TDInternal.h"
 #import "TDPuller.h"
+#import "MYBlockUtils.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -66,17 +67,13 @@
 }
 
 
-- (void) _removeReplicator: (TDReplicator*)repl {
-    [_activeReplicators removeObjectIdenticalTo: repl];
-}
-
 - (void) replicatorDidStop: (NSNotification*)n {
     TDReplicator* repl = n.object;
     if (repl.error)     // Leave it around a while so clients can see the error
-        [self performSelector: @selector(_removeReplicator:) withObject: repl
-                   afterDelay: kActiveReplicatorCleanupDelay];
+        MYAfterDelay(kActiveReplicatorCleanupDelay,
+                     ^{[_activeReplicators removeObjectIdenticalTo: repl];});
     else
-        [self _removeReplicator: repl];
+        [_activeReplicators removeObjectIdenticalTo: repl];
 }
 
 

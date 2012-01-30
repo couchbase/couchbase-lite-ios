@@ -22,7 +22,7 @@
 @implementation TDBase64
 
 
-static const uint8_t kEncodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const uint8_t kEncodingTable[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 static int8_t kDecodingTable[256];
 
 + (void) initialize {

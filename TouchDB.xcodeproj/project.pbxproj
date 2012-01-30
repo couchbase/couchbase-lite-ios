@@ -140,6 +140,10 @@
 		27990703149D2576003D4338 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
 		27990704149E58B0003D4338 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
 		279CE39014D1EDA0009F3FA6 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
+		279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */; };
+		279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
+		279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
+		279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
 		279EB2CB14913BBE00E74185 /* TDRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* TDRouter_Tests.m */; };
 		279EB2CE149140DE00E74185 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* TDView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		279EB2CF149140DE00E74185 /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* TDView.m */; };
@@ -438,6 +442,8 @@
 		279906EC149ABFC1003D4338 /* TDBatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBatcher.h; sourceTree = "<group>"; };
 		279906ED149ABFC2003D4338 /* TDBatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBatcher.m; sourceTree = "<group>"; };
 		27990702149D2576003D4338 /* CouchCocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchCocoa.framework; path = Frameworks/CouchCocoa.framework; sourceTree = "<group>"; };
+		279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYBlockUtils.h; sourceTree = "<group>"; };
+		279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYBlockUtils.m; sourceTree = "<group>"; };
 		279EB2CC149140DE00E74185 /* TDView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDView.h; sourceTree = "<group>"; };
 		279EB2CD149140DE00E74185 /* TDView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDView.m; sourceTree = "<group>"; };
 		279EB2D01491442500E74185 /* TDInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDInternal.h; sourceTree = "<group>"; };
@@ -1040,6 +1046,8 @@
 				27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */,
 				27F0749D11CD5B4F00E9A2AB /* Test.h */,
 				27F0749E11CD5B4F00E9A2AB /* Test.m */,
+				279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */,
+				279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */,
 			);
 			path = MYUtilities;
 			sourceTree = "<group>";
@@ -1100,6 +1108,7 @@
 				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
 				2713789314BCF6450058C5CD /* TDMultipartWriter.h in Headers */,
 				27A073EC14C0BB6200F52FE7 /* TDMisc.h in Headers */,
+				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1610,6 +1619,7 @@
 				2713789414BCF6450058C5CD /* TDMultipartWriter.m in Sources */,
 				2773ADC814BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* TDMisc.m in Sources */,
+				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1701,6 +1711,7 @@
 				2713789514BCF6450058C5CD /* TDMultipartWriter.m in Sources */,
 				2773ADC914BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */,
 				27A073EE14C0BB6200F52FE7 /* TDMisc.m in Sources */,
+				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1740,6 +1751,7 @@
 				27C706D31488679500F0F099 /* DemoAppController.m in Sources */,
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
+				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1931,7 +1943,6 @@
 				EXPORTED_SYMBOLS_FILE = "";
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
@@ -1953,7 +1964,6 @@
 				EXPORTED_SYMBOLS_FILE = Source/TouchDB.exp;
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Source/TouchDBPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
@@ -2392,7 +2402,6 @@
 					"\"$(SRCROOT)/Demo-Mac/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
@@ -2416,7 +2425,6 @@
 					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
 					"\"$(SRCROOT)/Demo-Mac/Frameworks\"",
 				);
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

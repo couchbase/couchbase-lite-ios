@@ -16,6 +16,7 @@
 #import "DemoAppController.h"
 #import "DemoQuery.h"
 #import "Test.h"
+#import "MYBlockUtils.h"
 #import <CouchCocoa/CouchCocoa.h>
 #import <CouchCocoa/CouchTouchDBServer.h>
 #import <CouchCocoa/CouchDesignDocument_Embedded.h>
@@ -311,12 +312,6 @@ int main (int argc, const char * argv[]) {
 #pragma mark HIGHLIGHTING NEW ITEMS:
 
 
-- (void) updateTableGlows {
-    _glowing = NO;
-    [_table setNeedsDisplay: YES];
-}
-
-
 - (void)tableView:(NSTableView *)tableView
   willDisplayCell:(id)cell
    forTableColumn:(NSTableColumn *)tableColumn
@@ -339,7 +334,10 @@ int main (int argc, const char * argv[]) {
         
         if (!_glowing) {
             _glowing = YES;
-            [self performSelector: @selector(updateTableGlows) withObject: nil afterDelay: 0.1];
+            MYAfterDelay(0.1, ^{
+                _glowing = NO;
+                [_table setNeedsDisplay: YES];
+            });
         }
     }
     
