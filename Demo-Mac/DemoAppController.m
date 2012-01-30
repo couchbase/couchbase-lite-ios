@@ -199,11 +199,11 @@ int main (int argc, const char * argv[]) {
     } else {
         if (_syncPushCheckbox.state) {
             NSLog(@"**** Pushing to <%@> ...", url);
-            [self observeReplication: [_database pushToDatabaseAtURL: url options: 0]];
+            [self observeReplication: [_database pushToDatabaseAtURL: url]];
         }
         if (_syncPullCheckbox.state) {
             NSLog(@"**** Pulling from <%@> ...", url);
-            [self observeReplication: [_database pullFromDatabaseAtURL: url options: 0]];
+            [self observeReplication: [_database pullFromDatabaseAtURL: url]];
         }
     }
 }
@@ -221,12 +221,12 @@ int main (int argc, const char * argv[]) {
     [self stopReplication: &_pull];
     [self stopReplication: &_push];
     if (otherDbURL) {
-        _pull = [[_database pullFromDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
-                    retain];
+        _pull = [[_database pullFromDatabaseAtURL: otherDbURL] retain];
+        _pull.continuous = YES;
         [self observeReplication: _pull];
 
-        _push = [[_database pushToDatabaseAtURL: otherDbURL options: kCouchReplicationContinuous]
-                    retain];
+        _push = [[_database pushToDatabaseAtURL: otherDbURL] retain];
+        _push.continuous = YES;
         [self observeReplication: _push];
     }
 }
