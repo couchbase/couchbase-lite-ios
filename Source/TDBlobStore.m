@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "TDBlobStore.h"
+#import "TDMisc.h"
 
 #define kFileExtension "blob"
 
@@ -59,6 +60,9 @@
 }
 
 
+@synthesize path=_path;
+
+
 - (NSString*) pathForKey: (TDBlobKey)key {
     char out[2*sizeof(key.bytes) + 1 + strlen(kFileExtension) + 1];
     char *dst = &out[0];
@@ -98,7 +102,7 @@
 }
 
 - (BOOL) storeBlob: (NSData*)blob
-           creatingKey: (TDBlobKey*)outKey
+       creatingKey: (TDBlobKey*)outKey
 {
     *outKey = [[self class] keyForBlob: blob];
     NSString* path = [self pathForKey: *outKey];
@@ -106,11 +110,12 @@
         return YES;
     NSError* error;
     if (![blob writeToFile: path options: NSDataWritingAtomic error: &error]) {
-        Warn(@"TDContentStore: Couldn't write to %@: %@", path, error);
+        Warn(@"TDBlobStore: Couldn't write to %@: %@", path, error);
         return NO;
     }
     return YES;
 }
+
 
 - (NSArray*) allKeys {
     NSArray* blob = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _path
@@ -173,6 +178,101 @@
         }
     }
     return numDeleted;
+}
+
+
+@end
+
+
+
+
+@implementation TDBlobStoreWriter
+
+@synthesize length=_length, blobKey=_blobKey, MD5Digest=_MD5Digest;
+
+- (id) initWithStore: (TDBlobStore*)store {
+    self = [super init];
+    if (self) {
+        _store = store;
+        CC_SHA1_Init(&_shaCtx);
+        CC_MD5_Init(&_md5Ctx);
+        
+        // Find a temporary directory suitable for files that will be moved into the store:
+        NSURL* storeURL = [NSURL fileURLWithPath: store.path];
+        NSURL* tempDirURL = [[NSFileManager defaultManager] 
+                                     URLForDirectory: NSItemReplacementDirectory
+                                            inDomain: NSUserDomainMask
+                                   appropriateForURL: storeURL
+                                              create: YES error: nil];
+        if (!tempDirURL) {
+            [self release];
+            return nil;
+        }
+        
+        // Open a temporary file in the temporary directory: 
+        NSString* filename = [TDCreateUUID() stringByAppendingPathExtension: @"blobtmp"];
+        _tempPath = [[tempDirURL.path stringByAppendingPathComponent: filename] copy];
+        [[NSFileManager defaultManager] createFileAtPath: _tempPath contents: nil attributes: nil];
+        _out = [[NSFileHandle fileHandleForWritingAtPath: _tempPath] retain];
+        if (!_out) {
+            [self release];
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (void) appendData: (NSData*)data {
+    [_out writeData: data];
+    NSUInteger dataLen = data.length;
+    _length += dataLen;
+    CC_SHA1_Update(&_shaCtx, data.bytes, (CC_LONG)dataLen);
+    CC_MD5_Update(&_md5Ctx, data.bytes, (CC_LONG)dataLen);
+}
+
+- (void) closeFile {
+    [_out closeFile];
+    [_out release];
+    _out = nil;    
+}
+
+- (void) finish {
+    Assert(_out, @"Already finished");
+    [self closeFile];
+    CC_SHA1_Final(_blobKey.bytes, &_shaCtx);
+    CC_MD5_Final(_MD5Digest.bytes, &_md5Ctx);
+}
+
+- (BOOL) install {
+    if (!_tempPath)
+        return YES;  // already installed
+    Assert(!_out, @"Not finished");
+    // Move temp file to correct location in blob store:
+    NSString* dstPath = [_store pathForKey: _blobKey];
+    if ([[NSFileManager defaultManager] moveItemAtPath: _tempPath
+                                                toPath: dstPath error:nil]) {
+        [_tempPath release];
+        _tempPath = nil;
+    } else {
+        // If the move fails, assume it means a file with the same name already exists; in that
+        // case it must have the identical contents, so we're still OK.
+        [self cancel];
+    }
+    return YES;
+}
+
+- (void) cancel {
+    [self closeFile];
+    if (_tempPath) {
+        [[NSFileManager defaultManager] removeItemAtPath: _tempPath error: nil];
+        [_tempPath release];
+        _tempPath = nil;
+    }
+}
+
+- (void) dealloc {
+    [self cancel];      // Close file, and delete it if it hasn't been installed yet
+    [super dealloc];
 }
 
 

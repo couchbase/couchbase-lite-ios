@@ -13,6 +13,8 @@
 #import "TDRemoteRequest.h"
 
 
+extern NSString* const kTDAttachmentBlobKeyProperty;
+
 @interface TDDatabase ()
 @property (readwrite, copy) NSString* name;  // make it settable
 @property (readonly) FMDatabase* fmdb;
@@ -35,11 +37,14 @@
 @end
 
 @interface TDDatabase (Attachments_Internal)
-- (TDStatus) insertAttachment: (NSData*)contents
-                  forSequence: (SequenceNumber)sequence
-                        named: (NSString*)filename
-                         type: (NSString*)contentType
-                       revpos: (unsigned)revpos;
+- (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
+- (NSData*) keyForAttachment: (NSData*)contents;
+- (TDStatus) insertAttachmentWithKey: (NSData*)keyData
+                         forSequence: (SequenceNumber)sequence
+                               named: (NSString*)name
+                                type: (NSString*)contentType
+                              length: (UInt64)length
+                              revpos: (unsigned)revpos;
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence
                       toSequence: (SequenceNumber)toSequence;

@@ -90,10 +90,18 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-LogRemoteRequest YES"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_All"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "Test_TDRemoteMultipartRequest"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "Test_Only"
             isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -15,6 +15,8 @@
 
 #import "TDRemoteRequest.h"
 #import "TDMisc.h"
+#import "TDMultipartReader.h"
+#import "TDBlobStore.h"
 
 
 @implementation TDRemoteRequest
@@ -25,16 +27,12 @@
 {
     self = [super init];
     if (self) {
-        LogTo(RemoteRequest, @"%@: %@ .%@", self, method, url);
+        LogTo(RemoteRequest, @"%@: Starting...", self);
         _onCompletion = [onCompletion copy];
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
         _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-        [_request setValue: @"application/json" forHTTPHeaderField: @"Accept"];
-        if (body) {
-            _request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
-            [_request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
-        }
+        [self setupRequest: _request withBody: body];
         
         _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
         [_connection start];
@@ -43,13 +41,15 @@
 }
 
 
+- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
+}
+
+
 - (void) clearConnection {
     [_request release];
     _request = nil;
     [_connection autorelease];
     _connection = nil;
-    [_inputBuffer release];
-    _inputBuffer = nil;
 }
 
 
@@ -72,20 +72,21 @@
 }
 
 
+- (void) cancelWithStatus: (int)status {
+    [_connection cancel];
+    [self connection: _connection didFailWithError: TDHTTPError(status, _request.URL)];
+}
+
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     int status = (int) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, status);
-    if (status >= 300) {
-        [_connection cancel];
-        [self connection: connection didFailWithError: TDHTTPError(status, _request.URL)];
-    }
+    if (status >= 300) 
+        [self cancelWithStatus: status];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     LogTo(RemoteRequest, @"%@: Got %lu bytes", self, (unsigned long)data.length);
-    if (!_inputBuffer)
-        _inputBuffer = [[NSMutableData alloc] initWithCapacity: MAX(data.length, 8192u)];
-    [_inputBuffer appendData: data];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
@@ -95,21 +96,54 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    id result = [NSJSONSerialization JSONObjectWithData: _inputBuffer options: 0 error:nil];
-    NSError* error = nil;
-    if (!result) {
-        Warn(@"%@: %@ %@ returned unparseable data '%@'",
-             self, _request.HTTPMethod, _request.URL, [_inputBuffer my_UTF8ToString]);
-        error = TDHTTPError(502, _request.URL);
-    }
     [self clearConnection];
-    [self respondWithResult: result error: error];
+    [self respondWithResult: nil error: nil];
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection
                   willCacheResponse:(NSCachedURLResponse *)cachedResponse
 {
     return nil;
+}
+
+@end
+
+
+
+
+@implementation TDRemoteJSONRequest
+
+- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
+    [request setValue: @"application/json" forHTTPHeaderField: @"Accept"];
+    if (body) {
+        request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
+        [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+    }
+}
+
+- (void) clearConnection {
+    [_jsonBuffer release];
+    _jsonBuffer = nil;
+    [super clearConnection];
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+    [super connection: connection didReceiveData: data];
+    if (!_jsonBuffer)
+        _jsonBuffer = [[NSMutableData alloc] initWithCapacity: MAX(data.length, 8192u)];
+    [_jsonBuffer appendData: data];
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    id result = [NSJSONSerialization JSONObjectWithData: _jsonBuffer options: 0 error:nil];
+    NSError* error = nil;
+    if (!result) {
+        Warn(@"%@: %@ %@ returned unparseable data '%@'",
+             self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
+        error = TDHTTPError(502, _request.URL);
+    }
+    [self clearConnection];
+    [self respondWithResult: result error: error];
 }
 
 @end

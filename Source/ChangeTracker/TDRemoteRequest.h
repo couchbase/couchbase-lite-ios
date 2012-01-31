@@ -14,14 +14,27 @@ typedef void (^TDRemoteRequestCompletionBlock)(id, NSError*);
 
 @interface TDRemoteRequest : NSObject <NSURLConnectionDelegate>
 {
-    @private
+    @protected
     NSMutableURLRequest* _request;
     TDRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
-    NSMutableData* _inputBuffer;
 }
 
 - (id) initWithMethod: (NSString*)method URL: (NSURL*)url body: (id)body
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 
+// protected:
+- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;
+- (void) clearConnection;
+- (void) cancelWithStatus: (int)status;
+- (void) respondWithResult: (id)result error: (NSError*)error;
+
+@end
+
+
+@interface TDRemoteJSONRequest : TDRemoteRequest
+{
+    @private
+    NSMutableData* _jsonBuffer;
+}
 @end

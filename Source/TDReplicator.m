@@ -219,7 +219,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSURL* url = [NSURL URLWithString: urlStr];
-    TDRemoteRequest* request = [[TDRemoteRequest alloc] initWithMethod: method
+    TDRemoteJSONRequest* request = [[TDRemoteJSONRequest alloc] initWithMethod: method
                                                                    URL: url
                                                                   body: body
                                                           onCompletion: onCompletion];

@@ -7,9 +7,13 @@
 //
 
 #import "TDDatabase.h"
+@class TDBlobStoreWriter;
 
 
 @interface TDDatabase (Attachments)
+
+/** Creates a TDBlobStoreWriter object that can be used to stream an attachment to the store. */
+- (TDBlobStoreWriter*) attachmentWriter;
 
 /** Given a newly-added revision, adds the necessary attachment rows to the database and stores inline attachments into the blob store. */
 - (TDStatus) processAttachmentsForRevision: (TDRevision*)rev

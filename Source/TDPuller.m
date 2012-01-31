@@ -19,6 +19,7 @@
 #import "TDRevision.h"
 #import "TDChangeTracker.h"
 #import "TDBatcher.h"
+#import "TDMultipartDownloader.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 #import "ExceptionUtils.h"
@@ -31,7 +32,7 @@
 @interface TDPuller () <TDChangeTrackerClient>
 - (void) pullRemoteRevisions;
 - (void) pullRemoteRevision: (TDRevision*)rev;
-- (void) insertRevisions: (NSArray*)revs;
+- (void) insertDownloads: (NSArray*)downloads;
 - (NSArray*) knownCurrentRevIDsOf: (TDRevision*)rev;
 @end
 
@@ -48,7 +49,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_changeTracker stop];
     [_changeTracker release];
     [_revsToPull release];
-    [_revsToInsert release];
+    [_downloadsToInsert release];
     [_filterName release];
     [_filterParameters release];
     [super dealloc];
@@ -57,10 +58,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 - (void) beginReplicating {
     Assert(!_changeTracker);
-    if (!_revsToInsert) {
-        _revsToInsert = [[TDBatcher alloc] initWithCapacity: 100 delay: 0.25
-                                                  processor: ^(NSArray *revs) {
-                                                      [self insertRevisions: revs];
+    if (!_downloadsToInsert) {
+        _downloadsToInsert = [[TDBatcher alloc] initWithCapacity: 100 delay: 0.25
+                                                  processor: ^(NSArray *downloads) {
+                                                      [self insertDownloads: downloads];
                                                   }];
     }
     
@@ -195,47 +196,44 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     
-    [self sendAsyncRequest: @"GET" path: path body: nil
-          onCompletion: ^(NSDictionary *properties, NSError *error) {
-              // OK, now we've got the response revision:
-              if (properties) {
-                  NSArray* history = [TDDatabase parseCouchDBRevisionHistory: properties];
-                  if (history) {
-                      rev.properties = properties;
-                      // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                      [_revsToInsert queueObject: $array(rev, history)];
-                      [self asyncTaskStarted];
-                  } else {
-                      Warn(@"%@: Missing revision history in response from %@", path, self);
-                      self.changesProcessed++;
-                  }
-              } else {
-                  if (error)
-                      self.error = error;
-                  self.changesProcessed++;
-              }
-              
-              // Note that we've finished this task; then start another one if there
-              // are still revisions waiting to be pulled:
-              [self asyncTasksFinished: 1];
-              --_httpConnectionCount;
-              [self pullRemoteRevisions];
-          }
-     ];
+    LogTo(SyncVerbose, @"%@: GET .%@", self, path);
+    NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
+    [[[TDMultipartDownloader alloc] initWithURL: [NSURL URLWithString: urlStr]
+                                       database: _db
+                                       revision: rev
+                                   onCompletion:
+        ^(TDMultipartDownloader* download, NSError *error) {
+            // OK, now we've got the response revision:
+            if (error) {
+                self.error = error;
+                self.changesProcessed++;
+            } else {
+                rev.properties = download.document;
+                // Add to batcher ... eventually it will be fed to -insertRevisions:.
+                [_downloadsToInsert queueObject: download];
+                [self asyncTaskStarted];
+            }
+            
+            // Note that we've finished this task:
+            [self asyncTasksFinished: 1];
+            --_httpConnectionCount;
+            // Start another task if there are still revisions waiting to be pulled:
+            [self pullRemoteRevisions];
+        }
+     ] autorelease];
 }
 
 
-// This will be called when _revsToInsert fills up:
-- (void) insertRevisions:(NSArray *)revs {
-    LogTo(Sync, @"%@ inserting %u revisions...", self, revs.count);
-    LogTo(SyncVerbose, @"%@ inserting %@", self, revs);
+// This will be called when _downloadsToInsert fills up:
+- (void) insertDownloads:(NSArray *)downloads {
+    LogTo(Sync, @"%@ inserting %u revisions...", self, downloads.count);
+    LogTo(SyncVerbose, @"%@ inserting %@", self, downloads);
     
     /* Updating self.lastSequence is tricky. It needs to be the received sequence ID of the revision for which we've successfully received and inserted (or rejected) it and all previous received revisions. That way, next time we can start tracking remote changes from that sequence ID and know we haven't missed anything. */
     /* FIX: The current code below doesn't quite achieve that: it tracks the latest sequence ID we've successfully processed, but doesn't handle failures correctly across multiple calls to -insertRevisions. I think correct behavior will require keeping an NSMutableIndexSet to track the fake-sequences of all processed revisions; then we can find the first missing index in that set and not advance lastSequence past the revision with that fake-sequence. */
     
-    revs = [revs sortedArrayUsingComparator: ^(id array1, id array2) {
-        return TDSequenceCompare( [[array1 objectAtIndex: 0] sequence],
-                                 [[array2 objectAtIndex: 0] sequence]);
+    downloads = [downloads sortedArrayUsingComparator: ^(id dl1, id dl2) {
+        return TDSequenceCompare( [[dl1 revision] sequence], [[dl2 revision] sequence]);
     }];
     BOOL allGood = YES;
     TDPulledRevision* lastGoodRev = nil;
@@ -243,10 +241,17 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_db beginTransaction];
     BOOL success = NO;
     @try{
-        for (NSArray* revAndHistory in revs) {
+        for (TDMultipartDownloader* download in downloads) {
             @autoreleasepool {
-                TDPulledRevision* rev = [revAndHistory objectAtIndex: 0];
-                NSArray* history = [revAndHistory objectAtIndex: 1];
+                TDPulledRevision* rev = (TDPulledRevision*)download.revision;
+                NSArray* history = [TDDatabase parseCouchDBRevisionHistory: rev.properties];
+                if (!history) {
+                    Warn(@"%@: Missing revision history in response for %@", self, rev);
+                    self.error = TDHTTPError(502, nil);
+                    allGood = NO;
+                    continue;
+                }
+
                 // Insert the revision:
                 int status = [_db forceInsert: rev revisionHistory: history source: _remote];
                 if (status >= 300) {
@@ -271,7 +276,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             self.lastSequence = lastGoodRev.remoteSequenceID;
         }
         
-        LogTo(Sync, @"%@ finished inserting %u revisions", self, revs.count);
+        LogTo(Sync, @"%@ finished inserting %u revisions", self, downloads.count);
         success = YES;
     } @catch (NSException *x) {
         MYReportException(x, @"%@: Exception inserting revisions", self);
@@ -279,8 +284,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         [_db endTransaction: success];
     }
     
-    [self asyncTasksFinished: revs.count];
-    self.changesProcessed += revs.count;
+    [self asyncTasksFinished: downloads.count];
+    self.changesProcessed += downloads.count;
 }
 
 

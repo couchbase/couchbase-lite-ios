@@ -307,8 +307,9 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 201);
     
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssertEq([db insertAttachment: attach1 forSequence: rev1.sequence
-                             named: @"attach" type: @"text/plain"
+    CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: attach1]
+                              forSequence: rev1.sequence
+                                    named: @"attach" type: @"text/plain" length: attach1.length
                             revpos: rev1.generation],
               201);
     
@@ -357,8 +358,10 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 201);
     
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssertEq([db insertAttachment: attach2 forSequence: rev3.sequence
-                             named: @"attach" type: @"text/html" revpos: rev2.generation],
+    CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: attach2]
+                              forSequence: rev3.sequence
+                                    named: @"attach" type: @"text/html" length: attach2.length
+                                   revpos: rev2.generation],
               201);
     
     // Check the 2nd revision's attachment:

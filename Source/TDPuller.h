@@ -20,7 +20,7 @@
     unsigned _maxInsertedFakeSequence;
     NSMutableArray* _revsToPull;
     NSUInteger _httpConnectionCount;
-    TDBatcher* _revsToInsert;
+    TDBatcher* _downloadsToInsert;
     NSString* _filterName;
     NSDictionary* _filterParameters;
 }

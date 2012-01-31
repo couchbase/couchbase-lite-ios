@@ -284,6 +284,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     [_validations release];
     [_filters release];
     [_attachments release];
+    [_pendingAttachmentsByDigest release];
     [super dealloc];
 }
 

@@ -29,27 +29,49 @@
 #import "CollectionUtils.h"
 
 
+NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
+
+
 @implementation TDDatabase (Attachments)
 
 
-- (TDStatus) insertAttachment: (NSData*)contents
-                  forSequence: (SequenceNumber)sequence
-                        named: (NSString*)name
-                         type: (NSString*)contentType
-                       revpos: (unsigned)revpos
-{
+- (TDBlobStoreWriter*) attachmentWriter {
+    return [[[TDBlobStoreWriter alloc] initWithStore: _attachments] autorelease];
+}
+
+
+- (void) rememberAttachmentWritersForDigests: (NSDictionary*)blobsByDigests {
+    if (!_pendingAttachmentsByDigest)
+        _pendingAttachmentsByDigest = [[NSMutableDictionary alloc] init];
+    [_pendingAttachmentsByDigest addEntriesFromDictionary: blobsByDigests];
+}
+
+
+- (NSData*) keyForAttachment: (NSData*)contents {
     Assert(contents);
-    Assert(sequence > 0);
-    Assert(name);
     TDBlobKey key;
     if (![_attachments storeBlob: contents creatingKey: &key])
+        return nil;
+    return [NSData dataWithBytes: &key length: sizeof(key)];
+}
+
+
+- (TDStatus) insertAttachmentWithKey: (NSData*)keyData
+                         forSequence: (SequenceNumber)sequence
+                               named: (NSString*)name
+                                type: (NSString*)contentType
+                              length: (UInt64)length
+                              revpos: (unsigned)revpos
+{
+    Assert(sequence > 0);
+    Assert(name);
+    if(!keyData)
         return 500;
-    NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
     if (![_fmdb executeUpdate: @"INSERT INTO attachments "
                                   "(sequence, filename, key, type, length, revpos) "
                                   "VALUES (?, ?, ?, ?, ?, ?)",
                                  $object(sequence), name, keyData, contentType,
-                                 $object(contents.length), $object(revpos)]) {
+                                 $object(length), $object(revpos)]) {
         return 500;
     }
     return 201;
@@ -181,14 +203,38 @@
     for (NSString* name in newAttachments) {
         TDStatus status;
         NSDictionary* newAttach = [newAttachments objectForKey: name];
-        NSString* newContentsBase64 = [newAttach objectForKey: @"data"];
+        NSData* blobKey = nil;
+        UInt64 length;
+        
+        NSString* newContentsBase64 = $castIf(NSString, [newAttach objectForKey: @"data"]);
         if (newContentsBase64) {
-            // New item contains data, so insert it. First decode the data:
-            NSData* newContents = [TDBase64 decode: newContentsBase64];
-            if (!newContents)
+            // If there's inline attachment data, decode and store it:
+            @autoreleasepool {
+                NSData* newContents = [TDBase64 decode: newContentsBase64];
+                if (!newContents)
+                    return 400;
+                length = newContents.length;
+                blobKey = [[self keyForAttachment: newContents] retain];
+            }
+            [blobKey autorelease];
+        } else if ([[newAttach objectForKey: @"follows"] isEqual: $true]) {
+            // "follows" means the uploader provided the attachment in a separate MIME part.
+            // This means it's already been registered in _pendingAttachmentsByDigest;
+            // I just need to look it up by its "digest" property and install it into the store:
+            NSString* digest = $castIf(NSString, [newAttach objectForKey: @"digest"]);
+            if (!digest)
                 return 400;
-            
-            // Now determine the revpos, i.e. generation # this was added in. Usually this is
+            TDBlobStoreWriter *writer = [_pendingAttachmentsByDigest objectForKey: digest];
+            if (![writer install])
+                return 500;
+            TDBlobKey key = writer.blobKey;
+            blobKey = [NSData dataWithBytes: &key length: sizeof(key)];
+            length = $castIf(NSNumber, [newAttach objectForKey: @"length"]).unsignedLongLongValue;
+        }
+        
+        if (blobKey) {
+            // New item contains data, so insert it.
+            // First determine the revpos, i.e. generation # this was added in. Usually this is
             // implicit, but a rev being pulled in replication will have it set already.
             unsigned generation = rev.generation;
             Assert(generation > 0, @"Missing generation in rev %@", rev);
@@ -198,11 +244,12 @@
                 return 400;
 
             // Finally insert the attachment:
-            status = [self insertAttachment: newContents
-                                forSequence: newSequence
-                                      named: name
-                                       type: [newAttach objectForKey: @"content_type"]
-                                     revpos: revpos];
+            status = [self insertAttachmentWithKey: blobKey
+                                       forSequence: newSequence
+                                             named: name
+                                              type: [newAttach objectForKey: @"content_type"]
+                                            length: length
+                                            revpos: revpos];
         } else {
             // It's just a stub, so copy the previous revision's attachment entry:
             //? Should I enforce that the type and digest (if any) match?
@@ -278,9 +325,12 @@
         
         if (body) {
             // If not deleting, add a new attachment entry:
-            *outStatus = [self insertAttachment: body forSequence: newRev.sequence
-                                          named: filename type: contentType
-                                         revpos: newRev.generation];
+            *outStatus = [self insertAttachmentWithKey: [self keyForAttachment: body]
+                                           forSequence: newRev.sequence
+                                                 named: filename
+                                                  type: contentType
+                                                length: body.length
+                                                revpos: newRev.generation];
             if (*outStatus >= 300)
                 return nil;
         }
