@@ -41,6 +41,7 @@
     if (!_createTarget)
         return;
     LogTo(Sync, @"Remote db might not exist; creating it...");
+    [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
         if (error && error.code != 412) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
@@ -51,6 +52,7 @@
             _createTarget = NO;
             [self beginReplicating];
         }
+        [self asyncTasksFinished: 1];
     }];
 }
 
