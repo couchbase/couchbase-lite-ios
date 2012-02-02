@@ -502,7 +502,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         if (!revID)
             revID = [r stringForColumnIndex: 0];
         BOOL deleted = [r boolForColumnIndex: 1];
-        NSData* json = [r dataForColumnIndex: 2];
+        NSData* json = [r dataNoCopyForColumnIndex: 2];
         result = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted] autorelease];
         result.sequence = [r longLongIntForColumnIndex: 3];
         [self expandStoredJSON: json intoRevision: result options: options];
@@ -534,7 +534,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
         status = 200;
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        [self expandStoredJSON: [r dataForColumnIndex: 1] intoRevision: rev options: options];
+        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 1] intoRevision: rev options: options];
     }
     [r close];
     return status;
@@ -732,7 +732,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                         deleted: [r boolForColumnIndex: 4]];
             rev.sequence = [r longLongIntForColumnIndex: 0];
             if (includeDocs) {
-                [self expandStoredJSON: [r dataForColumnIndex: 5]
+                [self expandStoredJSON: [r dataNoCopyForColumnIndex: 5]
                           intoRevision: rev
                                options: options->contentOptions];
             }
@@ -877,7 +877,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             NSDictionary* docContents = nil;
             if (options->includeDocs && !deleted) {
                 // Fill in the document contents:
-                NSData* json = [r dataForColumnIndex: 4];
+                NSData* json = [r dataNoCopyForColumnIndex: 4];
                 SequenceNumber sequence = [r longLongIntForColumnIndex: 5];
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID

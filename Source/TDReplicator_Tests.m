@@ -93,6 +93,8 @@ TestCase(TDPusher) {
     // Push them to the remote:
     id lastSeq = replic8(db, kRemoteDBURLStr, YES, nil);
     CAssertEqual(lastSeq, @"3");
+    
+    [db close];
 }
 
 
@@ -120,6 +122,8 @@ TestCase(TDPuller) {
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"1-"]);
     CAssertEqual([doc.properties objectForKey: @"fnord"], $true);
+
+    [db close];
 }
 
 #endif

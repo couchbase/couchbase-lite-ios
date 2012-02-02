@@ -142,7 +142,7 @@
     }
     NSMutableDictionary* attachments = $mdict();
     do {
-        NSData* keyData = [r dataForColumnIndex: 1];
+        NSData* keyData = [r dataNoCopyForColumnIndex: 1];
         NSString* digestStr = [@"sha1-" stringByAppendingString: [TDBase64 encode: keyData]];
         NSString* dataBase64 = nil;
         if (withContent) {

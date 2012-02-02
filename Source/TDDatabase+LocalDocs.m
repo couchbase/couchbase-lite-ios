@@ -26,7 +26,7 @@
         NSString* gotRevID = [r stringForColumnIndex: 0];
         if (revID && !$equal(revID, gotRevID))
             return nil;
-        NSData* json = [r dataForColumnIndex: 1];
+        NSData* json = [r dataNoCopyForColumnIndex: 1];
         NSMutableDictionary* properties = [NSJSONSerialization JSONObjectWithData: json
                                                             options:NSJSONReadingMutableContainers
                                                               error: nil];

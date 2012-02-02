@@ -244,7 +244,7 @@ static id fromJSON( NSData* json ) {
                     if ([docID hasPrefix: @"_design/"])     // design docs don't get indexed!
                         continue;
                     NSString* revID = [r stringForColumnIndex: 3];
-                    NSData* json = [r dataForColumnIndex: 4];
+                    NSData* json = [r dataNoCopyForColumnIndex: 4];
                     NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                          docID: docID revID:revID
                                                                       sequence: sequence
@@ -407,8 +407,8 @@ static id groupKey(id key, unsigned groupLevel) {
     
     while ([r next]) {
         @autoreleasepool {
-            id key = fromJSON([r dataForColumnIndex: 0]);
-            id value = fromJSON([r dataForColumnIndex: 1]);
+            id key = fromJSON([r dataNoCopyForColumnIndex: 0]);
+            id value = fromJSON([r dataNoCopyForColumnIndex: 1]);
             Assert(key);
             if (reduce) {
                 // Reduced or grouped query:
