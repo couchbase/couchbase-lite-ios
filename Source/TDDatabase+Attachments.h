@@ -10,6 +10,13 @@
 @class TDBlobStoreWriter;
 
 
+/** Types of encoding/compression of stored attachments. */
+typedef enum {
+    kTDAttachmentEncodingNone,
+    kTDAttachmentEncodingGZIP
+} TDAttachmentEncoding;
+
+
 @interface TDDatabase (Attachments)
 
 /** Creates a TDBlobStoreWriter object that can be used to stream an attachment to the store. */
@@ -23,10 +30,12 @@
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
                                    withContent: (BOOL)withContent;
 
-/** Returns the content and MIME type of an attachment */
+/** Returns the content and metadata of an attachment.
+    If you pass NULL for the 'outEncoding' parameter, it signifies that you don't care about encodings and just want the 'real' data, so it'll be decoded for you. */
 - (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
                                named: (NSString*)filename
                                 type: (NSString**)outType
+                            encoding: (TDAttachmentEncoding*)outEncoding
                               status: (TDStatus*)outStatus;
 
 /** Deletes obsolete attachments from the database and blob store. */
@@ -37,6 +46,7 @@
 - (TDRevision*) updateAttachment: (NSString*)filename
                             body: (NSData*)body
                             type: (NSString*)contentType
+                        encoding: (TDAttachmentEncoding)encoding
                          ofDocID: (NSString*)docID
                            revID: (NSString*)oldRevID
                           status: (TDStatus*)outStatus;

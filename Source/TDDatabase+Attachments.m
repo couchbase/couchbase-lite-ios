@@ -23,10 +23,11 @@
 #import "TDBody.h"
 #import "TDInternal.h"
 
+#import "CollectionUtils.h"
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
-#import "CollectionUtils.h"
+#import "GTMNSData+zlib.h"
 
 
 NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
@@ -60,18 +61,26 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
                          forSequence: (SequenceNumber)sequence
                                named: (NSString*)name
                                 type: (NSString*)contentType
+                            encoding: (TDAttachmentEncoding)encoding
                               length: (UInt64)length
+                       encodedLength: (UInt64)encodedLength
                               revpos: (unsigned)revpos
 {
     Assert(sequence > 0);
     Assert(name);
+    Assert(!encoding || length==0 || encodedLength > 0);
     if(!keyData)
         return 500;
+    if (encodedLength > length)
+        Warn(@"Encoded attachment bigger than original: %llu > %llu for key %@",
+             encodedLength, length, keyData);
+    id encodedLengthObj = encoding ? $object(encodedLength) : nil;
     if (![_fmdb executeUpdate: @"INSERT INTO attachments "
-                                  "(sequence, filename, key, type, length, revpos) "
-                                  "VALUES (?, ?, ?, ?, ?, ?)",
+                                  "(sequence, filename, key, type, encoding, length, encoded_length, revpos) "
+                                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                                  $object(sequence), name, keyData, contentType,
-                                 $object(length), $object(revpos)]) {
+                                 $object(encoding), $object(length), encodedLengthObj,
+                                 $object(revpos)]) {
         return 500;
     }
     return 201;
@@ -88,11 +97,11 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
     if (fromSequence <= 0)
         return 404;
     if (![_fmdb executeUpdate: @"INSERT INTO attachments "
-                                "(sequence, filename, key, type, length, revpos) "
-                                  "SELECT ?, ?, key, type, length, revpos FROM attachments "
-                                    "WHERE sequence=? AND filename=?",
-                                $object(toSequence), name,
-                                $object(fromSequence), name]) {
+                    "(sequence, filename, key, type, encoding, encoded_Length, length, revpos) "
+                    "SELECT ?, ?, key, type, encoding, encoded_Length, length, revpos "
+                        "FROM attachments WHERE sequence=? AND filename=?",
+                    $object(toSequence), name,
+                    $object(fromSequence), name]) {
         return 500;
     }
     if (_fmdb.changes == 0) {
@@ -106,10 +115,24 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 }
 
 
+- (NSData*) decodeAttachment: (NSData*)attachment encoding: (TDAttachmentEncoding)encoding {
+    switch (encoding) {
+        case kTDAttachmentEncodingNone:
+            break;
+        case kTDAttachmentEncodingGZIP:
+            attachment = [NSData gtm_dataByInflatingData: attachment];
+    }
+    if (!attachment)
+        Warn(@"Unable to decode attachment!");
+    return attachment;
+}
+
+
 /** Returns the content and MIME type of an attachment */
 - (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
                                named: (NSString*)filename
                                 type: (NSString**)outType
+                            encoding: (TDAttachmentEncoding*)outEncoding
                               status: (TDStatus*)outStatus
 {
     Assert(sequence > 0);
@@ -117,7 +140,7 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
     NSData* contents = nil;
     *outStatus = 500;
     FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT key, type FROM attachments WHERE sequence=? AND filename=?",
+                      @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
                       $object(sequence), filename];
     if (!r)
         return nil;
@@ -140,6 +163,12 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
         *outStatus = 200;
         if (outType)
             *outType = [r stringForColumnIndex: 1];
+        
+        TDAttachmentEncoding encoding = [r intForColumnIndex: 2];
+        if (outEncoding)
+            *outEncoding = encoding;
+        else
+            contents = [self decodeAttachment: contents encoding: encoding];
     } @finally {
         [r close];
     }
@@ -153,8 +182,8 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 {
     Assert(sequence > 0);
     FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT filename, key, type, length, revpos FROM attachments "
-                       "WHERE sequence=?",
+                      @"SELECT filename, key, type, encoding, length, encoded_length, revpos "
+                       "FROM attachments WHERE sequence=?",
                       $object(sequence)];
     if (!r)
         return nil;
@@ -166,20 +195,33 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
     do {
         NSData* keyData = [r dataNoCopyForColumnIndex: 1];
         NSString* digestStr = [@"sha1-" stringByAppendingString: [TDBase64 encode: keyData]];
-        NSString* dataBase64 = nil;
+        NSData* data = nil;
         if (withContent) {
-            NSData* data = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
-            if (data)
-                dataBase64 = [TDBase64 encode: data];
-            else
+            data = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
+            if (!data)
                 Warn(@"TDDatabase: Failed to get attachment for key %@", keyData);
         }
-        [attachments setObject: $dict({@"stub", (dataBase64 ? nil : $true)},
-                                      {@"data", dataBase64},
+        
+        NSString* encodingStr = nil;
+        id encodedLength = nil;
+        TDAttachmentEncoding encoding = [r intForColumnIndex: 3];
+        if (encoding != kTDAttachmentEncodingNone) {
+            if (withContent) {
+                data = [self decodeAttachment: data encoding: encoding];
+            } else {
+                encodingStr = @"gzip";  // the only encoding I know
+                encodedLength = $object([r longLongIntForColumnIndex: 5]);
+            }
+        }
+
+        [attachments setObject: $dict({@"stub", (data ? nil : $true)},
+                                      {@"data", (data ? [TDBase64 encode: data] : nil)},
                                       {@"digest", digestStr},
                                       {@"content_type", [r stringForColumnIndex: 2]},
-                                      {@"length", $object([r longLongIntForColumnIndex: 3])},
-                                      {@"revpos", $object([r intForColumnIndex: 4])})
+                                      {@"encoding", encodingStr},
+                                      {@"length", $object([r longLongIntForColumnIndex: 4])},
+                                      {@"encoded_length", encodedLength},
+                                      {@"revpos", $object([r intForColumnIndex: 6])})
                         forKey: [r stringForColumnIndex: 0]];
     } while ([r next]);
     [r close];
@@ -214,7 +256,7 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
                 if (!newContents)
                     return 400;
                 length = newContents.length;
-                blobKey = [[self keyForAttachment: newContents] retain];
+                blobKey = [[self keyForAttachment: newContents] retain];    // store attachment!
             }
             [blobKey autorelease];
         } else if ([[newAttach objectForKey: @"follows"] isEqual: $true]) {
@@ -229,7 +271,7 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
                 return 500;
             TDBlobKey key = writer.blobKey;
             blobKey = [NSData dataWithBytes: &key length: sizeof(key)];
-            length = $castIf(NSNumber, [newAttach objectForKey: @"length"]).unsignedLongLongValue;
+            length = writer.length;
         }
         
         if (blobKey) {
@@ -242,13 +284,29 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
             unsigned revpos = revposObj ? (unsigned)revposObj.intValue : generation;
             if (revpos > generation)
                 return 400;
+            
+            // Handle encoded attachment:
+            TDAttachmentEncoding encoding = kTDAttachmentEncodingNone;
+            UInt64 encodedLength = 0;
+            NSString* encodingStr = [newAttach objectForKey: @"encoding"];
+            if (encodingStr) {
+                if ($equal(encodingStr, @"gzip"))
+                    encoding = kTDAttachmentEncodingGZIP;
+                else
+                    return 400;
+                
+                encodedLength = length;
+                length = $castIf(NSNumber, [newAttach objectForKey: @"length"]).unsignedLongLongValue;
+            }
 
             // Finally insert the attachment:
             status = [self insertAttachmentWithKey: blobKey
                                        forSequence: newSequence
                                              named: name
                                               type: [newAttach objectForKey: @"content_type"]
+                                          encoding: encoding
                                             length: length
+                                     encodedLength: encodedLength
                                             revpos: revpos];
         } else {
             // It's just a stub, so copy the previous revision's attachment entry:
@@ -267,6 +325,7 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 - (TDRevision*) updateAttachment: (NSString*)filename
                             body: (NSData*)body
                             type: (NSString*)contentType
+                        encoding: (TDAttachmentEncoding)encoding
                          ofDocID: (NSString*)docID
                            revID: (NSString*)oldRevID
                           status: (TDStatus*)outStatus
@@ -313,9 +372,9 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
         if (oldRevID) {
             // Copy all attachment rows _except_ for the one being updated:
             if (![_fmdb executeUpdate: @"INSERT INTO attachments "
-                                        "(sequence, filename, key, type, length, revpos) "
-                                          "SELECT ?, filename, key, type, length, revpos FROM attachments "
-                                            "WHERE sequence=? AND filename != ?",
+                    "(sequence, filename, key, type, encoding, encoded_length, length, revpos) "
+                    "SELECT ?, filename, key, type, encoding, encoded_length, length, revpos "
+                    "FROM attachments WHERE sequence=? AND filename != ?",
                                         $object(newRev.sequence), $object(oldRev.sequence),
                                         filename]) {
                 *outStatus = 500;
@@ -325,11 +384,22 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
         
         if (body) {
             // If not deleting, add a new attachment entry:
+            UInt64 length = body.length, encodedLength = 0;
+            if (encoding) {
+                encodedLength = length;
+                length = [self decodeAttachment: body encoding: encoding].length;
+                if (length == 0 && encodedLength > 0) {
+                    *outStatus = 400;     // failed to decode
+                    return nil;
+                }
+            }
             *outStatus = [self insertAttachmentWithKey: [self keyForAttachment: body]
                                            forSequence: newRev.sequence
                                                  named: filename
                                                   type: contentType
+                                              encoding: encoding
                                                 length: body.length
+                                         encodedLength: encodedLength
                                                 revpos: newRev.generation];
             if (*outStatus >= 300)
                 return nil;

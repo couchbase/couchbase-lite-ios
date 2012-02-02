@@ -7,6 +7,7 @@
 //
 
 #import "TDDatabase.h"
+#import "TDDatabase+Attachments.h"
 #import "TDView.h"
 #import "TDServer.h"
 #import "TDReplicator.h"
@@ -43,7 +44,9 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
                          forSequence: (SequenceNumber)sequence
                                named: (NSString*)name
                                 type: (NSString*)contentType
+                            encoding: (TDAttachmentEncoding)encoding
                               length: (UInt64)length
+                       encodedLength: (UInt64)encodedLength
                               revpos: (unsigned)revpos;
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence

@@ -236,6 +236,13 @@
 		27C706D41488679500F0F099 /* DemoQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CE1488679500F0F099 /* DemoQuery.m */; };
 		27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27C706D01488679500F0F099 /* ShoppingDemo.xib */; };
 		27C706D71488679500F0F099 /* ShoppingItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706D21488679500F0F099 /* ShoppingItem.m */; };
+		27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */; };
+		27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; };
+		27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; };
+		27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90DA14DB24E800FC7118 /* GTMDefines.h */; };
+		27DB90DD14DB250500FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DC14DB250500FC7118 /* libz.dylib */; };
+		27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
+		27DB90E014DB4B0A00FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
 		27E11F0D14ACFFC60006B340 /* TDHTTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E11F0C14ACFFC60006B340 /* TDHTTPServer.h */; };
 		27E11F1014AD15940006B340 /* TDHTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E11F0E14AD15940006B340 /* TDHTTPResponse.h */; };
 		27E11F1114AD15940006B340 /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; };
@@ -513,6 +520,11 @@
 		27C706D01488679500F0F099 /* ShoppingDemo.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ShoppingDemo.xib; sourceTree = "<group>"; };
 		27C706D11488679500F0F099 /* ShoppingItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShoppingItem.h; sourceTree = "<group>"; };
 		27C706D21488679500F0F099 /* ShoppingItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShoppingItem.m; sourceTree = "<group>"; };
+		27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSData+zlib.h"; sourceTree = "<group>"; };
+		27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GTMNSData+zlib.m"; sourceTree = "<group>"; };
+		27DB90DA14DB24E800FC7118 /* GTMDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMDefines.h; sourceTree = "<group>"; };
+		27DB90DC14DB250500FC7118 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		27DB90DE14DB4B0100FC7118 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		27E11F0C14ACFFC60006B340 /* TDHTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPServer.h; sourceTree = "<group>"; };
 		27E11F0E14AD15940006B340 /* TDHTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPResponse.h; sourceTree = "<group>"; };
 		27E11F0F14AD15940006B340 /* TDHTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDHTTPResponse.m; sourceTree = "<group>"; };
@@ -549,6 +561,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27DB90DD14DB250500FC7118 /* libz.dylib in Frameworks */,
 				270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */,
 				270B3E1D1489384700E0A926 /* libsqlite3.dylib in Frameworks */,
 			);
@@ -589,6 +602,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27DB90E014DB4B0A00FC7118 /* libz.dylib in Frameworks */,
 				27731F1E1495CFEF00815D67 /* libTouchDB.a in Frameworks */,
 				27731F1F1495CFEF00815D67 /* libsqlite3.dylib in Frameworks */,
 				27731F201495CFEF00815D67 /* UIKit.framework in Frameworks */,
@@ -629,6 +643,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */,
 				27B0B8531492CBE400A817AD /* libTouchDB.a in Frameworks */,
 				27B0B82D1492C4DB00A817AD /* libsqlite3.dylib in Frameworks */,
 				27B0B80D1492C16300A817AD /* UIKit.framework in Frameworks */,
@@ -764,6 +779,7 @@
 				27F0746C11CD51A200E9A2AB /* FMDB */,
 				27F0749A11CD5B1200E9A2AB /* MYUtilities */,
 				2753154E14ACEF5C0065964D /* CocoaHTTPServer */,
+				27DB90D414DB249700FC7118 /* google-toolbox-for-mac */,
 			);
 			path = vendor;
 			sourceTree = "<group>";
@@ -998,6 +1014,8 @@
 				27B0B80F1492C16300A817AD /* CoreGraphics.framework */,
 				27C70699148864BA00F0F099 /* Other Frameworks */,
 				27B0B7F81492BC8000A817AD /* libsqlite3.dylib */,
+				27DB90DC14DB250500FC7118 /* libz.dylib */,
+				27DB90DE14DB4B0100FC7118 /* libz.dylib */,
 				27B0B7F61492BC7A00A817AD /* Foundation.framework */,
 				275315F714ACF2500065964D /* CoreServices.framework */,
 				275315F414ACF1CC0065964D /* Security.framework */,
@@ -1034,6 +1052,16 @@
 				27990702149D2576003D4338 /* CouchCocoa.framework */,
 			);
 			path = "Demo-Mac";
+			sourceTree = "<group>";
+		};
+		27DB90D414DB249700FC7118 /* google-toolbox-for-mac */ = {
+			isa = PBXGroup;
+			children = (
+				27DB90DA14DB24E800FC7118 /* GTMDefines.h */,
+				27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */,
+				27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */,
+			);
+			path = "google-toolbox-for-mac";
 			sourceTree = "<group>";
 		};
 		27F0746C11CD51A200E9A2AB /* FMDB */ = {
@@ -1129,6 +1157,8 @@
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
 				279CE40014D749A7009F3FA6 /* TDMultipartReader.h in Headers */,
 				279CE40A14D8AA23009F3FA6 /* TDMultipartDownloader.h in Headers */,
+				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
+				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1643,6 +1673,7 @@
 				279CE40114D749A7009F3FA6 /* TDMultipartReader.m in Sources */,
 				279CE40614D88032009F3FA6 /* TDBlobStore_Tests.m in Sources */,
 				279CE40B14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
+				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1738,6 +1769,7 @@
 				279CE40214D749A7009F3FA6 /* TDMultipartReader.m in Sources */,
 				279CE40714D88032009F3FA6 /* TDBlobStore_Tests.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
+				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -25,7 +25,7 @@
 #import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
-
+#import "GTMNSData+zlib.h"
 
 
 #if DEBUG
@@ -309,15 +309,20 @@ TestCase(TDDatabase_Attachments) {
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: attach1]
                               forSequence: rev1.sequence
-                                    named: @"attach" type: @"text/plain" length: attach1.length
+                                    named: @"attach" type: @"text/plain"
+                                 encoding: kTDAttachmentEncodingNone
+                                   length: attach1.length
+                            encodedLength: 0
                             revpos: rev1.generation],
               201);
     
     NSString* type;
+    TDAttachmentEncoding encoding;
     CAssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
-                                         type: &type status: &status], attach1);
+                                         type: &type encoding: &encoding status: &status], attach1);
     CAssertEq(status, 200);
     CAssertEqual(type, @"text/plain");
+    CAssertEq(encoding, kTDAttachmentEncodingNone);
     
     // Check the attachment dict:
     NSMutableDictionary* itemDict = $mdict({@"content_type", @"text/plain"},
@@ -360,7 +365,10 @@ TestCase(TDDatabase_Attachments) {
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
     CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: attach2]
                               forSequence: rev3.sequence
-                                    named: @"attach" type: @"text/html" length: attach2.length
+                                    named: @"attach" type: @"text/html"
+                                 encoding: kTDAttachmentEncodingNone
+                                   length: attach2.length
+                            encodedLength: 0
                                    revpos: rev2.generation],
               201);
     
@@ -369,17 +377,21 @@ TestCase(TDDatabase_Attachments) {
     CAssertEqual([db getAttachmentForSequence: rev2.sequence
                                         named: @"attach"
                                          type: &type
+                                     encoding: &encoding
                                        status: &status], attach1);
     CAssertEq(status, 200);
     CAssertEqual(type, @"text/plain");
+    CAssertEq(encoding, kTDAttachmentEncodingNone);
     
     // Check the 3rd revision's attachment:
     CAssertEqual([db getAttachmentForSequence: rev3.sequence
                                         named: @"attach"
                                          type: &type
+                                     encoding: &encoding
                                        status: &status], attach2);
     CAssertEq(status, 200);
     CAssertEqual(type, @"text/html");
+    CAssertEq(encoding, kTDAttachmentEncodingNone);
     
     // Examine the attachment store:
     CAssertEq(attachments.count, 2u);
@@ -428,14 +440,17 @@ TestCase(TDDatabase_PutAttachment) {
     // Update the attachment directly:
     NSData* attachv2 = [@"Replaced body of attach" dataUsingEncoding: NSUTF8StringEncoding];
     [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+                encoding: kTDAttachmentEncodingNone
                  ofDocID: rev1.docID revID: nil
                   status: &status];
     CAssertEq(status, 409);
     [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+                encoding: kTDAttachmentEncodingNone
                  ofDocID: rev1.docID revID: @"1-bogus"
                   status: &status];
     CAssertEq(status, 409);
     TDRevision* rev2 = [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+                                   encoding: kTDAttachmentEncodingNone
                                     ofDocID: rev1.docID revID: rev1.revID
                                      status: &status];
     CAssertEq(status, 201);
@@ -454,14 +469,17 @@ TestCase(TDDatabase_PutAttachment) {
     
     // Delete the attachment:
     [db updateAttachment: @"nosuchattach" body: nil type: nil
+                encoding: kTDAttachmentEncodingNone
                  ofDocID: rev2.docID revID: rev2.revID
                   status: &status];
     CAssertEq(status, 404);
     [db updateAttachment: @"nosuchattach" body: nil type: nil
+                encoding: kTDAttachmentEncodingNone
                  ofDocID: @"nosuchdoc" revID: @"nosuchrev"
                   status: &status];
     CAssertEq(status, 404);
     TDRevision* rev3 = [db updateAttachment: @"attach" body: nil type: nil
+                                   encoding: kTDAttachmentEncodingNone
                                     ofDocID: rev2.docID revID: rev2.revID
                                      status: &status];
     CAssertEq(status, 200);
@@ -472,6 +490,72 @@ TestCase(TDDatabase_PutAttachment) {
     TDRevision* gotRev3 = [db getDocumentWithID: rev3.docID revisionID: rev3.revID
                                         options: 0];
     CAssertNil([gotRev3.properties objectForKey: @"_attachments"]);
+}
+
+
+TestCase(TDDatabase_EncodedAttachment) {
+    RequireTestCase(TDDatabase_Attachments);
+    // Start with a fresh database in /tmp:
+    TDDatabase* db = createDB();
+
+    // Add a revision and an attachment to it:
+    TDRevision* rev1;
+    TDStatus status;
+    rev1 = [db putRevision: [TDRevision revisionWithProperties:$dict({@"foo", $object(1)},
+                                                                     {@"bar", $false})]
+            prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, 201);
+    
+    NSData* attach1 = [@"Encoded! Encoded!Encoded! Encoded! Encoded! Encoded! Encoded! Encoded!"
+                            dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* encoded = [NSData gtm_dataByGzippingData: attach1];
+    CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: encoded]
+                              forSequence: rev1.sequence
+                                    named: @"attach" type: @"text/plain"
+                                 encoding: kTDAttachmentEncodingGZIP
+                                   length: attach1.length
+                            encodedLength: encoded.length
+                            revpos: rev1.generation],
+              201);
+    
+    // Read the attachment without decoding it:
+    NSString* type;
+    TDAttachmentEncoding encoding;
+    CAssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
+                                         type: &type encoding: &encoding status: &status], encoded);
+    CAssertEq(status, 200);
+    CAssertEqual(type, @"text/plain");
+    CAssertEq(encoding, kTDAttachmentEncodingGZIP);
+    
+    // Read the attachment, decoding it:
+    CAssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
+                                         type: &type encoding: NULL status: &status], attach1);
+    CAssertEq(status, 200);
+    CAssertEqual(type, @"text/plain");
+    
+    // Check the stub attachment dict:
+    NSMutableDictionary* itemDict = $mdict({@"content_type", @"text/plain"},
+                                           {@"digest", @"sha1-fhfNE/UKv/wgwDNPtNvG5DN/5Bg="},
+                                           {@"length", $object(70)},
+                                           {@"encoding", @"gzip"},
+                                           {@"encoded_length", $object(37)},
+                                           {@"stub", $true},
+                                           {@"revpos", $object(1)});
+    NSDictionary* attachmentDict = $dict({@"attach", itemDict});
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: NO], attachmentDict);
+    TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
+                                options: 0];
+    CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
+
+    // Check the attachment dict with data:
+    [itemDict setObject: [TDBase64 encode: attach1] forKey: @"data"];
+    [itemDict removeObjectForKey: @"encoding"];
+    [itemDict removeObjectForKey: @"encoded_length"];
+    [itemDict removeObjectForKey: @"stub"];
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: YES], attachmentDict);
+    gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
+                            options: kTDIncludeAttachments];
+    CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
 }
 
 
@@ -562,6 +646,7 @@ TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_RevTree);
     RequireTestCase(TDDatabase_Attachments);
     RequireTestCase(TDDatabase_PutAttachment);
+    RequireTestCase(TDDatabase_EncodedAttachment);
     RequireTestCase(TDDatabase_ReplicatorSequences);
     RequireTestCase(TDDatabase_LocalDocs);
 }

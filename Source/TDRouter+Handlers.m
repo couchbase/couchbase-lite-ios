@@ -600,14 +600,21 @@
     
     NSString* type = nil;
     TDStatus status;
+    TDAttachmentEncoding encoding = kTDAttachmentEncodingNone;
+    NSString* acceptEncoding = [_request valueForHTTPHeaderField: @"Accept-Encoding"];
+    BOOL acceptEncoded = (acceptEncoding && [acceptEncoding rangeOfString: @"gzip"].length > 0);
+    
     NSData* contents = [_db getAttachmentForSequence: rev.sequence
                                                named: attachment
                                                 type: &type
+                                            encoding: (acceptEncoded ? &encoding : NULL)
                                               status: &status];
     if (!contents)
         return status;
     if (type)
         [_response setValue: type ofHeader: @"Content-Type"];
+    if (encoding == kTDAttachmentEncodingGZIP)
+        [_response setValue: @"gzip" ofHeader: @"Content-Encoding"];
     _response.body = [TDBody bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
     return 200;
 }
@@ -720,6 +727,7 @@
     TDRevision* rev = [_db updateAttachment: attachment 
                                        body: body
                                        type: [_request valueForHTTPHeaderField: @"Content-Type"]
+                                   encoding: kTDAttachmentEncodingNone
                                     ofDocID: docID
                                       revID: ([self query: @"rev"] ?: [self revIDFromIfMatchHeader])
                                      status: &status];

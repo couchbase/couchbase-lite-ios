@@ -198,6 +198,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
             return NO;
         dbVersion = 2;
     }
+    
     if (dbVersion < 3) {
         // Version 3: added localdocs table
         NSString* sql = @"CREATE TABLE IF NOT EXISTS localdocs ( \
@@ -222,6 +223,17 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                                  TDCreateUUID(), TDCreateUUID());
         if (![self initialize: sql])
             return NO;
+        dbVersion = 4;
+    }
+
+    if (dbVersion < 5) {
+        // Version 5: added encoding for attachments
+        NSString* sql = @"ALTER TABLE attachments ADD COLUMN encoding INTEGER DEFAULT 0; \
+                          ALTER TABLE attachments ADD COLUMN encoded_length INTEGER; \
+                          PRAGMA user_version = 5";
+        if (![self initialize: sql])
+            return NO;
+        //dbVersion = 5;
     }
 
 #if DEBUG

@@ -12,7 +12,11 @@
 typedef void (^TDRemoteRequestCompletionBlock)(id, NSError*);
 
 
-@interface TDRemoteRequest : NSObject <NSURLConnectionDelegate>
+@interface TDRemoteRequest : NSObject <NSURLConnectionDelegate
+#if TARGET_OS_IPHONE
+                                                              , NSURLConnectionDataDelegate
+#endif
+                                                                                           >
 {
     @protected
     NSMutableURLRequest* _request;

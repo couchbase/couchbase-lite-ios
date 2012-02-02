@@ -294,6 +294,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                       path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
                       body: body
               onCompletion: ^(id response, NSError* error) {
+                  if (!_db)
+                      return;   // db already closed
                   if (error) {
                       Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
                       // TODO: If error is 401 or 403, and this is a pull, remember that remote is read-only and don't attempt to read its checkpoint next time.
