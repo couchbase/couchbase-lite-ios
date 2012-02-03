@@ -419,9 +419,8 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     Assert(sequence > 0);
     
     // Get attachment metadata, and optionally the contents:
-    BOOL withAttachments = (options & kTDIncludeAttachments) != 0;
     NSDictionary* attachmentsDict = [self getAttachmentDictForSequence: sequence
-                                                           withContent: withAttachments];
+                                                               options: options];
     
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.

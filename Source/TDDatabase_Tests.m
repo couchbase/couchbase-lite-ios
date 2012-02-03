@@ -331,7 +331,7 @@ TestCase(TDDatabase_Attachments) {
                                            {@"stub", $true},
                                            {@"revpos", $object(1)});
     NSDictionary* attachmentDict = $dict({@"attach", itemDict});
-    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: NO], attachmentDict);
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence options: 0], attachmentDict);
     TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
                                 options: 0];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
@@ -339,7 +339,7 @@ TestCase(TDDatabase_Attachments) {
     // Check the attachment dict, with attachments included:
     [itemDict removeObjectForKey: @"stub"];
     [itemDict setObject: [TDBase64 encode: attach1] forKey: @"data"];
-    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: YES], attachmentDict);
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence options: kTDIncludeAttachments], attachmentDict);
     gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
                             options: kTDIncludeAttachments];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
@@ -542,17 +542,26 @@ TestCase(TDDatabase_EncodedAttachment) {
                                            {@"stub", $true},
                                            {@"revpos", $object(1)});
     NSDictionary* attachmentDict = $dict({@"attach", itemDict});
-    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: NO], attachmentDict);
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence options: 0], attachmentDict);
     TDRevision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
                                 options: 0];
+    CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
+
+    // Check the attachment dict with encoded data:
+    [itemDict setObject: [TDBase64 encode: encoded] forKey: @"data"];
+    [itemDict removeObjectForKey: @"stub"];
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence
+                                          options: kTDIncludeAttachments | kTDLeaveAttachmentsEncoded],
+                 attachmentDict);
+    gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
+                            options: kTDIncludeAttachments | kTDLeaveAttachmentsEncoded];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);
 
     // Check the attachment dict with data:
     [itemDict setObject: [TDBase64 encode: attach1] forKey: @"data"];
     [itemDict removeObjectForKey: @"encoding"];
     [itemDict removeObjectForKey: @"encoded_length"];
-    [itemDict removeObjectForKey: @"stub"];
-    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence withContent: YES], attachmentDict);
+    CAssertEqual([db getAttachmentDictForSequence: rev1.sequence options: kTDIncludeAttachments], attachmentDict);
     gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
                             options: kTDIncludeAttachments];
     CAssertEqual([gotRev1.properties objectForKey: @"_attachments"], attachmentDict);

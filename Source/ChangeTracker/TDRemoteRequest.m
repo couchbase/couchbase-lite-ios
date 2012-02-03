@@ -97,7 +97,7 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     [self clearConnection];
-    [self respondWithResult: nil error: nil];
+    [self respondWithResult: self error: nil];
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection
@@ -135,7 +135,9 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    id result = [NSJSONSerialization JSONObjectWithData: _jsonBuffer options: 0 error:nil];
+    id result = nil;
+    if (_jsonBuffer)
+        result = [NSJSONSerialization JSONObjectWithData: _jsonBuffer options: 0 error:nil];
     NSError* error = nil;
     if (!result) {
         Warn(@"%@: %@ %@ returned unparseable data '%@'",

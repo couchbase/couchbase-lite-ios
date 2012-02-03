@@ -100,6 +100,12 @@
 		2753160214ACF9330065964D /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
 		2753160C14ACFC2A0065964D /* TDHTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753160A14ACFC2A0065964D /* TDHTTPConnection.h */; };
 		2753160D14ACFC2A0065964D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
+		2766EFF814DB7F9F009ECCA8 /* TDMultipartStreamer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFF614DB7F9F009ECCA8 /* TDMultipartStreamer.h */; };
+		2766EFF914DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */; };
+		2766EFFA14DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */; };
+		2766EFFD14DC7B37009ECCA8 /* TDMultiInputStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFFB14DC7B37009ECCA8 /* TDMultiInputStream.h */; };
+		2766EFFE14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */; };
+		2766EFFF14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */; };
 		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
 		27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* TDBlobStore.h */; };
@@ -228,6 +234,9 @@
 		27B0B8551492D0A000A817AD /* TDView_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* TDView_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27B0B8561492D0A400A817AD /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27B0B8571492D0AA00A817AD /* TDReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDReplicator_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27C5305414DF3A050078F886 /* TDMultipartUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C5305214DF3A050078F886 /* TDMultipartUploader.h */; };
+		27C5305514DF3A050078F886 /* TDMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* TDMultipartUploader.m */; };
+		27C5305614DF3A050078F886 /* TDMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* TDMultipartUploader.m */; };
 		27C706421486BBD500F0F099 /* TDServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* TDServer.m */; };
 		27C706481487584300F0F099 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
 		27C706701488634300F0F099 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7066F1488634300F0F099 /* AppKit.framework */; };
@@ -430,6 +439,10 @@
 		275315FA14ACF7FF0065964D /* TouchDBListener.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = TouchDBListener.exp; sourceTree = "<group>"; };
 		2753160A14ACFC2A0065964D /* TDHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPConnection.h; sourceTree = "<group>"; };
 		2753160B14ACFC2A0065964D /* TDHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDHTTPConnection.m; sourceTree = "<group>"; };
+		2766EFF614DB7F9F009ECCA8 /* TDMultipartStreamer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultipartStreamer.h; sourceTree = "<group>"; };
+		2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultipartStreamer.m; sourceTree = "<group>"; };
+		2766EFFB14DC7B37009ECCA8 /* TDMultiInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultiInputStream.h; sourceTree = "<group>"; };
+		2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultiInputStream.m; sourceTree = "<group>"; };
 		27731EFD1493FA3100815D67 /* TDBlobStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBlobStore.h; sourceTree = "<group>"; };
 		27731EFE1493FA3100815D67 /* TDBlobStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBlobStore.m; sourceTree = "<group>"; };
 		27731F2A1495CFEF00815D67 /* TouchDB Empty App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TouchDB Empty App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -499,6 +512,8 @@
 		27B0B8191492C16300A817AD /* iOS Demo-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iOS Demo-Prefix.pch"; sourceTree = "<group>"; };
 		27B0B81A1492C16300A817AD /* DemoAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DemoAppDelegate.h; sourceTree = "<group>"; };
 		27B0B81B1492C16300A817AD /* DemoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DemoAppDelegate.m; sourceTree = "<group>"; };
+		27C5305214DF3A050078F886 /* TDMultipartUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultipartUploader.h; sourceTree = "<group>"; };
+		27C5305314DF3A050078F886 /* TDMultipartUploader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultipartUploader.m; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* TDServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDServer.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* TDServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDServer.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* TDRouter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDRouter.h; sourceTree = "<group>"; };
@@ -910,6 +925,8 @@
 				270B3E3D148D7F0000E0A926 /* TDPusher.m */,
 				279CE40814D8AA23009F3FA6 /* TDMultipartDownloader.h */,
 				279CE40914D8AA23009F3FA6 /* TDMultipartDownloader.m */,
+				27C5305214DF3A050078F886 /* TDMultipartUploader.h */,
+				27C5305314DF3A050078F886 /* TDMultipartUploader.m */,
 				27B0B78F149290AB00A817AD /* ChangeTracker */,
 			);
 			name = Replicator;
@@ -943,6 +960,10 @@
 				279CE3FF14D749A7009F3FA6 /* TDMultipartReader.m */,
 				2713789114BCF6450058C5CD /* TDMultipartWriter.h */,
 				2713789214BCF6450058C5CD /* TDMultipartWriter.m */,
+				2766EFFB14DC7B37009ECCA8 /* TDMultiInputStream.h */,
+				2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */,
+				2766EFF614DB7F9F009ECCA8 /* TDMultipartStreamer.h */,
+				2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */,
 				27A073EA14C0BB6200F52FE7 /* TDMisc.h */,
 				27A073EB14C0BB6200F52FE7 /* TDMisc.m */,
 				270B3DEE1489359000E0A926 /* TouchDB-Info.plist */,
@@ -1159,6 +1180,9 @@
 				279CE40A14D8AA23009F3FA6 /* TDMultipartDownloader.h in Headers */,
 				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
 				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
+				2766EFF814DB7F9F009ECCA8 /* TDMultipartStreamer.h in Headers */,
+				2766EFFD14DC7B37009ECCA8 /* TDMultiInputStream.h in Headers */,
+				27C5305414DF3A050078F886 /* TDMultipartUploader.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1674,6 +1698,9 @@
 				279CE40614D88032009F3FA6 /* TDBlobStore_Tests.m in Sources */,
 				279CE40B14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
 				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
+				2766EFF914DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */,
+				2766EFFE14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */,
+				27C5305514DF3A050078F886 /* TDMultipartUploader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1770,6 +1797,9 @@
 				279CE40714D88032009F3FA6 /* TDBlobStore_Tests.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
 				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
+				2766EFFA14DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */,
+				2766EFFF14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */,
+				27C5305614DF3A050078F886 /* TDMultipartUploader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

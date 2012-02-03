@@ -26,6 +26,8 @@ typedef struct TDBlobKey {
 - (id) initWithPath: (NSString*)dir error: (NSError**)outError;
 
 - (NSData*) blobForKey: (TDBlobKey)key;
+- (NSInputStream*) blobInputStreamForKey: (TDBlobKey)key
+                                  length: (UInt64*)outLength;
 
 - (BOOL) storeBlob: (NSData*)blob
        creatingKey: (TDBlobKey*)outKey;

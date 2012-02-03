@@ -32,7 +32,9 @@ enum {
     kTDIncludeConflicts = 2,
     kTDIncludeRevs = 4,
     kTDIncludeRevsInfo = 8,
-    kTDIncludeLocalSeq = 16
+    kTDIncludeLocalSeq = 16,
+    kTDLeaveAttachmentsEncoded = 32,        // i.e. don't decode
+    kTDBigAttachmentsFollow = 64            // i.e. add 'follows' key instead of data for big ones
 };
 
 

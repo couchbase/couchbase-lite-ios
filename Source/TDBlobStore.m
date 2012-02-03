@@ -101,6 +101,16 @@
     return [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: nil];
 }
 
+- (NSInputStream*) blobInputStreamForKey: (TDBlobKey)key
+                                  length: (UInt64*)outLength
+{
+    NSString* path = [self pathForKey: key];
+    if (outLength)
+        *outLength = [[[NSFileManager defaultManager] attributesOfItemAtPath: path error: nil]
+                            fileSize];
+    return [NSInputStream inputStreamWithFileAtPath: path];
+}
+
 - (BOOL) storeBlob: (NSData*)blob
        creatingKey: (TDBlobKey*)outKey
 {

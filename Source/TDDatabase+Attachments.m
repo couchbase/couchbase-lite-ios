@@ -30,6 +30,10 @@
 #import "GTMNSData+zlib.h"
 
 
+// Length that constitutes a 'big' attachment
+#define kBigAttachmentLength (16*1024)
+
+
 NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 
 
@@ -178,7 +182,7 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
-                                   withContent: (BOOL)withContent
+                                       options: (TDContentOptions)options
 {
     Assert(sequence > 0);
     FMResultSet* r = [_fmdb executeQuery:
@@ -191,41 +195,67 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
         [r close];
         return nil;
     }
+    BOOL decodeAttachments = !(options & kTDLeaveAttachmentsEncoded);
     NSMutableDictionary* attachments = $mdict();
     do {
         NSData* keyData = [r dataNoCopyForColumnIndex: 1];
         NSString* digestStr = [@"sha1-" stringByAppendingString: [TDBase64 encode: keyData]];
+        TDAttachmentEncoding encoding = [r intForColumnIndex: 3];
+        UInt64 length = [r longLongIntForColumnIndex: 4];
+        UInt64 encodedLength = [r longLongIntForColumnIndex: 5];
+        
+        // Get the attachment contents if asked to:
         NSData* data = nil;
-        if (withContent) {
-            data = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
-            if (!data)
-                Warn(@"TDDatabase: Failed to get attachment for key %@", keyData);
+        BOOL dataSuppressed = NO;
+        if (options & kTDIncludeAttachments) {
+            UInt64 effectiveLength = (encoding && !decodeAttachments) ? encodedLength : length;
+            if ((options & kTDBigAttachmentsFollow) && effectiveLength >= kBigAttachmentLength) {
+                dataSuppressed = YES;
+            } else {
+                data = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
+                if (!data)
+                    Warn(@"TDDatabase: Failed to get attachment for key %@", keyData);
+            }
         }
         
         NSString* encodingStr = nil;
-        id encodedLength = nil;
-        TDAttachmentEncoding encoding = [r intForColumnIndex: 3];
+        id encodedLengthObj = nil;
         if (encoding != kTDAttachmentEncodingNone) {
-            if (withContent) {
+            // Decode the attachment if it's included in the dict:
+            if (data && decodeAttachments) {
                 data = [self decodeAttachment: data encoding: encoding];
             } else {
                 encodingStr = @"gzip";  // the only encoding I know
-                encodedLength = $object([r longLongIntForColumnIndex: 5]);
+                encodedLengthObj = $object(encodedLength);
             }
         }
 
-        [attachments setObject: $dict({@"stub", (data ? nil : $true)},
+        [attachments setObject: $dict({@"stub", ((data || dataSuppressed) ? nil : $true)},
                                       {@"data", (data ? [TDBase64 encode: data] : nil)},
+                                      {@"follows", (dataSuppressed ? $true : nil)},
                                       {@"digest", digestStr},
                                       {@"content_type", [r stringForColumnIndex: 2]},
                                       {@"encoding", encodingStr},
-                                      {@"length", $object([r longLongIntForColumnIndex: 4])},
-                                      {@"encoded_length", encodedLength},
+                                      {@"length", $object(length)},
+                                      {@"encoded_length", encodedLengthObj},
                                       {@"revpos", $object([r intForColumnIndex: 6])})
                         forKey: [r stringForColumnIndex: 0]];
     } while ([r next]);
     [r close];
     return attachments;
+}
+
+
+- (NSInputStream*) inputStreamForAttachmentDict: (NSDictionary*)attachmentDict
+                                         length: (UInt64*)outLength
+{
+    NSString* digest = [attachmentDict objectForKey: @"digest"];
+    if (![digest hasPrefix: @"sha1-"])
+        return nil;
+    NSData* keyData = [TDBase64 decode: [digest substringFromIndex: 5]];
+    if (!keyData)
+        return nil;
+    return [_attachments blobInputStreamForKey: *(TDBlobKey*)keyData.bytes length: outLength];
 }
 
 

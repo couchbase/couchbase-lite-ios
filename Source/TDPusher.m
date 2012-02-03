@@ -16,7 +16,14 @@
 #import "TDPusher.h"
 #import "TDDatabase.h"
 #import "TDRevision.h"
+#import "TDMultipartUploader.h"
 #import "TDInternal.h"
+#import "TDMisc.h"
+
+
+@interface TDPusher ()
+- (BOOL) uploadMultipartRevision: (TDRevision*)rev;
+@end
 
 
 @implementation TDPusher
@@ -99,7 +106,6 @@
 
 
 - (void) processInbox: (TDRevisionList*)changes {
-    SequenceNumber lastInboxSequence = [changes.allRevisions.lastObject sequence];
     // Generate a set of doc/rev IDs in the JSON format that _revs_diff wants:
     NSMutableDictionary* diffs = $mdict();
     for (TDRevision* rev in changes) {
@@ -122,29 +128,36 @@
         } else if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
-            NSArray* docsToSend = [changes.allRevisions my_map: ^(id rev) {
+            __block SequenceNumber lastInboxSequence = 0;
+            NSArray* docsToSend = [changes.allRevisions my_map: ^(TDRevision* rev) {
                 NSMutableDictionary* properties;
                 @autoreleasepool {
                     NSArray* revs = [[results objectForKey: [rev docID]] objectForKey: @"missing"];
                     if (![revs containsObject: [rev revID]])
                         return (id)nil;
                     // Get the revision's properties:
-                    if ([rev deleted])
-                        properties = [$mdict({@"_id", [rev docID]}, {@"_rev", [rev revID]}, 
-                                             {@"_deleted", $true}) retain];
-                    else {
+                    if ([rev deleted]) {
+                        properties = $mdict({@"_id", [rev docID]},
+                                            {@"_rev", [rev revID]}, 
+                                            {@"_deleted", $true},
+                                            {@"_revisions", [_db getRevisionHistoryDict: rev]});
+                        [properties retain];
+                    } else {
                         // OPT: Shouldn't include all attachment bodies, just ones that have changed
-                        // OPT: Should send docs with many or big attachments as multipart/related
-                        if ([_db loadRevisionBody: rev options: kTDIncludeAttachments] >= 300) {
+                        if ([_db loadRevisionBody: rev
+                                          options: kTDIncludeAttachments | kTDBigAttachmentsFollow |
+                                                   kTDIncludeRevs]
+                                    >= 300) {
                             Warn(@"%@: Couldn't get local contents of %@", self, rev);
                             return nil;
                         }
+                        // If the rev has huge attachments, send it under separate cover:
+                        if ([self uploadMultipartRevision: rev])
+                            return nil;
                         properties = [[rev properties] mutableCopy];
                     }
-                    
-                    // Add the _revisions list:
-                    [properties setValue: [_db getRevisionHistoryDict: rev] forKey: @"_revisions"];
                 }
+                lastInboxSequence = rev.sequence;
                 Assert([properties objectForKey: @"_id"]);
                 return [properties autorelease];
             }];
@@ -152,32 +165,78 @@
             // Post the revisions to the destination. "new_edits":false means that the server should
             // use the given _rev IDs instead of making up new ones.
             NSUInteger numDocsToSend = docsToSend.count;
-            LogTo(Sync, @"%@: Sending %u revisions", self, numDocsToSend);
-            LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
-            self.changesTotal += numDocsToSend;
-            [self asyncTaskStarted];
-            [self sendAsyncRequest: @"POST"
-                         path: @"/_bulk_docs"
-                         body: $dict({@"docs", docsToSend},
-                                     {@"new_edits", $false})
-                 onCompletion: ^(NSDictionary* response, NSError *error) {
-                     if (error) {
-                         self.error = error;
-                     } else {
-                         LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
-                         self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
+            if (numDocsToSend > 0) {
+                LogTo(Sync, @"%@: Sending %u revisions", self, numDocsToSend);
+                LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
+                self.changesTotal += numDocsToSend;
+                [self asyncTaskStarted];
+                [self sendAsyncRequest: @"POST"
+                             path: @"/_bulk_docs"
+                             body: $dict({@"docs", docsToSend},
+                                         {@"new_edits", $false})
+                     onCompletion: ^(NSDictionary* response, NSError *error) {
+                         if (error) {
+                             self.error = error;
+                         } else {
+                             LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
+                             self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
+                         }
+                         self.changesProcessed += numDocsToSend;
+                         [self asyncTasksFinished: 1];
                      }
-                     self.changesProcessed += numDocsToSend;
-                     [self asyncTasksFinished: 1];
-                 }
-             ];
+                 ];
+            }
             
         } else {
             // If none of the revisions are new to the remote, just bump the lastSequence:
-            self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
+            self.lastSequence = $sprintf(@"%lld", [changes.allRevisions.lastObject sequence]);
         }
         [self asyncTasksFinished: 1];
     }];
+}
+
+
+- (BOOL) uploadMultipartRevision: (TDRevision*)rev {
+    // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream:
+    TDMultipartStreamer* bodyStream = nil;
+    NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
+    for (NSDictionary* attachment in attachments.allValues) {
+        if ([attachment objectForKey: @"follows"]) {
+            if (!bodyStream) {
+                // Create the HTTP multipart stream:
+                bodyStream = [[[TDMultipartStreamer alloc] init] autorelease];
+                [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
+                [bodyStream addData: rev.asJSON];
+            }
+            UInt64 length;
+            NSInputStream *stream = [_db inputStreamForAttachmentDict: attachment length: &length];
+            [bodyStream addStream: stream length: length];
+        }
+    }
+    if (!bodyStream)
+        return NO;
+    
+    // OK, we are going to upload this on its own:
+    self.changesTotal++;
+    [self asyncTaskStarted];
+
+    NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeURLParam(rev.docID));
+    LogTo(SyncVerbose, @"%@: PUT .%@", self, path);
+    NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
+    [[[TDMultipartUploader alloc] initWithURL: [NSURL URLWithString: urlStr]
+                                     streamer: bodyStream
+                                 onCompletion: ^(id response, NSError *error) {
+                  if (error) {
+                      self.error = error;
+                  } else {
+                      LogTo(SyncVerbose, @"%@: Sent %@, response=%@", self, rev, response);
+                      self.lastSequence = $sprintf(@"%lld", rev.sequence);
+                  }
+                  self.changesProcessed++;
+                  [self asyncTasksFinished: 1];
+              }
+     ] autorelease];
+    return YES;
 }
 
 

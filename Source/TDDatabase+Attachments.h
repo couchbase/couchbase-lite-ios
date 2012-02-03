@@ -28,7 +28,7 @@ typedef enum {
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
-                                   withContent: (BOOL)withContent;
+                                       options: (TDContentOptions)options;
 
 /** Returns the content and metadata of an attachment.
     If you pass NULL for the 'outEncoding' parameter, it signifies that you don't care about encodings and just want the 'real' data, so it'll be decoded for you. */
@@ -37,6 +37,10 @@ typedef enum {
                                 type: (NSString**)outType
                             encoding: (TDAttachmentEncoding*)outEncoding
                               status: (TDStatus*)outStatus;
+
+/** Uses the "digest" field of the attachment dict to look up the attachment in the store and return an input stream to read its data. */
+- (NSInputStream*) inputStreamForAttachmentDict: (NSDictionary*)attachmentDict
+                                         length: (UInt64*)outLength;
 
 /** Deletes obsolete attachments from the database and blob store. */
 - (TDStatus) garbageCollectAttachments;
