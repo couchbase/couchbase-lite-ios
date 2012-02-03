@@ -1,6 +1,8 @@
 # TouchDB #
 
-by Jens Alfke (jens@couchbase.com)
+by Jens Alfke (jens@couchbase.com)  
+with contributions from Alexander Edge, Chris Kau, Marty Schoch, Paul Mietz Egli  
+and technical advice from Damien Katz, Filipe Manana, J Chris Anderson
 
 **TouchDB** is a lightweight [CouchDB][1]-compatible database engine suitable for embedding into mobile or desktop apps. Think of it this way: If CouchDB is MySQL, then TouchDB is SQLite.
 
@@ -8,12 +10,12 @@ By "_CouchDB-compatible_" I mean that it can replicate with CouchDB and [Couchba
 
 By "_suitable for embedding into mobile apps_", I mean that it meets the following requirements:
 
- * Small code size; ideally less than 256kbytes. (Code size is important to mobile apps, which are often downloaded over cell networks.)
+ * Small code size; currently under 200kbytes. (Code size is important to mobile apps, which are often downloaded over cell networks.)
  * Quick startup time on relatively-slow CPUs; ideally 100ms or less.
  * Low memory usage with typical mobile data-sets. The expectation is the number of documents will not be huge, although there may be sizable multimedia attachments.
  * "Good enough" performance with these CPUs and data-sets.
 
-And by "_mobile apps_" I'm focusing on iOS and Android, although there's no reason we couldn't extend this to other platforms like Windows Phone. And it's not limited to mobile OSs -- the initial Objective-C implementation runs on Mac OS as well.
+And by "_mobile apps_" I'm focusing on iOS and [Android][11], although there's no reason we couldn't extend this to other platforms like Windows Phone. And it's not limited to mobile OSs -- the Objective-C implementation runs on Mac OS as well.
 
 More documentation is available on the [wiki][2].
 
@@ -23,23 +25,28 @@ More documentation is available on the [wiki][2].
  * Xcode 4.2+ is required to build it.
  * Runtime system requirements are iOS 5+, or Mac OS X 10.7.2+.
 
+Looking for the [Java/Android implementation][11]? It has its own repository.
+
 ## License ##
 
- * TouchDB is under the Apache License 2.0.
+ * TouchDB itself is under the Apache License 2.0.
  * [FMDB][5], by [Gus Mueller][8], is under the MIT License.
+ * [Google Toolbox For Mac][10] is under the Apache License 2.0.
  * [CocoaHTTPServer][9], by Robbie Hanson, is under the BSD License.
  * [MYUtilities][6] (portions of which are copied into the vendor/MYUtilities directory) is under the BSD License. (But note that I, Jens, wrote MYUtilities and would have no problem re-licensing it under Apache for use here.)
 
 ## Development Status ##
 
-Currently [Jan. 2012] undergoing full-time development, nearing alpha. I hope to have a beta release in early 2012.
+TouchDB recently went alpha (at the end of January 2012; version 0.45.)
+
+Beta should arrive before spring.
 
 ## Building TouchDB ##
 
 For full details see the [wiki page][7]. The gist of it is:
 
  1. Clone the TouchDB repository to your local disk.
- 2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the [FMDB][5] and [CocoaHTTPServer][9] repos into the vendor/ subdirectory.
+ 2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the [FMDB][5], [MYUtilities][6], and [CocoaHTTPServer][9] repos into the vendor/ subdirectory.
  3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
 
 
@@ -52,3 +59,5 @@ For full details see the [wiki page][7]. The gist of it is:
 [7]: https://github.com/couchbaselabs/TouchDB-iOS/wiki/Building-TouchDB
 [8]: https://github.com/ccgus/
 [9]: https://github.com/robbiehanson/CocoaHTTPServer
+[10]: http://code.google.com/p/google-toolbox-for-mac/
+[11]: https://github.com/couchbaselabs/Android-Couchbase
