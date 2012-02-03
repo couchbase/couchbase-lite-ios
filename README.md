@@ -60,4 +60,4 @@ For full details see the [wiki page][7]. The gist of it is:
 [8]: https://github.com/ccgus/
 [9]: https://github.com/robbiehanson/CocoaHTTPServer
 [10]: http://code.google.com/p/google-toolbox-for-mac/
-[11]: https://github.com/couchbaselabs/Android-Couchbase
+[11]: https://github.com/couchbaselabs/TouchDB-Android
