@@ -6,4 +6,4 @@
 	url = git://github.com/robbiehanson/CocoaHTTPServer.git
 [submodule "vendor/MYUtilities"]
 	path = vendor/MYUtilities
-	url = git@github.com:snej/MYUtilities.git
+	url = git://github.com/snej/MYUtilities.git
