@@ -120,7 +120,7 @@ TestCase(TDMultipartStreamer) {
         uint8_t buffer[bufSize];
         NSInteger nBytes;
         while ((nBytes = [mp read: buffer maxLength: sizeof(buffer)]) > 0) {
-            CAssert(nBytes <= bufSize);
+            CAssert((unsigned)nBytes <= bufSize);
             [output appendBytes: buffer length: nBytes];
         }
         CAssert(nBytes == 0, @"Stream returned an error");
