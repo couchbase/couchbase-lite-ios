@@ -417,13 +417,16 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type {
-    TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: type];
+    TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: type
+                                                                      boundary: nil];
     for (id part in parts) {
-        if (![part isKindOfClass: [NSData class]])
+        if (![part isKindOfClass: [NSData class]]) {
             part = [NSJSONSerialization dataWithJSONObject: part options: 0 error: nil];
-        [mp addPart: part withHeaders: nil];
+            [mp setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
+        }
+        [mp addData: part];
     }
-    self.body = [TDBody bodyWithJSON: mp.body];
+    self.body = [TDBody bodyWithJSON: mp.allOutput];
     [self setValue: mp.contentType ofHeader: @"Content-Type"];
     [mp release];
 }

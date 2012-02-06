@@ -48,9 +48,6 @@
 		2711CE0314C759BD00505D55 /* TDDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2711CE0414C759BD00505D55 /* TDDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2711CE1414C75B6E00505D55 /* TDDatabase+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2713789314BCF6450058C5CD /* TDMultipartWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2713789114BCF6450058C5CD /* TDMultipartWriter.h */; };
-		2713789414BCF6450058C5CD /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2713789214BCF6450058C5CD /* TDMultipartWriter.m */; };
-		2713789514BCF6450058C5CD /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2713789214BCF6450058C5CD /* TDMultipartWriter.m */; };
 		2714CF521496AE5B00E03341 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
@@ -100,12 +97,12 @@
 		2753160214ACF9330065964D /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
 		2753160C14ACFC2A0065964D /* TDHTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753160A14ACFC2A0065964D /* TDHTTPConnection.h */; };
 		2753160D14ACFC2A0065964D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
-		2766EFF814DB7F9F009ECCA8 /* TDMultipartStreamer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFF614DB7F9F009ECCA8 /* TDMultipartStreamer.h */; };
-		2766EFF914DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */; };
-		2766EFFA14DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */; };
-		2766EFFD14DC7B37009ECCA8 /* TDMultiInputStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFFB14DC7B37009ECCA8 /* TDMultiInputStream.h */; };
-		2766EFFE14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */; };
-		2766EFFF14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */; };
+		2766EFF814DB7F9F009ECCA8 /* TDMultipartWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */; };
+		2766EFF914DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */; };
+		2766EFFA14DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */; };
+		2766EFFD14DC7B37009ECCA8 /* TDMultiStreamWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFFB14DC7B37009ECCA8 /* TDMultiStreamWriter.h */; };
+		2766EFFE14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */; };
+		2766EFFF14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */; };
 		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
 		27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* TDBlobStore.h */; };
@@ -382,8 +379,6 @@
 		2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TDDatabase+Attachments.h"; sourceTree = "<group>"; };
 		2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TDDatabase+Insertion.h"; sourceTree = "<group>"; };
 		2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TDDatabase+Replication.h"; sourceTree = "<group>"; };
-		2713789114BCF6450058C5CD /* TDMultipartWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultipartWriter.h; sourceTree = "<group>"; };
-		2713789214BCF6450058C5CD /* TDMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultipartWriter.m; sourceTree = "<group>"; };
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
 		274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmptyAppDelegate.m; sourceTree = "<group>"; };
@@ -439,10 +434,10 @@
 		275315FA14ACF7FF0065964D /* TouchDBListener.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = TouchDBListener.exp; sourceTree = "<group>"; };
 		2753160A14ACFC2A0065964D /* TDHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPConnection.h; sourceTree = "<group>"; };
 		2753160B14ACFC2A0065964D /* TDHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDHTTPConnection.m; sourceTree = "<group>"; };
-		2766EFF614DB7F9F009ECCA8 /* TDMultipartStreamer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultipartStreamer.h; sourceTree = "<group>"; };
-		2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultipartStreamer.m; sourceTree = "<group>"; };
-		2766EFFB14DC7B37009ECCA8 /* TDMultiInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultiInputStream.h; sourceTree = "<group>"; };
-		2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultiInputStream.m; sourceTree = "<group>"; };
+		2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultipartWriter.h; sourceTree = "<group>"; };
+		2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultipartWriter.m; sourceTree = "<group>"; };
+		2766EFFB14DC7B37009ECCA8 /* TDMultiStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultiStreamWriter.h; sourceTree = "<group>"; };
+		2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDMultiStreamWriter.m; sourceTree = "<group>"; };
 		27731EFD1493FA3100815D67 /* TDBlobStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBlobStore.h; sourceTree = "<group>"; };
 		27731EFE1493FA3100815D67 /* TDBlobStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBlobStore.m; sourceTree = "<group>"; };
 		27731F2A1495CFEF00815D67 /* TouchDB Empty App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TouchDB Empty App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -958,12 +953,10 @@
 				279906E2149A65B8003D4338 /* TDRemoteRequest.m */,
 				279CE3FE14D749A7009F3FA6 /* TDMultipartReader.h */,
 				279CE3FF14D749A7009F3FA6 /* TDMultipartReader.m */,
-				2713789114BCF6450058C5CD /* TDMultipartWriter.h */,
-				2713789214BCF6450058C5CD /* TDMultipartWriter.m */,
-				2766EFFB14DC7B37009ECCA8 /* TDMultiInputStream.h */,
-				2766EFFC14DC7B37009ECCA8 /* TDMultiInputStream.m */,
-				2766EFF614DB7F9F009ECCA8 /* TDMultipartStreamer.h */,
-				2766EFF714DB7F9F009ECCA8 /* TDMultipartStreamer.m */,
+				2766EFFB14DC7B37009ECCA8 /* TDMultiStreamWriter.h */,
+				2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */,
+				2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */,
+				2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */,
 				27A073EA14C0BB6200F52FE7 /* TDMisc.h */,
 				27A073EB14C0BB6200F52FE7 /* TDMisc.m */,
 				270B3DEE1489359000E0A926 /* TouchDB-Info.plist */,
@@ -1173,15 +1166,14 @@
 				275315C414ACF0330065964D /* DDFileLogger.h in Headers */,
 				275315C814ACF0330065964D /* DDLog.h in Headers */,
 				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
-				2713789314BCF6450058C5CD /* TDMultipartWriter.h in Headers */,
 				27A073EC14C0BB6200F52FE7 /* TDMisc.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
 				279CE40014D749A7009F3FA6 /* TDMultipartReader.h in Headers */,
 				279CE40A14D8AA23009F3FA6 /* TDMultipartDownloader.h in Headers */,
 				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
 				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
-				2766EFF814DB7F9F009ECCA8 /* TDMultipartStreamer.h in Headers */,
-				2766EFFD14DC7B37009ECCA8 /* TDMultiInputStream.h in Headers */,
+				2766EFF814DB7F9F009ECCA8 /* TDMultipartWriter.h in Headers */,
+				2766EFFD14DC7B37009ECCA8 /* TDMultiStreamWriter.h in Headers */,
 				27C5305414DF3A050078F886 /* TDMultipartUploader.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1690,7 +1682,6 @@
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
 				2700BC5E14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */,
-				2713789414BCF6450058C5CD /* TDMultipartWriter.m in Sources */,
 				2773ADC814BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* TDMisc.m in Sources */,
 				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
@@ -1698,8 +1689,8 @@
 				279CE40614D88032009F3FA6 /* TDBlobStore_Tests.m in Sources */,
 				279CE40B14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
 				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
-				2766EFF914DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */,
-				2766EFFE14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */,
+				2766EFF914DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */,
+				2766EFFE14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */,
 				27C5305514DF3A050078F886 /* TDMultipartUploader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1789,7 +1780,6 @@
 				27AA409E14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */,
 				27AA40A414AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */,
 				2700BC5F14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */,
-				2713789514BCF6450058C5CD /* TDMultipartWriter.m in Sources */,
 				2773ADC914BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */,
 				27A073EE14C0BB6200F52FE7 /* TDMisc.m in Sources */,
 				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
@@ -1797,8 +1787,8 @@
 				279CE40714D88032009F3FA6 /* TDBlobStore_Tests.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
 				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
-				2766EFFA14DB7F9F009ECCA8 /* TDMultipartStreamer.m in Sources */,
-				2766EFFF14DC7B37009ECCA8 /* TDMultiInputStream.m in Sources */,
+				2766EFFA14DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */,
+				2766EFFF14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* TDMultipartUploader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

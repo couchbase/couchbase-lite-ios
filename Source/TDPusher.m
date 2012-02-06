@@ -198,13 +198,14 @@
 
 - (BOOL) uploadMultipartRevision: (TDRevision*)rev {
     // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream:
-    TDMultipartStreamer* bodyStream = nil;
+    TDMultipartWriter* bodyStream = nil;
     NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
     for (NSDictionary* attachment in attachments.allValues) {
         if ([attachment objectForKey: @"follows"]) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
-                bodyStream = [[[TDMultipartStreamer alloc] init] autorelease];
+                bodyStream = [[[TDMultipartWriter alloc] initWithContentType: @"multipart/related"
+                                                                      boundary: nil] autorelease];
                 [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
                 [bodyStream addData: rev.asJSON];
             }

@@ -7,13 +7,17 @@
 //
 
 #import "TDRemoteRequest.h"
-#import "TDMultipartStreamer.h"
+#import "TDMultipartWriter.h"
 
 
 @interface TDMultipartUploader : TDRemoteRequest
+{
+    @private
+    TDMultipartWriter* _streamer;
+}
 
 - (id) initWithURL: (NSURL *)url
-          streamer: (TDMultipartStreamer*)streamer
+          streamer: (TDMultipartWriter*)streamer
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 
 @end
