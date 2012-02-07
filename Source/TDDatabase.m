@@ -30,6 +30,10 @@
 @implementation TDDatabase
 
 
+static int TDCollateRevIDs(void *context,
+                           int len1, const void * chars1,
+                           int len2, const void * chars2);
+
 static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     return [fmgr removeItemAtPath: path error: outError] || ![fmgr fileExistsAtPath: path];
@@ -119,6 +123,8 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                              kTDCollateJSON_Raw, TDCollateJSON);
     sqlite3_create_collation(_fmdb.sqliteHandle, "JSON_ASCII", SQLITE_UTF8,
                              kTDCollateJSON_ASCII, TDCollateJSON);
+    sqlite3_create_collation(_fmdb.sqliteHandle, "REVID", SQLITE_UTF8,
+                             NULL, TDCollateRevIDs);
     
     // Stuff we need to initialize every time the database opens:
     if (![self initialize: @"PRAGMA foreign_keys = ON;"])
@@ -146,7 +152,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
             CREATE TABLE revs ( \
                 sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
                 doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE, \
-                revid TEXT NOT NULL, \
+                revid TEXT NOT NULL COLLATE REVID, \
                 parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL, \
                 current BOOLEAN, \
                 deleted BOOLEAN DEFAULT 0, \
@@ -156,7 +162,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
             CREATE INDEX revs_parent ON revs(parent); \
             CREATE TABLE localdocs ( \
                 docid TEXT UNIQUE NOT NULL, \
-                revid TEXT NOT NULL, \
+                revid TEXT NOT NULL COLLATE REVID, \
                 json BLOB); \
             CREATE INDEX localdocs_by_docid ON localdocs(docid); \
             CREATE TABLE views ( \
@@ -925,7 +931,59 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 
+#pragma mark - COLLATE REVISION IDS:
 
+
+static inline int sgn(int n) {
+    return n>0 ? 1 : (n<0 ? -1 : 0);
+}
+
+static int defaultCollate(const char* str1, int len1, const char* str2, int len2) {
+    int result = memcmp(str1, str2, MIN(len1, len2));
+    return sgn(result ?: (len1 - len2));
+}
+
+static int parseDigits(const char* str, const char* end) {
+    long result = 0;
+    for (; str < end; ++str) {
+        if (!isdigit(*str))
+            return 0;
+        result = 10*result + digittoint(*str);
+    }
+    return result;
+}
+
+/* A proper revision ID consists of a generation number, a hyphen, and an arbitrary suffix.
+   Compare the generation numbers numerically, and then the suffixes lexicographically.
+   If either string isn't a proper rev ID, fall back to lexicographic comparison. */
+static int TDCollateRevIDs(void *context,
+                           int len1, const void * chars1,
+                           int len2, const void * chars2)
+{
+    const char *rev1 = chars1, *rev2 = chars2;
+    const char* dash1 = memchr(rev1, '-', len1);
+    const char* dash2 = memchr(rev2, '-', len2);
+    if ((dash1==rev1+1 && dash2==rev2+1)
+            || dash1 > rev1+8 || dash2 > rev2+8
+            || dash1==NULL || dash2==NULL)
+    {
+        // Single-digit generation #s, or improper rev IDs; just compare as plain text:
+        return defaultCollate(rev1,len1, rev2,len2);
+    }
+    // Parse generation numbers. If either is invalid, revert to default collation:
+    int gen1 = parseDigits(rev1, dash1);
+    int gen2 = parseDigits(rev2, dash2);
+    if (!gen1 || !gen2)
+        return defaultCollate(rev1,len1, rev2,len2);
+    
+    // Compare generation numbers; if they match, compare suffixes:
+    return sgn(gen1 - gen2) ?: defaultCollate(dash1+1, len1-(dash1+1-rev1),
+                                              dash2+1, len2-(dash2+1-rev2));
+}
+
+
+
+#pragma mark - TESTS:
 #if DEBUG
 
 static TDRevision* mkrev(NSString* revID) {
@@ -969,6 +1027,35 @@ TestCase(TDDatabase_MakeRevisionHistoryDict) {
     
     revs = $array(mkrev(@"12345"), mkrev(@"6789"));
     CAssertEqual(makeRevisionHistoryDict(revs), $dict({@"ids", $array(@"12345", @"6789")}));
+}
+
+static int collateRevs(const char* rev1, const char* rev2) {
+    return TDCollateRevIDs(NULL, strlen(rev1), rev1, strlen(rev2), rev2);
+}
+
+TestCase(TDCollateRevIDs) {
+    // Single-digit:
+    CAssertEq(collateRevs("1-foo", "1-foo"), 0);
+    CAssertEq(collateRevs("2-bar", "1-foo"), 1);
+    CAssertEq(collateRevs("1-foo", "2-bar"), -1);
+    // Multi-digit:
+    CAssertEq(collateRevs("123-bar", "456-foo"), -1);
+    CAssertEq(collateRevs("456-foo", "123-bar"), 1);
+    CAssertEq(collateRevs("456-foo", "456-foo"), 0);
+    CAssertEq(collateRevs("456-foo", "456-foofoo"), -1);
+    // Different numbers of digits:
+    CAssertEq(collateRevs("89-foo", "123-bar"), -1);
+    CAssertEq(collateRevs("123-bar", "89-foo"), 1);
+    // Edge cases:
+    CAssertEq(collateRevs("123-", "89-"), 1);
+    CAssertEq(collateRevs("123-a", "123-a"), 0);
+    // Invalid rev IDs:
+    CAssertEq(collateRevs("-a", "-b"), -1);
+    CAssertEq(collateRevs("-", "-"), 0);
+    CAssertEq(collateRevs("", ""), 0);
+    CAssertEq(collateRevs("", "-b"), -1);
+    CAssertEq(collateRevs("bogus", "yo"), -1);
+    CAssertEq(collateRevs("bogus-x", "yo-y"), -1);
 }
 
 #endif
