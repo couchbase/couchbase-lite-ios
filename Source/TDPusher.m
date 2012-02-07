@@ -15,10 +15,15 @@
 
 #import "TDPusher.h"
 #import "TDDatabase.h"
+#import "TDDatabase+Insertion.h"
 #import "TDRevision.h"
 #import "TDMultipartUploader.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
+
+
+static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
+static void stubOutAttachmentsBeforeRevPos(TDRevision* rev, int minRevPos);
 
 
 @interface TDPusher ()
@@ -130,11 +135,14 @@
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
             __block SequenceNumber lastInboxSequence = 0;
             NSArray* docsToSend = [changes.allRevisions my_map: ^(TDRevision* rev) {
-                NSMutableDictionary* properties;
+                NSDictionary* properties;
                 @autoreleasepool {
-                    NSArray* revs = [[results objectForKey: [rev docID]] objectForKey: @"missing"];
-                    if (![revs containsObject: [rev revID]])
+                    // Is this revision in the server's 'missing' list?
+                    NSDictionary* revResults = [results objectForKey: [rev docID]];
+                    NSArray* missing = [revResults objectForKey: @"missing"];
+                    if (![missing containsObject: [rev revID]])
                         return (id)nil;
+                    
                     // Get the revision's properties:
                     if ([rev deleted]) {
                         properties = $mdict({@"_id", [rev docID]},
@@ -143,7 +151,6 @@
                                             {@"_revisions", [_db getRevisionHistoryDict: rev]});
                         [properties retain];
                     } else {
-                        // OPT: Shouldn't include all attachment bodies, just ones that have changed
                         if ([_db loadRevisionBody: rev
                                           options: kTDIncludeAttachments | kTDBigAttachmentsFollow |
                                                    kTDIncludeRevs]
@@ -151,10 +158,18 @@
                             Warn(@"%@: Couldn't get local contents of %@", self, rev);
                             return nil;
                         }
-                        // If the rev has huge attachments, send it under separate cover:
-                        if ([self uploadMultipartRevision: rev])
-                            return nil;
-                        properties = [[rev properties] mutableCopy];
+                        // Strip any attachments already known to the target db:
+                        if ([rev.properties objectForKey: @"_attachments"]) {
+                            // Look for the latest common ancestor:
+                            NSArray* possible = [revResults objectForKey: @"possible_ancestors"];
+                            int minRevPos = findCommonAncestor(rev, possible);
+                            if (minRevPos > 0)
+                                stubOutAttachmentsBeforeRevPos(rev, minRevPos + 1);
+                            // If the rev has huge attachments, send it under separate cover:
+                            if ([self uploadMultipartRevision: rev])
+                                return nil;
+                        }
+                        properties = [[rev properties] copy];
                     }
                 }
                 lastInboxSequence = rev.sequence;
@@ -222,7 +237,7 @@
     [self asyncTaskStarted];
 
     NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeURLParam(rev.docID));
-    LogTo(SyncVerbose, @"%@: PUT .%@", self, path);
+    LogTo(SyncVerbose, @"%@: PUT .%@ (multipart, %lldkb)", self, path, bodyStream.length/1024);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
     [[[TDMultipartUploader alloc] initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
@@ -241,4 +256,84 @@
 }
 
 
+// Given a revision and an array of revIDs, finds the latest common ancestor revID
+// and returns its generation #. If there is none, returns 0.
+static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
+    if (possibleRevIDs.count == 0)
+        return 0;
+    NSArray* history = [TDDatabase parseCouchDBRevisionHistory: rev.properties];
+    NSString* ancestorID = [history firstObjectCommonWithArray: possibleRevIDs];
+    if (!ancestorID)
+        return 0;
+    int generation;
+    if (![TDDatabase parseRevID: ancestorID intoGeneration: &generation andSuffix: nil])
+        generation = 0;
+    return generation;
+}
+
+
+// Turns attachments whose revpos is less than the minRevPos into stubs.
+static void stubOutAttachmentsBeforeRevPos(TDRevision* rev, int minRevPos) {
+    NSDictionary* properties = rev.properties;
+    NSMutableDictionary* editedProperties = nil;
+    NSDictionary* attachments = (id)[properties objectForKey: @"_attachments"];
+    NSMutableDictionary* editedAttachments = nil;
+    for (NSString* name in attachments) {
+        NSDictionary* attachment = [attachments objectForKey: name];
+        int revPos = [[attachment objectForKey: @"revpos"] intValue];
+        if (revPos > 0 && revPos < minRevPos && ![attachment objectForKey: @"stub"]) {
+            // Strip this attachment's body. First make its dictionary mutable:
+            if (!editedProperties) {
+                editedProperties = [[properties mutableCopy] autorelease];
+                editedAttachments = [[attachments mutableCopy] autorelease];
+                [editedProperties setObject: editedAttachments forKey: @"_attachments"];
+            }
+            // ...then remove the 'data' and 'follows' key:
+            NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+            [editedAttachment removeObjectForKey: @"data"];
+            [editedAttachment removeObjectForKey: @"follows"];
+            [editedAttachment setObject: $true forKey: @"stub"];
+            [editedAttachments setObject: editedAttachment forKey: name];
+            LogTo(SyncVerbose, @"TDPusher: %@: Stubbed out attachment '%@': revpos %d < %d",
+                  rev, name, revPos, minRevPos);
+        }
+    }
+    
+    if (editedProperties)
+        rev.properties = editedProperties;
+}
+
+
 @end
+
+
+
+
+TestCase(TDPusher_findCommonAncestor) {
+    NSDictionary* revDict = $dict({@"ids", $array(@"second", @"first")}, {@"start", $object(2)});
+    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_revisions", revDict})];
+    CAssertEq(findCommonAncestor(rev, $array()), 0);
+    CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"1-nope")), 0);
+    CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"1-first")), 1);
+    CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"2-second", @"1-first")), 2);
+}
+
+TestCase(TDPusher_removeAttachmentsBeforeRevPos) {
+    NSDictionary* hello = $dict({@"revpos", $object(1)}, {@"follows", $true});
+    NSDictionary* goodbye = $dict({@"revpos", $object(2)}, {@"data", @"squeeee"});
+    NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
+    
+    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    stubOutAttachmentsBeforeRevPos(rev, 3);
+    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
+                                                               {@"goodbye", $dict({@"revpos", $object(2)}, {@"stub", $true})})}));
+    
+    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    stubOutAttachmentsBeforeRevPos(rev, 2);
+    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
+                                                               {@"goodbye", goodbye})}));
+    
+    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    stubOutAttachmentsBeforeRevPos(rev, 1);
+    CAssertEqual(rev.properties, $dict({@"_attachments", attachments}));
+}

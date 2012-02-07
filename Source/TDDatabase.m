@@ -663,13 +663,15 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 
 // Splits a revision ID into its generation number and opaque suffix string
-static BOOL parseRevID( NSString* revID, int* outNum, NSString** outSuffix) {
++ (BOOL) parseRevID: (NSString*)revID intoGeneration: (int*)outNum andSuffix:(NSString**)outSuffix
+{
     NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
     scanner.charactersToBeSkipped = nil;
     BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: nil];
-    *outSuffix = [revID substringFromIndex: scanner.scanLocation];
+    if (outSuffix)
+        *outSuffix = [revID substringFromIndex: scanner.scanLocation];
     [scanner release];
-    return parsed && *outNum > 0 && (*outSuffix).length > 0;
+    return parsed && *outNum > 0 && (!outSuffix || (*outSuffix).length > 0);
 }
 
 static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
@@ -683,7 +685,7 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
     for (TDRevision* rev in history) {
         int revNo;
         NSString* suffix;
-        if (parseRevID(rev.revID, &revNo, &suffix)) {
+        if ([TDDatabase parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
             if (!start)
                 start = $object(revNo);
             else if (revNo != lastRevNo - 1) {
@@ -928,6 +930,10 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 static TDRevision* mkrev(NSString* revID) {
     return [[[TDRevision alloc] initWithDocID: @"docid" revID: revID deleted: NO] autorelease];
+}
+
+static BOOL parseRevID(NSString* revID, int *gen, NSString** suffix) {
+    return [TDDatabase parseRevID: revID intoGeneration: gen andSuffix: suffix];
 }
 
 TestCase(TDDatabase_ParseRevID) {

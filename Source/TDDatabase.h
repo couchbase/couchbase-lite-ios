@@ -28,11 +28,11 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 /** Options for what metadata to include in document bodies */
 typedef unsigned TDContentOptions;
 enum {
-    kTDIncludeAttachments = 1,
-    kTDIncludeConflicts = 2,
-    kTDIncludeRevs = 4,
-    kTDIncludeRevsInfo = 8,
-    kTDIncludeLocalSeq = 16,
+    kTDIncludeAttachments = 1,              // adds '_attachments' property (if relevant)
+    kTDIncludeConflicts = 2,                // adds '_conflicts' property (if relevant)
+    kTDIncludeRevs = 4,                     // adds '_revisions' property
+    kTDIncludeRevsInfo = 8,                 // adds '_revs_info' property
+    kTDIncludeLocalSeq = 16,                // adds '_local_seq' property
     kTDLeaveAttachmentsEncoded = 32,        // i.e. don't decode
     kTDBigAttachmentsFollow = 64            // i.e. add 'follows' key instead of data for big ones
 };
@@ -149,5 +149,8 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
 
 - (TDFilterBlock) filterNamed: (NSString*)filterName;
+
+/** Splits a revision ID into its generation number and opaque suffix string. */
++ (BOOL) parseRevID: (NSString*)revID intoGeneration: (int*)outNum andSuffix:(NSString**)outSuffix;
 
 @end
