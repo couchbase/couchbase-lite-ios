@@ -75,9 +75,12 @@ static void stubOutAttachmentsBeforeRevPos(TDRevision* rev, int minRevPos);
     if (_createTarget)
         return;
     
+    // Include conflicts so all conflicting revisions are replicated too
+    TDChangesOptions options = kDefaultTDChangesOptions;
+    options.includeConflicts = YES;
     // Process existing changes since the last push:
     TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
-                                                options: nil filter: _filter];
+                                                options:&options filter: _filter];
     if (changes.count > 0)
         [self processInbox: changes];
     
