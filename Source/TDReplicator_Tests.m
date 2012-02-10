@@ -17,6 +17,7 @@
 #import "TDPusher.h"
 #import "TDServer.h"
 #import "TDDatabase+Insertion.h"
+#import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
 
@@ -57,6 +58,7 @@ static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* 
             break;
     }
     CAssert(!repl.running);
+    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     return repl.lastSequence;
 }
 
@@ -124,6 +126,32 @@ TestCase(TDPuller) {
     CAssertEqual([doc.properties objectForKey: @"fnord"], $true);
 
     [db close];
+}
+
+
+TestCase(TDPuller_FromCouchApp) {
+    /** This test case requires that there be an empty CouchApp installed on a local CouchDB server, in a database named "couchapp_helloworld". To keep the test from breaking for most people, I've disabled it unless you're me :) If you want to run this test, just delete the lines below. */
+    if (!$equal(NSUserName(), @"snej")) {
+        Log(@"Skipping TDPuller_FromCouchApp test");
+        return;
+    }
+    
+    RequireTestCase(TDPuller);
+    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDPuller_FromCouchApp"];
+    TDDatabase* db = [server databaseNamed: @"couchapp_helloworld"];
+    [db open];
+    
+    replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
+    
+    TDRevision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kTDIncludeAttachments];
+    NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
+    CAssertEq(attachments.count, 10u);
+    [attachments enumerateKeysAndObjectsUsingBlock:^(NSString* name, NSDictionary* attachment, BOOL *stop) {
+        NSData* data = [TDBase64 decode: [attachment objectForKey: @"data"]];
+        Log(@"Attachment %@: %u bytes", name, data.length);
+        CAssert(data);
+        CAssertEq([data length], [[attachment objectForKey: @"length"] unsignedLongLongValue]);
+    }];
 }
 
 #endif
