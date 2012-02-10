@@ -238,8 +238,11 @@
 
 
 TestCase(TDRemoteMultipartRequest) {
+    if (!$equal(NSUserName(), @"snej"))
+        return;
+    
     RequireTestCase(TDBlobStore);
-    TDDatabase* db = [TDDatabase createEmptyDBAtPath: @"/tmp/TestTDRemoteMultipartRequest"];
+    TDDatabase* db = [TDDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"TestTDRemoteMultipartRequest"]];
     //TEMP: This URL only works for me!
     //NSString* urlStr = @"http://127.0.0.1:5984/demo-shopping-attachments/2F9078DF-3C72-44C2-8332-B07B3A29FFE4"
     NSString* urlStr = @"http://127.0.0.1:5984/attach-test/oneBigAttachment";

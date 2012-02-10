@@ -26,6 +26,11 @@
 #pragma mark - TESTS
 
 
+static TDServer* createServer(void) {
+    return [TDServer createEmptyAtTemporaryPath: @"TDRouterTest"];
+}
+
+
 static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* path,
                                NSDictionary* headers, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"touchdb://" stringByAppendingString: path]];
@@ -80,7 +85,7 @@ static id Send(TDServer* server, NSString* method, NSString* path,
 
 TestCase(TDRouter_Server) {
     RequireTestCase(TDServer);
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"GET", @"/", 200, $dict({@"TouchDB", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
                                           {@"version", [TDRouter versionString]}));
@@ -94,7 +99,7 @@ TestCase(TDRouter_Server) {
 
 TestCase(TDRouter_Databases) {
     RequireTestCase(TDRouter_Server);
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/database", 201, nil);
     
     NSDictionary* dbInfo = Send(server, @"GET", @"/database", 200, nil);
@@ -119,7 +124,7 @@ TestCase(TDRouter_Databases) {
 TestCase(TDRouter_Docs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/db", 201, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     201, nil);
@@ -196,7 +201,7 @@ TestCase(TDRouter_LocalDocs) {
     RequireTestCase(TDDatabase_LocalDocs);
     RequireTestCase(TDRouter_Docs);
     // PUT a local doc:
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/db", 201, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}), 
                                     201, nil);
@@ -218,7 +223,7 @@ TestCase(TDRouter_LocalDocs) {
 
 TestCase(TDRouter_AllDocs) {
     // PUT:
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/db", 201, nil);
     
     NSDictionary* result;
@@ -265,7 +270,7 @@ TestCase(TDRouter_AllDocs) {
 
 TestCase(TDRouter_Views) {
     // PUT:
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/db", 201, nil);
     
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
@@ -309,7 +314,7 @@ TestCase(TDRouter_Views) {
 
 
 TestCase(TDRouter_ContinuousChanges) {
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/db", 201, nil);
 
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
@@ -356,7 +361,7 @@ TestCase(TDRouter_ContinuousChanges) {
 
 
 TestCase(TDRouter_GetAttachment) {
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/db", 201, nil);
 
     // Create a document with an attachment:
@@ -417,7 +422,7 @@ TestCase(TDRouter_GetAttachment) {
 TestCase(TDRouter_OpenRevs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDRouterTest"];
+    TDServer* server = createServer();
     Send(server, @"PUT", @"/db", 201, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     201, nil);

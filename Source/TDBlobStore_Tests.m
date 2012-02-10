@@ -11,7 +11,7 @@
 
 
 static TDBlobStore* createStore(void) {
-    NSString* path = @"/tmp/TDBlobStoreTest";
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"TDBlobStoreTest"];
     [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
     NSError* error;
     TDBlobStore* store = [[TDBlobStore alloc] initWithPath: path error: &error];

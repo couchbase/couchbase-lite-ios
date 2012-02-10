@@ -31,11 +31,9 @@
 #if DEBUG
 
 
-NSString* kPath = @"/tmp/touchdb_test.sqlite3";
-
-
 static TDDatabase* createDB(void) {
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: kPath];
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"touchdb_test.sqlite3"];
+    TDDatabase *db = [TDDatabase createEmptyDBAtPath: path];
     CAssert([db open]);
     return db;
 }

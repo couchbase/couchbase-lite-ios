@@ -21,9 +21,13 @@
 
 #if DEBUG
 
+static TDDatabase* createDB(void) {
+    return [TDDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"TouchDB_ViewTest.touchdb"]];
+}
+
 TestCase(TDView_Create) {
     RequireTestCase(TDDatabase);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     
     CAssertNil([db existingViewNamed: @"aview"]);
     
@@ -87,7 +91,7 @@ static TDView* createView(TDDatabase* db) {
 
 TestCase(TDView_Index) {
     RequireTestCase(TDView_Create);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     TDRevision* rev1 = putDoc(db, $dict({@"key", @"one"}));
     TDRevision* rev2 = putDoc(db, $dict({@"key", @"two"}));
     TDRevision* rev3 = putDoc(db, $dict({@"key", @"three"}));
@@ -146,7 +150,7 @@ TestCase(TDView_Index) {
 
 TestCase(TDView_Query) {
     RequireTestCase(TDView_Index);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     putDocs(db);
     TDView* view = createView(db);
     CAssertEq([view updateIndex], 200);
@@ -206,7 +210,7 @@ TestCase(TDView_Query) {
 
 
 TestCase(TDView_AllDocsQuery) {
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     NSDictionary* expectedRow[docs.count];
     int i = 0;
@@ -261,7 +265,7 @@ TestCase(TDView_AllDocsQuery) {
 
 TestCase(TDView_Reduce) {
     RequireTestCase(TDView_Query);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     putDoc(db, $dict({@"_id", @"CD"},      {@"cost", $object(8.99)}));
     putDoc(db, $dict({@"_id", @"App"},     {@"cost", $object(1.95)}));
     putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", $object(6.50)}));
@@ -297,7 +301,7 @@ TestCase(TDView_Reduce) {
 
 TestCase(TDView_Grouped) {
     RequireTestCase(TDView_Reduce);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     putDoc(db, $dict({@"_id", @"1"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
                      {@"track", @"Ether"}, {@"time", $object(231)}));
     putDoc(db, $dict({@"_id", @"2"}, {@"artist", @"Gang Of Four"}, {@"album", @"Songs Of The Free"},
@@ -367,7 +371,7 @@ TestCase(TDView_Grouped) {
 
 TestCase(TDView_GroupedStrings) {
     RequireTestCase(TDView_Grouped);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     putDoc(db, $dict({@"name", @"Alice"}));
     putDoc(db, $dict({@"name", @"Albert"}));
     putDoc(db, $dict({@"name", @"Naomi"}));
@@ -419,7 +423,7 @@ TestCase(TDView_Collation) {
                                                    $array(@"b", @"d"),
                                                    $array(@"b", @"d", @"e"), nil];
     RequireTestCase(TDView_Query);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     int i = 0;
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
@@ -463,7 +467,7 @@ TestCase(TDView_CollationRaw) {
                                                    @"bb",
                                                    @"~", nil];
     RequireTestCase(TDView_Query);
-    TDDatabase *db = [TDDatabase createEmptyDBAtPath: @"/tmp/TouchDB_ViewTest.touchdb"];
+    TDDatabase *db = createDB();
     int i = 0;
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));

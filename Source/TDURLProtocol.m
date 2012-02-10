@@ -121,7 +121,7 @@ static TDServer* sServer;
 
 TestCase(TDURLProtocol) {
     RequireTestCase(TDRouter);
-    [TDURLProtocol setServer: [TDServer createEmptyAtPath: @"/tmp/TDURLProtocolTest"]];
+    [TDURLProtocol setServer: [TDServer createEmptyAtTemporaryPath: @"TDURLProtocolTest"]];
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///"];
     NSURLRequest* req = [NSURLRequest requestWithURL: url];

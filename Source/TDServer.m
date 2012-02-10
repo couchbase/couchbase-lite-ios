@@ -44,6 +44,10 @@ static NSCharacterSet* kIllegalNameChars;
     AssertEqual(server.directory, path);
     return [server autorelease];
 }
++ (TDServer*) createEmptyAtTemporaryPath: (NSString*)name {
+    return [self createEmptyAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: name]];
+}
+
 #endif
 
 
@@ -160,7 +164,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 TestCase(TDServer) {
     RequireTestCase(TDDatabase);
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDServerTest"];
+    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDServerTest"];
     TDDatabase* db = [server databaseNamed: @"foo"];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");

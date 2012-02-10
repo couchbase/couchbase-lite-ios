@@ -74,6 +74,7 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 @interface TDServer ()
 #if DEBUG
 + (TDServer*) createEmptyAtPath: (NSString*)path;  // for testing
++ (TDServer*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
 @end
 

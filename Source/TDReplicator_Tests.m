@@ -25,7 +25,11 @@
 #if DEBUG
 
 // Change port to 59840 to test against TouchServ :)
+#if TARGET_OS_IPHONE
+#define kRemoteDBURLStr @"http://jens.local:5984/tdreplicator_test"
+#else
 #define kRemoteDBURLStr @"http://localhost:5984/tdreplicator_test"
+#endif
 
 
 static void deleteRemoteDB(void) {
@@ -65,7 +69,7 @@ static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* 
 
 TestCase(TDPusher) {
     RequireTestCase(TDDatabase);
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDPusherTest"];
+    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDPusherTest"];
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
     
@@ -102,7 +106,7 @@ TestCase(TDPusher) {
 
 TestCase(TDPuller) {
     RequireTestCase(TDPusher);
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDPullerTest"];
+    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDPullerTest"];
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
     
@@ -137,7 +141,7 @@ TestCase(TDPuller_FromCouchApp) {
     }
     
     RequireTestCase(TDPuller);
-    TDServer* server = [TDServer createEmptyAtPath: @"/tmp/TDPuller_FromCouchApp"];
+    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDPuller_FromCouchApp"];
     TDDatabase* db = [server databaseNamed: @"couchapp_helloworld"];
     [db open];
     
