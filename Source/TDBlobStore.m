@@ -43,6 +43,7 @@
 
 - (void)dealloc {
     [_path release];
+    [_tempDir release];
     [super dealloc];
 }
 
@@ -191,6 +192,25 @@
 }
 
 
+- (NSString*) tempDir {
+    if (!_tempDir) {
+        // Find a temporary directory suitable for files that will be moved into the store:
+        NSError* error;
+        NSURL* parentURL = [NSURL fileURLWithPath: _path isDirectory: YES];
+        NSURL* tempDirURL = [[NSFileManager defaultManager] 
+                                                 URLForDirectory: NSItemReplacementDirectory
+                                                 inDomain: NSUserDomainMask
+                                                 appropriateForURL: parentURL
+                                                 create: YES error: &error];
+        _tempDir = [tempDirURL.path copy];
+        Log(@"TDBlobStore %@ created tempDir %@", _path, _tempDir);
+        if (!_tempDir)
+            Warn(@"TDBlobStore: Unable to create temp dir: %@", error);
+    }
+    return _tempDir;
+}
+
+
 @end
 
 
@@ -206,22 +226,14 @@
         _store = store;
         CC_SHA1_Init(&_shaCtx);
         CC_MD5_Init(&_md5Ctx);
-        
-        // Find a temporary directory suitable for files that will be moved into the store:
-        NSURL* storeURL = [NSURL fileURLWithPath: store.path];
-        NSURL* tempDirURL = [[NSFileManager defaultManager] 
-                                     URLForDirectory: NSItemReplacementDirectory
-                                            inDomain: NSUserDomainMask
-                                   appropriateForURL: storeURL
-                                              create: YES error: nil];
-        if (!tempDirURL) {
+                
+        // Open a temporary file in the store's temporary directory: 
+        NSString* filename = [TDCreateUUID() stringByAppendingPathExtension: @"blobtmp"];
+        _tempPath = [[_store.tempDir stringByAppendingPathComponent: filename] copy];
+        if (!_tempPath) {
             [self release];
             return nil;
         }
-        
-        // Open a temporary file in the temporary directory: 
-        NSString* filename = [TDCreateUUID() stringByAppendingPathExtension: @"blobtmp"];
-        _tempPath = [[tempDirURL.path stringByAppendingPathComponent: filename] copy];
         [[NSFileManager defaultManager] createFileAtPath: _tempPath contents: nil attributes: nil];
         _out = [[NSFileHandle fileHandleForWritingAtPath: _tempPath] retain];
         if (!_out) {

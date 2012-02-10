@@ -21,6 +21,7 @@ typedef struct TDBlobKey {
 @interface TDBlobStore : NSObject
 {
     NSString* _path;
+    NSString* _tempDir;
 }
 
 - (id) initWithPath: (NSString*)dir error: (NSError**)outError;
