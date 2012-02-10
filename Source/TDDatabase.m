@@ -610,12 +610,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 }
 
 
-- (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID {
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID < 0)
-        return nil;
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid FROM revs WHERE doc_id=? AND current "
-                                           "ORDER BY revid DESC OFFSET 1", docNumericID];
+static NSArray* revIDsFromResultSet(FMResultSet* r) {
     if (!r)
         return nil;
     NSMutableArray* revIDs = $marray();
@@ -623,6 +618,29 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
         [revIDs addObject: [r stringForColumnIndex: 0]];
     [r close];
     return revIDs;
+}
+
+
+- (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID {
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID < 0)
+        return nil;
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid FROM revs WHERE doc_id=? AND current "
+                                           "ORDER BY revid DESC OFFSET 1", $object(docNumericID)];
+    return revIDsFromResultSet(r);
+}
+
+
+- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev {
+    int generation = rev.generation;
+    if (generation <= 1)
+        return nil;
+    SInt64 docNumericID = [self getDocNumericID: rev.docID];
+    if (docNumericID <= 0)
+        return nil;
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid FROM revs WHERE doc_id=? and revid < ?",
+                                           $object(docNumericID), $sprintf(@"%d-", generation)];
+    return revIDsFromResultSet(r);
 }
     
 

@@ -364,10 +364,29 @@
         NSMutableArray* revs = [[diffs objectForKey: docID] objectForKey: @"missing"];
         if (!revs) {
             revs = $marray();
-            [diffs setObject: $dict({@"missing", revs}) forKey: docID];
+            [diffs setObject: $mdict({@"missing", revs}) forKey: docID];
         }
         [revs addObject: rev.revID];
     }
+    
+    // Add the possible ancestors for each missing revision:
+    [diffs enumerateKeysAndObjectsUsingBlock: ^(NSString* docID, NSMutableDictionary* docInfo,
+                                                BOOL *stop) {
+        int maxGen = 0;
+        NSString* maxRevID = nil;
+        for (NSString* revID in [docInfo objectForKey: @"missing"]) {
+            int gen;
+            if ([TDDatabase parseRevID: revID intoGeneration: &gen andSuffix: nil] && gen > maxGen) {
+                maxGen = gen;
+                maxRevID = revID;
+            }
+        }
+        TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
+        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev];
+        [rev release];
+        if (ancestors)
+            [docInfo setObject: ancestors forKey: @"possible_ancestors"];
+    }];
                                     
     _response.bodyObject = diffs;
     return 200;

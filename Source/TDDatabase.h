@@ -128,6 +128,11 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                     onlyCurrent: (BOOL)onlyCurrent;
 
+- (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID;
+
+/** Returns all known revision IDs of the same document, that have a lower generation number. */
+- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev;
+
 // VIEWS & QUERIES:
 
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;

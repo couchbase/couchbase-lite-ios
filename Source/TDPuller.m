@@ -33,7 +33,6 @@
 - (void) pullRemoteRevisions;
 - (void) pullRemoteRevision: (TDRevision*)rev;
 - (void) insertDownloads: (NSArray*)downloads;
-- (NSArray*) knownCurrentRevIDsOf: (TDRevision*)rev;
 @end
 
 static NSString* joinQuotedEscaped(NSArray* strings);
@@ -192,7 +191,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true&attachments=true",
                               TDEscapeURLParam(rev.docID), TDEscapeURLParam(rev.revID));
-    NSArray* knownRevs = [self knownCurrentRevIDsOf: rev];
+    NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev];
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     
@@ -286,11 +285,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     [self asyncTasksFinished: downloads.count];
     self.changesProcessed += downloads.count;
-}
-
-
-- (NSArray*) knownCurrentRevIDsOf: (TDRevision*)rev {
-    return [_db getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES].allRevIDs;
 }
 
 

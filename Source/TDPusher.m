@@ -115,6 +115,7 @@ static void stubOutAttachmentsBeforeRevPos(TDRevision* rev, int minRevPos);
 
 - (void) processInbox: (TDRevisionList*)changes {
     // Generate a set of doc/rev IDs in the JSON format that _revs_diff wants:
+    // <http://wiki.apache.org/couchdb/HttpPostRevsDiff>
     NSMutableDictionary* diffs = $mdict();
     for (TDRevision* rev in changes) {
         NSString* docID = rev.docID;

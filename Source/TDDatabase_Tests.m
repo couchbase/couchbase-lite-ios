@@ -49,6 +49,18 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
+static TDRevision* putDoc(TDDatabase* db, NSDictionary* props) {
+    TDRevision* rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status;
+    TDRevision* result = [db putRevision: rev
+                          prevRevisionID: [props objectForKey: @"_rev"]
+                           allowConflict: NO
+                                  status: &status];
+    CAssert(status < 300);
+    return result;
+}
+
+
 TestCase(TDDatabase_CRUD) {
     // Start with a fresh database in /tmp:
     TDDatabase* db = createDB();
@@ -648,6 +660,34 @@ TestCase(TDDatabase_LocalDocs) {
 }
 
 
+TestCase(TDDatabase_FindMissingRevisions) {
+    TDDatabase* db = createDB();
+    TDRevision* doc1r1 = putDoc(db, $dict({@"_id", @"11111"}, {@"key", @"one"}));
+    TDRevision* doc2r1 = putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}));
+    putDoc(db, $dict({@"_id", @"33333"}, {@"key", @"three"}));
+    putDoc(db, $dict({@"_id", @"44444"}, {@"key", @"four"}));
+    putDoc(db, $dict({@"_id", @"55555"}, {@"key", @"five"}));
+
+    TDRevision* doc1r2 = putDoc(db, $dict({@"_id", @"11111"}, {@"_rev", doc1r1.revID}, {@"key", @"one+"}));
+    TDRevision* doc2r2 = putDoc(db, $dict({@"_id", @"22222"}, {@"_rev", doc2r1.revID}, {@"key", @"two+"}));
+    
+    putDoc(db, $dict({@"_id", @"11111"}, {@"_rev", doc1r2.revID}, {@"_deleted", $true}));
+    
+    // Now call -findMissingRevisions:
+    TDRevision* revToFind1 = [[[TDRevision alloc] initWithDocID: @"11111" revID: @"3-bogus" deleted: NO] autorelease];
+    TDRevision* revToFind2 = [[[TDRevision alloc] initWithDocID: @"22222" revID: doc2r2.revID deleted: NO] autorelease];
+    TDRevision* revToFind3 = [[[TDRevision alloc] initWithDocID: @"99999" revID: @"9-huh" deleted: NO] autorelease];
+    TDRevisionList* revs = [[[TDRevisionList alloc] initWithArray: $array(revToFind1, revToFind2, revToFind3)] autorelease];
+    CAssert([db findMissingRevisions: revs]);
+    CAssertEqual(revs.allRevisions, $array(revToFind1, revToFind3));
+    
+    // Check the possible ancestors:
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1], $array(doc1r1.revID, doc1r2.revID));
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind3], nil);
+    
+}
+
+
 TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_CRUD);
     RequireTestCase(TDDatabase_RevTree);
@@ -656,6 +696,7 @@ TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_EncodedAttachment);
     RequireTestCase(TDDatabase_ReplicatorSequences);
     RequireTestCase(TDDatabase_LocalDocs);
+    RequireTestCase(TDDatabase_FindMissingRevisions);
 }
 
 

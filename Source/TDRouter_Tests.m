@@ -455,6 +455,38 @@ TestCase(TDRouter_OpenRevs) {
 }
 
 
+TestCase(TDRouter_RevsDiff) {
+    RequireTestCase(TDRouter_Databases);
+    TDServer* server = createServer();
+    Send(server, @"PUT", @"/db", 201, nil);
+    NSDictionary* doc1r1 = SendBody(server, @"PUT", @"/db/11111", $dict(), 201,nil);
+    NSString* doc1r1ID = [doc1r1 objectForKey: @"rev"];
+    NSDictionary* doc2r1 = SendBody(server, @"PUT", @"/db/22222", $dict(), 201,nil);
+    NSString* doc2r1ID = [doc2r1 objectForKey: @"rev"];
+    NSDictionary* doc3r1 = SendBody(server, @"PUT", @"/db/33333", $dict(), 201,nil);
+    NSString* doc3r1ID = [doc3r1 objectForKey: @"rev"];
+    
+    NSDictionary* doc1r2 = SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r1ID}), 201,nil);
+    NSString* doc1r2ID = [doc1r2 objectForKey: @"rev"];
+    SendBody(server, @"PUT", @"/db/22222", $dict({@"_rev", doc2r1ID}), 201,nil);
+
+    SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r2ID}), 201,nil);
+    
+    SendBody(server, @"POST", @"/db/_revs_diff",
+             $dict({@"11111", $array(doc1r2ID, @"3-foo")},
+                   {@"22222", $array(doc2r1ID)},
+                   {@"33333", $array(@"10-bar")},
+                   {@"99999", $array(@"6-six")}),
+             200,
+             $dict({@"11111", $dict({@"missing", $array(@"3-foo")},
+                                    {@"possible_ancestors", $array(doc1r1ID, doc1r2ID)})},
+                   {@"33333", $dict({@"missing", $array(@"10-bar")},
+                                    {@"possible_ancestors", $array(doc3r1ID)})},
+                   {@"99999", $dict({@"missing", $array(@"6-six")})}
+                   ));
+}
+
+
 TestCase(TDRouter) {
     RequireTestCase(TDRouter_Server);
     RequireTestCase(TDRouter_Databases);
@@ -462,6 +494,7 @@ TestCase(TDRouter) {
     RequireTestCase(TDRouter_AllDocs);
     RequireTestCase(TDRouter_ContinuousChanges);
     RequireTestCase(TDRouter_GetAttachment);
+    RequireTestCase(TDRouter_RevsDiff);
 }
 
 #endif
