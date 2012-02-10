@@ -944,7 +944,7 @@ static int defaultCollate(const char* str1, int len1, const char* str2, int len2
 }
 
 static int parseDigits(const char* str, const char* end) {
-    long result = 0;
+    int result = 0;
     for (; str < end; ++str) {
         if (!isdigit(*str))
             return 0;
@@ -977,8 +977,8 @@ static int TDCollateRevIDs(void *context,
         return defaultCollate(rev1,len1, rev2,len2);
     
     // Compare generation numbers; if they match, compare suffixes:
-    return sgn(gen1 - gen2) ?: defaultCollate(dash1+1, len1-(dash1+1-rev1),
-                                              dash2+1, len2-(dash2+1-rev2));
+    return sgn(gen1 - gen2) ?: defaultCollate(dash1+1, len1-(int)(dash1+1-rev1),
+                                              dash2+1, len2-(int)(dash2+1-rev2));
 }
 
 
@@ -1030,7 +1030,7 @@ TestCase(TDDatabase_MakeRevisionHistoryDict) {
 }
 
 static int collateRevs(const char* rev1, const char* rev2) {
-    return TDCollateRevIDs(NULL, strlen(rev1), rev1, strlen(rev2), rev2);
+    return TDCollateRevIDs(NULL, (int)strlen(rev1), rev1, (int)strlen(rev2), rev2);
 }
 
 TestCase(TDCollateRevIDs) {

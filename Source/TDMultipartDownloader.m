@@ -50,6 +50,7 @@
     [_document release];
     [_revision release];
     [_attachmentsByDigest autorelease];
+    [super dealloc];
 }
 
 
