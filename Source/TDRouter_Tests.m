@@ -362,8 +362,13 @@ TestCase(TDRouter_GetAttachment) {
     // Create a document with an attachment:
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSString* base64 = [TDBase64 encode: attach1];
+    NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* base642 = [TDBase64 encode: attach2];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                                           {@"data", base64})});
+                                                           {@"data", base64})},
+                                         {@"path/to/attachment",
+                                                     $dict({@"content_type", @"text/plain"},
+                                                           {@"data", base642})});
     NSDictionary* props = $dict({@"message", @"hello"},
                                 {@"_attachments", attachmentDict});
 
@@ -375,6 +380,14 @@ TestCase(TDRouter_GetAttachment) {
     CAssertEqual(response.body.asJSON, attach1);
     CAssertEqual([response.headers objectForKey: @"Content-Type"], @"text/plain");
     NSString* eTag = [response.headers objectForKey: @"Etag"];
+    CAssert(eTag.length > 0);
+    
+    // Ditto the 2nd attachment, whose name contains "/"s:
+    response = SendRequest(server, @"GET", @"/db/doc1/path/to/attachment", nil, nil);
+    CAssertEq(response.status, 200);
+    CAssertEqual(response.body.asJSON, attach2);
+    CAssertEqual([response.headers objectForKey: @"Content-Type"], @"text/plain");
+    eTag = [response.headers objectForKey: @"Etag"];
     CAssert(eTag.length > 0);
     
     // A nonexistent attachment should result in a 404:
@@ -392,6 +405,11 @@ TestCase(TDRouter_GetAttachment) {
                                         {@"content_type", @"text/plain"},
                                         {@"length", $object(attach1.length)},
                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                         {@"revpos", $object(1)})},
+                       {@"path/to/attachment", $dict({@"data", [TDBase64 encode: attach2]}, 
+                                         {@"content_type", @"text/plain"},
+                                         {@"length", $object(attach2.length)},
+                                         {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                          {@"revpos", $object(1)})}));
 }
 

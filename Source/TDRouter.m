@@ -307,6 +307,9 @@ static NSArray* splitPath( NSURL* url ) {
             attachmentName = pathLen > 3 ? [_path objectAtIndex: 3] : nil;
         } else {
             [message appendString: @"attachment:"];
+            if (pathLen > 3)
+                attachmentName = [[_path subarrayWithRange: NSMakeRange(2, _path.count-2)]
+                                                                componentsJoinedByString: @"/"];
         }
     }
     
