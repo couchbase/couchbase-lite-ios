@@ -23,7 +23,6 @@
 
 
 static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
-static void stubOutAttachmentsBeforeRevPos(TDRevision* rev, int minRevPos);
 
 
 @interface TDPusher ()
@@ -164,11 +163,10 @@ static void stubOutAttachmentsBeforeRevPos(TDRevision* rev, int minRevPos);
                         }
                         // Strip any attachments already known to the target db:
                         if ([rev.properties objectForKey: @"_attachments"]) {
-                            // Look for the latest common ancestor:
+                            // Look for the latest common ancestor and stub out older attachments:
                             NSArray* possible = [revResults objectForKey: @"possible_ancestors"];
                             int minRevPos = findCommonAncestor(rev, possible);
-                            if (minRevPos > 0)
-                                stubOutAttachmentsBeforeRevPos(rev, minRevPos + 1);
+                            [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1];
                             // If the rev has huge attachments, send it under separate cover:
                             if ([self uploadMultipartRevision: rev])
                                 return nil;
@@ -270,41 +268,9 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
     if (!ancestorID)
         return 0;
     int generation;
-    if (![TDDatabase parseRevID: ancestorID intoGeneration: &generation andSuffix: nil])
+    if (![TDRevision parseRevID: ancestorID intoGeneration: &generation andSuffix: nil])
         generation = 0;
     return generation;
-}
-
-
-// Turns attachments whose revpos is less than the minRevPos into stubs.
-static void stubOutAttachmentsBeforeRevPos(TDRevision* rev, int minRevPos) {
-    NSDictionary* properties = rev.properties;
-    NSMutableDictionary* editedProperties = nil;
-    NSDictionary* attachments = (id)[properties objectForKey: @"_attachments"];
-    NSMutableDictionary* editedAttachments = nil;
-    for (NSString* name in attachments) {
-        NSDictionary* attachment = [attachments objectForKey: name];
-        int revPos = [[attachment objectForKey: @"revpos"] intValue];
-        if (revPos > 0 && revPos < minRevPos && ![attachment objectForKey: @"stub"]) {
-            // Strip this attachment's body. First make its dictionary mutable:
-            if (!editedProperties) {
-                editedProperties = [[properties mutableCopy] autorelease];
-                editedAttachments = [[attachments mutableCopy] autorelease];
-                [editedProperties setObject: editedAttachments forKey: @"_attachments"];
-            }
-            // ...then remove the 'data' and 'follows' key:
-            NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
-            [editedAttachment removeObjectForKey: @"data"];
-            [editedAttachment removeObjectForKey: @"follows"];
-            [editedAttachment setObject: $true forKey: @"stub"];
-            [editedAttachments setObject: editedAttachment forKey: name];
-            LogTo(SyncVerbose, @"TDPusher: %@: Stubbed out attachment '%@': revpos %d < %d",
-                  rev, name, revPos, minRevPos);
-        }
-    }
-    
-    if (editedProperties)
-        rev.properties = editedProperties;
 }
 
 
@@ -320,24 +286,4 @@ TestCase(TDPusher_findCommonAncestor) {
     CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"1-nope")), 0);
     CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"1-first")), 1);
     CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"2-second", @"1-first")), 2);
-}
-
-TestCase(TDPusher_removeAttachmentsBeforeRevPos) {
-    NSDictionary* hello = $dict({@"revpos", $object(1)}, {@"follows", $true});
-    NSDictionary* goodbye = $dict({@"revpos", $object(2)}, {@"data", @"squeeee"});
-    NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
-    
-    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    stubOutAttachmentsBeforeRevPos(rev, 3);
-    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
-                                                               {@"goodbye", $dict({@"revpos", $object(2)}, {@"stub", $true})})}));
-    
-    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    stubOutAttachmentsBeforeRevPos(rev, 2);
-    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
-                                                               {@"goodbye", goodbye})}));
-    
-    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    stubOutAttachmentsBeforeRevPos(rev, 1);
-    CAssertEqual(rev.properties, $dict({@"_attachments", attachments}));
 }

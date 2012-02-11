@@ -267,6 +267,39 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 }
 
 
++ (void) stubOutAttachmentsIn: (TDRevision*)rev beforeRevPos: (int)minRevPos
+{
+    if (minRevPos <= 1)
+        return;
+    NSDictionary* properties = rev.properties;
+    NSMutableDictionary* editedProperties = nil;
+    NSDictionary* attachments = (id)[properties objectForKey: @"_attachments"];
+    NSMutableDictionary* editedAttachments = nil;
+    for (NSString* name in attachments) {
+        NSDictionary* attachment = [attachments objectForKey: name];
+        int revPos = [[attachment objectForKey: @"revpos"] intValue];
+        if (revPos > 0 && revPos < minRevPos && ![attachment objectForKey: @"stub"]) {
+            // Strip this attachment's body. First make its dictionary mutable:
+            if (!editedProperties) {
+                editedProperties = [[properties mutableCopy] autorelease];
+                editedAttachments = [[attachments mutableCopy] autorelease];
+                [editedProperties setObject: editedAttachments forKey: @"_attachments"];
+            }
+            // ...then remove the 'data' and 'follows' key:
+            NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+            [editedAttachment removeObjectForKey: @"data"];
+            [editedAttachment removeObjectForKey: @"follows"];
+            [editedAttachment setObject: $true forKey: @"stub"];
+            [editedAttachments setObject: editedAttachment forKey: name];
+            LogTo(SyncVerbose, @"Stubbed out attachment %@/'%@': revpos %d < %d",
+                  rev, name, revPos, minRevPos);
+        }
+    }
+    if (editedProperties)
+        rev.properties = editedProperties;
+}
+
+
 - (TDStatus) processAttachmentsForRevision: (TDRevision*)rev
                         withParentSequence: (SequenceNumber)parentSequence
 {

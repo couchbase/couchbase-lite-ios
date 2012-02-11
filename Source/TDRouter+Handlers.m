@@ -376,7 +376,7 @@
         NSString* maxRevID = nil;
         for (NSString* revID in [docInfo objectForKey: @"missing"]) {
             int gen;
-            if ([TDDatabase parseRevID: revID intoGeneration: &gen andSuffix: nil] && gen > maxGen) {
+            if ([TDRevision parseRevID: revID intoGeneration: &gen andSuffix: nil] && gen > maxGen) {
                 maxGen = gen;
                 maxRevID = revID;
             }
@@ -552,6 +552,17 @@
 }
 
 
+static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
+    queryStr = [queryStr stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+    if (!queryStr)
+        return nil;
+    NSData* queryData = [queryStr dataUsingEncoding: NSUTF8StringEncoding];
+    return $castIfArrayOf(NSString, [NSJSONSerialization JSONObjectWithData: queryData
+                                                                    options: 0
+                                                                      error: nil]);
+}
+
+
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
@@ -561,10 +572,20 @@
         // Regular GET:
         NSString* revID = [self query: @"rev"];  // often nil
         TDRevision* rev;
-        if (isLocalDoc)
+        if (isLocalDoc) {
             rev = [db getLocalDocumentWithID: docID revisionID: revID];
-        else
+        } else {
             rev = [db getDocumentWithID: docID revisionID: revID options: options];
+            // Handle ?atts_since query by stubbing out older attachments:
+            if (options & kTDIncludeAttachments) {
+                NSArray* attsSince = parseJSONRevArrayQuery([self query: @"atts_since"]);
+                NSString* ancestorID = [_db findCommonAncestorOf: rev withRevIDs: attsSince];
+                if (ancestorID) {
+                    int generation = [TDRevision generationFromRevID: ancestorID];
+                    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: generation + 1];
+                }
+            }
+        }
         if (!rev)
             return 404;
         if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET

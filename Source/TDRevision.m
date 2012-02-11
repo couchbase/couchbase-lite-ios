@@ -90,6 +90,19 @@
     return 0;
 }
 
+// Splits a revision ID into its generation number and opaque suffix string
++ (BOOL) parseRevID: (NSString*)revID intoGeneration: (int*)outNum andSuffix:(NSString**)outSuffix
+{
+    NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
+    scanner.charactersToBeSkipped = nil;
+    BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: nil];
+    if (outSuffix)
+        *outSuffix = [revID substringFromIndex: scanner.scanLocation];
+    [scanner release];
+    return parsed && *outNum > 0 && (!outSuffix || (*outSuffix).length > 0);
+}
+
+
 - (NSDictionary*) properties {
     return _body.properties;
 }

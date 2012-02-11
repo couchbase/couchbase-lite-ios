@@ -578,6 +578,27 @@ TestCase(TDDatabase_EncodedAttachment) {
 }
 
 
+TestCase(TDDatabase_StubOutAttachmentsBeforeRevPos) {
+    NSDictionary* hello = $dict({@"revpos", $object(1)}, {@"follows", $true});
+    NSDictionary* goodbye = $dict({@"revpos", $object(2)}, {@"data", @"squeeee"});
+    NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
+    
+    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 3];
+    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
+                                                               {@"goodbye", $dict({@"revpos", $object(2)}, {@"stub", $true})})}));
+    
+    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 2];
+    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
+                                                               {@"goodbye", goodbye})}));
+    
+    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 1];
+    CAssertEqual(rev.properties, $dict({@"_attachments", attachments}));
+}
+
+
 TestCase(TDDatabase_ReplicatorSequences) {
     RequireTestCase(TDDatabase_CRUD);
     TDDatabase* db = createDB();
@@ -694,6 +715,7 @@ TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_Attachments);
     RequireTestCase(TDDatabase_PutAttachment);
     RequireTestCase(TDDatabase_EncodedAttachment);
+    RequireTestCase(TDDatabase_StubOutAttachmentsBeforeRevPos);
     RequireTestCase(TDDatabase_ReplicatorSequences);
     RequireTestCase(TDDatabase_LocalDocs);
     RequireTestCase(TDDatabase_FindMissingRevisions);

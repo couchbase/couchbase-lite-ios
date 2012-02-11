@@ -642,6 +642,20 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
                                            $object(docNumericID), $sprintf(@"%d-", generation)];
     return revIDsFromResultSet(r);
 }
+
+
+- (NSString*) findCommonAncestorOf: (TDRevision*)rev withRevIDs: (NSArray*)revIDs {
+    if (revIDs.count == 0)
+        return nil;
+    SInt64 docNumericID = [self getDocNumericID: rev.docID];
+    if (docNumericID <= 0)
+        return nil;
+    NSString* sql = $sprintf(@"SELECT revid FROM revs "
+                              "WHERE doc_id=? and revid in (%@) and revid <= ? "
+                              "ORDER BY revid DESC LIMIT 1", 
+                              [TDDatabase joinQuotedStrings: revIDs]);
+    return [_fmdb stringForQuery: sql, $object(docNumericID), rev.revID];
+}
     
 
 - (NSArray*) getRevisionHistory: (TDRevision*)rev {
@@ -686,18 +700,6 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
 }
 
 
-// Splits a revision ID into its generation number and opaque suffix string
-+ (BOOL) parseRevID: (NSString*)revID intoGeneration: (int*)outNum andSuffix:(NSString**)outSuffix
-{
-    NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
-    scanner.charactersToBeSkipped = nil;
-    BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: nil];
-    if (outSuffix)
-        *outSuffix = [revID substringFromIndex: scanner.scanLocation];
-    [scanner release];
-    return parsed && *outNum > 0 && (!outSuffix || (*outSuffix).length > 0);
-}
-
 static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
     if (!history)
         return nil;
@@ -709,7 +711,7 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
     for (TDRevision* rev in history) {
         int revNo;
         NSString* suffix;
-        if ([TDDatabase parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
+        if ([TDRevision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
             if (!start)
                 start = $object(revNo);
             else if (revNo != lastRevNo - 1) {
@@ -1009,7 +1011,7 @@ static TDRevision* mkrev(NSString* revID) {
 }
 
 static BOOL parseRevID(NSString* revID, int *gen, NSString** suffix) {
-    return [TDDatabase parseRevID: revID intoGeneration: gen andSuffix: suffix];
+    return [TDRevision parseRevID: revID intoGeneration: gen andSuffix: suffix];
 }
 
 TestCase(TDDatabase_ParseRevID) {

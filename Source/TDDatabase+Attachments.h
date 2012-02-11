@@ -30,6 +30,9 @@ typedef enum {
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
                                        options: (TDContentOptions)options;
 
+/** Modifies a TDRevision's body by changing all attachments with revpos < minRevPos into stubs. */
++ (void) stubOutAttachmentsIn: (TDRevision*)rev beforeRevPos: (int)minRevPos;
+
 /** Returns the content and metadata of an attachment.
     If you pass NULL for the 'outEncoding' parameter, it signifies that you don't care about encodings and just want the 'real' data, so it'll be decoded for you. */
 - (NSData*) getAttachmentForSequence: (SequenceNumber)sequence

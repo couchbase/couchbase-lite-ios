@@ -377,7 +377,8 @@ TestCase(TDRouter_GetAttachment) {
     NSDictionary* props = $dict({@"message", @"hello"},
                                 {@"_attachments", attachmentDict});
 
-    SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
+    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
+    NSString* revID = [result objectForKey: @"rev"];
     
     // Now get the attachment via its URL:
     TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil, nil);
@@ -416,6 +417,33 @@ TestCase(TDRouter_GetAttachment) {
                                          {@"length", $object(attach2.length)},
                                          {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                          {@"revpos", $object(1)})}));
+
+    // Update the document but not the attachments:
+    attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                             {@"stub", $true})},
+                           {@"path/to/attachment",
+                               $dict({@"content_type", @"text/plain"},
+                                     {@"stub", $true})});
+    props = $dict({@"_rev", revID},
+                  {@"message", @"aloha"},
+                  {@"_attachments", attachmentDict});
+    result = SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
+    revID = [result objectForKey: @"rev"];
+    
+    // Get the doc with attachments modified since rev #1:
+    NSString* path = $sprintf(@"/db/doc1?attachments=true&atts_since=[%%22%@%%22]", revID);
+    Send(server, @"GET", path, 200, 
+         $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"aloha"},
+               {@"_attachments", $dict({@"attach", $dict({@"stub", $true}, 
+                                                         {@"content_type", @"text/plain"},
+                                                         {@"length", $object(attach1.length)},
+                                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                                         {@"revpos", $object(1)})},
+                                       {@"path/to/attachment", $dict({@"stub", $true}, 
+                                                                     {@"content_type", @"text/plain"},
+                                                                     {@"length", $object(attach2.length)},
+                                                                     {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
+                                                                     {@"revpos", $object(1)})})}));
 }
 
 

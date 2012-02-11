@@ -133,6 +133,9 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 /** Returns all known revision IDs of the same document, that have a lower generation number. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev;
 
+/** Returns the most recent member of revIDs that appears in rev's ancestry. */
+- (NSString*) findCommonAncestorOf: (TDRevision*)rev withRevIDs: (NSArray*)revIDs;
+
 // VIEWS & QUERIES:
 
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
@@ -154,8 +157,5 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
 
 - (TDFilterBlock) filterNamed: (NSString*)filterName;
-
-/** Splits a revision ID into its generation number and opaque suffix string. */
-+ (BOOL) parseRevID: (NSString*)revID intoGeneration: (int*)outNum andSuffix:(NSString**)outSuffix;
 
 @end

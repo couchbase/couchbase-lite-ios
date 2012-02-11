@@ -50,6 +50,10 @@ typedef SInt64 SequenceNumber;
 
 + (unsigned) generationFromRevID: (NSString*)revID;
 
++ (BOOL) parseRevID: (NSString*)revID
+     intoGeneration: (int*)outNum
+          andSuffix: (NSString**)outSuffix;
+
 - (TDRevision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID;
 
 @end
