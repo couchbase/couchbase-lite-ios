@@ -21,12 +21,7 @@
     NSMutableArray* _revsToPull;
     NSUInteger _httpConnectionCount;
     TDBatcher* _downloadsToInsert;
-    NSString* _filterName;
-    NSDictionary* _filterParameters;
 }
-
-@property (copy) NSString* filterName;
-@property (copy) NSDictionary* filterParameters;
 
 @end
 

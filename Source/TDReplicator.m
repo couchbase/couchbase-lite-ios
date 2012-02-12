@@ -82,6 +82,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 - (void)dealloc {
     [self stop];
     [_remote release];
+    [_filterName release];
+    [_filterParameters release];
     [_lastSequence release];
     [_remoteCheckpoint release];
     [_batcher release];
@@ -103,7 +105,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
-@synthesize db=_db, remote=_remote;
+@synthesize db=_db, remote=_remote, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize running=_running, active=_active, error=_error, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;

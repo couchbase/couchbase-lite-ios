@@ -25,6 +25,8 @@ extern NSString* TDReplicatorStoppedNotification;
     TDDatabase* _db;
     NSURL* _remote;
     BOOL _continuous;
+    NSString* _filterName;
+    NSDictionary* _filterParameters;
     NSString* _lastSequence;
     BOOL _lastSequenceChanged;
     NSDictionary* _remoteCheckpoint;
@@ -44,6 +46,8 @@ extern NSString* TDReplicatorStoppedNotification;
 @property (readonly) TDDatabase* db;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
+@property (copy) NSString* filterName;
+@property (copy) NSDictionary* filterParameters;
 
 /** Starts the replicator.
     Replicators run asynchronously so nothing will happen until later.

@@ -33,17 +33,16 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 @implementation TDPusher
 
 
-@synthesize createTarget=_createTarget, filter=_filter;
-
-
-- (void)dealloc {
-    [_filter release];
-    [super dealloc];
-}
+@synthesize createTarget=_createTarget;
 
 
 - (BOOL) isPush {
     return YES;
+}
+
+
+- (TDFilterBlock) filter {
+    return _filterName ? [_db filterNamed: _filterName] : nil;
 }
 
 
@@ -74,12 +73,16 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_createTarget)
         return;
     
+    TDFilterBlock filter = self.filter;
+    if (!filter && _filterName)
+        Warn(@"%@: No TDFilterBlock registered for filter '%@'; ignoring", self, _filterName);
+    
     // Include conflicts so all conflicting revisions are replicated too
     TDChangesOptions options = kDefaultTDChangesOptions;
     options.includeConflicts = YES;
     // Process existing changes since the last push:
     TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
-                                                options:&options filter: _filter];
+                                                options: &options filter: filter];
     if (changes.count > 0)
         [self processInbox: changes];
     
@@ -107,7 +110,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if ([[userInfo objectForKey: @"source"] isEqual: _remote])
         return;
     TDRevision* rev = [userInfo objectForKey: @"rev"];
-    if (!_filter || _filter(rev))
+    TDFilterBlock filter = self.filter;
+    if (!filter || filter(rev))
         [self addToInbox: rev];
 }
 

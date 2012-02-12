@@ -41,16 +41,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 @implementation TDPuller
 
 
-@synthesize filterName=_filterName,filterParameters=_filterParameters;
-
-
 - (void)dealloc {
     [_changeTracker stop];
     [_changeTracker release];
     [_revsToPull release];
     [_downloadsToInsert release];
-    [_filterName release];
-    [_filterParameters release];
     [super dealloc];
 }
 
