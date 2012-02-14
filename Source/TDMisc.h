@@ -26,3 +26,6 @@ NSString* TDEscapeID( NSString* param );
 /** Escapes a string to be used as the value of a query parameter in a URL.
     This does the usual %-escaping, but makes sure that '&' is also escaped. */
 NSString* TDEscapeURLParam( NSString* param );
+
+/** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
+BOOL TDIsOfflineError( NSError* error );

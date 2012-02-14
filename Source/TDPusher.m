@@ -59,7 +59,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
             [self stop];
         } else {
             LogTo(Sync, @"Created remote db");
-            _createTarget = NO;
+            _createTarget = NO;             // remember that I created the target
             [self beginReplicating];
         }
         [self asyncTasksFinished: 1];
@@ -95,14 +95,29 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     }
 }
 
-- (void) stop {
+
+- (void) stopObserving {
     if (_observing) {
         _observing = NO;
-        [[NSNotificationCenter defaultCenter] removeObserver: self];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: TDDatabaseChangeNotification
+                                                      object: _db];
         [self asyncTasksFinished: 1];
     }
+}
+
+- (BOOL) goOffline {
+    if (![super goOffline])
+        return NO;
+    [self stopObserving];
+    return YES;
+}
+
+- (void) stop {
+    [self stopObserving];
     [super stop];
 }
+
 
 - (void) dbChanged: (NSNotification*)n {
     NSDictionary* userInfo = n.userInfo;

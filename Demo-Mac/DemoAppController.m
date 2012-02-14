@@ -47,7 +47,7 @@ int main (int argc, const char * argv[]) {
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
     //gRESTLogLevel = kRESTLogRequestURLs;
-    //gCouchLogLevel = 1;
+    gCouchLogLevel = 1;
     
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
@@ -180,12 +180,14 @@ int main (int argc, const char * argv[]) {
     [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"running" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
 }
 
 - (void) stopObservingReplication: (CouchReplication*)repl {
     [repl removeObserver: self forKeyPath: @"completed"];
     [repl removeObserver: self forKeyPath: @"error"];
     [repl removeObserver: self forKeyPath: @"running"];
+    [repl removeObserver: self forKeyPath: @"mode"];
 }
 
 
@@ -230,6 +232,40 @@ int main (int argc, const char * argv[]) {
         _push.continuous = YES;
         [self observeReplication: _push];
     }
+    
+    _syncHostField.stringValue = otherDbURL ? $sprintf(@"⇄ %@", otherDbURL.host) : @"";
+}
+
+
+- (void) updateSyncStatusView {
+    int value;
+    NSString* tooltip = nil;
+    if (_pull.error) {
+        value = 3;  // red
+        tooltip = _pull.error.localizedDescription;
+    } else if (_push.error) {
+        value = 3;  // red
+        tooltip = _push.error.localizedDescription;
+    } else switch(MAX(_pull.mode, _push.mode)) {
+        case kCouchReplicationStopped:
+            value = 3; 
+            tooltip = @"Sync stopped";
+            break;  // red
+        case kCouchReplicationOffline:
+            value = 2;  // yellow
+            tooltip = @"Offline";
+            break;
+        case kCouchReplicationIdle:
+            value = 0;
+            tooltip = @"Everything's in sync!";
+            break;
+        case kCouchReplicationActive:
+            value = 1;
+            tooltip = @"Syncing data...";
+            break;
+    }
+    _syncStatusView.intValue = value;
+    _syncStatusView.toolTip = tooltip;
 }
 
 
@@ -248,7 +284,10 @@ int main (int argc, const char * argv[]) {
                 [_syncProgress setDoubleValue: 0.0];
             }
         }
+    } else if ([keyPath isEqualToString: @"mode"]) {
+        [self updateSyncStatusView];
     } else if ([keyPath isEqualToString: @"error"]) {
+        [self updateSyncStatusView];
         if (repl.error) {
             NSAlert* alert = [NSAlert alertWithMessageText: @"Replication failed"
                                              defaultButton: nil

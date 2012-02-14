@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class TDDatabase, TDRevisionList, TDBatcher;
+@class TDDatabase, TDRevisionList, TDBatcher, TDReachability;
 
 
 /** Posted when changesProcessed or changesTotal changes. */
@@ -24,13 +24,14 @@ extern NSString* TDReplicatorStoppedNotification;
     @protected
     TDDatabase* _db;
     NSURL* _remote;
+    TDReachability* _host;
     BOOL _continuous;
     NSString* _filterName;
     NSDictionary* _filterParameters;
     NSString* _lastSequence;
     BOOL _lastSequenceChanged;
     NSDictionary* _remoteCheckpoint;
-    BOOL _running, _active;
+    BOOL _running, _online, _active;
     NSError* _error;
     NSString* _sessionID;
     TDBatcher* _batcher;
@@ -46,6 +47,7 @@ extern NSString* TDReplicatorStoppedNotification;
 @property (readonly) TDDatabase* db;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
+@property (readonly) BOOL continuous;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
 
@@ -59,19 +61,22 @@ extern NSString* TDReplicatorStoppedNotification;
     TDReplicatorStoppedNotification will be posted when it finally stops. */
 - (void) stop;
 
-/** Is the replicator active? (Observable) */
-@property (readonly) BOOL running;
+/** Is the replicator running? (Observable) */
+@property (readonly, nonatomic) BOOL running;
+
+/** Is the replicator able to connect to the remote host? */
+@property (readonly, nonatomic) BOOL online;
 
 /** Is the replicator actively sending/receiving revisions? (Observable) */
-@property (readonly) BOOL active;
+@property (readonly, nonatomic) BOOL active;
 
 /** Latest error encountered while replicating.
     This is set to nil when starting. It may also be set to nil by the client if desired.
     Not all errors are fatal; if .running is still true, the replicator will retry. */
-@property (retain) NSError* error;
+@property (retain, nonatomic) NSError* error;
 
 /** A unique-per-process string identifying this replicator instance. */
-@property (readonly) NSString* sessionID;
+@property (readonly, nonatomic) NSString* sessionID;
 
 /** Number of changes (docs or other metadata) transferred so far. */
 @property (readonly, nonatomic) NSUInteger changesProcessed;

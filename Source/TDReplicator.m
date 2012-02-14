@@ -19,6 +19,7 @@
 #import "TDDatabase.h"
 #import "TDRemoteRequest.h"
 #import "TDBatcher.h"
+#import "TDReachability.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 
@@ -32,7 +33,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 @interface TDReplicator ()
-@property (readwrite) BOOL running, active;
+@property (readwrite, nonatomic) BOOL running, active;
 @property (readwrite, copy) NSDictionary* remoteCheckpoint;
 - (void) fetchRemoteCheckpointDoc;
 - (void) saveLastSequence;
@@ -63,6 +64,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         _continuous = continuous;
         Assert(push == self.isPush);
         
+        _host = [[TDReachability alloc] initWithHostName: _remote.host];
+        _host.onChange = ^{[self reachabilityChanged: _host];};
+        [_host start];
+        
         _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
                      processor:^(NSArray *inbox) {
                          LogTo(Sync, @"*** %@: BEGIN processInbox (%i sequences)",
@@ -82,6 +87,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 - (void)dealloc {
     [self stop];
     [_remote release];
+    [_host stop];
+    [_host release];
     [_filterName release];
     [_filterParameters release];
     [_lastSequence release];
@@ -106,7 +113,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 @synthesize db=_db, remote=_remote, filterName=_filterName, filterParameters=_filterParameters;
-@synthesize running=_running, active=_active, error=_error, sessionID=_sessionID;
+@synthesize running=_running, online=_online, active=_active, continuous=_continuous;
+@synthesize error=_error, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 
@@ -134,16 +142,37 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
+- (void) postProgressChanged {
+    NSNotification* n = [NSNotification notificationWithName: TDReplicatorProgressChangedNotification
+                                                      object: self];
+    [[NSNotificationQueue defaultQueue] enqueueNotification: n
+                                               postingStyle: NSPostWhenIdle
+                                               coalesceMask: NSNotificationCoalescingOnSender |
+                                                             NSNotificationCoalescingOnName
+                                                   forModes: nil];
+}
+
+
 - (void) setChangesProcessed: (NSUInteger)processed {
     _changesProcessed = processed;
-    [[NSNotificationCenter defaultCenter]
-            postNotificationName: TDReplicatorProgressChangedNotification object: self];
+    [self postProgressChanged];
 }
 
 - (void) setChangesTotal: (NSUInteger)total {
     _changesTotal = total;
-    [[NSNotificationCenter defaultCenter]
-            postNotificationName: TDReplicatorProgressChangedNotification object: self];
+    [self postProgressChanged];
+}
+
+- (void) setActive:(BOOL)active {
+    if (active != _active) {
+        _active = active;
+        [self postProgressChanged];
+    }
+}
+
+- (void) setError:(NSError *)error {
+    if (ifSetObj(&_error, error))
+        [self postProgressChanged];
 }
 
 
@@ -155,10 +184,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
     LogTo(Sync, @"%@ STARTING ...", self);
     self.running = YES;
-    [_lastSequence release];
-    _lastSequence = nil;
-
-    [self fetchRemoteCheckpointDoc];
+    
+    // Check current reachability
+    _online = NO;
+    [self reachabilityChanged: _host];
 }
 
 
@@ -172,6 +201,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         return;
     LogTo(Sync, @"%@ STOPPING...", self);
     [_batcher flush];
+    _continuous = NO;
     if (_asyncTaskCount == 0)
         [self stopped];
 }
@@ -188,6 +218,42 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
+- (BOOL) goOffline {
+    if (!_online || !_running)
+        return NO;
+    LogTo(Sync, @"%@: Going offline", self);
+    _online = NO;
+    [self postProgressChanged];
+    return YES;
+}
+
+
+- (BOOL) goOnline {
+    if (_online || !_running)
+        return NO;
+    LogTo(Sync, @"%@: Going online", self);
+    _online = YES;
+    
+    [_lastSequence release];
+    _lastSequence = nil;
+    self.error = nil;
+
+    [self fetchRemoteCheckpointDoc];
+    [self postProgressChanged];
+    return YES;
+}
+
+
+- (void) reachabilityChanged: (TDReachability*)host {
+    LogTo(Sync, @"%@: Reachability state = %@ (%02X)", self, host, host.reachabilityFlags);
+
+    if (host.reachable)
+        [self goOnline];
+    else if (host.reachabilityKnown)
+        [self goOffline];
+}
+
+
 - (void) asyncTaskStarted {
     ++_asyncTaskCount;
 }
@@ -196,7 +262,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 - (void) asyncTasksFinished: (NSUInteger)numTasks {
     _asyncTaskCount -= numTasks;
     Assert(_asyncTaskCount >= 0);
-    if (_asyncTaskCount == 0) {
+    if (_asyncTaskCount == 0 && !_continuous) {
         [self stopped];
     }
 }

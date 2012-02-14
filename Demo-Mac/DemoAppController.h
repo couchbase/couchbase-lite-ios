@@ -26,6 +26,8 @@
     IBOutlet NSTableView* _table;
     IBOutlet NSArrayController* _tableController;
     IBOutlet NSProgressIndicator* _syncProgress;
+    IBOutlet NSTextField* _syncHostField;
+    IBOutlet NSLevelIndicator* _syncStatusView;
     
     IBOutlet NSPanel* _syncConfigSheet;
     IBOutlet NSTextField* _syncURLField;

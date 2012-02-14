@@ -165,15 +165,18 @@
             }
             NSString* status;
             id progress = nil;
-            if (repl.running) {
+            if (!repl.running) {
+                status = @"Stopped";
+            } else if (!repl.online) {
+                status = @"Offline";        // nonstandard
+            } else if (!repl.active) {
+                status = @"Idle";           // nonstandard
+            } else {
                 NSUInteger processed = repl.changesProcessed;
                 NSUInteger total = repl.changesTotal;
                 status = $sprintf(@"Processed %u / %u changes",
                                   (unsigned)processed, (unsigned)total);
                 progress = (total>0) ? $object(lroundf(100*(processed / (float)total))) : nil;
-                
-            } else {
-                status = @"Stopped";
             }
             NSArray* error = nil;
             NSError* errorObj = repl.error;
@@ -184,6 +187,7 @@
                                        {@"task", repl.sessionID},
                                        {@"source", source},
                                        {@"target", target},
+                                       {@"continuous", (repl.continuous ? $true : nil)},
                                        {@"status", status},
                                        {@"progress", progress},
                                        {@"error", error})];

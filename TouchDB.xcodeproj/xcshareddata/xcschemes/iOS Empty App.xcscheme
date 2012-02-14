@@ -58,10 +58,26 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "Test_All"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "Test_Only"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "Test_TDPuller_FromCouchApp"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-Log YES"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-LogSync YES"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-LogSyncVerbose YES"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -94,19 +94,21 @@ enum {
 
 
 - (void) stop {
-    LogTo(ChangeTracker, @"%@: stop", self);
-    [_trackingInput close];
-    [_trackingInput release];
-    _trackingInput = nil;
-    
-    [_trackingOutput close];
-    [_trackingOutput release];
-    _trackingOutput = nil;
-    
-    [_inputBuffer release];
-    _inputBuffer = nil;
-    
-    [super stop];
+    if (_trackingInput || _trackingOutput) {
+        LogTo(ChangeTracker, @"%@: stop", self);
+        [_trackingInput close];
+        [_trackingInput release];
+        _trackingInput = nil;
+        
+        [_trackingOutput close];
+        [_trackingOutput release];
+        _trackingOutput = nil;
+        
+        [_inputBuffer release];
+        _inputBuffer = nil;
+        
+        [super stop];
+    }
 }
 
 

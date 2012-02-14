@@ -61,12 +61,8 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-LogChangeTracker YES"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
             argument = "-LogTDRouter YES"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-LogTDListener YES"
@@ -89,20 +85,24 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "-LogChangeTracker YES"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-LogRemoteRequest YES"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_All"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "Test_TDMultipartStreamer"
+            argument = "Test_TDReachability"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_Only"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>

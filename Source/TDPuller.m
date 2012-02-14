@@ -83,9 +83,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_revsToPull release];
     _revsToPull = nil;
     [super stop];
+}
 
-    if (_asyncTaskCount == 0)
-        [self stopped];
+
+- (BOOL) goOffline {
+    if (![super goOffline])
+        return NO;
+    [_changeTracker stop];
+    return YES;
 }
 
 
@@ -120,15 +125,19 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (void) changeTrackerStopped:(TDChangeTracker *)tracker {
-    LogTo(Sync, @"%@: ChangeTracker stopped", self);
-    
-    if (!_error && tracker.error)
-        self.error = tracker.error;
+    NSError* error = tracker.error;
+    LogTo(Sync, @"%@: ChangeTracker stopped; error=%@", self, error.description);
     
     [_changeTracker release];
     _changeTracker = nil;
     
+    if (TDIsOfflineError(error))
+        [self goOffline];
+    else if (!_error && error)
+        self.error = error;
+    
     [_batcher flush];
+
     [self asyncTasksFinished: 1];
 }
 

@@ -56,8 +56,10 @@
 
 
 - (void) stop {
-    [_connection cancel];
-    [super stop];
+    if (_connection) {
+        [_connection cancel];
+        [super stop];
+    }
 }
 
 

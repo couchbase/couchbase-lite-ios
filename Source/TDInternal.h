@@ -93,4 +93,8 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;
 - (void) databaseClosing;
+
+- (void) reachabilityChanged: (TDReachability*)host;
+- (BOOL) goOffline;
+- (BOOL) goOnline;
 @end

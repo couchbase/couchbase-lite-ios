@@ -74,3 +74,14 @@ NSString* TDEscapeURLParam( NSString* param ) {
                                                                   kCFStringEncodingUTF8);
     return [NSMakeCollectable(escaped) autorelease];
 }
+
+
+BOOL TDIsOfflineError( NSError* error ) {
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    if ($equal(domain, NSURLErrorDomain))
+        return code == NSURLErrorDNSLookupFailed
+            || code == NSURLErrorNotConnectedToInternet
+            || code == NSURLErrorInternationalRoamingOff;
+    return NO;
+}
