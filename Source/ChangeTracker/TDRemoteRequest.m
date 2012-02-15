@@ -19,6 +19,10 @@
 #import "TDBlobStore.h"
 
 
+// Max number of retry attempts for a transient failure
+#define kMaxRetries 2
+
+
 @implementation TDRemoteRequest
 
 
@@ -33,15 +37,20 @@
         _request.HTTPMethod = method;
         _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
         [self setupRequest: _request withBody: body];
-        
-        _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
-        [_connection start];
+        [self start];
     }
     return self;
 }
 
 
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
+}
+
+
+- (void) start {
+    Assert(!_connection);
+    _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
+    [_connection start];
 }
 
 
@@ -74,8 +83,22 @@
 
 - (void) cancelWithStatus: (int)status {
     [_connection cancel];
+
+    if (status >= 500 && status != 501 && status <= 504 && _retryCount < kMaxRetries) {
+        // Retry on Internal Server Error, Bad Gateway, Service Unavailable or Gateway Timeout:
+        [self clearConnection];
+        NSTimeInterval delay = 1<<_retryCount;
+        ++_retryCount;
+        LogTo(RemoteRequest, @"%@: Will retry in %g sec", self, delay);
+        [self performSelector: @selector(start) withObject: nil afterDelay: delay];
+        return;
+    }
+    
     [self connection: _connection didFailWithError: TDHTTPError(status, _request.URL)];
 }
+
+
+#pragma mark - NSURLCONNECTION DELEGATE:
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {

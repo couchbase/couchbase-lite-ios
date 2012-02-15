@@ -9,9 +9,13 @@
 #import <Foundation/Foundation.h>
 
 
-typedef void (^TDRemoteRequestCompletionBlock)(id, NSError*);
+/** The signature of the completion block called by a TDRemoteRequest.
+    @param result  On success, a 'result' object; by default this is the TDRemoteRequest iself, but subclasses may return something else. On failure, this will likely be nil.
+    @param error  The error, if any, else nil. */
+typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 
 
+/** Asynchronous HTTP request; a fairly simple wrapper around NSURLConnection that calls a completion block when ready. */
 @interface TDRemoteRequest : NSObject <NSURLConnectionDelegate
 #if TARGET_OS_IPHONE
                                                               , NSURLConnectionDataDelegate
@@ -22,13 +26,16 @@ typedef void (^TDRemoteRequestCompletionBlock)(id, NSError*);
     NSMutableURLRequest* _request;
     TDRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
+    UInt8 _retryCount;
 }
 
+/** Creates and starts a request; when finished, the onCompletion block will be called. */
 - (id) initWithMethod: (NSString*)method URL: (NSURL*)url body: (id)body
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 
 // protected:
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;
+- (void) start;
 - (void) clearConnection;
 - (void) cancelWithStatus: (int)status;
 - (void) respondWithResult: (id)result error: (NSError*)error;
@@ -36,6 +43,8 @@ typedef void (^TDRemoteRequestCompletionBlock)(id, NSError*);
 @end
 
 
+/** A request that parses its response body as JSON.
+    The parsed object will be returned as the first parameter of the completion block. */
 @interface TDRemoteJSONRequest : TDRemoteRequest
 {
     @private
