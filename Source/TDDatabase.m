@@ -492,8 +492,8 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     rev.sequence = sequence;
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
     [rev release];
-    if (!json)
-        return extra;
+    if (json==nil || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
+        return extra;      // optimization, and workaround for issue #44
     NSMutableDictionary* docProperties = [NSJSONSerialization JSONObjectWithData: json
                                                             options: NSJSONReadingMutableContainers
                                                               error: nil];

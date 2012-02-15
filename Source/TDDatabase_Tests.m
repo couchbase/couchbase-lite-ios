@@ -153,6 +153,16 @@ TestCase(TDDatabase_CRUD) {
 }
 
 
+TestCase(TDDatabase_EmptyDoc) {
+    // Test case for issue #44, which is caused by a bug in NSJSONSerialization.
+    TDDatabase* db = createDB();
+    TDRevision* rev = putDoc(db, $dict());
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    options.includeDocs = YES;
+    [db getDocsWithIDs: $array(rev.docID) options: &options]; // raises an exception :(
+}
+
+
 TestCase(TDDatabase_Validation) {
     TDDatabase* db = createDB();
     __block BOOL validationCalled = NO;

@@ -34,11 +34,16 @@
         if (revID && !$equal(revID, gotRevID))
             return nil;
         NSData* json = [r dataNoCopyForColumnIndex: 1];
-        NSMutableDictionary* properties = [NSJSONSerialization JSONObjectWithData: json
-                                                            options:NSJSONReadingMutableContainers
-                                                              error: nil];
-        if (!properties)
-            return nil;
+        NSMutableDictionary* properties;
+        if (json.length==0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
+            properties = $mdict();      // workaround for issue #44
+        else {
+            properties = [NSJSONSerialization JSONObjectWithData: json
+                                                         options:NSJSONReadingMutableContainers
+                                                           error: nil];
+            if (!properties)
+                return nil;
+        }
         [properties setObject: docID forKey: @"_id"];
         [properties setObject: gotRevID forKey: @"_rev"];
         result = [[[TDRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO] autorelease];
