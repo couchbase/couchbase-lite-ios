@@ -86,10 +86,11 @@
 
     if (status >= 500 && status != 501 && status <= 504 && _retryCount < kMaxRetries) {
         // Retry on Internal Server Error, Bad Gateway, Service Unavailable or Gateway Timeout:
-        [self clearConnection];
         NSTimeInterval delay = 1<<_retryCount;
         ++_retryCount;
         LogTo(RemoteRequest, @"%@: Will retry in %g sec", self, delay);
+        [_connection autorelease];
+        _connection = nil;
         [self performSelector: @selector(start) withObject: nil afterDelay: delay];
         return;
     }
