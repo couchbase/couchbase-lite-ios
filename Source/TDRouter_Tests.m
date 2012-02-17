@@ -46,8 +46,17 @@ static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* pat
     }
     TDRouter* router = [[[TDRouter alloc] initWithServer: server request: request] autorelease];
     CAssert(router!=nil);
+    __block TDResponse* response = nil;
+    __block NSUInteger dataLength = 0;
+    __block BOOL calledOnFinished = NO;
+    router.onResponseReady = ^(TDResponse* theResponse) {CAssert(!response); response = theResponse;};
+    router.onDataAvailable = ^(NSData* data) {dataLength += data.length;};
+    router.onFinished = ^{CAssert(!calledOnFinished); calledOnFinished = YES;};
     [router start];
-    return router.response;
+    CAssert(response);
+    CAssertEq(dataLength, response.body.asJSON.length);
+    CAssert(calledOnFinished);
+    return response;
 }
 
 static id ParseJSONResponse(TDResponse* response) {

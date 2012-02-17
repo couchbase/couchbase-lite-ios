@@ -218,7 +218,7 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
-- (void) start {
+- (TDStatus) route {
     // Refer to: http://wiki.apache.org/couchdb/Complete_HTTP_API_Reference
     
     // We're going to map the request into a selector based on the method and path.
@@ -230,10 +230,8 @@ static NSArray* splitPath( NSURL* url ) {
     
     // First interpret the components of the request:
     _path = [splitPath(_request.URL) mutableCopy];
-    if (!_path) {
-        _response.status = 400;
-        return;
-    }
+    if (!_path)
+        return 400;
         
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
@@ -242,10 +240,8 @@ static NSArray* splitPath( NSURL* url ) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else {
             _db = [[_server databaseNamed: dbName] retain];
-            if (!_db) {
-                _response.status = 400;
-                return;
-            }
+            if (!_db)
+                return 400;
             [message appendString: @":"];
         }
     } else {
@@ -256,24 +252,18 @@ static NSArray* splitPath( NSURL* url ) {
     if (_db && pathLen > 1) {
         // Make sure database exists, then interpret doc name:
         TDStatus status = [self openDB];
-        if (status >= 300) {
-            _response.status = status;
-            return;
-        }
+        if (status >= 300)
+            return status;
         NSString* name = [_path objectAtIndex: 1];
         if (![name hasPrefix: @"_"]) {
             // Regular document
-            if (![TDDatabase isValidDocumentID: name]) {
-                _response.status = 400;
-                return;
-            }
+            if (![TDDatabase isValidDocumentID: name])
+                return 400;
             docID = name;
         } else if ([name isEqualToString: @"_design"] || [name isEqualToString: @"_local"]) {
             // "_design/____" and "_local/____" are document names
-            if (pathLen <= 2) {
-                _response.status = 404;
-                return;
-            }
+            if (pathLen <= 2)
+                return 404;
             docID = [name stringByAppendingPathComponent: [_path objectAtIndex: 2]];
             [_path replaceObjectAtIndex: 1 withObject: docID];
             [_path removeObjectAtIndex: 2];
@@ -322,7 +312,13 @@ static NSArray* splitPath( NSURL* url ) {
                @"TDRouter(Handlers) is missing -- app may be linked without -ObjC linker flag.");
         sel = @selector(do_UNKNOWN);
     }
-    TDStatus status = (TDStatus) objc_msgSend(self, sel, _db, docID, attachmentName);
+    return (TDStatus) objc_msgSend(self, sel, _db, docID, attachmentName);
+}
+
+
+- (void) start {
+    // Call the appropriate handler method:
+    TDStatus status = [self route];
 
     // Configure response headers:
     if (status < 300 && !_response.body && ![_response.headers objectForKey: @"Content-Type"]) {
