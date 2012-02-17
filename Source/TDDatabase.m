@@ -303,6 +303,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     [_filters release];
     [_attachments release];
     [_pendingAttachmentsByDigest release];
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
     [super dealloc];
 }
 
