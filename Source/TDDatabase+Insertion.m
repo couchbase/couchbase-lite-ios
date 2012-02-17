@@ -118,27 +118,28 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 /** Returns the JSON to be stored into the 'json' column for a given TDRevision.
     This has all the special keys like "_id" stripped out. */
 - (NSData*) encodeDocumentJSON: (TDRevision*)rev {
-    static NSSet* sKnownSpecialKeys;
-    if (!sKnownSpecialKeys) {
-        sKnownSpecialKeys = [[NSSet alloc] initWithObjects: @"_id", @"_rev", @"_attachments",
+    static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
+    if (!sSpecialKeysToRemove) {
+        sSpecialKeysToRemove = [[NSSet alloc] initWithObjects: @"_id", @"_rev", @"_attachments",
             @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts", nil];
+        sSpecialKeysToLeave = [[NSSet alloc] initWithObjects:
+            @"_replication_id", @"_replication_state", @"_replication_state_time", nil];
     }
 
     NSDictionary* origProps = rev.properties;
     if (!origProps)
         return nil;
     
-    // Don't allow any "_"-prefixed keys. Known ones we'll ignore, unknown ones are an error.
+    // Don't leave in any "_"-prefixed keys except for the ones in sSpecialKeysToLeave.
+    // Keys in sSpecialKeysToIgnore (_id, _rev, ...) are left out, any others trigger an error.
     NSMutableDictionary* properties = [[NSMutableDictionary alloc] initWithCapacity: origProps.count];
     for (NSString* key in origProps) {
-        if ([key hasPrefix: @"_"]) {
-            if (![sKnownSpecialKeys member: key]) {
-                Log(@"TDDatabase: Invalid top-level key '%@' in document to be inserted", key);
-                [properties release];
-                return nil;
-            }
-        } else {
+        if (![key hasPrefix: @"_"]  || [sSpecialKeysToLeave member: key]) {
             [properties setObject: [origProps objectForKey: key] forKey: key];
+        } else if (![sSpecialKeysToRemove member: key]) {
+            Log(@"TDDatabase: Invalid top-level key '%@' in document to be inserted", key);
+            [properties release];
+            return nil;
         }
     }
     

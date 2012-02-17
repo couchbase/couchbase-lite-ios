@@ -64,7 +64,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         _remote = [remote retain];
         _continuous = continuous;
         Assert(push == self.isPush);
-        
+
+        static int sLastSessionID = 0;
+        _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
+
         _host = [[TDReachability alloc] initWithHostName: _remote.host];
         _host.onChange = ^{[self reachabilityChanged: _host];};
         [_host start];
@@ -184,8 +187,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     if (_running)
         return;
     Assert(_db, @"Can't restart an already stopped TDReplicator");
-    static int sLastSessionID = 0;
-    _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
     LogTo(Sync, @"%@ STARTING ...", self);
     self.running = YES;
     

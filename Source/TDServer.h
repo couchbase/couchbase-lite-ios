@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDDatabase;
+@class TDDatabase, TDReplicatorManager;
 
 
 /** Manages a directory containing TDDatabases. */
@@ -16,7 +16,10 @@
     @private
     NSString* _dir;
     NSMutableDictionary* _databases;
+    TDReplicatorManager* _replicatorManager;
 }
+
++ (BOOL) isValidDatabaseName: (NSString*)name;
 
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
 

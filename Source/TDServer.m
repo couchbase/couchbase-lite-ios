@@ -15,6 +15,7 @@
 
 #import "TDServer.h"
 #import "TDDatabase.h"
+#import "TDReplicatorManager.h"
 #import "TDInternal.h"
 
 
@@ -71,6 +72,8 @@ static NSCharacterSet* kIllegalNameChars;
                 return nil;
             }
         }
+        
+        _replicatorManager = [[TDReplicatorManager alloc] initWithServer: self];
     }
     return self;
 }
@@ -84,9 +87,15 @@ static NSCharacterSet* kIllegalNameChars;
 
 @synthesize directory = _dir;
 
++ (BOOL) isValidDatabaseName: (NSString*)name {
+    if (name.length > 0 && [name rangeOfCharacterFromSet: kIllegalNameChars].length == 0
+                        && islower([name characterAtIndex: 0]))
+        return YES;
+    return $equal(name, kTDReplicatorDatabaseName);
+}
+
 - (NSString*) pathForName: (NSString*)name {
-    if (name.length == 0 || [name rangeOfCharacterFromSet: kIllegalNameChars].length > 0
-                         || !islower([name characterAtIndex: 0]))
+    if (![[self class] isValidDatabaseName: name])
         return nil;
     name = [name stringByReplacingOccurrencesOfString: @"/" withString: @":"];
     return [_dir stringByAppendingPathComponent:[name stringByAppendingPathExtension:kDBExtension]];
@@ -147,6 +156,8 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) close {
+    [_replicatorManager release];
+    _replicatorManager = nil;
     for (TDDatabase* db in _databases.allValues) {
         [db close];
     }

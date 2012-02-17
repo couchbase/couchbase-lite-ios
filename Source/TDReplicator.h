@@ -76,7 +76,7 @@ extern NSString* TDReplicatorStoppedNotification;
 @property (retain, nonatomic) NSError* error;
 
 /** A unique-per-process string identifying this replicator instance. */
-@property (readonly, nonatomic) NSString* sessionID;
+@property (copy, nonatomic) NSString* sessionID;
 
 /** Number of changes (docs or other metadata) transferred so far. */
 @property (readonly, nonatomic) NSUInteger changesProcessed;
