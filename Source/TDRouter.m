@@ -19,6 +19,8 @@
 #import "TDView.h"
 #import "TDBody.h"
 #import "TDMultipartWriter.h"
+#import "TDReplicatorManager.h"
+#import "TDInternal.h"
 #import <objc/message.h>
 
 
@@ -182,7 +184,8 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 
 
 - (TDStatus) openDB {
-    if (!_db.exists)
+    // As a special case, the _replicator db is created on demand (as though it already existed)
+    if (!_db.exists && !$equal(_db.name, kTDReplicatorDatabaseName))
         return 404;
     if (![_db open])
         return 500;
@@ -236,7 +239,7 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = [_path objectAtIndex: 0];
-        if ([dbName hasPrefix: @"_"]) {
+        if ([dbName hasPrefix: @"_"] && ![TDServer isValidDatabaseName: dbName]) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else {
             _db = [[_server databaseNamed: dbName] retain];
@@ -317,6 +320,10 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) start {
+    // Make sure the replicator starts up on launch (but not in the TDServer initializer; we want
+    // it to run on the same thread that other server requests come in on, i.e. the current one.
+    [_server replicatorManager];
+    
     // Call the appropriate handler method:
     TDStatus status = [self route];
 

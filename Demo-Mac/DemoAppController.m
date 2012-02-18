@@ -97,7 +97,7 @@ int main (int argc, const char * argv[]) {
     self.query = [[[DemoQuery alloc] initWithQuery: q] autorelease];
     self.query.modelClass =_tableController.objectClass;
     
-    // Enable continuous sync:
+    // Start watching any persistent replications already configured:
     [self startContinuousSyncWith: self.syncURL];
     
 #ifdef FOR_TESTING_PURPOSES
@@ -112,22 +112,7 @@ int main (int argc, const char * argv[]) {
 
 
 
-#pragma mark - SYNC:
-
-
-- (NSURL*) syncURL {
-    NSString* urlStr = [[NSUserDefaults standardUserDefaults] stringForKey: @"SyncURL"];
-    return urlStr ? [NSURL URLWithString: urlStr] : nil;
-}
-
-- (void) setSyncURL:(NSURL *)url {
-    NSURL* currentURL = self.syncURL;
-    if (url != currentURL && ![url isEqual: currentURL]) {
-        [[NSUserDefaults standardUserDefaults] setObject: url.absoluteString
-                                                  forKey: @"SyncURL"];
-        [self startContinuousSyncWith: url];
-    }
-}
+#pragma mark - SYNC UI:
 
 
 - (NSURL*) currentURLFromField {
@@ -176,21 +161,6 @@ int main (int argc, const char * argv[]) {
     [NSApp endSheet: _syncConfigSheet returnCode: returnCode];
 }
 
-- (void) observeReplication: (CouchReplication*)repl {
-    [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"running" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
-}
-
-- (void) stopObservingReplication: (CouchReplication*)repl {
-    [repl removeObserver: self forKeyPath: @"completed"];
-    [repl removeObserver: self forKeyPath: @"error"];
-    [repl removeObserver: self forKeyPath: @"running"];
-    [repl removeObserver: self forKeyPath: @"mode"];
-}
-
-
 - (void) configureSyncFinished:(NSWindow *)sheet returnCode:(NSInteger)returnCode {
     [sheet orderOut: self];
     NSURL* url = self.currentURLFromField;
@@ -200,6 +170,8 @@ int main (int argc, const char * argv[]) {
     if (_syncConfiguringDefault) {
         self.syncURL = url;
     } else {
+        /* FIX: Re-enable this functionality once CouchReplication/CouchPersistentReplication
+                 are merged
         if (_syncPushCheckbox.state) {
             NSLog(@"**** Pushing to <%@> ...", url);
             [self observeReplication: [_database pushToDatabaseAtURL: url]];
@@ -208,30 +180,61 @@ int main (int argc, const char * argv[]) {
             NSLog(@"**** Pulling from <%@> ...", url);
             [self observeReplication: [_database pullFromDatabaseAtURL: url]];
         }
+         */
     }
 }
 
 
-- (void) stopReplication: (CouchReplication**)repl {
-    [self stopObservingReplication: *repl];
-    [*repl stop];
-    [*repl release];
-    *repl = nil;
+#pragma mark - SYNC:
+
+
+- (NSURL*) syncURL {
+    NSString* urlStr = [[NSUserDefaults standardUserDefaults] stringForKey: @"SyncURL"];
+    return urlStr ? [NSURL URLWithString: urlStr] : nil;
+}
+
+- (void) setSyncURL:(NSURL *)url {
+    NSURL* currentURL = self.syncURL;
+    if (url != currentURL && ![url isEqual: currentURL]) {
+        [[NSUserDefaults standardUserDefaults] setObject: url.absoluteString
+                                                  forKey: @"SyncURL"];
+        [self startContinuousSyncWith: url];
+    }
+}
+
+
+- (void) observeReplication: (CouchPersistentReplication*)repl {
+    [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"total" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
+}
+
+- (void) stopObservingReplication: (CouchPersistentReplication*)repl {
+    [repl removeObserver: self forKeyPath: @"completed"];
+    [repl removeObserver: self forKeyPath: @"total"];
+    [repl removeObserver: self forKeyPath: @"error"];
+    [repl removeObserver: self forKeyPath: @"mode"];
+}
+
+- (void) forgetReplication: (CouchPersistentReplication**)repl {
+    if (*repl) {
+        [self stopObservingReplication: *repl];
+        [*repl release];
+        *repl = nil;
+    }
 }
 
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
-    [self stopReplication: &_pull];
-    [self stopReplication: &_push];
-    if (otherDbURL) {
-        _pull = [[_database pullFromDatabaseAtURL: otherDbURL] retain];
-        _pull.continuous = YES;
-        [self observeReplication: _pull];
-
-        _push = [[_database pushToDatabaseAtURL: otherDbURL] retain];
-        _push.continuous = YES;
-        [self observeReplication: _push];
-    }
+    [self forgetReplication: &_pull];
+    [self forgetReplication: &_push];
+    
+    NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
+    _pull = [[repls objectAtIndex: 0] retain];
+    _push = [[repls objectAtIndex: 1] retain];
+    [self observeReplication: _pull];
+    [self observeReplication: _push];
     
     _syncHostField.stringValue = otherDbURL ? $sprintf(@"⇄ %@", otherDbURL.host) : @"";
 }
@@ -272,8 +275,8 @@ int main (int argc, const char * argv[]) {
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
-    CouchReplication* repl = object;
-    if ([keyPath isEqualToString: @"completed"]) {
+    CouchPersistentReplication* repl = object;
+    if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
             unsigned completed = _pull.completed + _push.completed;
             unsigned total = _pull.total + _push.total;

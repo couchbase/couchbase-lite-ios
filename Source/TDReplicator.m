@@ -148,7 +148,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 - (void) postProgressChanged {
     LogTo(SyncVerbose, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)", 
-          self, _changesProcessed, _changesTotal, _active, _batcher.count, _asyncTaskCount, _online);
+          self, _changesProcessed, _changesTotal,
+          _active, _batcher.count, _asyncTaskCount, _online);
     NSNotification* n = [NSNotification notificationWithName: TDReplicatorProgressChangedNotification
                                                       object: self];
     [[NSNotificationQueue defaultQueue] enqueueNotification: n

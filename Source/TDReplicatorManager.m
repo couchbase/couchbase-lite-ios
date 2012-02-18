@@ -38,14 +38,6 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
         _server = server;
         _replicatorDB = [[server databaseNamed: kTDReplicatorDatabaseName] retain];
         Assert(_replicatorDB);
-        [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock:
-             ^BOOL(TDRevision *newRevision, id<TDValidationContext> context) {
-                 return [self validateRevision: newRevision context: context];
-             }];
-        [self processAllDocs];
-        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
-                                                     name: TDDatabaseChangeNotification
-                                                   object: _replicatorDB];
     }
     return self;
 }
@@ -56,6 +48,18 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     [_replicatorsByDocID release];
     [_replicatorDB release];
     [super dealloc];
+}
+
+
+- (void) start {
+    [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock:
+         ^BOOL(TDRevision *newRevision, id<TDValidationContext> context) {
+             return [self validateRevision: newRevision context: context];
+         }];
+    [self processAllDocs];
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
+                                                 name: TDDatabaseChangeNotification
+                                               object: _replicatorDB];
 }
 
 
@@ -288,11 +292,13 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 - (void) processAllDocs {
     if (!_replicatorDB.exists)
         return;
+    [_replicatorDB open];
     LogTo(Sync, @"ReplicationManager scanning existing _replicator docs...");
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.includeDocs = YES;
-    NSArray* allDocs = [[_replicatorDB getAllDocs: NULL] objectForKey: @"rows"];
-    for (NSDictionary* docProps in allDocs) {
+    NSArray* allDocs = [[_replicatorDB getAllDocs: &options] objectForKey: @"rows"];
+    for (NSDictionary* row in allDocs) {
+        NSDictionary* docProps = [row objectForKey: @"doc"];
         NSString* state = [docProps objectForKey: @"_replication_state"];
         if (state==nil || $equal(state, @"triggered"))
             [self processRevision: [TDRevision revisionWithProperties: docProps]];
@@ -342,54 +348,3 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 @end
-
-
-TestCase(TDReplicatorManager) {
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
-    TDDatabase* replicatorDb = [server databaseNamed: kTDReplicatorDatabaseName];
-    CAssert(replicatorDb);
-    CAssert([replicatorDb open]);
-    
-    // Try some bogus validation docs that will fail the validator function:
-    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
-                                                                {@"target", $object(7)})];
-    TDStatus status;
-    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 403);
-
-    rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
-                                                    {@"target", @"http://foo.com"},
-                                                    {@"_internal", $true})];
-    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 403);
-    
-    TDDatabase* sourceDB = [server databaseNamed: @"foo"];
-    CAssert([sourceDB open]);
-
-    // Now try a valid replication document:
-    NSURL* remote = [NSURL URLWithString: @"http://localhost:5984/tdreplicator_test"];
-    rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
-                                                    {@"target", remote.absoluteString})];
-    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 201);
-    
-    // Get back the document and verify it's been updated with replicator properties:
-    TDRevision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0];
-    Log(@"Updated doc = %@", newRev.properties);
-    CAssert(!$equal(newRev.revID, rev.revID), @"Replicator doc wasn't updated");
-    NSString* sessionID = [newRev.properties objectForKey: @"_replication_id"];
-    CAssert([sessionID length] >= 10);
-    CAssertEqual([newRev.properties objectForKey: @"_replication_state"], @"triggered");
-    CAssert([[newRev.properties objectForKey: @"_replication_state_time"] longLongValue] >= 1000);
-    
-    // Check that a TDReplicator exists:
-    TDReplicator* repl = [sourceDB activeReplicatorWithRemoteURL: remote push: YES];
-    CAssert(repl);
-    CAssertEqual(repl.sessionID, sessionID);
-    CAssert(repl.running);
-
-    // Now delete it:
-    rev = [[[TDRevision alloc] initWithDocID: rev.docID revID: newRev.revID deleted: YES] autorelease];
-    rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssertEq(status, 200);
-}

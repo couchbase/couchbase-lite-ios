@@ -15,7 +15,9 @@
 
 #import "TDPuller.h"
 #import "TDPusher.h"
+#import "TDReplicatorManager.h"
 #import "TDServer.h"
+#import "TDDatabase+Replication.h"
 #import "TDDatabase+Insertion.h"
 #import "TDBase64.h"
 #import "TDInternal.h"
@@ -156,6 +158,58 @@ TestCase(TDPuller_FromCouchApp) {
         CAssert(data);
         CAssertEq([data length], [[attachment objectForKey: @"length"] unsignedLongLongValue]);
     }];
+}
+
+
+TestCase(TDReplicatorManager) {
+    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
+    CAssert([server replicatorManager]);    // start the replicator
+    TDDatabase* replicatorDb = [server databaseNamed: kTDReplicatorDatabaseName];
+    CAssert(replicatorDb);
+    CAssert([replicatorDb open]);
+    
+    // Try some bogus validation docs that will fail the validator function:
+    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
+                                                                {@"target", $object(7)})];
+    TDStatus status;
+    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, 403);
+
+    rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
+                                                    {@"target", @"http://foo.com"},
+                                                    {@"_internal", $true})];
+    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, 403);
+    
+    TDDatabase* sourceDB = [server databaseNamed: @"foo"];
+    CAssert([sourceDB open]);
+
+    // Now try a valid replication document:
+    NSURL* remote = [NSURL URLWithString: @"http://localhost:5984/tdreplicator_test"];
+    rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
+                                                    {@"target", remote.absoluteString})];
+    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, 201);
+    
+    // Get back the document and verify it's been updated with replicator properties:
+    TDRevision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0];
+    Log(@"Updated doc = %@", newRev.properties);
+    CAssert(!$equal(newRev.revID, rev.revID), @"Replicator doc wasn't updated");
+    NSString* sessionID = [newRev.properties objectForKey: @"_replication_id"];
+    CAssert([sessionID length] >= 10);
+    CAssertEqual([newRev.properties objectForKey: @"_replication_state"], @"triggered");
+    CAssert([[newRev.properties objectForKey: @"_replication_state_time"] longLongValue] >= 1000);
+    
+    // Check that a TDReplicator exists:
+    TDReplicator* repl = [sourceDB activeReplicatorWithRemoteURL: remote push: YES];
+    CAssert(repl);
+    CAssertEqual(repl.sessionID, sessionID);
+    CAssert(repl.running);
+
+    // Now delete it:
+    rev = [[[TDRevision alloc] initWithDocID: rev.docID revID: newRev.revID deleted: YES] autorelease];
+    rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssertEq(status, 200);
 }
 
 #endif

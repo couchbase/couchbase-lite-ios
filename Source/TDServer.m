@@ -72,8 +72,6 @@ static NSCharacterSet* kIllegalNameChars;
                 return nil;
             }
         }
-        
-        _replicatorManager = [[TDReplicatorManager alloc] initWithServer: self];
     }
     return self;
 }
@@ -152,6 +150,15 @@ static NSCharacterSet* kIllegalNameChars;
 
 - (NSArray*) allOpenDatabases {
     return _databases.allValues;
+}
+
+
+- (TDReplicatorManager*) replicatorManager {
+    if (!_replicatorManager) {
+        _replicatorManager = [[TDReplicatorManager alloc] initWithServer: self];
+        [_replicatorManager start];
+    }
+    return _replicatorManager;
 }
 
 

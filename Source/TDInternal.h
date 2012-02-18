@@ -72,6 +72,7 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 
 
 @interface TDServer ()
+@property (readonly, nonatomic) TDReplicatorManager* replicatorManager;
 #if DEBUG
 + (TDServer*) createEmptyAtPath: (NSString*)path;  // for testing
 + (TDServer*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing

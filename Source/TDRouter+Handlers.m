@@ -24,7 +24,9 @@
 #import "TDRevision.h"
 #import "TDServer.h"
 #import "TDReplicator.h"
+#import "TDReplicatorManager.h"
 #import "TDPusher.h"
+#import "TDInternal.h"
 #import "TDMisc.h"
 
 
@@ -84,40 +86,19 @@
 - (TDStatus) do_POST_replicate {
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
-    id body = self.bodyAsDictionary;
-    if (!body)
-        return 400;
-    NSString* source = $castIf(NSString, [body objectForKey: @"source"]);
-    NSString* target = $castIf(NSString, [body objectForKey: @"target"]);
-    BOOL createTarget = [$castIf(NSNumber, [body objectForKey: @"create_target"]) boolValue];
+    TDDatabase* db;
+    NSURL* remote;
+    BOOL push, createTarget;
+    NSDictionary* body = self.bodyAsDictionary;
+    TDStatus status = [_server.replicatorManager parseReplicatorProperties: body
+                                                                toDatabase: &db remote: &remote
+                                                                    isPush: &push
+                                                              createTarget: &createTarget];
+    if (status >= 300)
+        return status;
+    
     BOOL continuous = [$castIf(NSNumber, [body objectForKey: @"continuous"]) boolValue];
     BOOL cancel = [$castIf(NSNumber, [body objectForKey: @"cancel"]) boolValue];
-    
-    // Map the 'source' and 'target' JSON params to a local database and remote URL:
-    if (!source || !target)
-        return 400;
-    BOOL push = NO;
-    TDDatabase* db = [_server existingDatabaseNamed: source];
-    NSString* remoteStr;
-    if (db) {
-        remoteStr = target;
-        push = YES;
-    } else {
-        remoteStr = source;
-        if (createTarget && !cancel) {
-            db = [_server databaseNamed: target];
-            if (![db open])
-                return 500;
-        } else {
-            db = [_server existingDatabaseNamed: target];
-        }
-        if (!db)
-            return 404;
-    }
-    NSURL* remote = [NSURL URLWithString: remoteStr];
-    if (!remote || ![remote.scheme hasPrefix: @"http"])
-        return 400;
-    
     if (!cancel) {
         // Start replication:
         TDReplicator* repl = [db replicatorWithRemoteURL: remote push: push continuous: continuous];
@@ -125,9 +106,8 @@
             return 500;
         repl.filterName = $castIf(NSString, [body objectForKey: @"filter"]);;
         repl.filterParameters = $castIf(NSDictionary, [body objectForKey: @"query_params"]);
-        if (push) {
+        if (push)
             ((TDPusher*)repl).createTarget = createTarget;
-        }
         [repl start];
         _response.bodyObject = $dict({@"session_id", repl.sessionID});
     } else {
