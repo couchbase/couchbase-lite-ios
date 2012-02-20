@@ -69,7 +69,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
     [_changeTracker start];
-    [self asyncTaskStarted];
+    if (!_continuous)
+        [self asyncTaskStarted];
 }
 
 
@@ -138,7 +139,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     [_batcher flush];
 
-    [self asyncTasksFinished: 1];
+    if (!_continuous)
+        [self asyncTasksFinished: 1];
 }
 
 

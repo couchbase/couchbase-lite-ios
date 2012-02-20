@@ -35,6 +35,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 @interface TDReplicator ()
 @property (readwrite, nonatomic) BOOL running, active;
 @property (readwrite, copy) NSDictionary* remoteCheckpoint;
+- (void) updateActive;
 - (void) fetchRemoteCheckpointDoc;
 - (void) saveLastSequence;
 @end
@@ -76,7 +77,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                          [self processInbox: revs];
                          [revs release];
                          LogTo(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
-                         self.active = NO;
+                         [self updateActive];
                      }
                     ];
     }
@@ -143,6 +144,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) postProgressChanged {
+    LogTo(SyncVerbose, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)", 
+          self, _changesProcessed, _changesTotal, _active, _batcher.count, _asyncTaskCount, _online);
     NSNotification* n = [NSNotification notificationWithName: TDReplicatorProgressChangedNotification
                                                       object: self];
     [[NSNotificationQueue defaultQueue] enqueueNotification: n
@@ -163,9 +166,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [self postProgressChanged];
 }
 
-- (void) setActive:(BOOL)active {
+- (void) updateActive {
+    BOOL active = _batcher.count > 0 || _asyncTaskCount > 0;
     if (active != _active) {
-        _active = active;
+        self.active = active;
         [self postProgressChanged];
     }
 }
@@ -255,25 +259,27 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) asyncTaskStarted {
-    ++_asyncTaskCount;
+    if (_asyncTaskCount++ == 0)
+        [self updateActive];
 }
 
 
 - (void) asyncTasksFinished: (NSUInteger)numTasks {
     _asyncTaskCount -= numTasks;
     Assert(_asyncTaskCount >= 0);
-    if (_asyncTaskCount == 0 && !_continuous) {
-        [self stopped];
+    if (_asyncTaskCount == 0) {
+        [self updateActive];
+        if (!_continuous)
+            [self stopped];
     }
 }
 
 
 - (void) addToInbox: (TDRevision*)rev {
     Assert(_running);
-    if (_batcher.count == 0)
-        self.active = YES;
-    [_batcher queueObject: rev];
     LogTo(SyncVerbose, @"%@: Received #%lld %@", self, rev.sequence, rev);
+    [_batcher queueObject: rev];
+    [self updateActive];
 }
 
 
