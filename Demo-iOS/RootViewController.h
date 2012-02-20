@@ -20,15 +20,15 @@
 
 #import <UIKit/UIKit.h>
 #import <CouchCocoa/CouchUITableSource.h>
-@class CouchDatabase, CouchReplication;
+@class CouchDatabase, CouchPersistentReplication;
 
 
 @interface RootViewController : UIViewController <CouchUITableDelegate, UITextFieldDelegate>
 {
     CouchDatabase *database;
     NSURL* remoteSyncURL;
-    CouchReplication* _pull;
-    CouchReplication* _push;
+    CouchPersistentReplication* _pull;
+    CouchPersistentReplication* _push;
     
     UITableView *tableView;
     IBOutlet UIProgressView *progress;
