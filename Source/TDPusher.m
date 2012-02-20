@@ -242,7 +242,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     self.changesTotal++;
     [self asyncTaskStarted];
 
-    NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeURLParam(rev.docID));
+    NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeID(rev.docID));
     LogTo(SyncVerbose, @"%@: PUT .%@ (multipart, %lldkb)", self, path, bodyStream.length/1024);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
     [[[TDMultipartUploader alloc] initWithURL: [NSURL URLWithString: urlStr]

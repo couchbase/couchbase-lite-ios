@@ -58,6 +58,15 @@ NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b) {
 }
 
 
+NSString* TDEscapeID( NSString* docOrRevID ) {
+    CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
+                                                                  (CFStringRef)docOrRevID,
+                                                                  NULL, (CFStringRef)@"&/",
+                                                                  kCFStringEncodingUTF8);
+    return [NSMakeCollectable(escaped) autorelease];
+}
+
+
 NSString* TDEscapeURLParam( NSString* param ) {
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)param,

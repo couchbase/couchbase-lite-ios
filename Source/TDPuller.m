@@ -185,7 +185,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // been added since the latest revisions we have locally.
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true&attachments=true",
-                              TDEscapeURLParam(rev.docID), TDEscapeURLParam(rev.revID));
+                              TDEscapeID(rev.docID), TDEscapeID(rev.revID));
     NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev];
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];

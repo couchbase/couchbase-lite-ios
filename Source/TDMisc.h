@@ -19,6 +19,10 @@ NSError* TDHTTPError( int status, NSURL* url );
 
 NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b);
 
-/** Escapes a string to be used as the value of a parameter in a URL.
+/** Escapes a document or revision ID for use in a URL.
+    This does the usual %-escaping, but makes sure that '/' is escaped in case the ID appears in the path portion of the URL, and that '&' is escaped in case the ID appears in a query value. */
+NSString* TDEscapeID( NSString* param );
+
+/** Escapes a string to be used as the value of a query parameter in a URL.
     This does the usual %-escaping, but makes sure that '&' is also escaped. */
 NSString* TDEscapeURLParam( NSString* param );
