@@ -271,8 +271,8 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 // A replication document has been deleted:
 - (void) processDeletion: (TDRevision*)rev ofReplicator: (TDReplicator*)repl {
     LogTo(Sync, @"ReplicatorManager: %@ was deleted", rev);
-    [repl stop];
     [_replicatorsByDocID removeObjectForKey: rev.docID];
+    [repl stop];
 }
 
 
@@ -301,7 +301,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
         NSDictionary* docProps = [row objectForKey: @"doc"];
         NSString* state = [docProps objectForKey: @"_replication_state"];
         if (state==nil || $equal(state, @"triggered"))
-            [self processRevision: [TDRevision revisionWithProperties: docProps]];
+            [self processInsertion: [TDRevision revisionWithProperties: docProps]];
     }
     LogTo(Sync, @"ReplicationManager done scanning.");
 }

@@ -140,7 +140,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         _lastSequence = [lastSequence copy];
         if (!_lastSequenceChanged) {
             _lastSequenceChanged = YES;
-            [self performSelector: @selector(saveLastSequence) withObject: nil afterDelay: 2.0];
+            [self performSelector: @selector(saveLastSequence) withObject: nil afterDelay: 5.0];
         }
     }
 }
