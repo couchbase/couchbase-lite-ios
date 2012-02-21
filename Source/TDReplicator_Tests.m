@@ -171,6 +171,7 @@ TestCase(TDReplicatorManager) {
     // Try some bogus validation docs that will fail the validator function:
     TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
                                                                 {@"target", $object(7)})];
+#pragma unused (rev) // some of the 'rev=' assignments below are unnecessary
     TDStatus status;
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, 403);

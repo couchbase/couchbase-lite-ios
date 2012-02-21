@@ -213,6 +213,7 @@ TestCase(TDView_AllDocsQuery) {
     TDDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     NSDictionary* expectedRow[docs.count];
+    memset(&expectedRow, 0, sizeof(expectedRow));
     int i = 0;
     for (TDRevision* rev in docs) {
         expectedRow[i++] = $dict({@"id",  rev.docID},

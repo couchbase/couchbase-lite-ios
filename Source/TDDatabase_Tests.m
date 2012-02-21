@@ -201,6 +201,7 @@ TestCase(TDDatabase_Validation) {
     [props removeObjectForKey: @"towel"];
     rev.properties = props;
     validationCalled = NO;
+#pragma unused (rev)  // tell analyzer to ignore dead stores below
     rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, 403);

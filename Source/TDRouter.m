@@ -43,6 +43,10 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
         _server = [server retain];
         _request = [request retain];
         _response = [[TDResponse alloc] init];
+        if (0) { // assignments just to appease static analyzer so it knows these ivars are used
+            _longpoll = NO;
+            _changesIncludeDocs = NO;
+        }
     }
     return self;
 }
@@ -55,6 +59,7 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
     [_queries release];
     [_path release];
     [_db release];
+    [_changesFilter release];
     [_onResponseReady release];
     [_onDataAvailable release];
     [_onFinished release];
