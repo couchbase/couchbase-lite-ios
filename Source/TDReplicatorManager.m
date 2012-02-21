@@ -146,10 +146,14 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     }
     
     // Only certain keys can be changed or removed:
+    NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", nil];
     NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params", nil];
     for (NSString* key in curProperties) {
-        if (![mutableProperties containsObject: key] &&
-                !$equal([curProperties objectForKey: key], [newProperties objectForKey: key])) {
+        id newValue = [newProperties objectForKey: key];
+        if (!newValue && [deletableProperties containsObject: key])
+            ;
+        else if (![mutableProperties containsObject: key] &&
+                !$equal([curProperties objectForKey: key], newValue)) {
             context.errorMessage = $sprintf(@"Cannot modify the '%@' property", key);
             return NO;
         }
@@ -263,8 +267,17 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 // A replication document has been changed:
-- (void) processUpdate: (TDRevision*)rev ofReplicator: (TDReplicator*)repl {
-    LogTo(Sync, @"ReplicationManager: %@ was updated", rev);
+- (void) processUpdate: (TDRevision*)rev {
+    if (![rev.properties objectForKey: @"_replication_state"]) {
+        // Client deleted the _replication_state property; restart the replicator:
+        LogTo(Sync, @"ReplicatorManager: Restarting replicator for %@", rev);
+        TDReplicator* repl = [_replicatorsByDocID objectForKey: rev.docID];
+        if (repl) {
+            [repl.db stopAndForgetReplicator: repl];
+            [_replicatorsByDocID removeObjectForKey: rev.docID];
+        }
+        [self processInsertion: rev];
+    }
 }
 
 
@@ -280,11 +293,10 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 - (void) processRevision: (TDRevision*)rev {
-    TDReplicator* repl = [_replicatorsByDocID objectForKey: rev.docID];
-    if (repl)
-        [self processUpdate: rev ofReplicator: repl];
-    else
+    if (rev.generation == 1)
         [self processInsertion: rev];
+    else
+        [self processUpdate: rev];
 }
 
 
@@ -309,6 +321,8 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 // Notified that a _replicator database document has been created/updated/deleted:
 - (void) dbChanged: (NSNotification*)n {
+    if (_updateInProgress)
+        return;
     TDRevision* rev = [n.userInfo objectForKey: @"rev"];
     LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
     NSString* docID = rev.docID;

@@ -205,9 +205,31 @@ TestCase(TDReplicatorManager) {
     CAssert(repl);
     CAssertEqual(repl.sessionID, sessionID);
     CAssert(repl.running);
+    
+    // Delete the _replication_state property:
+    NSMutableDictionary* updatedProps = [[newRev.properties mutableCopy] autorelease];
+    [updatedProps removeObjectForKey: @"_replication_state"];
+    rev = [TDRevision revisionWithProperties: updatedProps];
+    rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssertEq(status, 201);
+
+    // Get back the document and verify it's been updated with replicator properties:
+    newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0];
+    Log(@"Updated doc = %@", newRev.properties);
+    sessionID = [newRev.properties objectForKey: @"_replication_id"];
+    CAssert([sessionID length] >= 10);
+    CAssertEqual([newRev.properties objectForKey: @"_replication_state"], @"triggered");
+    CAssert([[newRev.properties objectForKey: @"_replication_state_time"] longLongValue] >= 1000);
+    
+    // Check that this restarted the replicator:
+    TDReplicator* newRepl = [sourceDB activeReplicatorWithRemoteURL: remote push: YES];
+    CAssert(newRepl);
+    CAssert(newRepl != repl);
+    CAssertEqual(newRepl.sessionID, sessionID);
+    CAssert(newRepl.running);
 
     // Now delete it:
-    rev = [[[TDRevision alloc] initWithDocID: rev.docID revID: newRev.revID deleted: YES] autorelease];
+    rev = [[[TDRevision alloc] initWithDocID: newRev.docID revID: newRev.revID deleted: YES] autorelease];
     rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, 200);
 }

@@ -67,6 +67,12 @@
 }
 
 
+- (void) stopAndForgetReplicator: (TDReplicator*)repl {
+    [repl databaseClosing];
+    [_activeReplicators removeObjectIdenticalTo: repl];
+}
+
+
 - (void) replicatorDidStop: (NSNotification*)n {
     TDReplicator* repl = n.object;
     if (repl.error)     // Leave it around a while so clients can see the error

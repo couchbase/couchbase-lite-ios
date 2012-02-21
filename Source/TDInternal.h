@@ -54,6 +54,7 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 @end
 
 @interface TDDatabase (Replication_Internal)
+- (void) stopAndForgetReplicator: (TDReplicator*)repl;
 - (NSString*) lastSequenceWithRemoteURL: (NSURL*)url
                                    push: (BOOL)push;
 - (BOOL) setLastSequence: (NSString*)lastSequence
