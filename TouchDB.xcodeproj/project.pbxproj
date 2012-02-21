@@ -145,6 +145,9 @@
 		279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* TDBatcher.m */; };
 		27990703149D2576003D4338 /* CouchCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
 		27990704149E58B0003D4338 /* CouchCocoa.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27990702149D2576003D4338 /* CouchCocoa.framework */; };
+		279C7E2E14F424090004A1E8 /* TDSequenceMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 279C7E2C14F424090004A1E8 /* TDSequenceMap.h */; };
+		279C7E2F14F424090004A1E8 /* TDSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* TDSequenceMap.m */; };
+		279C7E3014F424090004A1E8 /* TDSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* TDSequenceMap.m */; };
 		279CE39014D1EDA0009F3FA6 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
 		279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */; };
 		279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
@@ -478,6 +481,8 @@
 		279906EC149ABFC1003D4338 /* TDBatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBatcher.h; sourceTree = "<group>"; };
 		279906ED149ABFC2003D4338 /* TDBatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBatcher.m; sourceTree = "<group>"; };
 		27990702149D2576003D4338 /* CouchCocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchCocoa.framework; path = Frameworks/CouchCocoa.framework; sourceTree = "<group>"; };
+		279C7E2C14F424090004A1E8 /* TDSequenceMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDSequenceMap.h; sourceTree = "<group>"; };
+		279C7E2D14F424090004A1E8 /* TDSequenceMap.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDSequenceMap.m; sourceTree = "<group>"; };
 		279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYBlockUtils.h; sourceTree = "<group>"; };
 		279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYBlockUtils.m; sourceTree = "<group>"; };
 		279CE3FE14D749A7009F3FA6 /* TDMultipartReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDMultipartReader.h; sourceTree = "<group>"; };
@@ -980,6 +985,8 @@
 				2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */,
 				2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */,
 				2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */,
+				279C7E2C14F424090004A1E8 /* TDSequenceMap.h */,
+				279C7E2D14F424090004A1E8 /* TDSequenceMap.m */,
 				27A073EA14C0BB6200F52FE7 /* TDMisc.h */,
 				27A073EB14C0BB6200F52FE7 /* TDMisc.m */,
 				270B3DEE1489359000E0A926 /* TouchDB-Info.plist */,
@@ -1202,6 +1209,7 @@
 				27C5305414DF3A050078F886 /* TDMultipartUploader.h in Headers */,
 				27103F8314E9CE4400DF7209 /* TDReachability.h in Headers */,
 				27C40C7914EC58BC00994283 /* TDReplicatorManager.h in Headers */,
+				279C7E2E14F424090004A1E8 /* TDSequenceMap.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1721,6 +1729,7 @@
 				27C5305514DF3A050078F886 /* TDMultipartUploader.m in Sources */,
 				27103F8414E9CE4400DF7209 /* TDReachability.m in Sources */,
 				27C40C7A14EC58BC00994283 /* TDReplicatorManager.m in Sources */,
+				279C7E2F14F424090004A1E8 /* TDSequenceMap.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1821,6 +1830,7 @@
 				27C5305614DF3A050078F886 /* TDMultipartUploader.m in Sources */,
 				27103F8514E9CE4400DF7209 /* TDReachability.m in Sources */,
 				27C40C7B14EC58BC00994283 /* TDReplicatorManager.m in Sources */,
+				279C7E3014F424090004A1E8 /* TDSequenceMap.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

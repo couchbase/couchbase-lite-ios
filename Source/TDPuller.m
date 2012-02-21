@@ -20,6 +20,7 @@
 #import "TDChangeTracker.h"
 #import "TDBatcher.h"
 #import "TDMultipartDownloader.h"
+#import "TDSequenceMap.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 #import "ExceptionUtils.h"
@@ -46,6 +47,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_changeTracker release];
     [_revsToPull release];
     [_downloadsToInsert release];
+    [_pendingSequences release];
     [super dealloc];
 }
 
@@ -59,7 +61,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                   }];
     }
     
-    _nextFakeSequence = _maxInsertedFakeSequence = 0;
+    [_pendingSequences release];
+    _pendingSequences = [[TDSequenceMap alloc] init];
     LogTo(SyncVerbose, @"%@ starting ChangeTracker with since=%@", self, _lastSequence);
     _changeTracker = [[TDChangeTracker alloc]
                                    initWithDatabaseURL: _remote
@@ -97,7 +100,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Got a _changes feed entry from the TDChangeTracker.
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
-    NSString* lastSequence = [[change objectForKey: @"seq"] description];
+    NSString* lastSequenceID = [[change objectForKey: @"seq"] description];
     NSString* docID = [change objectForKey: @"id"];
     if (!docID)
         return;
@@ -115,8 +118,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 continue;
             TDPulledRevision* rev = [[TDPulledRevision alloc] initWithDocID: docID revID: revID
                                                                     deleted: deleted];
-            rev.remoteSequenceID = lastSequence;
-            rev.sequence = ++_nextFakeSequence;
+            // Remember its remote sequence ID (opaque), and make up a numeric sequence based
+            // on the order in which it appeared in the _changes feed:
+            rev.remoteSequenceID = lastSequenceID;
             [self addToInbox: rev];
             [rev release];
         }
@@ -158,9 +162,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         self.changesTotal = total + inbox.count;
     
     if (inbox.count == 0) {
-        // Nothing to do. Just bump the lastSequence.
-        LogTo(SyncVerbose, @"%@ no new remote revisions to fetch", self);
-        self.lastSequence = lastInboxSequence;
+        // Nothing to do; just count all the revisions as processed.
+        // Instead of adding and immediately removing the revs to _pendingSequences,
+        // just do the latest one (equivalent but faster):
+        LogTo(SyncVerbose, @"%@: no new remote revisions to fetch", self);
+        SequenceNumber seq = [_pendingSequences addValue: lastInboxSequence];
+        [_pendingSequences removeSequence: seq];
+        self.lastSequence = _pendingSequences.checkpointedValue;
         return;
     }
     
@@ -240,8 +248,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     downloads = [downloads sortedArrayUsingComparator: ^(id dl1, id dl2) {
         return TDSequenceCompare( [[dl1 revision] sequence], [[dl2 revision] sequence]);
     }];
-    BOOL allGood = YES;
-    TDPulledRevision* lastGoodRev = nil;
     
     [_db beginTransaction];
     BOOL success = NO;
@@ -249,11 +255,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         for (TDMultipartDownloader* download in downloads) {
             @autoreleasepool {
                 TDPulledRevision* rev = (TDPulledRevision*)download.revision;
+                SequenceNumber fakeSequence = rev.sequence;
                 NSArray* history = [TDDatabase parseCouchDBRevisionHistory: rev.properties];
                 if (!history) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
                     self.error = TDHTTPError(502, nil);
-                    allGood = NO;
                     continue;
                 }
 
@@ -265,23 +271,20 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                     else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
                         self.error = TDHTTPError(status, nil);
-                        allGood = NO; // stop advancing lastGoodRev
+                        continue;
                     }
                 }
                 
-                if (allGood)
-                    lastGoodRev = rev;
+                // Mark this revision's fake sequence as processed:
+                [_pendingSequences removeSequence: fakeSequence];
             }
-        }
-    
-        // Now update self.lastSequence from the latest consecutively inserted revision:
-        unsigned lastGoodFakeSequence = (unsigned) lastGoodRev.sequence;
-        if (lastGoodFakeSequence > _maxInsertedFakeSequence) {
-            _maxInsertedFakeSequence = lastGoodFakeSequence;
-            self.lastSequence = lastGoodRev.remoteSequenceID;
         }
         
         LogTo(Sync, @"%@ finished inserting %u revisions", self, downloads.count);
+        
+        // Checkpoint:
+        self.lastSequence = _pendingSequences.checkpointedValue;
+        
         success = YES;
     } @catch (NSException *x) {
         MYReportException(x, @"%@: Exception inserting revisions", self);

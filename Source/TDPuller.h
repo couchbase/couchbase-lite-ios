@@ -8,7 +8,7 @@
 
 #import "TDReplicator.h"
 #import "TDRevision.h"
-@class TDChangeTracker;
+@class TDChangeTracker, TDSequenceMap;
 
 
 /** Replicator that pulls from a remote CouchDB. */
@@ -16,8 +16,7 @@
 {
     @private
     TDChangeTracker* _changeTracker;
-    unsigned _nextFakeSequence;
-    unsigned _maxInsertedFakeSequence;
+    TDSequenceMap* _pendingSequences;
     NSMutableArray* _revsToPull;
     NSUInteger _httpConnectionCount;
     TDBatcher* _downloadsToInsert;
