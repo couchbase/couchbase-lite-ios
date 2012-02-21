@@ -46,6 +46,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_changeTracker stop];
     [_changeTracker release];
     [_revsToPull release];
+    [_deletedRevsToPull release];
     [_downloadsToInsert release];
     [_pendingSequences release];
     [super dealloc];
@@ -82,10 +83,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         return;
     _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
     [_changeTracker stop];
-    [_changeTracker release];
-    _changeTracker = nil;
-    [_revsToPull release];
-    _revsToPull = nil;
+    setObj(&_changeTracker, nil);
+    setObj(&_revsToPull, nil);
+    setObj(&_deletedRevsToPull, nil);
     [super stop];
 }
 
@@ -175,10 +175,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     LogTo(Sync, @"%@ fetching %u remote revisions...", self, inbox.count);
     LogTo(SyncVerbose, @"%@ fetching remote revisions %@", self, inbox.allRevisions);
     
-    // Dump the revs into the queue of revs to pull from the remote db:
-    if (!_revsToPull)
-        _revsToPull = [[NSMutableArray alloc] initWithCapacity: 100];
-    [_revsToPull addObjectsFromArray: inbox.allRevisions];
+    // Dump the revs into the queues of revs to pull from the remote db:
+    for (TDPulledRevision* rev in inbox.allRevisions) {
+        NSMutableArray** pQueue = rev.deleted ? &_deletedRevsToPull : &_revsToPull;
+        if (!*pQueue)
+            *pQueue = [[NSMutableArray alloc] initWithCapacity: 100];
+        [*pQueue addObject: rev];
+        rev.sequence = [_pendingSequences addValue: rev.remoteSequenceID];
+    }
     
     [self pullRemoteRevisions];
 }
@@ -186,9 +190,16 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Start up some HTTP GETs, within our limit on the maximum simultaneous number
 - (void) pullRemoteRevisions {
-    while (_httpConnectionCount < kMaxOpenHTTPConnections && _revsToPull.count > 0) {
-        [self pullRemoteRevision: [_revsToPull objectAtIndex: 0]];
-        [_revsToPull removeObjectAtIndex: 0];
+    while (_httpConnectionCount < kMaxOpenHTTPConnections) {
+        // Prefer to pull an existing revision over a deleted one:
+        NSMutableArray* queue = _revsToPull;
+        if (queue.count == 0) {
+            queue = _deletedRevsToPull;
+            if (queue.count == 0)
+                break;  // both queues are empty
+        }
+        [self pullRemoteRevision: [queue objectAtIndex: 0]];
+        [queue removeObjectAtIndex: 0];
     }
 }
 

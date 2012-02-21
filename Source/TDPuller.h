@@ -18,6 +18,7 @@
     TDChangeTracker* _changeTracker;
     TDSequenceMap* _pendingSequences;
     NSMutableArray* _revsToPull;
+    NSMutableArray* _deletedRevsToPull;
     NSUInteger _httpConnectionCount;
     TDBatcher* _downloadsToInsert;
 }
