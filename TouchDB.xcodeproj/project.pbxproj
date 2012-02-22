@@ -2515,7 +2515,6 @@
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
 					"\"$(SRCROOT)/Demo-Mac/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2539,7 +2538,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../iOS-Couchbase-repo/CouchCocoa/build/CouchCocoa/Build/Products/Debug\"",
 					"\"$(SRCROOT)/Demo-Mac/Frameworks\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
