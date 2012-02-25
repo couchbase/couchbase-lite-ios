@@ -111,7 +111,7 @@
             ++nAttachmentsInDoc;
         }
     }
-    if (nAttachmentsInDoc != _attachmentsByDigest.count)
+    if (nAttachmentsInDoc < _attachmentsByDigest.count)
         return NO;  // Some MIME bodies didn't match attachments in the document
     // If everything's copacetic, hand over the (uninstalled) blobs to the database to remember:
     [_database rememberAttachmentWritersForDigests: _attachmentsByDigest];
