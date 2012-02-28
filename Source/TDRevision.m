@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 #import "TDBody.h"
 #import "TDMisc.h"
 
@@ -95,7 +95,7 @@
 {
     NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
     scanner.charactersToBeSkipped = nil;
-    BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: nil];
+    BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: NULL];
     if (outSuffix)
         *outSuffix = [revID substringFromIndex: scanner.scanLocation];
     [scanner release];

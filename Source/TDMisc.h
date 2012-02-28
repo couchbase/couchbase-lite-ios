@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 
 extern NSString* const TDHTTPErrorDomain;
 
@@ -29,3 +29,6 @@ NSString* TDEscapeURLParam( NSString* param );
 
 /** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
 BOOL TDIsOfflineError( NSError* error );
+
+/** Returns the input URL without the query string or fragment identifier, just ending with the path. */
+NSURL* TDURLWithoutQuery( NSURL* url );

@@ -21,7 +21,9 @@
 #import "TDMultipartWriter.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
+#ifndef GNUSTEP
 #import <objc/message.h>
+#endif
 
 
 extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
@@ -112,9 +114,9 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
     NSString* value = [self query: param];
     if (!value)
         return nil;
-    id result = [NSJSONSerialization
+    id result = [TDJSON
                             JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
-                                       options: NSJSONReadingAllowFragments error: outError];
+                                       options: TDJSONReadingAllowFragments error: outError];
     if (!result)
         Warn(@"TDRouter: invalid JSON in query param ?%@=%@", param, value);
     return result;
@@ -129,8 +131,8 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 
 
 - (NSDictionary*) bodyAsDictionary {
-    return $castIf(NSDictionary, [NSJSONSerialization JSONObjectWithData: _request.HTTPBody
-                                                                 options: 0 error: nil]);
+    return $castIf(NSDictionary, [TDJSON JSONObjectWithData: _request.HTTPBody
+                                                                 options: 0 error: NULL]);
 }
 
 
@@ -200,7 +202,11 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 
 static NSArray* splitPath( NSURL* url ) {
     // Unfortunately can't just call url.path because that converts %2F to a '/'.
+#if GNUSTEP
+    NSString* pathString = [url.path copy]; //TEMP
+#else
     NSString* pathString = NSMakeCollectable(CFURLCopyPath((CFURLRef)url));
+#endif
     NSMutableArray* path = $marray();
     for (NSString* comp in [pathString componentsSeparatedByString: @"/"]) {
         if ([comp length] > 0) {
@@ -320,7 +326,13 @@ static NSArray* splitPath( NSURL* url ) {
                @"TDRouter(Handlers) is missing -- app may be linked without -ObjC linker flag.");
         sel = @selector(do_UNKNOWN);
     }
+    
+#ifdef GNUSTEP
+    IMP fn = objc_msg_lookup(self, sel);
+    return (TDStatus) fn(self, sel, _db, docID, attachmentName);
+#else
     return (TDStatus) objc_msgSend(self, sel, _db, docID, attachmentName);
+#endif
 }
 
 
@@ -432,7 +444,7 @@ static NSArray* splitPath( NSURL* url ) {
                                                                       boundary: nil];
     for (id part in parts) {
         if (![part isKindOfClass: [NSData class]]) {
-            part = [NSJSONSerialization dataWithJSONObject: part options: 0 error: nil];
+            part = [TDJSON dataWithJSONObject: part options: 0 error: NULL];
             [mp setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
         }
         [mp addData: part];

@@ -85,7 +85,7 @@
 
 
 - (BOOL) addFile: (NSString*)path {
-    NSDictionary* info = [[NSFileManager defaultManager] attributesOfItemAtPath: path error: nil];
+    NSDictionary* info = [[NSFileManager defaultManager] attributesOfItemAtPath: path error: NULL];
     if (!info)
         return NO;
     if (![super addFile: path])

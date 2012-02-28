@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 
 
 /** A data structure representing a type of array that allows object values to be added to the end, and removed in arbitrary order; it's used by the replicator to keep track of which revisions have been transferred and what sequences to checkpoint. */

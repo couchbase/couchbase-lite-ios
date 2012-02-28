@@ -266,6 +266,9 @@
 		27E11F1014AD15940006B340 /* TDHTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E11F0E14AD15940006B340 /* TDHTTPResponse.h */; };
 		27E11F1114AD15940006B340 /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; };
 		27E11F1214AD172F0006B340 /* TouchDBListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener.framework */; };
+		27EB95D114FBF89200072752 /* TDJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EB95CF14FBF89200072752 /* TDJSON.h */; };
+		27EB95D214FBF89200072752 /* TDJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EB95D014FBF89200072752 /* TDJSON.m */; };
+		27EB95D314FBF89200072752 /* TDJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EB95D014FBF89200072752 /* TDJSON.m */; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
@@ -476,8 +479,8 @@
 		27821BBB149001B20099B373 /* TDReplicator_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDReplicator_Tests.m; sourceTree = "<group>"; };
 		27821BBD14906FB50099B373 /* TouchDBPrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TouchDBPrefix.h; sourceTree = "<group>"; };
 		27821BBF149078C70099B373 /* TouchDB.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = TouchDB.exp; sourceTree = "<group>"; };
-		279906E1149A65B7003D4338 /* TDRemoteRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TDRemoteRequest.h; path = ChangeTracker/TDRemoteRequest.h; sourceTree = "<group>"; };
-		279906E2149A65B8003D4338 /* TDRemoteRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDRemoteRequest.m; path = ChangeTracker/TDRemoteRequest.m; sourceTree = "<group>"; };
+		279906E1149A65B7003D4338 /* TDRemoteRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDRemoteRequest.h; sourceTree = "<group>"; };
+		279906E2149A65B8003D4338 /* TDRemoteRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDRemoteRequest.m; sourceTree = "<group>"; };
 		279906EC149ABFC1003D4338 /* TDBatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBatcher.h; sourceTree = "<group>"; };
 		279906ED149ABFC2003D4338 /* TDBatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBatcher.m; sourceTree = "<group>"; };
 		27990702149D2576003D4338 /* CouchCocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchCocoa.framework; path = Frameworks/CouchCocoa.framework; sourceTree = "<group>"; };
@@ -508,8 +511,8 @@
 		27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDConnectionChangeTracker.m; sourceTree = "<group>"; };
 		27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDSocketChangeTracker.h; sourceTree = "<group>"; };
 		27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDSocketChangeTracker.m; sourceTree = "<group>"; };
-		27B0B79C1492932700A817AD /* TDBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TDBase64.h; path = ChangeTracker/TDBase64.h; sourceTree = "<group>"; };
-		27B0B79D1492932700A817AD /* TDBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDBase64.m; path = ChangeTracker/TDBase64.m; sourceTree = "<group>"; };
+		27B0B79C1492932700A817AD /* TDBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBase64.h; sourceTree = "<group>"; };
+		27B0B79D1492932700A817AD /* TDBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBase64.m; sourceTree = "<group>"; };
 		27B0B7A91492B83B00A817AD /* libTouchDB.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTouchDB.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B7B61492B83B00A817AD /* TouchDBiOSTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBiOSTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B7B81492B83C00A817AD /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -559,6 +562,11 @@
 		27E11F0C14ACFFC60006B340 /* TDHTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPServer.h; sourceTree = "<group>"; };
 		27E11F0E14AD15940006B340 /* TDHTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPResponse.h; sourceTree = "<group>"; };
 		27E11F0F14AD15940006B340 /* TDHTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDHTTPResponse.m; sourceTree = "<group>"; };
+		27EB95CC14FBEABB00072752 /* TDGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDGNUstep.h; sourceTree = "<group>"; };
+		27EB95CD14FBEABB00072752 /* TDGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDGNUstep.m; sourceTree = "<group>"; };
+		27EB95CF14FBF89200072752 /* TDJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDJSON.h; sourceTree = "<group>"; };
+		27EB95D014FBF89200072752 /* TDJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDJSON.m; sourceTree = "<group>"; };
+		27EB95EB14FC783E00072752 /* EmptyGNUstepApp.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EmptyGNUstepApp.m; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* TDDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDDatabase.h; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* TDDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDDatabase.m; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -993,6 +1001,10 @@
 				270B3E1F148938D800E0A926 /* TouchDB.h */,
 				27821BBD14906FB50099B373 /* TouchDBPrefix.h */,
 				27821BBF149078C70099B373 /* TouchDB.exp */,
+				27EB95CC14FBEABB00072752 /* TDGNUstep.h */,
+				27EB95CD14FBEABB00072752 /* TDGNUstep.m */,
+				27EB95CF14FBF89200072752 /* TDJSON.h */,
+				27EB95D014FBF89200072752 /* TDJSON.m */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -1096,6 +1108,7 @@
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
 				270FE0DC14C50382005FF647 /* TouchServ.m */,
 				27990702149D2576003D4338 /* CouchCocoa.framework */,
+				27EB95EB14FC783E00072752 /* EmptyGNUstepApp.m */,
 			);
 			path = "Demo-Mac";
 			sourceTree = "<group>";
@@ -1210,6 +1223,7 @@
 				27103F8314E9CE4400DF7209 /* TDReachability.h in Headers */,
 				27C40C7914EC58BC00994283 /* TDReplicatorManager.h in Headers */,
 				279C7E2E14F424090004A1E8 /* TDSequenceMap.h in Headers */,
+				27EB95D114FBF89200072752 /* TDJSON.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1730,6 +1744,7 @@
 				27103F8414E9CE4400DF7209 /* TDReachability.m in Sources */,
 				27C40C7A14EC58BC00994283 /* TDReplicatorManager.m in Sources */,
 				279C7E2F14F424090004A1E8 /* TDSequenceMap.m in Sources */,
+				27EB95D214FBF89200072752 /* TDJSON.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1831,6 +1846,7 @@
 				27103F8514E9CE4400DF7209 /* TDReachability.m in Sources */,
 				27C40C7B14EC58BC00994283 /* TDReplicatorManager.m in Sources */,
 				279C7E3014F424090004A1E8 /* TDSequenceMap.m in Sources */,
+				27EB95D314FBF89200072752 /* TDJSON.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

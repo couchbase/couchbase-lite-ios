@@ -71,7 +71,7 @@
 
 
 - (BOOL) parseJSONBuffer {
-    id document = [NSJSONSerialization JSONObjectWithData: _jsonBuffer options: 0 error: nil];
+    id document = [TDJSON JSONObjectWithData: _jsonBuffer options: 0 error: NULL];
     setObj(&_jsonBuffer, nil);
     if (![document isKindOfClass: [NSDictionary class]]) {
         Warn(@"%@: received unparseable JSON data '%@'",

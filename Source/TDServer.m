@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "TDServer.h"
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
 
@@ -38,7 +38,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 #if DEBUG
 + (TDServer*) createEmptyAtPath: (NSString*)path {
-    [[NSFileManager defaultManager] removeItemAtPath: path error: nil];
+    [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
     TDServer* server = [[self alloc] initWithDirectory: path error: &error];
     Assert(server, @"Failed to create server at %@: %@", path, error);
@@ -139,7 +139,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (NSArray*) allDatabaseNames {
-    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: nil];
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: NULL];
     files = [files pathsMatchingExtensions: $array(kDBExtension)];
     return [files my_map: ^(id filename) {
         return [[filename stringByDeletingPathExtension]

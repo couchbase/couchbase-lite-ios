@@ -14,14 +14,14 @@
 //  and limitations under the License.
 
 #import "TDRouter.h"
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 #import "TDDatabase+Attachments.h"
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+LocalDocs.h"
 #import "TDDatabase+Replication.h"
 #import "TDView.h"
 #import "TDBody.h"
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 #import "TDServer.h"
 #import "TDReplicator.h"
 #import "TDReplicatorManager.h"
@@ -49,20 +49,7 @@
 
 - (void) setResponseLocation: (NSURL*)url {
     // Strip anything after the URL's path (i.e. the query string)
-    CFURLRef cfURL = (CFURLRef)url;
-    CFRange range = CFURLGetByteRangeForComponent(cfURL, kCFURLComponentResourceSpecifier, NULL);
-    if (range.length == 0) {
-        [_response setValue: url.absoluteString ofHeader: @"Location"];
-    } else {
-        CFIndex size = CFURLGetBytes(cfURL, NULL, 0);
-        if (size > 8000)
-            return;
-        UInt8 bytes[size];
-        CFURLGetBytes(cfURL, bytes, size);
-        cfURL = CFURLCreateWithBytes(NULL, bytes, range.location - 1, kCFStringEncodingUTF8, NULL);
-        [_response setValue: (id)CFURLGetString(cfURL) ofHeader: @"Location"];
-        CFRelease(cfURL);
-    }
+    [_response setValue: TDURLWithoutQuery(url).absoluteString ofHeader: @"Location"];
 }
 
 
@@ -352,13 +339,13 @@
     }
     
     // Add the possible ancestors for each missing revision:
-    [diffs enumerateKeysAndObjectsUsingBlock: ^(NSString* docID, NSMutableDictionary* docInfo,
-                                                BOOL *stop) {
+    for (NSString* docID in diffs) {
+        NSMutableDictionary* docInfo = [diffs objectForKey: docID];
         int maxGen = 0;
         NSString* maxRevID = nil;
         for (NSString* revID in [docInfo objectForKey: @"missing"]) {
             int gen;
-            if ([TDRevision parseRevID: revID intoGeneration: &gen andSuffix: nil] && gen > maxGen) {
+            if ([TDRevision parseRevID: revID intoGeneration: &gen andSuffix: NULL] && gen > maxGen) {
                 maxGen = gen;
                 maxRevID = revID;
             }
@@ -368,7 +355,7 @@
         [rev release];
         if (ancestors)
             [docInfo setObject: ancestors forKey: @"possible_ancestors"];
-    }];
+    }
                                     
     _response.bodyObject = diffs;
     return 200;
@@ -431,8 +418,8 @@
 
 - (void) sendContinuousChange: (TDRevision*)rev {
     NSDictionary* changeDict = [self changeDictForRev: rev];
-    NSMutableData* json = [[NSJSONSerialization dataWithJSONObject: changeDict
-                                                           options: 0 error: nil] mutableCopy];
+    NSMutableData* json = [[TDJSON dataWithJSONObject: changeDict
+                                                           options: 0 error: NULL] mutableCopy];
     [json appendBytes: "\n" length: 1];
     _onDataAvailable(json);
     [json release];
@@ -449,8 +436,8 @@
         Log(@"TDRouter: Sending longpoll response");
         [self sendResponse];
         NSDictionary* body = [self responseBodyForChanges: $array(rev) since: 0];
-        _onDataAvailable([NSJSONSerialization dataWithJSONObject: body
-                                                         options: 0 error: nil]);
+        _onDataAvailable([TDJSON dataWithJSONObject: body
+                                                         options: 0 error: NULL]);
         _onFinished();
         [self stop];
     } else {
@@ -539,9 +526,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (!queryStr)
         return nil;
     NSData* queryData = [queryStr dataUsingEncoding: NSUTF8StringEncoding];
-    return $castIfArrayOf(NSString, [NSJSONSerialization JSONObjectWithData: queryData
+    return $castIfArrayOf(NSString, [TDJSON JSONObjectWithData: queryData
                                                                     options: 0
-                                                                      error: nil]);
+                                                                      error: NULL]);
 }
 
 
@@ -593,7 +580,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 
         } else {
             // ?open_revs=[...] returns an array of revisions of the document:
-            NSArray* openRevs = $castIf(NSArray, [self jsonQuery: @"open_revs" error: nil]);
+            NSArray* openRevs = $castIf(NSArray, [self jsonQuery: @"open_revs" error: NULL]);
             if (!openRevs)
                 return 400;
             result = [NSMutableArray arrayWithCapacity: openRevs.count];

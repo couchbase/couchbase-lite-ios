@@ -7,7 +7,7 @@
 //
 
 #import "TDPuller.h"
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 
 
 /** Replicator that pushes to a remote CouchDB. */

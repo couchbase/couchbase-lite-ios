@@ -14,9 +14,9 @@
 //  and limitations under the License.
 
 #import "TDPusher.h"
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 #import "TDDatabase+Insertion.h"
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 #import "TDMultipartUploader.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
@@ -42,7 +42,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 
 - (TDFilterBlock) filter {
-    return _filterName ? [_db filterNamed: _filterName] : nil;
+    return _filterName ? [_db filterNamed: _filterName] : NULL;
 }
 
 
@@ -195,7 +195,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 }
                 lastInboxSequence = rev.sequence;
                 Assert([properties objectForKey: @"_id"]);
-                return [properties autorelease];
+                return (id)[properties autorelease];
             }];
             
             // Post the revisions to the destination. "new_edits":false means that the server should
@@ -287,7 +287,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
     if (!ancestorID)
         return 0;
     int generation;
-    if (![TDRevision parseRevID: ancestorID intoGeneration: &generation andSuffix: nil])
+    if (![TDRevision parseRevID: ancestorID intoGeneration: &generation andSuffix: NULL])
         generation = 0;
     return generation;
 }

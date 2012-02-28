@@ -16,7 +16,7 @@
 #import "TDPuller.h"
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+Replication.h"
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 #import "TDChangeTracker.h"
 #import "TDBatcher.h"
 #import "TDMultipartDownloader.h"
@@ -328,6 +328,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 static NSString* joinQuotedEscaped(NSArray* strings) {
     if (strings.count == 0)
         return @"[]";
-    NSData* json = [NSJSONSerialization dataWithJSONObject: strings options: 0 error: NULL];
+    NSData* json = [TDJSON dataWithJSONObject: strings options: 0 error: NULL];
     return TDEscapeURLParam([json my_UTF8ToString]);
 }

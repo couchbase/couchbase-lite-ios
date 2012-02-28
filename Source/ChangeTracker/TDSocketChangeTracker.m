@@ -18,6 +18,8 @@
 #import "TDSocketChangeTracker.h"
 #import "TDBase64.h"
 
+#import <string.h>
+
 
 enum {
     kStateStatus,
@@ -122,7 +124,7 @@ enum {
 
 - (BOOL) readLine {
     const char* start = _inputBuffer.bytes;
-    const char* crlf = strnstr(start, "\r\n", _inputBuffer.length);
+    const char* crlf = memmem(start, _inputBuffer.length, "\r\n", 2);
     if (!crlf)
         return NO;  // Wait till we have a complete line
     ptrdiff_t lineLength = crlf - start;

@@ -64,7 +64,7 @@
 }
 
 - (NSString*) databaseName {
-    return _databaseURL.lastPathComponent;
+    return _databaseURL.path.lastPathComponent;
 }
 
 - (NSString*) changesFeedPath {
@@ -76,10 +76,11 @@
         [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
     if (_filterName) {
         [path appendFormat: @"&filter=%@", TDEscapeURLParam(_filterName)];
-        [_filterParameters enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+        for (NSString* key in _filterParameters) {
+            id value = [_filterParameters objectForKey: key];
             [path appendFormat: @"&%@=%@", TDEscapeURLParam(key), 
                                            TDEscapeURLParam([value description])];
-        }];
+        }
     }
 
     return path;
@@ -147,7 +148,7 @@
 
 - (BOOL) receivedChunk: (NSData*)chunk {
     if (chunk.length > 1) {
-        id change = [NSJSONSerialization JSONObjectWithData: chunk options: 0 error: nil];
+        id change = [TDJSON JSONObjectWithData: chunk options: 0 error: NULL];
         if (![self receivedChange: change]) {
             Warn(@"Received unparseable change line from server: %@", [chunk my_UTF8ToString]);
             return NO;
@@ -159,7 +160,7 @@
 - (BOOL) receivedPollResponse: (NSData*)body {
     if (!body)
         return NO;
-    id changeObj = [NSJSONSerialization JSONObjectWithData: body options: 0 error: nil];
+    id changeObj = [TDJSON JSONObjectWithData: body options: 0 error: NULL];
     NSDictionary* changeDict = $castIf(NSDictionary, changeObj);
     NSArray* changes = $castIf(NSArray, [changeDict objectForKey: @"results"]);
     if (!changes)

@@ -15,7 +15,7 @@
 
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+Attachments.h"
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 #import "TDInternal.h"
 #import "TDMisc.h"
 
@@ -144,7 +144,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     }
     
     NSError* error;
-    NSData* json = [NSJSONSerialization dataWithJSONObject: properties options:0 error: &error];
+    NSData* json = [TDJSON dataWithJSONObject: properties options:0 error: &error];
     [properties release];
     Assert(json, @"Unable to serialize %@ to JSON: %@", rev, error);
     return json;

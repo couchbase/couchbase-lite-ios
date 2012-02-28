@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "TDRouter.h"
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 #import "TDBody.h"
 #import "TDServer.h"
 #import "TDBase64.h"
@@ -41,7 +41,7 @@ static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* pat
         [request setValue: [headers objectForKey: header] forHTTPHeaderField: header];
     if (bodyObj) {
         NSError* error = nil;
-        request.HTTPBody = [NSJSONSerialization dataWithJSONObject: bodyObj options:0 error:&error];
+        request.HTTPBody = [TDJSON dataWithJSONObject: bodyObj options:0 error:&error];
         CAssertNil(error);
     }
     TDRouter* router = [[[TDRouter alloc] initWithServer: server request: request] autorelease];
@@ -67,7 +67,7 @@ static id ParseJSONResponse(TDResponse* response) {
         jsonStr = [[[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding] autorelease];
         CAssert(jsonStr);
         NSError* error;
-        result = [NSJSONSerialization JSONObjectWithData: json options: 0 error: &error];
+        result = [TDJSON JSONObjectWithData: json options: 0 error: &error];
         CAssert(result, @"Couldn't parse JSON response: %@", error);
     }
     return result;

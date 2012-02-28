@@ -13,10 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 #import "TDDatabase+Attachments.h"
 #import "TDInternal.h"
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 #import "TDCollateJSON.h"
 #import "TDBlobStore.h"
 #import "TDPuller.h"
@@ -46,10 +46,10 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
 
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path {
-    if (!removeItemIfExists(path, nil))
+    if (!removeItemIfExists(path, NULL))
         return nil;
     TDDatabase *db = [[[self alloc] initWithPath: path] autorelease];
-    if (!removeItemIfExists(db.attachmentStorePath, nil))
+    if (!removeItemIfExists(db.attachmentStorePath, NULL))
         return nil;
     if (![db open])
         return nil;
@@ -311,7 +311,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
 
 - (UInt64) totalDataSize {
-    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: nil];
+    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: NULL];
     if (!attrs)
         return 0;
     return attrs.fileSize + _attachments.totalDataSize;
@@ -394,7 +394,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     if (!dict.count)
         return json;
-    NSData* extraJson = [NSJSONSerialization dataWithJSONObject: dict options:0 error:nil];
+    NSData* extraJson = [TDJSON dataWithJSONObject: dict options:0 error: NULL];
     if (!extraJson)
         return nil;
     size_t jsonLength = json.length;
@@ -495,9 +495,9 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     [rev release];
     if (json==nil || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
         return extra;      // optimization, and workaround for issue #44
-    NSMutableDictionary* docProperties = [NSJSONSerialization JSONObjectWithData: json
-                                                            options: NSJSONReadingMutableContainers
-                                                              error: nil];
+    NSMutableDictionary* docProperties = [TDJSON JSONObjectWithData: json
+                                                            options: TDJSONReadingMutableContainers
+                                                              error: NULL];
     [docProperties addEntriesFromDictionary: extra];
     return docProperties;
 }

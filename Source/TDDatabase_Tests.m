@@ -14,13 +14,13 @@
 //  and limitations under the License.
 
 
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 #import "TDDatabase+Attachments.h"
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+LocalDocs.h"
 #import "TDDatabase+Replication.h"
 #import "TDBody.h"
-#import "TDRevision.h"
+#import <TouchDB/TDRevision.h>
 #import "TDBlobStore.h"
 #import "TDBase64.h"
 #import "TDInternal.h"
@@ -154,7 +154,7 @@ TestCase(TDDatabase_CRUD) {
 
 
 TestCase(TDDatabase_EmptyDoc) {
-    // Test case for issue #44, which is caused by a bug in NSJSONSerialization.
+    // Test case for issue #44, which is caused by a bug in TDJSON.
     TDDatabase* db = createDB();
     TDRevision* rev = putDoc(db, $dict());
     TDQueryOptions options = kDefaultTDQueryOptions;

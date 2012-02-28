@@ -18,8 +18,10 @@
 
 // ============================================================================
 
+#if TARGET_OS_MAC
 #include <AvailabilityMacros.h>
 #include <TargetConditionals.h>
+#endif
 
 #if TARGET_OS_IPHONE
 #include <Availability.h>

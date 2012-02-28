@@ -7,12 +7,19 @@
 //
 
 #import <Foundation/Foundation.h>
+
+#ifdef GNUSTEP
+#import <openssl/md5.h>
+#import <openssl/sha.h>
+#else
+#define COMMON_DIGEST_FOR_OPENSSL
 #import <CommonCrypto/CommonDigest.h>
+#endif
 
 
 /** Key identifying a data blob. This happens to be a SHA-1 digest. */
 typedef struct TDBlobKey {
-    uint8_t bytes[CC_SHA1_DIGEST_LENGTH];
+    uint8_t bytes[SHA_DIGEST_LENGTH];
 } TDBlobKey;
 
 
@@ -48,7 +55,7 @@ typedef struct TDBlobKey {
 
 
 typedef struct {
-    uint8_t bytes[CC_MD5_DIGEST_LENGTH];
+    uint8_t bytes[MD5_DIGEST_LENGTH];
 } TDMD5Key;
 
 
@@ -59,8 +66,8 @@ typedef struct {
     NSString* _tempPath;
     NSFileHandle* _out;
     UInt64 _length;
-    CC_SHA1_CTX _shaCtx;
-    CC_MD5_CTX _md5Ctx;
+    SHA_CTX _shaCtx;
+    MD5_CTX _md5Ctx;
     TDBlobKey _blobKey;
     TDMD5Key _MD5Digest;
 }

@@ -1,5 +1,5 @@
 //
-//  main.m
+//  TouchServ.m
 //  TouchServ
 //
 //  Created by Jens Alfke on 1/16/12.

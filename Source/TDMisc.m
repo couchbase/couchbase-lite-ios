@@ -16,23 +16,42 @@
 #import "TDMisc.h"
 
 #import "CollectionUtils.h"
+
+
+#ifdef GNUSTEP
+#import <openssl/sha.h>
+#import <uuid/uuid.h>   // requires installing "uuid-dev" package on Ubuntu
+#else
+#define COMMON_DIGEST_FOR_OPENSSL
 #import <CommonCrypto/CommonDigest.h>
+#endif
 
 
 NSString* const TDHTTPErrorDomain = @"TDHTTP";
 
 
 NSString* TDCreateUUID() {
+#ifdef GNUSTEP
+    uuid_t uuid;
+    uuid_generate(uuid);
+    char cstr[37];
+    uuid_unparse_lower(uuid, cstr);
+    return [[[NSString alloc] initWithCString: cstr encoding: NSASCIIStringEncoding] autorelease];
+#else
     CFUUIDRef uuid = CFUUIDCreate(NULL);
     NSString* str = NSMakeCollectable(CFUUIDCreateString(NULL, uuid));
     CFRelease(uuid);
     return [str autorelease];
+#endif
 }
 
 
 NSString* TDHexSHA1Digest( NSData* input ) {
-    unsigned char digest[CC_SHA1_DIGEST_LENGTH];
-    CC_SHA1(input.bytes, (CC_LONG)input.length, digest);
+    unsigned char digest[SHA_DIGEST_LENGTH];
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+    SHA1_Update(&ctx, input.bytes, input.length);
+    SHA1_Final(digest, &ctx);
     char hex[2*sizeof(digest) + 1];
     char *dst = &hex[0];
     for( size_t i=0; i<sizeof(digest); i+=1 )
@@ -59,20 +78,33 @@ NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b) {
 
 
 NSString* TDEscapeID( NSString* docOrRevID ) {
+#ifdef GNUSTEP
+    docOrRevID = [docOrRevID stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+    docOrRevID = [docOrRevID stringByReplacingOccurrencesOfString: @"&" withString: @"%26"];
+    docOrRevID = [docOrRevID stringByReplacingOccurrencesOfString: @"/" withString: @"%2F"];
+    return docOrRevID;
+#else
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)docOrRevID,
                                                                   NULL, (CFStringRef)@"&/",
                                                                   kCFStringEncodingUTF8);
     return [NSMakeCollectable(escaped) autorelease];
+#endif
 }
 
 
 NSString* TDEscapeURLParam( NSString* param ) {
+#ifdef GNUSTEP
+    param = [param stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+    param = [param stringByReplacingOccurrencesOfString: @"&" withString: @"%26"];
+    return param;
+#else
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)param,
                                                                   NULL, (CFStringRef)@"&",
                                                                   kCFStringEncodingUTF8);
     return [NSMakeCollectable(escaped) autorelease];
+#endif
 }
 
 
@@ -82,6 +114,31 @@ BOOL TDIsOfflineError( NSError* error ) {
     if ($equal(domain, NSURLErrorDomain))
         return code == NSURLErrorDNSLookupFailed
             || code == NSURLErrorNotConnectedToInternet
-            || code == NSURLErrorInternationalRoamingOff;
+#ifndef GNUSTEP
+            || code == NSURLErrorInternationalRoamingOff
+#endif
+        ;
     return NO;
+}
+
+
+NSURL* TDURLWithoutQuery( NSURL* url ) {
+#if GNUSTEP
+    CAssert(NO, @"UNIMPLEMENTED"); //TEMP
+#else
+    // Strip anything after the URL's path (i.e. the query string)
+    CFURLRef cfURL = (CFURLRef)url;
+    CFRange range = CFURLGetByteRangeForComponent(cfURL, kCFURLComponentResourceSpecifier, NULL);
+    if (range.length == 0) {
+        return url;
+    } else {
+        CFIndex size = CFURLGetBytes(cfURL, NULL, 0);
+        if (size > 8000)
+            return url;  // give up
+        UInt8 bytes[size];
+        CFURLGetBytes(cfURL, bytes, size);
+        cfURL = CFURLCreateWithBytes(NULL, bytes, range.location - 1, kCFStringEncodingUTF8, NULL);
+        return [NSMakeCollectable(cfURL) autorelease];
+    }
+#endif
 }

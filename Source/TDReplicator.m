@@ -16,7 +16,7 @@
 #import "TDReplicator.h"
 #import "TDPusher.h"
 #import "TDPuller.h"
-#import "TDDatabase.h"
+#import <TouchDB/TDDatabase.h>
 #import "TDRemoteRequest.h"
 #import "TDBatcher.h"
 #import "TDReachability.h"

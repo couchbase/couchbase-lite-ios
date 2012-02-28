@@ -15,6 +15,13 @@
 
 #import "TDBlobStore.h"
 #import "TDMisc.h"
+#import <ctype.h>
+
+
+#ifdef GNUSTEP
+#define NSDataReadingMappedIfSafe NSMappedRead
+#define NSDataWritingAtomic NSAtomicWrite
+#endif
 
 #define kFileExtension "blob"
 
@@ -51,7 +58,10 @@
 + (TDBlobKey) keyForBlob: (NSData*)blob {
     NSCParameterAssert(blob);
     TDBlobKey key;
-    CC_SHA1(blob.bytes, (CC_LONG)blob.length, key.bytes);
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+    SHA1_Update(&ctx, blob.bytes, blob.length);
+    SHA1_Final(key.bytes, &ctx);
     return key;
 }
 
@@ -99,7 +109,7 @@
 
 - (NSData*) blobForKey: (TDBlobKey)key {
     NSString* path = [self pathForKey: key];
-    return [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: nil];
+    return [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: NULL];
 }
 
 - (NSInputStream*) blobInputStreamForKey: (TDBlobKey)key
@@ -107,7 +117,7 @@
 {
     NSString* path = [self pathForKey: key];
     if (outLength)
-        *outLength = [[[NSFileManager defaultManager] attributesOfItemAtPath: path error: nil]
+        *outLength = [[[NSFileManager defaultManager] attributesOfItemAtPath: path error: NULL]
                             fileSize];
     return [NSInputStream inputStreamWithFileAtPath: path];
 }
@@ -130,7 +140,7 @@
 
 - (NSArray*) allKeys {
     NSArray* blob = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _path
-                                                                            error: nil];
+                                                                            error: NULL];
     if (!blob)
         return nil;
     return [blob my_map: ^(id filename) {
@@ -146,7 +156,7 @@
 - (NSUInteger) count {
     NSUInteger n = 0;
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    for (NSString* filename in [fmgr contentsOfDirectoryAtPath: _path error: nil]) {
+    for (NSString* filename in [fmgr contentsOfDirectoryAtPath: _path error: NULL]) {
         if ([[self class] getKey: NULL forFilename: filename])
             ++n;
     }
@@ -157,10 +167,10 @@
 - (UInt64) totalDataSize {
     UInt64 total = 0;
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    for (NSString* filename in [fmgr contentsOfDirectoryAtPath: _path error: nil]) {
+    for (NSString* filename in [fmgr contentsOfDirectoryAtPath: _path error: NULL]) {
         if ([[self class] getKey: NULL forFilename: filename]) {
             NSString* itemPath = [_path stringByAppendingPathComponent: filename];
-            NSDictionary* attrs = [fmgr attributesOfItemAtPath: itemPath error: nil];
+            NSDictionary* attrs = [fmgr attributesOfItemAtPath: itemPath error: NULL];
             if (attrs)
                 total += attrs.fileSize;
         }
@@ -171,7 +181,7 @@
 
 - (NSUInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep {
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    NSArray* blob = [fmgr contentsOfDirectoryAtPath: _path error: nil];
+    NSArray* blob = [fmgr contentsOfDirectoryAtPath: _path error: NULL];
     if (!blob)
         return 0;
     NSUInteger numDeleted = 0;
@@ -195,6 +205,9 @@
 - (NSString*) tempDir {
     if (!_tempDir) {
         // Find a temporary directory suitable for files that will be moved into the store:
+#ifdef GNUSTEP
+        _tempDir = [NSTemporaryDirectory() copy];
+#else
         NSError* error;
         NSURL* parentURL = [NSURL fileURLWithPath: _path isDirectory: YES];
         NSURL* tempDirURL = [[NSFileManager defaultManager] 
@@ -206,6 +219,7 @@
         Log(@"TDBlobStore %@ created tempDir %@", _path, _tempDir);
         if (!_tempDir)
             Warn(@"TDBlobStore: Unable to create temp dir: %@", error);
+#endif
     }
     return _tempDir;
 }
@@ -224,8 +238,8 @@
     self = [super init];
     if (self) {
         _store = store;
-        CC_SHA1_Init(&_shaCtx);
-        CC_MD5_Init(&_md5Ctx);
+        SHA1_Init(&_shaCtx);
+        MD5_Init(&_md5Ctx);
                 
         // Open a temporary file in the store's temporary directory: 
         NSString* filename = [TDCreateUUID() stringByAppendingPathExtension: @"blobtmp"];
@@ -248,8 +262,8 @@
     [_out writeData: data];
     NSUInteger dataLen = data.length;
     _length += dataLen;
-    CC_SHA1_Update(&_shaCtx, data.bytes, (CC_LONG)dataLen);
-    CC_MD5_Update(&_md5Ctx, data.bytes, (CC_LONG)dataLen);
+    SHA1_Update(&_shaCtx, data.bytes, dataLen);
+    MD5_Update(&_md5Ctx, data.bytes, dataLen);
 }
 
 - (void) closeFile {
@@ -261,8 +275,8 @@
 - (void) finish {
     Assert(_out, @"Already finished");
     [self closeFile];
-    CC_SHA1_Final(_blobKey.bytes, &_shaCtx);
-    CC_MD5_Final(_MD5Digest.bytes, &_md5Ctx);
+    SHA1_Final(_blobKey.bytes, &_shaCtx);
+    MD5_Final(_MD5Digest.bytes, &_md5Ctx);
 }
 
 - (BOOL) install {
@@ -272,7 +286,7 @@
     // Move temp file to correct location in blob store:
     NSString* dstPath = [_store pathForKey: _blobKey];
     if ([[NSFileManager defaultManager] moveItemAtPath: _tempPath
-                                                toPath: dstPath error:nil]) {
+                                                toPath: dstPath error:NULL]) {
         [_tempPath release];
         _tempPath = nil;
     } else {
@@ -286,7 +300,7 @@
 - (void) cancel {
     [self closeFile];
     if (_tempPath) {
-        [[NSFileManager defaultManager] removeItemAtPath: _tempPath error: nil];
+        [[NSFileManager defaultManager] removeItemAtPath: _tempPath error: NULL];
         [_tempPath release];
         _tempPath = nil;
     }

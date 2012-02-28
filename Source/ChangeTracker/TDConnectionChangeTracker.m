@@ -34,7 +34,6 @@
     request.timeoutInterval = 6.02e23;
     
     _connection = [[NSURLConnection connectionWithRequest: request delegate: self] retain];
-    [_connection start];
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
 }
@@ -96,7 +95,7 @@
         // In continuous mode, break input into lines and parse each as JSON:
         for (;;) {
             const char* start = _inputBuffer.bytes;
-            const char* eol = strnstr(start, "\n", _inputBuffer.length);
+            const char* eol = memchr(start, '\n', _inputBuffer.length);
             if (!eol)
                 break;  // Wait till we have a complete line
             ptrdiff_t lineLength = eol - start;
