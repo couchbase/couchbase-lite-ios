@@ -1140,19 +1140,19 @@
 		27F0749A11CD5B1200E9A2AB /* MYUtilities */ = {
 			isa = PBXGroup;
 			children = (
+				27F0749B11CD5B4F00E9A2AB /* CollectionUtils.h */,
+				27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */,
 				27F0751611CDC80A00E9A2AB /* ExceptionUtils.h */,
 				27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */,
 				27F0751111CDC7F900E9A2AB /* Logging.h */,
 				27F0751211CDC7F900E9A2AB /* Logging.m */,
+				279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */,
+				279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */,
+				27F0749D11CD5B4F00E9A2AB /* Test.h */,
+				27F0749E11CD5B4F00E9A2AB /* Test.m */,
 				27F074F811CDC71800E9A2AB /* MYUtilities_Debug.xcconfig */,
 				27F074F911CDC71800E9A2AB /* MYUtilities_Release.xcconfig */,
 				27F074FA11CDC71800E9A2AB /* MYUtilities.xcconfig */,
-				27F0749B11CD5B4F00E9A2AB /* CollectionUtils.h */,
-				27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */,
-				27F0749D11CD5B4F00E9A2AB /* Test.h */,
-				27F0749E11CD5B4F00E9A2AB /* Test.m */,
-				279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */,
-				279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */,
 			);
 			path = MYUtilities;
 			sourceTree = "<group>";

@@ -12,6 +12,7 @@
 
 #if DEBUG
 #import "Logging.h"
+#import "Test.h"
 #else
 #define Warn NSLog
 #define Log NSLog
@@ -23,18 +24,21 @@ int main (int argc, const char * argv[])
     @autoreleasepool {
 #if DEBUG
         EnableLog(YES);
-        EnableLogTo(TDListener, YES);
+        //EnableLogTo(TDDatabase, YES);
+        //EnableLogTo(TDDatabaseVerbose, YES);
+        RunTestCases(argc, argv);
 #endif
-        
+        /*
         NSError* error;
         TDServer* server = [[TDServer alloc] initWithDirectory: @"/tmp/touchdbserver" error: &error];
-        if (error) {
-            Warn(@"FATAL: Error initializing TouchDB: %@", error);
+        if (!server) {
+            Warn(@"FATAL: Error initializing TDServer: %@", error);
             exit(1);
         }
         NSLog(@"Started server %@", server);
         
         [[NSRunLoop currentRunLoop] run];
+         */
         
     }
     return 0;

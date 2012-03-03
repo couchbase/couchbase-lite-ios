@@ -65,11 +65,6 @@ typedef NSUInteger NSDataSearchOptions;
 @end
 
 
-enum {
-    NSFileWriteFileExistsError = 99999  //TEMP
-};
-
-
 @protocol NSURLConnectionDelegate <NSObject>
 @end
 

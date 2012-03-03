@@ -96,8 +96,12 @@
         return _input;
     Assert(!_output, @"Already open");
     LogTo(TDMultiStreamWriter, @"%@: Open!", self);
+#ifdef GNUSTEP
+    Assert(NO, @"Unimplemented CFStreamCreateBoundPair");   // TODO: Add this to CNUstep base fw
+#else
     CFStreamCreateBoundPair(NULL, (CFReadStreamRef*)&_input, (CFWriteStreamRef*)&_output,
                             _bufferSize);
+#endif
     [self opened];
     return _input;
 }
@@ -199,7 +203,7 @@
     _bufferLength -= bytesWritten;
     memmove(_buffer, _buffer+bytesWritten, _bufferLength);
     //LogTo(TDMultiStreamWriter, @"%@:     buffer is now \"%.*s\"", self, _bufferLength, _buffer);
-    if (_bufferLength < _bufferSize/2)
+    if (_bufferLength <= _bufferSize/2)
         [self refillBuffer];
     return _bufferLength > 0;
 }
@@ -244,10 +248,11 @@
 
 
 #pragma mark - UNIT TESTS:
+#ifndef GNUSTEP     // FIXME: Fix NSString bugs in GNUstep to make these tests work
 #if DEBUG
 
-static TDMultiStreamWriter* createWriter() {
-    TDMultiStreamWriter* stream = [[[TDMultiStreamWriter alloc] initWithBufferSize: 16] autorelease];
+static TDMultiStreamWriter* createWriter(unsigned bufSize) {
+    TDMultiStreamWriter* stream = [[[TDMultiStreamWriter alloc] initWithBufferSize: bufSize] autorelease];
     [stream addData: [@"<part the first, let us make it a bit longer for greater interest>" dataUsingEncoding: NSUTF8StringEncoding]];
     [stream addData: [@"<2nd part, again unnecessarily prolonged for testing purposes beyond any reasonable length...>" dataUsingEncoding: NSUTF8StringEncoding]];
     return stream;
@@ -255,7 +260,8 @@ static TDMultiStreamWriter* createWriter() {
 
 TestCase(TDMultiStreamWriter_Sync) {
     for (unsigned bufSize = 1; bufSize < 128; ++bufSize) {
-        TDMultiStreamWriter* mp = createWriter();
+        Log(@"Buffer size = %u", bufSize);
+        TDMultiStreamWriter* mp = createWriter(bufSize);
         NSData* outputBytes = [mp allOutput];
         CAssertEqual(outputBytes.my_UTF8ToString, @"<part the first, let us make it a bit longer for greater interest><2nd part, again unnecessarily prolonged for testing purposes beyond any reasonable length...>");
     }
@@ -315,7 +321,7 @@ TestCase(TDMultiStreamWriter_Sync) {
 @end
 
 TestCase(TDMultiStreamWriter_Async) {
-    TDMultiStreamWriter* writer = createWriter();
+    TDMultiStreamWriter* writer = createWriter(16);
     NSInputStream* input = [writer openForInputStream];
     CAssert(input);
     TDMultiStreamWriterTester *tester = [[[TDMultiStreamWriterTester alloc] initWithStream: input] autorelease];
@@ -342,4 +348,5 @@ TestCase(TDMultiStreamWriter) {
     RequireTestCase(TDMultiStreamWriter_Async);
 }
 
-#endif
+#endif // DEBUG
+#endif // GNUSTEP

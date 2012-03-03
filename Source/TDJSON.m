@@ -11,7 +11,32 @@
 
 #if ! USE_NSJSON
 
+#import "JSONKit.h"
+
+
 @implementation TDJSON
+
+
++ (NSData *)dataWithJSONObject:(id)obj
+                       options:(TDJSONWritingOptions)opt
+                         error:(NSError **)error
+{
+    Assert(obj);
+    return [obj JSONDataWithOptions: 0 error: error];
+}
+
+
++ (id)JSONObjectWithData:(NSData *)data
+                 options:(TDJSONReadingOptions)opt
+                   error:(NSError **)error
+{
+    Assert(data);
+    if (opt & (TDJSONReadingMutableContainers | TDJSONReadingMutableLeaves))
+        return [data mutableObjectFromJSONDataWithParseOptions: 0 error: error];
+    else
+        return [data objectFromJSONDataWithParseOptions: 0 error: error];
+}
+
 
 @end
 

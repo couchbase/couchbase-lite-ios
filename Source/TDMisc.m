@@ -122,9 +122,25 @@ BOOL TDIsOfflineError( NSError* error ) {
 }
 
 
+BOOL TDIsFileExistsError( NSError* error ) {
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    return ($equal(domain, NSPOSIXErrorDomain) && code == EEXIST)
+#ifndef GNUSTEP
+        || ($equal(domain, NSCocoaErrorDomain) && code == NSFileWriteFileExistsError)
+#endif
+        ;
+}
+
+
 NSURL* TDURLWithoutQuery( NSURL* url ) {
-#if GNUSTEP
-    CAssert(NO, @"UNIMPLEMENTED"); //TEMP
+#if 1// GNUSTEP
+    // No CFURL on GNUstep :(
+    NSString* str = url.absoluteString;
+    NSRange q = [str rangeOfString: @"?"];
+    if (q.length == 0)
+        return url;
+    return [NSURL URLWithString: [str substringToIndex: q.location]];
 #else
     // Strip anything after the URL's path (i.e. the query string)
     CFURLRef cfURL = (CFURLRef)url;

@@ -7,3 +7,6 @@
 [submodule "vendor/MYUtilities"]
 	path = vendor/MYUtilities
 	url = git://github.com/snej/MYUtilities.git
+[submodule "vendor/JSONKit"]
+	path = vendor/JSONKit
+	url = git://github.com/johnezang/JSONKit.git

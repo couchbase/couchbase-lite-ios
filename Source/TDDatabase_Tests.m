@@ -74,6 +74,7 @@ TestCase(TDDatabase_CRUD) {
     NSMutableDictionary* props = $mdict({@"foo", $object(1)}, {@"bar", $false});
     TDBody* doc = [[[TDBody alloc] initWithProperties: props] autorelease];
     TDRevision* rev1 = [[[TDRevision alloc] initWithBody: doc] autorelease];
+    CAssert(rev1);
     TDStatus status;
     rev1 = [db putRevision: rev1 prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, 201);

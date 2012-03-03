@@ -10,15 +10,19 @@
 
 
 // Conditional compilation for JSONKit and/or NSJSONSerialization.
-// If the app supports OS versions prior to NSJSONSerialization, we'll do a runtime
-// test for it and use it if present, otherwise fall back to JSONKit.
+// If the app supports OS versions prior to NSJSONSerialization, we'll use JSONKit.
 #ifdef __IPHONE_OS_VERSION_MIN_REQUIRED
 #define USE_NSJSON (__IPHONE_OS_VERSION_MIN_REQUIRED >= 50000)
-#else
+#elif defined(TARGET_OS_MAC)
 #define USE_NSJSON (MAC_OS_X_VERSION_MIN_REQUIRED >= 1070)
+#elif defined(GNUSTEP)
+#define USE_NSJSON 1
+#else
+#define USE_NSJSON 0
 #endif
 
 
+/** Identical to the corresponding NSJSON option flags. */
 enum {
     TDJSONReadingMutableContainers = (1UL << 0),
     TDJSONReadingMutableLeaves = (1UL << 1),
@@ -26,6 +30,7 @@ enum {
 };
 typedef NSUInteger TDJSONReadingOptions;
 
+/** Identical to the corresponding NSJSON option flags. */
 enum {
     TDJSONWritingPrettyPrinted = (1UL << 0)
 };

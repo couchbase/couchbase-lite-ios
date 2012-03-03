@@ -301,9 +301,11 @@ TestCase(TDCollateScalars) {
     CAssertEq(TDCollateJSON(mode, 0, "\"12\\/34\"", 0, "\"12/34\""), 0);
     CAssertEq(TDCollateJSON(mode, 0, "\"\\/1234\"", 0, "\"/1234\""), 0);
     CAssertEq(TDCollateJSON(mode, 0, "\"1234\\/\"", 0, "\"1234/\""), 0);
+#ifndef GNUSTEP     // FIXME: GNUstep doesn't support Unicode collation yet
     CAssertEq(TDCollateJSON(mode, 0, "\"a\"", 0, "\"A\""), -1);
     CAssertEq(TDCollateJSON(mode, 0, "\"A\"", 0, "\"aa\""), -1);
     CAssertEq(TDCollateJSON(mode, 0, "\"B\"", 0, "\"aa\""), 1);
+#endif
 }
 
 TestCase(TDCollateASCII) {

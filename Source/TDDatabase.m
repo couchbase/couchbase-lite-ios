@@ -67,9 +67,9 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
-        _fmdb.logsErrors = WillLogTo(TouchDB);
+        _fmdb.logsErrors = WillLogTo(TDDatabase);
 #endif
-        _fmdb.traceExecution = WillLogTo(TouchDBVerbose);
+        _fmdb.traceExecution = WillLogTo(TDDatabaseVerbose);
     }
     return self;
 }
@@ -113,6 +113,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 - (BOOL) open {
     if (_open)
         return YES;
+    LogTo(TDDatabase, @"Open %@", _path);
     if (![_fmdb open])
         return NO;
     
@@ -264,6 +265,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     if (!_open)
         return NO;
     
+    LogTo(TDDatabase, @"Close %@", _path);
     for (TDView* view in _views.allValues)
         [view databaseClosing];
     setObj(&_views, nil);

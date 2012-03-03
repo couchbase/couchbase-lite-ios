@@ -198,6 +198,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
               allowConflict: (BOOL)allowConflict
                      status: (TDStatus*)outStatus
 {
+    LogTo(TDDatabase, @"PUT rev=%@, prevRevID=%@, allowConflict=%d", rev, prevRevID, allowConflict);
     Assert(outStatus);
     NSString* docID = rev.docID;
     BOOL deleted = rev.deleted;

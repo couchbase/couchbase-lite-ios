@@ -15,7 +15,6 @@
 
 #import "TDRemoteRequest.h"
 #import "TDMisc.h"
-#import "TDMultipartReader.h"
 #import "TDBlobStore.h"
 
 
@@ -31,11 +30,11 @@
 {
     self = [super init];
     if (self) {
-        LogTo(RemoteRequest, @"%@: Starting...", self);
         _onCompletion = [onCompletion copy];
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
-        _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+        _request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
+        LogTo(RemoteRequest, @"%@: Starting...", self);
         [self setupRequest: _request withBody: body];
         [self start];
     }
@@ -50,15 +49,22 @@
 - (void) start {
     Assert(!_connection);
     _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
-    [_connection start];
+    // Retaining myself shouldn't be necessary, because NSURLConnection is documented as retaining
+    // its delegate while it's running. But GNUstep doesn't (currently) do this, so for
+    // compatibility I retain myself until the connection completes (see -clearConnection.)
+    // TEMP: Remove this and the [self autorelease] below when I get the fix from GNUstep.
+    [self retain];
 }
 
 
 - (void) clearConnection {
     [_request release];
     _request = nil;
-    [_connection autorelease];
-    _connection = nil;
+    if (_connection) {
+        [_connection autorelease];
+        _connection = nil;
+        [self autorelease];  // balances [self retain] in -start method
+    }
 }
 
 
@@ -76,7 +82,6 @@
 
 - (void) respondWithResult: (id)result error: (NSError*)error {
     Assert(result || error);
-    LogTo(RemoteRequest, @"%@: Calling completion block...", self);
     _onCompletion(result, error);
 }
 
@@ -120,6 +125,7 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    LogTo(RemoteRequest, @"%@: Finished loading", self);
     [self clearConnection];
     [self respondWithResult: self error: nil];
 }
@@ -159,6 +165,7 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    LogTo(RemoteRequest, @"%@: Finished loading", self);
     id result = nil;
     if (_jsonBuffer)
         result = [TDJSON JSONObjectWithData: _jsonBuffer options: 0 error: NULL];

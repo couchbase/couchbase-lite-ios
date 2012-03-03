@@ -30,5 +30,8 @@ NSString* TDEscapeURLParam( NSString* param );
 /** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
 BOOL TDIsOfflineError( NSError* error );
 
+/** Returns YES if this error appears to be due to a creating a file/dir that already exists. */
+BOOL TDIsFileExistsError( NSError* error );
+
 /** Returns the input URL without the query string or fragment identifier, just ending with the path. */
 NSURL* TDURLWithoutQuery( NSURL* url );

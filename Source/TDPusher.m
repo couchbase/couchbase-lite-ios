@@ -173,10 +173,12 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                                             {@"_revisions", [_db getRevisionHistoryDict: rev]});
                         [properties retain];
                     } else {
-                        if ([_db loadRevisionBody: rev
-                                          options: kTDIncludeAttachments | kTDBigAttachmentsFollow |
-                                                   kTDIncludeRevs]
-                                    >= 300) {
+                        TDContentOptions options = kTDIncludeAttachments | kTDIncludeRevs
+                                                    | kTDBigAttachmentsFollow;
+#ifdef GNUSTEP
+                        options &= ~kTDBigAttachmentsFollow;    // TODO: Multipart upload on GNUstep
+#endif
+                        if ([_db loadRevisionBody: rev options: options] >= 300) {
                             Warn(@"%@: Couldn't get local contents of %@", self, rev);
                             return nil;
                         }

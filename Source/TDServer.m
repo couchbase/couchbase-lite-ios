@@ -16,6 +16,7 @@
 #import "TDServer.h"
 #import <TouchDB/TDDatabase.h>
 #import "TDReplicatorManager.h"
+#import "TDMisc.h"
 #import "TDInternal.h"
 
 
@@ -60,13 +61,13 @@ static NSCharacterSet* kIllegalNameChars;
         _databases = [[NSMutableDictionary alloc] init];
         
         // Create the directory but don't fail if it already exists:
-        NSError* error;
+        NSError* error = nil;
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
                                        withIntermediateDirectories: NO
                                                         attributes: nil
                                                              error: &error]) {
-            if (!$equal(error.domain, NSCocoaErrorDomain)
-                        || error.code != NSFileWriteFileExistsError) {
+            if (!TDIsFileExistsError(error)) {
+                NSLog(@"ERROR for %@: %@", _dir, error);//TEMP
                 if (outError) *outError = error;
                 [self release];
                 return nil;

@@ -21,12 +21,18 @@
 #import "TDMultipartWriter.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
-#ifndef GNUSTEP
+#ifdef GNUSTEP
+#import <GNUstepBase/NSURL+GNUstepBase.h>
+#else
 #import <objc/message.h>
 #endif
 
 
-extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
+#ifdef GNUSTEP
+static double TouchDBVersionNumber = 0.7;
+#else
+extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
+#endif
 
 
 @implementation TDRouter
@@ -202,23 +208,25 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 
 static NSArray* splitPath( NSURL* url ) {
     // Unfortunately can't just call url.path because that converts %2F to a '/'.
-#if GNUSTEP
-    NSString* pathString = [url.path copy]; //TEMP
+#ifdef GNUSTEP
+    NSString* pathString = [url pathWithEscapes];
 #else
     NSString* pathString = NSMakeCollectable(CFURLCopyPath((CFURLRef)url));
 #endif
     NSMutableArray* path = $marray();
     for (NSString* comp in [pathString componentsSeparatedByString: @"/"]) {
         if ([comp length] > 0) {
-            comp = [comp stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-            if (!comp) {
+            NSString* unescaped = [comp stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            if (!unescaped) {
                 path = nil;     // bad URL
                 break;
             }
-            [path addObject: comp];
+            [path addObject: unescaped];
         }
     }
+#ifndef GNUSTEP
     [pathString release];
+#endif
     return path;
 }
 

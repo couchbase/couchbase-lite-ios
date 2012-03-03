@@ -17,16 +17,15 @@
 
 
 int digittoint(int c) {
-    if (isdigit(c))
-        return c - '0';
-    else if (c >= 'A' && c <= 'F')
-        return 10 + c - 'A';
-    else if (c >= 'a' && c <= 'f')
-        return 10 + c - 'a';
-    else
+    if (!isxdigit(c))
         return 0;
+    else if (c <= '9')
+        return c - '0';
+    else if (c <= 'F')
+        return 10 + c - 'A';
+    else
+        return 10 + c - 'a';
 }
-
 
 
 static NSComparisonResult callComparator(id a, id b, void* context) {
@@ -72,12 +71,21 @@ static NSComparisonResult callComparator(id a, id b, void* context) {
                  range:(NSRange)searchRange
 {
     NSParameterAssert(dataToFind);
-    NSParameterAssert(options == 0); // not implemented yet
-    const void* myBytes = self.bytes;
+    // TODO: Implement NSDataSearchBackwards
+    NSAssert(!(options & NSDataSearchBackwards), @"NSDataSearchBackwards not implemented yet");
     NSUInteger patternLen = dataToFind.length;
     if (patternLen == 0)
         return NSMakeRange(NSNotFound, 0);
-    const void* start = memmem(myBytes, self.length, dataToFind.bytes, patternLen);
+    const void* patternBytes = dataToFind.bytes;
+    NSUInteger myLen = self.length;
+    const void* myBytes = self.bytes;
+    const void* start = NULL;
+    if (options & NSDataSearchAnchored) {
+        if (patternLen <= myLen && memcmp(myBytes, patternBytes, patternLen) == 0)
+            start = myBytes;
+    } else {
+        start = memmem(myBytes, myLen, patternBytes, patternLen);
+    }
     if (!start)
         return NSMakeRange(NSNotFound, 0);
     return NSMakeRange(start - myBytes, patternLen);

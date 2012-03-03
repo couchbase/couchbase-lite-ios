@@ -227,10 +227,10 @@ static NSData* kCRLFCRLF;
                 // Otherwise look for two CRLFs that delimit the end of the headers:
                 NSRange r = [self searchFor: kCRLFCRLF from: 0];
                 if (r.length > 0) {
-                    NSString* headers = [[NSString alloc] initWithBytesNoCopy: (void*)_buffer.bytes
+                    //TEMP: Take out NoCopy to work around GNUstep bug till I check out the fix
+                    NSString* headers = [[NSString alloc] initWithBytes: (void*)_buffer.bytes
                                                                        length: r.location
-                                                                     encoding: NSUTF8StringEncoding
-                                                                 freeWhenDone: NO];
+                                                                     encoding: NSUTF8StringEncoding];
                     BOOL ok = [self parseHeaders: headers];
                     [headers release];
                     if (!ok) {
