@@ -1,0 +1,12 @@
+Index: Source/NSFileManager.m
+===================================================================
+--- Source/NSFileManager.m	(revision 34870)
++++ Source/NSFileManager.m	(working copy)
+@@ -854,6 +854,7 @@
+ 	    {
+ 	      ASSIGN(_lastError,
+ 		@"Could not create directory - already exists");
++	      errno = EEXIST;
+ 	      return NO;
+ 	    }
+ 	}

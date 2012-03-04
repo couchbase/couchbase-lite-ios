@@ -1,0 +1,87 @@
+Index: Source/NSURL.m
+===================================================================
+--- Source/NSURL.m	(revision 34870)
++++ Source/NSURL.m	(working copy)
+@@ -1415,7 +1415,7 @@
+   return fragment;
+ }
+ 
+-- (char*) _path: (char*)buf
++- (char*) _path: (char*)buf withEscapes: (BOOL)withEscapes
+ {
+   char	*ptr = buf;
+   char	*tmp = buf;
+@@ -1472,7 +1472,10 @@
+ 	}
+     }
+ 
+-  unescape(buf, buf);
++  if (!withEscapes)
++    {
++      unescape(buf, buf);
++    }
+ 
+ #if	defined(__MINGW__)
+   /* On windows a file URL path may be of the form C:\xxx (ie we should
+@@ -1602,7 +1605,7 @@
+   return password;
+ }
+ 
+-- (NSString*) path
++- (NSString*) _pathWithEscapes: (BOOL)withEscapes
+ {
+   NSString	*path = nil;
+   unsigned int	len = 3;
+@@ -1632,7 +1635,7 @@
+       char		*ptr;
+       char		*tmp;
+ 
+-      ptr = [self _path: buf];
++      ptr = [self _path: buf withEscapes: withEscapes];
+ 
+       /* Remove any trailing '/' from the path for MacOS-X compatibility.
+        */
+@@ -1647,6 +1650,11 @@
+   return path;
+ }
+ 
++- (NSString*) path
++{
++  return [self _pathWithEscapes: NO];
++}
++
+ - (NSArray*) pathComponents 
+ {
+   return [[self path] pathComponents];
+@@ -2036,10 +2044,15 @@
+       char		buf[len];
+       char		*ptr;
+ 
+-      ptr = [self _path: buf];
++      ptr = [self _path: buf withEscapes: NO];
+       path = [NSString stringWithUTF8String: ptr];
+     }
+   return path;
+ }
++
++- (NSString*) pathWithEscapes
++{
++  return [self _pathWithEscapes: YES];
++}
+ @end
+ 
+Index: Headers/GNUstepBase/NSURL+GNUstepBase.h
+===================================================================
+--- Headers/GNUstepBase/NSURL+GNUstepBase.h	(revision 34870)
++++ Headers/GNUstepBase/NSURL+GNUstepBase.h	(working copy)
+@@ -56,6 +56,10 @@
+ /** Returns the full path for this URL including any trailing slash.
+  */
+ - (NSString*) fullPath;
++
++/** Returns the full path for this URL, without decoding percent-escapes.
++	This is useful if you need to distinguish between "/" and "%2F" in the path. */
++- (NSString*) pathWithEscapes;
+ @end
+ 
+ #endif	/* OS_API_VERSION */
