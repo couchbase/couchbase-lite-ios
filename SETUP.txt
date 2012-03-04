@@ -1,0 +1,70 @@
+## Commands for setting up GNUstep on an Ubuntu system
+## Originally from Thomas Davie <tom.davie@gmail.com>
+## Adapted by Jens Alfke <jens@mooseyard.com>
+##
+## NOTE: I think this will run automatically as a shell-script,
+## but see the comment on line 44 about adding a line to your .bashrc file.
+## Without that, your makefiles won't work after you open a new shell...
+
+set -e
+mkdir ~/gnustep-src
+cd ~/gnustep-src
+
+# Install packages needed for building:
+sudo apt-get install subversion
+sudo apt-get install g++
+sudo apt-get install gobjc
+sudo apt-get install libffi-dev
+sudo apt-get install libxml2-dev
+sudo apt-get install libicu-dev
+sudo apt-get install libgnutls-dev
+
+# Check out and build LLVM:
+svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
+cd llvm/tools
+svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
+cd ../projects
+svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt
+cd ../../
+mkdir build
+cd build
+../llvm/configure --enable-optimized
+make
+sudo make install
+cd ../
+
+# Check out GNUstep and the Objective-C runtime:
+svn co http://svn.gna.org/svn/gnustep/tools/make/trunk/ gnustep-make
+svn co http://svn.gna.org/svn/gnustep/libs/base/trunk/ gnustep-base
+svn co http://svn.gna.org/svn/gnustep/libs/libobjc2/1.6/ libobjc2
+
+# Build the GNUstep make system:
+cd gnustep-make
+./configure --prefix=/usr/GNUstep --enable-native-objc-exceptions --with-layout=gnustep --with-config-file=/usr/GNUstep/Local/Configuration/GNUstep.conf
+make
+sudo make install
+
+/usr/GNUstep/System/Library/Makefiles/GNUstep.sh
+## Now edit ~/.bashrc and add a line to run /usr/GNUstep/System/Library/Makefiles/GNUstep.sh
+
+./configure --enable-libffi --with-default-config=/usr/GNUstep/Local/Configuration/GNUstep.conf
+make
+sudo -E make install
+
+# Build libobjc2:
+cd ../libobjc2
+export CC=clang
+make
+sudo -E make install
+
+# Reconfigure GNUstep make system to use libobjc2:
+cd ../gnustep-make
+./configure --prefix=/usr/GNUstep --enable-native-objc-exceptions --with-layout=gnustep --with-config-file=/usr/GNUstep/Local/Configuration/GNUstep.conf
+sudo make install
+
+# Build Base framework:
+cd ../gnustep-base
+make clean
+./configure --with-openssl-include=/usr/local/ssl/include --with-openssl-library=/usr/local/ssl/lib/ --enable-libffi --with-default-config=/usr/GNUstep/Local/Configuration/GNUstep.conf
+make
+sudo -E make install
