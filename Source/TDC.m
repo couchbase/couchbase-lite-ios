@@ -14,6 +14,7 @@
 #import <string.h>
 
 
+static NSLock* sLock;
 static NSString* sServerDir;
 static TDServer* sServer;
 
@@ -85,22 +86,42 @@ fail:
 }
 
 
+// Creates a TDCMIME whose body comes from an NSData object, without copying the body.
+static TDCMIME* TDCMIMECreateWithNSData(unsigned headerCount,
+                                        const char** headerNames,
+                                        const char** headerValues,
+                                        NSData* content)
+{
+    TDCMIME* mime = TDCMIMECreate(headerCount, headerNames, headerValues,
+                                  content.length, content.bytes, NO);
+    if (mime)
+        mime->_private = [content retain];
+    return mime;
+}
+
+
 void TDCMIMEFree(TDCMIME* mime) {
     if (!mime)
         return;
     FreeStringList(mime->headerCount, mime->headerNames);
     FreeStringList(mime->headerCount, mime->headerValues);
-    free((void*)mime->content);
+    if (mime->_private)  // _private field points to NSData that owns the content ptr
+        [(NSData*)mime->_private release];
+    else
+        free((void*)mime->content);
     free(mime);
 }
 
 
-void TDCSetBaseDirectory(const char* path) {
+void TDCInitialize(const char* dataDirectoryPath) {
     assert(!sServerDir);
-    sServerDir = [CToNSString(path) retain];
+    sServerDir = [CToNSString(dataDirectoryPath) retain];
+    assert(sServerDir);
+    sLock = [[NSLock alloc] init];
 }
 
 
+// Creates an NSURLRequest from a method, URL, headers and body.
 static NSURLRequest* CreateRequest(NSString* method, 
                                    NSString* urlStr,
                                    TDCMIME* headersAndBody)
@@ -133,6 +154,44 @@ static NSURLRequest* CreateRequest(NSString* method,
 }
 
 
+// Actually runs the pre-parsed request through a TDRouter. This method is thread-safe.
+static TDResponse* RunRequest(NSURLRequest* request) {
+    assert(sLock);
+    [sLock lock];
+    @try {
+        // Create TDServer on first call:
+        if (!sServer) {
+            assert(sServerDir);
+            NSError* error;
+            sServer = [[TDServer alloc] initWithDirectory: sServerDir error: &error];
+            if (!sServer) {
+                Warn(@"Unable to create TouchDB server: %@", error);
+                return nil;
+            }
+        }
+        
+        TDRouter* router = [[[TDRouter alloc] initWithServer: sServer
+                                                     request: request] autorelease];
+        __block bool finished = false;
+        router.onFinished = ^{finished = true;};
+        [router start];
+        while (!finished) {
+            if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                          beforeDate: [NSDate dateWithTimeIntervalSinceNow: 5]])
+                break;
+        }
+        
+        return finished ? router.response : nil;
+    } @catch (NSException *x) {
+        Warn(@"TDCSendRequest caught %@", x);
+        return nil;
+    } @finally {
+        [sLock unlock];
+    }
+}
+
+
+// Converts a TDResponse object to a TDCMIME structure.
 static TDCMIME* CreateMIMEFromTDResponse(TDResponse* response) {
     NSDictionary* headers = response.headers;
     NSArray* headerNames = headers.allKeys;
@@ -143,9 +202,7 @@ static TDCMIME* CreateMIMEFromTDResponse(TDResponse* response) {
         cHeaderNames[i] = [name UTF8String];
         cHeaderValues[i] = [[headers objectForKey: name] UTF8String];
     }
-    NSData* content = response.body.asJSON;
-    return TDCMIMECreate(headerCount, cHeaderNames, cHeaderValues,
-                         content.length, content.bytes, YES);
+    return TDCMIMECreateWithNSData(headerCount, cHeaderNames, cHeaderValues, response.body.asJSON);
 }
 
 
@@ -157,19 +214,6 @@ int TDCSendRequest(const char* method,
     @autoreleasepool {
         *outResponse = NULL;
         
-        // Create TDServer on first call:
-        if (!sServer) {
-            assert(sServerDir);
-            NSError* error;
-            sServer = [[TDServer alloc] initWithDirectory: sServerDir error: &error];
-            if (!sServer) {
-                Warn(@"Unable to create TouchDB server: %@", error);
-                TDCMIMEFree(headersAndBody);
-                return 500;
-            }
-        }
-        
-        // Create an NSURLRequest:
         NSURLRequest* request = CreateRequest(CToNSString(method),
                                               CToNSString(url),
                                               headersAndBody);
@@ -177,28 +221,19 @@ int TDCSendRequest(const char* method,
         if (!request)
             return 400;
         
-        // Create & run the router:
-        TDRouter* router = [[[TDRouter alloc] initWithServer: sServer
-                                                     request: request] autorelease];
-        __block bool finished = false;
-        router.onFinished = ^{finished = true;};
-        [router start];
-        while (!finished) {
-            if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                          beforeDate: [NSDate dateWithTimeIntervalSinceNow: 5]])
-                  break;
-        }
-        
-        // Return the response:
-        *outResponse = CreateMIMEFromTDResponse(router.response);
-        return router.response.status;
+        TDResponse* response = RunRequest(request);
+        if (!response)
+            return 500;
+        *outResponse = CreateMIMEFromTDResponse(response);
+        return response.status;
     }
 }
 
 
 
+
 TestCase(TDCSendRequest) {
-    TDCSetBaseDirectory("/tmp/TDCTest");
+    TDCInitialize("/tmp/TDCTest");
     
     TDCMIME* response;
     int status = TDCSendRequest("GET", "touchdb:///", NULL, &response);

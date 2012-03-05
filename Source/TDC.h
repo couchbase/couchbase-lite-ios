@@ -24,6 +24,7 @@ typedef struct {
     const char** headerValues;
     size_t contentLength;
     const void* content;
+    void* _private;
 } TDCMIME;
 
 
@@ -51,10 +52,10 @@ TDCMIME* TDCMIMECreate(unsigned headerCount,
 void TDCMIMEFree(TDCMIME* mime);
 
 
-/** Identifies the base directory in which TouchDB should store data files.
-    This directory must exist and must be writeable.
-    This must be called once (and only once), before the first call to TDCSendRequest. */
-void TDCSetBaseDirectory(const char* path);
+/** Initializes the TDC API.
+    This must be called once (and only once), before the first call to TDCSendRequest.
+    @param dataDirectoryPath  The base directory in which TouchDB should store data files. This directory's parent directory must exist and be writeable. */
+void TDCInitialize(const char* dataDirectoryPath);
 
 
 /** Synchronously calls a TouchDB REST API method.
