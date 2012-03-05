@@ -269,6 +269,8 @@
 		27EB95D114FBF89200072752 /* TDJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EB95CF14FBF89200072752 /* TDJSON.h */; };
 		27EB95D214FBF89200072752 /* TDJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EB95D014FBF89200072752 /* TDJSON.m */; };
 		27EB95D314FBF89200072752 /* TDJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EB95D014FBF89200072752 /* TDJSON.m */; };
+		27EFD62E15052F3E003B58E0 /* TDC.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EFD62C15052F3E003B58E0 /* TDC.h */; };
+		27EFD63115056C44003B58E0 /* TDC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EFD62D15052F3E003B58E0 /* TDC.m */; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
@@ -567,6 +569,8 @@
 		27EB95CF14FBF89200072752 /* TDJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDJSON.h; sourceTree = "<group>"; };
 		27EB95D014FBF89200072752 /* TDJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDJSON.m; sourceTree = "<group>"; };
 		27EB95EB14FC783E00072752 /* EmptyGNUstepApp.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EmptyGNUstepApp.m; sourceTree = "<group>"; };
+		27EFD62C15052F3E003B58E0 /* TDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDC.h; sourceTree = "<group>"; };
+		27EFD62D15052F3E003B58E0 /* TDC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDC.m; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* TDDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDDatabase.h; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* TDDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDDatabase.m; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -969,6 +973,8 @@
 				2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */,
 				27C706461487584300F0F099 /* TDURLProtocol.h */,
 				27C706471487584300F0F099 /* TDURLProtocol.m */,
+				27EFD62C15052F3E003B58E0 /* TDC.h */,
+				27EFD62D15052F3E003B58E0 /* TDC.m */,
 			);
 			name = Router;
 			sourceTree = "<group>";
@@ -1224,6 +1230,7 @@
 				27C40C7914EC58BC00994283 /* TDReplicatorManager.h in Headers */,
 				279C7E2E14F424090004A1E8 /* TDSequenceMap.h in Headers */,
 				27EB95D114FBF89200072752 /* TDJSON.h in Headers */,
+				27EFD62E15052F3E003B58E0 /* TDC.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1888,6 +1895,7 @@
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
+				27EFD63115056C44003B58E0 /* TDC.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

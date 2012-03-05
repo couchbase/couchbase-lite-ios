@@ -22,6 +22,7 @@ TouchDB_OBJC_FILES = \
     Source/TDRouter.m \
     Source/TDRouter+Handlers.m \
     Source/TDURLProtocol.m \
+    Source/TDC.m \
     \
     Source/TDReplicator.m \
     Source/TDPuller.m \
@@ -87,6 +88,7 @@ TouchDB_HEADER_FILES = \
 	TDServer.h \
     TDURLProtocol.h \
 	TDView.h \
+    TDC.h
 
 TouchDB_INCLUDE_DIRS = \
     -ISource \
