@@ -126,8 +126,12 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         return;
     TDRevision* rev = [userInfo objectForKey: @"rev"];
     TDFilterBlock filter = self.filter;
-    if (!filter || filter(rev))
-        [self addToInbox: rev];
+    if (filter) {
+        [_db loadRevisionBody: rev options: 0];
+        if (!filter(rev))
+            return;
+    }
+    [self addToInbox: rev];
 }
 
 
@@ -180,6 +184,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                             Warn(@"%@: Couldn't get local contents of %@", self, rev);
                             return nil;
                         }
+                        Assert([[rev properties] objectForKey: @"_revisions"]);
                         // Strip any attachments already known to the target db:
                         if ([rev.properties objectForKey: @"_attachments"]) {
                             // Look for the latest common ancestor and stub out older attachments:

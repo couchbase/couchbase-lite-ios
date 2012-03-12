@@ -48,12 +48,14 @@ static void deleteRemoteDB(void) {
 }
 
 
-static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* lastSequence) {
+static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push,
+                         NSString* lastSequence, NSString* filter) {
     NSURL* remote = [NSURL URLWithString: urlStr];
     TDReplicator* repl = [[[TDReplicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO] autorelease];
     if (push)
         ((TDPusher*)repl).createTarget = YES;
+    repl.filterName = filter;
     [repl start];
     
     CAssert(repl.running);
@@ -74,6 +76,14 @@ TestCase(TDPusher) {
     TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDPusherTest"];
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
+    
+    __block int filterCalls = 0;
+    [db defineFilter: @"filter" asBlock: ^BOOL(TDRevision *revision) {
+        Log(@"Test filter called on %@, properties = %@", revision, revision.properties);
+        CAssert(revision.properties);
+        ++filterCalls;
+        return YES;
+    }];
     
     deleteRemoteDB();
 
@@ -99,8 +109,9 @@ TestCase(TDPusher) {
 #pragma unused(rev2)
     
     // Push them to the remote:
-    id lastSeq = replic8(db, kRemoteDBURLStr, YES, nil);
+    id lastSeq = replic8(db, kRemoteDBURLStr, YES, nil, @"filter");
     CAssertEqual(lastSeq, @"3");
+    CAssertEq(filterCalls, 2);
     
     [db close];
 }
@@ -112,13 +123,13 @@ TestCase(TDPuller) {
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
     
-    id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
+    id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil, nil);
     CAssert($equal(lastSeq, @"2") || $equal(lastSeq, @"3"), @"Unexpected lastSeq '%@'", lastSeq);
     
     CAssertEq(db.documentCount, 2u);
     CAssertEq(db.lastSequence, 3);
     
-    replic8(db, kRemoteDBURLStr, NO, lastSeq);
+    replic8(db, kRemoteDBURLStr, NO, lastSeq, nil);
     CAssertEq(db.lastSequence, 3);
     
     TDRevision* doc = [db getDocumentWithID: @"doc1" revisionID: nil options: 0];
@@ -147,7 +158,7 @@ TestCase(TDPuller_FromCouchApp) {
     TDDatabase* db = [server databaseNamed: @"couchapp_helloworld"];
     [db open];
     
-    replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
+    replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil, nil);
     
     TDRevision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kTDIncludeAttachments];
     NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];

@@ -251,7 +251,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {
     LogTo(Sync, @"%@ inserting %u revisions...", self, downloads.count);
-    LogTo(SyncVerbose, @"%@ inserting %@", self, downloads);
     
     /* Updating self.lastSequence is tricky. It needs to be the received sequence ID of the revision for which we've successfully received and inserted (or rejected) it and all previous received revisions. That way, next time we can start tracking remote changes from that sequence ID and know we haven't missed anything. */
     /* FIX: The current code below doesn't quite achieve that: it tracks the latest sequence ID we've successfully processed, but doesn't handle failures correctly across multiple calls to -insertRevisions. I think correct behavior will require keeping an NSMutableIndexSet to track the fake-sequences of all processed revisions; then we can find the first missing index in that set and not advance lastSequence past the revision with that fake-sequence. */
@@ -273,6 +272,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                     self.error = TDHTTPError(502, nil);
                     continue;
                 }
+                LogTo(SyncVerbose, @"%@ inserting %@ %@",
+                      self, rev.docID, [history my_compactDescription]);
 
                 // Insert the revision:
                 int status = [_db forceInsert: rev revisionHistory: history source: _remote];

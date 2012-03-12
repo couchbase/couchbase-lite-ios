@@ -540,7 +540,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
                       options: (TDContentOptions)options
 {
-    if (rev.body)
+    if (rev.body && options==0)
         return 200;
     Assert(rev.docID && rev.revID);
     FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs, docs "
