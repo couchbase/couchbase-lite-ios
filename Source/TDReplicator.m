@@ -356,7 +356,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) saveLastSequence {
-    if (!_lastSequenceChanged)
+    // If a save is already in progress, don't do anything. (The completion block will trigger
+    // another save after the first one finishes.)
+    if (!_lastSequenceChanged || _savingCheckpoint)
         return;
     _lastSequenceChanged = NO;
     
@@ -366,10 +368,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         body = $mdict();
     [body setValue: _lastSequence forKey: @"lastSequence"];
     
+    _savingCheckpoint = YES;
     [self sendAsyncRequest: @"PUT"
                       path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
                       body: body
               onCompletion: ^(id response, NSError* error) {
+                  _savingCheckpoint = NO;
                   if (!_db)
                       return;   // db already closed
                   if (error) {
@@ -381,6 +385,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                           [body setObject: rev forKey: @"_rev"];
                       self.remoteCheckpoint = body;
                   }
+                  if (_lastSequenceChanged)
+                      [self saveLastSequence];      // start a save that was waiting on me
               }
      ];
     [_db setLastSequence: _lastSequence withRemoteURL: _remote push: self.isPush];
