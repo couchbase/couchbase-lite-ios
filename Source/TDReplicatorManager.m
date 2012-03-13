@@ -139,6 +139,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     NSDictionary* curProperties = context.currentRevision.properties;
     for (NSString* key in newProperties) {
         if ([key hasPrefix: @"_"] &&
+                !$equal(key, @"_id") && !$equal(key, @"_rev") &&
                 !$equal([curProperties objectForKey: key], [newProperties objectForKey: key])) {
             context.errorMessage = $sprintf(@"Cannot add a '%@' property", key);
             return NO;

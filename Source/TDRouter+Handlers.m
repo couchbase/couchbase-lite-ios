@@ -656,21 +656,15 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
       allowConflict: (BOOL)allowConflict
          createdRev: (TDRevision**)outRev
 {
-    BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
     NSString* prevRevID;
     
     if (!deleting) {
         deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
         if (!docID) {
-            if (isLocalDoc)
-                return 405;  // method not allowed
-            // POST's doc ID may come from the _id field of the JSON body, else generate a random one.
+            // POST's doc ID may come from the _id field of the JSON body.
             docID = [body propertyForKey: @"_id"];
-            if (!docID) {
-                if (deleting)
-                    return 400;
-                docID = [TDDatabase generateDocumentID];
-            }
+            if (!docID && deleting)
+                return 400;
         }
         // PUT's revision ID comes from the JSON body.
         prevRevID = [body propertyForKey: @"_rev"];
@@ -690,7 +684,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     rev.body = body;
     
     TDStatus status;
-    if (isLocalDoc)
+    if ([docID hasPrefix: @"_local/"])
         *outRev = [db putLocalRevision: rev prevRevisionID: prevRevID status: &status];
     else
         *outRev = [db putRevision: rev prevRevisionID: prevRevID
