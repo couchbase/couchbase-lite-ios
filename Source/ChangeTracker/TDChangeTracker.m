@@ -94,7 +94,7 @@
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", [self class], self.databaseName];
+    return [NSString stringWithFormat: @"%@[%p %@]", [self class], self, self.databaseName];
 }
 
 - (void) dealloc {
@@ -138,14 +138,18 @@
     if (![change isKindOfClass: [NSDictionary class]])
         return NO;
     id seq = [change objectForKey: @"seq"];
-    if (!seq)
-        return NO;
+    if (!seq) {
+        // If a continuous feed closes (e.g. if its database is deleted), the last line it sends
+        // will indicate the last_seq. This is normal, just ignore it and return success:
+        return [change objectForKey: @"last_seq"] != nil;
+    }
     [_client changeTrackerReceivedChange: change];
     self.lastSequenceID = seq;
     return YES;
 }
 
 - (BOOL) receivedChunk: (NSData*)chunk {
+    LogTo(ChangeTracker, @"CHUNK: %@ %@", self, [chunk my_UTF8ToString]);
     if (chunk.length > 1) {
         id change = [NSJSONSerialization JSONObjectWithData: chunk options: 0 error: nil];
         if (![self receivedChange: change]) {
