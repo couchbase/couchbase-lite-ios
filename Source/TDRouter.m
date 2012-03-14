@@ -325,9 +325,9 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) start {
-    // Make sure the replicator starts up on launch (but not in the TDServer initializer; we want
-    // it to run on the same thread that other server requests come in on, i.e. the current one.
-    [_server replicatorManager];
+    // Before handling the request, run any blocks that have been queued with the server,
+    // because this code is running on the official server thread:
+    [_server performQueuedBlocks];
     
     // Call the appropriate handler method:
     TDStatus status = [self route];

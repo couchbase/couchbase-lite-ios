@@ -58,6 +58,7 @@ static NSCharacterSet* kIllegalNameChars;
     if (self) {
         _dir = [dirPath copy];
         _databases = [[NSMutableDictionary alloc] init];
+        _queue = [[NSMutableArray alloc] init];
         
         // Create the directory but don't fail if it already exists:
         NSError* error;
@@ -72,6 +73,11 @@ static NSCharacterSet* kIllegalNameChars;
                 return nil;
             }
         }
+        
+        // Queue up a block to initialize the replicatorManager. This initialization has to happen
+        // on the official server thread, because the TDReplicatorManager may start up replications
+        // that are tied to the thread's runloop.
+        [self queue:^{[self replicatorManager];}];
     }
     return self;
 }
@@ -80,6 +86,7 @@ static NSCharacterSet* kIllegalNameChars;
     [self close];
     [_dir release];
     [_databases release];
+    [_queue release];
     [super dealloc];
 }
 
@@ -170,6 +177,38 @@ static NSCharacterSet* kIllegalNameChars;
     }
     [_databases removeAllObjects];
 }
+
+
+- (void) queue: (void(^)())block {
+    block = [block copy];
+    @synchronized(_queue) {
+        [_queue addObject: block];
+    }
+    [block release];
+}
+
+- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TDDatabase*))block {
+    [self queue: ^{
+        block([self databaseNamed: dbName]);
+    }];
+}
+
+- (void) performQueuedBlocks {
+    while(true) {
+        void (^block)();
+        @synchronized(_queue) {
+            if (_queue.count == 0)
+                return;
+            block = [[_queue objectAtIndex: 0] retain];
+            [_queue removeObjectAtIndex: 0];
+        }
+        
+        Log(@"TDServer: Performing queued block...");
+        block();
+        [block release];
+    }
+}
+
 
 
 @end
