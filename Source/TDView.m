@@ -229,33 +229,44 @@ static id fromJSON( NSData* json ) {
         if (!r)
             return 500;
 
-        int64_t lastDocID = 0;
-        while ([r next]) {
+        BOOL keepGoing = [r next]; // Go to first result row
+        while (keepGoing) {
             @autoreleasepool {
+                // Reconstitute the document as a dictionary:
+                sequence = [r longLongIntForColumnIndex: 1];
+                NSString* docID = [r stringForColumnIndex: 2];
+                if ([docID hasPrefix: @"_design/"])     // design docs don't get indexed!
+                    continue;
+                NSString* revID = [r stringForColumnIndex: 3];
+                NSData* json = [r dataForColumnIndex: 4];
+            
+                // Iterate over following rows with the same doc_id -- these are conflicts.
+                // Skip them, but collect their revIDs:
                 int64_t doc_id = [r longLongIntForColumnIndex: 0];
-                if (doc_id != lastDocID) {
-                    // Only look at the first-iterated revision of any document, because this is the
-                    // one with the highest revid, hence the "winning" revision of a conflict.
-                    lastDocID = doc_id;
-                    
-                    // Reconstitute the document as a dictionary:
-                    sequence = [r longLongIntForColumnIndex: 1];
-                    NSString* docID = [r stringForColumnIndex: 2];
-                    if ([docID hasPrefix: @"_design/"])     // design docs don't get indexed!
-                        continue;
-                    NSString* revID = [r stringForColumnIndex: 3];
-                    NSData* json = [r dataNoCopyForColumnIndex: 4];
-                    NSDictionary* properties = [_db documentPropertiesFromJSON: json
-                                                                         docID: docID revID:revID
-                                                                      sequence: sequence
-                                                                       options: 0];
-                    if (properties) {
-                        // Call the user-defined map() to emit new key/value pairs from this revision:
-                        LogTo(View, @"  call map for sequence=%lld...", sequence);
-                        _mapBlock(properties, emit);
-                        if (emitFailed)
-                            return 500;
+                NSMutableArray* conflicts = nil;
+                while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
+                    if (!conflicts)
+                        conflicts = $marray();
+                    [conflicts addObject: [r stringForColumnIndex: 3]];
+                }
+            
+                NSDictionary* properties = [_db documentPropertiesFromJSON: json
+                                                                     docID: docID revID:revID
+                                                                  sequence: sequence
+                                                                   options: 0];
+                if (properties) {
+                    if (conflicts) {
+                        // Add a "_conflicts" property if there were conflicting revisions:
+                        NSMutableDictionary* mutableProps = [[properties mutableCopy] autorelease];
+                        [mutableProps setObject: conflicts forKey: @"_conflicts"];
+                        properties = mutableProps;
                     }
+                    
+                    // Call the user-defined map() to emit new key/value pairs from this revision:
+                    LogTo(View, @"  call map for sequence=%lld...", sequence);
+                    _mapBlock(properties, emit);
+                    if (emitFailed)
+                        return 500;
                 }
             }
         }

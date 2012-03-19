@@ -148,6 +148,40 @@ TestCase(TDView_Index) {
 }
 
 
+TestCase(TDView_MapConflicts) {
+    RequireTestCase(TDView_Index);
+    TDDatabase *db = createDB();
+    NSArray* docs = putDocs(db);
+    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    
+    // Create a conflict:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                                {@"key", @"40ur"});
+    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    CAssert(status < 300);
+    CAssertEqual(leaf1.docID, leaf2.docID);
+    
+    TDView* view = [db viewNamed: @"conflicts"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        NSString* docID = [doc objectForKey: @"_id"];
+        NSArray* conflicts = $cast(NSArray, [doc objectForKey: @"_conflicts"]);
+        if (conflicts) {
+            Log(@"Doc %@, _conflicts = %@", docID, conflicts);
+            emit(docID, conflicts);
+        }
+    } reduceBlock: NULL version: @"1"];
+    
+    CAssertEq([view updateIndex], 200);
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"44444\""},
+                                    {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)},
+                                    {@"seq", $object(6)}) ));
+}
+
+
 TestCase(TDView_Query) {
     RequireTestCase(TDView_Index);
     TDDatabase *db = createDB();
