@@ -21,6 +21,7 @@
 
 @implementation TDConnectionChangeTracker
 
+
 - (BOOL) start {
     [super start];
     // For some reason continuous mode doesn't work with CFNetwork.
@@ -33,7 +34,10 @@
     request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     request.timeoutInterval = 6.02e23;
     
-    _connection = [[NSURLConnection connectionWithRequest: request delegate: self] retain];
+    _connection = [[NSURLConnection alloc] initWithRequest: request delegate: self
+                                          startImmediately: NO];
+    if (_operationQueue)
+        [_connection setDelegateQueue: _operationQueue];
     [_connection start];
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;

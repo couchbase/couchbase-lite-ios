@@ -73,36 +73,34 @@ static TDServer* sServer;
 
 
 - (void) startLoading {
-    MYAfterDelay(0.0, ^{
-        LogTo(TDURLProtocol, @"Loading <%@>", self.request.URL);
-        TDServer* server = [[self class] server];
-        NSAssert(server, @"No server");
-        id<NSURLProtocolClient> client = self.client;
-        _router = [[TDRouter alloc] initWithServer: server request: self.request];
-        _router.onResponseReady = ^(TDResponse* routerResponse) {
-            LogTo(TDURLProtocol, @"response ready for <%@> (%d)",
-                  self.request.URL, routerResponse.status);
-            // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
-            // TODO: Find a way to work around this; it'd be nice to support 10.6 or iOS 4.x.
-            NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL
-                                                                      statusCode: routerResponse.status
-                                                                     HTTPVersion: @"1.1"
-                                                                    headerFields: routerResponse.headers];
-            [client URLProtocol: self didReceiveResponse: response 
-                                      cacheStoragePolicy: NSURLCacheStorageNotAllowed];
-            [response release];
-        };
-        _router.onDataAvailable = ^(NSData* content) {
-            LogTo(TDURLProtocol, @"data available from <%@>", self.request.URL);
-            if (content.length)
-                [client URLProtocol: self didLoadData: content];
-        };
-        _router.onFinished = ^{
-            LogTo(TDURLProtocol, @"finished response <%@>", self.request.URL);
-            [client URLProtocolDidFinishLoading: self];
-        };
-        [_router start];
-    });
+    LogTo(TDURLProtocol, @"Loading <%@>", self.request.URL);
+    TDServer* server = [[self class] server];
+    NSAssert(server, @"No server");
+    id<NSURLProtocolClient> client = self.client;
+    _router = [[TDRouter alloc] initWithServer: server request: self.request];
+    _router.onResponseReady = ^(TDResponse* routerResponse) {
+        LogTo(TDURLProtocol, @"response ready for <%@> (%d)",
+              self.request.URL, routerResponse.status);
+        // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
+        // TODO: Find a way to work around this; it'd be nice to support 10.6 or iOS 4.x.
+        NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL
+                                                                  statusCode: routerResponse.status
+                                                                 HTTPVersion: @"1.1"
+                                                                headerFields: routerResponse.headers];
+        [client URLProtocol: self didReceiveResponse: response 
+                                  cacheStoragePolicy: NSURLCacheStorageNotAllowed];
+        [response release];
+    };
+    _router.onDataAvailable = ^(NSData* content) {
+        LogTo(TDURLProtocol, @"data available from <%@>", self.request.URL);
+        if (content.length)
+            [client URLProtocol: self didLoadData: content];
+    };
+    _router.onFinished = ^{
+        LogTo(TDURLProtocol, @"finished response <%@>", self.request.URL);
+        [client URLProtocolDidFinishLoading: self];
+    };
+    [_router startAsync];
 }
 
 

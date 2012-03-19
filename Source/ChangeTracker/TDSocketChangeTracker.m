@@ -83,11 +83,14 @@ enum {
     
     _inputBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
     
+    // Schedule the delegate calls. If we're using an operation queue we shouldn't assume the
+    // current thread has any runloop, so hijack the main one (ugh!)
+    NSRunLoop* runLoop = _operationQueue ? [NSRunLoop mainRunLoop] : [NSRunLoop currentRunLoop];
     [_trackingOutput setDelegate: self];
-    [_trackingOutput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
+    [_trackingOutput scheduleInRunLoop: runLoop forMode: NSRunLoopCommonModes];
     [_trackingOutput open];
     [_trackingInput setDelegate: self];
-    [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
+    [_trackingInput scheduleInRunLoop: runLoop forMode: NSRunLoopCommonModes];
     [_trackingInput open];
     return YES;
 }
@@ -189,11 +192,22 @@ enum {
 }
 
 
+- (void) queueBlock: (void(^)())block {
+    if (_operationQueue)
+        [_operationQueue addOperationWithBlock: block];
+    else
+        block();
+}
+
+
+// Careful: This is called on the stream's scheduled runloop, and if I'm using an NSOperationQueue,
+// this will be on the main thread, not the thread on which I was originally called.
 - (void) stream: (NSInputStream*)stream handleEvent: (NSStreamEvent)eventCode {
     switch (eventCode) {
         case NSStreamEventHasSpaceAvailable: {
             LogTo(ChangeTracker, @"%@: HasSpaceAvailable %@", self, stream);
             if (_trackingRequest) {
+                // Don't queue this block. The stream needs us to write before returning.
                 const char* buffer = [_trackingRequest UTF8String];
                 NSUInteger written = [(NSOutputStream*)stream write: (void*)buffer maxLength: strlen(buffer)];
                 NSAssert(written == strlen(buffer), @"Output stream didn't write entire request");
@@ -207,26 +221,33 @@ enum {
         case NSStreamEventHasBytesAvailable: {
             LogTo(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);
             while ([stream hasBytesAvailable]) {
-                uint8_t buffer[1024];
-                NSInteger bytesRead = [stream read: buffer maxLength: sizeof(buffer)];
+                NSMutableData* buffer = [NSMutableData dataWithLength: 1024];
+                NSInteger bytesRead = [stream read: buffer.mutableBytes maxLength: buffer.length];
                 if (bytesRead > 0) {
-                    [_inputBuffer appendBytes: buffer length: bytesRead];
+                    buffer.length = bytesRead;
                     LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
+                    [self queueBlock: ^{
+                        [_inputBuffer appendData: buffer];
+                        while (_inputBuffer && [self readLine])
+                            ;
+                    }];
                 }
             }
-            while (_inputBuffer && [self readLine])
-                ;
             break;
         }
         case NSStreamEventEndEncountered:
             LogTo(ChangeTracker, @"%@: EndEncountered %@", self, stream);
-            if (_inputBuffer.length > 0)
-                Warn(@"%@ connection closed with unparsed data in buffer", self);
-            [self stop];
+            [self queueBlock: ^{
+                if (_inputBuffer.length > 0)
+                    Warn(@"%@ connection closed with unparsed data in buffer", self);
+                [self stop];
+            }];
             break;
         case NSStreamEventErrorOccurred:
             LogTo(ChangeTracker, @"%@: ErrorOccurred %@: %@", self, stream, stream.streamError);
-            [self errorOccurred: stream.streamError];
+            [self queueBlock: ^{
+                [self errorOccurred: stream.streamError];
+            }];
             break;
             
         default:

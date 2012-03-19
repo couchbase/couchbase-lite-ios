@@ -49,7 +49,9 @@
 
 - (void) start {
     Assert(!_connection);
-    _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
+    _connection = [[NSURLConnection alloc] initWithRequest: _request delegate: self
+                                          startImmediately: NO];
+    [_connection setDelegateQueue: [NSOperationQueue currentQueue]];
     [_connection start];
 }
 

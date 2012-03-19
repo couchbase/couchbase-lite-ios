@@ -54,6 +54,7 @@
     [self close];
     [_output release];
     [_input release];
+    [_operationQueue release];
     [super dealloc];
 }
 
@@ -85,8 +86,12 @@
 
 
 - (void) opened {
+    _operationQueue = [[NSOperationQueue currentQueue] retain];
+    // Schedule the delegate calls. If we're using an operation queue we shouldn't assume the
+    // current thread has any runloop, so hijack the main one (ugh!)
+    NSRunLoop* runLoop = _operationQueue ? [NSRunLoop mainRunLoop] : [NSRunLoop currentRunLoop];
     _output.delegate = self;
-    [_output scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSDefaultRunLoopMode];
+    [_output scheduleInRunLoop: runLoop forMode: NSRunLoopCommonModes];
     [_output open];
 }
 
@@ -205,21 +210,35 @@
 }
 
 
+- (void) runBlock: (void(^)())block {
+    if (_operationQueue && _operationQueue != [NSOperationQueue currentQueue]) {
+        NSOperation* op = [NSBlockOperation blockOperationWithBlock: block];
+        [_operationQueue addOperations: $array(op) waitUntilFinished: YES];
+    } else {
+        block();
+    }
+}
+
+
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)event {
     if (stream != _output)
         return;
     LogTo(TDMultiStreamWriter, @"%@: Received event 0x%x", self, event);
     switch (event) {
         case NSStreamEventOpenCompleted:
-            [self openNextInput];
-            [self refillBuffer];
+            [self runBlock: ^{
+                [self openNextInput];
+                [self refillBuffer];
+            }];
             break;
             
         case NSStreamEventHasSpaceAvailable:
-            if (![self writeToOutput]) {
-                LogTo(TDMultiStreamWriter, @"%@:   At end -- closing _output!", self);
-                [self close];
-            }
+            [self runBlock: ^{
+                if (![self writeToOutput]) {
+                    LogTo(TDMultiStreamWriter, @"%@:   At end -- closing _output!", self);
+                    [self close];
+                }
+            }];
             break;
     }
 }

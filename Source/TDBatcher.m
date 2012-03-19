@@ -14,6 +14,8 @@
 //  and limitations under the License.
 
 #import "TDBatcher.h"
+#import "MYBlockUtils.h"
+
 
 @implementation TDBatcher
 
@@ -53,18 +55,15 @@
         [self flush];
     if (!_inbox) {
         _inbox = [[NSMutableArray alloc] init];
-        [self performSelector: @selector(processNow) withObject: nil afterDelay: _delay];
+        MYAfterDelay(_delay, ^{[self processNow];});
     }
     [_inbox addObject: object];
 }
 
 
 - (void) flush {
-    if (_inbox) {
-        [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(processNow) object:nil];
+    if (_inbox)
         [self processNow];
-    }
 }
 
 

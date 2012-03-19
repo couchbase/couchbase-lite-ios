@@ -325,10 +325,6 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) start {
-    // Before handling the request, run any blocks that have been queued with the server,
-    // because this code is running on the official server thread:
-    [_server performQueuedBlocks];
-    
     // Call the appropriate handler method:
     TDStatus status = [self route];
 
@@ -372,6 +368,11 @@ static NSArray* splitPath( NSURL* url ) {
     self.onDataAvailable = nil;
     self.onFinished = nil;
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+
+
+- (void) startAsync {
+    [_server queue:^{ [self start]; }];
 }
 
 
@@ -429,7 +430,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type {
     TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: type
-                                                                      boundary: nil];
+                                                                  boundary: nil];
     for (id part in parts) {
         if (![part isKindOfClass: [NSData class]]) {
             part = [NSJSONSerialization dataWithJSONObject: part options: 0 error: nil];

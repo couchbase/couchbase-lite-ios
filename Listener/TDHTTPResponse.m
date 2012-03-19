@@ -50,7 +50,7 @@
         
         // Run the router, synchronously:
         LogTo(TDListenerVerbose, @"%@: Starting...", self);
-        [_connection.listener onServerThread: ^{[router start];}];
+        [router startAsync];
         _chunked = !_finished;
     }
     return self;
