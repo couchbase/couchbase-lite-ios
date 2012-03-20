@@ -163,6 +163,26 @@ TestCase(TDDatabase_EmptyDoc) {
 }
 
 
+TestCase(TDDatabase_DeleteWithProperties) {
+    // Test case for issue #50.
+    // Test that it's possible to delete a document by PUTting a revision with _deleted=true,
+    // and that the saved deleted revision will preserve any extra properties.
+    TDDatabase* db = createDB();
+    TDRevision* rev1 = putDoc(db, $dict({@"property", @"value"}));
+    TDRevision* rev2 = putDoc(db, $dict({@"_id", rev1.docID},
+                                        {@"_rev", rev1.revID},
+                                        {@"_deleted", $true},
+                                        {@"property", @"newvalue"}));
+    CAssertNil([db getDocumentWithID: rev2.docID revisionID: nil options: 0]);
+    TDRevision* readRev = [db getDocumentWithID: rev2.docID revisionID: rev2.revID options: 0];
+    CAssert(readRev.deleted, @"PUTting a _deleted property didn't delete the doc");
+    CAssertEqual(readRev.properties, $dict({@"_id", rev2.docID},
+                                           {@"_rev", rev2.revID},
+                                           {@"_deleted", $true},
+                                           {@"property", @"newvalue"}));
+}
+
+
 TestCase(TDDatabase_Validation) {
     TDDatabase* db = createDB();
     __block BOOL validationCalled = NO;
@@ -722,6 +742,7 @@ TestCase(TDDatabase_FindMissingRevisions) {
 
 TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_CRUD);
+    RequireTestCase(TDDatabase_DeleteWithProperties);
     RequireTestCase(TDDatabase_RevTree);
     RequireTestCase(TDDatabase_Attachments);
     RequireTestCase(TDDatabase_PutAttachment);

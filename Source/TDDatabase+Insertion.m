@@ -309,12 +309,14 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         // Bump the revID and update the JSON:
         NSString* newRevID = [self generateNextRevisionID: prevRevID];
         NSData* json = nil;
-        if (!rev.deleted) {
+        if (rev.properties) {
             json = [self encodeDocumentJSON: rev];
             if (!json) {
                 *outStatus = 400;  // bad or missing JSON
                 return nil;
             }
+            if (json.length == 2 && memcmp(json.bytes, "{}", 2)==0)
+                json = nil;
         }
         rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
         
