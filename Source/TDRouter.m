@@ -355,7 +355,7 @@ static NSArray* splitPath( NSURL* url ) {
         _response.status = status;
         [self sendResponse];
         if (_onDataAvailable && _response.body) {
-            _onDataAvailable(_response.body.asJSON);
+            _onDataAvailable(_response.body.asJSON, !_waiting);
         }
         if (_onFinished && !_waiting)
             _onFinished();

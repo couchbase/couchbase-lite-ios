@@ -91,7 +91,7 @@ static TDServer* sServer;
                                   cacheStoragePolicy: NSURLCacheStorageNotAllowed];
         [response release];
     };
-    _router.onDataAvailable = ^(NSData* content) {
+    _router.onDataAvailable = ^(NSData* content, BOOL finished) {
         LogTo(TDURLProtocol, @"data available from <%@>", self.request.URL);
         if (content.length)
             [client URLProtocol: self didLoadData: content];

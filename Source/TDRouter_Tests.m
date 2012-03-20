@@ -50,7 +50,7 @@ static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* pat
     __block NSUInteger dataLength = 0;
     __block BOOL calledOnFinished = NO;
     router.onResponseReady = ^(TDResponse* theResponse) {CAssert(!response); response = theResponse;};
-    router.onDataAvailable = ^(NSData* data) {dataLength += data.length;};
+    router.onDataAvailable = ^(NSData* data, BOOL finished) {dataLength += data.length;};
     router.onFinished = ^{CAssert(!calledOnFinished); calledOnFinished = YES;};
     [router start];
     CAssert(response);
@@ -339,7 +339,7 @@ TestCase(TDRouter_ContinuousChanges) {
         CAssert(!response);
         response = routerResponse;
     };
-    router.onDataAvailable = ^(NSData* content) {
+    router.onDataAvailable = ^(NSData* content, BOOL finished) {
         [body appendData: content];
     };
     router.onFinished = ^{

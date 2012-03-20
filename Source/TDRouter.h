@@ -11,7 +11,7 @@
 
 
 typedef void (^OnResponseReadyBlock)(TDResponse*);
-typedef void (^OnDataAvailableBlock)(NSData*);
+typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
 typedef void (^OnFinishedBlock)();
 
 

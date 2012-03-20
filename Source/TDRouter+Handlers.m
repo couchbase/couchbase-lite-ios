@@ -434,7 +434,8 @@
     NSMutableData* json = [[NSJSONSerialization dataWithJSONObject: changeDict
                                                            options: 0 error: nil] mutableCopy];
     [json appendBytes: "\n" length: 1];
-    _onDataAvailable(json);
+    if (_onDataAvailable)
+        _onDataAvailable(json, NO);
     [json release];
 }
 
@@ -449,9 +450,11 @@
         Log(@"TDRouter: Sending longpoll response");
         [self sendResponse];
         NSDictionary* body = [self responseBodyForChanges: $array(rev) since: 0];
-        _onDataAvailable([NSJSONSerialization dataWithJSONObject: body
-                                                         options: 0 error: nil]);
-        _onFinished();
+        _response.body = [TDBody bodyWithProperties: body];
+        if (_onDataAvailable)
+            _onDataAvailable(_response.body.asJSON, YES);
+        if (_onFinished)
+            _onFinished();
         [self stop];
     } else {
         Log(@"TDRouter: Sending continous change chunk");
