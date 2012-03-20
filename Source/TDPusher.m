@@ -170,33 +170,28 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                         return (id)nil;
                     
                     // Get the revision's properties:
-                    if ([rev deleted]) {
-                        properties = $mdict({@"_id", [rev docID]},
-                                            {@"_rev", [rev revID]}, 
-                                            {@"_deleted", $true},
-                                            {@"_revisions", [_db getRevisionHistoryDict: rev]});
-                        [properties retain];
-                    } else {
-                        if ([_db loadRevisionBody: rev
-                                          options: kTDIncludeAttachments | kTDBigAttachmentsFollow |
-                                                   kTDIncludeRevs]
-                                    >= 300) {
-                            Warn(@"%@: Couldn't get local contents of %@", self, rev);
-                            return nil;
-                        }
-                        Assert([[rev properties] objectForKey: @"_revisions"]);
-                        // Strip any attachments already known to the target db:
-                        if ([rev.properties objectForKey: @"_attachments"]) {
-                            // Look for the latest common ancestor and stub out older attachments:
-                            NSArray* possible = [revResults objectForKey: @"possible_ancestors"];
-                            int minRevPos = findCommonAncestor(rev, possible);
-                            [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1];
-                            // If the rev has huge attachments, send it under separate cover:
-                            if ([self uploadMultipartRevision: rev])
-                                return nil;
-                        }
-                        properties = [[rev properties] copy];
+                    if ([_db loadRevisionBody: rev
+                                      options: kTDIncludeAttachments | kTDBigAttachmentsFollow |
+                                               kTDIncludeRevs]
+                                >= 300) {
+                        Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                        return nil;
                     }
+                    properties = rev.properties;
+                    Assert([properties objectForKey: @"_revisions"]);
+                    
+                    // Strip any attachments already known to the target db:
+                    if ([properties objectForKey: @"_attachments"]) {
+                        // Look for the latest common ancestor and stub out older attachments:
+                        NSArray* possible = [revResults objectForKey: @"possible_ancestors"];
+                        int minRevPos = findCommonAncestor(rev, possible);
+                        [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1];
+                        properties = rev.properties;
+                        // If the rev has huge attachments, send it under separate cover:
+                        if ([self uploadMultipartRevision: rev])
+                            return nil;
+                    }
+                    [properties retain];  // (to survive impending autorelease-pool drain)
                 }
                 lastInboxSequence = rev.sequence;
                 Assert([properties objectForKey: @"_id"]);
