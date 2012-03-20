@@ -68,6 +68,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker = [[TDChangeTracker alloc]
                                    initWithDatabaseURL: _remote
                                                   mode: (_continuous ? kLongPoll :kOneShot)
+                                             conflicts: YES
                                           lastSequence: _lastSequence
                                                 client: self];
     _changeTracker.filterName = _filterName;
@@ -252,9 +253,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {
     LogTo(Sync, @"%@ inserting %u revisions...", self, downloads.count);
-    
-    /* Updating self.lastSequence is tricky. It needs to be the received sequence ID of the revision for which we've successfully received and inserted (or rejected) it and all previous received revisions. That way, next time we can start tracking remote changes from that sequence ID and know we haven't missed anything. */
-    /* FIX: The current code below doesn't quite achieve that: it tracks the latest sequence ID we've successfully processed, but doesn't handle failures correctly across multiple calls to -insertRevisions. I think correct behavior will require keeping an NSMutableIndexSet to track the fake-sequences of all processed revisions; then we can find the first missing index in that set and not advance lastSequence past the revision with that fake-sequence. */
     
     downloads = [downloads sortedArrayUsingComparator: ^(id dl1, id dl2) {
         return TDSequenceCompare( [[dl1 revision] sequence], [[dl2 revision] sequence]);

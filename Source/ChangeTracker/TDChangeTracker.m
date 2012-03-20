@@ -33,6 +33,7 @@
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
+                conflicts: (BOOL)includeConflicts
              lastSequence: (id)lastSequenceID
                    client: (id<TDChangeTrackerClient>)client {
     NSParameterAssert(databaseURL);
@@ -42,22 +43,21 @@
         if ([self class] == [TDChangeTracker class]) {
             [self release];
             // TDConnectionChangeTracker doesn't work in continuous due to some bug in CFNetwork.
-            if (mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"]) {
-                return (id) [[TDSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                          mode: mode
-                                                                  lastSequence: lastSequenceID
-                                                                        client: client];
-            } else {
-                return (id) [[TDConnectionChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                              mode: mode
-                                                                      lastSequence: lastSequenceID
-                                                                            client: client];
-            }
+            if (mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"])
+                self = [TDSocketChangeTracker alloc];
+            else
+                self = [TDConnectionChangeTracker alloc];
+            return [self initWithDatabaseURL: databaseURL
+                                        mode: mode
+                                   conflicts: includeConflicts
+                                lastSequence: lastSequenceID
+                                      client: client];
         }
     
         _databaseURL = [databaseURL retain];
         _client = client;
         _mode = mode;
+        _includeConflicts = includeConflicts;
         self.lastSequenceID = lastSequenceID;
     }
     return self;
@@ -72,6 +72,8 @@
     NSMutableString* path;
     path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=300000",
                                               kModeNames[_mode]];
+    if (_includeConflicts)
+        [path appendString: @"&style=all_docs"];
     if (_lastSequenceID)
         [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
     if (_filterName) {
