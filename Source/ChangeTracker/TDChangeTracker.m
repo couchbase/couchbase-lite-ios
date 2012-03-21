@@ -123,7 +123,8 @@
 
 - (BOOL) start {
     self.error = nil;
-    _operationQueue = [[NSOperationQueue currentQueue] retain];
+    if (![NSThread isMainThread])
+        _operationQueue = [[NSOperationQueue currentQueue] retain];
     return NO;
 }
 

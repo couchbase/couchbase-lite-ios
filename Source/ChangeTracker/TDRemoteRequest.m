@@ -51,7 +51,8 @@
     Assert(!_connection);
     _connection = [[NSURLConnection alloc] initWithRequest: _request delegate: self
                                           startImmediately: NO];
-    [_connection setDelegateQueue: [NSOperationQueue currentQueue]];
+    if (![NSThread isMainThread])
+        [_connection setDelegateQueue: [NSOperationQueue currentQueue]];
     [_connection start];
 }
 
