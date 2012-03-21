@@ -1,5 +1,5 @@
 //
-//  CouchConnectionChangeTracker.m
+//  TDConnectionChangeTracker.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/1/11.
