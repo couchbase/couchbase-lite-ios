@@ -95,6 +95,7 @@ TestCase(TDView_Index) {
     TDRevision* rev1 = putDoc(db, $dict({@"key", @"one"}));
     TDRevision* rev2 = putDoc(db, $dict({@"key", @"two"}));
     TDRevision* rev3 = putDoc(db, $dict({@"key", @"three"}));
+    putDoc(db, $dict({@"_id", @"_design/foo"}));
     putDoc(db, $dict({@"clef", @"quatre"}));
     
     TDView* view = createView(db);
@@ -131,8 +132,8 @@ TestCase(TDView_Index) {
 
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", $object(5)}),
-                              $dict({@"key", @"\"four\""}, {@"seq", $object(6)}),
+    CAssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", $object(6)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(7)}),
                               $dict({@"key", @"\"one\""}, {@"seq", $object(1)}) ));
     
     // Now do a real query:

@@ -235,8 +235,10 @@ static id fromJSON( NSData* json ) {
                 // Reconstitute the document as a dictionary:
                 sequence = [r longLongIntForColumnIndex: 1];
                 NSString* docID = [r stringForColumnIndex: 2];
-                if ([docID hasPrefix: @"_design/"])     // design docs don't get indexed!
+                if ([docID hasPrefix: @"_design/"]) {     // design docs don't get indexed!
+                    keepGoing = [r next];
                     continue;
+                }
                 NSString* revID = [r stringForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
             
