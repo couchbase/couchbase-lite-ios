@@ -50,7 +50,7 @@
         
         // Run the router, synchronously:
         LogTo(TDListenerVerbose, @"%@: Starting...", self);
-        [router startAsync];
+        [router start];
         LogTo(TDListenerVerbose, @"%@: Returning from -init", self);
     }
     return self;

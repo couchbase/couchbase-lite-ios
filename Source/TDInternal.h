@@ -8,8 +8,10 @@
 
 #import "TDDatabase.h"
 #import "TDDatabase+Attachments.h"
+#import "TDDatabaseManager.h"
 #import "TDView.h"
 #import "TDServer.h"
+#import "TDRouter.h"
 #import "TDReplicator.h"
 #import "TDRemoteRequest.h"
 
@@ -73,11 +75,24 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 
 
 @interface TDServer ()
-@property (readonly, nonatomic) TDReplicatorManager* replicatorManager;
 #if DEBUG
 + (TDServer*) createEmptyAtPath: (NSString*)path;  // for testing
 + (TDServer*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
+@end
+
+
+@interface TDDatabaseManager ()
+@property (readonly, nonatomic) TDReplicatorManager* replicatorManager;
+#if DEBUG
++ (TDDatabaseManager*) createEmptyAtPath: (NSString*)path;  // for testing
++ (TDDatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
+#endif
+@end
+
+
+@interface TDRouter ()
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager request: (NSURLRequest*)request;
 @end
 
 

@@ -73,7 +73,7 @@ static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push,
 
 TestCase(TDPusher) {
     RequireTestCase(TDDatabase);
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDPusherTest"];
+    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDPusherTest"];
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
     
@@ -114,12 +114,13 @@ TestCase(TDPusher) {
     CAssertEq(filterCalls, 2);
     
     [db close];
+    [server close];
 }
 
 
 TestCase(TDPuller) {
     RequireTestCase(TDPusher);
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDPullerTest"];
+    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDPullerTest"];
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
     
@@ -143,6 +144,7 @@ TestCase(TDPuller) {
     CAssertEqual([doc.properties objectForKey: @"fnord"], $true);
 
     [db close];
+    [server close];
 }
 
 
@@ -154,7 +156,7 @@ TestCase(TDPuller_FromCouchApp) {
     }
     
     RequireTestCase(TDPuller);
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDPuller_FromCouchApp"];
+    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDPuller_FromCouchApp"];
     TDDatabase* db = [server databaseNamed: @"couchapp_helloworld"];
     [db open];
     
@@ -169,11 +171,13 @@ TestCase(TDPuller_FromCouchApp) {
         CAssert(data);
         CAssertEq([data length], [[attachment objectForKey: @"length"] unsignedLongLongValue]);
     }];
+    [db close];
+    [server close];
 }
 
 
 TestCase(TDReplicatorManager) {
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
+    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
     CAssert([server replicatorManager]);    // start the replicator
     TDDatabase* replicatorDb = [server databaseNamed: kTDReplicatorDatabaseName];
     CAssert(replicatorDb);
@@ -244,6 +248,7 @@ TestCase(TDReplicatorManager) {
     rev = [[[TDRevision alloc] initWithDocID: newRev.docID revID: newRev.revID deleted: YES] autorelease];
     rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, 200);
+    [server close];
 }
 
 #endif

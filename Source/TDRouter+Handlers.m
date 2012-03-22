@@ -78,7 +78,7 @@
 }
 
 - (TDStatus) do_GET_all_dbs {
-    NSArray* dbs = _server.allDatabaseNames ?: $array();
+    NSArray* dbs = _dbManager.allDatabaseNames ?: $array();
     _response.body = [[[TDBody alloc] initWithArray: dbs] autorelease];
     return 200;
 }
@@ -90,7 +90,7 @@
     NSURL* remote;
     BOOL push, createTarget;
     NSDictionary* body = self.bodyAsDictionary;
-    TDStatus status = [_server.replicatorManager parseReplicatorProperties: body
+    TDStatus status = [_dbManager.replicatorManager parseReplicatorProperties: body
                                                                 toDatabase: &db remote: &remote
                                                                     isPush: &push
                                                               createTarget: &createTarget];
@@ -134,7 +134,7 @@
 - (TDStatus) do_GET_active_tasks {
     // http://wiki.apache.org/couchdb/HttpGetActiveTasks
     NSMutableArray* activity = $marray();
-    for (TDDatabase* db in _server.allOpenDatabases) {
+    for (TDDatabase* db in _dbManager.allOpenDatabases) {
         for (TDReplicator* repl in db.activeReplicators) {
             NSString* source = repl.remote.absoluteString;
             NSString* target = db.name;
@@ -212,7 +212,7 @@
 - (TDStatus) do_DELETE: (TDDatabase*)db {
     if ([self query: @"rev"])
         return 400;  // CouchDB checks for this; probably meant to be a document deletion
-    return [_server deleteDatabaseNamed: db.name] ? 200 : 404;
+    return [_dbManager deleteDatabaseNamed: db.name] ? 200 : 404;
 }
 
 

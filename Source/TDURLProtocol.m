@@ -100,7 +100,7 @@ static TDServer* sServer;
         LogTo(TDURLProtocol, @"finished response <%@>", self.request.URL);
         [client URLProtocolDidFinishLoading: self];
     };
-    [_router startAsync];
+    [_router start];
 }
 
 
@@ -119,7 +119,8 @@ static TDServer* sServer;
 
 TestCase(TDURLProtocol) {
     RequireTestCase(TDRouter);
-    [TDURLProtocol setServer: [TDServer createEmptyAtTemporaryPath: @"TDURLProtocolTest"]];
+    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDURLProtocolTest"];
+    [TDURLProtocol setServer: server];
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///"];
     NSURLRequest* req = [NSURLRequest requestWithURL: url];
@@ -138,6 +139,8 @@ TestCase(TDURLProtocol) {
     CAssertEq(response.statusCode, 200);
     CAssertEqual([response.allHeaderFields objectForKey: @"Content-Type"], @"application/json");
     CAssert([bodyStr rangeOfString: @"\"TouchDB\":\"Welcome\""].length > 0);
+    [server close];
+    [TDURLProtocol setServer: nil];
 }
 
 #endif

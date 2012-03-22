@@ -32,11 +32,11 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 @implementation TDReplicatorManager
 
 
-- (id) initWithServer: (TDServer*)server {
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager {
     self = [super init];
     if (self) {
-        _server = server;
-        _replicatorDB = [[server databaseNamed: kTDReplicatorDatabaseName] retain];
+        _dbManager = dbManager;
+        _replicatorDB = [[dbManager databaseNamed: kTDReplicatorDatabaseName] retain];
         Assert(_replicatorDB);
     }
     return self;
@@ -83,22 +83,22 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     *outIsPush = NO;
     TDDatabase* db = nil;
     NSString* remoteStr;
-    if ([TDServer isValidDatabaseName: source]) {
+    if ([TDDatabaseManager isValidDatabaseName: source]) {
         if (outDatabase)
-            db = [_server existingDatabaseNamed: source];
+            db = [_dbManager existingDatabaseNamed: source];
         remoteStr = target;
         *outIsPush = YES;
     } else {
-        if (![TDServer isValidDatabaseName: target])
+        if (![TDDatabaseManager isValidDatabaseName: target])
             return 400;
         remoteStr = source;
         if (outDatabase) {
             if (*outCreateTarget) {
-                db = [_server databaseNamed: target];
+                db = [_dbManager databaseNamed: target];
                 if (![db open])
                     return 500;
             } else {
-                db = [_server existingDatabaseNamed: target];
+                db = [_dbManager existingDatabaseNamed: target];
             }
         }
     }

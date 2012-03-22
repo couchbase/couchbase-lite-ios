@@ -26,12 +26,12 @@
 #pragma mark - TESTS
 
 
-static TDServer* createServer(void) {
-    return [TDServer createEmptyAtTemporaryPath: @"TDRouterTest"];
+static TDDatabaseManager* createDBManager(void) {
+    return [TDDatabaseManager createEmptyAtTemporaryPath: @"TDRouterTest"];
 }
 
 
-static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* path,
+static TDResponse* SendRequest(TDDatabaseManager* server, NSString* method, NSString* path,
                                NSDictionary* headers, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"touchdb://" stringByAppendingString: path]];
     CAssert(url, @"Invalid URL: <%@>", path);
@@ -44,7 +44,7 @@ static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* pat
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject: bodyObj options:0 error:&error];
         CAssertNil(error);
     }
-    TDRouter* router = [[[TDRouter alloc] initWithServer: server request: request] autorelease];
+    TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
     CAssert(router!=nil);
     __block TDResponse* response = nil;
     __block NSUInteger dataLength = 0;
@@ -73,7 +73,7 @@ static id ParseJSONResponse(TDResponse* response) {
     return result;
 }
 
-static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyObj,
+static id SendBody(TDDatabaseManager* server, NSString* method, NSString* path, id bodyObj,
                int expectedStatus, id expectedResult) {
     TDResponse* response = SendRequest(server, method, path, nil, bodyObj);
     id result = ParseJSONResponse(response);
@@ -86,15 +86,15 @@ static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyOb
     return result;
 }
 
-static id Send(TDServer* server, NSString* method, NSString* path,
+static id Send(TDDatabaseManager* server, NSString* method, NSString* path,
                int expectedStatus, id expectedResult) {
     return SendBody(server, method, path, nil, expectedStatus, expectedResult);
 }
 
 
 TestCase(TDRouter_Server) {
-    RequireTestCase(TDServer);
-    TDServer* server = createServer();
+    RequireTestCase(TDDatabaseManager);
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"GET", @"/", 200, $dict({@"TouchDB", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
                                           {@"version", [TDRouter versionString]}));
@@ -103,12 +103,13 @@ TestCase(TDRouter_Server) {
     Send(server, @"GET", @"/BadName", 400, nil);
     Send(server, @"PUT", @"/", 400, nil);
     Send(server, @"POST", @"/", 400, nil);
+    [server close];
 }
 
 
 TestCase(TDRouter_Databases) {
     RequireTestCase(TDRouter_Server);
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/database", 201, nil);
     
     NSDictionary* dbInfo = Send(server, @"GET", @"/database", 200, nil);
@@ -127,13 +128,14 @@ TestCase(TDRouter_Databases) {
     Send(server, @"PUT", @"/database%2Fwith%2Fslashes", 201, nil);
     dbInfo = Send(server, @"GET", @"/database%2Fwith%2Fslashes", 200, nil);
     CAssertEqual([dbInfo objectForKey: @"db_name"], @"database/with/slashes");
+    [server close];
 }
 
 
 TestCase(TDRouter_Docs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     201, nil);
@@ -203,6 +205,7 @@ TestCase(TDRouter_Docs) {
     Send(server, @"GET", @"/db/_changes?since=5", 200,
          $dict({@"last_seq", $object(5)},
                {@"results", $array()}));
+    [server close];
 }
 
 
@@ -210,7 +213,7 @@ TestCase(TDRouter_LocalDocs) {
     RequireTestCase(TDDatabase_LocalDocs);
     RequireTestCase(TDRouter_Docs);
     // PUT a local doc:
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}), 
                                     201, nil);
@@ -227,12 +230,13 @@ TestCase(TDRouter_LocalDocs) {
     Send(server, @"GET", @"/db/_changes", 200,
          $dict({@"last_seq", $object(0)},
                {@"results", $array()}));
+    [server close];
 }
 
 
 TestCase(TDRouter_AllDocs) {
     // PUT:
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
     
     NSDictionary* result;
@@ -274,12 +278,13 @@ TestCase(TDRouter_AllDocs) {
                                     {@"doc", $dict({@"message", @"bonjour"},
                                                    {@"_id", @"doc3"}, {@"_rev", revID3} )})
                               ));
+    [server close];
 }
 
 
 TestCase(TDRouter_Views) {
     // PUT:
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
     
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
@@ -319,11 +324,12 @@ TestCase(TDRouter_Views) {
                            $dict({@"If-None-Match", etag}), nil);
     CAssertEq(response.status, 200);
     CAssertEqual([ParseJSONResponse(response) objectForKey: @"total_rows"], $object(4));
+    [server close];
 }
 
 
 TestCase(TDRouter_ContinuousChanges) {
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
 
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
@@ -334,7 +340,7 @@ TestCase(TDRouter_ContinuousChanges) {
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///db/_changes?feed=continuous"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
-    TDRouter* router = [[TDRouter alloc] initWithServer: server request: request];
+    TDRouter* router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     router.onResponseReady = ^(TDResponse* routerResponse) {
         CAssert(!response);
         response = routerResponse;
@@ -366,11 +372,12 @@ TestCase(TDRouter_ContinuousChanges) {
     
     [router stop];
     [router release];
+    [server close];
 }
 
 
 TestCase(TDRouter_GetAttachment) {
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
 
     // Create a document with an attachment:
@@ -453,13 +460,14 @@ TestCase(TDRouter_GetAttachment) {
                                                                      {@"length", $object(attach2.length)},
                                                                      {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                                                      {@"revpos", $object(1)})})}));
+    [server close];
 }
 
 
 TestCase(TDRouter_OpenRevs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     201, nil);
@@ -489,12 +497,13 @@ TestCase(TDRouter_OpenRevs) {
                                     {@"message", @"hello"})}),
                 $dict({@"missing", @"bogus"})
                 ));
+    [server close];
 }
 
 
 TestCase(TDRouter_RevsDiff) {
     RequireTestCase(TDRouter_Databases);
-    TDServer* server = createServer();
+    TDDatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", 201, nil);
     NSDictionary* doc1r1 = SendBody(server, @"PUT", @"/db/11111", $dict(), 201,nil);
     NSString* doc1r1ID = [doc1r1 objectForKey: @"rev"];
@@ -521,6 +530,7 @@ TestCase(TDRouter_RevsDiff) {
                                     {@"possible_ancestors", $array(doc3r1ID)})},
                    {@"99999", $dict({@"missing", $array(@"6-six")})}
                    ));
+    [server close];
 }
 
 

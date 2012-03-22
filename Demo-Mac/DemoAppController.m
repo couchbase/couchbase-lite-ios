@@ -102,11 +102,14 @@ int main (int argc, const char * argv[]) {
     
 #ifdef FOR_TESTING_PURPOSES
     // Start a listener socket:
-    sListener = [[TDListener alloc] initWithTDServer: server.touchServer port: 8888];
-    [sListener start];
+    [server tellTDServer: ^(TDServer* tdServer) {
+        // Register support for handling certain JS functions used in the CouchDB unit tests:
+        [TDView setCompiler: self];
+        
+        sListener = [[TDListener alloc] initWithTDServer: tdServer port: 8888];
+        [sListener start];
+    }];
 
-    // Register support for handling certain JS functions used in the CouchDB unit tests:
-    [TDView setCompiler: self];
 #endif
 }
 

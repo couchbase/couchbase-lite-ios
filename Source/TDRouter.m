@@ -35,12 +35,11 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 }
 
 
-- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request {
-    NSParameterAssert(server);
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager request: (NSURLRequest*)request {
     NSParameterAssert(request);
     self = [super init];
     if (self) {
-        _server = [server retain];
+        _dbManager = [dbManager retain];
         _request = [request retain];
         _response = [[TDResponse alloc] init];
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
@@ -51,8 +50,19 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
     return self;
 }
 
+- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request {
+    NSParameterAssert(server);
+    NSParameterAssert(request);
+    self = [self initWithDatabaseManager: nil request: request];
+    if (self) {
+        _server = [server retain];
+    }
+    return self;
+}
+
 - (void)dealloc {
     [self stop];
+    [_dbManager release];
     [_server release];
     [_request release];
     [_response release];
@@ -244,10 +254,10 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = [_path objectAtIndex: 0];
-        if ([dbName hasPrefix: @"_"] && ![TDServer isValidDatabaseName: dbName]) {
+        if ([dbName hasPrefix: @"_"] && ![TDDatabaseManager isValidDatabaseName: dbName]) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else {
-            _db = [[_server databaseNamed: dbName] retain];
+            _db = [[_dbManager databaseNamed: dbName] retain];
             if (!_db)
                 return 400;
             [message appendString: @":"];
@@ -324,11 +334,8 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
-- (void) start {
-    // Before handling the request, run any blocks that have been queued with the server,
-    // because this code is running on the official server thread:
-    [_server performQueuedBlocks];
-    
+- (void) run {
+    Assert(_dbManager);
     // Call the appropriate handler method:
     TDStatus status = [self route];
 
@@ -372,6 +379,23 @@ static NSArray* splitPath( NSURL* url ) {
     self.onDataAvailable = nil;
     self.onFinished = nil;
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+
+
+- (void) start {
+    if (_dbManager) {
+        [self run];
+    } else {
+        [_server tellDatabaseManager: ^(TDDatabaseManager* dbm) {
+            _dbManager = [dbm retain];
+            [self run];
+        }];
+    }
+}
+
+
+- (void) runSynchronously {
+    
 }
 
 

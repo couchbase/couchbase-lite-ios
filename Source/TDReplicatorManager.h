@@ -7,7 +7,7 @@
 //
 
 #import "TDDatabase.h"
-@class TDServer;
+@class TDDatabaseManager;
 
 
 extern NSString* const kTDReplicatorDatabaseName;
@@ -18,13 +18,13 @@ extern NSString* const kTDReplicatorDatabaseName;
     A TDServer owns an instance of this class. */
 @interface TDReplicatorManager : NSObject
 {
-    TDServer* _server;
+    TDDatabaseManager* _dbManager;
     TDDatabase* _replicatorDB;
     NSMutableDictionary* _replicatorsByDocID;
     BOOL _updateInProgress;
 }
 
-- (id) initWithServer: (TDServer*)server;
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager;
 
 - (void) start;
 
