@@ -58,8 +58,7 @@ static NSCharacterSet* kIllegalNameChars;
     if (self) {
         _dir = [dirPath copy];
         _databases = [[NSMutableDictionary alloc] init];
-        _dispatchQueue = [[NSOperationQueue alloc] init];
-        _dispatchQueue.maxConcurrentOperationCount = 1; // serial
+        _queue = [[NSMutableArray alloc] init];
         
         // Create the directory but don't fail if it already exists:
         NSError* error;
@@ -87,7 +86,7 @@ static NSCharacterSet* kIllegalNameChars;
     [self close];
     [_dir release];
     [_databases release];
-    [_dispatchQueue release];
+    [_queue release];
     [super dealloc];
 }
 
@@ -181,7 +180,11 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) queue: (void(^)())block {
-    [_dispatchQueue addOperationWithBlock: block];
+    block = [block copy];
+    @synchronized(_queue) {
+        [_queue addObject: block];
+    }
+    [block release];
 }
 
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TDDatabase*))block {
@@ -189,6 +192,23 @@ static NSCharacterSet* kIllegalNameChars;
         block([self databaseNamed: dbName]);
     }];
 }
+
+- (void) performQueuedBlocks {
+    while(true) {
+        void (^block)();
+        @synchronized(_queue) {
+            if (_queue.count == 0)
+                return;
+            block = [[_queue objectAtIndex: 0] retain];
+            [_queue removeObjectAtIndex: 0];
+        }
+        
+        Log(@"TDServer: Performing queued block...");
+        block();
+        [block release];
+    }
+}
+
 
 
 @end

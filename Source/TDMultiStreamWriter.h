@@ -14,7 +14,6 @@
 @interface TDMultiStreamWriter : NSObject
 {
     @private
-    NSOperationQueue* _operationQueue;
     NSMutableArray* _inputs;
     NSInputStream* _currentInput;
     uint8_t* _buffer;

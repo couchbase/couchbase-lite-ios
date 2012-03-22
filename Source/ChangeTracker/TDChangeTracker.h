@@ -37,7 +37,6 @@ typedef enum TDChangeTrackerMode {
 {
     @protected
     NSURL* _databaseURL;
-    NSOperationQueue* _operationQueue;
     id<TDChangeTrackerClient> _client;
     TDChangeTrackerMode _mode;
     id _lastSequenceID;

@@ -17,7 +17,7 @@
     NSString* _dir;
     NSMutableDictionary* _databases;
     TDReplicatorManager* _replicatorManager;
-    NSOperationQueue* _dispatchQueue;
+    NSMutableArray* _queue;
 }
 
 + (BOOL) isValidDatabaseName: (NSString*)name;
@@ -38,5 +38,6 @@
 
 - (void) queue: (void(^)())block;
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TDDatabase*))block;
+- (void) performQueuedBlocks;
 
 @end

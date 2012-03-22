@@ -59,11 +59,11 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "Test_All"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "Test_Only"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-Log YES"

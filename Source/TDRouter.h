@@ -46,9 +46,6 @@ typedef void (^OnFinishedBlock)();
 - (void) start;
 - (void) stop;
 
-/** Starts the router on the server thread. Returns immediately. */
-- (void) startAsync;
-
 + (NSString*) versionString;
 
 @end

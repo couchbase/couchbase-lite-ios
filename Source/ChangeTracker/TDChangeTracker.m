@@ -123,8 +123,6 @@
 
 - (BOOL) start {
     self.error = nil;
-    if (![NSThread isMainThread])
-        _operationQueue = [[NSOperationQueue currentQueue] retain];
     return NO;
 }
 
@@ -133,8 +131,6 @@
 }
 
 - (void) stopped {
-    [_operationQueue release];
-    _operationQueue = nil;
     if ([_client respondsToSelector: @selector(changeTrackerStopped:)])
         [_client changeTrackerStopped: self];
     _client = nil;  // don't call client anymore even if -stopped is called again (i.e. on dealloc)
