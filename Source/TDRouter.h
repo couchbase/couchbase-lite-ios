@@ -30,6 +30,7 @@ typedef void (^OnFinishedBlock)();
     OnResponseReadyBlock _onResponseReady;
     OnDataAvailableBlock _onDataAvailable;
     OnFinishedBlock _onFinished;
+    BOOL _running;
     BOOL _longpoll;
     TDFilterBlock _changesFilter;
     BOOL _changesIncludeDocs;
@@ -64,6 +65,7 @@ typedef void (^OnFinishedBlock)();
 @property (readonly) NSDictionary* bodyAsDictionary;
 - (TDStatus) openDB;
 - (void) sendResponse;
+- (void) finished;
 @end
 
 

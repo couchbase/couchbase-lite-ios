@@ -453,9 +453,7 @@
         _response.body = [TDBody bodyWithProperties: body];
         if (_onDataAvailable)
             _onDataAvailable(_response.body.asJSON, YES);
-        if (_onFinished)
-            _onFinished();
-        [self stop];
+        [self finished];
     } else {
         Log(@"TDRouter: Sending continous change chunk");
         [self sendContinuousChange: rev];

@@ -61,7 +61,7 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 }
 
 - (void)dealloc {
-    [self stop];
+    [self stopNow];
     [_dbManager release];
     [_server release];
     [_request release];
@@ -368,13 +368,23 @@ static NSArray* splitPath( NSURL* url ) {
         if (_onDataAvailable && _response.body) {
             _onDataAvailable(_response.body.asJSON, !_waiting);
         }
-        if (_onFinished && !_waiting)
-            _onFinished();
+        if (!_waiting) 
+            [self finished];
     }
 }
 
 
-- (void) stop {
+- (void) finished {
+    OnFinishedBlock onFinished = [_onFinished retain];
+    [self stopNow];
+    if (onFinished)
+        onFinished();
+    [onFinished release];
+}
+
+
+- (void) stopNow {
+    _running = NO;
     self.onResponseReady = nil;
     self.onDataAvailable = nil;
     self.onFinished = nil;
@@ -382,7 +392,16 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
+- (void) stop {
+    if (!_running)
+        return;
+    _running = NO;
+    [_server queue: ^{ [self stopNow];  }];
+}
+
+
 - (void) start {
+    _running = YES;
     if (_dbManager) {
         [self run];
     } else {
@@ -391,11 +410,6 @@ static NSArray* splitPath( NSURL* url ) {
             [self run];
         }];
     }
-}
-
-
-- (void) runSynchronously {
-    
 }
 
 

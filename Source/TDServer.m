@@ -53,11 +53,6 @@
                                                   object: nil];
         LogTo(TDServer, @"Starting server thread %@ ...", _serverThread);
         [_serverThread start];
-        
-        // Queue up a block to initialize the replicatorManager. This initialization has to happen
-        // on the official server thread, because the TDReplicatorManager may start up replications
-        // that are tied to the thread's runloop.
-        [self queue:^{[_manager replicatorManager];}];
     }
     return self;
 }
@@ -91,16 +86,23 @@
 - (void) runServerThread {
     @autoreleasepool {
         [[self retain] autorelease]; // ensure self stays alive till this method returns
-        LogTo(TDServer, @"Server thread starting...");
+        
+        @autoreleasepool {
+            LogTo(TDServer, @"Server thread starting...");
 
-        [[NSThread currentThread] setName:@"TouchDB"];
+            [[NSThread currentThread] setName:@"TouchDB"];
+            
+            // Add a no-op source so the runloop won't stop on its own:
+            CFRunLoopSourceContext context = {};  // all zeros
+            CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+            CFRelease(source);
+            
+            // Initialize the replicator:
+            [_manager replicatorManager];
+        }
         
-        // Add a no-op source so the runloop won't stop on its own:
-        CFRunLoopSourceContext context = {};  // all zeros
-        CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
-        CFRelease(source);
-        
+        // Now run:
         CFRunLoopRun();
         
         LogTo(TDServer, @"Server thread exiting");
