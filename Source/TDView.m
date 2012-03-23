@@ -202,7 +202,9 @@ static id fromJSON( NSData* json ) {
         }
         if (!ok)
             return 500;
+#ifndef MY_DISABLE_LOGGING
         unsigned deleted = fmdb.changes;
+#endif
         
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.

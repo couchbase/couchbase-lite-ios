@@ -217,14 +217,18 @@
         // Finished downloading an attachment. Remember the association from the MD5 digest
         // (which appears in the body's _attachments dict) to the blob-store key of the data.
         [_curAttachment finish];
-        TDBlobKey key = _curAttachment.blobKey;
-        NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
         TDMD5Key md5 = _curAttachment.MD5Digest;
         NSString* md5Str = [@"md5-" stringByAppendingString: [TDBase64 encode: &md5
                                                                        length: sizeof(md5)]];
-        LogTo(SyncVerbose, @"%@: Finished attachment #%u: len=%uk, digest=%@, SHA1=%@",
-              self, _attachmentsByDigest.count+1, (unsigned)_curAttachment.length/1024,
-              md5Str, keyData);
+#ifndef MY_DISABLE_LOGGING
+        if (WillLogTo(SyncVerbose)) {
+            TDBlobKey key = _curAttachment.blobKey;
+            NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
+            LogTo(SyncVerbose, @"%@: Finished attachment #%u: len=%uk, digest=%@, SHA1=%@",
+                  self, _attachmentsByDigest.count+1, (unsigned)_curAttachment.length/1024,
+                  md5Str, keyData);
+        }
+#endif
         [_attachmentsByDigest setObject: _curAttachment forKey: md5Str];
         setObj(&_curAttachment, nil);
     }
