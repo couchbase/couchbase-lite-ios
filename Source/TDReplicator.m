@@ -190,6 +190,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     Assert(_db, @"Can't restart an already stopped TDReplicator");
     LogTo(Sync, @"%@ STARTING ...", self);
     self.running = YES;
+    _startTime = CFAbsoluteTimeGetCurrent();
     
     // Check current reachability
     _online = NO;
@@ -214,7 +215,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) stopped {
-    LogTo(Sync, @"%@ STOPPED", self);
+    LogTo(Sync, @"%@ STOPPED after %.3f sec", self, CFAbsoluteTimeGetCurrent()-_startTime);
     self.running = NO;
     self.changesProcessed = self.changesTotal = 0;
     [[NSNotificationCenter defaultCenter]
@@ -356,11 +357,15 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) saveLastSequence {
-    // If a save is already in progress, don't do anything. (The completion block will trigger
-    // another save after the first one finishes.)
-    if (!_lastSequenceChanged || _savingCheckpoint)
+    if (!_lastSequenceChanged)
         return;
-    _lastSequenceChanged = NO;
+    if (_savingCheckpoint) {
+        // If a save is already in progress, don't do anything. (The completion block will trigger
+        // another save after the first one finishes.)
+        _overdueForSave = YES;
+        return;
+    }
+    _lastSequenceChanged = _overdueForSave = NO;
     
     LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
     NSMutableDictionary* body = [[_remoteCheckpoint mutableCopy] autorelease];
@@ -385,7 +390,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                           [body setObject: rev forKey: @"_rev"];
                       self.remoteCheckpoint = body;
                   }
-                  if (_lastSequenceChanged)
+                  if (_overdueForSave)
                       [self saveLastSequence];      // start a save that was waiting on me
               }
      ];

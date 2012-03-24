@@ -31,13 +31,14 @@ extern NSString* TDReplicatorStoppedNotification;
     NSString* _lastSequence;
     BOOL _lastSequenceChanged;
     NSDictionary* _remoteCheckpoint;
-    BOOL _savingCheckpoint;
+    BOOL _savingCheckpoint, _overdueForSave;
     BOOL _running, _online, _active;
     NSError* _error;
     NSString* _sessionID;
     TDBatcher* _batcher;
     int _asyncTaskCount;
     NSUInteger _changesProcessed, _changesTotal;
+    CFAbsoluteTime _startTime;
 }
 
 - (id) initWithDB: (TDDatabase*)db
