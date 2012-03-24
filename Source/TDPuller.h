@@ -19,6 +19,7 @@
     TDSequenceMap* _pendingSequences;
     NSMutableArray* _revsToPull;
     NSMutableArray* _deletedRevsToPull;
+    NSMutableArray* _bulkRevsToPull;
     NSUInteger _httpConnectionCount;
     TDBatcher* _downloadsToInsert;
 }
@@ -32,8 +33,10 @@
 {
 @private
     NSString* _remoteSequenceID;
+    bool _conflicted;
 }
 
 @property (copy) NSString* remoteSequenceID;
+@property bool conflicted;
 
 @end
