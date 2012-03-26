@@ -173,7 +173,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     do {
         // Create an updated revision by merging in the updates:
         NSDictionary* currentProperties = currentRev.properties;
-        NSMutableDictionary* updatedProperties = [currentProperties mutableCopy];
+        NSMutableDictionary* updatedProperties = [[currentProperties mutableCopy] autorelease];
         [updatedProperties addEntriesFromDictionary: updates];
         if ($equal(updatedProperties, currentProperties)) {
             status = 200;     // this is a no-op change

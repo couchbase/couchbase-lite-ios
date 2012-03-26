@@ -103,7 +103,7 @@
         }
         
         // Now run:
-        CFRunLoopRun();
+        [[NSRunLoop currentRunLoop] run];
         
         LogTo(TDServer, @"Server thread exiting");
 
