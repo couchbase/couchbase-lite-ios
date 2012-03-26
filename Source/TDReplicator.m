@@ -74,12 +74,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         
         _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
                      processor:^(NSArray *inbox) {
-                         LogTo(Sync, @"*** %@: BEGIN processInbox (%i sequences)",
+                         LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%i sequences)",
                                self, inbox.count);
                          TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
                          [self processInbox: revs];
                          [revs release];
-                         LogTo(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
+                         LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
                          [self updateActive];
                      }
                     ];
@@ -215,7 +215,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) stopped {
-    LogTo(Sync, @"%@ STOPPED after %.3f sec", self, CFAbsoluteTimeGetCurrent()-_startTime);
+    LogTo(Sync, @"%@ STOPPED", self);
+    Log(@"Replication: %@ took %.3f sec", self, CFAbsoluteTimeGetCurrent()-_startTime);
     self.running = NO;
     self.changesProcessed = self.changesTotal = 0;
     [[NSNotificationCenter defaultCenter]

@@ -61,7 +61,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) beginReplicating {
     Assert(!_changeTracker);
     if (!_downloadsToInsert) {
-        _downloadsToInsert = [[TDBatcher alloc] initWithCapacity: 100 delay: 1.0
+        _downloadsToInsert = [[TDBatcher alloc] initWithCapacity: 200 delay: 1.0
                                                   processor: ^(NSArray *downloads) {
                                                       [self insertDownloads: downloads];
                                                   }];
@@ -200,21 +200,25 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         return;
     }
     
-    LogTo(Sync, @"%@ fetching %u remote revisions from seq=%@ ...",
-          self, inbox.count, [[[inbox allRevisions] objectAtIndex: 0] remoteSequenceID]);
-    LogTo(SyncVerbose, @"%@ fetching remote revisions %@", self, inbox.allRevisions);
+    LogTo(SyncVerbose, @"%@ queuing remote revisions %@", self, inbox.allRevisions);
     
     // Dump the revs into the queues of revs to pull from the remote db:
+    unsigned numBulked = 0;
     for (TDPulledRevision* rev in inbox.allRevisions) {
         if (rev.generation == 1 && !rev.deleted && !rev.conflicted) {
             // Optimistically pull 1st-gen revs in bulk:
             if (!_bulkRevsToPull) 
                 _bulkRevsToPull = [[NSMutableArray alloc] initWithCapacity: 100];
             [_bulkRevsToPull addObject: rev];
-        } else
+            ++numBulked;
+        } else {
             [self queueRemoteRevision: rev];
+        }
         rev.sequence = [_pendingSequences addValue: rev.remoteSequenceID];
     }
+    LogTo(Sync, @"%@ queued %u remote revisions from seq=%@ (%u in bulk, %u individually)",
+          self, inbox.count, [[[inbox allRevisions] objectAtIndex: 0] remoteSequenceID],
+          numBulked, inbox.count-numBulked);
     
     [self pullRemoteRevisions];
 }
@@ -328,7 +332,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       // We only add a document if it doesn't have attachments, and if its
                       // revID matches the one we asked for.
                       NSArray* rows = $castIf(NSArray, [result objectForKey: @"rows"]);
-                      LogTo(SyncVerbose, @"%@ checking %u bulk-fetched remote revisions", self, rows.count);
+                      LogTo(Sync, @"%@ checking %u bulk-fetched remote revisions", self, rows.count);
                       for (NSDictionary* row in rows) {
                           NSDictionary* doc = $castIf(NSDictionary, [row objectForKey: @"doc"]);
                           if (doc && ![doc objectForKey: @"_attachments"]) {
@@ -346,7 +350,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   
                   // Any leftover revisions that didn't get matched will be fetched individually:
                   if (remainingRevs.count) {
-                      LogTo(SyncVerbose, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
+                      LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
                             self, remainingRevs.count, nRevs);
                       for (TDRevision* rev in remainingRevs)
                           [self queueRemoteRevision: rev];
@@ -365,7 +369,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {
-    LogTo(Sync, @"%@ inserting %u revisions...", self, downloads.count);
+    LogTo(SyncVerbose, @"%@ inserting %u revisions...", self, downloads.count);
+    CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         
     [_db beginTransaction];
     BOOL success = NO;
@@ -412,6 +417,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     } @finally {
         [_db endTransaction: success];
     }
+    
+    time = CFAbsoluteTimeGetCurrent() - time;
+    LogTo(Sync, @"%@ inserted %u revs in %.3f sec (%.1f/sec)",
+          self, downloads.count, time, downloads.count/time);
     
     [self asyncTasksFinished: downloads.count];
     self.changesProcessed += downloads.count;
