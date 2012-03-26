@@ -53,6 +53,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_bulkRevsToPull release];
     [_downloadsToInsert release];
     [_pendingSequences release];
+    [_endingSequence release];
     [super dealloc];
 }
 
@@ -60,21 +61,30 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) beginReplicating {
     Assert(!_changeTracker);
     if (!_downloadsToInsert) {
-        _downloadsToInsert = [[TDBatcher alloc] initWithCapacity: 50 delay: 0.5
+        _downloadsToInsert = [[TDBatcher alloc] initWithCapacity: 100 delay: 1.0
                                                   processor: ^(NSArray *downloads) {
                                                       [self insertDownloads: downloads];
                                                   }];
     }
     
+    // Get the current sequence number so we know the pull has "caught up":
+    [self sendAsyncRequest: @"GET" path: @"/" body: nil
+              onCompletion:^(id result, NSError *error) {
+                  _endingSequence = [[[result objectForKey: @"update_seq"] description] copy];
+                  LogTo(Sync, @"Ending sequence = %@", _endingSequence);
+                  [self checkIfCaughtUp: _lastSequence];
+              }];
+    
     [_pendingSequences release];
     _pendingSequences = [[TDSequenceMap alloc] init];
     LogTo(SyncVerbose, @"%@ starting ChangeTracker with since=%@", self, _lastSequence);
-    _changeTracker = [[TDChangeTracker alloc]
-                                   initWithDatabaseURL: _remote
-                                                  mode: (_continuous ? kLongPoll :kOneShot)
-                                             conflicts: YES
-                                          lastSequence: _lastSequence
-                                                client: self];
+    // Always use continuous mode because it lets us parse and process changes one sequence at a
+    // time, instead of having to wait and parse the entire list as one JSON object.
+    _changeTracker = [[TDChangeTracker alloc] initWithDatabaseURL: _remote
+                                                             mode: kContinuous
+                                                        conflicts: YES
+                                                     lastSequence: _lastSequence
+                                                           client: self];
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
     [_changeTracker start];
@@ -107,6 +117,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 // Got a _changes feed entry from the TDChangeTracker.
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
     NSString* lastSequenceID = [[change objectForKey: @"seq"] description];
+    [self checkIfCaughtUp: lastSequenceID];
     NSString* docID = [change objectForKey: @"id"];
     if (!docID)
         return;
@@ -134,6 +145,15 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         }
     }
     self.changesTotal += changes.count;
+}
+
+
+- (void) checkIfCaughtUp: (NSString*)sequence {
+    if (!$equal(sequence, _endingSequence))
+        return;
+    LogTo(Sync, @"** Caught up, at sequence %@", _endingSequence);
+    if (!_continuous)
+        [_changeTracker stop];
 }
 
 

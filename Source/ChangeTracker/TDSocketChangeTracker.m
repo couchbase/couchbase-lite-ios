@@ -56,12 +56,13 @@ enum {
         OS X 10.6.7, the delegate never receives any notification of a response. The workaround
         is to act as a dumb HTTP parser and do the job ourselves. */
     
+    int port = _databaseURL.port.unsignedShortValue ?: 80;
 #if TARGET_OS_IPHONE
     CFReadStreamRef cfInputStream = NULL;
     CFWriteStreamRef cfOutputStream = NULL;
     CFStreamCreatePairWithSocketToHost(NULL,
                                        (CFStringRef)_databaseURL.host,
-                                       _databaseURL.port.intValue,
+                                       port,
                                        &cfInputStream, &cfOutputStream);
     if (!cfInputStream)
         return NO;
@@ -71,7 +72,7 @@ enum {
     NSInputStream* input;
     NSOutputStream* output;
     [NSStream getStreamsToHost: [NSHost hostWithName: _databaseURL.host]
-                          port: _databaseURL.port.intValue
+                          port: port
                    inputStream: &input outputStream: &output];
     if (!output)
         return NO;
@@ -106,6 +107,8 @@ enum {
         
         [_inputBuffer release];
         _inputBuffer = nil;
+        [_changeBuffer release];
+        _changeBuffer = nil;
         
         [super stop];
     }
@@ -120,23 +123,52 @@ enum {
 }
 
 
-- (BOOL) readLine {
-    const char* start = _inputBuffer.bytes;
-    const char* crlf = strnstr(start, "\r\n", _inputBuffer.length);
-    if (!crlf)
-        return NO;  // Wait till we have a complete line
-    ptrdiff_t lineLength = crlf - start;
-    NSString* line = [[[NSString alloc] initWithBytes: start
-                                               length: lineLength
-                                             encoding: NSUTF8StringEncoding] autorelease];
-    LogTo(ChangeTracker, @"%@: LINE: \"%@\"", self, line);
-    if (line) {
+- (BOOL) appendToChangeLine: (const void*)bytes length: (NSUInteger)length {
+    if (_changeBuffer)
+        [_changeBuffer appendBytes: bytes length: length];
+    else
+        _changeBuffer = [[NSMutableData alloc] initWithBytes: bytes length: length];
+    while (true) {
+        const void* start = _changeBuffer.bytes;
+        const void* eol = memchr(start, '\n', _changeBuffer.length);
+        if (!eol)
+            break;
+        NSData* line = [_changeBuffer subdataWithRange: NSMakeRange(0, eol-start)];
+        [_changeBuffer replaceBytesInRange: NSMakeRange(0, eol-start+1)
+                                withBytes: NULL length: 0];
+        // Finally! Parse the line as JSON:
+        if (![self receivedChunk: line])
+            return NO;
+    }
+    return YES;
+}
+
+
+- (void) readLines {
+    const char* pos = _inputBuffer.bytes;
+    const char* end = pos + _inputBuffer.length;
+    BOOL keepGoing = YES;
+    while (keepGoing && pos < end && _inputBuffer) {
+        const char* lineStart = pos;
+        const char* crlf = strnstr(pos, "\r\n", end-pos);
+        if (!crlf)
+            break;  // Wait till we have a complete line
+        ptrdiff_t lineLength = crlf - pos;
+        NSString* line = [[[NSString alloc] initWithBytes: pos
+                                                   length: lineLength
+                                                 encoding: NSUTF8StringEncoding] autorelease];
+        pos = crlf + 2;
+        LogTo(ChangeTracker, @"%@: LINE: \"%@\"", self, line);
+        if (!line) {
+            [self failUnparseable: @"invalid UTF-8"];
+            break;
+        }
+        
         switch (_state) {
             case kStateStatus: {
                 // Read the HTTP response status line:
-                if (![line hasPrefix: @"HTTP/1.1 200 "]) {
-                    return [self failUnparseable: line];
-                }
+                if (![line hasPrefix: @"HTTP/1.1 200 "])
+                    [self failUnparseable: line];
                 _state = kStateHeaders;
                 break;
             }
@@ -151,29 +183,25 @@ enum {
                     break;      // There's an empty line between chunks
                 NSScanner* scanner = [NSScanner scannerWithString: line];
                 unsigned chunkLength;
-                if (![scanner scanHexInt: &chunkLength]) 
-                    return [self failUnparseable: line];
-                if (_inputBuffer.length < (size_t)lineLength + 2 + chunkLength)
-                    return NO;     // Don't read the chunk till it's complete
-                
-                NSData* chunk = [_inputBuffer subdataWithRange: NSMakeRange(lineLength + 2,
-                                                                            chunkLength)];
-                [_inputBuffer replaceBytesInRange: NSMakeRange(0, lineLength + 2 + chunkLength)
-                                        withBytes: NULL length: 0];
-                // Finally! Send the line to the database to parse:
-                if ([self receivedChunk: chunk])
-                    return YES;
-                else 
-                    return [self failUnparseable: line];
+                if (![scanner scanHexInt: &chunkLength]) {
+                    [self failUnparseable: line];
+                    break;
+                }
+                if (pos + chunkLength > end) {
+                    keepGoing = NO;
+                    pos = lineStart;
+                    break;     // Don't read the chunk till it's complete
+                }
+                // Append the chunk to the current change line:
+                [self appendToChangeLine: pos length: chunkLength];
+                pos += chunkLength;
             }
         }
-    } else {
-        return [self failUnparseable: line];
     }
     
-    // Remove the parsed line:
-    [_inputBuffer replaceBytesInRange: NSMakeRange(0, lineLength + 2) withBytes: NULL length: 0];
-    return YES;
+    // Remove the parsed lines:
+    [_inputBuffer replaceBytesInRange: NSMakeRange(0, pos - (const char*)_inputBuffer.bytes)
+                            withBytes: NULL length: 0];
 }
 
 
@@ -190,6 +218,7 @@ enum {
 
 
 - (void) stream: (NSInputStream*)stream handleEvent: (NSStreamEvent)eventCode {
+    [[self retain] autorelease];  // Delegate calling -stop might otherwise dealloc me
     switch (eventCode) {
         case NSStreamEventHasSpaceAvailable: {
             LogTo(ChangeTracker, @"%@: HasSpaceAvailable %@", self, stream);
@@ -207,20 +236,19 @@ enum {
         case NSStreamEventHasBytesAvailable: {
             LogTo(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);
             while ([stream hasBytesAvailable]) {
-                uint8_t buffer[1024];
+                uint8_t buffer[8192];
                 NSInteger bytesRead = [stream read: buffer maxLength: sizeof(buffer)];
                 if (bytesRead > 0) {
                     [_inputBuffer appendBytes: buffer length: bytesRead];
                     LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
                 }
             }
-            while (_inputBuffer && [self readLine])
-                ;
+            [self readLines];
             break;
         }
         case NSStreamEventEndEncountered:
             LogTo(ChangeTracker, @"%@: EndEncountered %@", self, stream);
-            if (_inputBuffer.length > 0)
+            if (_inputBuffer.length > 0 || _changeBuffer.length > 0)
                 Warn(@"%@ connection closed with unparsed data in buffer", self);
             [self stop];
             break;

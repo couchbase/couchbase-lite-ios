@@ -16,6 +16,7 @@
 {
     @private
     TDChangeTracker* _changeTracker;
+    NSString* _endingSequence;
     TDSequenceMap* _pendingSequences;
     NSMutableArray* _revsToPull;
     NSMutableArray* _deletedRevsToPull;
