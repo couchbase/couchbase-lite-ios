@@ -239,7 +239,16 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                           PRAGMA user_version = 5";
         if (![self initialize: sql])
             return NO;
-        //dbVersion = 5;
+        dbVersion = 5;
+    }
+    
+    if (dbVersion < 6) {
+        // Version 6: enable Write-Ahead Log (WAL) <http://sqlite.org/wal.html>
+        NSString* sql = @"PRAGMA journal_mode=WAL; \
+                          PRAGMA user_version = 6";
+        if (![self initialize: sql])
+            return NO;
+        //dbVersion = 6;
     }
 
 #if DEBUG
