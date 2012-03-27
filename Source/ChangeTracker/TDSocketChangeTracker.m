@@ -25,7 +25,7 @@ enum {
     kStateChunks
 };
 
-#define kMaxRetries 7
+#define kMaxRetries 6
 
 
 @implementation TDSocketChangeTracker
@@ -69,9 +69,12 @@ enum {
     _trackingInput = (NSInputStream*)cfInputStream;
     _trackingOutput = (NSOutputStream*)cfOutputStream;
 #else
+    NSString* hostname = _databaseURL.host;
+    if ($equal(hostname, @"localhost"))     // for some reason connection fails if "localhost" used
+        hostname = @"127.0.0.1";
     NSInputStream* input;
     NSOutputStream* output;
-    [NSStream getStreamsToHost: [NSHost hostWithName: _databaseURL.host]
+    [NSStream getStreamsToHost: [NSHost hostWithName: hostname]
                           port: port
                    inputStream: &input outputStream: &output];
     if (!output)
@@ -94,22 +97,28 @@ enum {
 }
 
 
+- (void) clearConnection {
+    [_trackingInput close];
+    [_trackingInput release];
+    _trackingInput = nil;
+    
+    [_trackingOutput close];
+    [_trackingOutput release];
+    _trackingOutput = nil;
+    
+    [_inputBuffer release];
+    _inputBuffer = nil;
+    [_changeBuffer release];
+    _changeBuffer = nil;
+}
+
+
 - (void) stop {
     if (_trackingInput || _trackingOutput) {
         LogTo(ChangeTracker, @"%@: stop", self);
-        [_trackingInput close];
-        [_trackingInput release];
-        _trackingInput = nil;
-        
-        [_trackingOutput close];
-        [_trackingOutput release];
-        _trackingOutput = nil;
-        
-        [_inputBuffer release];
-        _inputBuffer = nil;
-        [_changeBuffer release];
-        _changeBuffer = nil;
-        
+        [self clearConnection];
+        [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(start)
+                                                   object: nil];
         [super stop];
     }
 }
@@ -206,12 +215,13 @@ enum {
 
 
 - (void) errorOccurred: (NSError*)error {
-    [self stop];
     if (++_retryCount <= kMaxRetries) {
+        [self clearConnection];
         NSTimeInterval retryDelay = 0.2 * (1 << (_retryCount-1));
         [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
     } else {
         Warn(@"%@: Can't connect, giving up: %@", self, error);
+        [self stop];
         self.error = error;
     }
 }
@@ -235,14 +245,18 @@ enum {
         }
         case NSStreamEventHasBytesAvailable: {
             LogTo(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);
-            while ([stream hasBytesAvailable]) {
+            uint8_t* buffer;
+            NSUInteger bufferLength;
+            NSInteger bytesRead;
+            if ([stream getBuffer: &buffer length: &bufferLength]) {
+                [_inputBuffer appendBytes: buffer length: bufferLength];
+                bytesRead = bufferLength;
+            } else {
                 uint8_t buffer[8192];
-                NSInteger bytesRead = [stream read: buffer maxLength: sizeof(buffer)];
-                if (bytesRead > 0) {
-                    [_inputBuffer appendBytes: buffer length: bytesRead];
-                    LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
-                }
+                bytesRead = [stream read: buffer maxLength: sizeof(buffer)];
+                [_inputBuffer appendBytes: buffer length: bytesRead];
             }
+            LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
             [self readLines];
             break;
         }
