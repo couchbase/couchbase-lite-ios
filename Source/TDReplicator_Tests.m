@@ -66,6 +66,7 @@ static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push,
             break;
     }
     CAssert(!repl.running);
+    CAssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     return repl.lastSequence;
 }

@@ -117,34 +117,34 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 // Got a _changes feed entry from the TDChangeTracker.
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
     NSString* lastSequenceID = [[change objectForKey: @"seq"] description];
-    [self checkIfCaughtUp: lastSequenceID];
     NSString* docID = [change objectForKey: @"id"];
-    if (!docID)
-        return;
-    if (![TDDatabase isValidDocumentID: docID]) {
-        Warn(@"%@: Received invalid doc ID from _changes: %@", self, change);
-        return;
-    }
-    BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
-    NSArray* changes = $castIf(NSArray, [change objectForKey: @"changes"]);
-    for (NSDictionary* changeDict in changes) {
-        @autoreleasepool {
-            // Push each revision info to the inbox
-            NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
-            if (!revID)
-                continue;
-            TDPulledRevision* rev = [[TDPulledRevision alloc] initWithDocID: docID revID: revID
-                                                                    deleted: deleted];
-            // Remember its remote sequence ID (opaque), and make up a numeric sequence based
-            // on the order in which it appeared in the _changes feed:
-            rev.remoteSequenceID = lastSequenceID;
-            if (changes.count > 1)
-                rev.conflicted = true;
-            [self addToInbox: rev];
-            [rev release];
+    if (docID) {
+        if ([TDDatabase isValidDocumentID: docID]) {
+            BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
+            NSArray* changes = $castIf(NSArray, [change objectForKey: @"changes"]);
+            for (NSDictionary* changeDict in changes) {
+                @autoreleasepool {
+                    // Push each revision info to the inbox
+                    NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
+                    if (!revID)
+                        continue;
+                    TDPulledRevision* rev = [[TDPulledRevision alloc] initWithDocID: docID revID: revID
+                                                                            deleted: deleted];
+                    // Remember its remote sequence ID (opaque), and make up a numeric sequence based
+                    // on the order in which it appeared in the _changes feed:
+                    rev.remoteSequenceID = lastSequenceID;
+                    if (changes.count > 1)
+                        rev.conflicted = true;
+                    [self addToInbox: rev];
+                    [rev release];
+                }
+                self.changesTotal += changes.count;
+            }
+        } else {
+            Warn(@"%@: Received invalid doc ID from _changes: %@", self, change);
         }
     }
-    self.changesTotal += changes.count;
+    [self checkIfCaughtUp: lastSequenceID];
 }
 
 

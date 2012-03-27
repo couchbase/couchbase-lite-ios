@@ -137,7 +137,7 @@ enum {
         [_changeBuffer appendBytes: bytes length: length];
     else
         _changeBuffer = [[NSMutableData alloc] initWithBytes: bytes length: length];
-    while (true) {
+    while (_changeBuffer) {                 // abort loop if delegate calls -stop on me!
         const void* start = _changeBuffer.bytes;
         const void* eol = memchr(start, '\n', _changeBuffer.length);
         if (!eol)
