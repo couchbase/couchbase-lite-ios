@@ -254,7 +254,9 @@ enum {
             } else {
                 uint8_t buffer[8192];
                 bytesRead = [stream read: buffer maxLength: sizeof(buffer)];
-                [_inputBuffer appendBytes: buffer length: bytesRead];
+                if (bytesRead > 0) {
+                    [_inputBuffer appendBytes: buffer length: bytesRead];
+                }
             }
             LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
             [self readLines];
