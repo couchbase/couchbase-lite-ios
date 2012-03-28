@@ -104,6 +104,9 @@ TestCase(TDRouter_Server) {
     Send(server, @"GET", @"/BadName", 400, nil);
     Send(server, @"PUT", @"/", 400, nil);
     Send(server, @"POST", @"/", 400, nil);
+    
+    NSDictionary* session = Send(server, @"GET", @"/_session", 200, nil);
+    CAssert([session objectForKey: @"ok"]);
     [server close];
 }
 

@@ -178,6 +178,16 @@
 }
 
 
+- (TDStatus) do_GET_session {
+    // Even though TouchDB doesn't support user logins, it implements a generic response to the
+    // CouchDB _session API, so that apps that call it (such as Futon!) won't barf.
+    _response.bodyObject = $dict({@"ok", $true},
+                                 {@"userCtx", $dict({@"name", $null},
+                                                    {@"roles", $array(@"_admin")})});
+    return 200;
+}
+
+
 #pragma mark - DATABASE REQUESTS:
 
 
