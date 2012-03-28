@@ -104,8 +104,10 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 - (void) beginReplicating;
 - (void) addToInbox: (TDRevision*)rev;
 - (void) processInbox: (TDRevisionList*)inbox;  // override this
-- (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
-             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
+- (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
+                                     path: (NSString*)relativePath
+                                     body: (id)body
+                             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;

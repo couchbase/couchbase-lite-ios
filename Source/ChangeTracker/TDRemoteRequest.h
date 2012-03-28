@@ -27,11 +27,15 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
     TDRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
     UInt8 _retryCount;
+    bool _dontLog404;
 }
 
 /** Creates and starts a request; when finished, the onCompletion block will be called. */
 - (id) initWithMethod: (NSString*)method URL: (NSURL*)url body: (id)body
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
+
+/** In some cases a 404 Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
+- (void) dontLog404;
 
 // protected:
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;

@@ -47,6 +47,11 @@
 }
 
 
+- (void) dontLog404 {
+    _dontLog404 = true;
+}
+
+
 - (void) start {
     Assert(!_connection);
     _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
@@ -114,7 +119,10 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    Log(@"%@: Got error %@", self, error);
+    if (WillLog()) {
+        if (!(_dontLog404 && error.code == 404 && $equal(error.domain, TDHTTPErrorDomain)))
+            Log(@"%@: Got error %@", self, error);
+    }
     [self clearConnection];
     [self respondWithResult: nil error: error];
 }

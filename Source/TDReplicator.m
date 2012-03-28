@@ -291,17 +291,18 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
-- (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
-             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
+- (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
+                                     path: (NSString*)relativePath
+                                     body: (id)body
+                             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
     LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSURL* url = [NSURL URLWithString: urlStr];
-    TDRemoteJSONRequest* request = [[TDRemoteJSONRequest alloc] initWithMethod: method
-                                                                   URL: url
-                                                                  body: body
-                                                          onCompletion: onCompletion];
-    [request autorelease];
+    return [[[TDRemoteJSONRequest alloc] initWithMethod: method
+                                                    URL: url
+                                                   body: body
+                                           onCompletion: onCompletion] autorelease];
 }
 
 
@@ -327,10 +328,11 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     NSString* localLastSequence = [_db lastSequenceWithRemoteURL: _remote push: self.isPush];
     
     [self asyncTaskStarted];
-    [self sendAsyncRequest: @"GET"
-                      path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
-                      body: nil
-              onCompletion: ^(id response, NSError* error) {
+    TDRemoteJSONRequest* request = 
+        [self sendAsyncRequest: @"GET"
+                          path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
+                          body: nil
+                  onCompletion: ^(id response, NSError* error) {
                   // Got the response:
                   if (error && error.code != 404) {
                       self.error = error;
@@ -354,6 +356,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                   [self asyncTasksFinished: 1];
           }
      ];
+    [request dontLog404];
 }
 
 
