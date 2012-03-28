@@ -619,10 +619,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    //OPT: This gets the JSON body too, which is a waste. Could add a kNoBody option?
     TDRevision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
-                                    options: 0];
+                                    options: kTDNoBody];        // all we need is revID & sequence
     if (!rev)
         return 404;
     if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET

@@ -517,23 +517,30 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
                           options: (TDContentOptions)options
 {
     TDRevision* result = nil;
-    NSString* sql;
+    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence"];
+    if (!(options & kTDNoBody))
+        [sql appendString: @", json"];
     if (revID)
-        sql = @"SELECT revid, deleted, json, sequence FROM revs, docs "
-               "WHERE docs.docid=? AND revs.doc_id=docs.doc_id AND revid=? LIMIT 1";
+        [sql appendString: @" FROM revs, docs "
+               "WHERE docs.docid=? AND revs.doc_id=docs.doc_id AND revid=? LIMIT 1"];
     else
-        sql = @"SELECT revid, deleted, json, sequence FROM revs, docs "
+        [sql appendString: @" FROM revs, docs "
                "WHERE docs.docid=? AND revs.doc_id=docs.doc_id and current=1 and deleted=0 "
-               "ORDER BY revid DESC LIMIT 1";
+               "ORDER BY revid DESC LIMIT 1"];
     FMResultSet *r = [_fmdb executeQuery: sql, docID, revID];
     if ([r next]) {
         if (!revID)
             revID = [r stringForColumnIndex: 0];
         BOOL deleted = [r boolForColumnIndex: 1];
-        NSData* json = [r dataNoCopyForColumnIndex: 2];
         result = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted] autorelease];
-        result.sequence = [r longLongIntForColumnIndex: 3];
-        [self expandStoredJSON: json intoRevision: result options: options];
+        result.sequence = [r longLongIntForColumnIndex: 2];
+        
+        if (options != kTDNoBody) {
+            NSData* json = nil;
+            if (!(options & kTDNoBody))
+                json = [r dataNoCopyForColumnIndex: 3];
+            [self expandStoredJSON: json intoRevision: result options: options];
+        }
     }
     [r close];
     return result;
@@ -541,8 +548,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 
 
 - (BOOL) existsDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
-    return [self getDocumentWithID: docID revisionID: revID options: 0] != nil;
-    //OPT: Do this without loading the data
+    return [self getDocumentWithID: docID revisionID: revID options: kTDNoBody] != nil;
 }
 
 

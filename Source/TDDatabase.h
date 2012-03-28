@@ -34,7 +34,8 @@ enum {
     kTDIncludeRevsInfo = 8,                 // adds '_revs_info' property
     kTDIncludeLocalSeq = 16,                // adds '_local_seq' property
     kTDLeaveAttachmentsEncoded = 32,        // i.e. don't decode
-    kTDBigAttachmentsFollow = 64            // i.e. add 'follows' key instead of data for big ones
+    kTDBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
+    kTDNoBody = 128                         // omit regular doc body properties
 };
 
 
