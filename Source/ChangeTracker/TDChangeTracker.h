@@ -70,6 +70,7 @@ typedef enum TDChangeTrackerMode {
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly) NSString* changesFeedPath;
 - (void) setUpstreamError: (NSString*)message;
+- (BOOL) receivedChange: (NSDictionary*)change;
 - (BOOL) receivedChunk: (NSData*)chunk;
 - (BOOL) receivedPollResponse: (NSData*)body;
 - (void) stopped; // override this
