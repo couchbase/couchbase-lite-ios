@@ -153,7 +153,7 @@
 - (BOOL) receivedChunk: (NSData*)chunk {
     LogTo(ChangeTracker, @"CHUNK: %@ %@", self, [chunk my_UTF8ToString]);
     if (chunk.length > 1) {
-        id change = [NSJSONSerialization JSONObjectWithData: chunk options: 0 error: nil];
+        id change = [TDJSON JSONObjectWithData: chunk options: 0 error: nil];
         if (![self receivedChange: change]) {
             Warn(@"Received unparseable change line from server: %@", [chunk my_UTF8ToString]);
             return NO;
@@ -165,7 +165,7 @@
 - (BOOL) receivedPollResponse: (NSData*)body {
     if (!body)
         return NO;
-    id changeObj = [NSJSONSerialization JSONObjectWithData: body options: 0 error: nil];
+    id changeObj = [TDJSON JSONObjectWithData: body options: 0 error: nil];
     NSDictionary* changeDict = $castIf(NSDictionary, changeObj);
     NSArray* changes = $castIf(NSArray, [changeDict objectForKey: @"results"]);
     if (!changes)

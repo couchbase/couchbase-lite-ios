@@ -52,6 +52,9 @@
 		2711CE0314C759BD00505D55 /* TDDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2711CE0414C759BD00505D55 /* TDDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2711CE1414C75B6E00505D55 /* TDDatabase+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		272B85141523691700A90CB2 /* TDJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* TDJSON.h */; };
+		272B85151523691700A90CB2 /* TDJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 272B85131523691700A90CB2 /* TDJSON.m */; };
+		272B85161523691700A90CB2 /* TDJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 272B85131523691700A90CB2 /* TDJSON.m */; };
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
@@ -399,6 +402,8 @@
 		2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TDDatabase+Insertion.h"; sourceTree = "<group>"; };
 		2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TDDatabase+Replication.h"; sourceTree = "<group>"; };
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
+		272B85121523691700A90CB2 /* TDJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDJSON.h; sourceTree = "<group>"; };
+		272B85131523691700A90CB2 /* TDJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDJSON.m; sourceTree = "<group>"; };
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
 		274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmptyAppDelegate.m; sourceTree = "<group>"; };
 		274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TDDatabase+Attachments.m"; sourceTree = "<group>"; };
@@ -976,6 +981,8 @@
 			isa = PBXGroup;
 			children = (
 				279EB2D01491442500E74185 /* TDInternal.h */,
+				272B85121523691700A90CB2 /* TDJSON.h */,
+				272B85131523691700A90CB2 /* TDJSON.m */,
 				27B0B79C1492932700A817AD /* TDBase64.h */,
 				27B0B79D1492932700A817AD /* TDBase64.m */,
 				279EB2D91491C34300E74185 /* TDCollateJSON.h */,
@@ -1218,6 +1225,7 @@
 				27C40C7914EC58BC00994283 /* TDReplicatorManager.h in Headers */,
 				279C7E2E14F424090004A1E8 /* TDSequenceMap.h in Headers */,
 				2751D4E4151BAE7000F7FD57 /* TDDatabaseManager.h in Headers */,
+				272B85141523691700A90CB2 /* TDJSON.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1739,6 +1747,7 @@
 				27C40C7A14EC58BC00994283 /* TDReplicatorManager.m in Sources */,
 				279C7E2F14F424090004A1E8 /* TDSequenceMap.m in Sources */,
 				2751D4E5151BAE7000F7FD57 /* TDDatabaseManager.m in Sources */,
+				272B85151523691700A90CB2 /* TDJSON.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1841,6 +1850,7 @@
 				27C40C7B14EC58BC00994283 /* TDReplicatorManager.m in Sources */,
 				279C7E3014F424090004A1E8 /* TDSequenceMap.m in Sources */,
 				2751D4E6151BAE7000F7FD57 /* TDDatabaseManager.m in Sources */,
+				272B85161523691700A90CB2 /* TDJSON.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

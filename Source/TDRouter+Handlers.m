@@ -431,8 +431,8 @@
 
 - (void) sendContinuousChange: (TDRevision*)rev {
     NSDictionary* changeDict = [self changeDictForRev: rev];
-    NSMutableData* json = [[NSJSONSerialization dataWithJSONObject: changeDict
-                                                           options: 0 error: nil] mutableCopy];
+    NSMutableData* json = [[TDJSON dataWithJSONObject: changeDict
+                                              options: 0 error: nil] mutableCopy];
     [json appendBytes: "\n" length: 1];
     if (_onDataAvailable)
         _onDataAvailable(json, NO);
@@ -540,9 +540,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (!queryStr)
         return nil;
     NSData* queryData = [queryStr dataUsingEncoding: NSUTF8StringEncoding];
-    return $castIfArrayOf(NSString, [NSJSONSerialization JSONObjectWithData: queryData
-                                                                    options: 0
-                                                                      error: nil]);
+    return $castIfArrayOf(NSString, [TDJSON JSONObjectWithData: queryData
+                                                       options: 0
+                                                         error: nil]);
 }
 
 

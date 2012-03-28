@@ -403,7 +403,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     if (!dict.count)
         return json;
-    NSData* extraJson = [NSJSONSerialization dataWithJSONObject: dict options:0 error:nil];
+    NSData* extraJson = [TDJSON dataWithJSONObject: dict options:0 error:nil];
     if (!extraJson)
         return nil;
     size_t jsonLength = json.length;
@@ -504,8 +504,8 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
     [rev release];
     if (json==nil || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
         return extra;      // optimization, and workaround for issue #44
-    NSMutableDictionary* docProperties = [NSJSONSerialization JSONObjectWithData: json
-                                                            options: NSJSONReadingMutableContainers
+    NSMutableDictionary* docProperties = [TDJSON JSONObjectWithData: json
+                                                            options: TDJSONReadingMutableContainers
                                                               error: nil];
     [docProperties addEntriesFromDictionary: extra];
     return docProperties;

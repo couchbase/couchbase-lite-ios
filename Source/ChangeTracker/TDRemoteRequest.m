@@ -148,7 +148,7 @@
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
     [request setValue: @"application/json" forHTTPHeaderField: @"Accept"];
     if (body) {
-        request.HTTPBody = [NSJSONSerialization dataWithJSONObject: body options: 0 error: nil];
+        request.HTTPBody = [TDJSON dataWithJSONObject: body options: 0 error: nil];
         [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
     }
 }
@@ -169,7 +169,7 @@
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     id result = nil;
     if (_jsonBuffer)
-        result = [NSJSONSerialization JSONObjectWithData: _jsonBuffer options: 0 error:nil];
+        result = [TDJSON JSONObjectWithData: _jsonBuffer options: 0 error:nil];
     NSError* error = nil;
     if (!result) {
         Warn(@"%@: %@ %@ returned unparseable data '%@'",

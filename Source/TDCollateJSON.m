@@ -264,11 +264,10 @@ int TDCollateJSON(void *context,
 #if DEBUG
 // encodes an object to a C string in JSON format. JSON fragments are allowed.
 static const char* encode(id obj) {
-    NSArray* wrapped = $array(obj);
-    NSData* data = [NSJSONSerialization dataWithJSONObject: wrapped options: 0 error: nil];
-    CAssert(data);
-    data = [data subdataWithRange: NSMakeRange(1, data.length-2)];  // strip the brackets
-    return [[data my_UTF8ToString] UTF8String];
+    NSString* str = [TDJSON stringWithJSONObject: obj
+                                         options: TDJSONWritingAllowFragments error: nil];
+    CAssert(str);
+    return [str UTF8String];
 }
 
 static void testEscape(const char* source, char decoded) {
@@ -353,7 +352,7 @@ TestCase(TDCollateNestedArrays) {
 }
 
 TestCase(TDCollateUnicodeStrings) {
-    // Make sure that NSJSONSerialization never creates escape sequences we can't parse.
+    // Make sure that TDJSON never creates escape sequences we can't parse.
     // That includes "\unnnn" for non-ASCII chars, and "\t", "\b", etc.
     RequireTestCase(TDCollateConvertEscape);
     void* mode = kTDCollateJSON_Unicode;

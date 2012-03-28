@@ -134,25 +134,18 @@ static id<TDViewCompiler> sCompiler;
 static NSString* toJSONString( id object ) {
     if (!object)
         return nil;
-    // NSJSONSerialization won't write fragments, so if I get one wrap it in an array first:
-    BOOL wrapped = NO;
-    if (![object isKindOfClass: [NSDictionary class]] && ![object isKindOfClass: [NSArray class]]) {
-        wrapped = YES;
-        object = $array(object);
-    }
-    NSData* json = [NSJSONSerialization dataWithJSONObject: object options: 0 error: nil];
-    if (wrapped)
-        json = [json subdataWithRange: NSMakeRange(1, json.length - 2)];
-    return [json my_UTF8ToString];
+    return [TDJSON stringWithJSONObject: object
+                                options: TDJSONWritingAllowFragments
+                                  error: nil];
 }
 
 
 static id fromJSON( NSData* json ) {
     if (!json)
         return nil;
-    return [NSJSONSerialization JSONObjectWithData: json 
-                                           options: NSJSONReadingAllowFragments
-                                             error: nil];
+    return [TDJSON JSONObjectWithData: json 
+                              options: TDJSONReadingAllowFragments
+                                error: nil];
 }
 
 

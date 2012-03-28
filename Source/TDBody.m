@@ -57,7 +57,7 @@
 - (BOOL) isValidJSON {
     // Yes, this is just like asObject except it doesn't warn.
     if (!_object && !_error) {
-        _object = [[NSJSONSerialization JSONObjectWithData: _json options: 0 error: nil] copy];
+        _object = [[TDJSON JSONObjectWithData: _json options: 0 error: nil] copy];
         if (!_object) {
             _error = YES;
         }
@@ -67,7 +67,7 @@
 
 - (NSData*) asJSON {
     if (!_json && !_error) {
-        _json = [[NSJSONSerialization dataWithJSONObject: _object options: 0 error: nil] copy];
+        _json = [[TDJSON dataWithJSONObject: _object options: 0 error: nil] copy];
         if (!_json) {
             Warn(@"TDBody: couldn't convert to JSON");
             _error = YES;
@@ -79,9 +79,9 @@
 - (NSData*) asPrettyJSON {
     id props = self.asObject;
     if (props) {
-        NSData* json = [NSJSONSerialization dataWithJSONObject: props
-                                                       options: NSJSONWritingPrettyPrinted
-                                                         error: nil];
+        NSData* json = [TDJSON dataWithJSONObject: props
+                                          options: TDJSONWritingPrettyPrinted
+                                            error: nil];
         if (json) {
             NSMutableData* mjson = [[json mutableCopy] autorelease];
             [mjson appendBytes: "\n" length: 1];
@@ -98,7 +98,7 @@
 - (id) asObject {
     if (!_object && !_error) {
         NSError* error = nil;
-        _object = [[NSJSONSerialization JSONObjectWithData: _json options: 0 error: &error] copy];
+        _object = [[TDJSON JSONObjectWithData: _json options: 0 error: &error] copy];
         if (!_object) {
             Warn(@"TDBody: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
             _error = YES;

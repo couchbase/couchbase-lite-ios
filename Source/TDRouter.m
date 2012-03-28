@@ -122,9 +122,9 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
     NSString* value = [self query: param];
     if (!value)
         return nil;
-    id result = [NSJSONSerialization
-                            JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
-                                       options: NSJSONReadingAllowFragments error: outError];
+    id result = [TDJSON JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
+                                   options: TDJSONReadingAllowFragments
+                                     error: outError];
     if (!result)
         Warn(@"TDRouter: invalid JSON in query param ?%@=%@", param, value);
     return result;
@@ -139,8 +139,8 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 
 
 - (NSDictionary*) bodyAsDictionary {
-    return $castIf(NSDictionary, [NSJSONSerialization JSONObjectWithData: _request.HTTPBody
-                                                                 options: 0 error: nil]);
+    return $castIf(NSDictionary, [TDJSON JSONObjectWithData: _request.HTTPBody
+                                                    options: 0 error: nil]);
 }
 
 
@@ -470,7 +470,7 @@ static NSArray* splitPath( NSURL* url ) {
                                                                       boundary: nil];
     for (id part in parts) {
         if (![part isKindOfClass: [NSData class]]) {
-            part = [NSJSONSerialization dataWithJSONObject: part options: 0 error: nil];
+            part = [TDJSON dataWithJSONObject: part options: 0 error: nil];
             [mp setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
         }
         [mp addData: part];

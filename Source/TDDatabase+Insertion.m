@@ -144,7 +144,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     }
     
     NSError* error;
-    NSData* json = [NSJSONSerialization dataWithJSONObject: properties options:0 error: &error];
+    NSData* json = [TDJSON dataWithJSONObject: properties options:0 error: &error];
     [properties release];
     Assert(json, @"Unable to serialize %@ to JSON: %@", rev, error);
     return json;

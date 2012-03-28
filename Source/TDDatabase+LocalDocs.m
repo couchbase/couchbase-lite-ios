@@ -38,9 +38,9 @@
         if (json.length==0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
             properties = $mdict();      // workaround for issue #44
         else {
-            properties = [NSJSONSerialization JSONObjectWithData: json
-                                                         options:NSJSONReadingMutableContainers
-                                                           error: nil];
+            properties = [TDJSON JSONObjectWithData: json
+                                            options:TDJSONReadingMutableContainers
+                                              error: nil];
             if (!properties)
                 return nil;
         }

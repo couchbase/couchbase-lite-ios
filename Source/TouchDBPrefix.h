@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "TDJSON.h"
+
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "Test.h"
