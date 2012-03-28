@@ -88,15 +88,6 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 }
 
 
-/** Maps a document ID to a numeric ID (row # in 'docs'), creating a new row if needed. */
-- (SInt64) getOrInsertDocNumericID: (NSString*)docID {
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID == 0)
-        docNumericID = [self insertDocumentID: docID];
-    return docNumericID;
-}
-
-
 /** Extracts the history of revision IDs (in reverse chronological order) from the _revisions key */
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties {
     NSDictionary* revisions = $castIf(NSDictionary,
@@ -376,14 +367,21 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     BOOL success = NO;
     [self beginTransaction];
     @try {
-        // First look up all locally-known revisions of this document:
-        SInt64 docNumericID = [self getOrInsertDocNumericID: docID];
-        TDRevisionList* localRevs = [self getAllRevisionsOfDocumentID: docID
-                                                            numericID: docNumericID
-                                                          onlyCurrent: NO];
-        if (!localRevs)
-            return 500;
-        
+        // First look up the document's row-id and all locally-known revisions of it:
+        TDRevisionList* localRevs = nil;
+        SInt64 docNumericID = [self getDocNumericID: docID];
+        if (docNumericID > 0) {
+            localRevs = [self getAllRevisionsOfDocumentID: docID
+                                                numericID: docNumericID
+                                              onlyCurrent: NO];
+            if (!localRevs)
+                return 500;
+        } else {
+            docNumericID = [self insertDocumentID: docID];
+            if (docNumericID <= 0)
+                return 500;
+        }
+
         // Validate against the latest common ancestor:
         if (_validations.count > 0) {
             TDRevision* oldRev = nil;
