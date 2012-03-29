@@ -20,16 +20,20 @@
 #import "MYBlockUtils.h"
 
 
+// Values of _state:
 enum {
     kStateStatus,
     kStateHeaders,
-    kStateChunks
+    kStateChunks,
 };
 
 #define kMaxRetries 6
+#define kInitialRetryDelay 0.2
+#define kReadLength 8192u
 
 
 @implementation TDSocketChangeTracker
+
 
 - (BOOL) start {
     NSAssert(!_trackingInput, @"Already started");
@@ -85,8 +89,9 @@ enum {
 #endif
     
     _state = kStateStatus;
+    _atEOF = _inputAvailable = _parsing = false;
     
-    _inputBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
+    _inputBuffer = [[NSMutableData alloc] initWithCapacity: kReadLength];
     
     [_trackingOutput setDelegate: self];
     [_trackingOutput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
@@ -119,7 +124,7 @@ enum {
         LogTo(ChangeTracker, @"%@: stop", self);
         [self clearConnection];
         [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(start)
-                                                   object: nil];
+                                                   object: nil];    // cancel pending retries
         [super stop];
     }
 }
@@ -262,8 +267,11 @@ enum {
                 [self stop];
             }
             
+            // Read more data if there is any, or stop if stream's at EOF:
             if (_inputAvailable)
                 [self readFromInput];
+            else if (_atEOF)
+                [self stop];
         });
     }];
 }
@@ -284,7 +292,7 @@ enum {
         [_inputBuffer appendBytes: buffer length: bufferLength];
         bytesRead = bufferLength;
     } else {
-        uint8_t buffer[8192];
+        uint8_t buffer[kReadLength];
         bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
         if (bytesRead > 0)
             [_inputBuffer appendBytes: buffer length: bytesRead];
@@ -297,7 +305,7 @@ enum {
 - (void) errorOccurred: (NSError*)error {
     if (++_retryCount <= kMaxRetries) {
         [self clearConnection];
-        NSTimeInterval retryDelay = 0.2 * (1 << (_retryCount-1));
+        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << (_retryCount-1));
         [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
     } else {
         Warn(@"%@: Can't connect, giving up: %@", self, error);
@@ -333,9 +341,9 @@ enum {
         }
         case NSStreamEventEndEncountered:
             LogTo(ChangeTracker, @"%@: EndEncountered %@", self, stream);
-            if (_inputBuffer.length > 0 || _changeBuffer.length > 0)
-                Warn(@"%@ connection closed with unparsed data in buffer", self);
-            [self stop];
+            _atEOF = true;
+            if (!_parsing)
+                [self stop];
             break;
         case NSStreamEventErrorOccurred:
             LogTo(ChangeTracker, @"%@: ErrorOccurred %@: %@", self, stream, stream.streamError);

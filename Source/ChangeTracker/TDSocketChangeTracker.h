@@ -23,5 +23,6 @@
     int _state;
     bool _parsing;
     bool _inputAvailable;
+    bool _atEOF;
 }
 @end
