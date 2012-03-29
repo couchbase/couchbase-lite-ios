@@ -73,4 +73,30 @@
 }
 
 
++ (NSData*) appendDictionary: (NSDictionary*)dict
+        toJSONDictionaryData: (NSData*)json
+{
+    if (!dict.count)
+        return json;
+    NSData* extraJson = [self dataWithJSONObject: dict options: 0 error: nil];
+    if (!extraJson)
+        return nil;
+    size_t jsonLength = json.length;
+    size_t extraLength = extraJson.length;
+    CAssert(jsonLength >= 2);
+    CAssertEq(*(const char*)json.bytes, '{');
+    if (jsonLength == 2)  // Original JSON was empty
+        return extraJson;
+    NSMutableData* newJson = [NSMutableData dataWithLength: jsonLength + extraLength - 1];
+    if (!newJson)
+        return nil;
+    uint8_t* dst = newJson.mutableBytes;
+    memcpy(dst, json.bytes, jsonLength - 1);                          // Copy json w/o trailing '}'
+    dst += jsonLength - 1;
+    *dst++ = ',';                                                     // Add a ','
+    memcpy(dst, (const uint8_t*)extraJson.bytes + 1, extraLength - 1);  // Add "extra" after '{'
+    return newJson;
+}
+
+
 @end

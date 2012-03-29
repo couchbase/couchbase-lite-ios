@@ -42,9 +42,6 @@ typedef NSUInteger TDJSONWritingOptions;
 #if USE_NSJSON
 
 @interface TDJSON : NSJSONSerialization
-+ (NSString*) stringWithJSONObject:(id)obj
-                           options:(TDJSONWritingOptions)opt
-                             error:(NSError **)error;
 @end
 
 #else
@@ -53,12 +50,23 @@ typedef NSUInteger TDJSONWritingOptions;
 + (NSData *)dataWithJSONObject:(id)obj
                        options:(TDJSONWritingOptions)opt
                          error:(NSError **)error;
-+ (NSString*) stringWithJSONObject:(id)obj
-                           options:(TDJSONWritingOptions)opt
-                             error:(NSError **)error;
 + (id)JSONObjectWithData:(NSData *)data
                  options:(TDJSONReadingOptions)opt
                    error:(NSError **)error;
 @end
 
 #endif // USE_NSJSON
+
+
+@interface TDJSON (Extensions)
+/** Same as -dataWithJSONObject... but returns an NSString. */
++ (NSString*) stringWithJSONObject:(id)obj
+                           options:(TDJSONWritingOptions)opt
+                             error:(NSError **)error;
+
+/** Given valid JSON data representing a dictionary, inserts the contents of the given NSDictionary into it and returns the resulting JSON data.
+    This does not parse or regenerate the JSON, so it's quite fast.
+    But it will generate invalid JSON if the input JSON begins or ends with whitespace, or if the dictionary contains any keys that are already in the original JSON. */
++ (NSData*) appendDictionary: (NSDictionary*)dict
+        toJSONDictionaryData: (NSData*)json;
+@end

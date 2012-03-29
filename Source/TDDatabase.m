@@ -399,31 +399,6 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-/** Splices the contents of an NSDictionary into JSON data (that already represents a dict), without parsing the JSON. */
-static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
-    if (!dict.count)
-        return json;
-    NSData* extraJson = [TDJSON dataWithJSONObject: dict options:0 error:nil];
-    if (!extraJson)
-        return nil;
-    size_t jsonLength = json.length;
-    size_t extraLength = extraJson.length;
-    CAssert(jsonLength >= 2);
-    CAssertEq(*(const char*)json.bytes, '{');
-    if (jsonLength == 2)  // Original JSON was empty
-        return extraJson;
-    NSMutableData* newJson = [NSMutableData dataWithLength: jsonLength + extraLength - 1];
-    if (!newJson)
-        return nil;
-    uint8_t* dst = newJson.mutableBytes;
-    memcpy(dst, json.bytes, jsonLength - 1);                          // Copy json w/o trailing '}'
-    dst += jsonLength - 1;
-    *dst++ = ',';                                                     // Add a ','
-    memcpy(dst, (const uint8_t*)extraJson.bytes + 1, extraLength - 1);  // Add "extra" after '{'
-    return newJson;
-}
-
-
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
     Rev must already have its revID and sequence properties set. */
 - (NSDictionary*) extraPropertiesForRevision: (TDRevision*)rev options: (TDContentOptions)options
@@ -486,7 +461,7 @@ static NSData* appendDictToJSON(NSData* json, NSDictionary* dict) {
 {
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
     if (json)
-        rev.asJSON = appendDictToJSON(json, extra);
+        rev.asJSON = [TDJSON appendDictionary: extra toJSONDictionaryData: json];
     else
         rev.properties = extra;
 }

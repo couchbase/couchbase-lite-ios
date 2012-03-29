@@ -112,7 +112,8 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
     if (!sSpecialKeysToRemove) {
         sSpecialKeysToRemove = [[NSSet alloc] initWithObjects: @"_id", @"_rev", @"_attachments",
-            @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts", nil];
+            @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts",
+            @"_local_seq", nil];
         sSpecialKeysToLeave = [[NSSet alloc] initWithObjects:
             @"_replication_id", @"_replication_state", @"_replication_state_time", nil];
     }
