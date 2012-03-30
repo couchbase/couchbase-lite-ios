@@ -169,6 +169,7 @@
 
 
 - (BOOL) isDone {
+    LogTo(TDListenerVerbose, @"%@ answers isDone=%d", self, _finished);
     return _finished;
 }
 
@@ -187,7 +188,7 @@
         _router.onDataAvailable = nil;
         _router.onFinished = nil;
 
-        if (_chunked) {
+        if (_chunked && _offset > 0) {
             [_connection responseHasAvailableData: self];
         } else {
             // Response finished immediately, before the connection asked for any data, so we're free
@@ -205,9 +206,9 @@
                 }
                 NSString* responseStr = [NSString stringWithFormat: @"{\"status\": %i, \"error\":\"%@\"}\n",
                                                                      status, errorMsg];
+                [_response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];
                 [self onDataAvailable: [responseStr dataUsingEncoding: NSUTF8StringEncoding]
                              finished: NO];
-                [_response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];
             } else {
     #if DEBUG
                 BOOL pretty = YES;
