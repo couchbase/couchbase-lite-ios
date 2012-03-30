@@ -41,6 +41,7 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 
 @interface TDDatabase (Attachments_Internal)
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
+- (TDBlobStoreWriter*) attachmentWriterForAttachment: (NSDictionary*)attachment;
 - (NSData*) keyForAttachment: (NSData*)contents;
 - (TDStatus) insertAttachmentWithKey: (NSData*)keyData
                          forSequence: (SequenceNumber)sequence

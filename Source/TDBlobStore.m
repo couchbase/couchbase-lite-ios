@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "TDBlobStore.h"
+#import "TDBase64.h"
 #import "TDMisc.h"
 
 #define kFileExtension "blob"
@@ -218,7 +219,7 @@
 
 @implementation TDBlobStoreWriter
 
-@synthesize length=_length, blobKey=_blobKey, MD5Digest=_MD5Digest;
+@synthesize length=_length, blobKey=_blobKey;
 
 - (id) initWithStore: (TDBlobStore*)store {
     self = [super init];
@@ -263,6 +264,16 @@
     [self closeFile];
     CC_SHA1_Final(_blobKey.bytes, &_shaCtx);
     CC_MD5_Final(_MD5Digest.bytes, &_md5Ctx);
+}
+
+- (NSString*) MD5DigestString {
+    return [@"md5-" stringByAppendingString: [TDBase64 encode: &_MD5Digest
+                                                       length: sizeof(_MD5Digest)]];
+}
+
+- (NSString*) SHA1DigestString {
+    return [@"sha1-" stringByAppendingString: [TDBase64 encode: &_blobKey
+                                                        length: sizeof(_blobKey)]];
 }
 
 - (BOOL) install {

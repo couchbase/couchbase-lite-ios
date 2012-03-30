@@ -76,6 +76,44 @@ NSString* TDEscapeURLParam( NSString* param ) {
 }
 
 
+NSString* TDQuoteString( NSString* param ) {
+    NSMutableString* quoted = [[param mutableCopy] autorelease];
+    [quoted replaceOccurrencesOfString: @"\\" withString: @"\\\\"
+                               options: NSLiteralSearch
+                                 range: NSMakeRange(0, quoted.length)];
+    [quoted replaceOccurrencesOfString: @"\"" withString: @"\\\""
+                               options: NSLiteralSearch
+                                 range: NSMakeRange(0, quoted.length)];
+    [quoted insertString: @"\"" atIndex: 0];
+    [quoted appendString: @"\""];
+    return quoted;
+}
+
+
+NSString* TDUnquoteString( NSString* param ) {
+    if (![param hasPrefix: @"\""])
+        return param;
+    if (![param hasSuffix: @"\""] || param.length < 2)
+        return nil;
+    param = [param substringWithRange: NSMakeRange(1, param.length - 2)];
+    if ([param rangeOfString: @"\\"].length == 0)
+        return param;
+    NSMutableString* unquoted = [[param mutableCopy] autorelease];
+    for (NSUInteger pos = 0; pos < unquoted.length; ) {
+        NSRange r = [unquoted rangeOfString: @"\\"
+                                    options: NSLiteralSearch
+                                      range: NSMakeRange(pos, unquoted.length-pos)];
+        if (r.length == 0)
+            break;
+        [unquoted deleteCharactersInRange: r];
+        pos = r.location + 1;
+        if (pos > unquoted.length)
+            return nil;
+    }
+    return unquoted;
+}
+
+
 BOOL TDIsOfflineError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
@@ -84,4 +122,27 @@ BOOL TDIsOfflineError( NSError* error ) {
             || code == NSURLErrorNotConnectedToInternet
             || code == NSURLErrorInternationalRoamingOff;
     return NO;
+}
+
+
+
+TestCase(TDQuoteString) {
+    CAssertEqual(TDQuoteString(@""), @"\"\"");
+    CAssertEqual(TDQuoteString(@"foo"), @"\"foo\"");
+    CAssertEqual(TDQuoteString(@"f\"o\"o"), @"\"f\\\"o\\\"o\"");
+    CAssertEqual(TDQuoteString(@"\\foo"), @"\"\\\\foo\"");
+    CAssertEqual(TDQuoteString(@"\""), @"\"\\\"\"");
+    CAssertEqual(TDQuoteString(@""), @"\"\"");
+
+    CAssertEqual(TDUnquoteString(@""), @"");
+    CAssertEqual(TDUnquoteString(@"\""), nil);
+    CAssertEqual(TDUnquoteString(@"\"\""), @"");
+    CAssertEqual(TDUnquoteString(@"\"foo"), nil);
+    CAssertEqual(TDUnquoteString(@"foo\""), @"foo\"");
+    CAssertEqual(TDUnquoteString(@"foo"), @"foo");
+    CAssertEqual(TDUnquoteString(@"\"foo\""), @"foo");
+    CAssertEqual(TDUnquoteString(@"\"f\\\"o\\\"o\""), @"f\"o\"o");
+    CAssertEqual(TDUnquoteString(@"\"\\foo\""), @"foo");
+    CAssertEqual(TDUnquoteString(@"\"\\\\foo\""), @"\\foo");
+    CAssertEqual(TDUnquoteString(@"\"foo\\\""), nil);
 }

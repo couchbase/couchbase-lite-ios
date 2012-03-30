@@ -60,6 +60,16 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 }
 
 
+- (TDBlobStoreWriter*) attachmentWriterForAttachment: (NSDictionary*)attachment {
+    NSString* digest = $castIf(NSString, [attachment objectForKey: @"digest"]);
+    if (!digest)
+        return nil;
+    TDBlobStoreWriter* writer = [[_pendingAttachmentsByDigest objectForKey: digest] retain];
+    [_pendingAttachmentsByDigest removeObjectForKey: digest];
+    return [writer autorelease];
+}
+
+
 - (NSData*) keyForAttachment: (NSData*)contents {
     Assert(contents);
     TDBlobKey key;
@@ -334,10 +344,9 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
             // "follows" means the uploader provided the attachment in a separate MIME part.
             // This means it's already been registered in _pendingAttachmentsByDigest;
             // I just need to look it up by its "digest" property and install it into the store:
-            NSString* digest = $castIf(NSString, [newAttach objectForKey: @"digest"]);
-            if (!digest)
+            TDBlobStoreWriter *writer = [self attachmentWriterForAttachment: newAttach];
+            if (!writer)
                 return 400;
-            TDBlobStoreWriter *writer = [_pendingAttachmentsByDigest objectForKey: digest];
             if (![writer install])
                 return 500;
             TDBlobKey key = writer.blobKey;

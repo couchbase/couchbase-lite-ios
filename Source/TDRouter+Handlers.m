@@ -21,6 +21,7 @@
 #import "TDDatabase+Replication.h"
 #import "TDView.h"
 #import "TDBody.h"
+#import "TDMultipartDocumentReader.h"
 #import "TDRevision.h"
 #import "TDServer.h"
 #import "TDReplicator.h"
@@ -28,20 +29,6 @@
 #import "TDPusher.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
-
-
-@interface TDRouter (Handlers_Internal)
-- (TDStatus) update: (TDDatabase*)db
-              docID: (NSString*)docID
-               body: (TDBody*)body
-           deleting: (BOOL)deleting
-      allowConflict: (BOOL)allowConflict
-         createdRev: (TDRevision**)outRev;
-- (TDStatus) update: (TDDatabase*)db
-              docID: (NSString*)docID
-               json: (NSData*)json
-           deleting: (BOOL)deleting;
-@end
 
 
 @implementation TDRouter (Handlers)
@@ -223,14 +210,6 @@
     if ([self query: @"rev"])
         return 400;  // CouchDB checks for this; probably meant to be a document deletion
     return [_dbManager deleteDatabaseNamed: db.name] ? 200 : 404;
-}
-
-
-- (TDStatus) do_POST: (TDDatabase*)db {
-    TDStatus status = [self openDB];
-    if (status >= 300)
-        return status;
-    return [self update: db docID: nil json: _request.HTTPBody deleting: NO];
 }
 
 
@@ -666,6 +645,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
       allowConflict: (BOOL)allowConflict
          createdRev: (TDRevision**)outRev
 {
+    if (body && !body.isValidJSON)
+        return 400;
+    
     NSString* prevRevID;
     
     if (!deleting) {
@@ -706,10 +688,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 - (TDStatus) update: (TDDatabase*)db
               docID: (NSString*)docID
-               json: (NSData*)json
+               body: (TDBody*)body
            deleting: (BOOL)deleting
 {
-    TDBody* body = json ? [TDBody bodyWithJSON: json] : nil;
     TDRevision* rev;
     TDStatus status = [self update: db docID: docID body: body
                           deleting: deleting
@@ -730,17 +711,39 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     return status;
 }
 
+
+- (TDBody*) documentBodyFromRequest: (TDStatus*)outStatus {
+    NSString* contentType = [_request valueForHTTPHeaderField: @"Content-Type"];
+    NSDictionary* properties = [TDMultipartDocumentReader readData: _request.HTTPBody
+                                                            ofType: contentType
+                                                        toDatabase: _db
+                                                            status: outStatus];
+    return properties ? [TDBody bodyWithProperties: properties] : nil;
+}
+
+
+- (TDStatus) do_POST: (TDDatabase*)db {
+    TDStatus status = [self openDB];
+    if (status >= 300)
+        return status;
+    TDBody* body = [self documentBodyFromRequest: &status];
+    if (!body)
+        return status;
+    return [self update: db docID: nil body: body deleting: NO];
+}
+
+
 - (TDStatus) do_PUT: (TDDatabase*)db docID: (NSString*)docID {
-    NSData* json = _request.HTTPBody;
-    if (!json)
-        return 400;
+    TDStatus status;
+    TDBody* body = [self documentBodyFromRequest: &status];
+    if (!body)
+        return status;
     
     if (![self query: @"new_edits"] || [self boolQuery: @"new_edits"]) {
         // Regular PUT:
-        return [self update: db docID: docID json: json deleting: NO];
+        return [self update: db docID: docID body: body deleting: NO];
     } else {
         // PUT with new_edits=false -- forcible insertion of existing revision:
-        TDBody* body =  [TDBody bodyWithJSON: json];
         TDRevision* rev = [[[TDRevision alloc] initWithBody: body] autorelease];
         if (!rev || !$equal(rev.docID, docID) || !rev.revID)
             return 400;
@@ -751,7 +754,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (TDStatus) do_DELETE: (TDDatabase*)db docID: (NSString*)docID {
-    return [self update: db docID: docID json: nil deleting: YES];
+    return [self update: db docID: docID body: nil deleting: YES];
 }
 
 
@@ -888,6 +891,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (![[_request valueForHTTPHeaderField: @"Content-Type"] hasPrefix: @"application/json"])
         return 415;
     TDBody* requestBody = [TDBody bodyWithJSON: _request.HTTPBody];
+    if (!requestBody.isValidJSON)
+        return 400;
     NSDictionary* props = requestBody.properties;
     if (!props)
         return 400;

@@ -284,7 +284,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
     [[[TDMultipartDownloader alloc] initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
-                                       revision: rev
                                    onCompletion:
         ^(TDMultipartDownloader* download, NSError *error) {
             // OK, now we've got the response revision:

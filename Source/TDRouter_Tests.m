@@ -41,9 +41,13 @@ static TDResponse* SendRequest(TDDatabaseManager* server, NSString* method, NSSt
     for (NSString* header in headers)
         [request setValue: [headers objectForKey: header] forHTTPHeaderField: header];
     if (bodyObj) {
-        NSError* error = nil;
-        request.HTTPBody = [TDJSON dataWithJSONObject: bodyObj options:0 error:&error];
-        CAssertNil(error);
+        if ([bodyObj isKindOfClass: [NSData class]])
+            request.HTTPBody = bodyObj;
+        else {
+            NSError* error = nil;
+            request.HTTPBody = [TDJSON dataWithJSONObject: bodyObj options:0 error:&error];
+            CAssertNil(error);
+        }
     }
     TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
     CAssert(router!=nil);
@@ -465,6 +469,37 @@ TestCase(TDRouter_GetAttachment) {
                                                                      {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                                                      {@"revpos", $object(1)})})}));
     [server close];
+}
+
+
+TestCase(TDRouter_PutMultipart) {
+    RequireTestCase(TDRouter_Docs);
+    RequireTestCase(TDMultipartDownloader);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", 201, nil);
+    
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"length", $object(36)},
+                                                           {@"content_type", @"text/plain"},
+                                                           {@"follows", $true})});
+    NSDictionary* props = $dict({@"message", @"hello"},
+                                {@"_attachments", attachmentDict});
+    NSString* attachmentString = @"This is the value of the attachment.";
+
+    NSString* body = $sprintf(@"\r\n--BOUNDARY\r\n\r\n"
+                              "%@"
+                              "\r\n--BOUNDARY\r\n"
+                              "Content-ID: attach\r\n"
+                              "Content-Type: text/plain\r\n\r\n"
+                              "%@"
+                              "\r\n--BOUNDARY--",
+                              [TDJSON stringWithJSONObject: props options: 0 error: nil],
+                              attachmentString);
+    
+    TDResponse* response = SendRequest(server, @"PUT", @"/db/doc",
+                           $dict({@"Content-Type", @"multipart/related; boundary=\"BOUNDARY\""}),
+                                       [body dataUsingEncoding: NSUTF8StringEncoding]);
+    CAssertEq(response.status, 201);
 }
 
 

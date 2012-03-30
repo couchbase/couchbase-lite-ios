@@ -27,5 +27,12 @@ NSString* TDEscapeID( NSString* param );
     This does the usual %-escaping, but makes sure that '&' is also escaped. */
 NSString* TDEscapeURLParam( NSString* param );
 
+/** Wraps a string in double-quotes and prepends backslashes to any existing double-quote or backslash characters in it. */
+NSString* TDQuoteString( NSString* param );
+
+/** Undoes effect of TDQuoteString, i.e. removes backslash escapes and any surrounding double-quotes.
+    If the string has no surrounding double-quotes it will be returned as-is. */
+NSString* TDUnquoteString( NSString* param );
+
 /** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
 BOOL TDIsOfflineError( NSError* error );

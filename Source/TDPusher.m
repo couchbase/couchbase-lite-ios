@@ -236,7 +236,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream:
     TDMultipartWriter* bodyStream = nil;
     NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
-    for (NSDictionary* attachment in attachments.allValues) {
+    for (NSString* attachmentName in attachments) {
+        NSDictionary* attachment = [attachments objectForKey: attachmentName];
         if ([attachment objectForKey: @"follows"]) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
@@ -247,6 +248,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
             }
             UInt64 length;
             NSInputStream *stream = [_db inputStreamForAttachmentDict: attachment length: &length];
+            NSString* disposition = $sprintf(@"attachment; filename=%@", TDQuoteString(attachmentName));
+            [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
             [bodyStream addStream: stream length: length];
         }
     }
