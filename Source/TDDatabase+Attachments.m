@@ -29,6 +29,8 @@
 #import "TDBase64.h"
 #import "TDBlobStore.h"
 #import "TDBody.h"
+#import "TDMultipartWriter.h"
+#import "TDMisc.h"
 #import "TDInternal.h"
 
 #import "CollectionUtils.h"
@@ -277,9 +279,11 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
 }
 
 
-+ (void) stubOutAttachmentsIn: (TDRevision*)rev beforeRevPos: (int)minRevPos
++ (void) stubOutAttachmentsIn: (TDRevision*)rev
+                 beforeRevPos: (int)minRevPos
+            attachmentsFollow: (BOOL)attachmentsFollow
 {
-    if (minRevPos <= 1)
+    if (minRevPos <= 1 && !attachmentsFollow)
         return;
     NSDictionary* properties = rev.properties;
     NSMutableDictionary* editedProperties = nil;
@@ -288,21 +292,33 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
     for (NSString* name in attachments) {
         NSDictionary* attachment = [attachments objectForKey: name];
         int revPos = [[attachment objectForKey: @"revpos"] intValue];
-        if (revPos > 0 && revPos < minRevPos && ![attachment objectForKey: @"stub"]) {
-            // Strip this attachment's body. First make its dictionary mutable:
+        bool includeAttachment = (revPos == 0 || revPos >= minRevPos);
+        bool stubItOut = !includeAttachment && ![attachment objectForKey: @"stub"];
+        bool addFollows = includeAttachment && attachmentsFollow
+                                            && ![attachment objectForKey: @"follows"];
+        if (stubItOut || addFollows) {
+            // Need to modify attachment entry:
             if (!editedProperties) {
+                // Make the document properties and _attachments dictionary mutable:
                 editedProperties = [[properties mutableCopy] autorelease];
                 editedAttachments = [[attachments mutableCopy] autorelease];
                 [editedProperties setObject: editedAttachments forKey: @"_attachments"];
             }
-            // ...then remove the 'data' and 'follows' key:
             NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
             [editedAttachment removeObjectForKey: @"data"];
-            [editedAttachment removeObjectForKey: @"follows"];
-            [editedAttachment setObject: $true forKey: @"stub"];
+            if (stubItOut) {
+                // ...then remove the 'data' and 'follows' key:
+                [editedAttachment removeObjectForKey: @"follows"];
+                [editedAttachment setObject: $true forKey: @"stub"];
+                LogTo(SyncVerbose, @"Stubbed out attachment %@/'%@': revpos %d < %d",
+                      rev, name, revPos, minRevPos);
+            } else if (addFollows) {
+                [editedAttachment removeObjectForKey: @"stub"];
+                [editedAttachment setObject: $true forKey: @"follows"];
+                LogTo(SyncVerbose, @"Added 'follows' for attachment %@/'%@': revpos %d >= %d",
+                      rev, name, revPos, minRevPos);
+            }
             [editedAttachments setObject: editedAttachment forKey: name];
-            LogTo(SyncVerbose, @"Stubbed out attachment %@/'%@': revpos %d < %d",
-                  rev, name, revPos, minRevPos);
         }
     }
     if (editedProperties)
@@ -399,6 +415,28 @@ NSString* const kTDAttachmentBlobKeyProperty = @"__tdblobkey__";
             return status;
     }
     return 200;
+}
+
+
+- (TDMultipartWriter*) multipartWriterForRevision: (TDRevision*)rev
+                                      contentType: (NSString*)contentType
+{
+    TDMultipartWriter* writer = [[TDMultipartWriter alloc] initWithContentType: contentType 
+                                                                      boundary: nil];
+    [writer setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
+    [writer addData: rev.asJSON];
+    NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
+    for (NSString* attachmentName in attachments) {
+        NSDictionary* attachment = [attachments objectForKey: attachmentName];
+        if ([attachment objectForKey: @"follows"]) {
+            UInt64 length;
+            NSInputStream *stream = [self inputStreamForAttachmentDict: attachment length: &length];
+            NSString* disposition = $sprintf(@"attachment; filename=%@", TDQuoteString(attachmentName));
+            [writer setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
+            [writer addStream: stream length: length];
+        }
+    }
+    return [writer autorelease];
 }
 
 

@@ -615,18 +615,35 @@ TestCase(TDDatabase_StubOutAttachmentsBeforeRevPos) {
     NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
     
     TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 3];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
                                                                {@"goodbye", $dict({@"revpos", $object(2)}, {@"stub", $true})})}));
     
     rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 2];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
                                                                {@"goodbye", goodbye})}));
     
     rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 1];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", attachments}));
+    
+    // Now test the "follows" mode:
+    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: YES];
+    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
+                                                               {@"goodbye", $dict({@"revpos", $object(2)}, {@"stub", $true})})}));
+
+    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: YES];
+    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"stub", $true})},
+                                                               {@"goodbye", $dict({@"revpos", $object(2)}, {@"follows", $true})})}));
+    
+    rev = [TDRevision revisionWithProperties: $dict({@"_attachments", attachments})];
+    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: YES];
+    CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", $object(1)}, {@"follows", $true})},
+                                                               {@"goodbye", $dict({@"revpos", $object(2)}, {@"follows", $true})})}));
+    
 }
 
 

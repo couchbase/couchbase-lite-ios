@@ -539,31 +539,42 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
     TDContentOptions options = [self contentOptions];
+    NSString* acceptMultipart = self.multipartRequestType;
     NSString* openRevsParam = [self query: @"open_revs"];
     if (openRevsParam == nil || isLocalDoc) {
         // Regular GET:
         NSString* revID = [self query: @"rev"];  // often nil
         TDRevision* rev;
+        BOOL includeAttachments = NO;
         if (isLocalDoc) {
             rev = [db getLocalDocumentWithID: docID revisionID: revID];
         } else {
+            includeAttachments = (options & kTDIncludeAttachments) != 0;
+            if (acceptMultipart)
+                options &= ~kTDIncludeAttachments;
             rev = [db getDocumentWithID: docID revisionID: revID options: options];
-            // Handle ?atts_since query by stubbing out older attachments:
-            if (options & kTDIncludeAttachments) {
-                NSArray* attsSince = parseJSONRevArrayQuery([self query: @"atts_since"]);
-                NSString* ancestorID = [_db findCommonAncestorOf: rev withRevIDs: attsSince];
-                if (ancestorID) {
-                    int generation = [TDRevision generationFromRevID: ancestorID];
-                    [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: generation + 1];
-                }
-            }
         }
+
         if (!rev)
             return 404;
         if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET
             return 304;
         
-        _response.body = rev.body;
+        if (includeAttachments) {
+            int minRevPos = 1;
+            NSArray* attsSince = parseJSONRevArrayQuery([self query: @"atts_since"]);
+            NSString* ancestorID = [_db findCommonAncestorOf: rev withRevIDs: attsSince];
+            if (ancestorID)
+                minRevPos = [TDRevision generationFromRevID: ancestorID] + 1;
+            [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos
+                           attachmentsFollow: (acceptMultipart != nil)];
+        }
+
+        if (acceptMultipart)
+            [_response setMultipartBody: [db multipartWriterForRevision: rev
+                                                            contentType: acceptMultipart]];
+        else
+            _response.body = rev.body;
         
     } else {
         NSMutableArray* result;
@@ -597,7 +608,6 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                     [result addObject: $dict({@"missing", revID})];
             }
         }
-        NSString* acceptMultipart = self.multipartRequestType;
         if (acceptMultipart)
             [_response setMultipartBody: result type: acceptMultipart];
         else

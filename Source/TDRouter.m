@@ -465,6 +465,12 @@ static NSArray* splitPath( NSURL* url ) {
     self.body = bodyObject ? [TDBody bodyWithProperties: bodyObject] : nil;
 }
 
+- (void) setMultipartBody: (TDMultipartWriter*)mp {
+    // OPT: Would be better to stream this than shoving all the data into _body.
+    self.body = [TDBody bodyWithJSON: mp.allOutput];
+    [self setValue: mp.contentType ofHeader: @"Content-Type"];
+}
+
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type {
     TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: type
                                                                       boundary: nil];
@@ -475,8 +481,7 @@ static NSArray* splitPath( NSURL* url ) {
         }
         [mp addData: part];
     }
-    self.body = [TDBody bodyWithJSON: mp.allOutput];
-    [self setValue: mp.contentType ofHeader: @"Content-Type"];
+    [self setMultipartBody: mp];
     [mp release];
 }
 

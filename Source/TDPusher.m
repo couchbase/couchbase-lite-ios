@@ -185,7 +185,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                         // Look for the latest common ancestor and stub out older attachments:
                         NSArray* possible = [revResults objectForKey: @"possible_ancestors"];
                         int minRevPos = findCommonAncestor(rev, possible);
-                        [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1];
+                        [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
+                                       attachmentsFollow: NO];
                         properties = rev.properties;
                         // If the rev has huge attachments, send it under separate cover:
                         if ([self uploadMultipartRevision: rev])

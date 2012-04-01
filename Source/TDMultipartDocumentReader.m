@@ -115,7 +115,7 @@
         }
         
         if (![self registerAttachments]) {
-            _status = 400;
+            _status = 502;
             return NO;
         }
     } else {
@@ -207,8 +207,10 @@
 
 - (BOOL) registerAttachments {
     NSDictionary* attachments = [_document objectForKey: @"_attachments"];
-    if (![attachments isKindOfClass: [NSDictionary class]]) 
+    if (attachments && ![attachments isKindOfClass: [NSDictionary class]]) {
+        Warn(@"%@: _attachments property is not a dictionary", self);
         return NO;
+    }
     NSUInteger nAttachmentsInDoc = 0;
     for (NSString* attachmentName in attachments) {
         NSMutableDictionary* attachment = [attachments objectForKey: attachmentName];
@@ -221,17 +223,16 @@
                 NSString* actualDigest = writer.MD5DigestString;
                 if (digest && !$equal(digest, actualDigest) 
                            && !$equal(digest, writer.SHA1DigestString)) {
-                    Log(@"TDMultipartDocumentReader: Attachment '%@' has incorrect MD5 digest "
-                         "(%@; should be %@)",
-                         attachmentName, digest, actualDigest);
+                    Warn(@"%@: Attachment '%@' has incorrect MD5 digest (%@; should be %@)",
+                         self, attachmentName, digest, actualDigest);
                     return NO;
                 }
                 [attachment setObject: actualDigest forKey: @"digest"];
             } else {
                 writer = [_attachmentsByDigest objectForKey: digest];
                 if (!writer) {
-                    Warn(@"TDMultipartDocumentReader: Attachment '%@' does not appear in a MIME body",
-                         attachmentName);
+                    Warn(@"%@: Attachment '%@' does not appear in a MIME body",
+                         self, attachmentName);
                     return NO;
                 }
             }
@@ -239,15 +240,19 @@
             // Check that the length matches:
             NSNumber* lengthObj = [attachment objectForKey: @"encoded_length"]
                                ?: [attachment objectForKey: @"length"];
-            if (!lengthObj)
+            if (!lengthObj || writer.length != [$castIf(NSNumber, lengthObj) unsignedLongLongValue]) {
+                Warn(@"%@: attachment has invalid length %@ (should be %llu)",
+                    self, lengthObj, writer.length);
                 return NO;
-            if (writer.length != [$castIf(NSNumber, lengthObj) unsignedLongLongValue])
-                return NO;
+            }
             ++nAttachmentsInDoc;
         }
     }
-    if (nAttachmentsInDoc < _attachmentsByDigest.count)
-        return NO;  // Some MIME bodies didn't match attachments in the document
+    if (nAttachmentsInDoc < _attachmentsByDigest.count) {
+        Warn(@"%@: More MIME bodies (%u) than attachments (%u)",
+            self, _attachmentsByDigest.count, nAttachmentsInDoc);
+        return NO;
+    }
     // If everything's copacetic, hand over the (uninstalled) blobs to the database to remember:
     [_database rememberAttachmentWritersForDigests: _attachmentsByDigest];
     return YES;

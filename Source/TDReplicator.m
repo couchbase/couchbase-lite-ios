@@ -216,7 +216,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 - (void) stopped {
     LogTo(Sync, @"%@ STOPPED", self);
-    Log(@"Replication: %@ took %.3f sec", self, CFAbsoluteTimeGetCurrent()-_startTime);
+    Log(@"Replication: %@ took %.3f sec; error=%@",
+        self, CFAbsoluteTimeGetCurrent()-_startTime, _error);
     self.running = NO;
     self.changesProcessed = self.changesTotal = 0;
     [[NSNotificationCenter defaultCenter]

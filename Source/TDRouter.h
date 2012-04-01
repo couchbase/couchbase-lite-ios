@@ -7,7 +7,7 @@
 //
 
 #import "TDDatabase.h"
-@class TDServer, TDDatabaseManager, TDResponse, TDBody;
+@class TDServer, TDDatabaseManager, TDResponse, TDBody, TDMultipartWriter;
 
 
 typedef void (^OnResponseReadyBlock)(TDResponse*);
@@ -86,6 +86,7 @@ typedef void (^OnFinishedBlock)();
 
 - (void) setValue: (NSString*)value ofHeader: (NSString*)header;
 
+- (void) setMultipartBody: (TDMultipartWriter*)mp;
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type;
 
 @end

@@ -489,7 +489,7 @@ TestCase(TDRouter_PutMultipart) {
     NSString* body = $sprintf(@"\r\n--BOUNDARY\r\n\r\n"
                               "%@"
                               "\r\n--BOUNDARY\r\n"
-                              "Content-ID: attach\r\n"
+                              "Content-Disposition: attachment; filename=attach\r\n"
                               "Content-Type: text/plain\r\n\r\n"
                               "%@"
                               "\r\n--BOUNDARY--",
