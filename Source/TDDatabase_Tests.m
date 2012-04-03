@@ -19,6 +19,7 @@
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+LocalDocs.h"
 #import "TDDatabase+Replication.h"
+#import "TDAttachment.h"
 #import "TDBody.h"
 #import "TDRevision.h"
 #import "TDBlobStore.h"
@@ -330,6 +331,59 @@ TestCase(TDDatabase_RevTree) {
 }
 
 
+TestCase(TDDatabase_DeterministicRevIDs) {
+    TDDatabase* db = createDB();
+    TDRevision* rev = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
+    NSString* revID = rev.revID;
+    [db close];
+    
+    db = createDB();
+    rev = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
+    CAssertEqual(rev.revID, revID);
+}
+
+
+TestCase(TDDatabase_DuplicateRev) {
+    TDDatabase* db = createDB();
+    TDRevision* rev1 = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
+    
+    NSDictionary* props = $dict({@"_id", @"mydoc"},
+                                {@"_rev", rev1.revID},
+                                {@"key", @"new-value"});
+    TDRevision* rev2a = putDoc(db, props);
+
+    TDRevision* rev2b = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status;
+    rev2b = [db putRevision: rev2b
+             prevRevisionID: rev1.revID
+              allowConflict: YES
+                     status: &status];
+    CAssertEq(status, 200);
+    CAssertEqual(rev2b, rev2a);
+}
+
+
+#pragma mark - ATTACHMENTS:
+
+
+static void insertAttachment(TDDatabase* db, NSData* blob,
+                                 SequenceNumber sequence,
+                                 NSString* name, NSString* type,
+                                 TDAttachmentEncoding encoding,
+                                 UInt64 length, UInt64 encodedLength,
+                                 unsigned revpos)
+{
+    TDAttachment* attachment = [[TDAttachment alloc] initWithName: name contentType: type];
+    [attachment autorelease];
+    CAssert([db storeBlob: blob creatingKey: &attachment->blobKey], @"Failed to store blob");
+    attachment->encoding = encoding;
+    attachment->length = length;
+    attachment->encodedLength = encodedLength;
+    attachment->revpos = revpos;
+    CAssertEq([db insertAttachment: attachment forSequence: sequence], 201);
+}
+
+
 TestCase(TDDatabase_Attachments) {
     RequireTestCase(TDDatabase_CRUD);
     // Start with a fresh database in /tmp:
@@ -348,14 +402,13 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 201);
     
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: attach1]
-                              forSequence: rev1.sequence
-                                    named: @"attach" type: @"text/plain"
-                                 encoding: kTDAttachmentEncodingNone
-                                   length: attach1.length
-                            encodedLength: 0
-                            revpos: rev1.generation],
-              201);
+    insertAttachment(db, attach1,
+                     rev1.sequence,
+                     @"attach", @"text/plain",
+                     kTDAttachmentEncodingNone,
+                     attach1.length,
+                     0,
+                     rev1.generation);
     
     NSString* type;
     TDAttachmentEncoding encoding;
@@ -404,14 +457,13 @@ TestCase(TDDatabase_Attachments) {
     CAssertEq(status, 201);
     
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
-    CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: attach2]
-                              forSequence: rev3.sequence
-                                    named: @"attach" type: @"text/html"
-                                 encoding: kTDAttachmentEncodingNone
-                                   length: attach2.length
-                            encodedLength: 0
-                                   revpos: rev2.generation],
-              201);
+    insertAttachment(db, attach2,
+                     rev3.sequence,
+                     @"attach", @"text/html",
+                     kTDAttachmentEncodingNone,
+                     attach2.length,
+                     0,
+                     rev2.generation);
     
     // Check the 2nd revision's attachment:
     type = nil;
@@ -550,14 +602,13 @@ TestCase(TDDatabase_EncodedAttachment) {
     NSData* attach1 = [@"Encoded! Encoded!Encoded! Encoded! Encoded! Encoded! Encoded! Encoded!"
                             dataUsingEncoding: NSUTF8StringEncoding];
     NSData* encoded = [NSData gtm_dataByGzippingData: attach1];
-    CAssertEq([db insertAttachmentWithKey: [db keyForAttachment: encoded]
-                              forSequence: rev1.sequence
-                                    named: @"attach" type: @"text/plain"
-                                 encoding: kTDAttachmentEncodingGZIP
-                                   length: attach1.length
-                            encodedLength: encoded.length
-                            revpos: rev1.generation],
-              201);
+    insertAttachment(db, encoded,
+                     rev1.sequence,
+                     @"attach", @"text/plain",
+                     kTDAttachmentEncodingGZIP,
+                     attach1.length,
+                     encoded.length,
+                     rev1.generation);
     
     // Read the attachment without decoding it:
     NSString* type;
@@ -645,6 +696,9 @@ TestCase(TDDatabase_StubOutAttachmentsBeforeRevPos) {
                                                                {@"goodbye", $dict({@"revpos", $object(2)}, {@"follows", $true})})}));
     
 }
+
+
+#pragma mark - MISC.:
 
 
 TestCase(TDDatabase_ReplicatorSequences) {

@@ -33,12 +33,16 @@ NSString* TDCreateUUID() {
 NSString* TDHexSHA1Digest( NSData* input ) {
     unsigned char digest[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1(input.bytes, (CC_LONG)input.length, digest);
-    char hex[2*sizeof(digest) + 1];
+    return TDHexFromBytes(&digest, sizeof(digest));
+}
+
+NSString* TDHexFromBytes( const void* bytes, size_t length) {
+    char hex[2*length + 1];
     char *dst = &hex[0];
-    for( size_t i=0; i<sizeof(digest); i+=1 )
-        dst += sprintf(dst,"%02X", digest[i]);
+    for( size_t i=0; i<length; i+=1 )
+        dst += sprintf(dst,"%02x", ((const uint8_t*)bytes)[i]); // important: generates lowercase!
     return [[[NSString alloc] initWithBytes: hex
-                                     length: 2*sizeof(digest)
+                                     length: 2*length
                                    encoding: NSASCIIStringEncoding] autorelease];
 }
 

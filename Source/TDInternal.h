@@ -14,9 +14,9 @@
 #import "TDRouter.h"
 #import "TDReplicator.h"
 #import "TDRemoteRequest.h"
+#import "TDBlobStore.h"
+@class TDAttachment;
 
-
-extern NSString* const kTDAttachmentBlobKeyProperty;
 
 @interface TDDatabase ()
 @property (readwrite, copy) NSString* name;  // make it settable
@@ -42,15 +42,9 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 @interface TDDatabase (Attachments_Internal)
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
 - (TDBlobStoreWriter*) attachmentWriterForAttachment: (NSDictionary*)attachment;
-- (NSData*) keyForAttachment: (NSData*)contents;
-- (TDStatus) insertAttachmentWithKey: (NSData*)keyData
-                         forSequence: (SequenceNumber)sequence
-                               named: (NSString*)name
-                                type: (NSString*)contentType
-                            encoding: (TDAttachmentEncoding)encoding
-                              length: (UInt64)length
-                       encodedLength: (UInt64)encodedLength
-                              revpos: (unsigned)revpos;
+- (BOOL) storeBlob: (NSData*)blob creatingKey: (TDBlobKey*)outKey;
+- (TDStatus) insertAttachment: (TDAttachment*)attachment
+                  forSequence: (SequenceNumber)sequence;
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence
                       toSequence: (SequenceNumber)toSequence;

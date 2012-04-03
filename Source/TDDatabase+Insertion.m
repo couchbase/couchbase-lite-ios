@@ -16,11 +16,15 @@
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+Attachments.h"
 #import "TDRevision.h"
+#import "TDCanonicalJSON.h"
+#import "TDAttachment.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
+
+#import <CommonCrypto/CommonDigest.h>
 
 
 NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
@@ -65,16 +69,49 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 }
 
 
-/** Given an existing revision ID, generates an ID for the next revision. */
-- (NSString*) generateNextRevisionID: (NSString*)revID {
-    // Revision IDs have a generation count, a hyphen, and a UUID.
+/** Given an existing revision ID, generates an ID for the next revision.
+    Returns nil if prevID is invalid. */
+- (NSString*) generateIDForRevision: (TDRevision*)rev
+                           withJSON: (NSData*)json
+                        attachments: (NSDictionary*)attachments
+                             prevID: (NSString*) prevID
+{
+    // Revision IDs have a generation count, a hyphen, and a hex digest.
     unsigned generation = 0;
-    if (revID) {
-        generation = [TDRevision generationFromRevID: revID];
+    if (prevID) {
+        generation = [TDRevision generationFromRevID: prevID];
         if (generation == 0)
             return nil;
     }
-    NSString* digest = TDCreateUUID();  //TODO: Generate canonical digest of body
+    
+    // Generate a digest for this revision based on the previous revision ID, document JSON,
+    // and attachment digests. This doesn't need to be secure; we just need to ensure that this
+    // code consistently generates the same ID given equivalent revisions.
+    CC_MD5_CTX ctx;
+    unsigned char digestBytes[CC_MD5_DIGEST_LENGTH];
+    CC_MD5_Init(&ctx);
+    
+    NSData* prevIDUTF8 = [prevID dataUsingEncoding: NSUTF8StringEncoding];
+    NSUInteger length = prevIDUTF8.length;
+    if (length > 0xFF)
+        return nil;
+    uint8_t lengthByte = length & 0xFF;
+    CC_MD5_Update(&ctx, &lengthByte, 1);       // prefix with length byte
+    if (length > 0)
+        CC_MD5_Update(&ctx, prevIDUTF8.bytes, (CC_LONG)length);
+    
+    uint8_t deletedByte = rev.deleted != NO;
+    CC_MD5_Update(&ctx, &deletedByte, 1);
+    
+    for (NSString* attName in [attachments.allKeys sortedArrayUsingSelector: @selector(compare:)]) {
+        TDAttachment* attachment = [attachments objectForKey: attName];
+        CC_MD5_Update(&ctx, &attachment->blobKey, sizeof(attachment->blobKey));
+    }
+    
+    CC_MD5_Update(&ctx, json.bytes, (CC_LONG)json.length);
+        
+    CC_MD5_Final(digestBytes, &ctx);
+    NSString* digest = TDHexFromBytes(digestBytes, sizeof(digestBytes));
     return [NSString stringWithFormat: @"%u-%@", generation+1, digest];
 }
 
@@ -135,10 +172,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         }
     }
     
-    NSError* error;
-    NSData* json = [TDJSON dataWithJSONObject: properties options:0 error: &error];
+    // Create canonical JSON -- this is important, because the JSON data returned here will be used
+    // to create the new revision ID, and we need to guarantee that equivalent revision bodies
+    // result in equal revision IDs.
+    NSData* json = [TDCanonicalJSON canonicalData: properties];
     [properties release];
-    Assert(json, @"Unable to serialize %@ to JSON: %@", rev, error);
     return json;
 }
 
@@ -199,9 +237,10 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         return nil;
     }
     
-    *outStatus = 500;
+    *outStatus = 500;  // default error is 500 Internal Server Error, if we return nil below
     [self beginTransaction];
     FMResultSet* r = nil;
+    TDStatus status;
     @try {
         //// PART I: In which are performed lookups and validations prior to the insert...
         
@@ -230,7 +269,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                 // Fetch the previous revision and validate the new one against it:
                 TDRevision* prevRev = [[TDRevision alloc] initWithDocID: docID revID: prevRevID
                                                                 deleted: NO];
-                TDStatus status = [self validateRevision: rev previousRevision: prevRev];
+                status = [self validateRevision: rev previousRevision: prevRev];
                 [prevRev release];
                 if (status >= 300) {
                     *outStatus = status;
@@ -252,7 +291,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             }
             
             // Validate:
-            TDStatus status = [self validateRevision: rev previousRevision: nil];
+            status = [self validateRevision: rev previousRevision: nil];
             if (status >= 300) {
                 *outStatus = status;
                 return nil;
@@ -298,8 +337,14 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         
         //// PART II: In which insertion occurs...
         
+        // Get the attachments:
+        NSDictionary* attachments = [self attachmentsFromRevision: rev status: &status];
+        if (!attachments) {
+            *outStatus = status;
+            return nil;
+        }
+        
         // Bump the revID and update the JSON:
-        NSString* newRevID = [self generateNextRevisionID: prevRevID];
         NSData* json = nil;
         if (rev.properties) {
             json = [self encodeDocumentJSON: rev];
@@ -310,6 +355,14 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             if (json.length == 2 && memcmp(json.bytes, "{}", 2)==0)
                 json = nil;
         }
+        NSString* newRevID = [self generateIDForRevision: rev
+                                                withJSON: json
+                                             attachments: attachments
+                                                  prevID: prevRevID];
+        if (!newRevID) {
+            *outStatus = 400;  // invalid previous revID (no numeric prefix)
+            return nil;
+        }
         rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
         
         // Now insert the rev itself:
@@ -318,12 +371,22 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                                         parentSequence: parentSequence
                                                current: YES
                                                   JSON: json];
-        if (!sequence)
-            return nil;
+        if (!sequence) {
+            // The insert failed. If it was due to a constraint violation, that means an identical
+            // revision already exists; so just return it.
+            if (_fmdb.lastErrorCode == SQLITE_CONSTRAINT) {
+                *outStatus = 200;
+                rev.body = nil;
+                return rev;
+            } else {
+                return nil;
+            }
+        }
         
         // Store any attachments:
-        TDStatus status = [self processAttachmentsForRevision: rev
-                                           withParentSequence: parentSequence];
+        status = [self processAttachments: attachments
+                              forRevision: rev
+                       withParentSequence: parentSequence];
         if (status >= 300) {
             *outStatus = status;
             return nil;
@@ -443,8 +506,12 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                 if (i==0) {
                     // Write any changed attachments for the new revision. As the parent sequence use
                     // the latest local revision (this is to copy attachments from):
-                    TDStatus status = [self processAttachmentsForRevision: rev
-                                                       withParentSequence: localParentSequence];
+                    TDStatus status;
+                    NSDictionary* attachments = [self attachmentsFromRevision: rev status: &status];
+                    if (attachments)
+                        status = [self processAttachments: attachments
+                                              forRevision: rev
+                                       withParentSequence: localParentSequence];
                     if (status >= 300) 
                         return status;
                 }

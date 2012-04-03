@@ -22,9 +22,14 @@ typedef enum {
 /** Creates a TDBlobStoreWriter object that can be used to stream an attachment to the store. */
 - (TDBlobStoreWriter*) attachmentWriter;
 
+/** Creates TDAttachment objects from the revision's '_attachments' property. */
+- (NSDictionary*) attachmentsFromRevision: (TDRevision*)rev
+                                   status: (TDStatus*)outStatus;
+
 /** Given a newly-added revision, adds the necessary attachment rows to the database and stores inline attachments into the blob store. */
-- (TDStatus) processAttachmentsForRevision: (TDRevision*)rev
-                        withParentSequence: (SequenceNumber)parentSequence;
+- (TDStatus) processAttachments: (NSDictionary*)attachments
+                    forRevision: (TDRevision*)rev
+             withParentSequence: (SequenceNumber)parentSequence;
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence

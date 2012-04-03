@@ -15,6 +15,10 @@ NSString* TDCreateUUID( void );
 
 NSString* TDHexSHA1Digest( NSData* input );
 
+/** Generates a hex dump of a sequence of bytes.
+    The result is lowercase. This is important for CouchDB compatibility. */
+NSString* TDHexFromBytes( const void* bytes, size_t length);
+
 NSError* TDHTTPError( int status, NSURL* url );
 
 NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b);

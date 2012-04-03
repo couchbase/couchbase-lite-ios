@@ -77,7 +77,7 @@
 
 + (unsigned) generationFromRevID: (NSString*)revID {
     unsigned generation = 0;
-    NSUInteger length = revID.length;
+    NSUInteger length = MIN(revID.length, 9u);
     for (NSUInteger i=0; i<length; ++i) {
         unichar c = [revID characterAtIndex: i];
         if (isdigit(c))

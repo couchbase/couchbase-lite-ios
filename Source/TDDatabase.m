@@ -156,8 +156,8 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                 parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL, \
                 current BOOLEAN, \
                 deleted BOOLEAN DEFAULT 0, \
-                json BLOB); \
-            CREATE INDEX revs_by_id ON revs(revid, doc_id); \
+                json BLOB, \
+                UNIQUE (doc_id, revid)); \
             CREATE INDEX revs_current ON revs(doc_id, current); \
             CREATE INDEX revs_parent ON revs(parent); \
             CREATE TABLE localdocs ( \
