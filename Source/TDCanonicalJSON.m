@@ -41,7 +41,7 @@
 - (void) encodeString: (NSString*)string {
     static NSCharacterSet* kCharsToQuote;
     if (!kCharsToQuote) {
-        NSMutableCharacterSet* chars = [NSMutableCharacterSet characterSetWithRange: NSMakeRange(0, 31)];
+        NSMutableCharacterSet* chars = [NSMutableCharacterSet characterSetWithRange: NSMakeRange(0, 32)];
         [chars addCharactersInString: @"\"\\"];
         kCharsToQuote = [chars copy];
     }
@@ -204,3 +204,77 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 
 
 @end
+
+
+
+#if DEBUG
+
+static void roundtrip( id obj ) {
+    NSData* json = [TDCanonicalJSON canonicalData: obj];
+    Log(@"%@ --> `%@`", [obj description], [json my_UTF8ToString]);
+    NSError* error;
+    id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
+    CAssert(reconstituted, @"Canonical JSON `%@` was unparseable: %@",
+            [json my_UTF8ToString], error);
+    CAssertEqual(reconstituted, obj);
+}
+
+static void roundtripFloat( double n ) {
+    NSData* json = [TDCanonicalJSON canonicalData: [NSNumber numberWithDouble: n]];
+    NSError* error;
+    id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
+    CAssert(reconstituted, @"`%@` was unparseable: %@",
+            [json my_UTF8ToString], error);
+    double delta = [reconstituted doubleValue] / n - 1.0;
+    Log(@"%g --> `%@` (error = %g)", n, [json my_UTF8ToString], delta);
+    CAssert(fabs(delta) < 1.0e-15, @"`%@` had floating point roundoff error of %g (%g vs %g)",
+            [json my_UTF8ToString], delta, [reconstituted doubleValue], n);
+}
+
+TestCase(TDCanonicalJSON_RoundTrip) {
+    roundtrip($true);
+    roundtrip($false);
+    roundtrip($null);
+    
+    roundtrip([NSNumber numberWithInt: 0]);
+    roundtrip([NSNumber numberWithInt: INT_MAX]);
+    roundtrip([NSNumber numberWithInt: INT_MIN]);
+    roundtrip([NSNumber numberWithUnsignedInt: UINT_MAX]);
+    roundtrip([NSNumber numberWithLongLong: INT64_MAX]);
+    roundtrip([NSNumber numberWithUnsignedLongLong: UINT64_MAX]);
+    
+    roundtripFloat(111111.111111);
+    roundtripFloat(M_PI);
+    roundtripFloat(6.02e23);
+    roundtripFloat(1.23456e-18);
+    roundtripFloat(1.0e-37);
+    roundtripFloat(UINT_MAX);
+    roundtripFloat(UINT64_MAX);
+    roundtripFloat(UINT_MAX + 0.01);
+    roundtripFloat(MAXFLOAT);
+    
+    roundtrip(@"");
+    roundtrip(@"ordinary string");
+    roundtrip(@"\\");
+    roundtrip(@"xx\\");
+    roundtrip(@"\\xx");
+    roundtrip(@"\"\\");
+    roundtrip(@"\\.\"");
+    roundtrip(@"...\\.\"...");
+    roundtrip(@"...\\..\"...");
+    roundtrip(@"\r\nHELO\r \tTHER");
+    roundtrip(@"\037wow\037");
+    roundtrip(@"\001");
+    roundtrip(@"\u1234");
+    
+    roundtrip($array());
+    roundtrip($array($array()));
+    roundtrip($array(@"foo", @"bar", $null));
+    
+    roundtrip($dict());
+    roundtrip($dict({@"key", @"value"}));
+    roundtrip($dict({@"\"key\"", $false}));
+    roundtrip($dict({@"\"key\"", $false}, {@"", $dict()}));
+}
+
+#endif
