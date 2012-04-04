@@ -120,11 +120,11 @@ enum {
 
 
 - (void) stop {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(start)
+                                               object: nil];    // cancel pending retries
     if (_trackingInput || _trackingOutput) {
         LogTo(ChangeTracker, @"%@: stop", self);
         [self clearConnection];
-        [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(start)
-                                                   object: nil];    // cancel pending retries
         [super stop];
     }
 }
