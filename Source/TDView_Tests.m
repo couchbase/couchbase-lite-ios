@@ -102,7 +102,7 @@ TestCase(TDView_Index) {
     CAssertEq(view.viewID, 1);
     
     CAssert(view.stale);
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
     
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -111,12 +111,12 @@ TestCase(TDView_Index) {
                               $dict({@"key", @"\"two\""}, {@"seq", $object(2)}) ));
     // No-op reindex:
     CAssert(!view.stale);
-    CAssertEq([view updateIndex], 304);
+    CAssertEq([view updateIndex], kTDStatusNotModified);
     
     // Now add a doc and update a doc:
     TDRevision* threeUpdated = [[[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
     threeUpdated.properties = $dict({@"key", @"3hree"});
-    int status;
+    TDStatus status;
     rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
@@ -128,7 +128,7 @@ TestCase(TDView_Index) {
 
     // Reindex again:
     CAssert(view.stale);
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
 
     dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -138,7 +138,7 @@ TestCase(TDView_Index) {
     
     // Now do a real query:
     NSArray* rows = [view queryWithOptions: NULL status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array( $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
                                $dict({@"key", @"four"}, {@"id", rev4.docID}),
                                $dict({@"key", @"one"}, {@"id", rev1.docID}) ));
@@ -174,7 +174,7 @@ TestCase(TDView_MapConflicts) {
         }
     } reduceBlock: NULL version: @"1"];
     
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array($dict({@"key", @"\"44444\""},
@@ -188,7 +188,7 @@ TestCase(TDView_Query) {
     TDDatabase *db = createDB();
     putDocs(db);
     TDView* view = createView(db);
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
     
     // Query all rows:
     TDQueryOptions options = kDefaultTDQueryOptions;
@@ -317,7 +317,7 @@ TestCase(TDView_Reduce) {
         return [TDView totalValues: values];
     } version: @"1"];
 
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", $object(2)}),
@@ -328,7 +328,7 @@ TestCase(TDView_Reduce) {
     options.reduce = YES;
     TDStatus status;
     NSArray* reduced = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEq(reduced.count, 1u);
     double result = [[[reduced objectAtIndex: 0] objectForKey: @"value"] doubleValue];
     CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
@@ -359,18 +359,18 @@ TestCase(TDView_Grouped) {
         return [TDView totalValues: values];
     } version: @"1"];
     
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
 
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.reduce = YES;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $null}, {@"value", $object(1162)})));
 
     options.group = YES;
     rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Ether")},
                                     {@"value", $object(231)}),
@@ -389,13 +389,13 @@ TestCase(TDView_Grouped) {
 
     options.groupLevel = 1;
     rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four")}, {@"value", $object(853)}),
                               $dict({@"key", $array(@"PiL")}, {@"value", $object(309)})));
     
     options.groupLevel = 2;
     rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!")},
                                     {@"value", $object(605)}),
                               $dict({@"key", $array(@"Gang Of Four", @"Songs Of The Free")},
@@ -423,13 +423,13 @@ TestCase(TDView_GroupedStrings) {
          return [NSNumber numberWithUnsignedInteger:[values count]];
      } version:@"1.0"];
    
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
 
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.groupLevel = 1;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", $object(2)}),
                               $dict({@"key", @"J"}, {@"value", $object(2)}),
                               $dict({@"key", @"N"}, {@"value", $object(1)})));
@@ -472,7 +472,7 @@ TestCase(TDView_Collation) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);
@@ -517,7 +517,7 @@ TestCase(TDView_CollationRaw) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);

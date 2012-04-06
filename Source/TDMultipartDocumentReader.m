@@ -21,7 +21,7 @@
 + (NSDictionary*) readData: (NSData*)data
                     ofType: (NSString*)contentType
                 toDatabase: (TDDatabase*)database
-                    status: (int*)outStatus
+                    status: (TDStatus*)outStatus
 {
     NSDictionary* result = nil;
     TDMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];
@@ -85,7 +85,7 @@
         return YES;
     }
     // Unknown/invalid MIME type:
-    _status = 406;
+    _status = kTDStatusNotAcceptable;
     return NO;
 }
 
@@ -95,7 +95,7 @@
         [_multipartReader appendData: data];
         if (_multipartReader.failed) {
             Warn(@"%@: received unparseable MIME multipart response", self);
-            _status = 502;
+            _status = kTDStatusUpstreamError;
             return NO;
         }
     } else {
@@ -110,19 +110,19 @@
     if (_multipartReader) {
         if (!_multipartReader.finished) {
             Warn(@"%@: received incomplete MIME multipart response", self);
-            _status = 502;
+            _status = kTDStatusUpstreamError;
             return NO;
         }
         
         if (![self registerAttachments]) {
-            _status = 502;
+            _status = kTDStatusUpstreamError;
             return NO;
         }
     } else {
         if (![self parseJSONBuffer])
             return NO;
     }
-    _status = 201;
+    _status = kTDStatusCreated;
     return YES;
 }
 
@@ -197,7 +197,7 @@
     if (![document isKindOfClass: [NSDictionary class]]) {
         Warn(@"%@: received unparseable JSON data '%@'",
              self, [_jsonBuffer my_UTF8ToString]);
-        _status = 502;
+        _status = kTDStatusUpstreamError;
         return NO;
     }
     _document = [document retain];

@@ -8,12 +8,9 @@
  */
 
 #import <TouchDB/TDRevision.h>
+#import "TDStatus.h"
 @class FMDatabase, TDView, TDBlobStore;
 struct TDQueryOptions;      // declared in TDView.h
-
-
-/** Same interpretation as HTTP status codes, esp. 200, 201, 404, 409, 500. */
-typedef int TDStatus;
 
 
 /** NSNotification posted when a document is updated.

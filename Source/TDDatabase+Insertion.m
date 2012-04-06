@@ -233,11 +233,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     BOOL deleted = rev.deleted;
     if (!rev || (prevRevID && !docID) || (deleted && !docID)
              || (docID && ![TDDatabase isValidDocumentID: docID])) {
-        *outStatus = 400;
+        *outStatus = kTDStatusBadID;
         return nil;
     }
     
-    *outStatus = 500;  // default error is 500 Internal Server Error, if we return nil below
+    *outStatus = kTDStatusDBError;  // default error is Internal Server Error, if we return nil below
     [self beginTransaction];
     FMResultSet* r = nil;
     TDStatus status;
@@ -249,7 +249,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         if (prevRevID) {
             // Replacing: make sure given prevRevID is current & find its sequence number:
             if (docNumericID <= 0) {
-                *outStatus = 404;
+                *outStatus = kTDStatusNotFound;
                 return nil;
             }
             NSString* sql = $sprintf(@"SELECT sequence FROM revs "
@@ -257,11 +257,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                                      (allowConflict ? @"" : @"AND current=1"));
             parentSequence = [_fmdb longLongForQuery: sql, $object(docNumericID), prevRevID];
             if (parentSequence == 0) {
-                // Not found: 404 or a 409, depending on whether there is any current revision
+                // Not found: kTDStatusNotFound or a kTDStatusConflict, depending on whether there is any current revision
                 if (!allowConflict && [self existsDocumentWithID: docID revisionID: nil])
-                    *outStatus = 409;
+                    *outStatus = kTDStatusConflict;
                 else
-                    *outStatus = 404;
+                    *outStatus = kTDStatusNotFound;
                 return nil;
             }
             
@@ -271,7 +271,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                                                                 deleted: NO];
                 status = [self validateRevision: rev previousRevision: prevRev];
                 [prevRev release];
-                if (status >= 300) {
+                if (TDStatusIsError(status)) {
                     *outStatus = status;
                     return nil;
                 }
@@ -285,14 +285,14 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         } else {
             // Inserting first revision.
             if (deleted && docID) {
-                // Didn't specify a revision to delete: 404 or a 409, depending
-                *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? 409 : 404;
+                // Didn't specify a revision to delete: kTDStatusNotFound or a kTDStatusConflict, depending
+                *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? kTDStatusConflict : kTDStatusNotFound;
                 return nil;
             }
             
             // Validate:
             status = [self validateRevision: rev previousRevision: nil];
-            if (status >= 300) {
+            if (TDStatusIsError(status)) {
                 *outStatus = status;
                 return nil;
             }
@@ -319,7 +319,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                                 return nil;
                         } else if (!allowConflict) {
                             // The current winning revision is not deleted, so this is a conflict
-                            *outStatus = 409;
+                            *outStatus = kTDStatusConflict;
                             return nil;
                         }
                     }
@@ -349,7 +349,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         if (rev.properties) {
             json = [self encodeDocumentJSON: rev];
             if (!json) {
-                *outStatus = 400;  // bad or missing JSON
+                *outStatus = kTDStatusBadJSON;
                 return nil;
             }
             if (json.length == 2 && memcmp(json.bytes, "{}", 2)==0)
@@ -360,7 +360,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                                              attachments: attachments
                                                   prevID: prevRevID];
         if (!newRevID) {
-            *outStatus = 400;  // invalid previous revID (no numeric prefix)
+            *outStatus = kTDStatusBadID;  // invalid previous revID (no numeric prefix)
             return nil;
         }
         rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
@@ -375,7 +375,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             // The insert failed. If it was due to a constraint violation, that means an identical
             // revision already exists; so just return it.
             if (_fmdb.lastErrorCode == SQLITE_CONSTRAINT) {
-                *outStatus = 200;
+                *outStatus = kTDStatusOK;
                 rev.body = nil;
                 return rev;
             } else {
@@ -387,13 +387,13 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         status = [self processAttachments: attachments
                               forRevision: rev
                        withParentSequence: parentSequence];
-        if (status >= 300) {
+        if (TDStatusIsError(status)) {
             *outStatus = status;
             return nil;
         }
         
         // Success!
-        *outStatus = deleted ? 200 : 201;
+        *outStatus = deleted ? kTDStatusOK : kTDStatusCreated;
         
     } @finally {
         // Remember, we could have gotten here via a 'return' inside the @try block above.
@@ -401,7 +401,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         [self endTransaction: (*outStatus < 300)];
     }
     
-    if (*outStatus >= 300) 
+    if (TDStatusIsError(*outStatus)) 
         return nil;
     
     //// EPILOGUE: A change notification is sent...
@@ -419,14 +419,14 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     if (![TDDatabase isValidDocumentID: docID] || !revID)
-        return 400;
+        return kTDStatusBadID;
     
     NSUInteger historyCount = history.count;
     if (historyCount == 0) {
         history = $array(revID);
         historyCount = 1;
     } else if (!$equal([history objectAtIndex: 0], revID))
-        return 400;
+        return kTDStatusBadID;
     
     BOOL success = NO;
     [self beginTransaction];
@@ -439,11 +439,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                                                 numericID: docNumericID
                                               onlyCurrent: NO];
             if (!localRevs)
-                return 500;
+                return kTDStatusDBError;
         } else {
             docNumericID = [self insertDocumentID: docID];
             if (docNumericID <= 0)
-                return 500;
+                return kTDStatusDBError;
         }
 
         // Validate against the latest common ancestor:
@@ -455,7 +455,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                     break;
             }
             TDStatus status = [self validateRevision: rev previousRevision: oldRev];
-            if (status >= 300)
+            if (TDStatusIsError(status))
                 return status;
         }
         
@@ -484,7 +484,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                     if (!rev.deleted) {
                         json = [self encodeDocumentJSON: rev];
                         if (!json)
-                            return 400;
+                            return kTDStatusBadJSON;
                     }
                     current = YES;
                 } else {
@@ -500,7 +500,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                                         current: current 
                                            JSON: json];
                 if (sequence <= 0)
-                    return 500;
+                    return kTDStatusDBError;
                 newRev.sequence = sequence;
                 
                 if (i==0) {
@@ -512,7 +512,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                         status = [self processAttachments: attachments
                                               forRevision: rev
                                        withParentSequence: localParentSequence];
-                    if (status >= 300) 
+                    if (TDStatusIsError(status)) 
                         return status;
                 }
             }
@@ -522,7 +522,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         if (localParentSequence > 0 && localParentSequence != sequence) {
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                   $object(localParentSequence)])
-                return 500;
+                return kTDStatusDBError;
         }
 
         success = YES;
@@ -532,7 +532,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     
     // Notify and return:
     [self notifyChange: rev source: source];
-    return 201;
+    return kTDStatusCreated;
 }
 
 
@@ -553,10 +553,10 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 - (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev {
     if (_validations.count == 0)
-        return 200;
+        return kTDStatusOK;
     TDValidationContext* context = [[TDValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev];
-    TDStatus status = 200;
+    TDStatus status = kTDStatusOK;
     for (TDValidationBlock validationName in _validations) {
         TDValidationBlock validation = [self validationNamed: validationName];
         if (!validation(newRev, context)) {
@@ -583,7 +583,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     if (self) {
         _db = db;
         _currentRevision = currentRevision;
-        _errorType = 403;
+        _errorType = kTDStatusForbidden;
         _errorMessage = [@"invalid document" retain];
     }
     return self;

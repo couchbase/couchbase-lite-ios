@@ -93,9 +93,9 @@
                                  attachment.contentType, $object(attachment->encoding),
                                  $object(attachment->length), encodedLengthObj,
                                  $object(attachment->revpos)]) {
-        return 500;
+        return kTDStatusDBError;
     }
-    return 201;
+    return kTDStatusCreated;
 }
 
 
@@ -107,23 +107,23 @@
     Assert(toSequence > 0);
     Assert(toSequence > fromSequence);
     if (fromSequence <= 0)
-        return 404;
+        return kTDStatusNotFound;
     if (![_fmdb executeUpdate: @"INSERT INTO attachments "
                     "(sequence, filename, key, type, encoding, encoded_Length, length, revpos) "
                     "SELECT ?, ?, key, type, encoding, encoded_Length, length, revpos "
                         "FROM attachments WHERE sequence=? AND filename=?",
                     $object(toSequence), name,
                     $object(fromSequence), name]) {
-        return 500;
+        return kTDStatusDBError;
     }
     if (_fmdb.changes == 0) {
         // Oops. This means a glitch in our attachment-management or pull code,
         // or else a bug in the upstream server.
         Warn(@"Can't find inherited attachment '%@' from seq#%lld to copy to #%lld",
              name, fromSequence, toSequence);
-        return 404;         // Fail if there is no such attachment on fromSequence
+        return kTDStatusNotFound;         // Fail if there is no such attachment on fromSequence
     }
-    return 200;
+    return kTDStatusOK;
 }
 
 
@@ -150,29 +150,32 @@
     Assert(sequence > 0);
     Assert(filename);
     NSData* contents = nil;
-    *outStatus = 500;
     FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
                       $object(sequence), filename];
-    if (!r)
+    if (!r) {
+        *outStatus = kTDStatusDBError;
         return nil;
+    }
     @try {
         if (![r next]) {
-            *outStatus = 404;
+            *outStatus = kTDStatusNotFound;
             return nil;
         }
         NSData* keyData = [r dataNoCopyForColumnIndex: 0];
         if (keyData.length != sizeof(TDBlobKey)) {
             Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
                  self, sequence, filename, keyData.length);
+            *outStatus = kTDStatusCorruptError;
             return nil;
         }
         contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
         if (!contents) {
             Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
+            *outStatus = kTDStatusCorruptError;
             return nil;
         }
-        *outStatus = 200;
+        *outStatus = kTDStatusOK;
         if (outType)
             *outType = [r stringForColumnIndex: 1];
         
@@ -320,11 +323,11 @@
     // If there are no attachments in the new rev, there's nothing to do:
     NSDictionary* revAttachments = [rev.properties objectForKey: @"_attachments"];
     if (revAttachments.count == 0 || rev.deleted) {
-        *outStatus = 200;
+        *outStatus = kTDStatusOK;
         return [NSDictionary dictionary];
     }
     
-    TDStatus status = 200;
+    TDStatus status = kTDStatusOK;
     NSMutableDictionary* attachments = $mdict();
     for (NSString* name in revAttachments) {
         // Create a TDAttachment object:
@@ -332,10 +335,6 @@
         NSString* contentType = $castIf(NSString, [attachInfo objectForKey: @"content_type"]);
         TDAttachment* attachment = [[[TDAttachment alloc] initWithName: name
                                                            contentType: contentType] autorelease];
-        if (!attachment) {
-            status = 500;
-            break;
-        }
 
         NSString* newContentsBase64 = $castIf(NSString, [attachInfo objectForKey: @"data"]);
         if (newContentsBase64) {
@@ -343,12 +342,12 @@
             @autoreleasepool {
                 NSData* newContents = [TDBase64 decode: newContentsBase64];
                 if (!newContents) {
-                    status = 400;
+                    status = kTDStatusBadEncoding;
                     break;
                 }
                 attachment->length = newContents.length;
                 if (![self storeBlob: newContents creatingKey: &attachment->blobKey]) {
-                    status = 500;
+                    status = kTDStatusAttachmentError;
                     break;
                 }
             }
@@ -358,11 +357,11 @@
             // I just need to look it up by its "digest" property and install it into the store:
             TDBlobStoreWriter *writer = [self attachmentWriterForAttachment: attachInfo];
             if (!writer) {
-                status = 400;
+                status = kTDStatusBadAttachment;
                 break;
             }
             if (![writer install]) {
-                status = 500;
+                status = kTDStatusAttachmentError;
                 break;
             }
             attachment->blobKey = writer.blobKey;
@@ -378,7 +377,7 @@
             if ($equal(encodingStr, @"gzip"))
                 attachment->encoding = kTDAttachmentEncodingGZIP;
             else {
-                status = 400;
+                status = kTDStatusBadEncoding;
                 break;
             }
             
@@ -404,7 +403,7 @@
     // If there are no attachments in the new rev, there's nothing to do:
     NSDictionary* revAttachments = [rev.properties objectForKey: @"_attachments"];
     if (revAttachments.count == 0 || rev.deleted)
-        return 200;
+        return kTDStatusOK;
     
     SequenceNumber newSequence = rev.sequence;
     Assert(newSequence > 0);
@@ -421,7 +420,7 @@
             if (attachment->revpos == 0)
                 attachment->revpos = generation;
             else if (attachment->revpos > generation)
-                return 400;
+                return kTDStatusBadAttachment;
 
             // Finally insert the attachment:
             status = [self insertAttachment: attachment forSequence: newSequence];
@@ -432,10 +431,10 @@
                                   fromSequence: parentSequence
                                     toSequence: newSequence];
         }
-        if (status >= 300)
+        if (TDStatusIsError(status))
             return status;
     }
-    return 200;
+    return kTDStatusOK;
 }
 
 
@@ -469,7 +468,7 @@
                            revID: (NSString*)oldRevID
                           status: (TDStatus*)outStatus
 {
-    *outStatus = 400;
+    *outStatus = kTDStatusBadAttachment;
     if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID))
         return nil;
     
@@ -479,14 +478,14 @@
         if (oldRevID) {
             // Load existing revision if this is a replacement:
             *outStatus = [self loadRevisionBody: oldRev options: 0];
-            if (*outStatus >= 300) {
-                if (*outStatus == 404 && [self existsDocumentWithID: docID revisionID: nil])
-                    *outStatus = 409;   // if some other revision exists, it's a conflict
+            if (TDStatusIsError(*outStatus)) {
+                if (*outStatus == kTDStatusNotFound && [self existsDocumentWithID: docID revisionID: nil])
+                    *outStatus = kTDStatusConflict;   // if some other revision exists, it's a conflict
                 return nil;
             }
             NSDictionary* attachments = [oldRev.properties objectForKey: @"_attachments"];
             if (!body && ![attachments objectForKey: filename]) {
-                *outStatus = 404;
+                *outStatus = kTDStatusAttachmentNotFound;
                 return nil;
             }
             // Remove the _attachments stubs so putRevision: doesn't copy the rows for me
@@ -516,7 +515,7 @@
                     "FROM attachments WHERE sequence=? AND filename != ?",
                                         $object(newRev.sequence), $object(oldRev.sequence),
                                         filename]) {
-                *outStatus = 500;
+                *outStatus = kTDStatusDBError;
                 return nil;
             }
         }
@@ -533,22 +532,22 @@
                 attachment->encodedLength = attachment->length;
                 attachment->length = [self decodeAttachment: body encoding: encoding].length;
                 if (attachment->length == 0 && attachment->encodedLength > 0) {
-                    *outStatus = 400;     // failed to decode
+                    *outStatus = kTDStatusBadEncoding;     // failed to decode
                     return nil;
                 }
             }
             
             if (![self storeBlob: body creatingKey: &attachment->blobKey]) {
-                *outStatus = 500;
+                *outStatus = kTDStatusAttachmentError;
                 return nil;
             }
             
             *outStatus = [self insertAttachment: attachment forSequence: newRev.sequence];
-            if (*outStatus >= 300)
+            if (TDStatusIsError(*outStatus))
                 return nil;
         }
         
-        *outStatus = body ? 201 : 200;
+        *outStatus = body ? kTDStatusCreated : kTDStatusOK;
         return newRev;
     } @finally {
         [self endTransaction: (*outStatus < 300)];
@@ -565,7 +564,7 @@
     // Now collect all remaining attachment IDs and tell the store to delete all but these:
     FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
     if (!r)
-        return 500;
+        return kTDStatusDBError;
     NSMutableSet* allKeys = [NSMutableSet set];
     while ([r next]) {
         [allKeys addObject: [r dataForColumnIndex: 0]];
@@ -573,9 +572,9 @@
     [r close];
     NSInteger numDeleted = [_attachments deleteBlobsExceptWithKeys: allKeys];
     if (numDeleted < 0)
-        return 500;
+        return kTDStatusAttachmentError;
     Log(@"Deleted %d attachments", numDeleted);
-    return 200;
+    return kTDStatusOK;
 }
 
 

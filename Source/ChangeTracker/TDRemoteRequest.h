@@ -34,7 +34,7 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 - (id) initWithMethod: (NSString*)method URL: (NSURL*)url body: (id)body
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 
-/** In some cases a 404 Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
+/** In some cases a kTDStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;
 
 // protected:

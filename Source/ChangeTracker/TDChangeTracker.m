@@ -19,6 +19,7 @@
 #import "TDConnectionChangeTracker.h"
 #import "TDSocketChangeTracker.h"
 #import "TDMisc.h"
+#import "TDStatus.h"
 
 
 @interface TDChangeTracker ()
@@ -118,7 +119,7 @@
 
 - (void) setUpstreamError: (NSString*)message {
     Warn(@"%@: Server error: %@", self, message);
-    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: 502 userInfo: nil];
+    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: kTDStatusUpstreamError userInfo: nil];
 }
 
 - (BOOL) start {

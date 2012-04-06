@@ -228,7 +228,7 @@ TestCase(TDURLProtocol_Registration) {
                                              error: &error];
     CAssert(body != nil);
     CAssert(response != nil);
-    CAssertEq(response.statusCode, 200);
+    CAssertEq(response.statusCode, kTDStatusOK);
     
     [server close];
     [TDURLProtocol registerServer: nil forHostname: @"some.hostname"];
@@ -260,7 +260,7 @@ TestCase(TDURLProtocol) {
     Log(@"Body = %@", bodyStr);
     CAssert(body != nil);
     CAssert(response != nil);
-    CAssertEq(response.statusCode, 200);
+    CAssertEq(response.statusCode, kTDStatusOK);
     CAssertEqual([response.allHeaderFields objectForKey: @"Content-Type"], @"application/json");
     CAssert([bodyStr rangeOfString: @"\"TouchDB\":\"Welcome\""].length > 0);
     [server close];

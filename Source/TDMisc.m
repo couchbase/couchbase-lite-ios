@@ -19,9 +19,6 @@
 #import <CommonCrypto/CommonDigest.h>
 
 
-NSString* const TDHTTPErrorDomain = @"TDHTTP";
-
-
 NSString* TDCreateUUID() {
     CFUUIDRef uuid = CFUUIDCreate(NULL);
     NSString* str = NSMakeCollectable(CFUUIDCreateString(NULL, uuid));
@@ -44,15 +41,6 @@ NSString* TDHexFromBytes( const void* bytes, size_t length) {
     return [[[NSString alloc] initWithBytes: hex
                                      length: 2*length
                                    encoding: NSASCIIStringEncoding] autorelease];
-}
-
-
-NSError* TDHTTPError( int status, NSURL* url ) {
-    NSString* reason = [NSHTTPURLResponse localizedStringForStatusCode: status];
-    NSDictionary* info = $dict({NSURLErrorKey, url},
-                               {NSLocalizedFailureReasonErrorKey, reason},
-                               {NSLocalizedDescriptionKey, $sprintf(@"%i %@", status, reason)});
-    return [NSError errorWithDomain: TDHTTPErrorDomain code: status userInfo: info];
 }
 
 

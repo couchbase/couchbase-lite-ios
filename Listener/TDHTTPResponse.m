@@ -195,26 +195,21 @@
             // to massage the response:
             LogTo(TDListenerVerbose, @"%@ prettifying response body", self);
             int status = _response.status;
-            if (status >= 300 && _data.length == 0) {
-                // Put a generic error message in the body:
+            if (TDStatusIsError(status) && _data.length == 0) {
+                // Put an error message in the body:
                 NSString* errorMsg;
-                switch (status) {
-                    case 404:   errorMsg = @"not_found"; break;
-                        // TODO: There are more of these to add; see error_info() in couch_httpd.erl
-                    default:
-                        errorMsg = [NSHTTPURLResponse localizedStringForStatusCode: status];
-                }
+                status = _response.status = TDStatusToHTTPStatus(status, &errorMsg);
                 NSString* responseStr = [NSString stringWithFormat: @"{\"status\": %i, \"error\":\"%@\"}\n",
                                                                      status, errorMsg];
                 [_response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];
                 [self onDataAvailable: [responseStr dataUsingEncoding: NSUTF8StringEncoding]
                              finished: NO];
             } else {
-    #if DEBUG
+#if DEBUG
                 BOOL pretty = YES;
-    #else
+#else
                 BOOL pretty = [_router boolQuery: @"pretty"];
-    #endif
+#endif
                 if (pretty) {
                     [_data release];
                     _data = [_response.body.asPrettyJSON mutableCopy];

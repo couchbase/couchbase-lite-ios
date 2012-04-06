@@ -79,7 +79,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     *outCreateTarget = [$castIf(NSNumber, [properties objectForKey: @"create_target"]) boolValue];
     
     if (!source || !target)
-        return 400;
+        return kTDStatusBadRequest;
     *outIsPush = NO;
     TDDatabase* db = nil;
     NSString* remoteStr;
@@ -90,13 +90,13 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
         *outIsPush = YES;
     } else {
         if (![TDDatabaseManager isValidDatabaseName: target])
-            return 400;
+            return kTDStatusBadID;
         remoteStr = source;
         if (outDatabase) {
             if (*outCreateTarget) {
                 db = [_dbManager databaseNamed: target];
                 if (![db open])
-                    return 500;
+                    return kTDStatusDBError;
             } else {
                 db = [_dbManager existingDatabaseNamed: target];
             }
@@ -104,15 +104,15 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     }
     NSURL* remote = [NSURL URLWithString: remoteStr];
     if (!remote || ![remote.scheme hasPrefix: @"http"])
-        return 400;
+        return kTDStatusBadRequest;
     if (outDatabase) {
         *outDatabase = db;
         if (!db)
-            return 404;
+            return kTDStatusNotFound;
     }
     if (outRemote)
         *outRemote = remote;
-    return 200;
+    return kTDStatusOK;
 }
 
 
@@ -176,7 +176,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
         NSMutableDictionary* updatedProperties = [[currentProperties mutableCopy] autorelease];
         [updatedProperties addEntriesFromDictionary: updates];
         if ($equal(updatedProperties, currentProperties)) {
-            status = 200;     // this is a no-op change
+            status = kTDStatusOK;     // this is a no-op change
             break;
         }
         TDRevision* updatedRev = [TDRevision revisionWithProperties: updatedProperties];
@@ -190,16 +190,16 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
             _updateInProgress = NO;
         }
         
-        if (status == 409) {
+        if (status == kTDStatusConflict) {
             // Conflict -- doc has been updated, get the latest revision & try again:
             currentRev = [_replicatorDB getDocumentWithID: currentRev.docID
                                                revisionID: nil options: 0];
             if (!currentRev)
-                status = 404;   // doc's been deleted, apparently
+                status = kTDStatusNotFound;   // doc's been deleted, apparently
         }
-    } while (status == 409);
+    } while (status == kTDStatusConflict);
     
-    if (status >= 300)
+    if (TDStatusIsError(status))
         Warn(@"TDReplicatorManager: Error %d updating _replicator doc %@", status, currentRev);
     return status;
 }
@@ -234,7 +234,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
                                            toDatabase: &localDb remote: &remote
                                                isPush: &push
                                          createTarget: &createTarget];
-    if (status >= 300) {
+    if (TDStatusIsError(status)) {
         Warn(@"TDReplicatorManager: Can't find replication endpoints for %@", properties);
         return;
     }

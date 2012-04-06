@@ -60,7 +60,7 @@
 {
     NSString* docID = revision.docID;
     if (![docID hasPrefix: @"_local/"]) {
-        *outStatus = 400;
+        *outStatus = kTDStatusBadID;
         return nil;
     }
     if (!revision.deleted) {
@@ -70,14 +70,14 @@
         if (prevRevID) {
             unsigned generation = [TDRevision generationFromRevID: prevRevID];
             if (generation == 0) {
-                *outStatus = 400;
+                *outStatus = kTDStatusBadID;
                 return nil;
             }
             newRevID = $sprintf(@"%d-local", ++generation);
             if (![_fmdb executeUpdate: @"UPDATE localdocs SET revid=?, json=? "
                                         "WHERE docid=? AND revid=?", 
                                        newRevID, json, docID, prevRevID]) {
-                *outStatus = 500;
+                *outStatus = kTDStatusDBError;
                 return nil;
             }
         } else {
@@ -87,15 +87,15 @@
             if (![_fmdb executeUpdate: @"INSERT OR IGNORE INTO localdocs (docid, revid, json) "
                                         "VALUES (?, ?, ?)",
                                    docID, newRevID, json]) {
-                *outStatus = 500;
+                *outStatus = kTDStatusDBError;
                 return nil;
             }
         }
         if (_fmdb.changes == 0) {
-            *outStatus = 409;
+            *outStatus = kTDStatusConflict;
             return nil;
         }
-        *outStatus = 201;
+        *outStatus = kTDStatusCreated;
         return [[revision copyWithDocID: docID revID: newRevID] autorelease];
         
     } else {
@@ -108,16 +108,16 @@
 
 - (TDStatus) deleteLocalDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
     if (!docID)
-        return 400;
+        return kTDStatusBadID;
     if (!revID) {
-        // Didn't specify a revision to delete: 404 or a 409, depending
-        return [self getLocalDocumentWithID: docID revisionID: nil] ? 409 : 404;
+        // Didn't specify a revision to delete: kTDStatusNotFound or a kTDStatusConflict, depending
+        return [self getLocalDocumentWithID: docID revisionID: nil] ? kTDStatusConflict : kTDStatusNotFound;
     }
     if (![_fmdb executeUpdate: @"DELETE FROM localdocs WHERE docid=? AND revid=?", docID, revID])
-        return 500;
+        return kTDStatusDBError;
     if (_fmdb.changes == 0)
-        return [self getLocalDocumentWithID: docID revisionID: nil] ? 409 : 404;
-    return 200;
+        return [self getLocalDocumentWithID: docID revisionID: nil] ? kTDStatusConflict : kTDStatusNotFound;
+    return kTDStatusOK;
 }
 
 

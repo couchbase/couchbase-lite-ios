@@ -335,10 +335,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                           body: nil
                   onCompletion: ^(id response, NSError* error) {
                   // Got the response:
-                  if (error && error.code != 404) {
+                  if (error && error.code != kTDStatusNotFound) {
                       self.error = error;
                   } else {
-                      if (error.code == 404)
+                      if (error.code == kTDStatusNotFound)
                           [self maybeCreateRemoteDB];
                       response = $castIf(NSDictionary, response);
                       self.remoteCheckpoint = response;

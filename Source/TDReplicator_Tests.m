@@ -44,7 +44,7 @@ static void deleteRemoteDB(void) {
     NSURLResponse* response = nil;
     NSError* error = nil;
     [NSURLConnection sendSynchronousRequest: req returningResponse: &response error: &error];
-    CAssert(error == nil || error.code == 404, @"Couldn't delete remote: %@", error);
+    CAssert(error == nil || error.code == kTDStatusNotFound, @"Couldn't delete remote: %@", error);
 }
 
 
@@ -94,19 +94,19 @@ TestCase(TDPusher) {
     TDStatus status;
     TDRevision* rev1 = [db putRevision: [TDRevision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 201);
+    CAssertEq(status, kTDStatusCreated);
     
     [props setObject: rev1.revID forKey: @"_rev"];
     [props setObject: $true forKey: @"UPDATED"];
     TDRevision* rev2 = [db putRevision: [TDRevision revisionWithProperties: props]
                         prevRevisionID: rev1.revID allowConflict: NO status: &status];
-    CAssertEq(status, 201);
+    CAssertEq(status, kTDStatusCreated);
     
     props = $mdict({@"_id", @"doc2"},
                    {@"baz", $object(666)}, {@"fnord", $true});
     [db putRevision: [TDRevision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 201);
+    CAssertEq(status, kTDStatusCreated);
 #pragma unused(rev2)
     
     // Push them to the remote:
@@ -190,13 +190,13 @@ TestCase(TDReplicatorManager) {
 #pragma unused (rev) // some of the 'rev=' assignments below are unnecessary
     TDStatus status;
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 403);
+    CAssertEq(status, kTDStatusForbidden);
 
     rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
                                                     {@"target", @"http://foo.com"},
                                                     {@"_internal", $true})];
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 403);
+    CAssertEq(status, kTDStatusForbidden);
     
     TDDatabase* sourceDB = [server databaseNamed: @"foo"];
     CAssert([sourceDB open]);
@@ -206,7 +206,7 @@ TestCase(TDReplicatorManager) {
     rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
                                                     {@"target", remote.absoluteString})];
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, 201);
+    CAssertEq(status, kTDStatusCreated);
     
     // Get back the document and verify it's been updated with replicator properties:
     TDRevision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0];
@@ -228,7 +228,7 @@ TestCase(TDReplicatorManager) {
     [updatedProps removeObjectForKey: @"_replication_state"];
     rev = [TDRevision revisionWithProperties: updatedProps];
     rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssertEq(status, 201);
+    CAssertEq(status, kTDStatusCreated);
 
     // Get back the document and verify it's been updated with replicator properties:
     newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0];
@@ -248,7 +248,7 @@ TestCase(TDReplicatorManager) {
     // Now delete it:
     rev = [[[TDRevision alloc] initWithDocID: newRev.docID revID: newRev.revID deleted: YES] autorelease];
     rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     [server close];
 }
 

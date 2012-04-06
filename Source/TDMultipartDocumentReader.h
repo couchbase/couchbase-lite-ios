@@ -7,6 +7,7 @@
 //
 
 #import "TDMultipartReader.h"
+#import "TDStatus.h"
 @class TDDatabase, TDRevision, TDBlobStoreWriter;
 
 
@@ -14,7 +15,7 @@
 {
     @private
     TDDatabase* _database;
-    int _status;
+    TDStatus _status;
     TDMultipartReader* _multipartReader;
     NSMutableData* _jsonBuffer;
     TDBlobStoreWriter* _curAttachment;
@@ -26,11 +27,11 @@
 + (NSDictionary*) readData: (NSData*)data
                     ofType: (NSString*)contentType
                 toDatabase: (TDDatabase*)database
-                    status: (int*)outStatus;
+                    status: (TDStatus*)outStatus;
 
 - (id) initWithDatabase: (TDDatabase*)database;
 
-@property (readonly, nonatomic) int status;
+@property (readonly, nonatomic) TDStatus status;
 @property (readonly, nonatomic) NSDictionary* document;
 @property (readonly, nonatomic) NSUInteger attachmentCount;
 

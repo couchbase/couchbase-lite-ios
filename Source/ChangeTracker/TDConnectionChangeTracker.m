@@ -17,6 +17,7 @@
 
 #import "TDConnectionChangeTracker.h"
 #import "TDMisc.h"
+#import "TDStatus.h"
 
 
 @implementation TDConnectionChangeTracker
@@ -79,11 +80,11 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    int status = (int) ((NSHTTPURLResponse*)response).statusCode;
+    TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(ChangeTracker, @"%@: Got response, status %d", self, status);
-    if (status >= 300) {
+    if (TDStatusIsError(status)) {
         Warn(@"%@: Got status %i", self, status);
-        self.error = TDHTTPError(status, self.changesFeedURL);
+        self.error = TDStatusToNSError(status, self.changesFeedURL);
         [self stop];
     }
 }

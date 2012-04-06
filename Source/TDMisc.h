@@ -19,8 +19,6 @@ NSString* TDHexSHA1Digest( NSData* input );
     The result is lowercase. This is important for CouchDB compatibility. */
 NSString* TDHexFromBytes( const void* bytes, size_t length);
 
-NSError* TDHTTPError( int status, NSURL* url );
-
 NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b);
 
 /** Escapes a document or revision ID for use in a URL.

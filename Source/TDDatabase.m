@@ -356,14 +356,14 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     // But we can remove the JSON of non-current revisions, which is most of the space.
     Log(@"TDDatabase: Deleting JSON of old revisions...");
     if (![_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"])
-        return 500;
+        return kTDStatusDBError;
     
     Log(@"Deleting old attachments...");
     TDStatus status = [self garbageCollectAttachments];
 
     Log(@"Vacuuming SQLite database...");
     if (![_fmdb executeUpdate: @"VACUUM"])
-        return 500;
+        return kTDStatusDBError;
     
     Log(@"...Finished database compaction.");
     return status;
@@ -531,17 +531,17 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                       options: (TDContentOptions)options
 {
     if (rev.body && options==0)
-        return 200;
+        return kTDStatusOK;
     Assert(rev.docID && rev.revID);
     FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs, docs "
                             "WHERE revid=? AND docs.docid=? AND revs.doc_id=docs.doc_id LIMIT 1",
                             rev.revID, rev.docID];
     if (!r)
-        return 500;
-    TDStatus status = 404;
+        return kTDStatusDBError;
+    TDStatus status = kTDStatusNotFound;
     if ([r next]) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
-        status = 200;
+        status = kTDStatusOK;
         rev.sequence = [r longLongIntForColumnIndex: 0];
         [self expandStoredJSON: [r dataNoCopyForColumnIndex: 1] intoRevision: rev options: options];
     }
@@ -837,9 +837,9 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 - (TDStatus) deleteViewNamed: (NSString*)name {
     if (![_fmdb executeUpdate: @"DELETE FROM views WHERE name=?", name])
-        return 500;
+        return kTDStatusDBError;
     [_views removeObjectForKey: name];
-    return _fmdb.changes ? 200 : 404;
+    return _fmdb.changes ? kTDStatusOK : kTDStatusNotFound;
 }
 
 

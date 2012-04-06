@@ -160,17 +160,17 @@ static id fromJSON( NSData* json ) {
     
     int viewID = self.viewID;
     if (viewID <= 0)
-        return 404;
+        return kTDStatusNotFound;
     
     [_db beginTransaction];
     FMResultSet* r = nil;
-    TDStatus status = 500;
+    TDStatus status = kTDStatusDBError;
     @try {
         // Check whether we need to update at all:
         const SequenceNumber lastSequence = self.lastSequenceIndexed;
         const SequenceNumber dbMaxSequence = _db.lastSequence;
         if (lastSequence == dbMaxSequence) {
-            status = 304;
+            status = kTDStatusNotModified;
             return status;
         }
 
@@ -181,7 +181,7 @@ static id fromJSON( NSData* json ) {
         // First remove obsolete emitted results from the 'maps' table:
         __block SequenceNumber sequence = lastSequence;
         if (lastSequence < 0)
-            return 500;
+            return kTDStatusDBError;
         BOOL ok;
         if (lastSequence == 0) {
             // If the lastSequence has been reset to 0, make sure to remove all map results:
@@ -194,7 +194,7 @@ static id fromJSON( NSData* json ) {
                                       $object(_viewID), $object(lastSequence), $object(lastSequence)];
         }
         if (!ok)
-            return 500;
+            return kTDStatusDBError;
 #ifndef MY_DISABLE_LOGGING
         unsigned deleted = fmdb.changes;
 #endif
@@ -222,7 +222,7 @@ static id fromJSON( NSData* json ) {
                                  "ORDER BY revs.doc_id, revid DESC",
                                  $object(lastSequence)];
         if (!r)
-            return 500;
+            return kTDStatusDBError;
 
         BOOL keepGoing = [r next]; // Go to first result row
         while (keepGoing) {
@@ -263,7 +263,7 @@ static id fromJSON( NSData* json ) {
                     LogTo(View, @"  call map for sequence=%lld...", sequence);
                     _mapBlock(properties, emit);
                     if (emitFailed)
-                        return 500;
+                        return kTDStatusCallbackError;
                 }
             }
         }
@@ -271,17 +271,17 @@ static id fromJSON( NSData* json ) {
         // Finally, record the last revision sequence number that was indexed:
         if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
                                    $object(dbMaxSequence), $object(viewID)])
-            return 500;
+            return kTDStatusDBError;
         
         LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
               _name, dbMaxSequence, deleted, inserted);
-        status = 200;
+        status = kTDStatusOK;
         
     } @finally {
         [r close];
-        if (status >= 400)
+        if (status >= kTDStatusBadRequest)
             Warn(@"TouchDB: Failed to rebuild view '%@': %d", _name, status);
-        [_db endTransaction: (status < 400)];
+        [_db endTransaction: (status < kTDStatusBadRequest)];
     }
     return status;
 }
@@ -358,7 +358,7 @@ static id fromJSON( NSData* json ) {
     
     FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r)
-        *outStatus = 500;
+        *outStatus = kTDStatusDBError;
     return r;
 }
 
@@ -401,7 +401,7 @@ static id groupKey(id key, unsigned groupLevel) {
 
     if (reduce && !_reduceBlock && !group) {
         Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
-        *outStatus = 400;
+        *outStatus = kTDStatusBadParam;
         return nil;
     }
     
@@ -464,7 +464,7 @@ static id groupKey(id key, unsigned groupLevel) {
     }
     
     [r close];
-    *outStatus = 200;
+    *outStatus = kTDStatusOK;
     return rows;
 }
 

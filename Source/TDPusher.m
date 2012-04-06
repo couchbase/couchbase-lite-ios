@@ -53,7 +53,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     LogTo(Sync, @"Remote db might not exist; creating it...");
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
-        if (error && error.code != 412) {
+        if (error && error.code != kTDStatusDuplicate) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
             [self stop];
