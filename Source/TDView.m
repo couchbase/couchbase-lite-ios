@@ -252,6 +252,19 @@ static id fromJSON( NSData* json ) {
                                                                   sequence: sequence
                                                                    options: 0];
                 if (properties) {
+                    if (lastSequence > 0) {
+                        // Find conflicts with documents from previous indexings.
+                        FMResultSet* r2 = [fmdb executeQuery: @"SELECT revid FROM revs "
+                                                               "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0",
+                                                               $object(doc_id), $object(lastSequence)];
+                        while ([r2 next]) {
+                            if (!conflicts)
+                                conflicts = $marray();
+                            [conflicts addObject:[r2 stringForColumnIndex:0]];
+                        }
+                        [r2 close];
+                    }
+                    
                     if (conflicts) {
                         // Add a "_conflicts" property if there were conflicting revisions:
                         NSMutableDictionary* mutableProps = [[properties mutableCopy] autorelease];
