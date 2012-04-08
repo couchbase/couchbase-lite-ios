@@ -38,6 +38,7 @@ typedef enum {
     kTDStatusCorruptError   = 591,      // bad data in database
     kTDStatusAttachmentError= 592,      // problem with attachment store
     kTDStatusCallbackError  = 593,      // app callback (emit fn, etc.) failed
+    kTDStatusException      = 594,      // Exception raised/caught
 } TDStatus;
 
 

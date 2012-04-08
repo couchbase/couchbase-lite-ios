@@ -40,7 +40,8 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kTDStatusDBError,              500, @"Database error!"},
     {kTDStatusCorruptError,         500, @"Invalid data in database"},
     {kTDStatusAttachmentError,      500, @"Attachment store error"},
-    {kTDStatusCallbackError,        500, @"Application callback block failed"}
+    {kTDStatusCallbackError,        500, @"Application callback block failed"},
+    {kTDStatusException,            500, @"Internal error"},
 };
 
 

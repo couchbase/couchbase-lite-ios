@@ -21,6 +21,7 @@
 #import "TDMultipartWriter.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
+#import "ExceptionUtils.h"
 #import <objc/message.h>
 
 
@@ -337,7 +338,15 @@ static NSArray* splitPath( NSURL* url ) {
 - (void) run {
     Assert(_dbManager);
     // Call the appropriate handler method:
-    TDStatus status = [self route];
+    TDStatus status;
+    @try {
+        status = [self route];
+    } @catch (NSException *x) {
+        MYReportException(x, @"handling TouchDB request");
+        status = kTDStatusException;
+        [_response.headers removeAllObjects];
+        _response.body = nil;
+    }
 
     // Configure response headers:
     if (status < 300 && !_response.body && ![_response.headers objectForKey: @"Content-Type"]) {
