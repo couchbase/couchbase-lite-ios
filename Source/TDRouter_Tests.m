@@ -78,13 +78,15 @@ static id ParseJSONResponse(TDResponse* response) {
     return result;
 }
 
+static TDResponse* sLastResponse;
+
 static id SendBody(TDDatabaseManager* server, NSString* method, NSString* path, id bodyObj,
                int expectedStatus, id expectedResult) {
-    TDResponse* response = SendRequest(server, method, path, nil, bodyObj);
-    id result = ParseJSONResponse(response);
-    Log(@"%@ %@ --> %d", method, path, response.status);
+    sLastResponse = SendRequest(server, method, path, nil, bodyObj);
+    id result = ParseJSONResponse(sLastResponse);
+    Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
     
-    CAssertEq(response.status, expectedStatus);
+    CAssertEq(sLastResponse.status, expectedStatus);
 
     if (expectedResult)
         CAssertEqual(result, expectedResult);
@@ -94,6 +96,13 @@ static id SendBody(TDDatabaseManager* server, NSString* method, NSString* path, 
 static id Send(TDDatabaseManager* server, NSString* method, NSString* path,
                int expectedStatus, id expectedResult) {
     return SendBody(server, method, path, nil, expectedStatus, expectedResult);
+}
+
+static void CheckCacheable(TDDatabaseManager* server, NSString* path) {
+    NSString* eTag = [sLastResponse.headers objectForKey: @"Etag"];
+    CAssert(eTag.length > 0, @"Missing eTag in response for %@", path);
+    sLastResponse = SendRequest(server, @"GET", path, $dict({@"If-None-Match", eTag}), nil);
+    CAssertEq(sLastResponse.status, kTDStatusNotModified);
 }
 
 
@@ -160,6 +169,7 @@ TestCase(TDRouter_Docs) {
     
     Send(server, @"GET", @"/db/doc1", kTDStatusOK,
          $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"goodbye"}));
+    CheckCacheable(server, @"/db/doc1");
     
     // Add more docs:
     result = SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"hello"}), 
@@ -181,6 +191,7 @@ TestCase(TDRouter_Docs) {
                               $dict({@"id",  @"doc3"}, {@"key", @"doc3"},
                                     {@"value", $dict({@"rev", revID3})})
                               ));
+    CheckCacheable(server, @"/db/_all_docs");
 
     // DELETE:
     result = Send(server, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), kTDStatusOK, nil);
@@ -202,6 +213,7 @@ TestCase(TDRouter_Docs) {
                                          {@"changes", $array($dict({@"rev", revID}))},
                                          {@"seq", $object(5)},
                                          {@"deleted", $true}))}));
+    CheckCacheable(server, @"/db/_changes");
     
     // _changes with ?since:
     Send(server, @"GET", @"/db/_changes?since=4", kTDStatusOK,
@@ -233,6 +245,7 @@ TestCase(TDRouter_LocalDocs) {
          $dict({@"_id", @"_local/doc1"},
                {@"_rev", revID},
                {@"message", @"hello"}));
+    CheckCacheable(server, @"/db/_local/doc1");
 
     // Local doc should not appear in _changes feed:
     Send(server, @"GET", @"/db/_changes", kTDStatusOK,

@@ -63,6 +63,7 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) getQueryOptions: (struct TDQueryOptions*)options;
 @property (readonly) NSString* multipartRequestType;
 @property (readonly) NSDictionary* bodyAsDictionary;
+@property (readonly) NSString* ifMatch;
 - (TDStatus) openDB;
 - (void) sendResponse;
 - (void) finished;

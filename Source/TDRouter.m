@@ -199,6 +199,18 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 }
 
 
+- (NSString*) ifMatch {
+    NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
+    if (!ifMatch)
+        return nil;
+    // Value of If-Match is an ETag, so have to trim the quotes around it:
+    if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
+        return [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
+    else
+        return nil;
+}
+
+
 - (TDStatus) openDB {
     // As a special case, the _replicator db is created on demand (as though it already existed)
     if (!_db.exists && !$equal(_db.name, kTDReplicatorDatabaseName))

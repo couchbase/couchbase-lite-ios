@@ -214,6 +214,9 @@
 
 
 - (TDStatus) do_GET_all_docs: (TDDatabase*)db {
+    if ([self cacheWithEtag: $sprintf(@"%lld", db.lastSequence)])
+        return kTDStatusNotModified;
+    
     TDQueryOptions options;
     if (![self getQueryOptions: &options])
         return kTDStatusBadParam;
@@ -452,6 +455,16 @@
 
 - (TDStatus) do_GET_changes: (TDDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
+    
+    NSString* feed = [self query: @"feed"];
+    _longpoll = $equal(feed, @"longpoll");
+    BOOL continuous = !_longpoll && $equal(feed, @"continuous");
+    
+    // Regular poll is cacheable:
+    if (!_longpoll && !continuous && [self cacheWithEtag: $sprintf(@"%lld", _db.lastSequence)])
+        return kTDStatusNotModified;
+
+    // Get options:
     TDChangesOptions options = kDefaultTDChangesOptions;
     _changesIncludeDocs = [self boolQuery: @"include_docs"];
     options.includeDocs = _changesIncludeDocs;
@@ -474,11 +487,9 @@
     if (!changes)
         return kTDStatusDBError;
     
-    NSString* feed = [self query: @"feed"];
-    _longpoll = $equal(feed, @"longpoll");
-    BOOL continuous = !_longpoll && $equal(feed, @"continuous");
     
     if (continuous || (_longpoll && changes.count==0)) {
+        // Response is going to stay open (continuous, or hanging GET):
         if (continuous) {
             [self sendResponse];
             for (TDRevision* rev in changes) 
@@ -492,6 +503,7 @@
         _waiting = YES;
         return 0;
     } else {
+        // Return a response immediately and close the connection:
         if (options.includeConflicts)
             _response.bodyObject = [self responseBodyForChangesWithConflicts: changes.allRevisions
                                                                        since: since];
@@ -503,25 +515,6 @@
 
 
 #pragma mark - DOCUMENT REQUESTS:
-
-
-- (NSString*) revIDFromIfMatchHeader {
-    NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
-    if (!ifMatch)
-        return nil;
-    // Value of If-Match is an ETag, so have to trim the quotes around it:
-    if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
-        return [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
-    else
-        return nil;
-}
-
-
-- (NSString*) setResponseEtag: (TDRevision*)rev {
-    NSString* eTag = $sprintf(@"\"%@\"", rev.revID);
-    [_response setValue: eTag ofHeader: @"Etag"];
-    return eTag;
-}
 
 
 static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
@@ -677,7 +670,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
     // A backup source of revision ID is an If-Match header:
     if (!prevRevID)
-        prevRevID = [self revIDFromIfMatchHeader];
+        prevRevID = self.ifMatch;
 
     TDRevision* rev = [[[TDRevision alloc] initWithDocID: docID revID: nil deleted: deleting]
                             autorelease];
@@ -777,7 +770,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                        type: [_request valueForHTTPHeaderField: @"Content-Type"]
                                    encoding: kTDAttachmentEncodingNone
                                     ofDocID: docID
-                                      revID: ([self query: @"rev"] ?: [self revIDFromIfMatchHeader])
+                                      revID: ([self query: @"rev"] ?: self.ifMatch)
                                      status: &status];
     if (status < 300) {
         _response.bodyObject = $dict({@"ok", $true}, {@"id", rev.docID}, {@"rev", rev.revID});
