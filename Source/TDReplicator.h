@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 
 @class TDDatabase, TDRevisionList, TDBatcher, TDReachability;
+@protocol TDAuthorizer;
 
 
 /** Posted when changesProcessed or changesTotal changes. */
@@ -39,6 +40,7 @@ extern NSString* TDReplicatorStoppedNotification;
     int _asyncTaskCount;
     NSUInteger _changesProcessed, _changesTotal;
     CFAbsoluteTime _startTime;
+    id<TDAuthorizer> _authorizer;
 }
 
 - (id) initWithDB: (TDDatabase*)db
@@ -52,6 +54,7 @@ extern NSString* TDReplicatorStoppedNotification;
 @property (readonly) BOOL continuous;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
+@property (retain) id<TDAuthorizer> authorizer;
 
 /** Starts the replicator.
     Replicators run asynchronously so nothing will happen until later.
@@ -90,3 +93,26 @@ extern NSString* TDReplicatorStoppedNotification;
 @end
 
 
+
+/** Protocol for adding authorization to HTTP requests sent by a TDReplicator. */
+@protocol TDAuthorizer <NSObject>
+
+/** Should generate and return an authorization string for the given request.
+    The string, if non-nil, will be set as the value of the "Authorization:" HTTP header. */
+- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request;
+
+@end
+
+
+
+/** Simple implementation of TDAuthorizer that does HTTP Basic Auth. */
+@interface TDBasicAuthorizer : NSObject <TDAuthorizer>
+{
+    @private
+    NSURLCredential* _credential;
+}
+
+/** Initialize given a credential object that contains a username and password. */
+- (id) initWithCredential: (NSURLCredential*)credential;
+
+@end

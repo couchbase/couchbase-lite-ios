@@ -22,6 +22,7 @@
 #import "TDReachability.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
+#import "TDBase64.h"
 
 
 #define kProcessDelay 0.5
@@ -100,6 +101,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [_batcher release];
     [_sessionID release];
     [_error release];
+    [_authorizer release];
     [super dealloc];
 }
 
@@ -121,6 +123,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 @synthesize error=_error, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
+@synthesize authorizer=_authorizer;
 
 
 - (BOOL) isPush {
@@ -303,6 +306,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     return [[[TDRemoteJSONRequest alloc] initWithMethod: method
                                                     URL: url
                                                    body: body
+                                             authorizer: _authorizer
                                            onCompletion: onCompletion] autorelease];
 }
 
@@ -402,5 +406,38 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [_db setLastSequence: _lastSequence withRemoteURL: _remote push: self.isPush];
 }
 
+
+@end
+
+
+
+
+@implementation TDBasicAuthorizer
+
+- (id) initWithCredential: (NSURLCredential*)credential {
+    Assert(credential);
+    self = [super init];
+    if (self) {
+        _credential = [credential retain];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [_credential release];
+    [super dealloc];
+}
+
+- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request {
+    NSString* username = _credential.user;
+    NSString* password = _credential.password;
+    if (username && password) {
+        NSString* seekrit = $sprintf(@"%@:%@", username, password);
+        seekrit = [TDBase64 encode: [seekrit dataUsingEncoding: NSUTF8StringEncoding]];
+        return [@"Basic " stringByAppendingString: seekrit];
+    }
+    return nil;
+}
 
 @end

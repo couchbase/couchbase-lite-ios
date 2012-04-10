@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+@protocol TDAuthorizer;
 
 
 /** The signature of the completion block called by a TDRemoteRequest.
@@ -32,6 +33,7 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 
 /** Creates and starts a request; when finished, the onCompletion block will be called. */
 - (id) initWithMethod: (NSString*)method URL: (NSURL*)url body: (id)body
+           authorizer: (id<TDAuthorizer>)authorizer
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 
 /** In some cases a kTDStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */

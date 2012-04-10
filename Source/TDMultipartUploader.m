@@ -20,10 +20,13 @@
 
 - (id) initWithURL: (NSURL *)url
           streamer: (TDMultipartWriter*)streamer
+        authorizer: (id<TDAuthorizer>)authorizer
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
     Assert(streamer);
-    return [super initWithMethod: @"PUT" URL: url body: streamer onCompletion: onCompletion];
+    return [super initWithMethod: @"PUT" URL: url body: streamer
+                      authorizer: authorizer
+                    onCompletion: onCompletion];
 }
 
 - (void)dealloc {
