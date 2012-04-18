@@ -87,3 +87,12 @@ typedef SInt64 SequenceNumber;
 - (void) sortBySequence;
 
 @end
+
+
+/** Compares revision IDs by CouchDB rules: generation number first, then the suffix. */
+NSComparisonResult TDCompareRevIDs(NSString* revID1, NSString* revID2);
+
+/** SQLite-compatible collation (comparison) function for revision IDs. */
+int TDCollateRevIDs(void *context,
+                    int len1, const void * chars1,
+                    int len2, const void * chars2);
