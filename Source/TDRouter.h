@@ -74,17 +74,22 @@ typedef void (^OnFinishedBlock)();
 @interface TDResponse : NSObject
 {
     @private
+    TDStatus _internalStatus;
     int _status;
+    NSString* _statusMsg;
     NSMutableDictionary* _headers;
     TDBody* _body;
 }
 
-@property int status;
-@property (retain) NSMutableDictionary* headers;
-@property (retain) TDBody* body;
-@property (copy) id bodyObject;
-@property (readonly) NSString* baseContentType;
+@property (nonatomic) TDStatus internalStatus;
+@property (nonatomic) int status;
+@property (nonatomic, readonly) NSString* statusMsg;
+@property (nonatomic, retain) NSMutableDictionary* headers;
+@property (nonatomic, retain) TDBody* body;
+@property (nonatomic, copy) id bodyObject;
+@property (nonatomic, readonly) NSString* baseContentType;
 
+- (void) reset;
 - (void) setValue: (NSString*)value ofHeader: (NSString*)header;
 
 - (void) setMultipartBody: (TDMultipartWriter*)mp;

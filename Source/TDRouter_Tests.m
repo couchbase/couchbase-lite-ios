@@ -81,12 +81,12 @@ static id ParseJSONResponse(TDResponse* response) {
 static TDResponse* sLastResponse;
 
 static id SendBody(TDDatabaseManager* server, NSString* method, NSString* path, id bodyObj,
-               int expectedStatus, id expectedResult) {
+                   TDStatus expectedStatus, id expectedResult) {
     sLastResponse = SendRequest(server, method, path, nil, bodyObj);
     id result = ParseJSONResponse(sLastResponse);
     Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
     
-    CAssertEq(sLastResponse.status, expectedStatus);
+    CAssertEq(sLastResponse.internalStatus, expectedStatus);
 
     if (expectedResult)
         CAssertEqual(result, expectedResult);
@@ -116,7 +116,10 @@ TestCase(TDRouter_Server) {
     Send(server, @"GET", @"/non-existent", kTDStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kTDStatusBadID, nil);
     Send(server, @"PUT", @"/", kTDStatusBadRequest, nil);
-    Send(server, @"POST", @"/", kTDStatusBadRequest, nil);
+    NSDictionary* response = Send(server, @"POST", @"/", kTDStatusBadRequest, nil);
+    
+    CAssertEqual([response objectForKey: @"status"], $object(400));
+    CAssertEqual([response objectForKey: @"error"], @"bad request");
     
     NSDictionary* session = Send(server, @"GET", @"/_session", kTDStatusOK, nil);
     CAssert([session objectForKey: @"ok"]);

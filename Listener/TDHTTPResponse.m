@@ -194,26 +194,14 @@
             // Response finished immediately, before the connection asked for any data, so we're free
             // to massage the response:
             LogTo(TDListenerVerbose, @"%@ prettifying response body", self);
-            int status = _response.status;
-            if (TDStatusIsError(status) && _data.length == 0) {
-                // Put an error message in the body:
-                NSString* errorMsg;
-                status = _response.status = TDStatusToHTTPStatus(status, &errorMsg);
-                NSString* responseStr = [NSString stringWithFormat: @"{\"status\": %i, \"error\":\"%@\"}\n",
-                                                                     status, errorMsg];
-                [_response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];
-                [self onDataAvailable: [responseStr dataUsingEncoding: NSUTF8StringEncoding]
-                             finished: NO];
-            } else {
 #if DEBUG
-                BOOL pretty = YES;
+            BOOL pretty = YES;
 #else
-                BOOL pretty = [_router boolQuery: @"pretty"];
+            BOOL pretty = [_router boolQuery: @"pretty"];
 #endif
-                if (pretty) {
-                    [_data release];
-                    _data = [_response.body.asPrettyJSON mutableCopy];
-                }
+            if (pretty) {
+                [_data release];
+                _data = [_response.body.asPrettyJSON mutableCopy];
             }
         }
     }

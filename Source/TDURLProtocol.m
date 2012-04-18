@@ -163,8 +163,8 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 
 - (void) onResponseReady: (TDResponse*)routerResponse {
-    LogTo(TDURLProtocol, @"response ready for <%@> (%d)",
-          self.request.URL, routerResponse.status);
+    LogTo(TDURLProtocol, @"response ready for <%@> (%d %@)",
+          self.request.URL, routerResponse.status, routerResponse.statusMsg);
     // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
     // TODO: Find a way to work around this; it'd be nice to support 10.6 or iOS 4.x.
     NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL

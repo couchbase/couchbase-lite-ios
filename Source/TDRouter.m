@@ -356,16 +356,8 @@ static NSArray* splitPath( NSURL* url ) {
     } @catch (NSException *x) {
         MYReportException(x, @"handling TouchDB request");
         status = kTDStatusException;
-        [_response.headers removeAllObjects];
-        _response.body = nil;
+        [_response reset];
     }
-
-    // Configure response headers:
-    if (status < 300 && !_response.body && ![_response.headers objectForKey: @"Content-Type"]) {
-        _response.body = [TDBody bodyWithJSON: [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
-    }
-    if (_response.body.isValidJSON)
-        [_response setValue: @"application/json" ofHeader: @"Content-Type"];
     
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
@@ -374,17 +366,19 @@ static NSArray* splitPath( NSURL* url ) {
         if (responseType && [accept rangeOfString: responseType].length == 0) {
             LogTo(TDRouter, @"Error kTDStatusNotAcceptable: Can't satisfy request Accept: %@", accept);
             status = kTDStatusNotAcceptable;
-            _response.headers = [NSMutableDictionary dictionary];
-            _response.body = nil;
+            [_response reset];
         }
     }
 
     [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
                           forKey: @"Server"];
 
+    if (_response.body.isValidJSON)
+        [_response setValue: @"application/json" ofHeader: @"Content-Type"];
+
     // If response is ready (nonzero status), tell my client about it:
     if (status > 0) {
-        _response.status = status;
+        _response.internalStatus = status;
         [self sendResponse];
         if (_onDataAvailable && _response.body) {
             _onDataAvailable(_response.body.asJSON, !_waiting);
@@ -457,12 +451,36 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 - (void)dealloc {
+    [_statusMsg release];
     [_headers release];
     [_body release];
     [super dealloc];
 }
 
-@synthesize status=_status, headers=_headers, body=_body;
+- (void) reset {
+    [_headers removeAllObjects];
+    setObj(&_body, nil);
+}
+
+@synthesize status=_status, internalStatus=_internalStatus, statusMsg=_statusMsg,
+            headers=_headers, body=_body;
+
+- (void) setInternalStatus:(TDStatus)internalStatus {
+    _internalStatus = internalStatus;
+    NSString* statusMsg;
+    self.status = TDStatusToHTTPStatus(internalStatus, &statusMsg);
+    setObjCopy(&_statusMsg, statusMsg);
+    if (_status < 300) {
+        if (!_body && ![_headers objectForKey: @"Content-Type"]) {
+            self.body = [TDBody bodyWithJSON:
+                                    [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
+        }
+    } else {
+        self.bodyObject = $dict({@"status", $object(_status)},
+                                {@"error", statusMsg});
+        [self setValue: @"application/json" ofHeader: @"Content-Type"];
+    }
+}
 
 - (void) setValue: (NSString*)value ofHeader: (NSString*)header {
     [_headers setValue: value forKey: header];
