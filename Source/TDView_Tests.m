@@ -83,7 +83,7 @@ static TDView* createView(TDDatabase* db) {
         CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
         CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
         if ([doc objectForKey: @"key"])
-            emit([doc objectForKey: @"key"], nil);
+            emit([doc objectForKey: @"key"], [doc objectForKey: @"_conflicts"]);
     } reduceBlock: NULL version: @"1"];
     return view;
 }
@@ -180,6 +180,86 @@ TestCase(TDView_MapConflicts) {
     CAssertEqual(dump, $array($dict({@"key", @"\"44444\""},
                                     {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)},
                                     {@"seq", $object(6)}) ));
+}
+
+
+TestCase(TDView_ConflictWinner) {
+    // If a view is re-indexed, and a document in the view has gone into conflict,
+    // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
+    //TEMP RequireTestCase(TDView_Index);
+    TDDatabase *db = createDB();
+    NSArray* docs = putDocs(db);
+    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    
+    TDView* view = createView(db);
+    CAssertEq([view updateIndex], kTDStatusOK);
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+    
+    // Create a conflict, won by the new revision:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                                {@"key", @"40ur"});
+    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    CAssert(status < 300);
+    CAssertEqual(leaf1.docID, leaf2.docID);
+    
+    // Update the view -- should contain only the key from the new rev, not the old:
+    CAssertEq([view updateIndex], kTDStatusOK);
+    dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", $object(6)},
+                                    {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)}),
+                              $dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+}
+
+
+TestCase(TDView_ConflictLoser) {
+    // Like the ConflictWinner test, except the newer revision is the loser,
+    // so it shouldn't be indexed at all. Instead, the older still-winning revision
+    // should be indexed again, this time with a '_conflicts' property.
+    TDDatabase *db = createDB();
+    NSArray* docs = putDocs(db);
+    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    
+    TDView* view = createView(db);
+    CAssertEq([view updateIndex], kTDStatusOK);
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+    
+    // Create a conflict, won by the new revision:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-...."},  // lower revID, will lose conflict
+                                {@"key", @"40ur"});
+    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    CAssert(status < 300);
+    CAssertEqual(leaf1.docID, leaf2.docID);
+    
+    // Update the view -- should contain only the key from the new rev, not the old:
+    CAssertEq([view updateIndex], kTDStatusOK);
+    dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)},
+                                    {@"value", @"[\"1-....\"]"}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
 }
 
 

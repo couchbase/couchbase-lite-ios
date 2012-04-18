@@ -247,37 +247,70 @@ static id fromJSON( NSData* json ) {
                     [conflicts addObject: [r stringForColumnIndex: 3]];
                 }
             
+                if (lastSequence > 0) {
+                    // Find conflicts with documents from previous indexings.
+                    BOOL first = YES;
+                    FMResultSet* r2 = [fmdb executeQuery:
+                                    @"SELECT revid, sequence FROM revs "
+                                     "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
+                                     "ORDER BY revID DESC",
+                                    $object(doc_id), $object(lastSequence)];
+                    while ([r2 next]) {
+                        NSString* oldRevID = [r2 stringForColumnIndex:0];
+                        if (!conflicts)
+                            conflicts = $marray();
+                        [conflicts addObject: oldRevID];
+                        if (first) {
+                            // This is the revision that used to be the 'winner'.
+                            // Remove its emitted rows:
+                            first = NO;
+                            SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
+                            [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
+                                                 $object(_viewID), $object(oldSequence)];
+                            if (TDCompareRevIDs(oldRevID, revID) > 0) {
+                                // It still 'wins' the conflict, so it's the one that
+                                // should be mapped [again], not the current revision!
+                                [conflicts removeObject: oldRevID];
+                                [conflicts addObject: revID];
+                                revID = oldRevID;
+                                sequence = oldSequence;
+                                json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
+                                        $object(sequence)];
+                            }
+                        }
+                    }
+                    [r2 close];
+                    
+                    if (!first) {
+                        // Re-sort the conflict array if we added more revisions to it:
+                        [conflicts sortUsingComparator: ^(NSString *r1, NSString* r2) {
+                            return TDCompareRevIDs(r2, r1);
+                        }];
+                    }
+                }
+                
+                // Get the document properties, to pass to the map function:
                 NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
                                                                   sequence: sequence
                                                                    options: 0];
-                if (properties) {
-                    if (lastSequence > 0) {
-                        // Find conflicts with documents from previous indexings.
-                        FMResultSet* r2 = [fmdb executeQuery: @"SELECT revid FROM revs "
-                                                               "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0",
-                                                               $object(doc_id), $object(lastSequence)];
-                        while ([r2 next]) {
-                            if (!conflicts)
-                                conflicts = $marray();
-                            [conflicts addObject:[r2 stringForColumnIndex:0]];
-                        }
-                        [r2 close];
-                    }
-                    
-                    if (conflicts) {
-                        // Add a "_conflicts" property if there were conflicting revisions:
-                        NSMutableDictionary* mutableProps = [[properties mutableCopy] autorelease];
-                        [mutableProps setObject: conflicts forKey: @"_conflicts"];
-                        properties = mutableProps;
-                    }
-                    
-                    // Call the user-defined map() to emit new key/value pairs from this revision:
-                    LogTo(View, @"  call map for sequence=%lld...", sequence);
-                    _mapBlock(properties, emit);
-                    if (emitFailed)
-                        return kTDStatusCallbackError;
+                if (!properties) {
+                    Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
+                    continue;
                 }
+                
+                if (conflicts) {
+                    // Add a "_conflicts" property if there were conflicting revisions:
+                    NSMutableDictionary* mutableProps = [[properties mutableCopy] autorelease];
+                    [mutableProps setObject: conflicts forKey: @"_conflicts"];
+                    properties = mutableProps;
+                }
+                
+                // Call the user-defined map() to emit new key/value pairs from this revision:
+                LogTo(View, @"  call map for sequence=%lld...", sequence);
+                _mapBlock(properties, emit);
+                if (emitFailed)
+                    return kTDStatusCallbackError;
             }
         }
         
