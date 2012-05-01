@@ -138,8 +138,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                     [self addToInbox: rev];
                     [rev release];
                 }
-                self.changesTotal += changes.count;
             }
+            self.changesTotal += changes.count;
         } else {
             Warn(@"%@: Received invalid doc ID from _changes: %@", self, change);
         }
@@ -327,6 +327,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               onCompletion:^(id result, NSError *error) {
                   if (error) {
                       self.error = error;
+                      self.changesProcessed += bulkRevs.count;
                   } else {
                       // Process the resulting rows' documents.
                       // We only add a document if it doesn't have attachments, and if its
