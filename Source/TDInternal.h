@@ -41,7 +41,9 @@
 
 @interface TDDatabase (Attachments_Internal)
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
-- (TDBlobStoreWriter*) attachmentWriterForAttachment: (NSDictionary*)attachment;
+#if DEBUG
+- (id) attachmentWriterForAttachment: (NSDictionary*)attachment;
+#endif
 - (BOOL) storeBlob: (NSData*)blob creatingKey: (TDBlobKey*)outKey;
 - (TDStatus) insertAttachment: (TDAttachment*)attachment
                   forSequence: (SequenceNumber)sequence;

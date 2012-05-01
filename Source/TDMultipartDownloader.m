@@ -102,7 +102,7 @@
 
 
 
-
+#if DEBUG
 TestCase(TDMultipartDownloader) {
     //These URLs only work for me!
     if (!$equal(NSUserName(), @"snej"))
@@ -146,3 +146,4 @@ TestCase(TDMultipartDownloader) {
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
 }
+#endif

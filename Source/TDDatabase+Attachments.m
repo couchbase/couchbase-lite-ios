@@ -61,13 +61,48 @@
 }
 
 
-- (TDBlobStoreWriter*) attachmentWriterForAttachment: (NSDictionary*)attachment {
+// This is ONLY FOR TESTS (see TDMultipartDownloader.m)
+#if DEBUG
+- (id) attachmentWriterForAttachment: (NSDictionary*)attachment {
     NSString* digest = $castIf(NSString, [attachment objectForKey: @"digest"]);
     if (!digest)
         return nil;
-    TDBlobStoreWriter* writer = [[_pendingAttachmentsByDigest objectForKey: digest] retain];
-    [_pendingAttachmentsByDigest removeObjectForKey: digest];
-    return [writer autorelease];
+    return [_pendingAttachmentsByDigest objectForKey: digest];
+}
+#endif
+
+
+- (TDStatus) installAttachment: (TDAttachment*)attachment
+                       forInfo: (NSDictionary*)attachInfo {
+    NSString* digest = $castIf(NSString, [attachInfo objectForKey: @"digest"]);
+    if (!digest)
+        return kTDStatusBadAttachment;
+    id writer = [_pendingAttachmentsByDigest objectForKey: digest];
+
+    if ([writer isKindOfClass: [TDBlobStoreWriter class]]) {
+        // Found a blob writer, so install the blob:
+        if (![writer install])
+            return kTDStatusAttachmentError;
+        attachment->blobKey = [writer blobKey];
+        attachment->length = [writer length];
+
+        // Remove the writer but leave the blob-key behind for future use:
+        NSData* keyData = [NSData dataWithBytes: &attachment->blobKey length: sizeof(TDBlobKey)];
+        [_pendingAttachmentsByDigest setObject: keyData forKey: digest];
+        return kTDStatusOK;
+        
+    } else if ([writer isKindOfClass: [NSData class]]) {
+        // This attachment was already added, but the key was left behind in the dictionary:
+        attachment->blobKey = *(TDBlobKey*)[writer bytes];
+        NSNumber* lengthObj = $castIf(NSNumber, [attachInfo objectForKey: @"length"]);
+        if (!lengthObj)
+            return kTDStatusBadAttachment;
+        attachment->length = lengthObj.unsignedLongLongValue;
+        return kTDStatusOK;
+        
+    } else {
+        return kTDStatusBadAttachment;
+    }
 }
 
 
@@ -355,17 +390,9 @@
             // "follows" means the uploader provided the attachment in a separate MIME part.
             // This means it's already been registered in _pendingAttachmentsByDigest;
             // I just need to look it up by its "digest" property and install it into the store:
-            TDBlobStoreWriter *writer = [self attachmentWriterForAttachment: attachInfo];
-            if (!writer) {
-                status = kTDStatusBadAttachment;
+            status = [self installAttachment: attachment forInfo: attachInfo];
+            if (TDStatusIsError(status))
                 break;
-            }
-            if (![writer install]) {
-                status = kTDStatusAttachmentError;
-                break;
-            }
-            attachment->blobKey = writer.blobKey;
-            attachment->length = writer.length;
         } else {
             // This item is just a stub; skip it
             continue;
