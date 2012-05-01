@@ -283,6 +283,8 @@
 		27E11F1014AD15940006B340 /* TDHTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E11F0E14AD15940006B340 /* TDHTTPResponse.h */; };
 		27E11F1114AD15940006B340 /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; };
 		27E11F1214AD172F0006B340 /* TouchDBListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener.framework */; };
+		27E4152F154F6E8500771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27E41530154F6E9C00771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
@@ -312,7 +314,6 @@
 		DA147C3C14BCAC780052DA4D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */; };
 		DA147C3D14BCAC780052DA4D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3B14BCAC780052DA4D /* Security.framework */; };
 		DA147C3E14BCAC9D0052DA4D /* TDListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315DE14ACF0A20065964D /* TDListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DA2DB52D153DF0BC00214584 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = DA2DB52C153DF0BC00214584 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -615,7 +616,6 @@
 		DA147C3614BCAC3B0052DA4D /* TouchDBListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		DA147C3B14BCAC780052DA4D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
-		DA2DB52C153DF0BC00214584 /* TDStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TDStatus.h; path = Source/TDStatus.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -763,7 +763,6 @@
 		08FB7794FE84155DC02AAC07 /* CouchLite */ = {
 			isa = PBXGroup;
 			children = (
-				DA2DB52C153DF0BC00214584 /* TDStatus.h */,
 				270B3E28148940C000E0A926 /* README.md */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				275315D714ACF0A20065964D /* Listener */,
@@ -1259,6 +1258,7 @@
 				27ADC079152502EE001ABC1D /* TDMultipartDocumentReader.h in Headers */,
 				278B0CA0152A8B1900577747 /* TDCanonicalJSON.h in Headers */,
 				27A720A0152B959100C0A0E8 /* TDAttachment.h in Headers */,
+				27E4152F154F6E8500771FC5 /* TDStatus.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1291,8 +1291,8 @@
 				27B0B8021492BDE800A817AD /* TDReplicator.h in Headers */,
 				27B0B8031492BDE800A817AD /* TDPuller.h in Headers */,
 				27B0B8041492BDE800A817AD /* TDPusher.h in Headers */,
-				DA2DB52D153DF0BC00214584 /* TDStatus.h in Headers */,
 				27B0B8051492BDE800A817AD /* TouchDB.h in Headers */,
+				27E41530154F6E9C00771FC5 /* TDStatus.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
