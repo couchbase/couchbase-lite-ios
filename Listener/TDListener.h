@@ -15,7 +15,6 @@
 {
     TDHTTPServer* _httpServer;
     TDServer* _tdServer;
-    dispatch_queue_t _queue;
 }
 
 - (id) initWithTDServer: (TDServer*)server port: (UInt16)port;
@@ -23,7 +22,5 @@
 - (BOOL) start;
 - (void) stop;
 
-/** Runs the block *synchronously* on the single server thread. */
-- (void) onServerThread: (void(^)())block;
 
 @end
