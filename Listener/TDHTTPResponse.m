@@ -188,9 +188,7 @@
         _router.onDataAvailable = nil;
         _router.onFinished = nil;
 
-        if (_chunked && _offset > 0) {
-            [_connection responseHasAvailableData: self];
-        } else {
+        if (!_chunked || _offset == 0) {
             // Response finished immediately, before the connection asked for any data, so we're free
             // to massage the response:
             LogTo(TDListenerVerbose, @"%@ prettifying response body", self);
@@ -204,6 +202,7 @@
                 _data = [_response.body.asPrettyJSON mutableCopy];
             }
         }
+        [_connection responseHasAvailableData: self];
     }
 }
 
