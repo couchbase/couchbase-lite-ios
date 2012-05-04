@@ -540,10 +540,13 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
 - (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock {
-    Assert(validationBlock);
-    if (!_validations)
-        _validations = [[NSMutableDictionary alloc] init];
-    [_validations setValue: [[validationBlock copy] autorelease] forKey: validationName];
+    if (validationBlock) {
+        if (!_validations)
+            _validations = [[NSMutableDictionary alloc] init];
+        [_validations setValue: [[validationBlock copy] autorelease] forKey: validationName];
+    } else {
+        [_validations removeObjectForKey: validationName];
+    }
 }
 
 - (TDValidationBlock) validationNamed: (NSString*)validationName {

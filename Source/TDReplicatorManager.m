@@ -52,8 +52,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 - (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [_replicatorsByDocID release];
+    [self stop];
     [_replicatorDB release];
     [super dealloc];
 }
@@ -68,6 +67,15 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
                                                  name: TDDatabaseChangeNotification
                                                object: _replicatorDB];
+}
+
+
+- (void) stop {
+    LogTo(TDServer, @"STOP %@", self);
+    [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [_replicatorsByDocID release];
+    _replicatorsByDocID = nil;
 }
 
 

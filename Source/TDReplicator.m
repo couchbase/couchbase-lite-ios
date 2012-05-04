@@ -68,22 +68,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
         static int sLastSessionID = 0;
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
-
-        _host = [[TDReachability alloc] initWithHostName: _remote.host];
-        _host.onChange = ^{[self reachabilityChanged: _host];};
-        [_host start];
-        
-        _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
-                     processor:^(NSArray *inbox) {
-                         LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%i sequences)",
-                               self, inbox.count);
-                         TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
-                         [self processInbox: revs];
-                         [revs release];
-                         LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
-                         [self updateActive];
-                     }
-                    ];
     }
     return self;
 }
@@ -192,11 +176,31 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         return;
     Assert(_db, @"Can't restart an already stopped TDReplicator");
     LogTo(Sync, @"%@ STARTING ...", self);
+
+    // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
+    // and _batcher retains the block, and of course I retain _batcher.
+    // The cycle is broken in -stopped when I release _batcher.
+    _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
+                 processor:^(NSArray *inbox) {
+                     LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%i sequences)",
+                           self, inbox.count);
+                     TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
+                     [self processInbox: revs];
+                     [revs release];
+                     LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
+                     [self updateActive];
+                 }
+                ];
+
     self.running = YES;
     _startTime = CFAbsoluteTimeGetCurrent();
     
-    // Check current reachability
+    // Start reachability checks. (This creates another ref cycle, because
+    // the block also retains a ref to self. Cycle is also broken in -stopped.)
     _online = NO;
+    _host = [[TDReachability alloc] initWithHostName: _remote.host];
+    _host.onChange = ^{[self reachabilityChanged: _host];};
+    [_host start];
     [self reachabilityChanged: _host];
 }
 
@@ -226,6 +230,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [[NSNotificationCenter defaultCenter]
         postNotificationName: TDReplicatorStoppedNotification object: self];
     [self saveLastSequence];
+    setObj(&_batcher, nil);
+    [_host stop];
+    setObj(&_host, nil);
     _db = nil;  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 

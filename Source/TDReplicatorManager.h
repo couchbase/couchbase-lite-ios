@@ -27,6 +27,7 @@ extern NSString* const kTDReplicatorDatabaseName;
 - (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager;
 
 - (void) start;
+- (void) stop;
 
 /** Examines the JSON object describing a replication and determines the local database and remote URL, and some of the other parameters. */
 - (TDStatus) parseReplicatorProperties: (NSDictionary*)body

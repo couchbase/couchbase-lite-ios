@@ -17,6 +17,9 @@ struct TDQueryOptions;      // declared in TDView.h
     The userInfo key "rev" has a TDRevision* as its value. */
 extern NSString* const TDDatabaseChangeNotification;
 
+/** NSNotification posted when a database is closing. */
+extern NSString* const TDDatabaseWillCloseNotification;
+
 
 /** Filter block, used in changes feeds and replication. */
 typedef BOOL (^TDFilterBlock) (TDRevision* revision);

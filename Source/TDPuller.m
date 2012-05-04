@@ -61,6 +61,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) beginReplicating {
     Assert(!_changeTracker);
     if (!_downloadsToInsert) {
+        // Note: This is a ref cycle, because the block has a (retained) reference to 'self',
+        // and _downloadsToInsert retains the block, and of course I retain _downloadsToInsert.
         _downloadsToInsert = [[TDBatcher alloc] initWithCapacity: 200 delay: 1.0
                                                   processor: ^(NSArray *downloads) {
                                                       [self insertDownloads: downloads];
@@ -103,6 +105,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     setObj(&_deletedRevsToPull, nil);
     setObj(&_bulkRevsToPull, nil);
     [super stop];
+    
+    [_downloadsToInsert flush];
+}
+
+
+- (void) stopped {
+    setObj(&_downloadsToInsert, nil);
+    [super stopped];
 }
 
 

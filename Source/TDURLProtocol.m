@@ -95,7 +95,9 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 
 + (void) unregisterServer: (TDServer*)server {
-    [sHostMap removeObjectsForKeys: [sHostMap allKeysForObject: server]];
+    @synchronized(self) {
+        [sHostMap removeObjectsForKeys: [sHostMap allKeysForObject: server]];
+    }
 }
 
 

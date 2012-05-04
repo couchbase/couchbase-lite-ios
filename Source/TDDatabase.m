@@ -27,6 +27,9 @@
 #import "FMDatabaseAdditions.h"
 
 
+NSString* const TDDatabaseWillCloseNotification = @"TDDatabaseWillClose";
+
+
 @implementation TDDatabase
 
 
@@ -269,10 +272,12 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     if (!_open)
         return NO;
     
+    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseWillCloseNotification
+                                                        object: self];
     for (TDView* view in _views.allValues)
         [view databaseClosing];
     setObj(&_views, nil);
-    for (TDReplicator* repl in _activeReplicators)
+    for (TDReplicator* repl in [_activeReplicators.copy autorelease])
         [repl databaseClosing];
     setObj(&_activeReplicators, nil);
     

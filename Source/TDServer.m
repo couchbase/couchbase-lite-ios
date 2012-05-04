@@ -16,6 +16,7 @@
 #import "TDServer.h"
 #import "TDDatabaseManager.h"
 #import "TDInternal.h"
+#import "TDURLProtocol.h"
 #import "MYBlockUtils.h"
 
 
@@ -60,6 +61,7 @@
 
 - (void)dealloc
 {
+    LogTo(TDServer, @"DEALLOC");
     if (_serverThread) Warn(@"%@ dealloced with _serverThread still set: %@", self, _serverThread);
     [_manager release];
     [super dealloc];
@@ -70,7 +72,8 @@
     if (_serverThread) {
         [self queue: ^{
             LogTo(TDServer, @"Stopping server thread...");
-            CFRunLoopStop(CFRunLoopGetCurrent());
+            [TDURLProtocol unregisterServer: self];
+            _stopRunLoop = YES;
         }];
         [_serverThread release];
         _serverThread = nil;
@@ -103,7 +106,9 @@
         }
         
         // Now run:
-        [[NSRunLoop currentRunLoop] run];
+        while (!_stopRunLoop && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                                         beforeDate: [NSDate distantFuture]])
+            ;
         
         LogTo(TDServer, @"Server thread exiting");
 

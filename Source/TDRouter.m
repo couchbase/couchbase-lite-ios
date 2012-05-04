@@ -386,6 +386,13 @@ static NSArray* splitPath( NSURL* url ) {
         if (!_waiting) 
             [self finished];
     }
+    
+    // If I will keep running asynchronously (i.e. a _changes feed handler), listen for the
+    // database closing so I can stop then:
+    if (_running)
+        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
+                                                     name: TDDatabaseWillCloseNotification
+                                                   object: _db];
 }
 
 
@@ -430,6 +437,16 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (TDStatus) do_UNKNOWN {
     return kTDStatusBadRequest;
+}
+
+
+- (void) dbClosing: (NSNotification*)n {
+    LogTo(TDRouter, @"Database closing! Returning error 500");
+    if (_responseSent) {
+        _response.internalStatus = 500;
+        [self sendResponse];
+    }
+    [self finished];
 }
 
 

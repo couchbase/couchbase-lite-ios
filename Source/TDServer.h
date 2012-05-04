@@ -18,6 +18,7 @@
     @private
     TDDatabaseManager* _manager;
     NSThread* _serverThread;
+    BOOL _stopRunLoop;
 }
 
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;

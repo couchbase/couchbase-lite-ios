@@ -175,6 +175,8 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) close {
+    LogTo(TDServer, @"CLOSE %@", self);
+    [_replicatorManager stop];
     [_replicatorManager release];
     _replicatorManager = nil;
     for (TDDatabase* db in _databases.allValues) {
