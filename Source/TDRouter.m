@@ -71,6 +71,7 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
     [_path release];
     [_db release];
     [_changesFilter release];
+    [_onAccessCheck release];
     [_onResponseReady release];
     [_onDataAvailable release];
     [_onFinished release];
@@ -78,8 +79,9 @@ extern double TouchDBVersionNumber; // Defined in generated TouchDB_vers.c
 }
 
 
-@synthesize onResponseReady=_onResponseReady, onDataAvailable=_onDataAvailable,
-            onFinished=_onFinished, request=_request, response=_response;
+@synthesize onAccessCheck=_onAccessCheck, onResponseReady=_onResponseReady,
+            onDataAvailable=_onDataAvailable, onFinished=_onFinished,
+            request=_request, response=_response;
 
 
 - (NSDictionary*) queries {
@@ -343,6 +345,15 @@ static NSArray* splitPath( NSURL* url ) {
                @"TDRouter(Handlers) is missing -- app may be linked without -ObjC linker flag.");
         sel = @selector(do_UNKNOWN);
     }
+    
+    if (_onAccessCheck) {
+        TDStatus status = _onAccessCheck(_db, docID, sel);
+        if (TDStatusIsError(status)) {
+            LogTo(TDRouter, @"Access check failed for %@", _db.name);
+            return status;
+        }
+    }
+    
     return (TDStatus) objc_msgSend(self, sel, _db, docID, attachmentName);
 }
 

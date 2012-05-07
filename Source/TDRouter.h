@@ -10,6 +10,7 @@
 @class TDServer, TDDatabaseManager, TDResponse, TDBody, TDMultipartWriter;
 
 
+typedef TDStatus (^OnAccessCheckBlock)(TDDatabase*, NSString *docID, SEL action);
 typedef void (^OnResponseReadyBlock)(TDResponse*);
 typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
 typedef void (^OnFinishedBlock)();
@@ -27,6 +28,7 @@ typedef void (^OnFinishedBlock)();
     TDDatabase* _db;
     BOOL _waiting;
     BOOL _responseSent;
+    OnAccessCheckBlock _onAccessCheck;
     OnResponseReadyBlock _onResponseReady;
     OnDataAvailableBlock _onDataAvailable;
     OnFinishedBlock _onFinished;
@@ -38,6 +40,7 @@ typedef void (^OnFinishedBlock)();
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;
 
+@property (copy) OnAccessCheckBlock onAccessCheck;
 @property (copy) OnResponseReadyBlock onResponseReady;
 @property (copy) OnDataAvailableBlock onDataAvailable;
 @property (copy) OnFinishedBlock onFinished;
