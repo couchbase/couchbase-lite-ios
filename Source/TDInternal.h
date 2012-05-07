@@ -8,13 +8,15 @@
 
 #import <TouchDB/TDDatabase.h>
 #import "TDDatabase+Attachments.h"
+#import "TDDatabaseManager.h"
 #import "TDView.h"
 #import "TDServer.h"
+#import "TDRouter.h"
 #import "TDReplicator.h"
 #import "TDRemoteRequest.h"
+#import "TDBlobStore.h"
+@class TDAttachment;
 
-
-extern NSString* const kTDAttachmentBlobKeyProperty;
 
 @interface TDDatabase ()
 @property (readwrite, copy) NSString* name;  // make it settable
@@ -39,15 +41,12 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 
 @interface TDDatabase (Attachments_Internal)
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
-- (NSData*) keyForAttachment: (NSData*)contents;
-- (TDStatus) insertAttachmentWithKey: (NSData*)keyData
-                         forSequence: (SequenceNumber)sequence
-                               named: (NSString*)name
-                                type: (NSString*)contentType
-                            encoding: (TDAttachmentEncoding)encoding
-                              length: (UInt64)length
-                       encodedLength: (UInt64)encodedLength
-                              revpos: (unsigned)revpos;
+#if DEBUG
+- (id) attachmentWriterForAttachment: (NSDictionary*)attachment;
+#endif
+- (BOOL) storeBlob: (NSData*)blob creatingKey: (TDBlobKey*)outKey;
+- (TDStatus) insertAttachment: (TDAttachment*)attachment
+                  forSequence: (SequenceNumber)sequence;
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence
                       toSequence: (SequenceNumber)toSequence;
@@ -73,11 +72,24 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 
 
 @interface TDServer ()
-@property (readonly, nonatomic) TDReplicatorManager* replicatorManager;
 #if DEBUG
 + (TDServer*) createEmptyAtPath: (NSString*)path;  // for testing
 + (TDServer*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
+@end
+
+
+@interface TDDatabaseManager ()
+@property (readonly, nonatomic) TDReplicatorManager* replicatorManager;
+#if DEBUG
++ (TDDatabaseManager*) createEmptyAtPath: (NSString*)path;  // for testing
++ (TDDatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
+#endif
+@end
+
+
+@interface TDRouter ()
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager request: (NSURLRequest*)request;
 @end
 
 
@@ -89,8 +101,10 @@ extern NSString* const kTDAttachmentBlobKeyProperty;
 - (void) beginReplicating;
 - (void) addToInbox: (TDRevision*)rev;
 - (void) processInbox: (TDRevisionList*)inbox;  // override this
-- (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
-             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
+- (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
+                                     path: (NSString*)relativePath
+                                     body: (id)body
+                             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;

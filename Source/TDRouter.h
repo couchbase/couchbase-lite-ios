@@ -7,11 +7,12 @@
 //
 
 #import <TouchDB/TDDatabase.h>
-@class TDServer, TDResponse, TDBody;
+@class TDServer, TDDatabaseManager, TDResponse, TDBody, TDMultipartWriter;
 
 
+typedef TDStatus (^OnAccessCheckBlock)(TDDatabase*, NSString *docID, SEL action);
 typedef void (^OnResponseReadyBlock)(TDResponse*);
-typedef void (^OnDataAvailableBlock)(NSData*);
+typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
 typedef void (^OnFinishedBlock)();
 
 
@@ -19,6 +20,7 @@ typedef void (^OnFinishedBlock)();
 {
     @private
     TDServer* _server;
+    TDDatabaseManager* _dbManager;
     NSURLRequest* _request;
     NSMutableArray* _path;
     NSDictionary* _queries;
@@ -26,9 +28,11 @@ typedef void (^OnFinishedBlock)();
     TDDatabase* _db;
     BOOL _waiting;
     BOOL _responseSent;
+    OnAccessCheckBlock _onAccessCheck;
     OnResponseReadyBlock _onResponseReady;
     OnDataAvailableBlock _onDataAvailable;
     OnFinishedBlock _onFinished;
+    BOOL _running;
     BOOL _longpoll;
     TDFilterBlock _changesFilter;
     BOOL _changesIncludeDocs;
@@ -36,6 +40,7 @@ typedef void (^OnFinishedBlock)();
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;
 
+@property (copy) OnAccessCheckBlock onAccessCheck;
 @property (copy) OnResponseReadyBlock onResponseReady;
 @property (copy) OnDataAvailableBlock onDataAvailable;
 @property (copy) OnFinishedBlock onFinished;
@@ -61,8 +66,10 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) getQueryOptions: (struct TDQueryOptions*)options;
 @property (readonly) NSString* multipartRequestType;
 @property (readonly) NSDictionary* bodyAsDictionary;
+@property (readonly) NSString* ifMatch;
 - (TDStatus) openDB;
 - (void) sendResponse;
+- (void) finished;
 @end
 
 
@@ -70,19 +77,25 @@ typedef void (^OnFinishedBlock)();
 @interface TDResponse : NSObject
 {
     @private
+    TDStatus _internalStatus;
     int _status;
+    NSString* _statusMsg;
     NSMutableDictionary* _headers;
     TDBody* _body;
 }
 
-@property int status;
-@property (retain) NSMutableDictionary* headers;
-@property (retain) TDBody* body;
-@property (copy) id bodyObject;
-@property (readonly) NSString* baseContentType;
+@property (nonatomic) TDStatus internalStatus;
+@property (nonatomic) int status;
+@property (nonatomic, readonly) NSString* statusMsg;
+@property (nonatomic, retain) NSMutableDictionary* headers;
+@property (nonatomic, retain) TDBody* body;
+@property (nonatomic, copy) id bodyObject;
+@property (nonatomic, readonly) NSString* baseContentType;
 
+- (void) reset;
 - (void) setValue: (NSString*)value ofHeader: (NSString*)header;
 
+- (void) setMultipartBody: (TDMultipartWriter*)mp;
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type;
 
 @end

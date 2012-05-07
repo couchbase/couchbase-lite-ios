@@ -92,8 +92,9 @@ typedef struct {
 /** After finishing, this is the key for looking up the blob through the TDBlobStore. */
 @property (readonly) TDBlobKey blobKey;
 
-/** After finishing, this is the MD5 digest of the blob.
+/** After finishing, this is the MD5 digest of the blob, in base64 with an "md5-" prefix.
     (This is useful for compatibility with CouchDB, which stores MD5 digests of attachments.) */
-@property (readonly) TDMD5Key MD5Digest;
+@property (readonly) NSString* MD5DigestString;
+@property (readonly) NSString* SHA1DigestString;
 
 @end

@@ -19,6 +19,10 @@
     int _retryCount;
     
     NSMutableData* _inputBuffer;
+    NSMutableData* _changeBuffer;
     int _state;
+    bool _parsing;
+    bool _inputAvailable;
+    bool _atEOF;
 }
 @end

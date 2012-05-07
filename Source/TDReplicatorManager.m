@@ -5,6 +5,14 @@
 //  Created by Jens Alfke on 2/15/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
+//
 //  http://wiki.apache.org/couchdb/Replication#Replicator_database
 //  http://www.couchbase.com/docs/couchdb-release-1.1/index.html
 
@@ -32,11 +40,11 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 @implementation TDReplicatorManager
 
 
-- (id) initWithServer: (TDServer*)server {
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager {
     self = [super init];
     if (self) {
-        _server = server;
-        _replicatorDB = [[server databaseNamed: kTDReplicatorDatabaseName] retain];
+        _dbManager = dbManager;
+        _replicatorDB = [[dbManager databaseNamed: kTDReplicatorDatabaseName] retain];
         Assert(_replicatorDB);
     }
     return self;
@@ -44,8 +52,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 - (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [_replicatorsByDocID release];
+    [self stop];
     [_replicatorDB release];
     [super dealloc];
 }
@@ -60,6 +67,15 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
                                                  name: TDDatabaseChangeNotification
                                                object: _replicatorDB];
+}
+
+
+- (void) stop {
+    LogTo(TDServer, @"STOP %@", self);
+    [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [_replicatorsByDocID release];
+    _replicatorsByDocID = nil;
 }
 
 
@@ -79,40 +95,40 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     *outCreateTarget = [$castIf(NSNumber, [properties objectForKey: @"create_target"]) boolValue];
     
     if (!source || !target)
-        return 400;
+        return kTDStatusBadRequest;
     *outIsPush = NO;
     TDDatabase* db = nil;
     NSString* remoteStr;
-    if ([TDServer isValidDatabaseName: source]) {
+    if ([TDDatabaseManager isValidDatabaseName: source]) {
         if (outDatabase)
-            db = [_server existingDatabaseNamed: source];
+            db = [_dbManager existingDatabaseNamed: source];
         remoteStr = target;
         *outIsPush = YES;
     } else {
-        if (![TDServer isValidDatabaseName: target])
-            return 400;
+        if (![TDDatabaseManager isValidDatabaseName: target])
+            return kTDStatusBadID;
         remoteStr = source;
         if (outDatabase) {
             if (*outCreateTarget) {
-                db = [_server databaseNamed: target];
+                db = [_dbManager databaseNamed: target];
                 if (![db open])
-                    return 500;
+                    return kTDStatusDBError;
             } else {
-                db = [_server existingDatabaseNamed: target];
+                db = [_dbManager existingDatabaseNamed: target];
             }
         }
     }
     NSURL* remote = [NSURL URLWithString: remoteStr];
     if (!remote || ![remote.scheme hasPrefix: @"http"])
-        return 400;
+        return kTDStatusBadRequest;
     if (outDatabase) {
         *outDatabase = db;
         if (!db)
-            return 404;
+            return kTDStatusNotFound;
     }
     if (outRemote)
         *outRemote = remote;
-    return 200;
+    return kTDStatusOK;
 }
 
 
@@ -127,7 +143,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     
     // First make sure the basic properties are valid:
     NSDictionary* newProperties = newRev.properties;
-    LogTo(Sync, @"ReplicationManager: Validating %@: %@", newRev, newProperties);
+    LogTo(Sync, @"ReplicatorManager: Validating %@: %@", newRev, newProperties);
     BOOL push, createTarget;
     if ([self parseReplicatorProperties: newProperties toDatabase: NULL
                                  remote: NULL isPush: &push createTarget: &createTarget] >= 300) {
@@ -139,6 +155,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     NSDictionary* curProperties = context.currentRevision.properties;
     for (NSString* key in newProperties) {
         if ([key hasPrefix: @"_"] &&
+                !$equal(key, @"_id") && !$equal(key, @"_rev") &&
                 !$equal([curProperties objectForKey: key], [newProperties objectForKey: key])) {
             context.errorMessage = $sprintf(@"Cannot add a '%@' property", key);
             return NO;
@@ -166,16 +183,16 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 - (TDStatus) updateDoc: (TDRevision*)currentRev
         withProperties: (NSDictionary*)updates 
 {
-    LogTo(Sync, @"ReplicationManager: Updating %@ with %@", currentRev, updates);
+    LogTo(Sync, @"ReplicatorManager: Updating %@ with %@", currentRev, updates);
     Assert(currentRev.revID);
     TDStatus status;
     do {
         // Create an updated revision by merging in the updates:
         NSDictionary* currentProperties = currentRev.properties;
-        NSMutableDictionary* updatedProperties = [currentProperties mutableCopy];
+        NSMutableDictionary* updatedProperties = [[currentProperties mutableCopy] autorelease];
         [updatedProperties addEntriesFromDictionary: updates];
         if ($equal(updatedProperties, currentProperties)) {
-            status = 200;     // this is a no-op change
+            status = kTDStatusOK;     // this is a no-op change
             break;
         }
         TDRevision* updatedRev = [TDRevision revisionWithProperties: updatedProperties];
@@ -189,16 +206,16 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
             _updateInProgress = NO;
         }
         
-        if (status == 409) {
+        if (status == kTDStatusConflict) {
             // Conflict -- doc has been updated, get the latest revision & try again:
             currentRev = [_replicatorDB getDocumentWithID: currentRev.docID
                                                revisionID: nil options: 0];
             if (!currentRev)
-                status = 404;   // doc's been deleted, apparently
+                status = kTDStatusNotFound;   // doc's been deleted, apparently
         }
-    } while (status == 409);
+    } while (status == kTDStatusConflict);
     
-    if (status >= 300)
+    if (TDStatusIsError(status))
         Warn(@"TDReplicatorManager: Error %d updating _replicator doc %@", status, currentRev);
     return status;
 }
@@ -224,7 +241,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 // A replication document has been created, so create the matching TDReplicator:
 - (void) processInsertion: (TDRevision*)rev {
-    LogTo(Sync, @"ReplicationManager: %@ was created", rev);
+    LogTo(Sync, @"ReplicatorManager: %@ was created", rev);
     NSDictionary* properties = rev.properties;
     TDDatabase* localDb;
     NSURL* remote;
@@ -233,7 +250,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
                                            toDatabase: &localDb remote: &remote
                                                isPush: &push
                                          createTarget: &createTarget];
-    if (status >= 300) {
+    if (TDStatusIsError(status)) {
         Warn(@"TDReplicatorManager: Can't find replication endpoints for %@", properties);
         return;
     }
@@ -305,7 +322,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     if (!_replicatorDB.exists)
         return;
     [_replicatorDB open];
-    LogTo(Sync, @"ReplicationManager scanning existing _replicator docs...");
+    LogTo(Sync, @"ReplicatorManager scanning existing _replicator docs...");
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.includeDocs = YES;
     NSArray* allDocs = [[_replicatorDB getAllDocs: &options] objectForKey: @"rows"];
@@ -315,7 +332,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
         if (state==nil || $equal(state, @"triggered"))
             [self processInsertion: [TDRevision revisionWithProperties: docProps]];
     }
-    LogTo(Sync, @"ReplicationManager done scanning.");
+    LogTo(Sync, @"ReplicatorManager done scanning.");
 }
 
 

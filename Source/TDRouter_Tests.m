@@ -20,18 +20,19 @@
 #import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
+#import "TDJSON.h"
 
 
 #if DEBUG
 #pragma mark - TESTS
 
 
-static TDServer* createServer(void) {
-    return [TDServer createEmptyAtTemporaryPath: @"TDRouterTest"];
+static TDDatabaseManager* createDBManager(void) {
+    return [TDDatabaseManager createEmptyAtTemporaryPath: @"TDRouterTest"];
 }
 
 
-static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* path,
+static TDResponse* SendRequest(TDDatabaseManager* server, NSString* method, NSString* path,
                                NSDictionary* headers, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"touchdb://" stringByAppendingString: path]];
     CAssert(url, @"Invalid URL: <%@>", path);
@@ -40,17 +41,21 @@ static TDResponse* SendRequest(TDServer* server, NSString* method, NSString* pat
     for (NSString* header in headers)
         [request setValue: [headers objectForKey: header] forHTTPHeaderField: header];
     if (bodyObj) {
-        NSError* error = nil;
-        request.HTTPBody = [TDJSON dataWithJSONObject: bodyObj options:0 error:&error];
-        CAssertNil(error);
+        if ([bodyObj isKindOfClass: [NSData class]])
+            request.HTTPBody = bodyObj;
+        else {
+            NSError* error = nil;
+            request.HTTPBody = [TDJSON dataWithJSONObject: bodyObj options:0 error:&error];
+            CAssertNil(error);
+        }
     }
-    TDRouter* router = [[[TDRouter alloc] initWithServer: server request: request] autorelease];
+    TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
     CAssert(router!=nil);
     __block TDResponse* response = nil;
     __block NSUInteger dataLength = 0;
     __block BOOL calledOnFinished = NO;
     router.onResponseReady = ^(TDResponse* theResponse) {CAssert(!response); response = theResponse;};
-    router.onDataAvailable = ^(NSData* data) {dataLength += data.length;};
+    router.onDataAvailable = ^(NSData* data, BOOL finished) {dataLength += data.length;};
     router.onFinished = ^{CAssert(!calledOnFinished); calledOnFinished = YES;};
     [router start];
     CAssert(response);
@@ -73,94 +78,112 @@ static id ParseJSONResponse(TDResponse* response) {
     return result;
 }
 
-static id SendBody(TDServer* server, NSString* method, NSString* path, id bodyObj,
-               int expectedStatus, id expectedResult) {
-    TDResponse* response = SendRequest(server, method, path, nil, bodyObj);
-    id result = ParseJSONResponse(response);
-    Log(@"%@ %@ --> %d", method, path, response.status);
+static TDResponse* sLastResponse;
+
+static id SendBody(TDDatabaseManager* server, NSString* method, NSString* path, id bodyObj,
+                   TDStatus expectedStatus, id expectedResult) {
+    sLastResponse = SendRequest(server, method, path, nil, bodyObj);
+    id result = ParseJSONResponse(sLastResponse);
+    Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
     
-    CAssertEq(response.status, expectedStatus);
+    CAssertEq(sLastResponse.internalStatus, expectedStatus);
 
     if (expectedResult)
         CAssertEqual(result, expectedResult);
     return result;
 }
 
-static id Send(TDServer* server, NSString* method, NSString* path,
+static id Send(TDDatabaseManager* server, NSString* method, NSString* path,
                int expectedStatus, id expectedResult) {
     return SendBody(server, method, path, nil, expectedStatus, expectedResult);
 }
 
+static void CheckCacheable(TDDatabaseManager* server, NSString* path) {
+    NSString* eTag = [sLastResponse.headers objectForKey: @"Etag"];
+    CAssert(eTag.length > 0, @"Missing eTag in response for %@", path);
+    sLastResponse = SendRequest(server, @"GET", path, $dict({@"If-None-Match", eTag}), nil);
+    CAssertEq(sLastResponse.status, kTDStatusNotModified);
+}
+
 
 TestCase(TDRouter_Server) {
-    RequireTestCase(TDServer);
-    TDServer* server = createServer();
-    Send(server, @"GET", @"/", 200, $dict({@"TouchDB", @"Welcome"},
+    RequireTestCase(TDDatabaseManager);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"GET", @"/", kTDStatusOK, $dict({@"TouchDB", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
                                           {@"version", [TDRouter versionString]}));
-    Send(server, @"GET", @"/_all_dbs", 200, $array());
-    Send(server, @"GET", @"/non-existent", 404, nil);
-    Send(server, @"GET", @"/BadName", 400, nil);
-    Send(server, @"PUT", @"/", 400, nil);
-    Send(server, @"POST", @"/", 400, nil);
+    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, $array());
+    Send(server, @"GET", @"/non-existent", kTDStatusNotFound, nil);
+    Send(server, @"GET", @"/BadName", kTDStatusBadID, nil);
+    Send(server, @"PUT", @"/", kTDStatusBadRequest, nil);
+    NSDictionary* response = Send(server, @"POST", @"/", kTDStatusBadRequest, nil);
+    
+    CAssertEqual([response objectForKey: @"status"], $object(400));
+    CAssertEqual([response objectForKey: @"error"], @"bad request");
+    
+    NSDictionary* session = Send(server, @"GET", @"/_session", kTDStatusOK, nil);
+    CAssert([session objectForKey: @"ok"]);
+    [server close];
 }
 
 
 TestCase(TDRouter_Databases) {
     RequireTestCase(TDRouter_Server);
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/database", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/database", kTDStatusCreated, nil);
     
-    NSDictionary* dbInfo = Send(server, @"GET", @"/database", 200, nil);
+    NSDictionary* dbInfo = Send(server, @"GET", @"/database", kTDStatusOK, nil);
     CAssertEq([[dbInfo objectForKey: @"doc_count"] intValue], 0);
     CAssertEq([[dbInfo objectForKey: @"update_seq"] intValue], 0);
     CAssert([[dbInfo objectForKey: @"disk_size"] intValue] > 8000);
     
-    Send(server, @"PUT", @"/database", 412, nil);
-    Send(server, @"PUT", @"/database2", 201, nil);
-    Send(server, @"GET", @"/_all_dbs", 200, $array(@"database", @"database2"));
-    dbInfo = Send(server, @"GET", @"/database2", 200, nil);
+    Send(server, @"PUT", @"/database", kTDStatusDuplicate, nil);
+    Send(server, @"PUT", @"/database2", kTDStatusCreated, nil);
+    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, $array(@"database", @"database2"));
+    dbInfo = Send(server, @"GET", @"/database2", kTDStatusOK, nil);
     CAssertEqual([dbInfo objectForKey: @"db_name"], @"database2");
-    Send(server, @"DELETE", @"/database2", 200, nil);
-    Send(server, @"GET", @"/_all_dbs", 200, $array(@"database"));
+    Send(server, @"DELETE", @"/database2", kTDStatusOK, nil);
+    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, $array(@"database"));
 
-    Send(server, @"PUT", @"/database%2Fwith%2Fslashes", 201, nil);
-    dbInfo = Send(server, @"GET", @"/database%2Fwith%2Fslashes", 200, nil);
+    Send(server, @"PUT", @"/database%2Fwith%2Fslashes", kTDStatusCreated, nil);
+    dbInfo = Send(server, @"GET", @"/database%2Fwith%2Fslashes", kTDStatusOK, nil);
     CAssertEqual([dbInfo objectForKey: @"db_name"], @"database/with/slashes");
+    [server close];
 }
 
 
 TestCase(TDRouter_Docs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
-                                    201, nil);
+                                    kTDStatusCreated, nil);
     NSString* revID = [result objectForKey: @"rev"];
     CAssert([revID hasPrefix: @"1-"]);
 
     // PUT to update:
     result = SendBody(server, @"PUT", @"/db/doc1",
                       $dict({@"message", @"goodbye"}, {@"_rev", revID}), 
-                      201, nil);
+                      kTDStatusCreated, nil);
     Log(@"PUT returned %@", result);
     revID = [result objectForKey: @"rev"];
     CAssert([revID hasPrefix: @"2-"]);
     
-    Send(server, @"GET", @"/db/doc1", 200,
+    Send(server, @"GET", @"/db/doc1", kTDStatusOK,
          $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"goodbye"}));
+    CheckCacheable(server, @"/db/doc1");
     
     // Add more docs:
     result = SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"hello"}), 
-                                    201, nil);
+                                    kTDStatusCreated, nil);
     NSString* revID3 = [result objectForKey: @"rev"];
     result = SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"hello"}), 
-                                    201, nil);
+                                    kTDStatusCreated, nil);
     NSString* revID2 = [result objectForKey: @"rev"];
 
     // _all_docs:
-    result = Send(server, @"GET", @"/db/_all_docs", 200, nil);
+    result = Send(server, @"GET", @"/db/_all_docs", kTDStatusOK, nil);
     CAssertEqual([result objectForKey: @"total_rows"], $object(3));
     CAssertEqual([result objectForKey: @"offset"], $object(0));
     NSArray* rows = [result objectForKey: @"rows"];
@@ -171,16 +194,17 @@ TestCase(TDRouter_Docs) {
                               $dict({@"id",  @"doc3"}, {@"key", @"doc3"},
                                     {@"value", $dict({@"rev", revID3})})
                               ));
+    CheckCacheable(server, @"/db/_all_docs");
 
     // DELETE:
-    result = Send(server, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), 200, nil);
+    result = Send(server, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), kTDStatusOK, nil);
     revID = [result objectForKey: @"rev"];
     CAssert([revID hasPrefix: @"3-"]);
 
-    Send(server, @"GET", @"/db/doc1", 404, nil);
+    Send(server, @"GET", @"/db/doc1", kTDStatusNotFound, nil);
     
     // _changes:
-    Send(server, @"GET", @"/db/_changes", 200,
+    Send(server, @"GET", @"/db/_changes", kTDStatusOK,
          $dict({@"last_seq", $object(5)},
                {@"results", $array($dict({@"id", @"doc3"},
                                          {@"changes", $array($dict({@"rev", revID3}))},
@@ -192,17 +216,19 @@ TestCase(TDRouter_Docs) {
                                          {@"changes", $array($dict({@"rev", revID}))},
                                          {@"seq", $object(5)},
                                          {@"deleted", $true}))}));
+    CheckCacheable(server, @"/db/_changes");
     
     // _changes with ?since:
-    Send(server, @"GET", @"/db/_changes?since=4", 200,
+    Send(server, @"GET", @"/db/_changes?since=4", kTDStatusOK,
          $dict({@"last_seq", $object(5)},
                {@"results", $array($dict({@"id", @"doc1"},
                                          {@"changes", $array($dict({@"rev", revID}))},
                                          {@"seq", $object(5)},
                                          {@"deleted", $true}))}));
-    Send(server, @"GET", @"/db/_changes?since=5", 200,
+    Send(server, @"GET", @"/db/_changes?since=5", kTDStatusOK,
          $dict({@"last_seq", $object(5)},
                {@"results", $array()}));
+    [server close];
 }
 
 
@@ -210,41 +236,43 @@ TestCase(TDRouter_LocalDocs) {
     RequireTestCase(TDDatabase_LocalDocs);
     RequireTestCase(TDRouter_Docs);
     // PUT a local doc:
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}), 
-                                    201, nil);
+                                    kTDStatusCreated, nil);
     NSString* revID = [result objectForKey: @"rev"];
     CAssert([revID hasPrefix: @"1-"]);
     
     // GET it:
-    Send(server, @"GET", @"/db/_local/doc1", 200,
+    Send(server, @"GET", @"/db/_local/doc1", kTDStatusOK,
          $dict({@"_id", @"_local/doc1"},
                {@"_rev", revID},
                {@"message", @"hello"}));
+    CheckCacheable(server, @"/db/_local/doc1");
 
     // Local doc should not appear in _changes feed:
-    Send(server, @"GET", @"/db/_changes", 200,
+    Send(server, @"GET", @"/db/_changes", kTDStatusOK,
          $dict({@"last_seq", $object(0)},
                {@"results", $array()}));
+    [server close];
 }
 
 
 TestCase(TDRouter_AllDocs) {
     // PUT:
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     
     NSDictionary* result;
-    result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
+    result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kTDStatusCreated, nil);
     NSString* revID = [result objectForKey: @"rev"];
-    result = SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), 201, nil);
+    result = SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kTDStatusCreated, nil);
     NSString* revID3 = [result objectForKey: @"rev"];
-    result = SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), 201, nil);
+    result = SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kTDStatusCreated, nil);
     NSString* revID2 = [result objectForKey: @"rev"];
     
     // _all_docs:
-    result = Send(server, @"GET", @"/db/_all_docs", 200, nil);
+    result = Send(server, @"GET", @"/db/_all_docs", kTDStatusOK, nil);
     CAssertEqual([result objectForKey: @"total_rows"], $object(3));
     CAssertEqual([result objectForKey: @"offset"], $object(0));
     NSArray* rows = [result objectForKey: @"rows"];
@@ -257,7 +285,7 @@ TestCase(TDRouter_AllDocs) {
                               ));
     
     // ?include_docs:
-    result = Send(server, @"GET", @"/db/_all_docs?include_docs=true", 200, nil);
+    result = Send(server, @"GET", @"/db/_all_docs?include_docs=true", kTDStatusOK, nil);
     CAssertEqual([result objectForKey: @"total_rows"], $object(3));
     CAssertEqual([result objectForKey: @"offset"], $object(0));
     rows = [result objectForKey: @"rows"];
@@ -274,17 +302,18 @@ TestCase(TDRouter_AllDocs) {
                                     {@"doc", $dict({@"message", @"bonjour"},
                                                    {@"_id", @"doc3"}, {@"_rev", revID3} )})
                               ));
+    [server close];
 }
 
 
 TestCase(TDRouter_Views) {
     // PUT:
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     
-    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
-    SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), 201, nil);
-    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), 201, nil);
+    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kTDStatusCreated, nil);
+    SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kTDStatusCreated, nil);
+    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kTDStatusCreated, nil);
     
     TDDatabase* db = [server databaseNamed: @"db"];
     TDView* view = [db viewNamed: @"design/view"];
@@ -294,7 +323,7 @@ TestCase(TDRouter_Views) {
     } reduceBlock: NULL version: @"1"];
 
     // Query the view and check the result:
-    Send(server, @"GET", @"/db/_design/design/_view/view", 200,
+    Send(server, @"GET", @"/db/_design/design/_view/view", kTDStatusOK,
          $dict({@"offset", $object(0)},
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
                                 $dict({@"id", @"doc2"}, {@"key", @"guten tag"}),
@@ -309,24 +338,25 @@ TestCase(TDRouter_Views) {
     // Try a conditional GET:
     response = SendRequest(server, @"GET", @"/db/_design/design/_view/view",
                            $dict({@"If-None-Match", etag}), nil);
-    CAssertEq(response.status, 304);
+    CAssertEq(response.status, kTDStatusNotModified);
 
     // Update the database:
-    SendBody(server, @"PUT", @"/db/doc4", $dict({@"message", @"aloha"}), 201, nil);
+    SendBody(server, @"PUT", @"/db/doc4", $dict({@"message", @"aloha"}), kTDStatusCreated, nil);
     
     // Try a conditional GET:
     response = SendRequest(server, @"GET", @"/db/_design/design/_view/view",
                            $dict({@"If-None-Match", etag}), nil);
-    CAssertEq(response.status, 200);
+    CAssertEq(response.status, kTDStatusOK);
     CAssertEqual([ParseJSONResponse(response) objectForKey: @"total_rows"], $object(4));
+    [server close];
 }
 
 
 TestCase(TDRouter_ContinuousChanges) {
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
 
-    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 201, nil);
+    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kTDStatusCreated, nil);
 
     __block TDResponse* response = nil;
     __block NSMutableData* body = [NSMutableData data];
@@ -334,12 +364,12 @@ TestCase(TDRouter_ContinuousChanges) {
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///db/_changes?feed=continuous"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
-    TDRouter* router = [[TDRouter alloc] initWithServer: server request: request];
+    TDRouter* router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     router.onResponseReady = ^(TDResponse* routerResponse) {
         CAssert(!response);
         response = routerResponse;
     };
-    router.onDataAvailable = ^(NSData* content) {
+    router.onDataAvailable = ^(NSData* content, BOOL finished) {
         [body appendData: content];
     };
     router.onFinished = ^{
@@ -352,13 +382,13 @@ TestCase(TDRouter_ContinuousChanges) {
     
     // Should initially have a response and one line of output:
     CAssert(response != nil);
-    CAssertEq(response.status, 200);
+    CAssertEq(response.status, kTDStatusOK);
     CAssert(body.length > 0);
     CAssert(!finished);
     [body setLength: 0];
     
     // Now make a change to the database:
-    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"hej"}), 201, nil);
+    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"hej"}), kTDStatusCreated, nil);
 
     // Should now have received additional output from the router:
     CAssert(body.length > 0);
@@ -366,12 +396,13 @@ TestCase(TDRouter_ContinuousChanges) {
     
     [router stop];
     [router release];
+    [server close];
 }
 
 
 TestCase(TDRouter_GetAttachment) {
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
 
     // Create a document with an attachment:
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
@@ -386,12 +417,12 @@ TestCase(TDRouter_GetAttachment) {
     NSDictionary* props = $dict({@"message", @"hello"},
                                 {@"_attachments", attachmentDict});
 
-    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
+    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", props, kTDStatusCreated, nil);
     NSString* revID = [result objectForKey: @"rev"];
     
     // Now get the attachment via its URL:
     TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil, nil);
-    CAssertEq(response.status, 200);
+    CAssertEq(response.status, kTDStatusOK);
     CAssertEqual(response.body.asJSON, attach1);
     CAssertEqual([response.headers objectForKey: @"Content-Type"], @"text/plain");
     NSString* eTag = [response.headers objectForKey: @"Etag"];
@@ -399,22 +430,22 @@ TestCase(TDRouter_GetAttachment) {
     
     // Ditto the 2nd attachment, whose name contains "/"s:
     response = SendRequest(server, @"GET", @"/db/doc1/path/to/attachment", nil, nil);
-    CAssertEq(response.status, 200);
+    CAssertEq(response.status, kTDStatusOK);
     CAssertEqual(response.body.asJSON, attach2);
     CAssertEqual([response.headers objectForKey: @"Content-Type"], @"text/plain");
     eTag = [response.headers objectForKey: @"Etag"];
     CAssert(eTag.length > 0);
     
-    // A nonexistent attachment should result in a 404:
+    // A nonexistent attachment should result in a kTDStatusNotFound:
     response = SendRequest(server, @"GET", @"/db/doc1/bogus", nil, nil);
-    CAssertEq(response.status, 404);
+    CAssertEq(response.status, kTDStatusNotFound);
     
     response = SendRequest(server, @"GET", @"/db/missingdoc/bogus", nil, nil);
-    CAssertEq(response.status, 404);
+    CAssertEq(response.status, kTDStatusNotFound);
     
     // Get the document with attachment data:
     response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil, nil);
-    CAssertEq(response.status, 200);
+    CAssertEq(response.status, kTDStatusOK);
     CAssertEqual([response.body.properties objectForKey: @"_attachments"],
                  $dict({@"attach", $dict({@"data", [TDBase64 encode: attach1]}, 
                                         {@"content_type", @"text/plain"},
@@ -436,12 +467,12 @@ TestCase(TDRouter_GetAttachment) {
     props = $dict({@"_rev", revID},
                   {@"message", @"aloha"},
                   {@"_attachments", attachmentDict});
-    result = SendBody(server, @"PUT", @"/db/doc1", props, 201, nil);
+    result = SendBody(server, @"PUT", @"/db/doc1", props, kTDStatusCreated, nil);
     revID = [result objectForKey: @"rev"];
     
     // Get the doc with attachments modified since rev #1:
     NSString* path = $sprintf(@"/db/doc1?attachments=true&atts_since=[%%22%@%%22]", revID);
-    Send(server, @"GET", path, 200, 
+    Send(server, @"GET", path, kTDStatusOK, 
          $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"aloha"},
                {@"_attachments", $dict({@"attach", $dict({@"stub", $true}, 
                                                          {@"content_type", @"text/plain"},
@@ -453,29 +484,61 @@ TestCase(TDRouter_GetAttachment) {
                                                                      {@"length", $object(attach2.length)},
                                                                      {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                                                      {@"revpos", $object(1)})})}));
+    [server close];
+}
+
+
+TestCase(TDRouter_PutMultipart) {
+    RequireTestCase(TDRouter_Docs);
+    RequireTestCase(TDMultipartDownloader);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
+    
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"length", $object(36)},
+                                                           {@"content_type", @"text/plain"},
+                                                           {@"follows", $true})});
+    NSDictionary* props = $dict({@"message", @"hello"},
+                                {@"_attachments", attachmentDict});
+    NSString* attachmentString = @"This is the value of the attachment.";
+
+    NSString* body = $sprintf(@"\r\n--BOUNDARY\r\n\r\n"
+                              "%@"
+                              "\r\n--BOUNDARY\r\n"
+                              "Content-Disposition: attachment; filename=attach\r\n"
+                              "Content-Type: text/plain\r\n\r\n"
+                              "%@"
+                              "\r\n--BOUNDARY--",
+                              [TDJSON stringWithJSONObject: props options: 0 error: NULL],
+                              attachmentString);
+    
+    TDResponse* response = SendRequest(server, @"PUT", @"/db/doc",
+                           $dict({@"Content-Type", @"multipart/related; boundary=\"BOUNDARY\""}),
+                                       [body dataUsingEncoding: NSUTF8StringEncoding]);
+    CAssertEq(response.status, kTDStatusCreated);
 }
 
 
 TestCase(TDRouter_OpenRevs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
-                                    201, nil);
+                                    kTDStatusCreated, nil);
     NSString* revID1 = [result objectForKey: @"rev"];
     
     // PUT to update:
     result = SendBody(server, @"PUT", @"/db/doc1",
                       $dict({@"message", @"goodbye"}, {@"_rev", revID1}), 
-                      201, nil);
+                      kTDStatusCreated, nil);
     NSString* revID2 = [result objectForKey: @"rev"];
     
-    Send(server, @"GET", @"/db/doc1?open_revs=all", 200,
+    Send(server, @"GET", @"/db/doc1?open_revs=all", kTDStatusOK,
          $array( $dict({@"ok", $dict({@"_id", @"doc1"},
                                      {@"_rev", revID2},
                                      {@"message", @"goodbye"})}) ));
-    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, revID2), 200,
+    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, revID2), kTDStatusOK,
          $array($dict({@"ok", $dict({@"_id", @"doc1"},
                                     {@"_rev", revID1},
                                     {@"message", @"hello"})}),
@@ -483,44 +546,81 @@ TestCase(TDRouter_OpenRevs) {
                                     {@"_rev", revID2},
                                     {@"message", @"goodbye"})})
                 ));
-    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"bogus"), 200,
+    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"bogus"), kTDStatusOK,
          $array($dict({@"ok", $dict({@"_id", @"doc1"},
                                     {@"_rev", revID1},
                                     {@"message", @"hello"})}),
                 $dict({@"missing", @"bogus"})
                 ));
+    [server close];
 }
 
 
 TestCase(TDRouter_RevsDiff) {
     RequireTestCase(TDRouter_Databases);
-    TDServer* server = createServer();
-    Send(server, @"PUT", @"/db", 201, nil);
-    NSDictionary* doc1r1 = SendBody(server, @"PUT", @"/db/11111", $dict(), 201,nil);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
+    NSDictionary* doc1r1 = SendBody(server, @"PUT", @"/db/11111", $dict(), kTDStatusCreated,nil);
     NSString* doc1r1ID = [doc1r1 objectForKey: @"rev"];
-    NSDictionary* doc2r1 = SendBody(server, @"PUT", @"/db/22222", $dict(), 201,nil);
+    NSDictionary* doc2r1 = SendBody(server, @"PUT", @"/db/22222", $dict(), kTDStatusCreated,nil);
     NSString* doc2r1ID = [doc2r1 objectForKey: @"rev"];
-    NSDictionary* doc3r1 = SendBody(server, @"PUT", @"/db/33333", $dict(), 201,nil);
+    NSDictionary* doc3r1 = SendBody(server, @"PUT", @"/db/33333", $dict(), kTDStatusCreated,nil);
     NSString* doc3r1ID = [doc3r1 objectForKey: @"rev"];
     
-    NSDictionary* doc1r2 = SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r1ID}), 201,nil);
+    NSDictionary* doc1r2 = SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r1ID}), kTDStatusCreated,nil);
     NSString* doc1r2ID = [doc1r2 objectForKey: @"rev"];
-    SendBody(server, @"PUT", @"/db/22222", $dict({@"_rev", doc2r1ID}), 201,nil);
+    SendBody(server, @"PUT", @"/db/22222", $dict({@"_rev", doc2r1ID}), kTDStatusCreated,nil);
 
-    SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r2ID}), 201,nil);
+    SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r2ID}), kTDStatusCreated,nil);
     
     SendBody(server, @"POST", @"/db/_revs_diff",
              $dict({@"11111", $array(doc1r2ID, @"3-foo")},
                    {@"22222", $array(doc2r1ID)},
                    {@"33333", $array(@"10-bar")},
                    {@"99999", $array(@"6-six")}),
-             200,
+             kTDStatusOK,
              $dict({@"11111", $dict({@"missing", $array(@"3-foo")},
                                     {@"possible_ancestors", $array(doc1r1ID, doc1r2ID)})},
                    {@"33333", $dict({@"missing", $array(@"10-bar")},
                                     {@"possible_ancestors", $array(doc3r1ID)})},
                    {@"99999", $dict({@"missing", $array(@"6-six")})}
                    ));
+    [server close];
+}
+
+
+TestCase(TDRouter_AccessCheck) {
+    RequireTestCase(TDRouter_Databases);
+    TDDatabaseManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
+    
+    NSURL* url = [NSURL URLWithString: @"touchdb:///db/"];
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
+    request.HTTPMethod = @"GET";
+    TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    CAssert(router!=nil);
+    __block BOOL calledOnAccessCheck = NO;
+    router.onAccessCheck = ^TDStatus(TDDatabase* accessDB, NSString* docID, SEL action) {
+        CAssert([accessDB.name isEqualToString: @"db"]);
+        calledOnAccessCheck = YES;
+        return 200;
+    };
+    [router start];
+    CAssert(calledOnAccessCheck);
+    CAssert(router.response.status == 200);
+    
+    router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    CAssert(router!=nil);
+    calledOnAccessCheck = NO;
+    router.onAccessCheck = ^TDStatus(TDDatabase* accessDB, NSString* docID, SEL action) {
+        CAssert([accessDB.name isEqualToString: @"db"]);
+        calledOnAccessCheck = YES;
+        return 401;
+    };
+    [router start];
+    
+    CAssert(calledOnAccessCheck);
+    CAssert(router.response.status == 401);
 }
 
 
@@ -532,6 +632,7 @@ TestCase(TDRouter) {
     RequireTestCase(TDRouter_ContinuousChanges);
     RequireTestCase(TDRouter_GetAttachment);
     RequireTestCase(TDRouter_RevsDiff);
+    RequireTestCase(TDRouter_AccessCheck);
 }
 
 #endif

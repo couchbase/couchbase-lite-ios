@@ -27,9 +27,6 @@
 #endif
 
 
-NSString* const TDHTTPErrorDomain = @"TDHTTP";
-
-
 NSString* TDCreateUUID() {
 #ifdef GNUSTEP
     uuid_t uuid;
@@ -52,22 +49,17 @@ NSString* TDHexSHA1Digest( NSData* input ) {
     SHA1_Init(&ctx);
     SHA1_Update(&ctx, input.bytes, input.length);
     SHA1_Final(digest, &ctx);
-    char hex[2*sizeof(digest) + 1];
-    char *dst = &hex[0];
-    for( size_t i=0; i<sizeof(digest); i+=1 )
-        dst += sprintf(dst,"%02X", digest[i]);
-    return [[[NSString alloc] initWithBytes: hex
-                                     length: 2*sizeof(digest)
-                                   encoding: NSASCIIStringEncoding] autorelease];
+    return TDHexFromBytes(&digest, sizeof(digest));
 }
 
-
-NSError* TDHTTPError( int status, NSURL* url ) {
-    NSString* reason = [NSHTTPURLResponse localizedStringForStatusCode: status];
-    NSDictionary* info = $dict({NSURLErrorKey, url},
-                               {NSLocalizedFailureReasonErrorKey, reason},
-                               {NSLocalizedDescriptionKey, $sprintf(@"%i %@", status, reason)});
-    return [NSError errorWithDomain: TDHTTPErrorDomain code: status userInfo: info];
+NSString* TDHexFromBytes( const void* bytes, size_t length) {
+    char hex[2*length + 1];
+    char *dst = &hex[0];
+    for( size_t i=0; i<length; i+=1 )
+        dst += sprintf(dst,"%02x", ((const uint8_t*)bytes)[i]); // important: generates lowercase!
+    return [[[NSString alloc] initWithBytes: hex
+                                     length: 2*length
+                                   encoding: NSASCIIStringEncoding] autorelease];
 }
 
 
@@ -105,6 +97,44 @@ NSString* TDEscapeURLParam( NSString* param ) {
                                                                   kCFStringEncodingUTF8);
     return [NSMakeCollectable(escaped) autorelease];
 #endif
+}
+
+
+NSString* TDQuoteString( NSString* param ) {
+    NSMutableString* quoted = [[param mutableCopy] autorelease];
+    [quoted replaceOccurrencesOfString: @"\\" withString: @"\\\\"
+                               options: NSLiteralSearch
+                                 range: NSMakeRange(0, quoted.length)];
+    [quoted replaceOccurrencesOfString: @"\"" withString: @"\\\""
+                               options: NSLiteralSearch
+                                 range: NSMakeRange(0, quoted.length)];
+    [quoted insertString: @"\"" atIndex: 0];
+    [quoted appendString: @"\""];
+    return quoted;
+}
+
+
+NSString* TDUnquoteString( NSString* param ) {
+    if (![param hasPrefix: @"\""])
+        return param;
+    if (![param hasSuffix: @"\""] || param.length < 2)
+        return nil;
+    param = [param substringWithRange: NSMakeRange(1, param.length - 2)];
+    if ([param rangeOfString: @"\\"].length == 0)
+        return param;
+    NSMutableString* unquoted = [[param mutableCopy] autorelease];
+    for (NSUInteger pos = 0; pos < unquoted.length; ) {
+        NSRange r = [unquoted rangeOfString: @"\\"
+                                    options: NSLiteralSearch
+                                      range: NSMakeRange(pos, unquoted.length-pos)];
+        if (r.length == 0)
+            break;
+        [unquoted deleteCharactersInRange: r];
+        pos = r.location + 1;
+        if (pos > unquoted.length)
+            return nil;
+    }
+    return unquoted;
 }
 
 
@@ -157,4 +187,25 @@ NSURL* TDURLWithoutQuery( NSURL* url ) {
         return [NSMakeCollectable(cfURL) autorelease];
     }
 #endif
+}
+
+TestCase(TDQuoteString) {
+    CAssertEqual(TDQuoteString(@""), @"\"\"");
+    CAssertEqual(TDQuoteString(@"foo"), @"\"foo\"");
+    CAssertEqual(TDQuoteString(@"f\"o\"o"), @"\"f\\\"o\\\"o\"");
+    CAssertEqual(TDQuoteString(@"\\foo"), @"\"\\\\foo\"");
+    CAssertEqual(TDQuoteString(@"\""), @"\"\\\"\"");
+    CAssertEqual(TDQuoteString(@""), @"\"\"");
+
+    CAssertEqual(TDUnquoteString(@""), @"");
+    CAssertEqual(TDUnquoteString(@"\""), nil);
+    CAssertEqual(TDUnquoteString(@"\"\""), @"");
+    CAssertEqual(TDUnquoteString(@"\"foo"), nil);
+    CAssertEqual(TDUnquoteString(@"foo\""), @"foo\"");
+    CAssertEqual(TDUnquoteString(@"foo"), @"foo");
+    CAssertEqual(TDUnquoteString(@"\"foo\""), @"foo");
+    CAssertEqual(TDUnquoteString(@"\"f\\\"o\\\"o\""), @"f\"o\"o");
+    CAssertEqual(TDUnquoteString(@"\"\\foo\""), @"foo");
+    CAssertEqual(TDUnquoteString(@"\"\\\\foo\""), @"\\foo");
+    CAssertEqual(TDUnquoteString(@"\"foo\\\""), nil);
 }

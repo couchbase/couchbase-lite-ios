@@ -18,6 +18,7 @@
 
 - (id) initWithURL: (NSURL *)url
           streamer: (TDMultipartWriter*)streamer
+        authorizer: (id<TDAuthorizer>)authorizer
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 
 @end

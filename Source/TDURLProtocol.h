@@ -18,7 +18,25 @@
 /** The root URL served by this protocol, "touchdb:///". */
 + (NSURL*) rootURL;
 
+/** Registers a TDServer instance with a URL hostname.
+    'touchdb:' URLs with that hostname will be routed to that server.
+    If the server is nil, that hostname is unregistered, and URLs with that hostname will cause a host-not-found error.
+    If the hostname is nil or an empty string, "localhost" is substituted. */
++ (NSURL*) registerServer: (TDServer*)server forHostname: (NSString*)hostname;
+
+/** Returns the TDServer instance that's been registered with a specific hostname. */
++ (TDServer*) serverForHostname: (NSString*)hostname;
+
+/** Registers a TDServer instance with a new unique hostname, and returns the root URL at which the server can now be reached. */
++ (NSURL*) registerServer: (TDServer*)server;
+
+/** Unregisters a TDServer. After this, the server can be safely closed. */
++ (void) unregisterServer: (TDServer*)server;
+
+/** A convenience to register a server with the default hostname "localhost". */
 + (void) setServer: (TDServer*)server;
+
+/** Returns the server registered with the hostname "localhost". */
 + (TDServer*) server;
 
 @end

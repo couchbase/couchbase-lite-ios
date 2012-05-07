@@ -22,6 +22,7 @@
 #import "TDReachability.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
+#import "TDBase64.h"
 
 
 #define kProcessDelay 0.5
@@ -67,22 +68,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
         static int sLastSessionID = 0;
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
-
-        _host = [[TDReachability alloc] initWithHostName: _remote.host];
-        _host.onChange = ^{[self reachabilityChanged: _host];};
-        [_host start];
-        
-        _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
-                     processor:^(NSArray *inbox) {
-                         LogTo(Sync, @"*** %@: BEGIN processInbox (%i sequences)",
-                               self, inbox.count);
-                         TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
-                         [self processInbox: revs];
-                         [revs release];
-                         LogTo(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
-                         [self updateActive];
-                     }
-                    ];
     }
     return self;
 }
@@ -100,6 +85,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [_batcher release];
     [_sessionID release];
     [_error release];
+    [_authorizer release];
     [super dealloc];
 }
 
@@ -121,6 +107,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 @synthesize error=_error, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
+@synthesize authorizer=_authorizer;
 
 
 - (BOOL) isPush {
@@ -189,10 +176,31 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         return;
     Assert(_db, @"Can't restart an already stopped TDReplicator");
     LogTo(Sync, @"%@ STARTING ...", self);
+
+    // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
+    // and _batcher retains the block, and of course I retain _batcher.
+    // The cycle is broken in -stopped when I release _batcher.
+    _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
+                 processor:^(NSArray *inbox) {
+                     LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%i sequences)",
+                           self, inbox.count);
+                     TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
+                     [self processInbox: revs];
+                     [revs release];
+                     LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
+                     [self updateActive];
+                 }
+                ];
+
     self.running = YES;
+    _startTime = CFAbsoluteTimeGetCurrent();
     
-    // Check current reachability
+    // Start reachability checks. (This creates another ref cycle, because
+    // the block also retains a ref to self. Cycle is also broken in -stopped.)
     _online = NO;
+    _host = [[TDReachability alloc] initWithHostName: _remote.host];
+    _host.onChange = ^{[self reachabilityChanged: _host];};
+    [_host start];
     [self reachabilityChanged: _host];
 }
 
@@ -215,11 +223,16 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 - (void) stopped {
     LogTo(Sync, @"%@ STOPPED", self);
+    Log(@"Replication: %@ took %.3f sec; error=%@",
+        self, CFAbsoluteTimeGetCurrent()-_startTime, _error);
     self.running = NO;
     self.changesProcessed = self.changesTotal = 0;
     [[NSNotificationCenter defaultCenter]
         postNotificationName: TDReplicatorStoppedNotification object: self];
     [self saveLastSequence];
+    setObj(&_batcher, nil);
+    [_host stop];
+    setObj(&_host, nil);
     _db = nil;  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -289,17 +302,19 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
-- (void) sendAsyncRequest: (NSString*)method path: (NSString*)relativePath body: (id)body
-             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
+- (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
+                                     path: (NSString*)relativePath
+                                     body: (id)body
+                             onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
     LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSURL* url = [NSURL URLWithString: urlStr];
-    TDRemoteJSONRequest* request = [[TDRemoteJSONRequest alloc] initWithMethod: method
-                                                                   URL: url
-                                                                  body: body
-                                                          onCompletion: onCompletion];
-    [request autorelease];
+    return [[[TDRemoteJSONRequest alloc] initWithMethod: method
+                                                    URL: url
+                                                   body: body
+                                             authorizer: _authorizer
+                                           onCompletion: onCompletion] autorelease];
 }
 
 
@@ -325,15 +340,16 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     NSString* localLastSequence = [_db lastSequenceWithRemoteURL: _remote push: self.isPush];
     
     [self asyncTaskStarted];
-    [self sendAsyncRequest: @"GET"
-                      path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
-                      body: nil
-              onCompletion: ^(id response, NSError* error) {
+    TDRemoteJSONRequest* request = 
+        [self sendAsyncRequest: @"GET"
+                          path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
+                          body: nil
+                  onCompletion: ^(id response, NSError* error) {
                   // Got the response:
-                  if (error && error.code != 404) {
+                  if (error && error.code != kTDStatusNotFound) {
                       self.error = error;
                   } else {
-                      if (error.code == 404)
+                      if (error.code == kTDStatusNotFound)
                           [self maybeCreateRemoteDB];
                       response = $castIf(NSDictionary, response);
                       self.remoteCheckpoint = response;
@@ -352,13 +368,20 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                   [self asyncTasksFinished: 1];
           }
      ];
+    [request dontLog404];
 }
 
 
 - (void) saveLastSequence {
     if (!_lastSequenceChanged)
         return;
-    _lastSequenceChanged = NO;
+    if (_savingCheckpoint) {
+        // If a save is already in progress, don't do anything. (The completion block will trigger
+        // another save after the first one finishes.)
+        _overdueForSave = YES;
+        return;
+    }
+    _lastSequenceChanged = _overdueForSave = NO;
     
     LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
     NSMutableDictionary* body = [[_remoteCheckpoint mutableCopy] autorelease];
@@ -366,10 +389,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         body = $mdict();
     [body setValue: _lastSequence forKey: @"lastSequence"];
     
+    _savingCheckpoint = YES;
     [self sendAsyncRequest: @"PUT"
                       path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
                       body: body
               onCompletion: ^(id response, NSError* error) {
+                  _savingCheckpoint = NO;
                   if (!_db)
                       return;   // db already closed
                   if (error) {
@@ -381,10 +406,45 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                           [body setObject: rev forKey: @"_rev"];
                       self.remoteCheckpoint = body;
                   }
+                  if (_overdueForSave)
+                      [self saveLastSequence];      // start a save that was waiting on me
               }
      ];
     [_db setLastSequence: _lastSequence withRemoteURL: _remote push: self.isPush];
 }
 
+
+@end
+
+
+
+
+@implementation TDBasicAuthorizer
+
+- (id) initWithCredential: (NSURLCredential*)credential {
+    Assert(credential);
+    self = [super init];
+    if (self) {
+        _credential = [credential retain];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [_credential release];
+    [super dealloc];
+}
+
+- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request {
+    NSString* username = _credential.user;
+    NSString* password = _credential.password;
+    if (username && password) {
+        NSString* seekrit = $sprintf(@"%@:%@", username, password);
+        seekrit = [TDBase64 encode: [seekrit dataUsingEncoding: NSUTF8StringEncoding]];
+        return [@"Basic " stringByAppendingString: seekrit];
+    }
+    return nil;
+}
 
 @end

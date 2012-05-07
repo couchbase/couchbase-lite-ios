@@ -7,31 +7,27 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDDatabase, TDReplicatorManager;
+@class TDDatabase, TDDatabaseManager;
 
 
-/** Manages a directory containing TDDatabases. */
+/** Thread-safe top-level interface to TouchDB API.
+    A TDServer owns a background thread on which it runs a TDDatabaseManager and all related tasks.
+    The database objects can only be called by queueing blocks that will run on the background thread. */
 @interface TDServer : NSObject
 {
     @private
-    NSString* _dir;
-    NSMutableDictionary* _databases;
-    TDReplicatorManager* _replicatorManager;
+    TDDatabaseManager* _manager;
+    NSThread* _serverThread;
+    BOOL _stopRunLoop;
 }
-
-+ (BOOL) isValidDatabaseName: (NSString*)name;
 
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
 
 @property (readonly) NSString* directory;
 
-- (TDDatabase*) databaseNamed: (NSString*)name;
-- (TDDatabase*) existingDatabaseNamed: (NSString*)name;
-
-- (BOOL) deleteDatabaseNamed: (NSString*)name;
-
-@property (readonly) NSArray* allDatabaseNames;
-@property (readonly) NSArray* allOpenDatabases;
+- (void) queue: (void(^)())block;
+- (void) tellDatabaseManager: (void (^)(TDDatabaseManager*))block;
+- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TDDatabase*))block;
 
 - (void) close;
 

@@ -13,9 +13,11 @@ TouchDB_OBJC_FILES = \
     Source/TDDatabase+Attachments.m \
     Source/TDDatabase+Insertion.m \
     Source/TDDatabase+LocalDocs.m \
+    Source/TDAttachment.m \
     Source/TDBody.m \
     Source/TDRevision.m \
     Source/TDView.m \
+    Source/TDDatabaseManager.m \
     Source/TDServer.m \
     Source/TDBlobStore.m \
     \
@@ -29,6 +31,7 @@ TouchDB_OBJC_FILES = \
     Source/TDPusher.m \
     Source/TDReplicatorManager.m \
     Source/TDRemoteRequest.m \
+    Source/TDMultipartDocumentReader.m \
     Source/TDMultipartDownloader.m \
     Source/TDMultipartReader.m \
     Source/TDMultipartUploader.m \
@@ -37,12 +40,14 @@ TouchDB_OBJC_FILES = \
     Source/TDReachability_Stubs.m \
     \
     Source/TDBatcher.m \
+    Source/TDCanonicalJSON.m \
     Source/TDCollateJSON.m \
     Source/TDGNUstep.m \
     Source/TDBase64.m \
     Source/TDJSON.m \
     Source/TDMisc.m \
     Source/TDSequenceMap.m \
+    Source/TDStatus.m \
     \
     Source/TDBlobStore_Tests.m \
     Source/TDDatabase_Tests.m \
@@ -86,6 +91,7 @@ TouchDB_HEADER_FILES = \
     TDRevision.h \
     TDRouter.h \
 	TDServer.h \
+	TDStatus.h \
     TDURLProtocol.h \
 	TDView.h \
     TDC.h

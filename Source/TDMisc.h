@@ -15,7 +15,9 @@ NSString* TDCreateUUID( void );
 
 NSString* TDHexSHA1Digest( NSData* input );
 
-NSError* TDHTTPError( int status, NSURL* url );
+/** Generates a hex dump of a sequence of bytes.
+    The result is lowercase. This is important for CouchDB compatibility. */
+NSString* TDHexFromBytes( const void* bytes, size_t length);
 
 NSComparisonResult TDSequenceCompare( SequenceNumber a, SequenceNumber b);
 
@@ -26,6 +28,13 @@ NSString* TDEscapeID( NSString* param );
 /** Escapes a string to be used as the value of a query parameter in a URL.
     This does the usual %-escaping, but makes sure that '&' is also escaped. */
 NSString* TDEscapeURLParam( NSString* param );
+
+/** Wraps a string in double-quotes and prepends backslashes to any existing double-quote or backslash characters in it. */
+NSString* TDQuoteString( NSString* param );
+
+/** Undoes effect of TDQuoteString, i.e. removes backslash escapes and any surrounding double-quotes.
+    If the string has no surrounding double-quotes it will be returned as-is. */
+NSString* TDUnquoteString( NSString* param );
 
 /** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
 BOOL TDIsOfflineError( NSError* error );

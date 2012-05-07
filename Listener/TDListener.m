@@ -24,6 +24,9 @@
 @implementation TDListener
 
 
+@synthesize readOnly=_readOnly;
+
+
 - (id) initWithTDServer: (TDServer*)server port: (UInt16)port {
     self = [super init];
     if (self) {
@@ -33,7 +36,6 @@
         _httpServer.tdServer = _tdServer;
         _httpServer.port = port;
         _httpServer.connectionClass = [TDHTTPConnection class];
-        _queue = dispatch_queue_create("TDListener", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -44,13 +46,7 @@
     [self stop];
     [_tdServer release];
     [_httpServer release];
-    dispatch_release(_queue);
     [super dealloc];
-}
-
-
-- (void) onServerThread: (void(^)())block {
-    dispatch_sync(_queue, block);
 }
 
 

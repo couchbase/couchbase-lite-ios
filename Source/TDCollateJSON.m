@@ -265,11 +265,10 @@ int TDCollateJSON(void *context,
 #if DEBUG
 // encodes an object to a C string in JSON format. JSON fragments are allowed.
 static const char* encode(id obj) {
-    NSArray* wrapped = $array(obj);
-    NSData* data = [TDJSON dataWithJSONObject: wrapped options: 0 error: NULL];
-    CAssert(data);
-    data = [data subdataWithRange: NSMakeRange(1, data.length-2)];  // strip the brackets
-    return [[data my_UTF8ToString] UTF8String];
+    NSString* str = [TDJSON stringWithJSONObject: obj
+                                         options: TDJSONWritingAllowFragments error: NULL];
+    CAssert(str);
+    return [str UTF8String];
 }
 
 static void testEscape(const char* source, char decoded) {

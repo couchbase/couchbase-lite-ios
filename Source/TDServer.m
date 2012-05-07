@@ -17,24 +17,13 @@
 #import <TouchDB/TDDatabase.h>
 #import "TDReplicatorManager.h"
 #import "TDMisc.h"
+#import "TDDatabaseManager.h"
 #import "TDInternal.h"
+#import "TDURLProtocol.h"
+#import "MYBlockUtils.h"
 
 
 @implementation TDServer
-
-
-#define kDBExtension @"touchdb"
-
-// http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
-#define kLegalChars @"abcdefghijklmnopqrstuvwxyz0123456789_$()+-/"
-static NSCharacterSet* kIllegalNameChars;
-
-+ (void) initialize {
-    if (self == [TDServer class]) {
-        kIllegalNameChars = [[[NSCharacterSet characterSetWithCharactersInString: kLegalChars]
-                                        invertedSet] retain];
-    }
-}
 
 
 #if DEBUG
@@ -46,10 +35,10 @@ static NSCharacterSet* kIllegalNameChars;
     AssertEqual(server.directory, path);
     return [server autorelease];
 }
+
 + (TDServer*) createEmptyAtTemporaryPath: (NSString*)name {
     return [self createEmptyAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: name]];
 }
-
 #endif
 
 
@@ -57,119 +46,96 @@ static NSCharacterSet* kIllegalNameChars;
     if (outError) *outError = nil;
     self = [super init];
     if (self) {
-        _dir = [dirPath copy];
-        _databases = [[NSMutableDictionary alloc] init];
-        
-        // Create the directory but don't fail if it already exists:
-        NSError* error = nil;
-        if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
-                                       withIntermediateDirectories: NO
-                                                        attributes: nil
-                                                             error: &error]) {
-            if (!TDIsFileExistsError(error)) {
-                NSLog(@"ERROR for %@: %@", _dir, error);//TEMP
-                if (outError) *outError = error;
-                [self release];
-                return nil;
-            }
+        _manager = [[TDDatabaseManager alloc] initWithDirectory: dirPath error: outError];
+        if (!_manager) {
+            [self release];
+            return nil;
         }
+        
+        _serverThread = [[NSThread alloc] initWithTarget: self
+                                                selector: @selector(runServerThread)
+                                                  object: nil];
+        LogTo(TDServer, @"Starting server thread %@ ...", _serverThread);
+        [_serverThread start];
     }
     return self;
 }
 
-- (void)dealloc {
-    [self close];
-    [_dir release];
-    [_databases release];
+
+- (void)dealloc
+{
+    LogTo(TDServer, @"DEALLOC");
+    if (_serverThread) Warn(@"%@ dealloced with _serverThread still set: %@", self, _serverThread);
+    [_manager release];
     [super dealloc];
-}
-
-@synthesize directory = _dir;
-
-+ (BOOL) isValidDatabaseName: (NSString*)name {
-    if (name.length > 0 && [name rangeOfCharacterFromSet: kIllegalNameChars].length == 0
-                        && islower([name characterAtIndex: 0]))
-        return YES;
-    return $equal(name, kTDReplicatorDatabaseName);
-}
-
-- (NSString*) pathForName: (NSString*)name {
-    if (![[self class] isValidDatabaseName: name])
-        return nil;
-    name = [name stringByReplacingOccurrencesOfString: @"/" withString: @":"];
-    return [_dir stringByAppendingPathComponent:[name stringByAppendingPathExtension:kDBExtension]];
-}
-
-- (TDDatabase*) databaseNamed: (NSString*)name create: (BOOL)create {
-    TDDatabase* db = [_databases objectForKey: name];
-    if (!db) {
-        NSString* path = [self pathForName: name];
-        if (!path)
-            return nil;
-        db = [[TDDatabase alloc] initWithPath: path];
-        if (!create && !db.exists) {
-            [db release];
-            return nil;
-        }
-        db.name = name;
-        [_databases setObject: db forKey: name];
-        [db release];
-    }
-    return db;
-}
-
-- (TDDatabase*) databaseNamed: (NSString*)name {
-    return [self databaseNamed: name create: YES];
-}
-
-- (TDDatabase*) existingDatabaseNamed: (NSString*)name {
-    TDDatabase* db = [self databaseNamed: name create: NO];
-    if (db && ![db open])
-        db = nil;
-    return db;
-}
-
-- (BOOL) deleteDatabaseNamed: (NSString*)name {
-    TDDatabase* db = [self databaseNamed: name];
-    if (!db)
-        return NO;
-    [db deleteDatabase: NULL];
-    [_databases removeObjectForKey: name];
-    return YES;
-}
-
-
-- (NSArray*) allDatabaseNames {
-    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: NULL];
-    files = [files pathsMatchingExtensions: $array(kDBExtension)];
-    return [files my_map: ^(id filename) {
-        return [[filename stringByDeletingPathExtension]
-                                stringByReplacingOccurrencesOfString: @":" withString: @"/"];
-    }];
-}
-
-
-- (NSArray*) allOpenDatabases {
-    return _databases.allValues;
-}
-
-
-- (TDReplicatorManager*) replicatorManager {
-    if (!_replicatorManager) {
-        _replicatorManager = [[TDReplicatorManager alloc] initWithServer: self];
-        [_replicatorManager start];
-    }
-    return _replicatorManager;
 }
 
 
 - (void) close {
-    [_replicatorManager release];
-    _replicatorManager = nil;
-    for (TDDatabase* db in _databases.allValues) {
-        [db close];
+    if (_serverThread) {
+        [self queue: ^{
+            LogTo(TDServer, @"Stopping server thread...");
+            [TDURLProtocol unregisterServer: self];
+            _stopRunLoop = YES;
+        }];
+        [_serverThread release];
+        _serverThread = nil;
     }
-    [_databases removeAllObjects];
+}
+
+
+- (NSString*) directory {
+    return _manager.directory;
+}
+
+
+- (void) runServerThread {
+    @autoreleasepool {
+        [[self retain] autorelease]; // ensure self stays alive till this method returns
+        
+        @autoreleasepool {
+            LogTo(TDServer, @"Server thread starting...");
+
+            [[NSThread currentThread] setName:@"TouchDB"];
+            
+#ifndef GNUSTEP
+            // Add a no-op source so the runloop won't stop on its own:
+            CFRunLoopSourceContext context = {};  // all zeros
+            CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+            CFRelease(source);
+#endif
+            
+            // Initialize the replicator:
+            [_manager replicatorManager];
+        }
+        
+        // Now run:
+        while (!_stopRunLoop && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                                         beforeDate: [NSDate distantFuture]])
+            ;
+        
+        LogTo(TDServer, @"Server thread exiting");
+
+        // Clean up; this has to be done on the server thread, not in the -close method.
+        [_manager close];
+    }
+}
+
+
+- (void) queue: (void(^)())block {
+    Assert(_serverThread, @"-queue: called after -close");
+    MYOnThread(_serverThread, block);
+}
+
+
+- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TDDatabase*))block {
+    [self queue: ^{ block([_manager databaseNamed: dbName]); }];
+}
+
+
+- (void) tellDatabaseManager: (void (^)(TDDatabaseManager*))block {
+    [self queue: ^{ block(_manager); }];
 }
 
 
@@ -178,25 +144,6 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 
-#pragma mark - TESTS
-#if DEBUG
-
 TestCase(TDServer) {
-    RequireTestCase(TDDatabase);
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDServerTest"];
-    TDDatabase* db = [server databaseNamed: @"foo"];
-    CAssert(db != nil);
-    CAssertEqual(db.name, @"foo");
-    CAssertEqual(db.path.stringByDeletingLastPathComponent, server.directory);
-    CAssert(!db.exists);
-    
-    CAssertEq([server databaseNamed: @"foo"], db);
-    
-    CAssertEqual(server.allDatabaseNames, $array());    // because foo doesn't exist yet
-    
-    CAssert([db open]);
-    CAssert(db.exists);
-    CAssertEqual(server.allDatabaseNames, $array(@"foo"));    // because foo doesn't exist yet
+    RequireTestCase(TDDatabaseManager);
 }
-
-#endif

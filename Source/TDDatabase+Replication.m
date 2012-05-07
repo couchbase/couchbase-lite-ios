@@ -95,10 +95,6 @@
 }
 
 
-static NSString* quote(NSString* str) {
-    return [str stringByReplacingOccurrencesOfString: @"'" withString: @"''"];
-}
-
 + (NSString*) joinQuotedStrings: (NSArray*)strings {
     if (strings.count == 0)
         return @"";
@@ -109,7 +105,10 @@ static NSString* quote(NSString* str) {
             first = NO;
         else
             [result appendString: @"','"];
-        [result appendString: quote(str)];
+        NSRange range = NSMakeRange(result.length, str.length);
+        [result appendString: str];
+        [result replaceOccurrencesOfString: @"'" withString: @"''"
+                                   options: NSLiteralSearch range: range];
     }
     [result appendString: @"'"];
     return result;

@@ -15,7 +15,6 @@
 @end
 
 
-
 int digittoint(int c) {
     if (!isxdigit(c))
         return 0;
@@ -25,6 +24,13 @@ int digittoint(int c) {
         return 10 + c - 'A';
     else
         return 10 + c - 'a';
+}
+
+
+CFAbsoluteTime CFAbsoluteTimeGetCurrent(void) {
+    // NOTE: The time base for this isn't the same as CF's (1970 vs 2001), but this is only being
+    // used in TouchDB to calculate relative times, so that doesn't matter.
+    return time(NULL);
 }
 
 

@@ -19,6 +19,7 @@
 #import "TDConnectionChangeTracker.h"
 #import "TDSocketChangeTracker.h"
 #import "TDMisc.h"
+#import "TDStatus.h"
 
 
 @interface TDChangeTracker ()
@@ -33,6 +34,7 @@
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
+                conflicts: (BOOL)includeConflicts
              lastSequence: (id)lastSequenceID
                    client: (id<TDChangeTrackerClient>)client {
     NSParameterAssert(databaseURL);
@@ -42,22 +44,21 @@
         if ([self class] == [TDChangeTracker class]) {
             [self release];
             // TDConnectionChangeTracker doesn't work in continuous due to some bug in CFNetwork.
-            if (mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"]) {
-                return (id) [[TDSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                          mode: mode
-                                                                  lastSequence: lastSequenceID
-                                                                        client: client];
-            } else {
-                return (id) [[TDConnectionChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                              mode: mode
-                                                                      lastSequence: lastSequenceID
-                                                                            client: client];
-            }
+            if (mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"])
+                self = [TDSocketChangeTracker alloc];
+            else
+                self = [TDConnectionChangeTracker alloc];
+            return [self initWithDatabaseURL: databaseURL
+                                        mode: mode
+                                   conflicts: includeConflicts
+                                lastSequence: lastSequenceID
+                                      client: client];
         }
     
         _databaseURL = [databaseURL retain];
         _client = client;
         _mode = mode;
+        _includeConflicts = includeConflicts;
         self.lastSequenceID = lastSequenceID;
     }
     return self;
@@ -72,6 +73,8 @@
     NSMutableString* path;
     path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=300000",
                                               kModeNames[_mode]];
+    if (_includeConflicts)
+        [path appendString: @"&style=all_docs"];
     if (_lastSequenceID)
         [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
     if (_filterName) {
@@ -95,7 +98,7 @@
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", [self class], self.databaseName];
+    return [NSString stringWithFormat: @"%@[%p %@]", [self class], self, self.databaseName];
 }
 
 - (void) dealloc {
@@ -117,7 +120,7 @@
 
 - (void) setUpstreamError: (NSString*)message {
     Warn(@"%@: Server error: %@", self, message);
-    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: 502 userInfo: nil];
+    self.error = [NSError errorWithDomain: @"TDChangeTracker" code: kTDStatusUpstreamError userInfo: nil];
 }
 
 - (BOOL) start {
@@ -139,14 +142,18 @@
     if (![change isKindOfClass: [NSDictionary class]])
         return NO;
     id seq = [change objectForKey: @"seq"];
-    if (!seq)
-        return NO;
+    if (!seq) {
+        // If a continuous feed closes (e.g. if its database is deleted), the last line it sends
+        // will indicate the last_seq. This is normal, just ignore it and return success:
+        return [change objectForKey: @"last_seq"] != nil;
+    }
     [_client changeTrackerReceivedChange: change];
     self.lastSequenceID = seq;
     return YES;
 }
 
 - (BOOL) receivedChunk: (NSData*)chunk {
+    LogTo(ChangeTracker, @"CHUNK: %@ %@", self, [chunk my_UTF8ToString]);
     if (chunk.length > 1) {
         id change = [TDJSON JSONObjectWithData: chunk options: 0 error: NULL];
         if (![self receivedChange: change]) {

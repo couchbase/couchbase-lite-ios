@@ -41,12 +41,14 @@ typedef enum TDChangeTrackerMode {
     TDChangeTrackerMode _mode;
     id _lastSequenceID;
     NSError* _error;
+    BOOL _includeConflicts;
     NSString* _filterName;
     NSDictionary* _filterParameters;
 }
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
+                conflicts: (BOOL)includeConflicts
              lastSequence: (id)lastSequenceID
                    client: (id<TDChangeTrackerClient>)client;
 
@@ -68,6 +70,7 @@ typedef enum TDChangeTrackerMode {
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly) NSString* changesFeedPath;
 - (void) setUpstreamError: (NSString*)message;
+- (BOOL) receivedChange: (NSDictionary*)change;
 - (BOOL) receivedChunk: (NSData*)chunk;
 - (BOOL) receivedPollResponse: (NSData*)body;
 - (void) stopped; // override this

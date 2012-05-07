@@ -7,7 +7,7 @@
 //
 
 #import <TouchDB/TDDatabase.h>
-@class TDServer;
+@class TDDatabaseManager;
 
 
 extern NSString* const kTDReplicatorDatabaseName;
@@ -18,15 +18,16 @@ extern NSString* const kTDReplicatorDatabaseName;
     A TDServer owns an instance of this class. */
 @interface TDReplicatorManager : NSObject
 {
-    TDServer* _server;
+    TDDatabaseManager* _dbManager;
     TDDatabase* _replicatorDB;
     NSMutableDictionary* _replicatorsByDocID;
     BOOL _updateInProgress;
 }
 
-- (id) initWithServer: (TDServer*)server;
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager;
 
 - (void) start;
+- (void) stop;
 
 /** Examines the JSON object describing a replication and determines the local database and remote URL, and some of the other parameters. */
 - (TDStatus) parseReplicatorProperties: (NSDictionary*)body

@@ -53,7 +53,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     LogTo(Sync, @"Remote db might not exist; creating it...");
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
-        if (error && error.code != 412) {
+        if (error && error.code != kTDStatusDuplicate) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
             [self stop];
@@ -126,8 +126,12 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         return;
     TDRevision* rev = [userInfo objectForKey: @"rev"];
     TDFilterBlock filter = self.filter;
-    if (!filter || filter(rev))
-        [self addToInbox: rev];
+    if (filter) {
+        [_db loadRevisionBody: rev options: 0];
+        if (!filter(rev))
+            return;
+    }
+    [self addToInbox: rev];
 }
 
 
@@ -166,34 +170,31 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                         return (id)nil;
                     
                     // Get the revision's properties:
-                    if ([rev deleted]) {
-                        properties = $mdict({@"_id", [rev docID]},
-                                            {@"_rev", [rev revID]}, 
-                                            {@"_deleted", $true},
-                                            {@"_revisions", [_db getRevisionHistoryDict: rev]});
-                        [properties retain];
-                    } else {
-                        TDContentOptions options = kTDIncludeAttachments | kTDIncludeRevs
-                                                    | kTDBigAttachmentsFollow;
+                    TDContentOptions options = kTDIncludeAttachments | kTDIncludeRevs
+                    | kTDBigAttachmentsFollow;
 #ifdef GNUSTEP
-                        options &= ~kTDBigAttachmentsFollow;    // TODO: Multipart upload on GNUstep
+                    options &= ~kTDBigAttachmentsFollow;    // TODO: Multipart upload on GNUstep
 #endif
-                        if ([_db loadRevisionBody: rev options: options] >= 300) {
-                            Warn(@"%@: Couldn't get local contents of %@", self, rev);
-                            return nil;
-                        }
-                        // Strip any attachments already known to the target db:
-                        if ([rev.properties objectForKey: @"_attachments"]) {
-                            // Look for the latest common ancestor and stub out older attachments:
-                            NSArray* possible = [revResults objectForKey: @"possible_ancestors"];
-                            int minRevPos = findCommonAncestor(rev, possible);
-                            [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1];
-                            // If the rev has huge attachments, send it under separate cover:
-                            if ([self uploadMultipartRevision: rev])
-                                return nil;
-                        }
-                        properties = [[rev properties] copy];
+                    if ([_db loadRevisionBody: rev options: options] >= 300) {
+                        Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                        return nil;
                     }
+                    properties = rev.properties;
+                    Assert([properties objectForKey: @"_revisions"]);
+                    
+                    // Strip any attachments already known to the target db:
+                    if ([properties objectForKey: @"_attachments"]) {
+                        // Look for the latest common ancestor and stub out older attachments:
+                        NSArray* possible = [revResults objectForKey: @"possible_ancestors"];
+                        int minRevPos = findCommonAncestor(rev, possible);
+                        [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
+                                       attachmentsFollow: NO];
+                        properties = rev.properties;
+                        // If the rev has huge attachments, send it under separate cover:
+                        if ([self uploadMultipartRevision: rev])
+                            return nil;
+                    }
+                    [properties retain];  // (to survive impending autorelease-pool drain)
                 }
                 lastInboxSequence = rev.sequence;
                 Assert([properties objectForKey: @"_id"]);
@@ -238,7 +239,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream:
     TDMultipartWriter* bodyStream = nil;
     NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
-    for (NSDictionary* attachment in attachments.allValues) {
+    for (NSString* attachmentName in attachments) {
+        NSDictionary* attachment = [attachments objectForKey: attachmentName];
         if ([attachment objectForKey: @"follows"]) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
@@ -249,6 +251,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
             }
             UInt64 length;
             NSInputStream *stream = [_db inputStreamForAttachmentDict: attachment length: &length];
+            NSString* disposition = $sprintf(@"attachment; filename=%@", TDQuoteString(attachmentName));
+            [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
             [bodyStream addStream: stream length: length];
         }
     }
@@ -264,6 +268,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
     [[[TDMultipartUploader alloc] initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
+                                   authorizer: _authorizer
                                  onCompletion: ^(id response, NSError *error) {
                   if (error) {
                       self.error = error;

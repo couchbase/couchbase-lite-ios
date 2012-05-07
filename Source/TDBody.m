@@ -80,8 +80,8 @@
     id props = self.asObject;
     if (props) {
         NSData* json = [TDJSON dataWithJSONObject: props
-                                                       options: TDJSONWritingPrettyPrinted
-                                                         error: NULL];
+                                          options: TDJSONWritingPrettyPrinted
+                                            error: NULL];
         if (json) {
             NSMutableData* mjson = [[json mutableCopy] autorelease];
             [mjson appendBytes: "\n" length: 1];

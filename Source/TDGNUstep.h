@@ -32,6 +32,10 @@ typedef uint8_t UInt8;
 int digittoint(int c);
 
 
+typedef double CFAbsoluteTime;
+CFAbsoluteTime CFAbsoluteTimeGetCurrent(void);
+
+
 #define NSRunLoopCommonModes NSDefaultRunLoopMode
 
 
@@ -65,12 +69,22 @@ typedef NSUInteger NSDataSearchOptions;
 @end
 
 
+@interface NSOperationQueue (GNUstep)
+- (void)addOperationWithBlock:(void (^)(void))block;
+@end
+
+
 @protocol NSURLConnectionDelegate <NSObject>
 @end
 
 
 @protocol NSStreamDelegate <NSObject>
 @end
+
+
+enum {
+    NSURLRequestReloadIgnoringLocalCacheData = NSURLRequestReloadIgnoringCacheData
+};
 
 
 #endif // GNUSTEP

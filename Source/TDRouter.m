@@ -21,6 +21,8 @@
 #import "TDMultipartWriter.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
+#import "ExceptionUtils.h"
+
 #ifdef GNUSTEP
 #import <GNUstepBase/NSURL+GNUstepBase.h>
 #else
@@ -43,12 +45,11 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 }
 
 
-- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request {
-    NSParameterAssert(server);
+- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager request: (NSURLRequest*)request {
     NSParameterAssert(request);
     self = [super init];
     if (self) {
-        _server = [server retain];
+        _dbManager = [dbManager retain];
         _request = [request retain];
         _response = [[TDResponse alloc] init];
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
@@ -59,8 +60,19 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     return self;
 }
 
+- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request {
+    NSParameterAssert(server);
+    NSParameterAssert(request);
+    self = [self initWithDatabaseManager: nil request: request];
+    if (self) {
+        _server = [server retain];
+    }
+    return self;
+}
+
 - (void)dealloc {
-    [self stop];
+    [self stopNow];
+    [_dbManager release];
     [_server release];
     [_request release];
     [_response release];
@@ -68,6 +80,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     [_path release];
     [_db release];
     [_changesFilter release];
+    [_onAccessCheck release];
     [_onResponseReady release];
     [_onDataAvailable release];
     [_onFinished release];
@@ -75,8 +88,9 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 }
 
 
-@synthesize onResponseReady=_onResponseReady, onDataAvailable=_onDataAvailable,
-            onFinished=_onFinished, request=_request, response=_response;
+@synthesize onAccessCheck=_onAccessCheck, onResponseReady=_onResponseReady,
+            onDataAvailable=_onDataAvailable, onFinished=_onFinished,
+            request=_request, response=_response;
 
 
 - (NSDictionary*) queries {
@@ -120,9 +134,9 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     NSString* value = [self query: param];
     if (!value)
         return nil;
-    id result = [TDJSON
-                            JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
-                                       options: TDJSONReadingAllowFragments error: outError];
+    id result = [TDJSON JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
+                                   options: TDJSONReadingAllowFragments
+                                     error: outError];
     if (!result)
         Warn(@"TDRouter: invalid JSON in query param ?%@=%@", param, value);
     return result;
@@ -138,7 +152,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 
 - (NSDictionary*) bodyAsDictionary {
     return $castIf(NSDictionary, [TDJSON JSONObjectWithData: _request.HTTPBody
-                                                                 options: 0 error: NULL]);
+                                                    options: 0 error: NULL]);
 }
 
 
@@ -196,13 +210,25 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 }
 
 
+- (NSString*) ifMatch {
+    NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
+    if (!ifMatch)
+        return nil;
+    // Value of If-Match is an ETag, so have to trim the quotes around it:
+    if (ifMatch.length > 2 && [ifMatch hasPrefix: @"\""] && [ifMatch hasSuffix: @"\""])
+        return [ifMatch substringWithRange: NSMakeRange(1, ifMatch.length-2)];
+    else
+        return nil;
+}
+
+
 - (TDStatus) openDB {
     // As a special case, the _replicator db is created on demand (as though it already existed)
     if (!_db.exists && !$equal(_db.name, kTDReplicatorDatabaseName))
-        return 404;
+        return kTDStatusNotFound;
     if (![_db open])
-        return 500;
-    return 200;
+        return kTDStatusDBError;
+    return kTDStatusOK;
 }
 
 
@@ -253,17 +279,17 @@ static NSArray* splitPath( NSURL* url ) {
     // First interpret the components of the request:
     _path = [splitPath(_request.URL) mutableCopy];
     if (!_path)
-        return 400;
+        return kTDStatusBadRequest;
         
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = [_path objectAtIndex: 0];
-        if ([dbName hasPrefix: @"_"] && ![TDServer isValidDatabaseName: dbName]) {
+        if ([dbName hasPrefix: @"_"] && ![TDDatabaseManager isValidDatabaseName: dbName]) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else {
-            _db = [[_server databaseNamed: dbName] retain];
+            _db = [[_dbManager databaseNamed: dbName] retain];
             if (!_db)
-                return 400;
+                return kTDStatusBadID;
             [message appendString: @":"];
         }
     } else {
@@ -274,18 +300,18 @@ static NSArray* splitPath( NSURL* url ) {
     if (_db && pathLen > 1) {
         // Make sure database exists, then interpret doc name:
         TDStatus status = [self openDB];
-        if (status >= 300)
+        if (TDStatusIsError(status))
             return status;
         NSString* name = [_path objectAtIndex: 1];
         if (![name hasPrefix: @"_"]) {
             // Regular document
             if (![TDDatabase isValidDocumentID: name])
-                return 400;
+                return kTDStatusBadID;
             docID = name;
         } else if ([name isEqualToString: @"_design"] || [name isEqualToString: @"_local"]) {
             // "_design/____" and "_local/____" are document names
             if (pathLen <= 2)
-                return 404;
+                return kTDStatusNotFound;
             docID = [name stringByAppendingPathComponent: [_path objectAtIndex: 2]];
             [_path replaceObjectAtIndex: 1 withObject: docID];
             [_path removeObjectAtIndex: 2];
@@ -335,6 +361,14 @@ static NSArray* splitPath( NSURL* url ) {
         sel = @selector(do_UNKNOWN);
     }
     
+    if (_onAccessCheck) {
+        TDStatus status = _onAccessCheck(_db, docID, sel);
+        if (TDStatusIsError(status)) {
+            LogTo(TDRouter, @"Access check failed for %@", _db.name);
+            return status;
+        }
+    }
+    
 #ifdef GNUSTEP
     IMP fn = objc_msg_lookup(self, sel);
     return (TDStatus) fn(self, sel, _db, docID, attachmentName);
@@ -344,50 +378,66 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
-- (void) start {
-    // Make sure the replicator starts up on launch (but not in the TDServer initializer; we want
-    // it to run on the same thread that other server requests come in on, i.e. the current one.
-    [_server replicatorManager];
-    
+- (void) run {
+    Assert(_dbManager);
     // Call the appropriate handler method:
-    TDStatus status = [self route];
-
-    // Configure response headers:
-    if (status < 300 && !_response.body && ![_response.headers objectForKey: @"Content-Type"]) {
-        _response.body = [TDBody bodyWithJSON: [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
+    TDStatus status;
+    @try {
+        status = [self route];
+    } @catch (NSException *x) {
+        MYReportException(x, @"handling TouchDB request");
+        status = kTDStatusException;
+        [_response reset];
     }
-    if (_response.body.isValidJSON)
-        [_response setValue: @"application/json" ofHeader: @"Content-Type"];
     
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
     if (accept && !$equal(accept, @"*/*")) {
         NSString* responseType = _response.baseContentType;
         if (responseType && [accept rangeOfString: responseType].length == 0) {
-            LogTo(TDRouter, @"Error 406: Can't satisfy request Accept: %@", accept);
-            status = 406;
-            _response.headers = [NSMutableDictionary dictionary];
-            _response.body = nil;
+            LogTo(TDRouter, @"Error kTDStatusNotAcceptable: Can't satisfy request Accept: %@", accept);
+            status = kTDStatusNotAcceptable;
+            [_response reset];
         }
     }
 
     [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
                           forKey: @"Server"];
 
+    if (_response.body.isValidJSON)
+        [_response setValue: @"application/json" ofHeader: @"Content-Type"];
+
     // If response is ready (nonzero status), tell my client about it:
     if (status > 0) {
-        _response.status = status;
+        _response.internalStatus = status;
         [self sendResponse];
         if (_onDataAvailable && _response.body) {
-            _onDataAvailable(_response.body.asJSON);
+            _onDataAvailable(_response.body.asJSON, !_waiting);
         }
-        if (_onFinished && !_waiting)
-            _onFinished();
+        if (!_waiting) 
+            [self finished];
     }
+    
+    // If I will keep running asynchronously (i.e. a _changes feed handler), listen for the
+    // database closing so I can stop then:
+    if (_running)
+        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
+                                                     name: TDDatabaseWillCloseNotification
+                                                   object: _db];
 }
 
 
-- (void) stop {
+- (void) finished {
+    OnFinishedBlock onFinished = [_onFinished retain];
+    [self stopNow];
+    if (onFinished)
+        onFinished();
+    [onFinished release];
+}
+
+
+- (void) stopNow {
+    _running = NO;
     self.onResponseReady = nil;
     self.onDataAvailable = nil;
     self.onFinished = nil;
@@ -395,8 +445,39 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
+- (void) stop {
+    if (!_running)
+        return;
+    _running = NO;
+    [_server queue: ^{ [self stopNow];  }];
+}
+
+
+- (void) start {
+    _running = YES;
+    if (_dbManager) {
+        [self run];
+    } else {
+        [_server tellDatabaseManager: ^(TDDatabaseManager* dbm) {
+            _dbManager = [dbm retain];
+            [self run];
+        }];
+    }
+}
+
+
 - (TDStatus) do_UNKNOWN {
-    return 400;
+    return kTDStatusBadRequest;
+}
+
+
+- (void) dbClosing: (NSNotification*)n {
+    LogTo(TDRouter, @"Database closing! Returning error 500");
+    if (_responseSent) {
+        _response.internalStatus = 500;
+        [self sendResponse];
+    }
+    [self finished];
 }
 
 
@@ -411,19 +492,43 @@ static NSArray* splitPath( NSURL* url ) {
 {
     self = [super init];
     if (self) {
-        _status = 200;
+        _status = kTDStatusOK;
         _headers = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
 
 - (void)dealloc {
+    [_statusMsg release];
     [_headers release];
     [_body release];
     [super dealloc];
 }
 
-@synthesize status=_status, headers=_headers, body=_body;
+- (void) reset {
+    [_headers removeAllObjects];
+    setObj(&_body, nil);
+}
+
+@synthesize status=_status, internalStatus=_internalStatus, statusMsg=_statusMsg,
+            headers=_headers, body=_body;
+
+- (void) setInternalStatus:(TDStatus)internalStatus {
+    _internalStatus = internalStatus;
+    NSString* statusMsg;
+    self.status = TDStatusToHTTPStatus(internalStatus, &statusMsg);
+    setObjCopy(&_statusMsg, statusMsg);
+    if (_status < 300) {
+        if (!_body && ![_headers objectForKey: @"Content-Type"]) {
+            self.body = [TDBody bodyWithJSON:
+                                    [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
+        }
+    } else {
+        self.bodyObject = $dict({@"status", $object(_status)},
+                                {@"error", statusMsg});
+        [self setValue: @"application/json" ofHeader: @"Content-Type"];
+    }
+}
 
 - (void) setValue: (NSString*)value ofHeader: (NSString*)header {
     [_headers setValue: value forKey: header];
@@ -447,6 +552,12 @@ static NSArray* splitPath( NSURL* url ) {
     self.body = bodyObject ? [TDBody bodyWithProperties: bodyObject] : nil;
 }
 
+- (void) setMultipartBody: (TDMultipartWriter*)mp {
+    // OPT: Would be better to stream this than shoving all the data into _body.
+    self.body = [TDBody bodyWithJSON: mp.allOutput];
+    [self setValue: mp.contentType ofHeader: @"Content-Type"];
+}
+
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type {
     TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: type
                                                                       boundary: nil];
@@ -457,8 +568,7 @@ static NSArray* splitPath( NSURL* url ) {
         }
         [mp addData: part];
     }
-    self.body = [TDBody bodyWithJSON: mp.allOutput];
-    [self setValue: mp.contentType ofHeader: @"Content-Type"];
+    [self setMultipartBody: mp];
     [mp release];
 }
 

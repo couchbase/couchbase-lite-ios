@@ -24,7 +24,7 @@
 
 @interface TDHTTPResponse ()
 - (void) onResponseReady: (TDResponse*)response;
-- (void) onDataAvailable: (NSData*)data;
+- (void) onDataAvailable: (NSData*)data finished: (BOOL)finished;
 - (void) onFinished;
 @end
 
@@ -41,17 +41,26 @@
         router.onResponseReady = ^(TDResponse* r) {
             [self onResponseReady: r];
         };
-        router.onDataAvailable = ^(NSData* data) {
-            [self onDataAvailable: data];
+        router.onDataAvailable = ^(NSData* data, BOOL finished) {
+            [self onDataAvailable: data finished: finished];
         };
         router.onFinished = ^{
             [self onFinished];
         };
+
+        if (connection.listener.readOnly) {
+            router.onAccessCheck = ^TDStatus(TDDatabase* db, NSString* docID, SEL action) {
+                NSString* method = router.request.HTTPMethod;
+                if (![method isEqualToString: @"GET"] && ![method isEqualToString: @"HEAD"])
+                    return kTDStatusForbidden;
+                return kTDStatusOK;
+            };
+        }
         
         // Run the router, synchronously:
         LogTo(TDListenerVerbose, @"%@: Starting...", self);
-        [_connection.listener onServerThread: ^{[router start];}];
-        _chunked = !_finished;
+        [router start];
+        LogTo(TDListenerVerbose, @"%@: Returning from -init", self);
     }
     return self;
 }
@@ -75,109 +84,123 @@
  * implement this method in your custom response class and return YES.
  **/
 - (BOOL) isChunked {
-    return _chunked;
+    @synchronized(self) {
+        if (!_askedIfChunked) {
+            _chunked = !_finished;
+        }
+        LogTo(TDListenerVerbose, @"%@ answers isChunked=%d", self, _chunked);
+        return _chunked;
+    }
 }
 
 
-- (BOOL) delayResponeHeaders {
-    return _chunked && !_response;
+- (BOOL) delayResponeHeaders {  // [sic]
+    @synchronized(self) {
+        LogTo(TDListenerVerbose, @"%@ answers delayResponeHeaders=%d", self, !_response);
+        if (!_response)
+            _delayedHeaders = YES;
+        return !_response;
+    }
 }
 
 
 - (void) onResponseReady: (TDResponse*)response {
-    _response = [response retain];
-    LogTo(TDListener, @"    %@ --> %i", self, _response.status);
-    if (_chunked)
-        [_connection responseHasAvailableData: self];
+    @synchronized(self) {
+        _response = [response retain];
+        LogTo(TDListener, @"    %@ --> %i", self, _response.status);
+        if (_delayedHeaders)
+            [_connection responseHasAvailableData: self];
+    }
 }
 
 
 - (NSInteger) status {
+    LogTo(TDListenerVerbose, @"%@ answers status=%d", self, _response.status);
     return _response.status;
 }
 
 - (NSDictionary *) httpHeaders {
+    LogTo(TDListenerVerbose, @"%@ answers httpHeaders={%d headers}", self, _response.headers.count);
     return _response.headers;
 }
 
 
-- (void) onDataAvailable: (NSData*)data {
-    LogTo(TDListenerVerbose, @"%@ adding %u bytes", self, (unsigned)data.length);
-    if (_data)
-        [_data appendData: data];
-    else
-        _data = [data mutableCopy];
-    if (_chunked)
-        [_connection responseHasAvailableData: self];
+- (void) onDataAvailable: (NSData*)data finished: (BOOL)finished {
+    @synchronized(self) {
+        LogTo(TDListenerVerbose, @"%@ adding %u bytes", self, (unsigned)data.length);
+        if (_data)
+            [_data appendData: data];
+        else
+            _data = [data mutableCopy];
+        if (finished)
+            [self onFinished];
+        else if (_chunked)
+            [_connection responseHasAvailableData: self];
+    }
 }
 
 
-- (UInt64) offset                        {return _offset;}
-- (void) setOffset: (UInt64)offset       {_offset = offset;}
+@synthesize offset=_offset;
+
 
 - (UInt64) contentLength {
-    if (!_finished)
-        return 0;
-    return _dataOffset + _data.length;
+    @synchronized(self) {
+        if (!_finished)
+            return 0;
+        return _dataOffset + _data.length;
+    }
 }
 
 
 - (NSData*) readDataOfLength: (NSUInteger)length {
-    NSAssert(_offset >= _dataOffset, @"Invalid offset %llu, min is %llu", _offset, _dataOffset);
-    NSRange range;
-    range.location = (NSUInteger)(_offset - _dataOffset);
-    if (range.location >= _data.length)
-        return nil;
-    NSUInteger bytesAvailable = _data.length - range.location;
-    range.length = MIN(length, bytesAvailable);
-    NSData* result = [_data subdataWithRange: range];
-    _offset += range.length;
-    if (range.length == bytesAvailable) {
-        // Client has read all of the available data, so we can discard it
-        _dataOffset += _data.length;
-        [_data autorelease];
-        _data = nil;
+    @synchronized(self) {
+        NSAssert(_offset >= _dataOffset, @"Invalid offset %llu, min is %llu", _offset, _dataOffset);
+        NSRange range;
+        range.location = (NSUInteger)(_offset - _dataOffset);
+        if (range.location >= _data.length) {
+            LogTo(TDListenerVerbose, @"%@ sending nil bytes", self);
+            return nil;
+        }
+        NSUInteger bytesAvailable = _data.length - range.location;
+        range.length = MIN(length, bytesAvailable);
+        NSData* result = [_data subdataWithRange: range];
+        _offset += range.length;
+        if (range.length == bytesAvailable) {
+            // Client has read all of the available data, so we can discard it
+            _dataOffset += _data.length;
+            [_data autorelease];
+            _data = nil;
+        }
+        LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, result.length);
+        return result;
     }
-    LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, result.length);
-    return result;
 }
 
 
 - (BOOL) isDone {
+    LogTo(TDListenerVerbose, @"%@ answers isDone=%d", self, _finished);
     return _finished;
 }
 
 
 - (void) onFinished {
-    if (_finished)
-        return;
-    _finished = true;
+    @synchronized(self) {
+        if (_finished)
+            return;
+        _finished = true;
+        _askedIfChunked = true;
 
-    LogTo(TDListenerVerbose, @"%@ Finished!", self);
+        LogTo(TDListenerVerbose, @"%@ Finished!", self);
 
-    // Break cycles:
-    _router.onResponseReady = nil;
-    _router.onDataAvailable = nil;
-    _router.onFinished = nil;
+        // Break cycles:
+        _router.onResponseReady = nil;
+        _router.onDataAvailable = nil;
+        _router.onFinished = nil;
 
-    if (!_chunked) {
-        // Response finished immediately, before the connection asked for any data, so we're free
-        // to massage the response:
-        int status = _response.status;
-        if (status >= 300 && _data.length == 0) {
-            // Put a generic error message in the body:
-            NSString* errorMsg;
-            switch (status) {
-                case 404:   errorMsg = @"not_found"; break;
-                    // TODO: There are more of these to add; see error_info() in couch_httpd.erl
-                default:
-                    errorMsg = [NSHTTPURLResponse localizedStringForStatusCode: status];
-            }
-            NSString* responseStr = [NSString stringWithFormat: @"{\"status\": %i, \"error\":\"%@\"}\n",
-                                                                 status, errorMsg];
-            [self onDataAvailable: [responseStr dataUsingEncoding: NSUTF8StringEncoding]];
-            [_response.headers setObject: @"text/plain; encoding=UTF-8" forKey: @"Content-Type"];
-        } else {
+        if (!_chunked || _offset == 0) {
+            // Response finished immediately, before the connection asked for any data, so we're free
+            // to massage the response:
+            LogTo(TDListenerVerbose, @"%@ prettifying response body", self);
 #if DEBUG
             BOOL pretty = YES;
 #else
@@ -188,6 +211,7 @@
                 _data = [_response.body.asPrettyJSON mutableCopy];
             }
         }
+        [_connection responseHasAvailableData: self];
     }
 }
 

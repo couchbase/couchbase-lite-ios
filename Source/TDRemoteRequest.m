@@ -16,6 +16,12 @@
 #import "TDRemoteRequest.h"
 #import "TDMisc.h"
 #import "TDBlobStore.h"
+#import <TouchDB/TDDatabase.h>
+#import "TDRouter.h"
+#import "TDReplicator.h"
+#import "CollectionUtils.h"
+#import "Logging.h"
+#import "Test.h"
 
 
 // Max number of retry attempts for a transient failure
@@ -26,6 +32,7 @@
 
 
 - (id) initWithMethod: (NSString*)method URL: (NSURL*)url body: (id)body
+           authorizer: (id<TDAuthorizer>)authorizer
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
     self = [super init];
@@ -33,9 +40,17 @@
         _onCompletion = [onCompletion copy];
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
-        _request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
+        _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+        [_request setValue: $sprintf(@"TouchDB/%@", [TDRouter versionString])
+                  forHTTPHeaderField:@"User-Agent"];
+        
         LogTo(RemoteRequest, @"%@: Starting...", self);
         [self setupRequest: _request withBody: body];
+        
+        NSString* authHeader = [authorizer authorizeURLRequest: _request];
+        if (authHeader)
+            [_request setValue: authHeader forHTTPHeaderField: @"Authorization"];
+        
         [self start];
     }
     return self;
@@ -43,6 +58,11 @@
 
 
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
+}
+
+
+- (void) dontLog404 {
+    _dontLog404 = true;
 }
 
 
@@ -100,7 +120,7 @@
         return;
     }
     
-    [self connection: _connection didFailWithError: TDHTTPError(status, _request.URL)];
+    [self connection: _connection didFailWithError: TDStatusToNSError(status, _request.URL)];
 }
 
 
@@ -110,7 +130,7 @@
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     int status = (int) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, status);
-    if (status >= 300) 
+    if (TDStatusIsError(status)) 
         [self cancelWithStatus: status];
 }
 
@@ -119,7 +139,10 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    Log(@"%@: Got error %@", self, error);
+    if (WillLog()) {
+        if (!(_dontLog404 && error.code == kTDStatusNotFound && $equal(error.domain, TDHTTPErrorDomain)))
+            Log(@"%@: Got error %@", self, error);
+    }
     [self clearConnection];
     [self respondWithResult: nil error: error];
 }
@@ -173,7 +196,7 @@
     if (!result) {
         Warn(@"%@: %@ %@ returned unparseable data '%@'",
              self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
-        error = TDHTTPError(502, _request.URL);
+        error = TDStatusToNSError(kTDStatusUpstreamError, _request.URL);
     }
     [self clearConnection];
     [self respondWithResult: result error: error];

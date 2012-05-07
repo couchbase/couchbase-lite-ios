@@ -8,17 +8,17 @@
  */
 
 #import <TouchDB/TDRevision.h>
+#import <TouchDB/TDStatus.h>
 @class FMDatabase, TDView, TDBlobStore;
 struct TDQueryOptions;      // declared in TDView.h
-
-
-/** Same interpretation as HTTP status codes, esp. 200, 201, 404, 409, 500. */
-typedef int TDStatus;
 
 
 /** NSNotification posted when a document is updated.
     The userInfo key "rev" has a TDRevision* as its value. */
 extern NSString* const TDDatabaseChangeNotification;
+
+/** NSNotification posted when a database is closing. */
+extern NSString* const TDDatabaseWillCloseNotification;
 
 
 /** Filter block, used in changes feeds and replication. */
@@ -28,13 +28,14 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision);
 /** Options for what metadata to include in document bodies */
 typedef unsigned TDContentOptions;
 enum {
-    kTDIncludeAttachments = 1,              // adds '_attachments' property (if relevant)
+    kTDIncludeAttachments = 1,              // adds inline bodies of attachments
     kTDIncludeConflicts = 2,                // adds '_conflicts' property (if relevant)
     kTDIncludeRevs = 4,                     // adds '_revisions' property
     kTDIncludeRevsInfo = 8,                 // adds '_revs_info' property
     kTDIncludeLocalSeq = 16,                // adds '_local_seq' property
     kTDLeaveAttachmentsEncoded = 32,        // i.e. don't decode
-    kTDBigAttachmentsFollow = 64            // i.e. add 'follows' key instead of data for big ones
+    kTDBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
+    kTDNoBody = 128                         // omit regular doc body properties
 };
 
 

@@ -83,7 +83,7 @@ static TDView* createView(TDDatabase* db) {
         CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
         CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
         if ([doc objectForKey: @"key"])
-            emit([doc objectForKey: @"key"], nil);
+            emit([doc objectForKey: @"key"], [doc objectForKey: @"_conflicts"]);
     } reduceBlock: NULL version: @"1"];
     return view;
 }
@@ -95,13 +95,14 @@ TestCase(TDView_Index) {
     TDRevision* rev1 = putDoc(db, $dict({@"key", @"one"}));
     TDRevision* rev2 = putDoc(db, $dict({@"key", @"two"}));
     TDRevision* rev3 = putDoc(db, $dict({@"key", @"three"}));
+    putDoc(db, $dict({@"_id", @"_design/foo"}));
     putDoc(db, $dict({@"clef", @"quatre"}));
     
     TDView* view = createView(db);
     CAssertEq(view.viewID, 1);
     
     CAssert(view.stale);
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
     
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -110,12 +111,12 @@ TestCase(TDView_Index) {
                               $dict({@"key", @"\"two\""}, {@"seq", $object(2)}) ));
     // No-op reindex:
     CAssert(!view.stale);
-    CAssertEq([view updateIndex], 304);
+    CAssertEq([view updateIndex], kTDStatusNotModified);
     
     // Now add a doc and update a doc:
     TDRevision* threeUpdated = [[[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
     threeUpdated.properties = $dict({@"key", @"3hree"});
-    int status;
+    TDStatus status;
     rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
@@ -127,17 +128,17 @@ TestCase(TDView_Index) {
 
     // Reindex again:
     CAssert(view.stale);
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
 
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", $object(5)}),
-                              $dict({@"key", @"\"four\""}, {@"seq", $object(6)}),
+    CAssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", $object(6)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(7)}),
                               $dict({@"key", @"\"one\""}, {@"seq", $object(1)}) ));
     
     // Now do a real query:
     NSArray* rows = [view queryWithOptions: NULL status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array( $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
                                $dict({@"key", @"four"}, {@"id", rev4.docID}),
                                $dict({@"key", @"one"}, {@"id", rev1.docID}) ));
@@ -148,12 +149,126 @@ TestCase(TDView_Index) {
 }
 
 
+TestCase(TDView_MapConflicts) {
+    RequireTestCase(TDView_Index);
+    TDDatabase *db = createDB();
+    NSArray* docs = putDocs(db);
+    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    
+    // Create a conflict:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                                {@"key", @"40ur"});
+    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    CAssert(status < 300);
+    CAssertEqual(leaf1.docID, leaf2.docID);
+    
+    TDView* view = [db viewNamed: @"conflicts"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        NSString* docID = [doc objectForKey: @"_id"];
+        NSArray* conflicts = $cast(NSArray, [doc objectForKey: @"_conflicts"]);
+        if (conflicts) {
+            Log(@"Doc %@, _conflicts = %@", docID, conflicts);
+            emit(docID, conflicts);
+        }
+    } reduceBlock: NULL version: @"1"];
+    
+    CAssertEq([view updateIndex], kTDStatusOK);
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"44444\""},
+                                    {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)},
+                                    {@"seq", $object(6)}) ));
+}
+
+
+TestCase(TDView_ConflictWinner) {
+    // If a view is re-indexed, and a document in the view has gone into conflict,
+    // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
+    //TEMP RequireTestCase(TDView_Index);
+    TDDatabase *db = createDB();
+    NSArray* docs = putDocs(db);
+    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    
+    TDView* view = createView(db);
+    CAssertEq([view updateIndex], kTDStatusOK);
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+    
+    // Create a conflict, won by the new revision:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                                {@"key", @"40ur"});
+    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    CAssert(status < 300);
+    CAssertEqual(leaf1.docID, leaf2.docID);
+    
+    // Update the view -- should contain only the key from the new rev, not the old:
+    CAssertEq([view updateIndex], kTDStatusOK);
+    dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", $object(6)},
+                                    {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)}),
+                              $dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+}
+
+
+TestCase(TDView_ConflictLoser) {
+    // Like the ConflictWinner test, except the newer revision is the loser,
+    // so it shouldn't be indexed at all. Instead, the older still-winning revision
+    // should be indexed again, this time with a '_conflicts' property.
+    TDDatabase *db = createDB();
+    NSArray* docs = putDocs(db);
+    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    
+    TDView* view = createView(db);
+    CAssertEq([view updateIndex], kTDStatusOK);
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+    
+    // Create a conflict, won by the new revision:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-...."},  // lower revID, will lose conflict
+                                {@"key", @"40ur"});
+    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    CAssert(status < 300);
+    CAssertEqual(leaf1.docID, leaf2.docID);
+    
+    // Update the view -- should contain only the key from the new rev, not the old:
+    CAssertEq([view updateIndex], kTDStatusOK);
+    dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)},
+                                    {@"value", @"[\"1-....\"]"}),
+                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
+                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
+                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+}
+
+
 TestCase(TDView_Query) {
     RequireTestCase(TDView_Index);
     TDDatabase *db = createDB();
     putDocs(db);
     TDView* view = createView(db);
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
     
     // Query all rows:
     TDQueryOptions options = kDefaultTDQueryOptions;
@@ -282,7 +397,7 @@ TestCase(TDView_Reduce) {
         return [TDView totalValues: values];
     } version: @"1"];
 
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", $object(2)}),
@@ -293,7 +408,7 @@ TestCase(TDView_Reduce) {
     options.reduce = YES;
     TDStatus status;
     NSArray* reduced = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEq(reduced.count, 1u);
     double result = [[[reduced objectAtIndex: 0] objectForKey: @"value"] doubleValue];
     CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
@@ -324,18 +439,18 @@ TestCase(TDView_Grouped) {
         return [TDView totalValues: values];
     } version: @"1"];
     
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
 
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.reduce = YES;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $null}, {@"value", $object(1162)})));
 
     options.group = YES;
     rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Ether")},
                                     {@"value", $object(231)}),
@@ -354,13 +469,13 @@ TestCase(TDView_Grouped) {
 
     options.groupLevel = 1;
     rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four")}, {@"value", $object(853)}),
                               $dict({@"key", $array(@"PiL")}, {@"value", $object(309)})));
     
     options.groupLevel = 2;
     rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!")},
                                     {@"value", $object(605)}),
                               $dict({@"key", $array(@"Gang Of Four", @"Songs Of The Free")},
@@ -388,13 +503,13 @@ TestCase(TDView_GroupedStrings) {
          return [NSNumber numberWithUnsignedInteger:[values count]];
      } version:@"1.0"];
    
-    CAssertEq([view updateIndex], 200);
+    CAssertEq([view updateIndex], kTDStatusOK);
 
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.groupLevel = 1;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", $object(2)}),
                               $dict({@"key", @"J"}, {@"value", $object(2)}),
                               $dict({@"key", @"N"}, {@"value", $object(1)})));
@@ -437,7 +552,7 @@ TestCase(TDView_Collation) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);
@@ -482,7 +597,7 @@ TestCase(TDView_CollationRaw) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
-    CAssertEq(status, 200);
+    CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);
