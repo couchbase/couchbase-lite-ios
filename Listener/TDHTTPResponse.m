@@ -47,6 +47,15 @@
         router.onFinished = ^{
             [self onFinished];
         };
+
+        if (connection.listener.readOnly) {
+            router.onAccessCheck = ^TDStatus(TDDatabase* db, NSString* docID, SEL action) {
+                NSString* method = router.request.HTTPMethod;
+                if (![method isEqualToString: @"GET"] && ![method isEqualToString: @"HEAD"])
+                    return kTDStatusForbidden;
+                return kTDStatusOK;
+            };
+        }
         
         // Run the router, synchronously:
         LogTo(TDListenerVerbose, @"%@: Starting...", self);

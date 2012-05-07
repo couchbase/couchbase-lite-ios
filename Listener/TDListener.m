@@ -24,6 +24,9 @@
 @implementation TDListener
 
 
+@synthesize readOnly=_readOnly;
+
+
 - (id) initWithTDServer: (TDServer*)server port: (UInt16)port {
     self = [super init];
     if (self) {

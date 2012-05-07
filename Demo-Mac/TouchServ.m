@@ -60,9 +60,16 @@ int main (int argc, const char * argv[])
         
         // Start a listener socket:
         TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
+        
+        if (argc >= 2 && strcmp(argv[1], "--readonly") == 0)
+            listener.readOnly = YES;
+        
         [listener start];
         
-        Log(@"TouchServ %@ is listening on port %d ... relax!", [TDRouter versionString], kPortNumber);
+        Log(@"TouchServ %@ is listening%@ on port %d ... relax!",
+            [TDRouter versionString],
+            (listener.readOnly ? @" in read-only mode" : @""),
+            kPortNumber);
         
         [[NSRunLoop currentRunLoop] run];
         

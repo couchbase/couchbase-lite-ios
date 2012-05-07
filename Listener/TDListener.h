@@ -15,12 +15,14 @@
 {
     TDHTTPServer* _httpServer;
     TDServer* _tdServer;
+    BOOL _readOnly;
 }
 
 - (id) initWithTDServer: (TDServer*)server port: (UInt16)port;
 
+@property BOOL readOnly;
+
 - (BOOL) start;
 - (void) stop;
-
 
 @end
