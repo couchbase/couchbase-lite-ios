@@ -98,3 +98,41 @@ static NSComparisonResult callComparator(id a, id b, void* context) {
 }
 
 @end
+
+
+@interface BlockOperation : NSOperation
+{
+    void (^_blockToRun)(void);
+}
+@end
+
+@implementation BlockOperation
+
+- (id) initWithBlock: (void (^)(void))block {
+    self = [super init];
+    if (self)
+        _blockToRun = [block copy];
+    return self;
+}
+
+- (void)main {
+    _blockToRun();
+}
+
+- (void) dealloc {
+    [_blockToRun release];
+    [super dealloc];
+}
+
+@end
+
+
+@implementation NSOperationQueue (GNUstep)
+
+- (void)addOperationWithBlock:(void (^)(void))block {
+    NSOperation* op = [[BlockOperation alloc] initWithBlock: block];
+    [self addOperation: op];
+    [op release];
+}
+
+@end

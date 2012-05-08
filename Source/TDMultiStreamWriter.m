@@ -248,7 +248,6 @@
 
 
 #pragma mark - UNIT TESTS:
-#ifndef GNUSTEP     // FIXME: Fix NSString bugs in GNUstep to make these tests work
 #if DEBUG
 
 static TDMultiStreamWriter* createWriter(unsigned bufSize) {
@@ -344,9 +343,10 @@ TestCase(TDMultiStreamWriter_Async) {
 
 
 TestCase(TDMultiStreamWriter) {
+#ifndef GNUSTEP     // FIXME: Fix NSString bugs in GNUstep to make these tests work
     RequireTestCase(TDMultiStreamWriter_Sync);
     RequireTestCase(TDMultiStreamWriter_Async);
+#endif
 }
 
 #endif // DEBUG
-#endif // GNUSTEP
