@@ -4,13 +4,13 @@ by Jens Alfke (jens@couchbase.com)
 with contributions from Alexander Edge, Chris Kau, J Chris Anderson, Marty Schoch, Paul Mietz Egli  
 and technical advice from Damien Katz and Filipe Manana
 
-**TouchDB** is a lightweight [CouchDB][1]-compatible database engine suitable for embedding into mobile or desktop apps. Think of it this way: If CouchDB is MySQL, then TouchDB is SQLite.
+**TouchDB** is a lightweight [Apache CouchDB][1]-compatible database engine suitable for embedding into mobile or desktop apps. Think of it this way: If CouchDB is MySQL, then TouchDB is SQLite.
 
-By "_CouchDB-compatible_" I mean that it can replicate with CouchDB and [Couchbase Server][3], and that its data model and high-level design are "Couch-like" enough to make it familiar to CouchDB/Couchbase developers. Its API will _not_ be identical and it may not support some CouchDB features (like user accounts) that aren't useful in mobile apps. Its implementation is _not_ based on CouchDB's (it's not even written in Erlang.) It _does_ support replication to and from CouchDB.
+By "_CouchDB-compatible_" I mean that it can replicate with CouchDB, and that its data model and high-level design are "Couch-like" enough to make it familiar to CouchDB/Couchbase developers. Its API will _not_ be identical and it may not support some CouchDB features (like user accounts) that aren't useful in mobile apps. Its implementation is _not_ based on CouchDB's (it's not even written in Erlang.) It _does_ support replication to and from CouchDB.
 
 By "_suitable for embedding into mobile apps_", I mean that it meets the following requirements:
 
- * Small code size; currently under 200kbytes. (Code size is important to mobile apps, which are often downloaded over cell networks.)
+ * Small code size; currently about 250kbytes. (Code size is important to mobile apps, which are often downloaded over cell networks.)
  * Quick startup time on relatively-slow CPUs; ideally 100ms or less.
  * Low memory usage with typical mobile data-sets. The expectation is the number of documents will not be huge, although there may be sizable multimedia attachments.
  * "Good enough" performance with these CPUs and data-sets.
