@@ -171,7 +171,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                     
                     // Get the revision's properties:
                     TDContentOptions options = kTDIncludeAttachments | kTDIncludeRevs
-                    | kTDBigAttachmentsFollow;
+                                                                     | kTDBigAttachmentsFollow;
 #ifdef GNUSTEP
                     options &= ~kTDBigAttachmentsFollow;    // TODO: Multipart upload on GNUstep
 #endif

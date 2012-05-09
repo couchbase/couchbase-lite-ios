@@ -164,7 +164,7 @@ BOOL TDIsFileExistsError( NSError* error ) {
 
 
 NSURL* TDURLWithoutQuery( NSURL* url ) {
-#if 1// GNUSTEP
+#ifdef GNUSTEP
     // No CFURL on GNUstep :(
     NSString* str = url.absoluteString;
     NSRange q = [str rangeOfString: @"?"];
