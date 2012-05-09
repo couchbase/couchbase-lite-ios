@@ -1,0 +1,27 @@
+If you haven't installed GNUstep yet, first follow the steps in SETUP.txt (which is basically a
+shellscript but you might want to run the lines manually.)
+
+Disclaimer: This has only been tested on Ubuntu Linux; YMMV on other platforms. I [Jens] am not a
+Linux or GNUstep expert.
+
+There is one small GNUstep patch needed that hasn't made its way upstream yet; you'll find that in
+`fix_NSFileManager.patch`. You should apply that to `NSFileManager.m` in the `gnustep-base` source
+directory and rebuild.
+
+After that you should be able to cd to the TouchDB directory and enter
+    make OPTFLAG= debug=yes
+to build a debug version of TouchDB including unit tests. The output is "TouchDB.framework".
+
+To run the unit tests, enter
+    env LD_LIBRARY_PATH=$LD_LIBRARY_PATH:TouchDB.framework/Versions/Current obj/TouchTool Test_All
+which just tells the loader where to find the TouchDB library, then starts the TouchTool binary and
+tells it to run all the unit tests.
+
+To build a release version (optimized, no unit tests), enter
+    make
+
+If you need to debug the GNUstep Base framework, it helps to build and install a non-optimized
+version of it. To do that:
+    cd ~/gnustep-src/gnustep-base
+    make OPTFLAG= debug=yes
+    sudo -E make install
