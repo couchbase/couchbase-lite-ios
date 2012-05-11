@@ -96,7 +96,12 @@ enum {
         // Disable peer name checking, because it will fail for certs with wildcard subdomains,
         // in particular for IrisCouch whose cert is for "*.iriscouch.com". (SecureTransport bug?)
         // TODO: FIXME: Add a manual hostname check after the connection opens!!!
-        NSDictionary *settings = $dict({(id)kCFStreamSSLPeerName, $null});
+        // Also, disable TLS 1.2 support because it breaks compatibility with some SSL servers;
+        // workaround taken from Apple technote TN2287:
+        // http://developer.apple.com/library/ios/#technotes/tn2287/
+        NSDictionary *settings = $dict({(id)kCFStreamSSLPeerName, $null},
+                                       {(id)kCFStreamSSLLevel,
+                                        @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"});
         CFReadStreamSetProperty((CFReadStreamRef)_trackingInput,
                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
         CFWriteStreamSetProperty((CFWriteStreamRef)_trackingOutput,
