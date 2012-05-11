@@ -285,6 +285,11 @@
 		27E11F1214AD172F0006B340 /* TouchDBListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener.framework */; };
 		27E4152F154F6E8500771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E41530154F6E9C00771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27E7FAEC155D78C20025F93A /* TDChangeTracker_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E7FAEA155D78C20025F93A /* TDChangeTracker_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27E7FAED155D78DA0025F93A /* TDChangeTracker_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E7FAEA155D78C20025F93A /* TDChangeTracker_Tests.m */; };
+		27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F714ACF2500065964D /* CoreServices.framework */; };
+		27E7FAF0155D8EBA0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
+		27E7FAF1155D8ECE0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
 		27F0744A11CD4BA000E9A2AB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27F0745D11CD50A600E9A2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27F0747611CD51A200E9A2AB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
@@ -590,6 +595,8 @@
 		27E11F0C14ACFFC60006B340 /* TDHTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPServer.h; sourceTree = "<group>"; };
 		27E11F0E14AD15940006B340 /* TDHTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDHTTPResponse.h; sourceTree = "<group>"; };
 		27E11F0F14AD15940006B340 /* TDHTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDHTTPResponse.m; sourceTree = "<group>"; };
+		27E7FAEA155D78C20025F93A /* TDChangeTracker_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDChangeTracker_Tests.m; sourceTree = "<group>"; };
+		27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		27F0744611CD4B6D00E9A2AB /* TDDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDDatabase.h; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* TDDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDDatabase.m; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -625,6 +632,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */,
 				27103F8814EA076600DF7209 /* SystemConfiguration.framework in Frameworks */,
 				27DB90DD14DB250500FC7118 /* libz.dylib in Frameworks */,
 				270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */,
@@ -667,6 +675,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E7FAF1155D8ECE0025F93A /* CFNetwork.framework in Frameworks */,
 				27E00C8F14EC2CAB004BCBA9 /* SystemConfiguration.framework in Frameworks */,
 				27DB90E014DB4B0A00FC7118 /* libz.dylib in Frameworks */,
 				27731F1E1495CFEF00815D67 /* libTouchDB.a in Frameworks */,
@@ -709,6 +718,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E7FAF0155D8EBA0025F93A /* CFNetwork.framework in Frameworks */,
 				27E00C8E14EC2C74004BCBA9 /* SystemConfiguration.framework in Frameworks */,
 				27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */,
 				27B0B8531492CBE400A817AD /* libTouchDB.a in Frameworks */,
@@ -840,6 +850,7 @@
 				27C7064A1488311100F0F099 /* TDRouter_Tests.m */,
 				27821BBB149001B20099B373 /* TDReplicator_Tests.m */,
 				279CE40414D88031009F3FA6 /* TDBlobStore_Tests.m */,
+				27E7FAEA155D78C20025F93A /* TDChangeTracker_Tests.m */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -1116,6 +1127,7 @@
 				275315F414ACF1CC0065964D /* Security.framework */,
 				27103F8714EA076600DF7209 /* SystemConfiguration.framework */,
 				27E00C8D14EC2C74004BCBA9 /* SystemConfiguration.framework */,
+				27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1790,6 +1802,7 @@
 				278B0CA1152A8B1900577747 /* TDCanonicalJSON.m in Sources */,
 				27A720A1152B959100C0A0E8 /* TDAttachment.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* TDStatus.m in Sources */,
+				27E7FAED155D78DA0025F93A /* TDChangeTracker_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1927,6 +1940,7 @@
 				27B0B8561492D0A400A817AD /* TDDatabase_Tests.m in Sources */,
 				27B0B8571492D0AA00A817AD /* TDReplicator_Tests.m in Sources */,
 				27C5308414E09E2B0078F886 /* TDBlobStore_Tests.m in Sources */,
+				27E7FAEC155D78C20025F93A /* TDChangeTracker_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

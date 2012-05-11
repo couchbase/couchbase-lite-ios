@@ -59,7 +59,8 @@ enum {
         OS X 10.6.7, the delegate never receives any notification of a response. The workaround
         is to act as a dumb HTTP parser and do the job ourselves. */
     
-    int port = _databaseURL.port.unsignedShortValue ?: 80;
+    BOOL isSSL = (0 == [_databaseURL.scheme caseInsensitiveCompare: @"https"]);
+    int port = _databaseURL.port.unsignedShortValue ?: (isSSL ? 443 : 80);
 #if TARGET_OS_IPHONE
     CFReadStreamRef cfInputStream = NULL;
     CFWriteStreamRef cfOutputStream = NULL;
@@ -85,6 +86,22 @@ enum {
     _trackingInput = [input retain];
     _trackingOutput = [output retain];
 #endif
+    
+    if (isSSL) {
+        [_trackingInput setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
+                             forKey: NSStreamSocketSecurityLevelKey];
+        [_trackingOutput setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
+                              forKey: NSStreamSocketSecurityLevelKey];  
+
+        // Disable peer name checking, because it will fail for certs with wildcard subdomains,
+        // in particular for IrisCouch whose cert is for "*.iriscouch.com". (SecureTransport bug?)
+        // TODO: FIXME: Add a manual hostname check after the connection opens!!!
+        NSDictionary *settings = $dict({(id)kCFStreamSSLPeerName, $null});
+        CFReadStreamSetProperty((CFReadStreamRef)_trackingInput,
+                                kCFStreamPropertySSLSettings, (CFTypeRef)settings);
+        CFWriteStreamSetProperty((CFWriteStreamRef)_trackingOutput,
+                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
+    }
     
     _state = kStateStatus;
     _atEOF = _inputAvailable = _parsing = false;
@@ -318,6 +335,7 @@ enum {
 
 
 - (void) errorOccurred: (NSError*)error {
+    LogTo(ChangeTracker, @"%@: ErrorOccurred: %@", self, error);
     if (++_retryCount <= kMaxRetries) {
         [self clearConnection];
         NSTimeInterval retryDelay = kInitialRetryDelay * (1 << (_retryCount-1));
@@ -357,11 +375,14 @@ enum {
         case NSStreamEventEndEncountered:
             LogTo(ChangeTracker, @"%@: EndEncountered %@", self, stream);
             _atEOF = true;
-            if (!_parsing)
+            if (_state < kStateChunks || _mode == kContinuous || _inputBuffer.length > 0)
+                [self errorOccurred: [NSError errorWithDomain: NSURLErrorDomain
+                                                         code: NSURLErrorNetworkConnectionLost
+                                                     userInfo: nil]];
+            else if (!_parsing)
                 [self stop];
             break;
         case NSStreamEventErrorOccurred:
-            LogTo(ChangeTracker, @"%@: ErrorOccurred %@: %@", self, stream, stream.streamError);
             [self errorOccurred: stream.streamError];
             break;
             
