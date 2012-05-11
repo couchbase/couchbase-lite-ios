@@ -46,13 +46,9 @@ enum {
                                      @"GET /%@/%@ HTTP/1.1\r\n"
                                      @"Host: %@\r\n",
                                 self.databaseName, self.changesFeedPath, _databaseURL.host];
-    NSURLCredential* credential = self.authCredential;
-    if (credential) {
-        NSString* auth = [NSString stringWithFormat: @"%@:%@",
-                          credential.user, credential.password];
-        auth = [TDBase64 encode: [auth dataUsingEncoding: NSUTF8StringEncoding]];
-        [request appendFormat: @"Authorization: Basic %@\r\n", auth];
-    }
+    NSString* auth = self.authorizationHeader;
+    if (auth)
+        [request appendFormat: @"Authorization: %@\r\n", auth];
     LogTo(ChangeTracker, @"%@: Starting with request:\n%@", self, request);
     [request appendString: @"\r\n"];
     _trackingRequest = [request copy];
@@ -102,6 +98,23 @@ enum {
     [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     [_trackingInput open];
     return YES;
+}
+
+
+- (NSString*) authorizationHeader {
+    if ([_client respondsToSelector: @selector(authorizationHeader)]) {
+        NSString* auth = [_client authorizationHeader];
+        if (auth)
+            return auth;
+    }
+    NSURLCredential* credential = self.authCredential;
+    if (credential) {
+        NSString* auth = [NSString stringWithFormat: @"%@:%@",
+                          credential.user, credential.password];
+        auth = [TDBase64 encode: [auth dataUsingEncoding: NSUTF8StringEncoding]];
+        return [NSString stringWithFormat: @"Basic %@\r\n", auth];
+    }
+    return nil;
 }
 
 

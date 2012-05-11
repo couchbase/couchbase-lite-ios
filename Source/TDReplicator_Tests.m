@@ -30,20 +30,30 @@
 #if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 #define kRemoteDBURLStr @"http://jens.local:5984/tdreplicator_test"
 #else
-#define kRemoteDBURLStr @"http://localhost:5984/tdreplicator_test"
+#define kRemoteDBURLStr @"http://127.0.0.1:5984/tdreplicator_test"
 #endif
 
 
 static void deleteRemoteDB(void) {
     Log(@"Deleting %@", kRemoteDBURLStr);
     NSURL* url = [NSURL URLWithString: kRemoteDBURLStr];
-    NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL: url
-                                                       cachePolicy: NSURLRequestUseProtocolCachePolicy
-                                                   timeoutInterval: 10.0];
-    req.HTTPMethod = @"DELETE";
-    NSURLResponse* response = nil;
-    NSError* error = nil;
-    [NSURLConnection sendSynchronousRequest: req returningResponse: &response error: &error];
+    __block NSError* error = nil;
+    __block BOOL finished = NO;
+    TDRemoteRequest* request = [[TDRemoteRequest alloc] initWithMethod: @"DELETE"
+                                                                   URL: url
+                                                                  body: nil
+                                                            authorizer: nil
+                                                          onCompletion:
+        ^(id result, NSError *err) {
+            finished = YES;
+            error = err;
+        }
+                                ];
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
+    while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                                 beforeDate: timeout])
+        ;
+    [request release];
     CAssert(error == nil || error.code == kTDStatusNotFound, @"Couldn't delete remote: %@", error);
 }
 

@@ -20,6 +20,7 @@
 @protocol TDChangeTrackerClient <NSObject>
 - (void) changeTrackerReceivedChange: (NSDictionary*)change;
 @optional
+- (NSString*) authorizationHeader;
 - (NSURLCredential*) authCredential;
 - (void) changeTrackerStopped: (TDChangeTracker*)tracker;
 @end
@@ -54,6 +55,7 @@ typedef enum TDChangeTrackerMode {
 
 @property (readonly, nonatomic) NSURL* databaseURL;
 @property (readonly, nonatomic) NSString* databaseName;
+@property (readonly) NSURL* changesFeedURL;
 @property (readonly, nonatomic) TDChangeTrackerMode mode;
 @property (readonly, copy, nonatomic) id lastSequenceID;
 @property (retain, nonatomic) NSError* error;
@@ -67,7 +69,6 @@ typedef enum TDChangeTrackerMode {
 
 // Protected
 @property (readonly) NSURLCredential* authCredential;
-@property (readonly) NSURL* changesFeedURL;
 @property (readonly) NSString* changesFeedPath;
 - (void) setUpstreamError: (NSString*)message;
 - (BOOL) receivedChange: (NSDictionary*)change;
