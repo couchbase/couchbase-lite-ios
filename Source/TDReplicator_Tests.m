@@ -46,7 +46,7 @@ static void deleteRemoteDB(void) {
                                                           onCompletion:
         ^(id result, NSError *err) {
             finished = YES;
-            error = err;
+            error = [err retain];
         }
                                 ];
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
@@ -55,6 +55,7 @@ static void deleteRemoteDB(void) {
         ;
     [request release];
     CAssert(error == nil || error.code == kTDStatusNotFound, @"Couldn't delete remote: %@", error);
+    [error release];
 }
 
 

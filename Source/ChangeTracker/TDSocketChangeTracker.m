@@ -19,8 +19,11 @@
 #import "TDStatus.h"
 #import "TDBase64.h"
 #import "MYBlockUtils.h"
+#import "MYCertificateInfo.h"
 
 #import <string.h>
+#import <Security/SecCertificate.h>
+#import <Security/SecureTransport.h>
 
 
 // Values of _state:
@@ -111,6 +114,7 @@ enum {
     
     _state = kStateStatus;
     _atEOF = _inputAvailable = _parsing = false;
+    _checkPeerName = isSSL;
     
     _inputBuffer = [[NSMutableData alloc] initWithCapacity: kReadLength];
     
@@ -171,6 +175,68 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
         [self clearConnection];
         [super stop];
     }
+}
+
+
+static NSString* peerCertName(NSInputStream* stream) {
+    SecTrustRef trust = (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)stream,
+                                                               kCFStreamPropertySSLPeerTrust);
+    if (!trust) {
+        Warn(@"Couldn't get SecTrust for %@", stream);
+        return nil;
+    }
+    SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+    NSString* name;
+    
+#if 1 // Workaround for lack of SecCertificateCopyCommonName on iOS
+    CFDataRef certData = SecCertificateCopyData(cert);
+    NSError* err;
+    MYCertificateInfo* info = [[[MYCertificateInfo alloc] initWithCertificateData: (NSData*)certData
+                                                                            error: &err]
+                               autorelease];
+    CFRelease(certData);
+    name = info.subject.commonName;
+#else
+    CFStringRef cfName = NULL;
+    OSStatus err = SecCertificateCopyCommonName(cert, &cfName);
+    name = [NSMakeCollectable(cfName) autorelease];
+#endif
+    
+    CFRelease(trust);
+    if (err)
+        return nil;
+    return name;
+}
+
+static NSString* parentDomain(NSString* domain) {
+    NSRange dot = [domain rangeOfString: @"."];
+    if (dot.length == 0)
+        return @"";
+    return [domain substringFromIndex: NSMaxRange(dot)];
+}
+
+
+// Compares the name in the server's SSL cert against the hostname of the URL.
+// This shouldn't be necessary; SecureTransport should do this check for us. But if we let it,
+// it won't correctly match certs with wildcard subdomains (like "*.iriscouch.com"), so we
+// have to turn that checking off and do it ourselves. See, this is why we can't have nice things.
+- (BOOL) checkPeerName {
+    NSString* certName = peerCertName(_trackingInput);
+    NSString* hostName = _databaseURL.host;
+
+    BOOL result = NO;
+    if (0 == [certName caseInsensitiveCompare: hostName]) {
+        // exact match
+        result = YES;
+    } else if ([certName hasPrefix: @"*."]) {
+        // Cert has a wildcard subdomain; check if parent domains match:
+        result = (0 == [parentDomain(certName) caseInsensitiveCompare: parentDomain(hostName)]);
+    }
+    if (!result) {
+        Warn(@"%@: SSL name verification failed: expected '%@', cert has '%@'", 
+             self, hostName, certName);
+    }
+    return result;
 }
 
 
@@ -376,8 +442,19 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
 }
 
 
-- (void) stream: (NSInputStream*)stream handleEvent: (NSStreamEvent)eventCode {
+- (void) stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
     [[self retain] autorelease];  // Delegate calling -stop might otherwise dealloc me
+    
+    // Verify SSL peer name before first read or write:
+    if (eventCode == NSStreamEventHasSpaceAvailable || eventCode == NSStreamEventHasBytesAvailable) {
+        if (_checkPeerName && ![self checkPeerName]) {
+            [self errorOccurred: [NSError errorWithDomain: NSOSStatusErrorDomain
+                                                     code: errSSLHostNameMismatch
+                                                 userInfo: nil]];
+        }
+        _checkPeerName = NO;
+    }
+    
     switch (eventCode) {
         case NSStreamEventHasSpaceAvailable: {
             LogTo(ChangeTracker, @"%@: HasSpaceAvailable %@", self, stream);

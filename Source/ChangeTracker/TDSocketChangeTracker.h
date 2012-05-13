@@ -24,5 +24,6 @@
     bool _parsing;
     bool _inputAvailable;
     bool _atEOF;
+    bool _checkPeerName;
 }
 @end

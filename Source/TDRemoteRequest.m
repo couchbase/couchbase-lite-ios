@@ -127,6 +127,13 @@
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 
+- (void)connection:(NSURLConnection *)connection
+        willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+{
+    LogTo(RemoteRequest, @"Got challenge: %@", challenge);
+    [challenge.sender performDefaultHandlingForAuthenticationChallenge: challenge];
+}
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     int status = (int) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, status);
