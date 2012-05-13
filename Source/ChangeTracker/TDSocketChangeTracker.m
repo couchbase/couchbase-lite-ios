@@ -16,6 +16,7 @@
 // <http://wiki.apache.org/couchdb/HTTP_database_API#Changes>
 
 #import "TDSocketChangeTracker.h"
+#import "TDStatus.h"
 #import "TDBase64.h"
 #import "MYBlockUtils.h"
 
@@ -123,20 +124,26 @@ enum {
 }
 
 
+static NSString* basicAuthString(NSString* username, NSString* password) {
+    if (!username || !password)
+        return nil;
+    NSString* auth = [NSString stringWithFormat: @"%@:%@", username, password];
+    auth = [TDBase64 encode: [auth dataUsingEncoding: NSUTF8StringEncoding]];
+    return [NSString stringWithFormat: @"Basic %@", auth];
+}
+
+
 - (NSString*) authorizationHeader {
-    if ([_client respondsToSelector: @selector(authorizationHeader)]) {
-        NSString* auth = [_client authorizationHeader];
-        if (auth)
-            return auth;
+    NSString* auth = nil;
+    if ([_client respondsToSelector: @selector(authorizationHeader)])
+        auth = [_client authorizationHeader];
+    if (!auth)
+        auth = basicAuthString(_databaseURL.user, _databaseURL.password);
+    if (!auth) {
+        NSURLCredential* credential = self.authCredential;
+        auth = basicAuthString(credential.user, credential.password);
     }
-    NSURLCredential* credential = self.authCredential;
-    if (credential) {
-        NSString* auth = [NSString stringWithFormat: @"%@:%@",
-                          credential.user, credential.password];
-        auth = [TDBase64 encode: [auth dataUsingEncoding: NSUTF8StringEncoding]];
-        return [NSString stringWithFormat: @"Basic %@\r\n", auth];
-    }
-    return nil;
+    return auth;
 }
 
 
@@ -172,6 +179,21 @@ enum {
     [self setUpstreamError: @"Unparseable change line"];
     [self stop];
     return NO;
+}
+
+
+- (BOOL) readServerResponse: (NSString*)line {
+    int status;
+    NSScanner* scanner = [NSScanner scannerWithString: line];
+    if (![scanner scanString: @"HTTP/1.1 " intoString: nil] ||
+            ![scanner scanInt: &status]) {
+        return [self failUnparseable: line];
+    }
+    if (status >= 300) {
+        self.error = TDStatusToNSError(status, self.changesFeedURL);
+        return NO;
+    }
+    return YES;
 }
 
 
@@ -220,9 +242,10 @@ enum {
         switch (_state) {
             case kStateStatus: {
                 // Read the HTTP response status line:
-                if (![line hasPrefix: @"HTTP/1.1 200 "])
-                    [self failUnparseable: line];
-                _state = kStateHeaders;
+                if ([self readServerResponse: line])
+                    _state = kStateHeaders;
+                else
+                    [self stop];
                 break;
             }
             case kStateHeaders:
