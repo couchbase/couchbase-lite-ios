@@ -2,6 +2,7 @@
 .objc_class_name_TDDatabase
 .objc_class_name_TDView
 .objc_class_name_TDBlobStore
+.objc_class_name_TDBlobStoreWriter
 .objc_class_name_TDBody
 .objc_class_name_TDRevision
 .objc_class_name_TDRevisionList
@@ -13,6 +14,12 @@
 .objc_class_name_TDURLProtocol
 .objc_class_name_TDRouter
 .objc_class_name_TDServer
+.objc_class_name_TDDatabaseManager
+
+_TDStatusToHTTPStatus
+_TDStatusToNSError
 
 _TDDatabaseChangeNotification
+_TDDatabaseWillCloseNotification
 _TDReplicatorProgressChangedNotification
+_TDReplicatorStoppedNotification

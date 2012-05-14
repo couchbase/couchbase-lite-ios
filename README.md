@@ -43,7 +43,7 @@ More documentation is available on the [wiki][2].
 
 ## Development Status ##
 
-TouchDB went alpha in January 201 with version 0.45.
+TouchDB went alpha in January 2012 with version 0.45.
 
 Current versions (0.75 as of this writing) are close to being beta candidates.
 
