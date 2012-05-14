@@ -41,6 +41,7 @@ extern NSString* TDReplicatorStoppedNotification;
     NSUInteger _changesProcessed, _changesTotal;
     CFAbsoluteTime _startTime;
     id<TDAuthorizer> _authorizer;
+    NSDictionary* _options;
 }
 
 - (id) initWithDB: (TDDatabase*)db
@@ -54,6 +55,7 @@ extern NSString* TDReplicatorStoppedNotification;
 @property (readonly) BOOL continuous;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
+@property (copy) NSDictionary* options;
 @property (retain) id<TDAuthorizer> authorizer;
 
 /** Starts the replicator.

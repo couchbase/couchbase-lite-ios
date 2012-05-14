@@ -164,7 +164,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     
     // Only certain keys can be changed or removed:
     NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", nil];
-    NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params", nil];
+    NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params", @"heartbeat", nil];
     for (NSString* key in curProperties) {
         id newValue = [newProperties objectForKey: key];
         if (!newValue && [deletableProperties containsObject: key])
@@ -270,6 +270,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     repl.sessionID = replicationID;
     repl.filterName = $castIf(NSString, [properties objectForKey: @"filter"]);;
     repl.filterParameters = $castIf(NSDictionary, [properties objectForKey: @"query_params"]);
+    repl.options = properties;
     if (push)
         ((TDPusher*)repl).createTarget = createTarget;
     

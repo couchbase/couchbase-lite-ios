@@ -22,6 +22,9 @@
 #import "TDStatus.h"
 
 
+#define kDefaultHeartbeat (5 * 60.0)
+
+
 @interface TDChangeTracker ()
 @property (readwrite, copy, nonatomic) id lastSequenceID;
 @end
@@ -30,7 +33,8 @@
 @implementation TDChangeTracker
 
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
-@synthesize error=_error, client=_client, filterName=_filterName, filterParameters=_filterParameters;
+@synthesize heartbeat=_heartbeat, error=_error;
+@synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
@@ -58,6 +62,7 @@
         _databaseURL = [databaseURL retain];
         _client = client;
         _mode = mode;
+        _heartbeat = kDefaultHeartbeat;
         _includeConflicts = includeConflicts;
         self.lastSequenceID = lastSequenceID;
     }
@@ -71,8 +76,8 @@
 - (NSString*) changesFeedPath {
     static NSString* const kModeNames[3] = {@"normal", @"longpoll", @"continuous"};
     NSMutableString* path;
-    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=300000",
-                                              kModeNames[_mode]];
+    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=%.0f",
+                                              kModeNames[_mode], _heartbeat*1000.0];
     if (_includeConflicts)
         [path appendString: @"&style=all_docs"];
     if (_lastSequenceID)

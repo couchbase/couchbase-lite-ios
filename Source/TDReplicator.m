@@ -86,6 +86,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [_sessionID release];
     [_error release];
     [_authorizer release];
+    [_options release];
     [super dealloc];
 }
 
@@ -104,7 +105,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 @synthesize db=_db, remote=_remote, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize running=_running, online=_online, active=_active, continuous=_continuous;
-@synthesize error=_error, sessionID=_sessionID;
+@synthesize error=_error, sessionID=_sessionID, options=_options;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 @synthesize authorizer=_authorizer;

@@ -80,6 +80,7 @@
             return kTDStatusServerError;
         repl.filterName = $castIf(NSString, [body objectForKey: @"filter"]);;
         repl.filterParameters = $castIf(NSDictionary, [body objectForKey: @"query_params"]);
+        repl.options = body;
         if (push)
             ((TDPusher*)repl).createTarget = createTarget;
         [repl start];
