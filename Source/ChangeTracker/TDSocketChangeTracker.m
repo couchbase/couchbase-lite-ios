@@ -19,11 +19,8 @@
 #import "TDStatus.h"
 #import "TDBase64.h"
 #import "MYBlockUtils.h"
-#import "MYCertificateInfo.h"
 
 #import <string.h>
-#import <Security/SecCertificate.h>
-#import <Security/SecureTransport.h>
 
 
 // Values of _state:
@@ -46,16 +43,20 @@ enum {
     NSAssert(_mode == kContinuous, @"TDSocketChangeTracker only supports continuous mode");
     
     [super start];
-    NSMutableString* request = [NSMutableString stringWithFormat:
-                                     @"GET /%@/%@ HTTP/1.1\r\n"
-                                     @"Host: %@\r\n",
-                                self.databaseName, self.changesFeedPath, _databaseURL.host];
+    
+    CFHTTPMessageRef request = CFHTTPMessageCreateRequest(NULL, CFSTR("GET"),
+                                                          (CFURLRef)self.changesFeedURL,
+                                                          kCFHTTPVersion1_1);
+    Assert(request);
+    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Host"), (CFStringRef)_databaseURL.host);
     NSString* auth = self.authorizationHeader;
     if (auth)
-        [request appendFormat: @"Authorization: %@\r\n", auth];
-    LogTo(ChangeTracker, @"%@: Starting with request:\n%@", self, request);
-    [request appendString: @"\r\n"];
-    _trackingRequest = [request copy];
+        CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"), (CFStringRef)auth);
+    CFDataRef serialized = CFHTTPMessageCopySerializedMessage(request);
+    _trackingRequest = [(NSData*)serialized mutableCopy];
+    CFRelease(serialized);
+    CFRelease(request);
+    LogTo(ChangeTracker, @"Request = \n%@", [_trackingRequest my_UTF8ToString]);
     
     /* Why are we using raw TCP streams rather than NSURLConnection? Good question.
         NSURLConnection seems to have some kind of bug with reading the output of _changes, maybe
@@ -92,29 +93,22 @@ enum {
 #endif
     
     if (isSSL) {
-        [_trackingInput setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
-                             forKey: NSStreamSocketSecurityLevelKey];
-        [_trackingOutput setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
-                              forKey: NSStreamSocketSecurityLevelKey];  
-
-        // Disable peer name checking, because it will fail for certs with wildcard subdomains,
-        // in particular for IrisCouch whose cert is for "*.iriscouch.com". (SecureTransport bug?)
-        // TODO: FIXME: Add a manual hostname check after the connection opens!!!
+        // Enable SSL for this connection.
+        // Tell SecureTransport the hostname we need to find in the server cert.
         // Also, disable TLS 1.2 support because it breaks compatibility with some SSL servers;
         // workaround taken from Apple technote TN2287:
         // http://developer.apple.com/library/ios/#technotes/tn2287/
-        NSDictionary *settings = $dict({(id)kCFStreamSSLPeerName, $null},
+        [_trackingInput setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
+                             forKey: NSStreamSocketSecurityLevelKey];
+        NSDictionary *settings = $dict({(id)kCFStreamSSLPeerName, _databaseURL.host},
                                        {(id)kCFStreamSSLLevel,
                                         @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"});
         CFReadStreamSetProperty((CFReadStreamRef)_trackingInput,
                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
-        CFWriteStreamSetProperty((CFWriteStreamRef)_trackingOutput,
-                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
     }
     
     _state = kStateStatus;
     _atEOF = _inputAvailable = _parsing = false;
-    _checkPeerName = isSSL;
     
     _inputBuffer = [[NSMutableData alloc] initWithCapacity: kReadLength];
     
@@ -160,6 +154,8 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
     [_trackingOutput release];
     _trackingOutput = nil;
     
+    [_trackingRequest release];
+    _trackingRequest = nil;
     [_inputBuffer release];
     _inputBuffer = nil;
     [_changeBuffer release];
@@ -175,68 +171,6 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
         [self clearConnection];
         [super stop];
     }
-}
-
-
-static NSString* peerCertName(NSInputStream* stream) {
-    SecTrustRef trust = (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)stream,
-                                                               kCFStreamPropertySSLPeerTrust);
-    if (!trust) {
-        Warn(@"Couldn't get SecTrust for %@", stream);
-        return nil;
-    }
-    SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
-    NSString* name;
-    
-#if 1 // Workaround for lack of SecCertificateCopyCommonName on iOS
-    CFDataRef certData = SecCertificateCopyData(cert);
-    NSError* err;
-    MYCertificateInfo* info = [[[MYCertificateInfo alloc] initWithCertificateData: (NSData*)certData
-                                                                            error: &err]
-                               autorelease];
-    CFRelease(certData);
-    name = info.subject.commonName;
-#else
-    CFStringRef cfName = NULL;
-    OSStatus err = SecCertificateCopyCommonName(cert, &cfName);
-    name = [NSMakeCollectable(cfName) autorelease];
-#endif
-    
-    CFRelease(trust);
-    if (err)
-        return nil;
-    return name;
-}
-
-static NSString* parentDomain(NSString* domain) {
-    NSRange dot = [domain rangeOfString: @"."];
-    if (dot.length == 0)
-        return @"";
-    return [domain substringFromIndex: NSMaxRange(dot)];
-}
-
-
-// Compares the name in the server's SSL cert against the hostname of the URL.
-// This shouldn't be necessary; SecureTransport should do this check for us. But if we let it,
-// it won't correctly match certs with wildcard subdomains (like "*.iriscouch.com"), so we
-// have to turn that checking off and do it ourselves. See, this is why we can't have nice things.
-- (BOOL) checkPeerName {
-    NSString* certName = peerCertName(_trackingInput);
-    NSString* hostName = _databaseURL.host;
-
-    BOOL result = NO;
-    if (0 == [certName caseInsensitiveCompare: hostName]) {
-        // exact match
-        result = YES;
-    } else if ([certName hasPrefix: @"*."]) {
-        // Cert has a wildcard subdomain; check if parent domains match:
-        result = (0 == [parentDomain(certName) caseInsensitiveCompare: parentDomain(hostName)]);
-    }
-    if (!result) {
-        Warn(@"%@: SSL name verification failed: expected '%@', cert has '%@'", 
-             self, hostName, certName);
-    }
-    return result;
 }
 
 
@@ -445,27 +379,18 @@ static NSString* parentDomain(NSString* domain) {
 - (void) stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
     [[self retain] autorelease];  // Delegate calling -stop might otherwise dealloc me
     
-    // Verify SSL peer name before first read or write:
-    if (eventCode == NSStreamEventHasSpaceAvailable || eventCode == NSStreamEventHasBytesAvailable) {
-        if (_checkPeerName && ![self checkPeerName]) {
-            [self errorOccurred: [NSError errorWithDomain: NSOSStatusErrorDomain
-                                                     code: errSSLHostNameMismatch
-                                                 userInfo: nil]];
-        }
-        _checkPeerName = NO;
-    }
-    
     switch (eventCode) {
         case NSStreamEventHasSpaceAvailable: {
             LogTo(ChangeTracker, @"%@: HasSpaceAvailable %@", self, stream);
             if (_trackingRequest) {
-                const char* buffer = [_trackingRequest UTF8String];
-                NSUInteger written = [(NSOutputStream*)stream write: (void*)buffer maxLength: strlen(buffer)];
-                NSAssert(written == strlen(buffer), @"Output stream didn't write entire request");
-                // FIX: It's unlikely but possible that the stream won't take the entire request; need to
-                // write the rest later.
-                [_trackingRequest release];
-                _trackingRequest = nil;
+                NSInteger written = [(NSOutputStream*)stream write: _trackingRequest.bytes
+                                                         maxLength: _trackingRequest.length];
+                if (written >= (NSInteger)_trackingRequest.length) {
+                    setObj(&_trackingRequest, nil);
+                } else if (written > 0) {
+                    [_trackingRequest replaceBytesInRange: NSMakeRange(0, written)
+                                                withBytes: NULL length: 0];
+                }
             }
             break;
         }

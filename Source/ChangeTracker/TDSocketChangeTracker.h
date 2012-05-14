@@ -15,7 +15,7 @@
     @private
     NSInputStream* _trackingInput;
     NSOutputStream* _trackingOutput;
-    NSString* _trackingRequest;
+    NSMutableData* _trackingRequest;
     int _retryCount;
     
     NSMutableData* _inputBuffer;
@@ -24,6 +24,5 @@
     bool _parsing;
     bool _inputAvailable;
     bool _atEOF;
-    bool _checkPeerName;
 }
 @end

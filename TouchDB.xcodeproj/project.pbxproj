@@ -270,18 +270,6 @@
 		27CF5D2D152F514A0015D7A9 /* TDStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* TDStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* TDStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* TDStatus.m */; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
-		27D90B0515601B5E0000735E /* MYCertificateInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D90AFA15601B5E0000735E /* MYCertificateInfo.h */; };
-		27D90B0615601B5E0000735E /* MYCertificateInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90AFB15601B5E0000735E /* MYCertificateInfo.m */; };
-		27D90B0715601B5E0000735E /* MYCertificateInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90AFB15601B5E0000735E /* MYCertificateInfo.m */; };
-		27D90B0A15601B5E0000735E /* MYASN1Object.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D90AFD15601B5E0000735E /* MYASN1Object.h */; };
-		27D90B0B15601B5E0000735E /* MYASN1Object.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90AFE15601B5E0000735E /* MYASN1Object.m */; };
-		27D90B0C15601B5E0000735E /* MYASN1Object.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90AFE15601B5E0000735E /* MYASN1Object.m */; };
-		27D90B0D15601B5E0000735E /* MYBERParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D90AFF15601B5E0000735E /* MYBERParser.h */; };
-		27D90B0E15601B5E0000735E /* MYBERParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B0015601B5E0000735E /* MYBERParser.m */; };
-		27D90B0F15601B5E0000735E /* MYBERParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B0015601B5E0000735E /* MYBERParser.m */; };
-		27D90B1315601B5E0000735E /* MYOID.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D90B0315601B5E0000735E /* MYOID.h */; };
-		27D90B1415601B5E0000735E /* MYOID.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B0415601B5E0000735E /* MYOID.m */; };
-		27D90B1515601B5E0000735E /* MYOID.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B0415601B5E0000735E /* MYOID.m */; };
 		27D90B1815601C340000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; };
 		27D90B1915601C350000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; };
 		27D90B1A15601F8C0000735E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FB02155DBDA20025F93A /* Security.framework */; };
@@ -603,14 +591,6 @@
 		27C706D11488679500F0F099 /* ShoppingItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShoppingItem.h; sourceTree = "<group>"; };
 		27C706D21488679500F0F099 /* ShoppingItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShoppingItem.m; sourceTree = "<group>"; };
 		27CF5D2C152F514A0015D7A9 /* TDStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDStatus.m; sourceTree = "<group>"; };
-		27D90AFA15601B5E0000735E /* MYCertificateInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYCertificateInfo.h; sourceTree = "<group>"; };
-		27D90AFB15601B5E0000735E /* MYCertificateInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYCertificateInfo.m; sourceTree = "<group>"; };
-		27D90AFD15601B5E0000735E /* MYASN1Object.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYASN1Object.h; sourceTree = "<group>"; };
-		27D90AFE15601B5E0000735E /* MYASN1Object.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYASN1Object.m; sourceTree = "<group>"; };
-		27D90AFF15601B5E0000735E /* MYBERParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYBERParser.h; sourceTree = "<group>"; };
-		27D90B0015601B5E0000735E /* MYBERParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYBERParser.m; sourceTree = "<group>"; };
-		27D90B0315601B5E0000735E /* MYOID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYOID.h; sourceTree = "<group>"; };
-		27D90B0415601B5E0000735E /* MYOID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYOID.m; sourceTree = "<group>"; };
 		27D90B1615601C2F0000735E /* MYErrorUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
 		27D90B1715601C2F0000735E /* MYErrorUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYErrorUtils.m; sourceTree = "<group>"; };
 		27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSData+zlib.h"; sourceTree = "<group>"; };
@@ -1082,7 +1062,6 @@
 				27821BBF149078C70099B373 /* TouchDB.exp */,
 				27F87BE61558890600F0A416 /* TDGNUstep.h */,
 				27F87BE71558890700F0A416 /* TDGNUstep.m */,
-				27D90AF915601B040000735E /* Crypto */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -1190,21 +1169,6 @@
 				27990702149D2576003D4338 /* CouchCocoa.framework */,
 			);
 			path = "Demo-Mac";
-			sourceTree = "<group>";
-		};
-		27D90AF915601B040000735E /* Crypto */ = {
-			isa = PBXGroup;
-			children = (
-				27D90AFA15601B5E0000735E /* MYCertificateInfo.h */,
-				27D90AFB15601B5E0000735E /* MYCertificateInfo.m */,
-				27D90AFD15601B5E0000735E /* MYASN1Object.h */,
-				27D90AFE15601B5E0000735E /* MYASN1Object.m */,
-				27D90AFF15601B5E0000735E /* MYBERParser.h */,
-				27D90B0015601B5E0000735E /* MYBERParser.m */,
-				27D90B0315601B5E0000735E /* MYOID.h */,
-				27D90B0415601B5E0000735E /* MYOID.m */,
-			);
-			path = Crypto;
 			sourceTree = "<group>";
 		};
 		27DB90D414DB249700FC7118 /* google-toolbox-for-mac */ = {
@@ -1325,10 +1289,6 @@
 				278B0CA0152A8B1900577747 /* TDCanonicalJSON.h in Headers */,
 				27A720A0152B959100C0A0E8 /* TDAttachment.h in Headers */,
 				27E4152F154F6E8500771FC5 /* TDStatus.h in Headers */,
-				27D90B0515601B5E0000735E /* MYCertificateInfo.h in Headers */,
-				27D90B0A15601B5E0000735E /* MYASN1Object.h in Headers */,
-				27D90B0D15601B5E0000735E /* MYBERParser.h in Headers */,
-				27D90B1315601B5E0000735E /* MYOID.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1857,10 +1817,6 @@
 				27A720A1152B959100C0A0E8 /* TDAttachment.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* TDStatus.m in Sources */,
 				27E7FAED155D78DA0025F93A /* TDChangeTracker_Tests.m in Sources */,
-				27D90B0615601B5E0000735E /* MYCertificateInfo.m in Sources */,
-				27D90B0B15601B5E0000735E /* MYASN1Object.m in Sources */,
-				27D90B0E15601B5E0000735E /* MYBERParser.m in Sources */,
-				27D90B1415601B5E0000735E /* MYOID.m in Sources */,
 				27D90B1815601C340000735E /* MYErrorUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1969,10 +1925,6 @@
 				278B0CA2152A8B1900577747 /* TDCanonicalJSON.m in Sources */,
 				27A720A2152B959100C0A0E8 /* TDAttachment.m in Sources */,
 				27CF5D2E152F514A0015D7A9 /* TDStatus.m in Sources */,
-				27D90B0715601B5E0000735E /* MYCertificateInfo.m in Sources */,
-				27D90B0C15601B5E0000735E /* MYASN1Object.m in Sources */,
-				27D90B0F15601B5E0000735E /* MYBERParser.m in Sources */,
-				27D90B1515601B5E0000735E /* MYOID.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
