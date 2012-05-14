@@ -79,11 +79,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     [_pendingSequences release];
     _pendingSequences = [[TDSequenceMap alloc] init];
+    
+    // Default to continuous mode because it lets us parse and process changes one sequence at a
+    // time, instead of having to wait and parse the entire list as one JSON object. But allow
+    // the client to force longpoll mode, since apparently some cell networks have trouble with
+    // the continuous feed (see <https://github.com/couchbaselabs/TouchDB-iOS/issues/72>)
+    TDChangeTrackerMode mode = kContinuous;
+    if ([[_options objectForKey: @"feed"] isEqual: @"longpoll"])
+        mode = kLongPoll;
+    
     LogTo(SyncVerbose, @"%@ starting ChangeTracker with since=%@", self, _lastSequence);
-    // Always use continuous mode because it lets us parse and process changes one sequence at a
-    // time, instead of having to wait and parse the entire list as one JSON object.
     _changeTracker = [[TDChangeTracker alloc] initWithDatabaseURL: _remote
-                                                             mode: kContinuous
+                                                             mode: mode
                                                         conflicts: YES
                                                      lastSequence: _lastSequence
                                                            client: self];
