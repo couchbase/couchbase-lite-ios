@@ -20,6 +20,7 @@
 #import "TDSocketChangeTracker.h"
 #import "TDInternal.h"
 #import "Test.h"
+#import "MYURLUtils.h"
 
 
 #if DEBUG
@@ -71,6 +72,17 @@
 @end
 
 
+static void addTemporaryCredential(NSURL* url, NSString* realm,
+                                   NSString* username, NSString* password)
+{
+    NSURLCredential* c = [NSURLCredential credentialWithUser: username password: password
+                                                 persistence: NSURLCredentialPersistenceForSession];
+    NSURLProtectionSpace* s = [url my_protectionSpaceWithRealm: realm
+                                          authenticationMethod: NSURLAuthenticationMethodDefault];
+    [[NSURLCredentialStorage sharedCredentialStorage] setCredential: c forProtectionSpace: s];
+}
+
+
 TestCase(TDSocketChangeTracker) {
     TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
     NSURL* url = [NSURL URLWithString: @"http://snej.iriscouch.com/tdpuller_test1"];
@@ -110,6 +122,20 @@ TestCase(TDSocketChangeTracker_SSL) {
                                      {@"id", @"08a5cb4cc83156401c85bbe40e0007de"},
                                      {@"deleted", $true},
                                      {@"changes", $array($dict({@"rev", @"3-cbdb323dec78588cfea63bf7bb5a246f"}))}) );
+    [tester run: tracker expectingChanges: expected];
+}
+
+
+TestCase(TDSocketChangeTracker_Auth) {
+    // This database requires authentication to access at all.
+    TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
+    NSURL* url = [NSURL URLWithString: @"https://dummy@snej.iriscouch.com/tdpuller_test2_auth"];
+    addTemporaryCredential(url, @"snejdom", @"dummy", @"dummy");
+
+    TDChangeTracker* tracker = [[[TDSocketChangeTracker alloc] initWithDatabaseURL: url mode:kContinuous conflicts: NO lastSequence: 0 client:  tester] autorelease];
+    NSArray* expected = $array($dict({@"seq", $object(1)},
+                                     {@"id", @"something"},
+                                     {@"changes", $array($dict({@"rev", @"1-967a00dff5e02add41819138abb3284d"}))}) );
     [tester run: tracker expectingChanges: expected];
 }
 

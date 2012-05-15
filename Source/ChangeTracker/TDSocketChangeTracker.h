@@ -20,6 +20,8 @@
     
     NSMutableData* _inputBuffer;
     NSMutableData* _changeBuffer;
+    CFHTTPMessageRef _unauthResponse;
+    NSURLCredential* _credential;
     int _state;
     bool _parsing;
     bool _inputAvailable;

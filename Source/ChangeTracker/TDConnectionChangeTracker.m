@@ -63,21 +63,6 @@
 }
 
 
-- (void)connection:(NSURLConnection *)connection
-        didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
-{
-    LogTo(ChangeTracker, @"%@: didReceiveAuthenticationChallenge", self);
-    if (challenge.previousFailureCount == 0) {
-        NSURLCredential* credential = self.authCredential;
-        if (credential) {
-            [challenge.sender useCredential: credential forAuthenticationChallenge: challenge];
-            return;
-        }
-    }
-    // give up
-    [challenge.sender cancelAuthenticationChallenge: challenge];
-}
-
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(ChangeTracker, @"%@: Got response, status %d", self, status);

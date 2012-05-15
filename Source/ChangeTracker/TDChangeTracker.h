@@ -21,7 +21,6 @@
 - (void) changeTrackerReceivedChange: (NSDictionary*)change;
 @optional
 - (NSString*) authorizationHeader;
-- (NSURLCredential*) authCredential;
 - (void) changeTrackerStopped: (TDChangeTracker*)tracker;
 @end
 
@@ -70,7 +69,6 @@ typedef enum TDChangeTrackerMode {
 - (void) stop;
 
 // Protected
-@property (readonly) NSURLCredential* authCredential;
 @property (readonly) NSString* changesFeedPath;
 - (void) setUpstreamError: (NSString*)message;
 - (BOOL) receivedChange: (NSDictionary*)change;

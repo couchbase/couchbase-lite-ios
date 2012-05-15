@@ -144,29 +144,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-// TDChangeTrackerClient protocol
-- (NSURLCredential*) authCredential {
-    if (_authorizer)
-        return nil;
-    // It's unclear what value to use for 'realm' since we don't already have a challenge from
-    // the server. In practice, nil doesn't work (won't find existing Keychain passwords) while
-    // using the hostname does.
-    NSURL* url = _changeTracker.changesFeedURL;
-    NSURLProtectionSpace* space = [[[NSURLProtectionSpace alloc]
-                                                    initWithHost: url.host
-                                                            port: url.port.intValue
-                                                        protocol: NSURLProtectionSpaceHTTP
-                                                           realm: url.host
-                                            authenticationMethod: NSURLAuthenticationMethodDefault]
-                                   autorelease];
-    NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                                        defaultCredentialForProtectionSpace: space];
-    if (cred)
-        LogTo(Sync, @"%@ Using credential %@", self, cred);
-    return cred;
-}
-
-
 // Got a _changes feed entry from the TDChangeTracker.
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
     NSString* lastSequenceID = [[change objectForKey: @"seq"] description];

@@ -19,7 +19,7 @@
 #import "TDStatus.h"
 #import "TDBase64.h"
 #import "MYBlockUtils.h"
-
+#import "MYURLUtils.h"
 #import <string.h>
 
 
@@ -49,9 +49,14 @@ enum {
                                                           kCFHTTPVersion1_1);
     Assert(request);
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Host"), (CFStringRef)_databaseURL.host);
-    NSString* auth = self.authorizationHeader;
-    if (auth)
-        CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"), (CFStringRef)auth);
+    if (_unauthResponse && _credential) {
+        int unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
+        Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,
+                                              (CFStringRef)_credential.user,
+                                              (CFStringRef)_credential.password,
+                                              kCFHTTPAuthenticationSchemeBasic,
+                                              unauthStatus == 407));
+    }
     CFDataRef serialized = CFHTTPMessageCopySerializedMessage(request);
     _trackingRequest = [(NSData*)serialized mutableCopy];
     CFRelease(serialized);
@@ -64,14 +69,12 @@ enum {
         OS X 10.6.7, the delegate never receives any notification of a response. The workaround
         is to act as a dumb HTTP parser and do the job ourselves. */
     
-    BOOL isSSL = (0 == [_databaseURL.scheme caseInsensitiveCompare: @"https"]);
-    int port = _databaseURL.port.unsignedShortValue ?: (isSSL ? 443 : 80);
 #if TARGET_OS_IPHONE
     CFReadStreamRef cfInputStream = NULL;
     CFWriteStreamRef cfOutputStream = NULL;
     CFStreamCreatePairWithSocketToHost(NULL,
                                        (CFStringRef)_databaseURL.host,
-                                       port,
+                                       _databaseURL.my_effectivePort,
                                        &cfInputStream, &cfOutputStream);
     if (!cfInputStream)
         return NO;
@@ -84,7 +87,7 @@ enum {
     NSInputStream* input;
     NSOutputStream* output;
     [NSStream getStreamsToHost: [NSHost hostWithName: hostname]
-                          port: port
+                          port: _databaseURL.my_effectivePort
                    inputStream: &input outputStream: &output];
     if (!output)
         return NO;
@@ -92,7 +95,7 @@ enum {
     _trackingOutput = [output retain];
 #endif
     
-    if (isSSL) {
+    if (_databaseURL.my_isHTTPS) {
         // Enable SSL for this connection.
         // Tell SecureTransport the hostname we need to find in the server cert.
         // Also, disable TLS 1.2 support because it breaks compatibility with some SSL servers;
@@ -122,29 +125,6 @@ enum {
 }
 
 
-static NSString* basicAuthString(NSString* username, NSString* password) {
-    if (!username || !password)
-        return nil;
-    NSString* auth = [NSString stringWithFormat: @"%@:%@", username, password];
-    auth = [TDBase64 encode: [auth dataUsingEncoding: NSUTF8StringEncoding]];
-    return [NSString stringWithFormat: @"Basic %@", auth];
-}
-
-
-- (NSString*) authorizationHeader {
-    NSString* auth = nil;
-    if ([_client respondsToSelector: @selector(authorizationHeader)])
-        auth = [_client authorizationHeader];
-    if (!auth)
-        auth = basicAuthString(_databaseURL.user, _databaseURL.password);
-    if (!auth) {
-        NSURLCredential* credential = self.authCredential;
-        auth = basicAuthString(credential.user, credential.password);
-    }
-    return auth;
-}
-
-
 - (void) clearConnection {
     [_trackingInput close];
     [_trackingInput release];
@@ -160,6 +140,14 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
     _inputBuffer = nil;
     [_changeBuffer release];
     _changeBuffer = nil;
+}
+
+
+- (void)dealloc
+{
+    if (_unauthResponse) CFRelease(_unauthResponse);
+    [_credential release];
+    [super dealloc];
 }
 
 
@@ -182,17 +170,74 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
 }
 
 
-- (BOOL) readServerResponse: (NSString*)line {
-    int status;
-    NSScanner* scanner = [NSScanner scannerWithString: line];
-    if (![scanner scanString: @"HTTP/1.1 " intoString: nil] ||
-            ![scanner scanInt: &status]) {
-        return [self failUnparseable: line];
+- (NSURLCredential*) credentialForResponse: (CFHTTPMessageRef)response {
+    NSString* realm;
+    NSString* authenticationMethod;
+    
+    // Basic & digest auth: http://www.ietf.org/rfc/rfc2617.txt
+    CFStringRef str = CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("WWW-Authenticate"));
+    NSString* authHeader = [NSMakeCollectable(str) autorelease];
+    if (!authHeader)
+        return nil;
+    
+    // Get the auth type:
+    if ([authHeader hasPrefix: @"Basic"])
+        authenticationMethod = NSURLAuthenticationMethodHTTPBasic;
+    else if ([authHeader hasPrefix: @"Digest"])
+        authenticationMethod = NSURLAuthenticationMethodHTTPDigest;
+    else
+        return nil;
+    
+    // Get the realm:
+    NSRange r = [authHeader rangeOfString: @"realm=\""];
+    if (r.length == 0)
+        return nil;
+    NSUInteger start = NSMaxRange(r);
+    r = [authHeader rangeOfString: @"\"" options: 0
+                            range: NSMakeRange(start, authHeader.length - start)];
+    if (r.length == 0)
+        return nil;
+    realm = [authHeader substringWithRange: NSMakeRange(start, r.location - start)];
+    
+    return [_databaseURL my_credentialForRealm: realm authenticationMethod: authenticationMethod];
+}
+
+
+- (BOOL) readResponseHeader {
+    const UInt8* start = _inputBuffer.bytes;
+    const UInt8* crlf = memmem(start, _inputBuffer.length, "\r\n\r\n", 4);
+    if (!crlf)
+        return NO;      // Not at end of response headers yet
+    
+    size_t headerLen = crlf + 4 - start;
+    CFHTTPMessageRef response = CFHTTPMessageCreateEmpty(NULL, NO);
+    if (!CFHTTPMessageAppendBytes(response, start, headerLen)) {
+        Warn(@"%@: Couldn't server's HTTP response header", self);
+        [self setUpstreamError: @"Unparseable server response"];
+        [self stop];
+        CFRelease(response);
+        return NO;
     }
+    
+    int status = CFHTTPMessageGetResponseStatusCode(response);
+    if ((status == 401 || status == 407) && !_unauthResponse) {
+        _credential = [[self credentialForResponse: response] retain];
+        LogTo(ChangeTracker, @"%@: Auth challenge; credential = %@", self, _credential);
+        if (_credential) {
+            // Recoverable auth failure -- try again with _credential:
+            _unauthResponse = response;
+            [self errorOccurred: TDStatusToNSError(status, self.changesFeedURL)];
+            return NO;
+        }
+    }
+
+    CFRelease(response);
     if (status >= 300) {
         self.error = TDStatusToNSError(status, self.changesFeedURL);
         return NO;
     }
+    
+    [_inputBuffer replaceBytesInRange: NSMakeRange(0, headerLen) withBytes: NULL length: 0];
     return YES;
 }
 
@@ -220,11 +265,11 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
 
 
 - (void) readLines {
+    Assert(_state == kStateChunks);
     NSMutableArray* changes = $marray();
     const char* pos = _inputBuffer.bytes;
     const char* end = pos + _inputBuffer.length;
-    BOOL keepGoing = YES;
-    while (keepGoing && pos < end && _inputBuffer) {
+    while (pos < end && _inputBuffer) {
         const char* lineStart = pos;
         const char* crlf = memmem(pos, end-pos, "\r\n", 2);
         if (!crlf)
@@ -238,41 +283,22 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
             [self failUnparseable: @"invalid UTF-8"];
             break;
         }
+        if (line.length == 0)
+            continue;      // There's an empty line between chunks
         
-        switch (_state) {
-            case kStateStatus: {
-                // Read the HTTP response status line:
-                if ([self readServerResponse: line])
-                    _state = kStateHeaders;
-                else
-                    [self stop];
-                break;
-            }
-            case kStateHeaders:
-                if (line.length == 0) {
-                    _state = kStateChunks;
-                    _retryCount = 0;  // successful connection
-                }
-                break;
-            case kStateChunks: {
-                if (line.length == 0)
-                    break;      // There's an empty line between chunks
-                NSScanner* scanner = [NSScanner scannerWithString: line];
-                unsigned chunkLength;
-                if (![scanner scanHexInt: &chunkLength]) {
-                    [self failUnparseable: line];
-                    break;
-                }
-                if (pos + chunkLength > end) {
-                    keepGoing = NO;
-                    pos = lineStart;
-                    break;     // Don't read the chunk till it's complete
-                }
-                // Append the chunk to the current change line:
-                [self readChangeLine: pos length: chunkLength intoArray: changes];
-                pos += chunkLength;
-            }
+        NSScanner* scanner = [NSScanner scannerWithString: line];
+        unsigned chunkLength;
+        if (![scanner scanHexInt: &chunkLength]) {
+            [self failUnparseable: line];
+            break;
         }
+        if (pos + chunkLength > end) {
+            pos = lineStart;
+            break;     // Don't read the chunk till it's complete
+        }
+        // Append the chunk to the current change line:
+        [self readChangeLine: pos length: chunkLength intoArray: changes];
+        pos += chunkLength;
     }
     
     // Remove the parsed lines:
@@ -358,6 +384,14 @@ static NSString* basicAuthString(NSString* username, NSString* password) {
             [_inputBuffer appendBytes: buffer length: bytesRead];
     }
     LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
+
+    if (_state < kStateChunks) {
+        if (![self readResponseHeader])
+            return;
+        _state = kStateChunks;
+        _retryCount = 0;
+    }
+    
     [self readLines];
 }
 

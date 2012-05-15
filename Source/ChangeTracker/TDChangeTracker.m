@@ -116,13 +116,6 @@
     [super dealloc];
 }
 
-- (NSURLCredential*) authCredential {
-    if ([_client respondsToSelector: @selector(authCredential)])
-        return _client.authCredential;
-    else
-        return nil;
-}
-
 - (void) setUpstreamError: (NSString*)message {
     Warn(@"%@: Server error: %@", self, message);
     self.error = [NSError errorWithDomain: @"TDChangeTracker" code: kTDStatusUpstreamError userInfo: nil];
