@@ -50,7 +50,7 @@ enum {
     Assert(request);
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Host"), (CFStringRef)_databaseURL.host);
     if (_unauthResponse && _credential) {
-        int unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
+        CFIndex unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
         Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,
                                               (CFStringRef)_credential.user,
                                               (CFStringRef)_credential.password,
@@ -69,7 +69,6 @@ enum {
         OS X 10.6.7, the delegate never receives any notification of a response. The workaround
         is to act as a dumb HTTP parser and do the job ourselves. */
     
-#if TARGET_OS_IPHONE
     CFReadStreamRef cfInputStream = NULL;
     CFWriteStreamRef cfOutputStream = NULL;
     CFStreamCreatePairWithSocketToHost(NULL,
@@ -80,31 +79,15 @@ enum {
         return NO;
     _trackingInput = (NSInputStream*)cfInputStream;
     _trackingOutput = (NSOutputStream*)cfOutputStream;
-#else
-    NSString* hostname = _databaseURL.host;
-    if ($equal(hostname, @"localhost"))     // for some reason connection fails if "localhost" used
-        hostname = @"127.0.0.1";
-    NSInputStream* input;
-    NSOutputStream* output;
-    [NSStream getStreamsToHost: [NSHost hostWithName: hostname]
-                          port: _databaseURL.my_effectivePort
-                   inputStream: &input outputStream: &output];
-    if (!output)
-        return NO;
-    _trackingInput = [input retain];
-    _trackingOutput = [output retain];
-#endif
     
     if (_databaseURL.my_isHTTPS) {
         // Enable SSL for this connection.
-        // Tell SecureTransport the hostname we need to find in the server cert.
-        // Also, disable TLS 1.2 support because it breaks compatibility with some SSL servers;
+        // Disable TLS 1.2 support because it breaks compatibility with some SSL servers;
         // workaround taken from Apple technote TN2287:
         // http://developer.apple.com/library/ios/#technotes/tn2287/
         [_trackingInput setProperty: NSStreamSocketSecurityLevelNegotiatedSSL
                              forKey: NSStreamSocketSecurityLevelKey];
-        NSDictionary *settings = $dict({(id)kCFStreamSSLPeerName, _databaseURL.host},
-                                       {(id)kCFStreamSSLLevel,
+        NSDictionary *settings = $dict({(id)kCFStreamSSLLevel,
                                         @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"});
         CFReadStreamSetProperty((CFReadStreamRef)_trackingInput,
                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
@@ -219,14 +202,14 @@ enum {
         return NO;
     }
     
-    int status = CFHTTPMessageGetResponseStatusCode(response);
+    CFIndex status = CFHTTPMessageGetResponseStatusCode(response);
     if ((status == 401 || status == 407) && !_unauthResponse) {
         _credential = [[self credentialForResponse: response] retain];
         LogTo(ChangeTracker, @"%@: Auth challenge; credential = %@", self, _credential);
         if (_credential) {
             // Recoverable auth failure -- try again with _credential:
             _unauthResponse = response;
-            [self errorOccurred: TDStatusToNSError(status, self.changesFeedURL)];
+            [self errorOccurred: TDStatusToNSError((TDStatus)status, self.changesFeedURL)];
             return NO;
         }
     }
