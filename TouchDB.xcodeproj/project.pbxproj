@@ -337,6 +337,34 @@
 			remoteGlobalIDString = 270B3DE91489359000E0A926;
 			remoteInfo = ToyCouch;
 		};
+		270BDD6E15645127007D52F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 275315D414ACF0A10065964D;
+			remoteInfo = TouchDBListener;
+		};
+		270BDD701564512A007D52F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270B3DE91489359000E0A926;
+			remoteInfo = TouchDB;
+		};
+		270BDD7215645147007D52F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27B0B7E61492BB6B00A817AD;
+			remoteInfo = "iOS Framework";
+		};
+		270BDD741564514C007D52F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27B0B7E61492BB6B00A817AD;
+			remoteInfo = "iOS Framework";
+		};
 		275315FD14ACF87F0065964D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -1394,6 +1422,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				270BDD6F15645127007D52F6 /* PBXTargetDependency */,
+				270BDD711564512A007D52F6 /* PBXTargetDependency */,
 			);
 			name = TouchServ;
 			productName = TouchServ;
@@ -1430,6 +1460,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				270BDD751564514C007D52F6 /* PBXTargetDependency */,
 			);
 			name = "iOS Empty App";
 			productName = "iOS Demo";
@@ -1502,6 +1533,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				270BDD7315645147007D52F6 /* PBXTargetDependency */,
 			);
 			name = "iOS Demo";
 			productName = "iOS Demo";
@@ -2037,6 +2069,26 @@
 			isa = PBXTargetDependency;
 			target = 270B3DE91489359000E0A926 /* TouchDB */;
 			targetProxy = 270B3DFF1489359000E0A926 /* PBXContainerItemProxy */;
+		};
+		270BDD6F15645127007D52F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 275315D414ACF0A10065964D /* TouchDBListener */;
+			targetProxy = 270BDD6E15645127007D52F6 /* PBXContainerItemProxy */;
+		};
+		270BDD711564512A007D52F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270B3DE91489359000E0A926 /* TouchDB */;
+			targetProxy = 270BDD701564512A007D52F6 /* PBXContainerItemProxy */;
+		};
+		270BDD7315645147007D52F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27B0B7E61492BB6B00A817AD /* iOS Framework */;
+			targetProxy = 270BDD7215645147007D52F6 /* PBXContainerItemProxy */;
+		};
+		270BDD751564514C007D52F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27B0B7E61492BB6B00A817AD /* iOS Framework */;
+			targetProxy = 270BDD741564514C007D52F6 /* PBXContainerItemProxy */;
 		};
 		275315FE14ACF87F0065964D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
