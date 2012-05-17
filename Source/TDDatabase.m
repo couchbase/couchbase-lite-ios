@@ -28,6 +28,7 @@
 
 
 NSString* const TDDatabaseWillCloseNotification = @"TDDatabaseWillClose";
+NSString* const TDDatabaseWillBeDeletedNotification = @"TDDatabaseWillBeDeleted";
 
 
 @implementation TDDatabase
@@ -291,6 +292,9 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 - (BOOL) deleteDatabase: (NSError**)outError {
+    LogTo(TDDatabase, @"Deleting %@", _path);
+    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseWillBeDeletedNotification
+                                                        object: self];
     if (_open) {
         if (![self close])
             return NO;

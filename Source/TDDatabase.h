@@ -20,6 +20,9 @@ extern NSString* const TDDatabaseChangeNotification;
 /** NSNotification posted when a database is closing. */
 extern NSString* const TDDatabaseWillCloseNotification;
 
+/** NSNotification posted when a database is about to be deleted (but before it closes). */
+extern NSString* const TDDatabaseWillBeDeletedNotification;
+
 
 /** Filter block, used in changes feeds and replication. */
 typedef BOOL (^TDFilterBlock) (TDRevision* revision);

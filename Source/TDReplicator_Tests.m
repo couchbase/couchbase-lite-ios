@@ -206,7 +206,7 @@ TestCase(TDReplicatorManager) {
 
     rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
                                                     {@"target", @"http://foo.com"},
-                                                    {@"_internal", $true})];
+                                                    {@"_internal", $true})];  // <--illegal prop
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusForbidden);
     
@@ -257,10 +257,10 @@ TestCase(TDReplicatorManager) {
     CAssertEqual(newRepl.sessionID, sessionID);
     CAssert(newRepl.running);
 
-    // Now delete it:
-    rev = [[[TDRevision alloc] initWithDocID: newRev.docID revID: newRev.revID deleted: YES] autorelease];
-    rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssertEq(status, kTDStatusOK);
+    // Now delete the database, and check that the replication doc is deleted too:
+    CAssert([server deleteDatabaseNamed: @"foo"]);
+    CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0]);
+    
     [server close];
 }
 

@@ -67,6 +67,9 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
                                                  name: TDDatabaseChangeNotification
                                                object: _replicatorDB];
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(someDbDeleted:)
+                                                 name: TDDatabaseWillBeDeletedNotification
+                                               object: nil];
 }
 
 
@@ -378,6 +381,36 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     }
 }
 
+
+// Notified that some database is being deleted; delete any associated replication document:
+- (void) someDbDeleted: (NSNotification*)n {
+    TDDatabase* db = n.object;
+    if ([_dbManager.allOpenDatabases indexOfObjectIdenticalTo: db] == NSNotFound)
+        return;
+    NSString* dbName = db.name;
+    
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    options.includeDocs = YES;
+    NSArray* allDocs = [[_replicatorDB getAllDocs: &options] objectForKey: @"rows"];
+    for (NSDictionary* row in allDocs) {
+        NSDictionary* docProps = [row objectForKey: @"doc"];
+        NSString* source = $castIf(NSString, [docProps objectForKey: @"source"]);
+        NSString* target = $castIf(NSString, [docProps objectForKey: @"target"]);
+        if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
+            // Replication doc involves this database -- delete it:
+            LogTo(Sync, @"ReplicatorManager deleting replication %@", docProps);
+            TDRevision* delRev = [[TDRevision alloc] initWithDocID: [docProps objectForKey: @"_id"]
+                                                             revID: nil deleted: YES];
+            TDStatus status;
+            if (![_replicatorDB putRevision: delRev
+                             prevRevisionID: [docProps objectForKey: @"_rev"]
+                              allowConflict: NO status: &status]) {
+                Warn(@"TDReplicatorManager: Couldn't delete replication doc %@", docProps);
+            }
+            [delRev release];
+        }
+    }
+}
 
 
 @end
