@@ -123,3 +123,23 @@ extern NSString* TDReplicatorStoppedNotification;
 - (id) initWithCredential: (NSURLCredential*)credential;
 
 @end
+
+
+
+/** Implementation of TDAuthorizer that supports MAC authorization as used in OAuth 2. */
+@interface TDMACAuthorizer : NSObject <TDAuthorizer>
+{
+@private
+    NSString *_key, *_identifier;
+    NSDate* _issueTime;
+    NSData* (*_hmacFunction)(NSData*, NSData*);
+
+}
+
+/** Initialize given MAC credentials */
+- (id) initWithKey: (NSString*)key
+        identifier: (NSString*)identifier
+         algorithm: (NSString*)algorithm
+         issueTime: (NSDate*)issueTime;
+
+@end

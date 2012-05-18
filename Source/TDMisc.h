@@ -13,7 +13,13 @@ extern NSString* const TDHTTPErrorDomain;
 
 NSString* TDCreateUUID( void );
 
+NSData* TDSHA1Digest( NSData* input );
+NSData* TDSHA256Digest( NSData* input );
+
 NSString* TDHexSHA1Digest( NSData* input );
+
+NSData* TDHMACSHA1(NSData* key, NSData* data);
+NSData* TDHMACSHA256(NSData* key, NSData* data);
 
 /** Generates a hex dump of a sequence of bytes.
     The result is lowercase. This is important for CouchDB compatibility. */

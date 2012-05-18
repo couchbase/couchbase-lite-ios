@@ -24,6 +24,7 @@
 #else
 #define COMMON_DIGEST_FOR_OPENSSL
 #import <CommonCrypto/CommonDigest.h>
+#import <CommonCrypto/CommonHMAC.h>
 #endif
 
 
@@ -40,6 +41,25 @@ NSString* TDCreateUUID() {
     CFRelease(uuid);
     return [str autorelease];
 #endif
+}
+
+
+NSData* TDSHA1Digest( NSData* input ) {
+    unsigned char digest[SHA_DIGEST_LENGTH];
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+    SHA1_Update(&ctx, input.bytes, input.length);
+    SHA1_Final(digest, &ctx);
+    return [NSData dataWithBytes: &digest length: sizeof(digest)];
+}
+
+NSData* TDSHA256Digest( NSData* input ) {
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256_CTX ctx;
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, input.bytes, input.length);
+    SHA256_Final(digest, &ctx);
+    return [NSData dataWithBytes: &digest length: sizeof(digest)];
 }
 
 
@@ -60,6 +80,19 @@ NSString* TDHexFromBytes( const void* bytes, size_t length) {
     return [[[NSString alloc] initWithBytes: hex
                                      length: 2*length
                                    encoding: NSASCIIStringEncoding] autorelease];
+}
+
+
+NSData* TDHMACSHA1(NSData* key, NSData* data) {
+    UInt8 hmac[SHA_DIGEST_LENGTH];
+    CCHmac(kCCHmacAlgSHA1, key.bytes, key.length, data.bytes, data.length, &hmac);
+    return [NSData dataWithBytes: hmac length: sizeof(hmac)];
+}
+
+NSData* TDHMACSHA256(NSData* key, NSData* data) {
+    UInt8 hmac[SHA256_DIGEST_LENGTH];
+    CCHmac(kCCHmacAlgSHA256, key.bytes, key.length, data.bytes, data.length, &hmac);
+    return [NSData dataWithBytes: hmac length: sizeof(hmac)];
 }
 
 
