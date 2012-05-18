@@ -269,6 +269,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     [[[TDMultipartUploader alloc] initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
                                    authorizer: _authorizer
+                               requestHeaders: self.requestHeaders
                                  onCompletion: ^(id response, NSError *error) {
                   if (error) {
                       self.error = error;

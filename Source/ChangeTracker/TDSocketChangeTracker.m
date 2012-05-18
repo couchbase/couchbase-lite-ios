@@ -48,7 +48,16 @@ enum {
                                                           (CFURLRef)self.changesFeedURL,
                                                           kCFHTTPVersion1_1);
     Assert(request);
-    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Host"), (CFStringRef)_databaseURL.host);
+    NSString* hostHeader = _databaseURL.host;
+    if (_databaseURL.port)
+        hostHeader = [hostHeader stringByAppendingFormat: @":%@", _databaseURL.port];
+    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Host"), (CFStringRef)hostHeader);
+    
+    // Add headers.
+    [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+        CFHTTPMessageSetHeaderFieldValue(request, (CFStringRef)key, (CFStringRef)value);
+    }];
+    
     if (_unauthResponse && _credential) {
         CFIndex unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
         Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,

@@ -99,6 +99,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     unsigned heartbeat = $castIf(NSNumber, [_options objectForKey: @"heartbeat"]).unsignedIntValue;
     if (heartbeat >= 15000)
         _changeTracker.heartbeat = heartbeat;
+    
+    NSMutableDictionary* headers = $mdict({@"User-Agent", [TDRemoteRequest userAgentHeader]});
+    [headers addEntriesFromDictionary: _requestHeaders];
+    if (_authorizer) {
+        NSURL* url = _changeTracker.changesFeedURL;
+        NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
+        NSString* authorization = [_authorizer authorizeURLRequest: request];
+        if (authorization)
+            [headers setObject: authorization forKey: @"Authorization"];
+    }
+    _changeTracker.requestHeaders = headers;
+    
     [_changeTracker start];
     if (!_continuous)
         [self asyncTaskStarted];
@@ -131,16 +143,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         return NO;
     [_changeTracker stop];
     return YES;
-}
-
-
-// TDChangeTrackerClient protocol
-- (NSString*) authorizationHeader {
-    if (!_authorizer)
-        return nil;
-    NSURL* url = _changeTracker.changesFeedURL;
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
-    return [_authorizer authorizeURLRequest: request];
 }
 
 
@@ -315,6 +317,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [[[TDMultipartDownloader alloc] initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
                                      authorizer: _authorizer
+                                 requestHeaders: self.requestHeaders
                                    onCompletion:
         ^(TDMultipartDownloader* download, NSError *error) {
             // OK, now we've got the response revision:

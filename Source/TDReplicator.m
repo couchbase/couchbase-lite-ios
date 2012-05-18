@@ -87,6 +87,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [_error release];
     [_authorizer release];
     [_options release];
+    [_requestHeaders release];
     [super dealloc];
 }
 
@@ -109,6 +110,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 @synthesize authorizer=_authorizer;
+@synthesize requestHeaders = _requestHeaders;
 
 
 - (BOOL) isPush {
@@ -315,9 +317,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                                                     URL: url
                                                    body: body
                                              authorizer: _authorizer
+                                         requestHeaders: self.requestHeaders 
                                            onCompletion: onCompletion] autorelease];
 }
-
 
 #pragma mark - CHECKPOINT STORAGE:
 

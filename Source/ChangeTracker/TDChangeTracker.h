@@ -20,7 +20,6 @@
 @protocol TDChangeTrackerClient <NSObject>
 - (void) changeTrackerReceivedChange: (NSDictionary*)change;
 @optional
-- (NSString*) authorizationHeader;
 - (void) changeTrackerStopped: (TDChangeTracker*)tracker;
 @end
 
@@ -45,6 +44,7 @@ typedef enum TDChangeTrackerMode {
     NSString* _filterName;
     NSDictionary* _filterParameters;
     NSTimeInterval _heartbeat;
+    NSDictionary* _requestHeaders;
 }
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
@@ -60,6 +60,7 @@ typedef enum TDChangeTrackerMode {
 @property (readonly, copy, nonatomic) id lastSequenceID;
 @property (retain, nonatomic) NSError* error;
 @property (assign, nonatomic) id<TDChangeTrackerClient> client;
+@property (retain, nonatomic) NSDictionary *requestHeaders;
 
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;

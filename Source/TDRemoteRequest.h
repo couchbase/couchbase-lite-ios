@@ -32,8 +32,11 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 }
 
 /** Creates and starts a request; when finished, the onCompletion block will be called. */
-- (id) initWithMethod: (NSString*)method URL: (NSURL*)url body: (id)body
+- (id) initWithMethod: (NSString*)method 
+                  URL: (NSURL*)url 
+                 body: (id)body
            authorizer: (id<TDAuthorizer>)authorizer
+       requestHeaders: (NSDictionary *)requestHeaders
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 
 /** In some cases a kTDStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
@@ -45,6 +48,9 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 - (void) clearConnection;
 - (void) cancelWithStatus: (int)status;
 - (void) respondWithResult: (id)result error: (NSError*)error;
+
+// The value to use for the User-Agent HTTP header.
++ (NSString*) userAgentHeader;
 
 @end
 

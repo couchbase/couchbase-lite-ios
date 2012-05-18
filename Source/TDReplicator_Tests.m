@@ -43,6 +43,7 @@ static void deleteRemoteDB(void) {
                                                                    URL: url
                                                                   body: nil
                                                             authorizer: nil
+                                                        requestHeaders: nil
                                                           onCompletion:
         ^(id result, NSError *err) {
             finished = YES;

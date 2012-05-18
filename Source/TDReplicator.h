@@ -42,6 +42,7 @@ extern NSString* TDReplicatorStoppedNotification;
     CFAbsoluteTime _startTime;
     id<TDAuthorizer> _authorizer;
     NSDictionary* _options;
+    NSDictionary* _requestHeaders;
 }
 
 - (id) initWithDB: (TDDatabase*)db
@@ -56,6 +57,10 @@ extern NSString* TDReplicatorStoppedNotification;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
 @property (copy) NSDictionary* options;
+
+/** Optional dictionary of headers to be added to all requests to remote servers. */
+@property (copy) NSDictionary* requestHeaders;
+
 @property (retain) id<TDAuthorizer> authorizer;
 
 /** Starts the replicator.

@@ -35,6 +35,7 @@
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
 @synthesize heartbeat=_heartbeat, error=_error;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
+@synthesize requestHeaders = _requestHeaders;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
@@ -113,6 +114,7 @@
     [_databaseURL release];
     [_lastSequenceID release];
     [_error release];
+    [_requestHeaders release];
     [super dealloc];
 }
 

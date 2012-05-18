@@ -21,11 +21,15 @@
 - (id) initWithURL: (NSURL *)url
           streamer: (TDMultipartWriter*)streamer
         authorizer: (id<TDAuthorizer>)authorizer
+    requestHeaders: (NSDictionary *) requestHeaders
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
     Assert(streamer);
-    return [super initWithMethod: @"PUT" URL: url body: streamer
+    return [super initWithMethod: @"PUT" 
+                             URL: url 
+                            body: streamer
                       authorizer: authorizer
+                  requestHeaders:requestHeaders 
                     onCompletion: onCompletion];
 }
 

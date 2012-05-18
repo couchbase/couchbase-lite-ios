@@ -34,6 +34,11 @@
     request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     request.timeoutInterval = 6.02e23;
     
+    // Add headers.
+    [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+        [request setValue: value forHTTPHeaderField: key];
+    }];
+    
     _connection = [[NSURLConnection connectionWithRequest: request delegate: self] retain];
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
