@@ -59,12 +59,17 @@ enum {
     }];
     
     if (_unauthResponse && _credential) {
-        CFIndex unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
-        Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,
-                                              (CFStringRef)_credential.user,
-                                              (CFStringRef)_credential.password,
-                                              kCFHTTPAuthenticationSchemeBasic,
-                                              unauthStatus == 407));
+        NSString* password = _credential.password;
+        if (password) {
+            CFIndex unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
+            Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,
+                                                  (CFStringRef)_credential.user,
+                                                  (CFStringRef)password,
+                                                  kCFHTTPAuthenticationSchemeBasic,
+                                                  unauthStatus == 407));
+        } else {
+            Warn(@"%@: Unable to get password of %@", self, _credential);
+        }
     }
     CFDataRef serialized = CFHTTPMessageCopySerializedMessage(request);
     _trackingRequest = [(NSData*)serialized mutableCopy];
@@ -191,7 +196,11 @@ enum {
         return nil;
     realm = [authHeader substringWithRange: NSMakeRange(start, r.location - start)];
     
-    return [_databaseURL my_credentialForRealm: realm authenticationMethod: authenticationMethod];
+    NSURLCredential* cred;
+    cred = [_databaseURL my_credentialForRealm: realm authenticationMethod: authenticationMethod];
+    if (!cred.hasPassword)
+        cred = nil;     // TODO: Add support for client certs
+    return cred;
 }
 
 
