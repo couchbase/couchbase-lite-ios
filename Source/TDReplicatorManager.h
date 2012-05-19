@@ -34,6 +34,7 @@ extern NSString* const kTDReplicatorDatabaseName;
                             toDatabase: (TDDatabase**)outDatabase
                                 remote: (NSURL**)outRemote
                                 isPush: (BOOL*)outIsPush
-                          createTarget: (BOOL*)outCreateTarget;
+                          createTarget: (BOOL*)outCreateTarget
+                               headers: (NSDictionary**)outHeaders;
 
 @end

@@ -87,30 +87,46 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 }
 
 
+// Replication 'source' or 'target' property may be a string or a dictionary. Normalize to dict form
+static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key) {
+    id value = [properties objectForKey: key];
+    if ([value isKindOfClass: [NSDictionary class]])
+        return value;
+    else if ([value isKindOfClass: [NSString class]])
+        return $dict({@"url", value});
+    else
+        return nil;
+}
+
+
 - (TDStatus) parseReplicatorProperties: (NSDictionary*)properties
                             toDatabase: (TDDatabase**)outDatabase   // may be NULL
                                 remote: (NSURL**)outRemote          // may be NULL
                                 isPush: (BOOL*)outIsPush
-                          createTarget: (BOOL*)outCreateTarget;
+                          createTarget: (BOOL*)outCreateTarget
+                               headers: (NSDictionary**)outHeaders
 {
-    NSString* source = $castIf(NSString, [properties objectForKey: @"source"]);
-    NSString* target = $castIf(NSString, [properties objectForKey: @"target"]);
-    *outCreateTarget = [$castIf(NSNumber, [properties objectForKey: @"create_target"]) boolValue];
-    
+    // http://wiki.apache.org/couchdb/Replication
+    NSDictionary* sourceDict = parseSourceOrTarget(properties, @"source");
+    NSDictionary* targetDict = parseSourceOrTarget(properties, @"target");
+    NSString* source = [sourceDict objectForKey: @"url"];
+    NSString* target = [targetDict objectForKey: @"url"];
     if (!source || !target)
         return kTDStatusBadRequest;
+
+    *outCreateTarget = [$castIf(NSNumber, [properties objectForKey: @"create_target"]) boolValue];
     *outIsPush = NO;
     TDDatabase* db = nil;
-    NSString* remoteStr;
+    NSDictionary* remoteDict = nil;
     if ([TDDatabaseManager isValidDatabaseName: source]) {
         if (outDatabase)
             db = [_dbManager existingDatabaseNamed: source];
-        remoteStr = target;
+        remoteDict = targetDict;
         *outIsPush = YES;
     } else {
         if (![TDDatabaseManager isValidDatabaseName: target])
             return kTDStatusBadID;
-        remoteStr = source;
+        remoteDict = sourceDict;
         if (outDatabase) {
             if (*outCreateTarget) {
                 db = [_dbManager databaseNamed: target];
@@ -121,7 +137,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
             }
         }
     }
-    NSURL* remote = [NSURL URLWithString: remoteStr];
+    NSURL* remote = [NSURL URLWithString: [remoteDict objectForKey: @"url"]];
     if (!remote || ![remote.scheme hasPrefix: @"http"])
         return kTDStatusBadRequest;
     if (outDatabase) {
@@ -131,6 +147,8 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     }
     if (outRemote)
         *outRemote = remote;
+    if (outHeaders)
+        *outHeaders = $castIf(NSDictionary, [remoteDict objectForKey: @"headers"]);
     return kTDStatusOK;
 }
 
@@ -149,7 +167,8 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     LogTo(Sync, @"ReplicatorManager: Validating %@: %@", newRev, newProperties);
     BOOL push, createTarget;
     if ([self parseReplicatorProperties: newProperties toDatabase: NULL
-                                 remote: NULL isPush: &push createTarget: &createTarget] >= 300) {
+                                 remote: NULL isPush: &push createTarget: &createTarget
+                                headers: NULL] >= 300) {
         context.errorMessage = @"Invalid replication parameters";
         return NO;
     }
@@ -250,10 +269,12 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     TDDatabase* localDb;
     NSURL* remote;
     BOOL push, createTarget;
+    NSDictionary* headers;
     TDStatus status = [self parseReplicatorProperties: properties
                                            toDatabase: &localDb remote: &remote
                                                isPush: &push
-                                         createTarget: &createTarget];
+                                         createTarget: &createTarget
+                                              headers: &headers];
     if (TDStatusIsError(status)) {
         Warn(@"TDReplicatorManager: Can't find replication endpoints for %@", properties);
         return;
@@ -275,6 +296,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     repl.filterName = $castIf(NSString, [properties objectForKey: @"filter"]);;
     repl.filterParameters = $castIf(NSDictionary, [properties objectForKey: @"query_params"]);
     repl.options = properties;
+    repl.requestHeaders = headers;
     if (push)
         ((TDPusher*)repl).createTarget = createTarget;
     

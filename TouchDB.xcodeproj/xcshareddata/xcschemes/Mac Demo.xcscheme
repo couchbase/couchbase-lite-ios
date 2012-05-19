@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0430"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -40,7 +39,7 @@
       </MacroExpansion>
    </TestAction>
    <LaunchAction
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.GDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.GDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
@@ -80,11 +79,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-LogSync YES"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-LogSyncVerbose YES"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-LogChangeTracker YES"
@@ -99,7 +98,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "Test_TDReachability"
+            argument = "Test_ParseReplicatorProperties"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

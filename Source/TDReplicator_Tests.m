@@ -22,6 +22,7 @@
 #import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
+#import "MYURLUtils.h"
 
 
 #if DEBUG
@@ -191,6 +192,7 @@ TestCase(TDPuller_FromCouchApp) {
 
 
 TestCase(TDReplicatorManager) {
+    RequireTestCase(ParseReplicatorProperties);
     TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
     CAssert([server replicatorManager]);    // start the replicator
     TDDatabase* replicatorDb = [server databaseNamed: kTDReplicatorDatabaseName];
@@ -263,6 +265,51 @@ TestCase(TDReplicatorManager) {
     CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0]);
     
     [server close];
+}
+
+
+TestCase(ParseReplicatorProperties) {
+    TDDatabaseManager* dbManager = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
+    TDReplicatorManager* replManager = [dbManager replicatorManager];
+    TDDatabase* localDB = [dbManager databaseNamed: @"foo"];
+
+    TDDatabase* db = nil;
+    NSURL* remote = nil;
+    BOOL isPush = NO, createTarget = NO;
+    NSDictionary* headers = nil;
+    
+    NSDictionary* props;
+    props = $dict({@"source", @"foo"},
+                  {@"target", @"http://example.com"},
+                  {@"create_target", $true});
+    CAssertEq(200, [replManager parseReplicatorProperties: props
+                                               toDatabase: &db
+                                                   remote: &remote
+                                                   isPush: &isPush
+                                             createTarget: &createTarget
+                                                  headers: &headers]);
+    CAssertEq(db, localDB);
+    CAssertEqual(remote, $url(@"http://example.com"));
+    CAssertEq(isPush, YES);
+    CAssertEq(createTarget, YES);
+    CAssertEq(headers, nil);
+    
+    props = $dict({@"source", $dict({@"url", @"http://example.com"},
+                                    {@"headers", $dict({@"Excellence", @"Most"})})},
+                  {@"target", @"foo"});
+    CAssertEq(200, [replManager parseReplicatorProperties: props
+                                               toDatabase: &db
+                                                   remote: &remote
+                                                   isPush: &isPush
+                                             createTarget: &createTarget
+                                                  headers: &headers]);
+    CAssertEq(db, localDB);
+    CAssertEqual(remote, $url(@"http://example.com"));
+    CAssertEq(isPush, NO);
+    CAssertEq(createTarget, NO);
+    CAssertEqual(headers, $dict({@"Excellence", @"Most"}));
+    
+    [dbManager close];
 }
 
 #endif

@@ -213,15 +213,16 @@ enum {
     size_t headerLen = crlf + 4 - start;
     CFHTTPMessageRef response = CFHTTPMessageCreateEmpty(NULL, NO);
     if (!CFHTTPMessageAppendBytes(response, start, headerLen)) {
-        Warn(@"%@: Couldn't server's HTTP response header", self);
         [self setUpstreamError: @"Unparseable server response"];
         [self stop];
         CFRelease(response);
         return NO;
     }
     
+    // Handle authentication failure (401 or 407 status):
     CFIndex status = CFHTTPMessageGetResponseStatusCode(response);
-    if ((status == 401 || status == 407) && !_unauthResponse) {
+    if ((status == 401 || status == 407) && !_credential
+                                         && ![_requestHeaders objectForKey: @"Authorization"]) {
         _credential = [[self credentialForResponse: response] retain];
         LogTo(ChangeTracker, @"%@: Auth challenge; credential = %@", self, _credential);
         if (_credential) {
