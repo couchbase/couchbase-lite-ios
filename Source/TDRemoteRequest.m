@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "TDRemoteRequest.h"
+#import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDBlobStore.h"
 #import <TouchDB/TDDatabase.h>
@@ -59,7 +60,8 @@
         LogTo(RemoteRequest, @"%@: Starting...", self);
         [self setupRequest: _request withBody: body];
         
-        NSString* authHeader = [authorizer authorizeURLRequest: _request];
+        NSString* authHeader = [authorizer authorizeURLRequest: _request
+                                                      forRealm: nil];
         if (authHeader)
             [_request setValue: authHeader forHTTPHeaderField: @"Authorization"];
         

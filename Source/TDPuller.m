@@ -18,6 +18,7 @@
 #import "TDDatabase+Replication.h"
 #import <TouchDB/TDRevision.h>
 #import "TDChangeTracker.h"
+#import "TDAuthorizer.h"
 #import "TDBatcher.h"
 #import "TDMultipartDownloader.h"
 #import "TDSequenceMap.h"
@@ -105,7 +106,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (_authorizer) {
         NSURL* url = _changeTracker.changesFeedURL;
         NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
-        NSString* authorization = [_authorizer authorizeURLRequest: request];
+        NSString* authorization = [_authorizer authorizeURLRequest: request
+                                                          forRealm: nil];
         if (authorization)
             [headers setObject: authorization forKey: @"Authorization"];
     }

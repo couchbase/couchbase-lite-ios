@@ -24,6 +24,7 @@
 #import "TDPusher.h"
 #import "TDPuller.h"
 #import "TDView.h"
+#import "TDOAuth1Authorizer.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 
@@ -105,6 +106,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                                 isPush: (BOOL*)outIsPush
                           createTarget: (BOOL*)outCreateTarget
                                headers: (NSDictionary**)outHeaders
+                            authorizer: (id<TDAuthorizer>*)outAuthorizer
 {
     // http://wiki.apache.org/couchdb/Replication
     NSDictionary* sourceDict = parseSourceOrTarget(properties, @"source");
@@ -149,6 +151,28 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         *outRemote = remote;
     if (outHeaders)
         *outHeaders = $castIf(NSDictionary, [remoteDict objectForKey: @"headers"]);
+    
+    if (outAuthorizer) {
+        *outAuthorizer = nil;
+        NSDictionary* auth = $castIf(NSDictionary, [remoteDict objectForKey: @"auth"]);
+        NSDictionary* oauth = $castIf(NSDictionary, [auth objectForKey: @"oauth"]);
+        if (oauth) {
+            NSString* consumerKey = $castIf(NSString, [oauth objectForKey: @"consumer_key"]);
+            NSString* consumerSec = $castIf(NSString, [oauth objectForKey: @"consumer_secret"]);
+            NSString* token = $castIf(NSString, [oauth objectForKey: @"token"]);
+            NSString* tokenSec = $castIf(NSString, [oauth objectForKey: @"token_secret"]);
+            NSString* sigMethod = $castIf(NSString, [oauth objectForKey: @"signature_method"]);
+            *outAuthorizer = [[[TDOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
+                                                               consumerSecret: consumerSec
+                                                                        token: token
+                                                                  tokenSecret: tokenSec
+                                                              signatureMethod: sigMethod]
+                              autorelease];
+            if (!*outAuthorizer)
+                return kTDStatusBadRequest;
+        }
+    }
+    
     return kTDStatusOK;
 }
 
@@ -168,7 +192,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     BOOL push, createTarget;
     if ([self parseReplicatorProperties: newProperties toDatabase: NULL
                                  remote: NULL isPush: &push createTarget: &createTarget
-                                headers: NULL] >= 300) {
+                                headers: NULL
+                             authorizer: NULL] >= 300) {
         context.errorMessage = @"Invalid replication parameters";
         return NO;
     }
@@ -270,11 +295,13 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     NSURL* remote;
     BOOL push, createTarget;
     NSDictionary* headers;
+    id<TDAuthorizer> authorizer;
     TDStatus status = [self parseReplicatorProperties: properties
                                            toDatabase: &localDb remote: &remote
                                                isPush: &push
                                          createTarget: &createTarget
-                                              headers: &headers];
+                                              headers: &headers
+                                           authorizer: &authorizer];
     if (TDStatusIsError(status)) {
         Warn(@"TDReplicatorManager: Can't find replication endpoints for %@", properties);
         return;
@@ -297,6 +324,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     repl.filterParameters = $castIf(NSDictionary, [properties objectForKey: @"query_params"]);
     repl.options = properties;
     repl.requestHeaders = headers;
+    repl.authorizer = authorizer;
     if (push)
         ((TDPusher*)repl).createTarget = createTarget;
     

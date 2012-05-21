@@ -7,3 +7,6 @@
 [submodule "vendor/MYUtilities"]
 	path = vendor/MYUtilities
 	url = git://github.com/snej/MYUtilities.git
+[submodule "vendor/oauthconsumer"]
+	path = vendor/oauthconsumer
+	url = git://github.com/couchbaselabs/ios-oauthconsumer.git

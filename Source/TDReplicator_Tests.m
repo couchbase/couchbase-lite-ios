@@ -1,5 +1,5 @@
 //
-//  TDPuller_Tests.m
+//  TDReplicator_Tests.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/7/11.
@@ -19,6 +19,7 @@
 #import "TDServer.h"
 #import "TDDatabase+Replication.h"
 #import "TDDatabase+Insertion.h"
+#import "TDOAuth1Authorizer.h"
 #import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
@@ -287,27 +288,36 @@ TestCase(ParseReplicatorProperties) {
                                                    remote: &remote
                                                    isPush: &isPush
                                              createTarget: &createTarget
-                                                  headers: &headers]);
+                                                  headers: &headers
+                                               authorizer: NULL]);
     CAssertEq(db, localDB);
     CAssertEqual(remote, $url(@"http://example.com"));
     CAssertEq(isPush, YES);
     CAssertEq(createTarget, YES);
     CAssertEq(headers, nil);
     
+    NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
+                                    {@"consumer_key", @"consumer_key"},
+                                    {@"token_secret", @"token_secret"},
+                                    {@"token", @"token"});
     props = $dict({@"source", $dict({@"url", @"http://example.com"},
-                                    {@"headers", $dict({@"Excellence", @"Most"})})},
+                                    {@"headers", $dict({@"Excellence", @"Most"})},
+                                    {@"auth", $dict({@"oauth", oauthDict})})},
                   {@"target", @"foo"});
+    id<TDAuthorizer> authorizer = nil;
     CAssertEq(200, [replManager parseReplicatorProperties: props
                                                toDatabase: &db
                                                    remote: &remote
                                                    isPush: &isPush
                                              createTarget: &createTarget
-                                                  headers: &headers]);
+                                                  headers: &headers
+                                               authorizer: &authorizer]);
     CAssertEq(db, localDB);
     CAssertEqual(remote, $url(@"http://example.com"));
     CAssertEq(isPush, NO);
     CAssertEq(createTarget, NO);
     CAssertEqual(headers, $dict({@"Excellence", @"Most"}));
+    CAssert([authorizer isKindOfClass: [TDOAuth1Authorizer class]]);
     
     [dbManager close];
 }
