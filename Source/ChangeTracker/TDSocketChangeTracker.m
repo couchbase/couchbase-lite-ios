@@ -154,8 +154,8 @@ enum {
     if (_trackingInput || _trackingOutput) {
         LogTo(ChangeTracker, @"%@: stop", self);
         [self clearConnection];
-        [super stop];
     }
+    [super stop];
 }
 
 

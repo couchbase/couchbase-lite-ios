@@ -192,6 +192,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (void) changeTrackerStopped:(TDChangeTracker *)tracker {
+    if (tracker != _changeTracker)
+        return;
     NSError* error = tracker.error;
     LogTo(Sync, @"%@: ChangeTracker stopped; error=%@", self, error.description);
     
