@@ -133,9 +133,11 @@
 }
 
 - (void) stopped {
-    if ([_client respondsToSelector: @selector(changeTrackerStopped:)])
-        [_client changeTrackerStopped: self];
-    _client = nil;  // don't call client anymore even if -stopped is called again (i.e. on dealloc)
+    // Clear client ref so its -changeTrackerStopped: won't be called again during -dealloc
+    id<TDChangeTrackerClient> client = _client;
+    _client = nil;
+    if ([client respondsToSelector: @selector(changeTrackerStopped:)])
+        [client changeTrackerStopped: self];    // note: this method might release/dealloc me
 }
 
 - (BOOL) receivedChange: (NSDictionary*)change {
