@@ -17,13 +17,13 @@
     @private
     TDChangeTracker* _changeTracker;
     NSString* _endingSequence;          // Where to stop in noncontinuous pull
-    NSMutableArray* _seenSequences;
-    TDSequenceMap* _pendingSequences;
-    NSMutableArray* _revsToPull;
-    NSMutableArray* _deletedRevsToPull;
-    NSMutableArray* _bulkRevsToPull;
-    NSUInteger _httpConnectionCount;
-    TDBatcher* _downloadsToInsert;
+    NSMutableArray* _seenSequences;     // Seq IDs received before _endingSequence is known
+    TDSequenceMap* _pendingSequences;   // Received but not yet copied into local DB
+    NSMutableArray* _revsToPull;        // Queue of TDPulledRevisions to download
+    NSMutableArray* _deletedRevsToPull; // Separate lower-priority of deleted TDPulledRevisions
+    NSMutableArray* _bulkRevsToPull;    // TDPulledRevisions that can be fetched in bulk
+    NSUInteger _httpConnectionCount;    // Number of active NSURLConnections
+    TDBatcher* _downloadsToInsert;      // Queue of TDPulledRevisions, with bodies, to insert in DB
 }
 
 @end

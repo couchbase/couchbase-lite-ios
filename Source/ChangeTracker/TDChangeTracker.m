@@ -43,18 +43,9 @@
                    client: (id<TDChangeTrackerClient>)client {
     NSParameterAssert(databaseURL);
     NSParameterAssert(client);
+    Assert([self class] != [TDChangeTracker class]); // abstract!
     self = [super init];
     if (self) {
-        if ([self class] == [TDChangeTracker class]) {
-            // TDChangeTracker is abstract -- instantiate concrete subclass instead:
-            [self release];
-            return [[TDConnectionChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                     mode: mode
-                                                                conflicts: includeConflicts
-                                                             lastSequence: lastSequenceID
-                                                                   client: client];
-        }
-    
         _databaseURL = [databaseURL retain];
         _client = client;
         _mode = mode;
@@ -148,18 +139,6 @@
     }
     [_client changeTrackerReceivedChange: change];
     self.lastSequenceID = seq;
-    return YES;
-}
-
-- (BOOL) receivedChunk: (NSData*)chunk {
-    LogTo(ChangeTrackerVerbose, @"CHUNK: %@ %@", self, [chunk my_UTF8ToString]);
-    if (chunk.length > 1) {
-        id change = [TDJSON JSONObjectWithData: chunk options: 0 error: NULL];
-        if (![self receivedChange: change]) {
-            Warn(@"Received unparseable change line from server: %@", [chunk my_UTF8ToString]);
-            return NO;
-        }
-    }
     return YES;
 }
 

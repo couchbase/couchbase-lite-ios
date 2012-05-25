@@ -17,7 +17,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDChangeTracker.h"
+#import "TDConnectionChangeTracker.h"
 #import "TDInternal.h"
 #import "Test.h"
 #import "MYURLUtils.h"
@@ -86,7 +86,7 @@ static void addTemporaryCredential(NSURL* url, NSString* realm,
 TestCase(TDChangeTracker) {
     TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
     NSURL* url = [NSURL URLWithString: @"http://snej.iriscouch.com/tdpuller_test1"];
-    TDChangeTracker* tracker = [[[TDChangeTracker alloc] initWithDatabaseURL: url mode:kContinuous conflicts: NO lastSequence: nil client: tester] autorelease];
+    TDChangeTracker* tracker = [[[TDConnectionChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: nil client: tester] autorelease];
     NSArray* expected = $array($dict({@"seq", $object(1)},
                                      {@"id", @"foo"},
                                      {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
@@ -108,7 +108,7 @@ TestCase(TDChangeTracker_SSL) {
     // The only difference here is the "https:" scheme in the URL.
     TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
     NSURL* url = [NSURL URLWithString: @"https://snej.iriscouch.com/tdpuller_test1"];
-    TDChangeTracker* tracker = [[[TDChangeTracker alloc] initWithDatabaseURL: url mode:kContinuous conflicts: NO lastSequence: 0 client:  tester] autorelease];
+    TDChangeTracker* tracker = [[[TDConnectionChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester] autorelease];
     NSArray* expected = $array($dict({@"seq", $object(1)},
                                      {@"id", @"foo"},
                                      {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
@@ -132,7 +132,7 @@ TestCase(TDSocketChangeTracker_Auth) {
     NSURL* url = [NSURL URLWithString: @"https://dummy@snej.iriscouch.com/tdpuller_test2_auth"];
     addTemporaryCredential(url, @"snejdom", @"dummy", @"dummy");
 
-    TDChangeTracker* tracker = [[[TDChangeTracker alloc] initWithDatabaseURL: url mode:kContinuous conflicts: NO lastSequence: 0 client:  tester] autorelease];
+    TDChangeTracker* tracker = [[[TDConnectionChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester] autorelease];
     NSArray* expected = $array($dict({@"seq", $object(1)},
                                      {@"id", @"something"},
                                      {@"changes", $array($dict({@"rev", @"1-967a00dff5e02add41819138abb3284d"}))}) );
