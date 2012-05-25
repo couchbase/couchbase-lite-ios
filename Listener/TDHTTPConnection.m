@@ -36,6 +36,20 @@
 }
 
 
+- (BOOL)isPasswordProtected:(NSString *)path {
+    return self.listener.requiresAuth;
+}
+
+- (NSString*) realm {
+    return self.listener.realm;
+}
+
+- (NSString*) passwordForUser: (NSString*)username {
+    LogTo(TDListener, @"Login attempted for user '%@'", username);
+    return [self.listener passwordForUser: username];
+}
+
+
 - (BOOL)supportsMethod:(NSString *)method atPath:(NSString *)path {
     return $equal(method, @"POST") || $equal(method, @"PUT") || $equal(method,  @"DELETE")
         || [super supportsMethod: method atPath: path];

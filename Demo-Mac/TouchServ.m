@@ -10,6 +10,7 @@
 #import <TouchDB/TouchDB.h>
 #import <TouchDB/TDRouter.h>
 #import <TouchDBListener/TDListener.h>
+#import "CollectionUtils.h"
 
 #if DEBUG
 #import "Logging.h"
@@ -61,15 +62,28 @@ int main (int argc, const char * argv[])
         // Start a listener socket:
         TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
         
-        if (argc >= 2 && strcmp(argv[1], "--readonly") == 0)
-            listener.readOnly = YES;
+        [listener setBonjourName: @"TouchServ" type: @"_touchdb._tcp."];
+        listener.TXTRecordDictionary = $dict({@"Key",
+                                             [@"value" dataUsingEncoding: NSUTF8StringEncoding]});
+        
+        for (int i = 1; i < argc; ++i) {
+            if (strcmp(argv[i], "--readonly") == 0) {
+                listener.readOnly = YES;
+            } else if (strcmp(argv[i], "--auth") == 0) {
+                srandomdev();
+                NSString* password = $sprintf(@"%x", random());
+                listener.passwords = [NSDictionary dictionaryWithObject: password
+                                                                 forKey: @"touchdb"];
+                Log(@"Auth required: user='touchdb', password='%@'", password);
+            }
+        }
         
         [listener start];
         
         Log(@"TouchServ %@ is listening%@ on port %d ... relax!",
             [TDRouter versionString],
             (listener.readOnly ? @" in read-only mode" : @""),
-            kPortNumber);
+            listener.port);
         
         [[NSRunLoop currentRunLoop] run];
         

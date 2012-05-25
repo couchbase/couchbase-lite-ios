@@ -24,7 +24,7 @@
 @implementation TDListener
 
 
-@synthesize readOnly=_readOnly;
+@synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm;
 
 
 - (id) initWithTDServer: (TDServer*)server port: (UInt16)port {
@@ -36,6 +36,7 @@
         _httpServer.tdServer = _tdServer;
         _httpServer.port = port;
         _httpServer.connectionClass = [TDHTTPConnection class];
+        self.realm = @"TouchDB";
     }
     return self;
 }
@@ -46,8 +47,20 @@
     [self stop];
     [_tdServer release];
     [_httpServer release];
+    [_realm release];
+    [_passwords release];
     [super dealloc];
 }
+
+
+- (void) setBonjourName: (NSString*)name type: (NSString*)type {
+    _httpServer.name = name;
+    _httpServer.type = type;
+}
+
+- (NSDictionary *)TXTRecordDictionary                   {return _httpServer.TXTRecordDictionary;}
+- (void)setTXTRecordDictionary:(NSDictionary *)dict     {_httpServer.TXTRecordDictionary = dict;}
+
 
 
 - (BOOL) start {
@@ -57,6 +70,22 @@
 
 - (void) stop {
     [_httpServer stop];
+}
+
+
+- (UInt16) port {
+    return _httpServer.listeningPort;
+}
+
+
+- (void) setPasswords: (NSDictionary*)passwords {
+    [_passwords autorelease];
+    _passwords = [passwords copy];
+    _requiresAuth = (_passwords != nil);
+}
+
+- (NSString*) passwordForUser:(NSString *)username {
+    return [_passwords objectForKey: username];
 }
 
 
