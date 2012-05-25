@@ -62,8 +62,7 @@ static void deleteRemoteDB(void) {
 }
 
 
-static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push,
-                         NSString* lastSequence, NSString* filter) {
+static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* filter) {
     NSURL* remote = [NSURL URLWithString: urlStr];
     TDReplicator* repl = [[[TDReplicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO] autorelease];
@@ -74,12 +73,13 @@ static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push,
     
     CAssert(repl.running);
     Log(@"Waiting for replicator to finish...");
-    while (repl.running) {
+    while (repl.running || repl.savingCheckpoint) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
     }
     CAssert(!repl.running);
+    CAssert(!repl.savingCheckpoint);
     CAssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     return repl.lastSequence;
@@ -124,7 +124,7 @@ TestCase(TDPusher) {
 #pragma unused(rev2)
     
     // Push them to the remote:
-    id lastSeq = replic8(db, kRemoteDBURLStr, YES, nil, @"filter");
+    id lastSeq = replic8(db, kRemoteDBURLStr, YES, @"filter");
     CAssertEqual(lastSeq, @"3");
     CAssertEq(filterCalls, 2);
     
@@ -139,13 +139,15 @@ TestCase(TDPuller) {
     TDDatabase* db = [server databaseNamed: @"db"];
     [db open];
     
-    id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil, nil);
-    CAssert($equal(lastSeq, @"2") || $equal(lastSeq, @"3"), @"Unexpected lastSeq '%@'", lastSeq);
+    id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
+    CAssertEqual(lastSeq, @"2");
     
     CAssertEq(db.documentCount, 2u);
     CAssertEq(db.lastSequence, 3);
     
-    replic8(db, kRemoteDBURLStr, NO, lastSeq, nil);
+    // Replicate again; should complete but add no revisions:
+    Log(@"Second replication, should get no more revs:");
+    replic8(db, kRemoteDBURLStr, NO, nil);
     CAssertEq(db.lastSequence, 3);
     
     TDRevision* doc = [db getDocumentWithID: @"doc1" revisionID: nil options: 0];
@@ -175,7 +177,7 @@ TestCase(TDPuller_FromCouchApp) {
     TDDatabase* db = [server databaseNamed: @"couchapp_helloworld"];
     [db open];
     
-    replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil, nil);
+    replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
     
     TDRevision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kTDIncludeAttachments];
     NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];

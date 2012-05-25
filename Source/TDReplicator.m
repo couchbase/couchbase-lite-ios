@@ -377,6 +377,11 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
+#if DEBUG
+@synthesize savingCheckpoint=_savingCheckpoint;  // for unit tests
+#endif
+
+
 - (void) saveLastSequence {
     if (!_lastSequenceChanged)
         return;
