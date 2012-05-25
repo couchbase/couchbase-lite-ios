@@ -16,7 +16,8 @@
 {
     @private
     TDChangeTracker* _changeTracker;
-    NSString* _endingSequence;
+    NSString* _endingSequence;          // Where to stop in noncontinuous pull
+    NSMutableArray* _seenSequences;
     TDSequenceMap* _pendingSequences;
     NSMutableArray* _revsToPull;
     NSMutableArray* _deletedRevsToPull;

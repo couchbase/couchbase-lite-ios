@@ -17,7 +17,6 @@
 
 #import "TDChangeTracker.h"
 #import "TDConnectionChangeTracker.h"
-#import "TDSocketChangeTracker.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
 
@@ -33,7 +32,7 @@
 @implementation TDChangeTracker
 
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
-@synthesize heartbeat=_heartbeat, error=_error;
+@synthesize limit=_limit, heartbeat=_heartbeat, error=_error;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders;
 
@@ -47,17 +46,13 @@
     self = [super init];
     if (self) {
         if ([self class] == [TDChangeTracker class]) {
+            // TDChangeTracker is abstract -- instantiate concrete subclass instead:
             [self release];
-            // TDConnectionChangeTracker doesn't work in continuous due to some bug in CFNetwork.
-            if (mode == kContinuous && [databaseURL.scheme.lowercaseString hasPrefix: @"http"])
-                self = [TDSocketChangeTracker alloc];
-            else
-                self = [TDConnectionChangeTracker alloc];
-            return [self initWithDatabaseURL: databaseURL
-                                        mode: mode
-                                   conflicts: includeConflicts
-                                lastSequence: lastSequenceID
-                                      client: client];
+            return [[TDConnectionChangeTracker alloc] initWithDatabaseURL: databaseURL
+                                                                     mode: mode
+                                                                conflicts: includeConflicts
+                                                             lastSequence: lastSequenceID
+                                                                   client: client];
         }
     
         _databaseURL = [databaseURL retain];
@@ -83,6 +78,8 @@
         [path appendString: @"&style=all_docs"];
     if (_lastSequenceID)
         [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
+    if (_limit > 0)
+        [path appendFormat: @"&limit=%u", _limit];
     if (_filterName) {
         [path appendFormat: @"&filter=%@", TDEscapeURLParam(_filterName)];
         for (NSString* key in _filterParameters) {
@@ -155,7 +152,7 @@
 }
 
 - (BOOL) receivedChunk: (NSData*)chunk {
-    LogTo(ChangeTracker, @"CHUNK: %@ %@", self, [chunk my_UTF8ToString]);
+    LogTo(ChangeTrackerVerbose, @"CHUNK: %@ %@", self, [chunk my_UTF8ToString]);
     if (chunk.length > 1) {
         id change = [TDJSON JSONObjectWithData: chunk options: 0 error: NULL];
         if (![self receivedChange: change]) {
@@ -166,19 +163,19 @@
     return YES;
 }
 
-- (BOOL) receivedPollResponse: (NSData*)body {
+- (NSInteger) receivedPollResponse: (NSData*)body {
     if (!body)
-        return NO;
+        return -1;
     id changeObj = [TDJSON JSONObjectWithData: body options: 0 error: NULL];
     NSDictionary* changeDict = $castIf(NSDictionary, changeObj);
     NSArray* changes = $castIf(NSArray, [changeDict objectForKey: @"results"]);
     if (!changes)
-        return NO;
+        return -1;
     for (NSDictionary* change in changes) {
         if (![self receivedChange: change])
-            return NO;
+            return -1;
     }
-    return YES;
+    return changes.count;
 }
 
 @end

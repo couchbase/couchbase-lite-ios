@@ -203,8 +203,6 @@
 		27B0B797149290AB00A817AD /* TDChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* TDChangeTracker.m */; };
 		27B0B798149290AB00A817AD /* TDConnectionChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B792149290AB00A817AD /* TDConnectionChangeTracker.h */; };
 		27B0B799149290AB00A817AD /* TDConnectionChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */; };
-		27B0B79A149290AB00A817AD /* TDSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */; };
-		27B0B79B149290AB00A817AD /* TDSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */; };
 		27B0B79E1492932800A817AD /* TDBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B79C1492932700A817AD /* TDBase64.h */; };
 		27B0B79F1492932800A817AD /* TDBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* TDBase64.m */; };
 		27B0B7AA1492B83B00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
@@ -225,7 +223,6 @@
 		27B0B7D71492B8A200A817AD /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
 		27B0B7D81492B8A200A817AD /* TDChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* TDChangeTracker.m */; };
 		27B0B7D91492B8A200A817AD /* TDConnectionChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */; };
-		27B0B7DA1492B8A200A817AD /* TDSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */; };
 		27B0B7DB1492B8A200A817AD /* TDBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* TDBase64.m */; };
 		27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
 		27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747211CD51A200E9A2AB /* FMResultSet.m */; };
@@ -601,8 +598,6 @@
 		27B0B791149290AB00A817AD /* TDChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDChangeTracker.m; sourceTree = "<group>"; };
 		27B0B792149290AB00A817AD /* TDConnectionChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDConnectionChangeTracker.h; sourceTree = "<group>"; };
 		27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDConnectionChangeTracker.m; sourceTree = "<group>"; };
-		27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDSocketChangeTracker.h; sourceTree = "<group>"; };
-		27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDSocketChangeTracker.m; sourceTree = "<group>"; };
 		27B0B79C1492932700A817AD /* TDBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBase64.h; sourceTree = "<group>"; };
 		27B0B79D1492932700A817AD /* TDBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBase64.m; sourceTree = "<group>"; };
 		27B0B7A91492B83B00A817AD /* libTouchDB.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTouchDB.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1151,8 +1146,6 @@
 				27B0B791149290AB00A817AD /* TDChangeTracker.m */,
 				27B0B792149290AB00A817AD /* TDConnectionChangeTracker.h */,
 				27B0B793149290AB00A817AD /* TDConnectionChangeTracker.m */,
-				27B0B794149290AB00A817AD /* TDSocketChangeTracker.h */,
-				27B0B795149290AB00A817AD /* TDSocketChangeTracker.m */,
 			);
 			path = ChangeTracker;
 			sourceTree = "<group>";
@@ -1354,7 +1347,6 @@
 				279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */,
 				27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */,
 				27B0B798149290AB00A817AD /* TDConnectionChangeTracker.h in Headers */,
-				27B0B79A149290AB00A817AD /* TDSocketChangeTracker.h in Headers */,
 				27B0B79E1492932800A817AD /* TDBase64.h in Headers */,
 				27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */,
 				279906E3149A65B8003D4338 /* TDRemoteRequest.h in Headers */,
@@ -1904,7 +1896,6 @@
 				27B0B7801491E76200A817AD /* TDView_Tests.m in Sources */,
 				27B0B797149290AB00A817AD /* TDChangeTracker.m in Sources */,
 				27B0B799149290AB00A817AD /* TDConnectionChangeTracker.m in Sources */,
-				27B0B79B149290AB00A817AD /* TDSocketChangeTracker.m in Sources */,
 				27B0B79F1492932800A817AD /* TDBase64.m in Sources */,
 				27731F001493FA3100815D67 /* TDBlobStore.m in Sources */,
 				279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
@@ -2020,7 +2011,6 @@
 				27B0B7D71492B8A200A817AD /* TDPusher.m in Sources */,
 				27B0B7D81492B8A200A817AD /* TDChangeTracker.m in Sources */,
 				27B0B7D91492B8A200A817AD /* TDConnectionChangeTracker.m in Sources */,
-				27B0B7DA1492B8A200A817AD /* TDSocketChangeTracker.m in Sources */,
 				27B0B7DB1492B8A200A817AD /* TDBase64.m in Sources */,
 				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
 				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,

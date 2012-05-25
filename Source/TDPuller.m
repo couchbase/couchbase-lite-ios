@@ -30,6 +30,11 @@
 // Maximum number of revisions to fetch simultaneously
 #define kMaxOpenHTTPConnections 8
 
+// ?limit= param for _changes feed: max # of revs to get in one batch. Smaller values reduce
+// latency since we can't parse till the entire result arrives in longpoll mode. But larger
+// values are more efficient because they use fewer HTTP requests.
+#define kChangesFeedLimit 100u
+
 // Maximum number of revs to fetch in a single bulk request
 #define kMaxRevsToGetInBulk 50u
 
@@ -55,12 +60,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_downloadsToInsert release];
     [_pendingSequences release];
     [_endingSequence release];
+    [_seenSequences release];
     [super dealloc];
 }
 
 
 - (void) beginReplicating {
-    Assert(!_changeTracker);
     if (!_downloadsToInsert) {
         // Note: This is a ref cycle, because the block has a (retained) reference to 'self',
         // and _downloadsToInsert retains the block, and of course I retain _downloadsToInsert.
@@ -70,31 +75,40 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                   }];
     }
     
-    // Get the current sequence number so we know the pull has "caught up":
+    // Get the current sequence number so we know when the pull has "caught up":
+    [self asyncTaskStarted];
     [self sendAsyncRequest: @"GET" path: @"/" body: nil
               onCompletion:^(id result, NSError *error) {
-                  _endingSequence = [[[result objectForKey: @"update_seq"] description] copy];
-                  LogTo(Sync, @"Ending sequence = %@", _endingSequence);
-                  [self checkIfCaughtUp: _lastSequence];
+                  if (error)
+                      self.error = error;
+                  else
+                      [self gotEndingSequence: [[result objectForKey: @"update_seq"] description]];
+                  [self asyncTasksFinished: 1];
               }];
     
     [_pendingSequences release];
     _pendingSequences = [[TDSequenceMap alloc] init];
     
-    // Default to continuous mode because it lets us parse and process changes one sequence at a
-    // time, instead of having to wait and parse the entire list as one JSON object. But allow
-    // the client to force longpoll mode, since apparently some cell networks have trouble with
-    // the continuous feed (see <https://github.com/couchbaselabs/TouchDB-iOS/issues/72>)
-    TDChangeTrackerMode mode = kContinuous;
-    if ([[_options objectForKey: @"feed"] isEqual: @"longpoll"])
-        mode = kLongPoll;
+    _seenSequences = [[NSMutableArray alloc] init];
+    if (_lastSequence)
+        [_seenSequences addObject: _lastSequence];
     
-    LogTo(SyncVerbose, @"%@ starting ChangeTracker with since=%@", self, _lastSequence);
+    [self startChangeTracker];
+}
+
+
+- (void) startChangeTracker {
+    Assert(!_changeTracker);
+    TDChangeTrackerMode mode = _continuous ? kLongPoll : kOneShot;
+    
+    LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[TDChangeTracker alloc] initWithDatabaseURL: _remote
                                                              mode: mode
                                                         conflicts: YES
                                                      lastSequence: _lastSequence
                                                            client: self];
+    // Limit the number of changes to return, so we can parse the feed in parts:
+    _changeTracker.limit = kChangesFeedLimit;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
     unsigned heartbeat = $castIf(NSNumber, [_options objectForKey: @"heartbeat"]).unsignedIntValue;
@@ -122,8 +136,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) stop {
     if (!_running)
         return;
-    _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
-    [_changeTracker stop];
+    if (_changeTracker) {
+        _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
+        [_changeTracker stop];
+        if (!_continuous)
+            [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
+    }
     setObj(&_changeTracker, nil);
     setObj(&_revsToPull, nil);
     setObj(&_deletedRevsToPull, nil);
@@ -182,15 +200,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-- (void) checkIfCaughtUp: (NSString*)sequence {
-    if (!$equal(sequence, _endingSequence))
-        return;
-    LogTo(Sync, @"** Caught up, at sequence %@", _endingSequence);
-    if (!_continuous)
-        [_changeTracker stop];
-}
-
-
+// The change tracker reached EOF or an error.
 - (void) changeTrackerStopped:(TDChangeTracker *)tracker {
     if (tracker != _changeTracker)
         return;
@@ -200,16 +210,53 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_changeTracker release];
     _changeTracker = nil;
     
-    if (TDIsOfflineError(error))
-        [self goOffline];
-    else if (!_error && error)
-        self.error = error;
+    if (error) {
+        if (TDIsOfflineError(error))
+            [self goOffline];
+        else if (!_error)
+            self.error = error;
+    }
     
     [_batcher flush];
-
     if (!_continuous)
-        [self asyncTasksFinished: 1];
+        [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
 }
+
+
+#pragma mark - CAUGHT-UP CHECK (FOR NON-CONTINUOUS REPLICATION):
+
+
+// Check whether 'sequence' has reached the _endingSequence, and if so, stop.
+- (void) checkIfCaughtUp: (NSString*)sequence {
+    if (!_endingSequence) {
+        // Don't know the ending sequence yet, so remember all sequences we've seen:
+        [_seenSequences addObject: sequence];
+    } else if ($equal(sequence, _endingSequence)) {
+        [self caughtUp];
+    }
+}
+
+// Found out what the ending sequence is. Remember it, and check if it's already been received:
+- (void) gotEndingSequence: (NSString*)endingSequence {
+    LogTo(Sync, @"Ending sequence = %@", endingSequence);
+    if (_endingSequence)
+        return;
+    _endingSequence = [endingSequence copy];
+    if ([_seenSequences containsObject: _endingSequence]) 
+        [self caughtUp];
+    setObj(&_seenSequences, nil);
+}
+
+
+- (void) caughtUp {
+    LogTo(Sync, @"** Caught up, at sequence %@", _endingSequence);
+    if (!_continuous)
+        [_changeTracker stop];
+    // Might be useful to notify this fact to observers even in a continuous replication.
+}
+
+
+#pragma mark - REVISION CHECKING:
 
 
 // Process a bunch of remote revisions from the _changes feed at once
@@ -468,6 +515,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 @end
 
 
+
+#pragma mark -
 
 @implementation TDPulledRevision
 

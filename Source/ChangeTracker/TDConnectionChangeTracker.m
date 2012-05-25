@@ -79,7 +79,7 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    LogTo(ChangeTracker, @"%@: Got %lu bytes", self, (unsigned long)data.length);
+    LogTo(ChangeTrackerVerbose, @"%@: Got %lu bytes", self, (unsigned long)data.length);
     [_inputBuffer appendData: data];
     
     if (_mode == kContinuous) {
@@ -111,13 +111,16 @@
         // In non-continuous mode, now parse the entire response as a JSON document:
         NSData* input = [_inputBuffer retain];
         LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
-        BOOL responseOK = [self receivedPollResponse: input];
-        if (!responseOK)
+        NSInteger numChanges = [self receivedPollResponse: input];
+        if (numChanges < 0)
             [self setUpstreamError: @"Unparseable server response"];
         [input release];
         
         [self clearConnection];
-        if (_mode == kLongPoll && responseOK)
+        
+        // Poll again if there was no error, and either we're in longpoll mode or it looks like we
+        // ran out of changes due to a _limit rather than because we hit the end.
+        if (numChanges > 0 && (_mode == kLongPoll || numChanges == (NSInteger)_limit))
             [self start];       // Next poll...
         else
             [self stopped];

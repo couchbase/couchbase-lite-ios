@@ -39,6 +39,7 @@ typedef enum TDChangeTrackerMode {
     id<TDChangeTrackerClient> _client;
     TDChangeTrackerMode _mode;
     id _lastSequenceID;
+    unsigned _limit;
     NSError* _error;
     BOOL _includeConflicts;
     NSString* _filterName;
@@ -64,6 +65,7 @@ typedef enum TDChangeTrackerMode {
 
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
+@property (nonatomic) unsigned limit;
 @property (nonatomic) NSTimeInterval heartbeat;
 
 - (BOOL) start;
@@ -74,7 +76,7 @@ typedef enum TDChangeTrackerMode {
 - (void) setUpstreamError: (NSString*)message;
 - (BOOL) receivedChange: (NSDictionary*)change;
 - (BOOL) receivedChunk: (NSData*)chunk;
-- (BOOL) receivedPollResponse: (NSData*)body;
+- (NSInteger) receivedPollResponse: (NSData*)body;
 - (void) stopped; // override this
 
 @end
