@@ -44,13 +44,26 @@
     _running = YES;
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     while (_running && _changes.count < expectedChanges.count
-                    && [timeout timeIntervalSinceNow] > 0
-                    && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                                beforeDate: timeout])
+           && [timeout timeIntervalSinceNow] > 0
+           && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                       beforeDate: timeout])
         ;
     [tracker stop];
     AssertNil(tracker.error);
     CAssertEqual(_changes, expectedChanges);
+}
+
+- (void) run: (TDChangeTracker*)tracker expectingError: (NSError*)error {
+    [tracker start];
+    _running = YES;
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 60];
+    while (_running && [timeout timeIntervalSinceNow] > 0
+           && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                       beforeDate: timeout])
+        ;
+    Assert(!_running, @"-changeTrackerStoped: wasn't called");
+    CAssertEqual(tracker.error.domain, error.domain);
+    CAssertEq(tracker.error.code, error.code);
 }
 
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
@@ -126,7 +139,7 @@ TestCase(TDChangeTracker_SSL) {
 }
 
 
-TestCase(TDSocketChangeTracker_Auth) {
+TestCase(TDChangeTracker_Auth) {
     // This database requires authentication to access at all.
     TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
     NSURL* url = [NSURL URLWithString: @"https://dummy@snej.iriscouch.com/tdpuller_test2_auth"];
@@ -139,5 +152,16 @@ TestCase(TDSocketChangeTracker_Auth) {
     [tester run: tracker expectingChanges: expected];
 }
 
+
+#if 0 // This test takes 31 seconds to run, so let's leave it turned off normally
+TestCase(TDChangeTracker_Retry) {
+    // Intentionally connect to a nonexistent server to see the retry logic.
+    TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
+    NSURL* url = [NSURL URLWithString: @"https://localhost:5999/db"];
+    
+    TDChangeTracker* tracker = [[[TDConnectionChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester] autorelease];
+    [tester run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain code: -1004 userInfo: nil]];
+}
+#endif
 
 #endif // DEBUG

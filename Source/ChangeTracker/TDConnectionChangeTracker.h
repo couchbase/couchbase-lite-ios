@@ -16,6 +16,7 @@
     @private
     NSURLConnection* _connection;
     NSMutableData* _inputBuffer;
+    unsigned _retryCount;
 }
 
 @end

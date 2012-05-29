@@ -20,6 +20,10 @@
 #import "TDStatus.h"
 
 
+#define kMaxRetries 4               // Number of retry attempts on failure to open TCP connection
+#define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
+
+
 @implementation TDConnectionChangeTracker
 
 - (BOOL) start {
@@ -57,14 +61,16 @@
 
 
 - (void) stop {
-    if (_connection) {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(start)
+                                               object: nil];    // cancel pending retries
+    if (_connection)
         [_connection cancel];
-        [super stop];
-    }
+    [super stop];
 }
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+    _retryCount = 0;  // successful TCP connection
     TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(ChangeTracker, @"%@: Got response, status %d", self, status);
     if (TDStatusIsError(status)) {
@@ -80,9 +86,19 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    LogTo(ChangeTracker, @"%@: Got error %@", self, error);
-    self.error = error;
-    [self stopped];
+    // This is called for an error with the socket, _not_ an HTTP error status.
+    // In this case we should retry, since the network might be flaky.
+    if (++_retryCount <= kMaxRetries) {
+        [self clearConnection];
+        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << (_retryCount-1));
+        Log(@"%@: Connection error, retrying in %.1f sec: %@",
+            self, retryDelay, error.localizedDescription);
+        [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
+    } else {
+        Warn(@"%@: Can't connect, giving up: %@", self, error);
+        self.error = error;
+        [self stopped];
+    }
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
