@@ -580,7 +580,7 @@ TestCase(TDRouter_RevsDiff) {
                    {@"99999", $array(@"6-six")}),
              kTDStatusOK,
              $dict({@"11111", $dict({@"missing", $array(@"3-foo")},
-                                    {@"possible_ancestors", $array(doc1r1ID, doc1r2ID)})},
+                                    {@"possible_ancestors", $array(doc1r2ID, doc1r1ID)})},
                    {@"33333", $dict({@"missing", $array(@"10-bar")},
                                     {@"possible_ancestors", $array(doc3r1ID)})},
                    {@"99999", $dict({@"missing", $array(@"6-six")})}

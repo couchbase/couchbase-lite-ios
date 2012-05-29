@@ -629,15 +629,18 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
 }
 
 
-- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev {
+- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev limit: (unsigned)limit {
     int generation = rev.generation;
     if (generation <= 1)
         return nil;
     SInt64 docNumericID = [self getDocNumericID: rev.docID];
     if (docNumericID <= 0)
         return nil;
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid FROM revs WHERE doc_id=? and revid < ?",
-                                           $object(docNumericID), $sprintf(@"%d-", generation)];
+    int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
+    FMResultSet* r = [_fmdb executeQuery:
+                      @"SELECT revid FROM revs WHERE doc_id=? and revid < ? and deleted=0"
+                       " ORDER BY sequence DESC LIMIT ?",
+                      $object(docNumericID), $sprintf(@"%d-", generation), $object(sqlLimit)];
     return revIDsFromResultSet(r);
 }
 

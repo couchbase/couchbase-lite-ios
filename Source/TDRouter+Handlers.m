@@ -350,7 +350,7 @@
             }
         }
         TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
-        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev];
+        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0];
         [rev release];
         if (ancestors)
             [docInfo setObject: ancestors forKey: @"possible_ancestors"];

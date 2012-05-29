@@ -38,6 +38,9 @@
 // Maximum number of revs to fetch in a single bulk request
 #define kMaxRevsToGetInBulk 50u
 
+// Maximum number of revision IDs to pass in an "?atts_since=" query param
+#define kMaxNumberOfAttsSince 50u
+
 
 @interface TDPuller () <TDChangeTrackerClient>
 @end
@@ -357,7 +360,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"/%@?rev=%@&revs=true&attachments=true",
                               TDEscapeID(rev.docID), TDEscapeID(rev.revID));
-    NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev];
+    NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev limit: kMaxNumberOfAttsSince];
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     

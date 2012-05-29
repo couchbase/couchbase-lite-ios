@@ -134,8 +134,9 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 - (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID;
 
-/** Returns all known revision IDs of the same document, that have a lower generation number. */
-- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev;
+/** Returns known revision IDs of the same document, that have a lower generation number. */
+- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev
+                                      limit: (unsigned)limit;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
 - (NSString*) findCommonAncestorOf: (TDRevision*)rev withRevIDs: (NSArray*)revIDs;

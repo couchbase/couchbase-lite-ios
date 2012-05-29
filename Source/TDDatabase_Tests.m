@@ -806,8 +806,11 @@ TestCase(TDDatabase_FindMissingRevisions) {
     CAssertEqual(revs.allRevisions, $array(revToFind1, revToFind3));
     
     // Check the possible ancestors:
-    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1], $array(doc1r1.revID, doc1r2.revID));
-    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind3], nil);
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 0],
+                 $array(doc1r2.revID, doc1r1.revID));
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 1],
+                 $array(doc1r2.revID));
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind3 limit: 0], nil);
     
 }
 
