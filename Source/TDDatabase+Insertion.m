@@ -206,6 +206,11 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                           current: (BOOL)current
                              JSON: (NSData*)json
 {
+    // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
+    // has been lost due to compaction. Instead, store an empty zero-length blob.
+    if (json == nil)
+        json = [NSData data];
+    
     if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
                                 "VALUES (?, ?, ?, ?, ?, ?)",
                                $object(docNumericID),
