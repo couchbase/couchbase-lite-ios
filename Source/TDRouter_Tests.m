@@ -571,7 +571,8 @@ TestCase(TDRouter_RevsDiff) {
     NSString* doc1r2ID = [doc1r2 objectForKey: @"rev"];
     SendBody(server, @"PUT", @"/db/22222", $dict({@"_rev", doc2r1ID}), kTDStatusCreated,nil);
 
-    SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r2ID}), kTDStatusCreated,nil);
+    NSDictionary* doc1r3 = SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r2ID}), kTDStatusCreated,nil);
+    NSString* doc1r3ID = [doc1r3 objectForKey: @"rev"];
     
     SendBody(server, @"POST", @"/db/_revs_diff",
              $dict({@"11111", $array(doc1r2ID, @"3-foo")},
@@ -581,6 +582,23 @@ TestCase(TDRouter_RevsDiff) {
              kTDStatusOK,
              $dict({@"11111", $dict({@"missing", $array(@"3-foo")},
                                     {@"possible_ancestors", $array(doc1r2ID, doc1r1ID)})},
+                   {@"33333", $dict({@"missing", $array(@"10-bar")},
+                                    {@"possible_ancestors", $array(doc3r1ID)})},
+                   {@"99999", $dict({@"missing", $array(@"6-six")})}
+                   ));
+    
+    // Compact the database -- this will null out the JSON of doc1r1 & doc1r2,
+    // and they won't be returned as possible ancestors anymore.
+    Send(server, @"POST", @"/db/_compact", kTDStatusAccepted, nil);
+    
+    SendBody(server, @"POST", @"/db/_revs_diff",
+             $dict({@"11111", $array(doc1r2ID, @"4-foo")},
+                   {@"22222", $array(doc2r1ID)},
+                   {@"33333", $array(@"10-bar")},
+                   {@"99999", $array(@"6-six")}),
+             kTDStatusOK,
+             $dict({@"11111", $dict({@"missing", $array(@"4-foo")},
+                                    {@"possible_ancestors", $array(doc1r3ID)})},
                    {@"33333", $dict({@"missing", $array(@"10-bar")},
                                     {@"possible_ancestors", $array(doc3r1ID)})},
                    {@"99999", $dict({@"missing", $array(@"6-six")})}

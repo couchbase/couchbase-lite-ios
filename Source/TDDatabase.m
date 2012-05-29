@@ -467,7 +467,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                   options: (TDContentOptions)options
 {
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
-    if (json)
+    if (json.length > 0)
         rev.asJSON = [TDJSON appendDictionary: extra toJSONDictionaryData: json];
     else
         rev.properties = extra;
@@ -638,7 +638,8 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
         return nil;
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
     FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT revid FROM revs WHERE doc_id=? and revid < ? and deleted=0"
+                      @"SELECT revid FROM revs WHERE doc_id=? and revid < ?"
+                       " and deleted=0 and json not null"
                        " ORDER BY sequence DESC LIMIT ?",
                       $object(docNumericID), $sprintf(@"%d-", generation), $object(sqlLimit)];
     return revIDsFromResultSet(r);
