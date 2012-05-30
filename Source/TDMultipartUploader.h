@@ -13,7 +13,7 @@
 @interface TDMultipartUploader : TDRemoteRequest
 {
     @private
-    TDMultipartWriter* _streamer;
+    TDMultipartWriter* _multipartWriter;
 }
 
 - (id) initWithURL: (NSURL *)url

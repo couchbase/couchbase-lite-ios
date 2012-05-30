@@ -22,12 +22,16 @@
 
 
 @interface TDMultiStreamWriter () <NSStreamDelegate>
+@property (readwrite, retain) NSError* error;
 - (BOOL) openNextInput;
 - (BOOL) refillBuffer;
 @end
 
 
 @implementation TDMultiStreamWriter
+
+
+@synthesize error=_error, length=_length;
 
 
 - (id)initWithBufferSize: (NSUInteger)bufferSize {
@@ -54,24 +58,37 @@
     [self close];
     [_output release];
     [_input release];
+    [_error release];
     [super dealloc];
 }
 
 
-- (void) addStream: (NSInputStream*)stream {
+- (void) addStream: (NSInputStream*)stream length: (UInt64)length {
     [_inputs addObject: stream];
+    if (_length >= 0)
+        _length += length;
+}
+
+- (void) addStream: (NSInputStream*)stream {
+    LogTo(TDMultiStreamWriter, @"%@: adding stream of unknown length: %@", self, stream);
+    [_inputs addObject: stream];
+    _length = -1;  // length is now unknown
 }
 
 - (void) addData: (NSData*)data {
     if (data.length > 0)
-        [self addStream: [NSInputStream inputStreamWithData: data]];
+        [self addStream: [NSInputStream inputStreamWithData: data] length: data.length];
 }
 
 - (BOOL) addFile: (NSString*)path {
+    NSDictionary* info = [[NSFileManager defaultManager] attributesOfItemAtPath: path error: NULL];
+    if (!info)
+        return NO;
+
     NSInputStream* input = [NSInputStream inputStreamWithFileAtPath: path];
     if (!input)
         return NO;
-    [self addStream: input];
+    [self addStream: input length: [info fileSize]];
     return YES;
 }
 
@@ -97,7 +114,7 @@
     Assert(!_output, @"Already open");
     LogTo(TDMultiStreamWriter, @"%@: Open!", self);
 #ifdef GNUSTEP
-    Assert(NO, @"Unimplemented CFStreamCreateBoundPair");   // TODO: Add this to CNUstep base fw
+    Assert(NO, @"Unimplemented CFStreamCreateBoundPair");   // TODO: Add this to GNUstep base fw
 #else
     CFStreamCreateBoundPair(NULL, (CFReadStreamRef*)&_input, (CFWriteStreamRef*)&_output,
                             _bufferSize);
@@ -135,6 +152,7 @@
 #pragma mark - I/O:
 
 
+// Close the current input stream and open the next one, assigning it to _currentInput.
 - (BOOL) openNextInput {
     if (_currentInput) {
         [_currentInput close];
@@ -150,6 +168,16 @@
 }
 
 
+// Set my .error property from 'stream's error.
+- (void) setErrorFrom: (NSStream*)stream {
+    NSError* error = stream.streamError;
+    Warn(@"%@: Error on %@: %@", self, stream, error);
+    if (error && !_error)
+        self.error = error;
+}
+
+
+// Read up to 'len' bytes from the aggregated input streams to 'buffer'.
 - (NSInteger) read:(uint8_t *)buffer maxLength:(NSUInteger)len {
     NSInteger totalBytesRead = 0;
     while (len > 0 && _currentInput) {
@@ -160,25 +188,20 @@
             totalBytesRead += bytesRead;
             buffer += bytesRead;
             len -= bytesRead;
-            if (_currentInput.streamStatus != NSStreamStatusAtEnd) {
-                // Not at EOF on this stream, but we shouldn't call -read: again right away
-                // or it might block.
-                break;
-            }
-        } else if (bytesRead < 0) {
+        } else if (bytesRead == 0) {
+            // At EOF on stream, so go to the next one:
+            [self openNextInput];
+        } else {
             // There was a read error:
-            Warn(@"%@: Read error on %@", self, _currentInput);
+            [self setErrorFrom: _currentInput];
             return bytesRead;
         }
-
-        // At EOF on stream, so go to the next one:
-        if (![self openNextInput] || !_currentInput.hasBytesAvailable)
-            break;
     }
     return totalBytesRead;
 }
 
 
+// Read enough bytes from the aggregated input to refill my _buffer. Returns success/failure.
 - (BOOL) refillBuffer {
     LogTo(TDMultiStreamWriter, @"%@:   Refilling buffer", self);
     NSInteger bytesRead = [self read: _buffer+_bufferLength maxLength: _bufferSize-_bufferLength];
@@ -193,12 +216,16 @@
 }
 
 
+// Write from my _buffer to _output, then refill _buffer if it's not halfway full.
 - (BOOL) writeToOutput {
     Assert(_bufferLength > 0);
     NSInteger bytesWritten = [_output write: _buffer maxLength: _bufferLength];
     LogTo(TDMultiStreamWriter, @"%@:   Wrote %d (of %u) bytes to _output", self, bytesWritten, _bufferLength);
-    if (bytesWritten <= 0)
+    if (bytesWritten <= 0) {
+        [self setErrorFrom: _output];
         return NO;
+    }
+    _totalBytesWritten += bytesWritten;
     Assert(bytesWritten <= (NSInteger)_bufferLength);
     _bufferLength -= bytesWritten;
     memmove(_buffer, _buffer+bytesWritten, _bufferLength);
@@ -209,6 +236,7 @@
 }
 
 
+// Handle an async event on my _output stream -- basically, write to it when it has room.
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)event {
     if (stream != _output)
         return;
@@ -222,6 +250,9 @@
         case NSStreamEventHasSpaceAvailable:
             if (![self writeToOutput]) {
                 LogTo(TDMultiStreamWriter, @"%@:   At end -- closing _output!", self);
+                if (_totalBytesWritten != _length && !_error)
+                    Warn(@"%@ wrote %lld bytes, but expected length was %lld!",
+                         _totalBytesWritten, _length);
                 [self close];
             }
             break;
@@ -250,10 +281,13 @@
 #pragma mark - UNIT TESTS:
 #if DEBUG
 
+#define kExpectedOutputString @"<part the first, let us make it a bit longer for greater interest><2nd part, again unnecessarily prolonged for testing purposes beyond any reasonable length...>"
+
 static TDMultiStreamWriter* createWriter(unsigned bufSize) {
     TDMultiStreamWriter* stream = [[[TDMultiStreamWriter alloc] initWithBufferSize: bufSize] autorelease];
     [stream addData: [@"<part the first, let us make it a bit longer for greater interest>" dataUsingEncoding: NSUTF8StringEncoding]];
     [stream addData: [@"<2nd part, again unnecessarily prolonged for testing purposes beyond any reasonable length...>" dataUsingEncoding: NSUTF8StringEncoding]];
+    CAssertEq(stream.length, (SInt64)kExpectedOutputString.length);
     return stream;
 }
 
@@ -262,7 +296,7 @@ TestCase(TDMultiStreamWriter_Sync) {
         Log(@"Buffer size = %u", bufSize);
         TDMultiStreamWriter* mp = createWriter(bufSize);
         NSData* outputBytes = [mp allOutput];
-        CAssertEqual(outputBytes.my_UTF8ToString, @"<part the first, let us make it a bit longer for greater interest><2nd part, again unnecessarily prolonged for testing purposes beyond any reasonable length...>");
+        CAssertEqual(outputBytes.my_UTF8ToString, kExpectedOutputString);
     }
 }
 

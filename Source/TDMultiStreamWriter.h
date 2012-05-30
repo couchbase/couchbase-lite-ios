@@ -1,5 +1,5 @@
 //
-//  TDMultiInputStream.h
+//  TDMultiStreamWriter.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 2/3/12.
@@ -20,14 +20,26 @@
     NSUInteger _bufferSize, _bufferLength;
     NSOutputStream* _output;
     NSInputStream* _input;
+    NSError* _error;
+    @protected
+    SInt64 _length;
+    SInt64 _totalBytesWritten;
 }
 
+- (void) addStream: (NSInputStream*)stream length: (UInt64)length;
 - (void) addStream: (NSInputStream*)stream;
 - (void) addData: (NSData*)data;
 - (BOOL) addFile: (NSString*)path;
 
+/** Total length of the stream.
+    This is just computed by adding the values passed to -addStream:length:, and the lengths of the NSData objects and files added.
+    If -addStream: has been called (the version without length:) the length is unknown and will be returned as -1.
+    (Many clients won't care about the length, but TDMultipartUploader does.) */
+@property (readonly) SInt64 length;
+
 /** Returns an input stream; reading from this will return the contents of all added streams in sequence.
-    This stream can be set as the HTTPBodyStream of an NSURLRequest. */
+    This stream can be set as the HTTPBodyStream of an NSURLRequest.
+    It is the caller's responsibility to close the returned stream. */
 - (NSInputStream*) openForInputStream;
 
 /** Associates an output stream; the data from all of the added streams will be written to the output, asynchronously. */
@@ -36,6 +48,8 @@
 - (void) close;
 
 @property (readonly) BOOL isOpen;
+
+@property (readonly, retain) NSError* error;
 
 /** Convenience method that opens an output stream, collects all the data, and returns it. */
 - (NSData*) allOutput;

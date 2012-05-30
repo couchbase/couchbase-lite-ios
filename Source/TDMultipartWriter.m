@@ -44,7 +44,7 @@
 }
 
 
-@synthesize boundary=_boundary, length=_length;
+@synthesize boundary=_boundary;
 
 
 - (NSString*) contentType {
@@ -54,11 +54,6 @@
 
 - (void) setNextPartsHeaders: (NSDictionary*)headers {
     setObj(&_nextPartsHeaders, headers);
-}
-
-
-- (void) addStream:(NSInputStream *)partStream {
-    [self addStream: partStream length: 0];
 }
 
 
@@ -73,33 +68,16 @@
         separator = [headers dataUsingEncoding: NSUTF8StringEncoding];
         [self setNextPartsHeaders: nil];
     }
-    [super addStream: [NSInputStream inputStreamWithData: separator]];
-    [super addStream: partStream];
-    _length += separator.length + length;
-}
-
-- (void) addData: (NSData*)data {
-    [super addData: data];
-    _length += data.length;
+    [super addStream: [NSInputStream inputStreamWithData: separator] length: separator.length];
+    [super addStream: partStream length: length];
 }
 
 
-- (BOOL) addFile: (NSString*)path {
-    NSDictionary* info = [[NSFileManager defaultManager] attributesOfItemAtPath: path error: NULL];
-    if (!info)
-        return NO;
-    if (![super addFile: path])
-        return NO;
-    _length += [info fileSize];
-    return YES;
-}
-     
-     
 - (void) opened {
     // Append the final boundary:
     NSString* trailerStr = $sprintf(@"\r\n--%@--", _boundary);
     NSData* trailerData = [trailerStr dataUsingEncoding: NSUTF8StringEncoding];
-    [super addStream: [NSInputStream inputStreamWithData: trailerData]];
+    [super addStream: [NSInputStream inputStreamWithData: trailerData] length: 0];
     // _length was already adjusted for this in -init
     
     [super opened];
@@ -130,7 +108,7 @@ TestCase(TDMultipartWriter) {
         [mp addData: [@"<part the first>" dataUsingEncoding: NSUTF8StringEncoding]];
         [mp setNextPartsHeaders: $dict({@"Content-Type", @"something"})];
         [mp addData: [@"<2nd part>" dataUsingEncoding: NSUTF8StringEncoding]];
-        CAssertEq(mp.length, expectedOutput.length);
+        CAssertEq((NSUInteger)mp.length, expectedOutput.length);
 
         NSData* output = [mp allOutput];
         CAssertEqual(output.my_UTF8ToString, expectedOutput);

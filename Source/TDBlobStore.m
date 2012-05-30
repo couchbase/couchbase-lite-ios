@@ -117,9 +117,13 @@
                                   length: (UInt64*)outLength
 {
     NSString* path = [self pathForKey: key];
-    if (outLength)
-        *outLength = [[[NSFileManager defaultManager] attributesOfItemAtPath: path error: NULL]
-                            fileSize];
+    if (outLength) {
+        NSDictionary* info = [[NSFileManager defaultManager] attributesOfItemAtPath: path
+                                                                              error: NULL];
+        if (!info)
+            return nil;
+        *outLength = [info fileSize];
+    }
     return [NSInputStream inputStreamWithFileAtPath: path];
 }
 
