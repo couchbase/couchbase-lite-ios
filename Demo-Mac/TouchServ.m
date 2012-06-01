@@ -10,7 +10,6 @@
 #import <TouchDB/TouchDB.h>
 #import <TouchDB/TDRouter.h>
 #import <TouchDBListener/TDListener.h>
-#import "CollectionUtils.h"
 
 #if DEBUG
 #import "Logging.h"
@@ -62,16 +61,17 @@ int main (int argc, const char * argv[])
         // Start a listener socket:
         TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
         
+        // Advertise via Bonjour, and set a TXT record just as an example:
         [listener setBonjourName: @"TouchServ" type: @"_touchdb._tcp."];
-        listener.TXTRecordDictionary = $dict({@"Key",
-                                             [@"value" dataUsingEncoding: NSUTF8StringEncoding]});
+        NSData* value = [@"value" dataUsingEncoding: NSUTF8StringEncoding];
+        listener.TXTRecordDictionary = [NSDictionary dictionaryWithObject: value forKey: @"Key"];
         
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
                 listener.readOnly = YES;
             } else if (strcmp(argv[i], "--auth") == 0) {
                 srandomdev();
-                NSString* password = $sprintf(@"%x", random());
+                NSString* password = [NSString stringWithFormat: @"%x", random()];
                 listener.passwords = [NSDictionary dictionaryWithObject: password
                                                                  forKey: @"touchdb"];
                 Log(@"Auth required: user='touchdb', password='%@'", password);
