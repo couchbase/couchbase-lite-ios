@@ -604,4 +604,51 @@ TestCase(TDView_CollationRaw) {
 }
 
 
+TestCase(TDView_LinkedDocs) {
+    RequireTestCase(TDView_Query);
+    TDDatabase *db = createDB();
+    NSArray* revs = putDocs(db);
+    
+    NSDictionary* docs[5];
+    int i = 0;
+    for (TDRevision* rev in revs) {
+        docs[i++] = [db getDocumentWithID: rev.docID revisionID: rev.revID options: 0].properties;
+    }
+
+    TDView* view = [db viewNamed: @"linkview"];
+    [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        NSString* key = [doc objectForKey: @"key"];
+        NSDictionary* value = nil;
+        int linkedID = [[doc objectForKey: @"_id"] intValue] - 11111;
+        if (linkedID > 0)
+            value = $dict({@"_id", $sprintf(@"%d", linkedID)});
+        emit(key, value);
+    } reduceBlock: NULL version: @"1"];
+
+    CAssertEq([view updateIndex], kTDStatusOK);
+    
+    // Query all rows:
+    TDQueryOptions options = kDefaultTDQueryOptions;
+    options.includeDocs = YES;
+    TDStatus status;
+    NSArray* rows = [view queryWithOptions: &options status: &status];
+    NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"},
+                                         {@"value", $dict({@"_id", @"44444"})},
+                                         {@"doc", docs[1]}),
+                                   $dict({@"id",  @"44444"}, {@"key", @"four"},
+                                         {@"value", $dict({@"_id", @"33333"})},
+                                         {@"doc", docs[3]}),
+                                   $dict({@"id",  @"11111"}, {@"key", @"one"},
+                                         {@"doc", docs[2]}),
+                                   $dict({@"id",  @"33333"}, {@"key", @"three"},
+                                         {@"value", $dict({@"_id", @"22222"})},
+                                         {@"doc", docs[0]}),
+                                   $dict({@"id",  @"22222"}, {@"key", @"two"},
+                                         {@"value", $dict({@"_id", @"11111"})},
+                                         {@"doc", docs[2]}));
+    CAssertEqual(rows, expectedRows);
+    
+}
+
+
 #endif

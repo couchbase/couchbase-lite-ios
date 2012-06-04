@@ -481,13 +481,23 @@ static id groupKey(id key, unsigned groupLevel) {
             } else {
                 // Regular query:
                 NSString* docID = [r stringForColumnIndex: 2];
-                NSDictionary* docContents = nil;
+                id docContents = nil;
                 if (options->includeDocs) {
-                    docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 4]
-                                                            docID: docID
-                                                            revID: [r stringForColumnIndex: 3]
-                                                         sequence: [r longLongIntForColumnIndex:5]
-                                                          options: options->content];
+                    NSString* linkedID = [value objectForKey: @"_id"];
+                    if (linkedID) {
+                        // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
+                        NSString* linkedRev = [value objectForKey: @"_rev"]; // usually nil
+                        TDRevision* linked = [_db getDocumentWithID: linkedID
+                                                         revisionID: linkedRev
+                                                            options: options->content];
+                        docContents = linked ? linked.properties : $null;
+                    } else {
+                        docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 4]
+                                                                docID: docID
+                                                                revID: [r stringForColumnIndex: 3]
+                                                             sequence: [r longLongIntForColumnIndex:5]
+                                                              options: options->content];
+                    }
                 }
                 [rows addObject: $dict({@"id",  docID},
                                        {@"key", key},
