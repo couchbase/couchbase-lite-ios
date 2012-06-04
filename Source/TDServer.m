@@ -139,6 +139,24 @@
 }
 
 
+- (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(TDDatabase*))block {
+    __block id result = nil;
+    NSConditionLock* lock = [[NSConditionLock alloc] initWithCondition: 0];
+    [self queue: ^{
+        [lock lockWhenCondition: 0];
+        @try {
+            TDDatabase* db = [_manager databaseNamed: dbName];
+            result = [block(db) retain];
+        } @finally {
+            [lock unlockWithCondition: 1];
+        }
+    }];
+    [lock lockWhenCondition: 1];  // wait till block finishes
+    [lock release];
+    return [result autorelease];
+}
+
+
 @end
 
 

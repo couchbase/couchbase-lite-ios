@@ -28,6 +28,7 @@
 - (void) queue: (void(^)())block;
 - (void) tellDatabaseManager: (void (^)(TDDatabaseManager*))block;
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TDDatabase*))block;
+- (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(TDDatabase*))block;
 
 - (void) close;
 
