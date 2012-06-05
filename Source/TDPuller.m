@@ -114,7 +114,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.filterParameters = _filterParameters;
     unsigned heartbeat = $castIf(NSNumber, [_options objectForKey: @"heartbeat"]).unsignedIntValue;
     if (heartbeat >= 15000)
-        _changeTracker.heartbeat = heartbeat;
+        _changeTracker.heartbeat = heartbeat / 1000.0;
     
     NSMutableDictionary* headers = $mdict({@"User-Agent", [TDRemoteRequest userAgentHeader]});
     [headers addEntriesFromDictionary: _requestHeaders];
