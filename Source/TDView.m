@@ -483,7 +483,7 @@ static id groupKey(id key, unsigned groupLevel) {
                 NSString* docID = [r stringForColumnIndex: 2];
                 id docContents = nil;
                 if (options->includeDocs) {
-                    NSString* linkedID = [value objectForKey: @"_id"];
+                    NSString* linkedID = [$castIf(NSDictionary, value) objectForKey: @"_id"];
                     if (linkedID) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = [value objectForKey: @"_rev"]; // usually nil
