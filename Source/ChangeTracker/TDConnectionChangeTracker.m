@@ -40,6 +40,7 @@
     }];
     
     _connection = [[NSURLConnection connectionWithRequest: request delegate: self] retain];
+    _startTime = CFAbsoluteTimeGetCurrent();
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
 }
@@ -50,7 +51,6 @@
     _connection = nil;
     [_inputBuffer release];
     _inputBuffer = nil;
-    _lastDataTime = 0;
 }
 
 
@@ -83,7 +83,6 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     LogTo(ChangeTrackerVerbose, @"%@: Got %lu bytes", self, (unsigned long)data.length);
-    _lastDataTime = CFAbsoluteTimeGetCurrent();
     [_inputBuffer appendData: data];
 }
 
@@ -115,10 +114,10 @@
                                                         dataUsingEncoding: NSUTF8StringEncoding]]) {
             // Looks like the connection got closed by a proxy (like AWS' load balancer) before
             // the server had an actual change to send.
-            NSTimeInterval idle = CFAbsoluteTimeGetCurrent() - _lastDataTime;
-            Warn(@"%@: Connection closed (by proxy?) after %.1f sec idle", self, idle);
-            if (idle >= 30.0 && idle < _heartbeat) {
-                self.heartbeat = idle * 0.75;
+            NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
+            Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
+            if (elapsed >= 30.0 && elapsed < _heartbeat) {
+                self.heartbeat = elapsed * 0.75;
                 restart = YES;
             }
         }
