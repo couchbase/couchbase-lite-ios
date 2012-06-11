@@ -140,8 +140,16 @@
     Assert(docID && revID);
     Assert(!_docID || $equal(_docID, docID));
     TDRevision* rev = [[[self class] alloc] initWithDocID: docID revID: revID deleted: _deleted];
-    if ( _body)
-        rev.body = _body;
+
+    // Update the _id and _rev in the new object's JSON:
+    NSDictionary* properties = self.properties;
+    NSMutableDictionary* nuProperties = properties ? [properties mutableCopy]
+                                                   : [[NSMutableDictionary alloc] init];
+    [nuProperties setValue: docID forKey: @"_id"];
+    [nuProperties setValue: revID forKey: @"_rev"];
+    rev.properties = nuProperties;
+    [nuProperties release];
+
     return rev;
 }
 

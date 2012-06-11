@@ -126,11 +126,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         return;
     TDRevision* rev = [userInfo objectForKey: @"rev"];
     TDFilterBlock filter = self.filter;
-    if (filter) {
-        [_db loadRevisionBody: rev options: 0];
-        if (!filter(rev))
-            return;
-    }
+    if (filter && !filter(rev))
+        return;
     [self addToInbox: rev];
 }
 

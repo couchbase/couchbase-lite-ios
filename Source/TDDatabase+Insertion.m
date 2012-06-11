@@ -417,7 +417,6 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         return nil;
     
     //// EPILOGUE: A change notification is sent...
-    rev.body = nil;     // body is not up to date (no current _rev, likely no _id) so avoid confusion
     [self notifyChange: rev source: nil];
     return rev;
 }

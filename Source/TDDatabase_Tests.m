@@ -71,6 +71,20 @@ TestCase(TDDatabase_CRUD) {
     CAssert(privateUUID.length >= 20, @"Invalid privateUUID: %@", privateUUID);
     CAssert(publicUUID.length >= 20, @"Invalid publicUUID: %@", publicUUID);
     
+    // Make sure the database-changed notifications have the right data in them (see issue #93)
+    id observer = [[NSNotificationCenter defaultCenter]
+                   addObserverForName: TDDatabaseChangeNotification
+                   object: db
+                   queue: nil
+                   usingBlock: ^(NSNotification* n) {
+                       TDRevision* rev = [n.userInfo objectForKey: @"rev"];
+                       CAssert(rev);
+                       CAssert(rev.docID);
+                       CAssert(rev.revID);
+                       CAssertEqual([rev.properties objectForKey: @"_id"], rev.docID);
+                       CAssertEqual([rev.properties objectForKey: @"_rev"], rev.revID);
+                   }];
+    
     // Create a document:
     NSMutableDictionary* props = $mdict({@"foo", $object(1)}, {@"bar", $false});
     TDBody* doc = [[[TDBody alloc] initWithProperties: props] autorelease];
@@ -152,6 +166,8 @@ TestCase(TDDatabase_CRUD) {
     CAssertEqual(history, $array(revD, rev2, rev1));
     
     CAssert([db close]);
+    
+    [[NSNotificationCenter defaultCenter] removeObserver: observer];
 }
 
 
