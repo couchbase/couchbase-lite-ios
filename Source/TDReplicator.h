@@ -45,6 +45,9 @@ extern NSString* TDReplicatorStoppedNotification;
     NSDictionary* _requestHeaders;
 }
 
++ (NSString *)progressChangedNotification;
++ (NSString *)stoppedNotification;
+
 - (id) initWithDB: (TDDatabase*)db
            remote: (NSURL*)remote
              push: (BOOL)push
