@@ -91,7 +91,6 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: TDDatabaseChangeNotification object: _db];
-        [self asyncTaskStarted];  // prevents -stopped from being called when other tasks finish
     }
 }
 
@@ -102,7 +101,6 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         [[NSNotificationCenter defaultCenter] removeObserver: self
                                                         name: TDDatabaseChangeNotification
                                                       object: _db];
-        [self asyncTasksFinished: 1];
     }
 }
 
