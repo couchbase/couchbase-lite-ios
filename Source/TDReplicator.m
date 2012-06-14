@@ -46,6 +46,17 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 @implementation TDReplicator
 
++ (NSString *)progressChangedNotification
+{
+    return TDReplicatorProgressChangedNotification;
+}
+
++ (NSString *)stoppedNotification
+{
+    return TDReplicatorStoppedNotification;
+}
+
+
 - (id) initWithDB: (TDDatabase*)db
            remote: (NSURL*)remote
              push: (BOOL)push
