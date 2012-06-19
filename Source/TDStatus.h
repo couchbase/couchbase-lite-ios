@@ -42,7 +42,7 @@ typedef enum {
 } TDStatus;
 
 
-static inline bool TDStatusIsError(TDStatus status) {return status >= 300;}
+static inline bool TDStatusIsError(TDStatus status) {return status >= 400;}
 
 int TDStatusToHTTPStatus( TDStatus status, NSString** outMessage );
 

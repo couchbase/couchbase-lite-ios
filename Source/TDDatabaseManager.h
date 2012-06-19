@@ -21,6 +21,8 @@
 
 + (BOOL) isValidDatabaseName: (NSString*)name;
 
++ (NSString*) defaultDirectory;
+
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
 
 @property (readonly) NSString* directory;

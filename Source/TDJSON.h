@@ -69,4 +69,12 @@ typedef NSUInteger TDJSONWritingOptions;
     But it will generate invalid JSON if the input JSON begins or ends with whitespace, or if the dictionary contains any keys that are already in the original JSON. */
 + (NSData*) appendDictionary: (NSDictionary*)dict
         toJSONDictionaryData: (NSData*)json;
+
+/** Encodes an NSDate as a string in ISO-8601 format. */
++ (NSString*) JSONObjectWithDate: (NSDate*)date;
+
+/** Parses an ISO-8601 formatted date string.
+    If the object is not a string, or not valid ISO-8601, it returns nil. */
++ (NSDate*) dateWithJSONObject: (id)jsonObject;
+
 @end

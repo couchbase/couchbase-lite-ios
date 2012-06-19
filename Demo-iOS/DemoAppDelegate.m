@@ -15,8 +15,10 @@
 
 #import "DemoAppDelegate.h"
 #import "RootViewController.h"
-#import <CouchCocoa/CouchCocoa.h>
-#import <CouchCocoa/CouchTouchDBServer.h>
+#import "TDPublic.h"
+
+
+static TDDatabaseManager* sDBManager;
 
 
 @implementation DemoAppDelegate
@@ -30,23 +32,17 @@
     // Add the navigation controller's view to the window and display.
 	[window addSubview:navigationController.view];
 	[window makeKeyAndVisible];
-    
-    //gRESTLogLevel = kRESTLogRequestHeaders;
-    gCouchLogLevel = 1;
-    
+        
     NSLog(@"Creating database...");
-    CouchTouchDBServer* server = [CouchTouchDBServer sharedInstance];
-    NSAssert(!server.error, @"Error initializing TouchDB: %@", server.error);
+    NSError* error;
+    sDBManager = [[TDDatabaseManager alloc] initWithDirectory: [TDDatabaseManager defaultDirectory] 
+                                                        error: &error];
+    NSAssert(sDBManager, @"Error initializing TouchDB: %@", error);
     
     // Create the database on the first run of the app.
-    self.database = [server databaseNamed: @"grocery-sync"];
-    NSError* error;
-    if (![self.database ensureCreated: &error]) {
-        [self showAlert: @"Couldn't create local database." error: error fatal: YES];
-        return YES;
-    }
-    database.tracksChanges = YES;
-    NSLog(@"...Created CouchDatabase at <%@>", self.database.URL);
+    self.database = [sDBManager databaseNamed: @"grocery-sync"];
+    BOOL opened = [self.database open];
+    NSAssert(opened, @"Couldn't open database");
     
     // Tell the RootViewController:
     RootViewController* root = (RootViewController*)navigationController.topViewController;

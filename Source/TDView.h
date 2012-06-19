@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <TouchDB/TDDatabase.h>
-
+@class TDQuery;
 
 typedef void (^TDMapEmitBlock)(id key, id value);
 
@@ -23,6 +23,10 @@ typedef void (^TDMapBlock)(NSDictionary* doc, TDMapEmitBlock emit);
 	@param rereduce  YES if the input values are the results of previous reductions.
 	@return  The reduced value; almost always a scalar or small fixed-size object. */
 typedef id (^TDReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
+
+
+#define MAPBLOCK(BLOCK) ^(NSDictionary* doc, void (^emit)(id key, id value)){BLOCK}
+#define REDUCEBLOCK(BLOCK) ^id(NSArray* keys, NSArray* values, BOOL rereduce){BLOCK}
 
 
 /** Standard query options for views. */
@@ -101,6 +105,8 @@ typedef enum {
     @return  An array of result rows -- each is a dictionary with "key" and "value" keys, and possibly "id" and "doc". */
 - (NSArray*) queryWithOptions: (const TDQueryOptions*)options
                        status: (TDStatus*)outStatus;
+
+- (TDQuery*) query;
 
 /** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
 + (NSNumber*) totalValues: (NSArray*)values;

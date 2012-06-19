@@ -53,6 +53,17 @@ static NSCharacterSet* kIllegalNameChars;
 #endif
 
 
++ (NSString*) defaultDirectory {
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                                         NSUserDomainMask, YES);
+    NSString* path = [paths objectAtIndex:0];
+#if !TARGET_OS_IPHONE
+    path = [path stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]];
+#endif
+    return [path stringByAppendingPathComponent: @"TouchDB"];
+}
+
+
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError {
     if (outError) *outError = nil;
     self = [super init];

@@ -7,24 +7,25 @@
 //
 
 #import "TDDocument.h"
+#import "TDDocRevision.h"
 #import "TDDatabase+Insertion.h"
-#import "TDServer.h"
+#import "TDRevision.h"
+#import "TDQuery.h"
 
 
 @implementation TDDocument
 
 
-- (id)initWithServer: (TDServer*)server
-        databaseName: (NSString*)name
-               docID: (NSString*)docID
-           numericID: (UInt64)numericID
+@synthesize owningCache=_owningCache;
+
+
+- (id)initWithDatabase: (TDDatabase*)database
+            documentID: (NSString*)docID
 {
     self = [super init];
     if (self) {
-        _server = server;
-        _databaseName = [name copy];
+        _database = [database retain];
         _docID = [docID copy];
-        _numericID = numericID;
     }
     return self;
 }
@@ -32,39 +33,79 @@
 
 - (void)dealloc
 {
+    [_owningCache resourceBeingDealloced: self];
+    [_currentRevision release];
+    [_database release];
     [_docID release];
     [super dealloc];
 }
 
 
-@synthesize database=_database, documentID=_docID, isDeleted=_deleted;
+@synthesize database=_database, documentID=_docID;
 
 
-- (TDRevision*) currentRevision {
+- (NSString*) cacheKey {
+    return _docID;
+}
+
+
+#pragma mark - REVISIONS:
+
+
+- (TDDocRevision*) currentRevision {
     if (!_currentRevision) {
-        _currentRevisionOptions = 0;
-        _currentRevision = [[self revisionWithID: nil
-                                         options: _currentRevisionOptions] retain];
-        _deleted = _currentRevision.deleted;
+        _currentRevision = [[self revisionWithID: nil] retain];
     }
     return _currentRevision;
 }
 
 
+- (void) forgetCurrentRevision {
+    setObj(&_currentRevision, nil);
+}
+
+
 - (NSString*) currentRevisionID {
-    return self.currentRevision.revID;
+    return self.currentRevision.revisionID;
 }
 
 
-- (TDRevision*) revisionWithID: (NSString*)revID {
-    return [self revisionWithID: revID options: 0];
+- (TDDocRevision*) revisionWithID: (NSString*)revID  {
+    TDRevision* rev = [_database getDocumentWithID: _docID revisionID: revID options: 0];
+    if (!rev)
+        return nil;
+    return [[[TDDocRevision alloc] initWithDocument: self revision: rev] autorelease];
 }
 
-- (TDRevision*) revisionWithID: (NSString*)revID options: (TDContentOptions)options {
-    return [_server waitForDatabaseNamed: _databaseName to: ^(TDDatabase* db) {
-        return [[db getDocumentWithID: _docID revisionID: revID options: options] retain];
-    }];
+
+// Notification from the TDDatabase that a (current) revision has been added to the database
+- (void) revisionAdded: (TDRevision*)rev source: (NSURL*)source {
+    if (_currentRevision && TDCompareRevIDs(rev.revID, _currentRevision.revisionID) > 0) {
+        [_currentRevision autorelease];
+        if (rev.deleted)
+            _currentRevision = nil;
+        else
+            _currentRevision = [[TDDocRevision alloc] initWithDocument: self revision: rev];
+    }
 }
+
+
+- (void) loadCurrentRevisionFrom: (TDQueryRow*)row {
+    NSString* revID = row.documentRevision;
+    if (!revID)
+        return;
+    if (!_currentRevision || TDCompareRevIDs(revID, _currentRevision.revisionID) > 0) {
+        [self forgetCurrentRevision];
+        NSDictionary* properties = row.documentProperties;
+        if (properties) {
+            TDRevision* rev = [TDRevision revisionWithProperties: properties];
+            _currentRevision = [[TDDocRevision alloc] initWithDocument: self revision: rev];
+        }
+    }
+}
+
+
+#pragma mark - PROPERTIES:
 
 
 - (NSDictionary*) properties {
@@ -76,31 +117,31 @@
 }
 
 - (NSDictionary*) userProperties {
-    NSDictionary* rep = [self properties];
-    if (!rep)
-        return nil;
-    NSMutableDictionary* props = [NSMutableDictionary dictionary];
-    for (NSString* key in rep) {
-        if (![key hasPrefix: @"_"])
-            [props setObject: [rep objectForKey: key] forKey: key];
-    }
-    return props;
+    return self.currentRevision.userProperties;
 }
 
-
-- (TDStatus) putProperties: (NSDictionary*)properties {
-    NSString* prevID = [properties objectForKey: @"_rev"];
-    BOOL deleted = [[properties objectForKey: @"_deleted"] boolValue];
+- (TDDocRevision*) putProperties: (NSDictionary*)properties
+                       prevRevID: (NSString*)prevID
+                           error: (NSError**)outError
+{
+    BOOL deleted = !properties || [[properties objectForKey: @"_deleted"] boolValue];
     TDRevision* rev = [[[TDRevision alloc] initWithDocID: _docID
                                                    revID: nil
                                                  deleted: deleted] autorelease];
-    __block TDStatus status = 0;
-    rev = [_server waitForDatabaseNamed: _databaseName to: ^(TDDatabase* db) {
-        return [db putRevision: rev prevRevisionID: prevID allowConflict: NO status: &status];
-    }];
-    if (rev)
-        _deleted = deleted;
-    return status;
+    if (properties)
+        rev.properties = properties;
+    TDStatus status = 0;
+    rev = [_database putRevision: rev prevRevisionID: prevID allowConflict: NO status: &status];
+    if (!rev) {
+        if (outError) *outError = TDStatusToNSError(status, nil);
+        return nil;
+    }
+    return [[[TDDocRevision alloc] initWithDocument: self revision: rev] autorelease];
+}
+
+- (TDDocRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
+    NSString* prevID = [properties objectForKey: @"_rev"];
+    return [self putProperties: properties prevRevID: prevID error: outError];
 }
 
 

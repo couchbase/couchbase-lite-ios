@@ -319,6 +319,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     [_filters release];
     [_attachments release];
     [_pendingAttachmentsByDigest release];
+    [_docCache release];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [super dealloc];
 }
@@ -356,7 +357,6 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     --_transactionLevel;
     return YES;
 }
-
 
 - (TDStatus) inTransaction: (TDStatus(^)())block {
     TDStatus status;

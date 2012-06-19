@@ -9,7 +9,7 @@
 
 #import <TouchDB/TDRevision.h>
 #import <TouchDB/TDStatus.h>
-@class FMDatabase, TDView, TDBlobStore;
+@class FMDatabase, TDView, TDBlobStore, TDDocument, TDCache;
 struct TDQueryOptions;      // declared in TDView.h
 
 
@@ -70,6 +70,8 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     TDBlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
+    
+    TDCache* _docCache;
 }    
         
 - (id) initWithPath: (NSString*)path;

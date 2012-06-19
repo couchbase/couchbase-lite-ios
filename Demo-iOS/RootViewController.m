@@ -22,12 +22,14 @@
 #import "ConfigViewController.h"
 #import "DemoAppDelegate.h"
 
-#import <CouchCocoa/CouchCocoa.h>
-#import <CouchCocoa/CouchDesignDocument_Embedded.h>
+#import "TDPublic.h"
+#import "TDView.h"
+#import "TDDatabase+Insertion.h"
+#import "TDJSON.h"
 
 
 @interface RootViewController ()
-@property(nonatomic, strong)CouchDatabase *database;
+@property(nonatomic, strong)TDDatabase *database;
 @property(nonatomic, strong)NSURL* remoteSyncURL;
 - (void)updateSyncURL;
 - (void)showSyncButton;
@@ -52,8 +54,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    [CouchUITableSource class];     // Prevents class from being dead-stripped by linker
-
     UIBarButtonItem* deleteButton = [[UIBarButtonItem alloc] initWithTitle: @"Clean"
                                                             style:UIBarButtonItemStylePlain
                                                            target: self 
@@ -72,8 +72,7 @@
 
     // Create a query sorted by descending date, i.e. newest items first:
     NSAssert(database!=nil, @"Not hooked up to database yet");
-    CouchLiveQuery* query = [[[database designDocumentWithName: @"default"]
-                                                queryViewNamed: @"byDate"] asLiveQuery];
+    TDLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
     query.descending = YES;
     
     self.dataSource.query = query;
@@ -95,34 +94,34 @@
 }
 
 
-- (void)useDatabase:(CouchDatabase*)theDatabase {
+- (void)useDatabase:(TDDatabase*)theDatabase {
     self.database = theDatabase;
     
     // Create a 'view' containing list items sorted by date:
-    CouchDesignDocument* design = [database designDocumentWithName: @"default"];
-    [design defineViewNamed: @"byDate" mapBlock: MAPBLOCK({
+    [[theDatabase viewNamed: @"byDate"] setMapBlock: MAPBLOCK({
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);
-    }) version: @"1.0"];
+    }) reduceBlock: nil version: @"1.1"];
+    
     
     // and a validation function requiring parseable dates:
-    design.validationBlock = VALIDATIONBLOCK({
+    [theDatabase defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.deleted)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
-        if (date && ! [RESTBody dateWithJSONObject: date]) {
+        if (date && ! [TDJSON dateWithJSONObject: date]) {
             context.errorMessage = [@"invalid date " stringByAppendingString: date];
             return NO;
         }
         return YES;
-    });
+    })];
 }
 
 
-- (void)showErrorAlert: (NSString*)message forOperation: (RESTOperation*)op {
-    NSLog(@"%@: op=%@, error=%@", message, op, op.error);
+- (void)showErrorAlert: (NSString*)message forError: (NSError*)error {
+    NSLog(@"%@: error=%@", message, error);
     [(DemoAppDelegate*)[[UIApplication sharedApplication] delegate] 
-        showAlert: message error: op.error fatal: NO];
+        showAlert: message error: error fatal: NO];
 }
 
 
@@ -130,9 +129,9 @@
 
 
 // Customize the appearance of table view cells.
-- (void)couchTableSource:(CouchUITableSource*)source
+- (void)couchTableSource:(TDUITableSource*)source
              willUseCell:(UITableViewCell*)cell
-                  forRow:(CouchQueryRow*)row
+                  forRow:(TDQueryRow*)row
 {
     // Set the cell background and font:
     cell.backgroundColor = [UIColor whiteColor];
@@ -161,23 +160,19 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    CouchQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
-    CouchDocument *doc = [row document];
+    TDQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
+    TDDocument *doc = [row document];
 
     // Toggle the document's 'checked' property:
     NSMutableDictionary *docContent = [doc.properties mutableCopy];
     BOOL wasChecked = [[docContent valueForKey:@"check"] boolValue];
     [docContent setObject:[NSNumber numberWithBool:!wasChecked] forKey:@"check"];
 
-    // Save changes, asynchronously:
-    RESTOperation* op = [doc putProperties:docContent];
-    [op onCompletion: ^{
-        if (op.error)
-            [self showErrorAlert: @"Failed to update item" forOperation: op];
-        // Re-run the query:
-		[self.dataSource.query start];
-    }];
-    [op start];
+    // Save changes:
+    NSError* error;
+    if (![doc.currentRevision putProperties: docContent error: &error]) {
+        [self showErrorAlert: @"Failed to update item" forError: error];
+    }
 }
 
 
@@ -187,8 +182,8 @@
 - (NSArray*)checkedDocuments {
     // If there were a whole lot of documents, this would be more efficient with a custom query.
     NSMutableArray* checked = [NSMutableArray array];
-    for (CouchQueryRow* row in self.dataSource.rows) {
-        CouchDocument* doc = row.document;
+    for (TDQueryRow* row in self.dataSource.rows) {
+        TDDocument* doc = row.document;
         if ([[doc.properties valueForKey:@"check"] boolValue])
             [checked addObject: doc];
     }
@@ -219,14 +214,6 @@
 }
 
 
-- (void)couchTableSource:(CouchUITableSource*)source
-         operationFailed:(RESTOperation*)op
-{
-    NSString* message = op.isDELETE ? @"Couldn't delete item" : @"Operation failed";
-    [self showErrorAlert: message forOperation: op];
-}
-
-
 #pragma mark - UITextField delegate
 
 
@@ -254,19 +241,15 @@
     // Create the new document's properties:
 	NSDictionary *inDocument = [NSDictionary dictionaryWithObjectsAndKeys:text, @"text",
                                 [NSNumber numberWithBool:NO], @"check",
-                                [RESTBody JSONObjectWithDate: [NSDate date]], @"created_at",
+                                [TDJSON JSONObjectWithDate: [NSDate date]], @"created_at",
                                 nil];
 
-    // Save the document, asynchronously:
-    CouchDocument* doc = [database untitledDocument];
-    RESTOperation* op = [doc putProperties:inDocument];
-    [op onCompletion: ^{
-        if (op.error)
-            [self showErrorAlert: @"Couldn't save the new item" forOperation: op];
-        // Re-run the query:
-		[self.dataSource.query start];
-	}];
-    [op start];
+    // Save the document:
+    TDDocument* doc = [database untitledDocument];
+    NSError* error;
+    if (![doc putProperties: inDocument error: &error]) {
+        [self showErrorAlert: @"Couldn't save new item" forError: error];
+    }
 }
 
 
@@ -290,19 +273,23 @@
     
     [self forgetSync];
     
+#if 0
     NSArray* repls = [self.database replicateWithURL: newRemoteURL exclusively: YES];
     _pull = [repls objectAtIndex: 0];
     _push = [repls objectAtIndex: 1];
     [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
     [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
+#endif
 }
 
 
 - (void) forgetSync {
+#if 0
     [_pull removeObserver: self forKeyPath: @"completed"];
     _pull = nil;
     [_push removeObserver: self forKeyPath: @"completed"];
     _push = nil;
+#endif
 }
 
 
@@ -338,6 +325,7 @@
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
+#if 0
     if (object == _pull || object == _push) {
         unsigned completed = _pull.completed + _push.completed;
         unsigned total = _pull.total + _push.total;
@@ -349,6 +337,7 @@
             [self showSyncButton];
         }
     }
+#endif
 }
 
 

@@ -19,16 +19,16 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <CouchCocoa/CouchUITableSource.h>
-@class CouchDatabase, CouchPersistentReplication;
+#import "TDUITableSource.h"
+@class TDDatabase, TDPersistentReplication;
 
 
-@interface RootViewController : UIViewController <CouchUITableDelegate, UITextFieldDelegate>
+@interface RootViewController : UIViewController <TDUITableDelegate, UITextFieldDelegate>
 {
-    CouchDatabase *database;
+    TDDatabase *database;
     NSURL* remoteSyncURL;
-    CouchPersistentReplication* _pull;
-    CouchPersistentReplication* _push;
+    TDPersistentReplication* _pull;
+    TDPersistentReplication* _push;
     
     UITableView *tableView;
     IBOutlet UIProgressView *progress;
@@ -38,9 +38,9 @@
 }
 
 @property(nonatomic, strong) IBOutlet UITableView *tableView;
-@property(nonatomic, strong) IBOutlet CouchUITableSource* dataSource;
+@property(nonatomic, strong) IBOutlet TDUITableSource* dataSource;
 
--(void)useDatabase:(CouchDatabase*)theDatabase;
+-(void)useDatabase:(TDDatabase*)theDatabase;
 
 - (IBAction)configureSync:(id)sender;
 - (IBAction) deleteCheckedItems:(id)sender;

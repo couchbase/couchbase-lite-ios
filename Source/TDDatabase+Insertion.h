@@ -14,6 +14,9 @@
 typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
                                    id<TDValidationContext> context);
 
+#define VALIDATIONBLOCK(BLOCK) ^BOOL(TDRevision* newRevision, id<TDValidationContext> context)\
+                                    {BLOCK}
+
 
 @interface TDDatabase (Insertion)
 

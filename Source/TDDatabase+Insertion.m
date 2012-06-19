@@ -15,6 +15,8 @@
 
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+Attachments.h"
+#import "TDDatabase+Documents.h"
+#import "TDDocument.h"
 #import <TouchDB/TDRevision.h>
 #import "TDCanonicalJSON.h"
 #import "TDAttachment.h"
@@ -193,6 +195,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 /** Posts a local NSNotification of a new revision of a document. */
 - (void) notifyChange: (TDRevision*)rev source: (NSURL*)source
 {
+    [[self cachedDocumentWithID: rev.docID] revisionAdded: rev source: source];
     NSDictionary* userInfo = $dict({@"rev", rev},
                                    {@"seq", $object(rev.sequence)},
                                    {@"source", source});
