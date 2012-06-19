@@ -226,14 +226,14 @@
 
 - (void) deleteDocuments: (NSArray*)documents atIndexes: (NSArray*)indexPaths {
     __block NSError* error = nil;
-    BOOL ok = [_query.database inTransaction: ^{
+    TDStatus status = [_query.database inTransaction: ^TDStatus{
         for (TDDocument* doc in documents) {
             if (![doc.currentRevision deleteDocument: &error])
-                return NO;
+                return kTDStatusForbidden;
         }
-        return YES;
+        return kTDStatusOK;
     }];
-    if (!ok) {
+    if (status != kTDStatusOK) {
         [self tellDelegate: @selector(couchTableSource:operationFailed:) withObject: nil];
         [self reloadFromQuery];
         return;

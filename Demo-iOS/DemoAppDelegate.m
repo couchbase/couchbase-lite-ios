@@ -43,6 +43,7 @@ static TDDatabaseManager* sDBManager;
     self.database = [sDBManager databaseNamed: @"grocery-sync"];
     BOOL opened = [self.database open];
     NSAssert(opened, @"Couldn't open database");
+    (void)opened;
     
     // Tell the RootViewController:
     RootViewController* root = (RootViewController*)navigationController.topViewController;

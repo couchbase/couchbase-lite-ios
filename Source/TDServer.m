@@ -75,7 +75,10 @@
     if (_serverThread) {
         [self queue: ^{
             LogTo(TDServer, @"Stopping server thread...");
-            [TDURLProtocol unregisterServer: self];
+            
+            Class tdURLProtocol = NSClassFromString(@"TDURLProtocol");
+            if (tdURLProtocol)
+                [tdURLProtocol unregisterServer: self];
             _stopRunLoop = YES;
         }];
         [_serverThread release];

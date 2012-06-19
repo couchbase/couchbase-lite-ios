@@ -35,7 +35,7 @@
 
 
 + (NSString*) userAgentHeader {
-    return $sprintf(@"TouchDB/%@", [TDRouter versionString]);
+    return $sprintf(@"TouchDB/%@", TDVersionString());
 }
 
 

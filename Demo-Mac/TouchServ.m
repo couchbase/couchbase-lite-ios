@@ -147,7 +147,7 @@ int main (int argc, const char * argv[])
                 return 1;
         } else {
             Log(@"TouchServ %@ is listening%@ on port %d ... relax!",
-                [TDRouter versionString],
+                TDVersionString(),
                 (listener.readOnly ? @" in read-only mode" : @""),
                 listener.port);
         }

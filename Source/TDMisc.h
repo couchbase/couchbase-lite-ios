@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <TouchDB/TDRevision.h>
 
+NSString* TDVersionString( void );
+
 extern NSString* const TDHTTPErrorDomain;
 
 NSString* TDCreateUUID( void );

@@ -30,19 +30,7 @@
 #endif
 
 
-#ifdef GNUSTEP
-static double TouchDBVersionNumber = 0.7;
-#else
-extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
-#endif
-
-
 @implementation TDRouter
-
-
-+ (NSString*) versionString {
-    return $sprintf(@"%g", TouchDBVersionNumber);
-}
 
 
 - (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager request: (NSURLRequest*)request {

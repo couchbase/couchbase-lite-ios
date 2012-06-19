@@ -111,7 +111,7 @@ TestCase(TDRouter_Server) {
     TDDatabaseManager* server = createDBManager();
     Send(server, @"GET", @"/", kTDStatusOK, $dict({@"TouchDB", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
-                                          {@"version", [TDRouter versionString]}));
+                                          {@"version", TDVersionString()}));
     Send(server, @"GET", @"/_all_dbs", kTDStatusOK, $array());
     Send(server, @"GET", @"/non-existent", kTDStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kTDStatusBadID, nil);

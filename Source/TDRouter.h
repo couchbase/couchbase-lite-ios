@@ -51,8 +51,6 @@ typedef void (^OnFinishedBlock)();
 - (void) start;
 - (void) stop;
 
-+ (NSString*) versionString;
-
 @end
 
 

@@ -28,6 +28,18 @@
 #endif
 
 
+#ifdef GNUSTEP
+static double TouchDBVersionNumber = 0.7;
+#else
+extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
+#endif
+
+
+NSString* TDVersionString( void ) {
+return $sprintf(@"%g", TouchDBVersionNumber);
+}
+
+
 NSString* TDCreateUUID() {
 #ifdef GNUSTEP
     uuid_t uuid;
