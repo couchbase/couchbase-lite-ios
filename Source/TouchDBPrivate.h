@@ -29,6 +29,17 @@
 @interface TouchRevision ()
 - (id)initWithDocument: (TouchDocument*)doc revision: (TDRevision*)rev;
 @property (readonly) TDRevision* rev;
+@property (readonly) SequenceNumber sequence;
+@end
+
+
+@interface TouchAttachment ()
+- (id) initWithRevision: (TouchRevision*)rev
+                   name: (NSString*)name
+               metadata: (NSDictionary*)metadata;
++ (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
+                             intoDatabase: (TouchDatabase*)database;
+@property (readwrite, copy) NSString* name;
 @end
 
 

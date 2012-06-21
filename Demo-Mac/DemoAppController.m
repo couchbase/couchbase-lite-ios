@@ -28,6 +28,8 @@
 static TDListener* sListener;
 #endif
 
+#undef ENABLE_REPLICATION
+
 
 #define kChangeGlowDuration 3.0
 
@@ -55,7 +57,7 @@ int main (int argc, const char * argv[]) {
     NSError* error;
     _database = [[[TouchDatabaseManager sharedInstance] createDatabaseNamed: dbName
                                                                       error: &error] retain];
-    if (error) {
+    if (!_database) {
         NSAssert(NO, @"Error creating db: %@", error);
     }
     
@@ -86,8 +88,8 @@ int main (int argc, const char * argv[]) {
     
     TouchQuery* q = [[_database viewNamed: @"byDate"] query];
     q.descending = YES;
-    self.query = [[[DemoQuery alloc] initWithQuery: q] autorelease];
-    self.query.modelClass =_tableController.objectClass;
+    self.query = [[[DemoQuery alloc] initWithQuery: q
+                                        modelClass: _tableController.objectClass] autorelease];
     
     // Start watching any persistent replications already configured:
     [self startContinuousSyncWith: self.syncURL];
@@ -222,6 +224,7 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
+#ifdef ENABLE_REPLICATION
     [self forgetReplication: &_pull];
     [self forgetReplication: &_push];
     
@@ -232,10 +235,12 @@ int main (int argc, const char * argv[]) {
     [self observeReplication: _push];
     
     _syncHostField.stringValue = otherDbURL ? $sprintf(@"⇄ %@", otherDbURL.host) : @"";
+#endif
 }
 
 
 - (void) updateSyncStatusView {
+#ifdef ENABLE_REPLICATION
     int value;
     NSString* tooltip = nil;
     if (_pull.error) {
@@ -267,9 +272,11 @@ int main (int argc, const char * argv[]) {
     }
     _syncStatusView.intValue = value;
     _syncStatusView.toolTip = tooltip;
+#endif
 }
 
 
+#ifdef ENABLE_REPLICATION
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
@@ -306,6 +313,7 @@ int main (int argc, const char * argv[]) {
         }
     }
 }
+#endif
 
 
 #pragma mark - JS MAP/REDUCE FUNCTIONS:

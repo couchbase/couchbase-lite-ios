@@ -29,10 +29,7 @@
     Class _modelClass;
 }
 
-- (id) initWithQuery: (TouchQuery*)query;
-
-/** Class to instantiate for entries. Defaults to DemoItem. */
-@property (assign) Class modelClass;
+- (id) initWithQuery: (TouchQuery*)query modelClass: (Class)modelClass;
 
 /** The documents returned by the query, wrapped in DemoItem objects.
     An NSArrayController can be bound to this property. */

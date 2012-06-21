@@ -36,6 +36,7 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 - (void)dealloc
 {
+    [_modelFactory release];
     _tddb.touchDatabase = nil;
     [_tddb release];
     [[NSNotificationCenter defaultCenter] removeObserver: self];

@@ -17,6 +17,7 @@
 #import "TouchDatabase.h"
 #import "TouchDocument.h"
 #import "TouchRevision.h"
+#import "TouchAttachment.h"
 #import "TouchView.h"
 #import "TouchQuery.h"
 #import "TouchModel.h"

@@ -142,8 +142,10 @@
                                                      name: kTouchDatabaseChangeNotification 
                                                    object: self.database];
     }
-    if (!_rows)
+    if (!_rows) {
         _rows = [super.rows copy];
+        Log(@"TDLiveQuery: Initial row count is %lu", (unsigned long)_rows.count);
+    }
     // Have to return a copy because the enumeration has to start at item #0 every time
     return [[_rows copy] autorelease];
 }

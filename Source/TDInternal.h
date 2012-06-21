@@ -15,7 +15,7 @@
 #import "TDReplicator.h"
 #import "TDRemoteRequest.h"
 #import "TDBlobStore.h"
-@class TDAttachment;
+@class TDAttachment, TDBlobStoreWriter;
 
 
 @interface TDDatabase ()
@@ -40,6 +40,7 @@
 @end
 
 @interface TDDatabase (Attachments_Internal)
+- (void) rememberAttachmentWriter: (TDBlobStoreWriter*)writer;
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
 #if DEBUG
 - (id) attachmentWriterForAttachment: (NSDictionary*)attachment;

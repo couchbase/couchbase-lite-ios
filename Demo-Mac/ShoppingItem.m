@@ -55,9 +55,13 @@ static NSData* ImageJPEGData(NSImage* image);
     if (_picture && picture == _picture)
         return;
     
-    [self createAttachmentWithName: @"picture"
-                              type: @"image/jpeg"
-                              body: ImageJPEGData(picture)];
+    TouchAttachment* attachment = nil;
+    if (picture)
+        attachment = [[TouchAttachment alloc] initWithContentType: @"image/jpeg"
+                                                             body: ImageJPEGData(picture)];
+    [self addAttachment: attachment named: @"picture"];
+    [attachment release];
+    
     [_picture release];
     _picture = [picture retain];
 }

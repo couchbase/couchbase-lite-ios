@@ -10,9 +10,6 @@
 @class TouchAttachment, TouchDatabase, TouchDocument;
 
 
-#define ATTACHMENT_SUPPORT 0    //TEMP
-
-
 /** Generic model class for TouchDB documents.
     There's a 1::1 mapping between these and TouchDocuments; call +modelForDocument: to get (or create) a model object for a document, and .document to get the document of a model.
     You should subclass this and declare properties in the subclass's @@interface. As with NSManagedObject, you don't need to implement their accessor methods or declare instance variables; simply note them as '@@dynamic' in the class @@implementation. The property value will automatically be fetched from or stored to the document, using the same name.
@@ -103,7 +100,6 @@
     You can use this for document properties that you haven't added @@property declarations for. */
 - (BOOL) setValue: (id)value ofProperty: (NSString*)property;
 
-#if ATTACHMENT_SUPPORT
 
 /** The names of all attachments (array of strings).
     This reflects unsaved changes made by creating or deleting attachments. */
@@ -114,18 +110,13 @@
 
 /** Creates or updates an attachment (in memory).
     The attachment data will be written to the database at the same time as property changes are saved.
-    @param name  The attachment name.
-    @param contentType  The MIME type of the body.
-    @param body  The raw attachment data, or nil to delete the attachment. */
-- (TouchAttachment*) createAttachmentWithName: (NSString*)name
-                                         type: (NSString*)contentType
-                                         body: (NSData*)body;
+    @param attachment  A newly-created TouchAttachment (not yet associated with any revision)
+    @param name  The attachment name. */
+- (void) addAttachment: (TouchAttachment*)attachment named: (NSString*)name;
 
 /** Deletes (in memory) any existing attachment with the given name.
     The attachment will be deleted from the database at the same time as property changes are saved. */
 - (void) removeAttachmentNamed: (NSString*)name;
-
-#endif // ATTACHMENT_SUPPORT
 
 
 #pragma mark - PROTECTED (FOR SUBCLASSES TO OVERRIDE)

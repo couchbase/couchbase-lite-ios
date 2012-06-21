@@ -25,12 +25,11 @@
 @implementation DemoQuery
 
 
-- (id) initWithQuery: (TouchQuery*)query
-{
+- (id) initWithQuery: (TouchQuery*)query modelClass: (Class)modelClass {
     NSParameterAssert(query);
     self = [super init];
     if (self != nil) {
-        _modelClass = [TouchModel class];
+        _modelClass = modelClass;
         _query = [[query asLiveQuery] retain];
         _query.prefetch = YES;        // for efficiency, include docs on first load
         // Observe changes to _query.rows:
@@ -47,9 +46,6 @@
     [_query release];
     [super dealloc];
 }
-
-
-@synthesize modelClass=_modelClass;
 
 
 - (void) loadEntriesFrom: (TouchQueryEnumerator*)rows {
@@ -91,29 +87,36 @@
 }
 
 
+- (NSMutableArray*) _entries {
+    if (!_entries)
+        [self loadEntriesFrom: _query.rows];
+    return _entries;
+}
+
+
 #pragma mark -
 #pragma mark ENTRIES PROPERTY:
 
 
 - (NSUInteger) countOfEntries {
-    return _entries.count;
+    return self._entries.count;
 }
 
 
 - (TouchModel*)objectInEntriesAtIndex: (NSUInteger)index {
-    return [_entries objectAtIndex: index];
+    return [self._entries objectAtIndex: index];
 }
 
 
 - (void) insertObject: (TouchModel*)object inEntriesAtIndex: (NSUInteger)index {
-    [_entries insertObject: object atIndex: index];
+    [self._entries insertObject: object atIndex: index];
     object.autosaves = YES;
     object.database = _query.database;
 }
 
 
 - (void) removeObjectFromEntriesAtIndex: (NSUInteger)index {
-    TouchModel* item = [_entries objectAtIndex: index];
+    TouchModel* item = [self._entries objectAtIndex: index];
     item.database = nil;
     [_entries removeObjectAtIndex: index];
 }

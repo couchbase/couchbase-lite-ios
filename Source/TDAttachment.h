@@ -16,6 +16,7 @@
     @private
     NSString* _name;
     NSString* _contentType;
+    
     @public
     // Yes, these are public. They're simple scalar values so it's not really worth
     // creating accessor methods for them all.

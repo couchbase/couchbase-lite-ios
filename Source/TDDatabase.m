@@ -553,7 +553,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 - (TDStatus) loadRevisionBody: (TDRevision*)rev
                       options: (TDContentOptions)options
 {
-    if (rev.body && options==0)
+    if (rev.body && options==0 && rev.sequence)
         return kTDStatusOK;
     Assert(rev.docID && rev.revID);
     FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs, docs "

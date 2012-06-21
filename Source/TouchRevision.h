@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TouchDocument, TDRevision, TouchDatabase;
+@class TouchDocument, TDRevision, TouchDatabase, TouchAttachment;
 
 
 /** A revision of a document. */
@@ -54,5 +54,13 @@
 
 /** Deletes the document by creating a new deletion-marker revision. */
 - (TouchRevision*) deleteDocument: (NSError**)outError;
+
+#pragma mark ATTACHMENTS
+
+/** The names of all attachments (array of strings). */
+@property (readonly) NSArray* attachmentNames;
+
+/** Looks up the attachment with the given name (without fetching its contents yet). */
+- (TouchAttachment*) attachmentNamed: (NSString*)name;
 
 @end

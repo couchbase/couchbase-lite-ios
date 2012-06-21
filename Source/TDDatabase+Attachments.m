@@ -54,6 +54,13 @@
 }
 
 
+- (void) rememberAttachmentWriter: (TDBlobStoreWriter*)writer {
+    if (!_pendingAttachmentsByDigest)
+        _pendingAttachmentsByDigest = [[NSMutableDictionary alloc] init];
+    [_pendingAttachmentsByDigest setObject: writer forKey: writer.MD5DigestString];
+}
+
+
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)blobsByDigests {
     if (!_pendingAttachmentsByDigest)
         _pendingAttachmentsByDigest = [[NSMutableDictionary alloc] init];
@@ -101,6 +108,7 @@
         return kTDStatusOK;
         
     } else {
+        Warn(@"TDDatabase: No pending attachment for digest %@", digest);
         return kTDStatusBadAttachment;
     }
 }

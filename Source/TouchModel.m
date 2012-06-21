@@ -16,9 +16,6 @@
 @interface TouchModel ()
 @property (readwrite, retain) TouchDocument* document;
 @property (readwrite) bool needsSave;
-#if ATTACHMENT_SUPPORT
-- (NSDictionary*) attachmentDataToSave;
-#endif
 @end
 
 
@@ -69,6 +66,8 @@
     } else {
         // If invoked on TouchModel itself, ask the factory to instantiate the appropriate class:
         model = [document.database.modelFactory modelForDocument: document];
+        if (!model)
+            Warn(@"Couldn't figure out what model class to use for doc %@", document);
     }
     return model;
 }
@@ -87,7 +86,8 @@
 
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, TDAbbreviate(self.document.documentID)];
+    return [NSString stringWithFormat: @"%@[%@]",
+                self.class, TDAbbreviate(self.document.documentID)];
 }
 
 
@@ -202,14 +202,14 @@
     if (autosaves != _autosaves) {
         _autosaves = autosaves;
         if (_autosaves && _needsSave)
-            [self performSelector: @selector(save) withObject: nil afterDelay: 0.0];
+            [self performSelector: @selector(save:) withObject: nil afterDelay: 0.0];
     }
 }
 
 
 - (void) markNeedsSave {
     if (_autosaves && !_needsSave)
-        [self performSelector: @selector(save) withObject: nil afterDelay: 0.0];
+        [self performSelector: @selector(save:) withObject: nil afterDelay: 0.0];
     self.needsSave = YES;
 }
 
@@ -235,8 +235,10 @@
     LogTo(TouchModel, @"%@ Saving <- %@", self, properties);
     NSError* error;
     if (![_document putProperties: properties error: &error]) {
-        Warn(@"%@: Save failed: %@", self, error);
-        if (outError) *outError = error;
+        if (outError)
+            *outError = error;
+        else
+            Warn(@"%@: Save failed: %@", self, error);
         return NO;
     }
     [self didSave];
@@ -289,9 +291,7 @@
         id value = [_properties objectForKey: key];
         [properties setValue: [self externalizePropertyValue: value] forKey: key];
     }
-#if ATTACHMENT_SUPPORT
     [properties setValue: self.attachmentDataToSave forKey: @"_attachments"];
-#endif
     return [properties autorelease];
 }
 
@@ -481,8 +481,6 @@ static void setModelProperty(TouchModel *self, SEL _cmd, id value) {
 #pragma mark - ATTACHMENTS:
 
 
-#if ATTACHMENT_SUPPORT
-
 - (NSArray*) attachmentNames {
     NSArray* names = [_document.currentRevision attachmentNames];
     if (!_changedAttachments)
@@ -512,35 +510,22 @@ static void setModelProperty(TouchModel *self, SEL _cmd, id value) {
 }
 
 
-- (TouchAttachment*) createAttachmentWithName: (NSString*)name
-                                         type: (NSString*)contentType
-                                         body: (NSData*)body
-{
-    NSParameterAssert(name);
-    id attach = nil;
-    if (body) {
-        NSDictionary* metadata = [NSDictionary dictionaryWithObjectsAndKeys:
-                                  [RESTBody base64WithData: body], @"data",
-                                  [NSNumber numberWithUnsignedLong: body.length], @"length",
-                                  contentType, @"content_type",
-                                  nil];
-        attach = [[[TouchAttachment alloc] initWithParent: (_document.currentRevision ?: _document)
-                                                     name: name
-                                                 metadata: metadata] autorelease];
-    } else if (![self attachmentNamed: name]) {
-        return nil;
-    }
+- (void) addAttachment: (TouchAttachment*)attachment named: (NSString*)name {
+    Assert(name);
+    Assert(!attachment.name, @"Attachment already attached to another revision");
+    if (attachment == [self attachmentNamed: name])
+        return;
     
     if (!_changedAttachments)
         _changedAttachments = [[NSMutableDictionary alloc] init];
-    [_changedAttachments setObject: (attach ? attach : [NSNull null])
+    [_changedAttachments setObject: (attachment ? attachment : [NSNull null])
                             forKey: name];
+    attachment.name = name;
     [self markNeedsSave];
-    return attach;
 }
 
 - (void) removeAttachmentNamed: (NSString*)name {
-    [self createAttachmentWithName: name type: nil body: nil];
+    [self addAttachment: nil named: name];
 }
 
 
@@ -552,15 +537,16 @@ static void setModelProperty(TouchModel *self, SEL _cmd, id value) {
     NSMutableDictionary* nuAttach = attachments ? [[attachments mutableCopy] autorelease]
                                                 : [NSMutableDictionary dictionary];
     for (NSString* name in _changedAttachments.allKeys) {
+        // Yes, we are putting TDAttachment objects into the JSON-compatible dictionary.
+        // The TouchDocument will process & convert these before actually storing the JSON.
         TouchAttachment* attach = [_changedAttachments objectForKey: name];
         if ([attach isKindOfClass: [TouchAttachment class]])
-            [nuAttach setObject: attach.metadata forKey: name];
+            [nuAttach setObject: attach forKey: name];
         else
             [nuAttach removeObjectForKey: name];
     }
     return nuAttach;
 }
 
-#endif // ATTACHMENT_SUPPORT
 
 @end

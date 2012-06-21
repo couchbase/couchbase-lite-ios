@@ -378,7 +378,7 @@ static NSArray* splitPath( NSURL* url ) {
     @try {
         status = [self route];
     } @catch (NSException *x) {
-        MYReportException(x, @"handling TouchDB request");
+        Warn(@"Exception caught in TDRouter:\n\t%@\n%@", x, x.my_callStack);
         status = kTDStatusException;
         [_response reset];
     }

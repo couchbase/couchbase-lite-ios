@@ -4,6 +4,7 @@
 .objc_class_name_TouchDatabaseManager
 .objc_class_name_TouchTouchDocument
 .objc_class_name_TouchRevision
+.objc_class_name_TouchAttachment
 .objc_class_name_TouchView
 .objc_class_name_TouchQuery
 .objc_class_name_TouchQueryEnumerator
@@ -32,11 +33,21 @@ _kTouchDocumentChangeNotification
 .objc_class_name_TDRouter
 .objc_class_name_TDServer
 .objc_class_name_TDDatabaseManager
+.objc_class_name_TDMultipartDocumentReader
+.objc_class_name_TDMultipartWriter
+.objc_class_name_TDJSON
 
 _TDStatusToHTTPStatus
 _TDStatusToNSError
+_TDURLWithoutQuery
+_TDSequenceCompare
+_TDVersionString
 
 _TDDatabaseChangeNotification
 _TDDatabaseWillCloseNotification
 _TDReplicatorProgressChangedNotification
 _TDReplicatorStoppedNotification
+
+_kDefaultTDChangesOptions
+_kDefaultTDQueryOptions
+_kTDReplicatorDatabaseName

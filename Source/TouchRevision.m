@@ -39,6 +39,18 @@
 - (BOOL) isDeleted          {return [self.properties objectForKey: @"_deleted"] != nil;}
 
 
+- (SequenceNumber) sequence {
+    SequenceNumber sequence = _rev.sequence;
+    if (sequence == 0) {
+        TDStatus status = [self.database.tddb loadRevisionBody: _rev options: 0];
+        if (TDStatusIsError(status))
+            Warn(@"Couldn't get sequence of %@: %d", self, status);
+        sequence = _rev.sequence;
+    }
+    return sequence;
+}
+
+
 - (NSDictionary*) properties {
     NSDictionary* properties = _rev.properties;
     if (!properties) {
@@ -83,6 +95,32 @@
 
 - (TouchRevision*) deleteDocument: (NSError**)outError {
     return [self putProperties: nil error: outError];
+}
+
+
+#pragma mark - ATTACHMENTS:
+
+
+- (NSDictionary*) attachmentMetadata {
+    return $castIf(NSDictionary, [self.properties objectForKey: @"_attachments"]);
+}
+
+
+- (NSDictionary*) attachmentMetadataFor: (NSString*)name {
+    return $castIf(NSDictionary, [self.attachmentMetadata objectForKey: name]);
+}
+
+
+- (NSArray*) attachmentNames {
+    return [self.attachmentMetadata allKeys];
+}
+
+
+- (TouchAttachment*) attachmentNamed: (NSString*)name {
+    NSDictionary* metadata = [self attachmentMetadataFor: name];
+    if (!metadata)
+        return nil;
+    return [[[TouchAttachment alloc] initWithRevision: self name: name metadata: metadata] autorelease];
 }
 
 

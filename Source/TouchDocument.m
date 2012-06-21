@@ -135,6 +135,17 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
                        prevRevID: (NSString*)prevID
                            error: (NSError**)outError
 {
+    NSDictionary* attachments = [properties objectForKey: @"_attachments"];
+    if (attachments.count) {
+        NSDictionary* expanded = [TouchAttachment installAttachmentBodies: attachments
+                                                             intoDatabase: _database];
+        if (expanded != attachments) {
+            NSMutableDictionary* nuProperties = [[properties mutableCopy] autorelease];
+            [nuProperties setObject: expanded forKey: @"_attachments"];
+            properties = nuProperties;
+        }
+    }
+    
     BOOL deleted = !properties || [[properties objectForKey: @"_deleted"] boolValue];
     TDRevision* rev = [[[TDRevision alloc] initWithDocID: _docID
                                                    revID: nil
