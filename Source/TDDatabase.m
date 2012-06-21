@@ -22,6 +22,7 @@
 #import "TDPuller.h"
 #import "TDPusher.h"
 #import "TDMisc.h"
+#import "TouchDBPrivate.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -51,7 +52,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     TDDatabase *db = [[[self alloc] initWithPath: path] autorelease];
     if (!removeItemIfExists(db.attachmentStorePath, NULL))
         return nil;
-    if (![db open])
+    if (![db open: nil])
         return nil;
     return db;
 }
@@ -98,9 +99,15 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-- (BOOL) initialize: (NSString*)statements {
+- (NSError*) fmdbError {
+    NSDictionary* info = $dict({NSLocalizedDescriptionKey, _fmdb.lastErrorMessage});
+    return [NSError errorWithDomain: @"SQLite" code: _fmdb.lastErrorCode userInfo: info];
+}
+
+- (BOOL) initialize: (NSString*)statements error: (NSError**)outError {
     for (NSString* statement in [statements componentsSeparatedByString: @";"]) {
         if (statement.length && ![_fmdb executeUpdate: statement]) {
+            if (outError) *outError = self.fmdbError;
             Warn(@"TDDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
                   "SQLite error: %@", _path, _fmdb.lastErrorMessage);
             [_fmdb close];
@@ -110,12 +117,14 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     return YES;
 }
 
-- (BOOL) open {
+- (BOOL) open: (NSError**)outError {
     if (_open)
         return YES;
     LogTo(TDDatabase, @"Open %@", _path);
-    if (![_fmdb open])
+    if (![_fmdb open]) {
+        if (outError) *outError = self.fmdbError;
         return NO;
+    }
     
     // Register CouchDB-compatible JSON collation functions:
     sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8,
@@ -128,7 +137,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                              NULL, TDCollateRevIDs);
     
     // Stuff we need to initialize every time the database opens:
-    if (![self initialize: @"PRAGMA foreign_keys = ON;"])
+    if (![self initialize: @"PRAGMA foreign_keys = ON;" error: outError])
         return NO;
     
     // Check the user_version number we last stored in the database:
@@ -138,6 +147,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     if (dbVersion >= 100) {
         Warn(@"TDDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
         [_fmdb close];
+        if (outError) *outError = [NSError errorWithDomain: @"TouchDB" code: 1 userInfo: nil]; //FIX: Real code
         return NO;
     }
     
@@ -192,7 +202,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                 last_sequence TEXT, \
                 UNIQUE (remote, push)); \
             PRAGMA user_version = 3";             // at the end, update user_version
-        if (![self initialize: schema])
+        if (![self initialize: schema error: outError])
             return NO;
         dbVersion = 3;
     }
@@ -201,7 +211,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         // Version 2: added attachments.revpos
         NSString* sql = @"ALTER TABLE attachments ADD COLUMN revpos INTEGER DEFAULT 0; \
                           PRAGMA user_version = 2";
-        if (![self initialize: sql])
+        if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 2;
     }
@@ -214,7 +224,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                             json BLOB); \
                             CREATE INDEX IF NOT EXISTS localdocs_by_docid ON localdocs(docid); \
                           PRAGMA user_version = 3";
-        if (![self initialize: sql])
+        if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 3;
     }
@@ -228,7 +238,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                                    INSERT INTO INFO (key, value) VALUES ('publicUUID',  '%@');\
                                    PRAGMA user_version = 4",
                                  TDCreateUUID(), TDCreateUUID());
-        if (![self initialize: sql])
+        if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 4;
     }
@@ -238,7 +248,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         NSString* sql = @"ALTER TABLE attachments ADD COLUMN encoding INTEGER DEFAULT 0; \
                           ALTER TABLE attachments ADD COLUMN encoded_length INTEGER; \
                           PRAGMA user_version = 5";
-        if (![self initialize: sql])
+        if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 5;
     }
@@ -247,7 +257,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         // Version 6: enable Write-Ahead Log (WAL) <http://sqlite.org/wal.html>
         NSString* sql = @"PRAGMA journal_mode=WAL; \
                           PRAGMA user_version = 6";
-        if (![self initialize: sql])
+        if (![self initialize: sql error: outError])
             return NO;
         //dbVersion = 6;
     }
@@ -258,8 +268,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
-    NSError* error;
-    _attachments = [[TDBlobStore alloc] initWithPath: attachmentsPath error: &error];
+    _attachments = [[TDBlobStore alloc] initWithPath: attachmentsPath error: outError];
     if (!_attachments) {
         Warn(@"%@: Couldn't open attachment store at %@", self, attachmentsPath);
         [_fmdb close];
@@ -268,6 +277,10 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
     _open = YES;
     return YES;
+}
+
+- (BOOL) open {
+    return [self open: nil];
 }
 
 - (BOOL) close {
@@ -319,12 +332,19 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     [_filters release];
     [_attachments release];
     [_pendingAttachmentsByDigest release];
-    [_docCache release];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [super dealloc];
 }
 
-@synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments;
+@synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments,
+            touchDatabase=_touchDatabase;
+
+
+- (TouchDatabase*) touchDatabase {
+    if (!_touchDatabase)
+        _touchDatabase = [[[TouchDatabase alloc] initWithTDDatabase: self] autorelease];
+    return _touchDatabase;
+}
 
 
 - (UInt64) totalDataSize {

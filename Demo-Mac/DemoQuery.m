@@ -14,28 +14,25 @@
 //  and limitations under the License.
 
 #import "DemoQuery.h"
-#import <CouchCocoa/CouchCocoa.h>
+#import <TouchDB/TouchDB.h>
 
 
 @interface DemoQuery ()
-- (void) loadEntriesFrom: (CouchQueryEnumerator*)rows;
+- (void) loadEntriesFrom: (TouchQueryEnumerator*)rows;
 @end
 
 
 @implementation DemoQuery
 
 
-- (id) initWithQuery: (CouchQuery*)query
+- (id) initWithQuery: (TouchQuery*)query
 {
     NSParameterAssert(query);
     self = [super init];
     if (self != nil) {
-        _modelClass = [CouchModel class];
+        _modelClass = [TouchModel class];
         _query = [[query asLiveQuery] retain];
-
         _query.prefetch = YES;        // for efficiency, include docs on first load
-        [_query start];
-
         // Observe changes to _query.rows:
         [_query addObserver: self forKeyPath: @"rows" options: 0 context: NULL];
     }
@@ -55,13 +52,13 @@
 @synthesize modelClass=_modelClass;
 
 
-- (void) loadEntriesFrom: (CouchQueryEnumerator*)rows {
+- (void) loadEntriesFrom: (TouchQueryEnumerator*)rows {
     NSLog(@"Reloading %lu rows from sequence #%lu...",
           (unsigned long)rows.count, (unsigned long)rows.sequenceNumber);
     NSMutableArray* entries = [NSMutableArray array];
 
-    for (CouchQueryRow* row in rows) {
-        CouchModel* item = [_modelClass modelForDocument: row.document];
+    for (TouchQueryRow* row in rows) {
+        TouchModel* item = [_modelClass modelForDocument: row.document];
         item.autosaves = YES;
         [entries addObject: item];
         // If this item isn't in the prior _entries, it's an external insertion:
@@ -69,7 +66,7 @@
             [item markExternallyChanged];
     }
 
-    for (CouchModel* item in _entries) {
+    for (TouchModel* item in _entries) {
         if ([item isNew])
             [entries addObject: item];
     }
@@ -103,12 +100,12 @@
 }
 
 
-- (CouchModel*)objectInEntriesAtIndex: (NSUInteger)index {
+- (TouchModel*)objectInEntriesAtIndex: (NSUInteger)index {
     return [_entries objectAtIndex: index];
 }
 
 
-- (void) insertObject: (CouchModel*)object inEntriesAtIndex: (NSUInteger)index {
+- (void) insertObject: (TouchModel*)object inEntriesAtIndex: (NSUInteger)index {
     [_entries insertObject: object atIndex: index];
     object.autosaves = YES;
     object.database = _query.database;
@@ -116,7 +113,7 @@
 
 
 - (void) removeObjectFromEntriesAtIndex: (NSUInteger)index {
-    CouchModel* item = [_entries objectAtIndex: index];
+    TouchModel* item = [_entries objectAtIndex: index];
     item.database = nil;
     [_entries removeObjectAtIndex: index];
 }

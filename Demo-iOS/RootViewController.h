@@ -19,13 +19,13 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "TDUITableSource.h"
-@class TDDatabase, TDPersistentReplication;
+#import "TouchUITableSource.h"
+@class TouchDatabase, TDPersistentReplication;
 
 
-@interface RootViewController : UIViewController <TDUITableDelegate, UITextFieldDelegate>
+@interface RootViewController : UIViewController <TouchUITableDelegate, UITextFieldDelegate>
 {
-    TDDatabase *database;
+    TouchDatabase *database;
     NSURL* remoteSyncURL;
     TDPersistentReplication* _pull;
     TDPersistentReplication* _push;
@@ -38,9 +38,9 @@
 }
 
 @property(nonatomic, strong) IBOutlet UITableView *tableView;
-@property(nonatomic, strong) IBOutlet TDUITableSource* dataSource;
+@property(nonatomic, strong) IBOutlet TouchUITableSource* dataSource;
 
--(void)useDatabase:(TDDatabase*)theDatabase;
+-(void)useDatabase:(TouchDatabase*)theDatabase;
 
 - (IBAction)configureSync:(id)sender;
 - (IBAction) deleteCheckedItems:(id)sender;

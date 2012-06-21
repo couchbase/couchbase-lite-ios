@@ -9,7 +9,7 @@
 
 #import <TouchDB/TDRevision.h>
 #import <TouchDB/TDStatus.h>
-@class FMDatabase, TDView, TDBlobStore, TDDocument, TDCache;
+@class FMDatabase, TDView, TDBlobStore, TouchDocument, TDCache, TouchDatabase;
 struct TDQueryOptions;      // declared in TDView.h
 
 
@@ -26,6 +26,8 @@ extern NSString* const TDDatabaseWillBeDeletedNotification;
 
 /** Filter block, used in changes feeds and replication. */
 typedef BOOL (^TDFilterBlock) (TDRevision* revision);
+
+#define FILTERBLOCK(BLOCK) ^BOOL(TDRevision* revision) {BLOCK}
 
 
 /** Options for what metadata to include in document bodies */
@@ -70,11 +72,11 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     TDBlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
-    
-    TDCache* _docCache;
+    TouchDatabase* _touchDatabase;
 }    
         
 - (id) initWithPath: (NSString*)path;
+- (BOOL) open: (NSError**)outError;
 - (BOOL) open;
 - (BOOL) close;
 - (BOOL) deleteDatabase: (NSError**)outError;
@@ -95,6 +97,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 @property (readonly, copy) NSString* name;
 @property (readonly) BOOL exists;
 @property (readonly) UInt64 totalDataSize;
+@property (assign, nonatomic) TouchDatabase* touchDatabase;
 
 @property (readonly) NSUInteger documentCount;
 @property (readonly) SequenceNumber lastSequence;

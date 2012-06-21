@@ -7,12 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
-@class TDDatabase;
+@class TouchDatabase;
 
 
 @interface DemoAppDelegate : UIResponder <UIApplicationDelegate>
 
-@property (nonatomic, strong) TDDatabase *database;
+@property (nonatomic, strong) TouchDatabase *database;
 
 @property (strong, nonatomic) IBOutlet UIWindow *window;
 @property (nonatomic, strong) IBOutlet UINavigationController *navigationController;

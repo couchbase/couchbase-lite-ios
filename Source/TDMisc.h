@@ -44,6 +44,9 @@ NSString* TDQuoteString( NSString* param );
     If the string has no surrounding double-quotes it will be returned as-is. */
 NSString* TDUnquoteString( NSString* param );
 
+/** Abbreviates a string to 10 characters or less by replacing its middle with "..". */
+NSString* TDAbbreviate( NSString* str );
+
 /** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
 BOOL TDIsOfflineError( NSError* error );
 

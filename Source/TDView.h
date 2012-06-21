@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <TouchDB/TDDatabase.h>
-@class TDQuery;
+
 
 typedef void (^TDMapEmitBlock)(id key, id value);
 
@@ -105,8 +105,6 @@ typedef enum {
     @return  An array of result rows -- each is a dictionary with "key" and "value" keys, and possibly "id" and "doc". */
 - (NSArray*) queryWithOptions: (const TDQueryOptions*)options
                        status: (TDStatus*)outStatus;
-
-- (TDQuery*) query;
 
 /** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
 + (NSNumber*) totalValues: (NSArray*)values;

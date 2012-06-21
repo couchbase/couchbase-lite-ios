@@ -15,13 +15,12 @@
 
 #import "DemoAppController.h"
 #import "DemoQuery.h"
+#import "TDJSON.h"
 #import "Test.h"
 #import "MYBlockUtils.h"
-#import <CouchCocoa/CouchCocoa.h>
-#import <CouchCocoa/CouchTouchDBServer.h>
-#import <CouchCocoa/CouchDesignDocument_Embedded.h>
+#import <TouchDB/TouchDB.h>
 
-#define FOR_TESTING_PURPOSES
+#undef FOR_TESTING_PURPOSES
 #ifdef FOR_TESTING_PURPOSES
 #import <TouchDBListener/TDListener.h>
 @interface DemoAppController () <TDViewCompiler>
@@ -46,53 +45,46 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
-    //gRESTLogLevel = kRESTLogRequestURLs;
-    gCouchLogLevel = 1;
-    
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
     if (!dbName) {
-        NSLog(@"FATAL: Please specify a CouchDB database name in the app's Info.plist under the 'DemoDatabase' key");
+        NSLog(@"FATAL: Please specify a TouchDB database name in the app's Info.plist under the 'DemoDatabase' key");
         exit(1);
     }
     
-    CouchTouchDBServer* server = [CouchTouchDBServer sharedInstance];
-    NSAssert(!server.error, @"Error initializing TouchDB: %@", server.error);
-
-    _database = [[server databaseNamed: dbName] retain];
-    
-    RESTOperation* op = [_database create];
-    if (![op wait]) {
-        NSAssert(op.error.code == 412, @"Error creating db: %@", op.error);
+    NSError* error;
+    _database = [[[TouchDatabaseManager sharedInstance] createDatabaseNamed: dbName
+                                                                      error: &error] retain];
+    if (error) {
+        NSAssert(NO, @"Error creating db: %@", error);
     }
     
     // Create a 'view' containing list items sorted by date:
-    CouchDesignDocument* design = [_database designDocumentWithName: @"default"];
-    [design defineViewNamed: @"byDate" mapBlock: MAPBLOCK({
+    [[_database viewNamed: @"byDate"] setMapBlock: MAPBLOCK({
         id date = [doc objectForKey: @"created_at"];
         if (date) emit(date, doc);
     }) version: @"1.0"];
     
     // and a validation function requiring parseable dates:
-    design.validationBlock = VALIDATIONBLOCK({
+    [_database defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.deleted)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
-        if (date && ! [RESTBody dateWithJSONObject: date]) {
+        if (date && ! [TDJSON dateWithJSONObject: date]) {
             context.errorMessage = [@"invalid date " stringByAppendingString: date];
             return NO;
         }
         return YES;
-    });
+    })];
     
     // And why not a filter, just to allow some simple testing of filtered _changes.
     // For example, try curl 'http://localhost:8888/demo-shopping/_changes?filter=default/checked'
-    [design defineFilterNamed: @"checked" block: FILTERBLOCK({
+    [_database defineFilter: @"checked" asBlock: FILTERBLOCK({
         return [[revision.properties objectForKey: @"check"] boolValue];
     })];
 
     
-    CouchQuery* q = [design queryViewNamed: @"byDate"];
+    TouchQuery* q = [[_database viewNamed: @"byDate"] query];
     q.descending = YES;
     self.query = [[[DemoQuery alloc] initWithQuery: q] autorelease];
     self.query.modelClass =_tableController.objectClass;
@@ -103,7 +95,7 @@ int main (int argc, const char * argv[]) {
 #ifdef FOR_TESTING_PURPOSES
     // Start a listener socket:
     [server tellTDServer: ^(TDServer* tdServer) {
-        // Register support for handling certain JS functions used in the CouchDB unit tests:
+        // Register support for handling certain JS functions used in the TouchDB unit tests:
         [TDView setCompiler: self];
         
         sListener = [[TDListener alloc] initWithTDServer: tdServer port: 8888];
@@ -173,7 +165,7 @@ int main (int argc, const char * argv[]) {
     if (_syncConfiguringDefault) {
         self.syncURL = url;
     } else {
-        /* FIX: Re-enable this functionality once CouchReplication/CouchPersistentReplication
+        /* FIX: Re-enable this functionality once TouchReplication/TouchPersistentReplication
                  are merged
         if (_syncPushCheckbox.state) {
             NSLog(@"**** Pushing to <%@> ...", url);
@@ -206,21 +198,21 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (void) observeReplication: (CouchPersistentReplication*)repl {
+- (void) observeReplication: (TouchPersistentReplication*)repl {
     [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"total" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
 }
 
-- (void) stopObservingReplication: (CouchPersistentReplication*)repl {
+- (void) stopObservingReplication: (TouchPersistentReplication*)repl {
     [repl removeObserver: self forKeyPath: @"completed"];
     [repl removeObserver: self forKeyPath: @"total"];
     [repl removeObserver: self forKeyPath: @"error"];
     [repl removeObserver: self forKeyPath: @"mode"];
 }
 
-- (void) forgetReplication: (CouchPersistentReplication**)repl {
+- (void) forgetReplication: (TouchPersistentReplication**)repl {
     if (*repl) {
         [self stopObservingReplication: *repl];
         [*repl release];
@@ -253,19 +245,19 @@ int main (int argc, const char * argv[]) {
         value = 3;  // red
         tooltip = _push.error.localizedDescription;
     } else switch(MAX(_pull.mode, _push.mode)) {
-        case kCouchReplicationStopped:
+        case kTouchReplicationStopped:
             value = 3; 
             tooltip = @"Sync stopped";
             break;  // red
-        case kCouchReplicationOffline:
+        case kTouchReplicationOffline:
             value = 2;  // yellow
             tooltip = @"Offline";
             break;
-        case kCouchReplicationIdle:
+        case kTouchReplicationIdle:
             value = 0;
             tooltip = @"Everything's in sync!";
             break;
-        case kCouchReplicationActive:
+        case kTouchReplicationActive:
             value = 1;
             tooltip = @"Syncing data...";
             break;
@@ -281,7 +273,7 @@ int main (int argc, const char * argv[]) {
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
-    CouchPersistentReplication* repl = object;
+    TouchPersistentReplication* repl = object;
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
             unsigned completed = _pull.completed + _push.completed;
@@ -320,7 +312,7 @@ int main (int argc, const char * argv[]) {
 
 #ifdef FOR_TESTING_PURPOSES
 
-// These map/reduce functions are used in the CouchDB 'basics.js' unit tests. By recognizing them
+// These map/reduce functions are used in the TouchDB 'basics.js' unit tests. By recognizing them
 // here and returning equivalent native blocks, we can run those tests.
 
 - (TDMapBlock) compileMapFunction: (NSString*)mapSource language:(NSString *)language {
@@ -370,7 +362,7 @@ int main (int argc, const char * argv[]) {
     NSArray* items = _tableController.arrangedObjects;
     if (row >= (NSInteger)items.count)
         return;                 // Don't know why I get called on illegal rows, but it happens...
-    CouchModel* item = [items objectAtIndex: row];
+    TouchModel* item = [items objectAtIndex: row];
     NSTimeInterval changedFor = item.timeSinceExternallyChanged;
     if (changedFor > 0 && changedFor < kChangeGlowDuration) {
         float fraction = (float)(1.0 - changedFor / kChangeGlowDuration);

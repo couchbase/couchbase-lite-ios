@@ -14,10 +14,10 @@
 //  and limitations under the License.
 
 #import <Cocoa/Cocoa.h>
-@class CouchDatabase, CouchPersistentReplication, DemoQuery;
+@class TouchDatabase, TouchPersistentReplication, DemoQuery;
 
 
-/** Generic application delegate for simple Mac OS CouchDB demo apps.
+/** Generic application delegate for simple Mac OS TouchDB demo apps.
     The name of the (local) database to use should be added to the app's Info.plist
     under the 'DemoDatabase' key. */
 @interface DemoAppController : NSObject
@@ -33,10 +33,10 @@
     IBOutlet NSTextField* _syncURLField;
     IBOutlet NSButtonCell* _syncPushCheckbox, *_syncPullCheckbox;
     
-    CouchDatabase* _database;
+    TouchDatabase* _database;
     DemoQuery* _query;
     BOOL _syncConfiguringDefault;
-    CouchPersistentReplication *_pull, *_push;
+    TouchPersistentReplication *_pull, *_push;
     BOOL _glowing;
 }
 

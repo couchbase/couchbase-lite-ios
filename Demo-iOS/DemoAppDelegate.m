@@ -15,10 +15,7 @@
 
 #import "DemoAppDelegate.h"
 #import "RootViewController.h"
-#import "TDPublic.h"
-
-
-static TDDatabaseManager* sDBManager;
+#import "TouchDB.h"
 
 
 @implementation DemoAppDelegate
@@ -33,17 +30,13 @@ static TDDatabaseManager* sDBManager;
 	[window addSubview:navigationController.view];
 	[window makeKeyAndVisible];
         
-    NSLog(@"Creating database...");
+    NSLog(@"Opening database...");
+    // Open the database, creating it on the first run:
     NSError* error;
-    sDBManager = [[TDDatabaseManager alloc] initWithDirectory: [TDDatabaseManager defaultDirectory] 
-                                                        error: &error];
-    NSAssert(sDBManager, @"Error initializing TouchDB: %@", error);
-    
-    // Create the database on the first run of the app.
-    self.database = [sDBManager databaseNamed: @"grocery-sync"];
-    BOOL opened = [self.database open];
-    NSAssert(opened, @"Couldn't open database");
-    (void)opened;
+    self.database = [[TouchDatabaseManager sharedInstance] createDatabaseNamed: @"grocery-sync"
+                                                                         error: &error];
+    if (!self.database)
+        [self showAlert: @"Couldn't open database" error: error fatal: YES];
     
     // Tell the RootViewController:
     RootViewController* root = (RootViewController*)navigationController.topViewController;

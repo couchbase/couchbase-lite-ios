@@ -22,14 +22,14 @@
 #import "ConfigViewController.h"
 #import "DemoAppDelegate.h"
 
-#import "TDPublic.h"
+#import "TouchDB.h"
 #import "TDView.h"
 #import "TDDatabase+Insertion.h"
 #import "TDJSON.h"
 
 
 @interface RootViewController ()
-@property(nonatomic, strong)TDDatabase *database;
+@property(nonatomic, strong)TouchDatabase *database;
 @property(nonatomic, strong)NSURL* remoteSyncURL;
 - (void)updateSyncURL;
 - (void)showSyncButton;
@@ -72,7 +72,7 @@
 
     // Create a query sorted by descending date, i.e. newest items first:
     NSAssert(database!=nil, @"Not hooked up to database yet");
-    TDLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
+    TouchLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
     query.descending = YES;
     
     self.dataSource.query = query;
@@ -94,7 +94,7 @@
 }
 
 
-- (void)useDatabase:(TDDatabase*)theDatabase {
+- (void)useDatabase:(TouchDatabase*)theDatabase {
     self.database = theDatabase;
     
     // Create a 'view' containing list items sorted by date:
@@ -129,9 +129,9 @@
 
 
 // Customize the appearance of table view cells.
-- (void)couchTableSource:(TDUITableSource*)source
+- (void)couchTableSource:(TouchUITableSource*)source
              willUseCell:(UITableViewCell*)cell
-                  forRow:(TDQueryRow*)row
+                  forRow:(TouchQueryRow*)row
 {
     // Set the cell background and font:
     cell.backgroundColor = [UIColor whiteColor];
@@ -160,8 +160,8 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    TDQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
-    TDDocument *doc = [row document];
+    TouchQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
+    TouchDocument *doc = [row document];
 
     // Toggle the document's 'checked' property:
     NSMutableDictionary *docContent = [doc.properties mutableCopy];
@@ -182,8 +182,8 @@
 - (NSArray*)checkedDocuments {
     // If there were a whole lot of documents, this would be more efficient with a custom query.
     NSMutableArray* checked = [NSMutableArray array];
-    for (TDQueryRow* row in self.dataSource.rows) {
-        TDDocument* doc = row.document;
+    for (TouchQueryRow* row in self.dataSource.rows) {
+        TouchDocument* doc = row.document;
         if ([[doc.properties valueForKey:@"check"] boolValue])
             [checked addObject: doc];
     }
@@ -245,7 +245,7 @@
                                 nil];
 
     // Save the document:
-    TDDocument* doc = [database untitledDocument];
+    TouchDocument* doc = [database untitledDocument];
     NSError* error;
     if (![doc putProperties: inDocument error: &error]) {
         [self showErrorAlert: @"Couldn't save new item" forError: error];

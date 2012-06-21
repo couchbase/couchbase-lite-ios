@@ -15,7 +15,6 @@
 
 #import "TDView.h"
 #import "TDInternal.h"
-#import "TDQuery.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -523,11 +522,6 @@ static id groupKey(id key, unsigned groupLevel) {
     [r close];
     *outStatus = kTDStatusOK;
     return rows;
-}
-
-
-- (TDQuery*) query {
-    return [[[TDQuery alloc] initWithView: self] autorelease];
 }
 
 

@@ -183,6 +183,15 @@ NSString* TDUnquoteString( NSString* param ) {
 }
 
 
+NSString* TDAbbreviate( NSString* str ) {
+    if (str.length <= 10)
+        return str;
+    NSMutableString* abbrev = [[str mutableCopy] autorelease];
+    [abbrev replaceCharactersInRange: NSMakeRange(4, abbrev.length - 8) withString: @".."];
+    return abbrev;
+}
+
+
 BOOL TDIsOfflineError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;

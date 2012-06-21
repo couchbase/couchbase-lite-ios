@@ -1,4 +1,21 @@
 # Symbols exported by the framework
+
+.objc_class_name_TouchDatabase
+.objc_class_name_TouchDatabaseManager
+.objc_class_name_TouchTouchDocument
+.objc_class_name_TouchRevision
+.objc_class_name_TouchView
+.objc_class_name_TouchQuery
+.objc_class_name_TouchQueryEnumerator
+.objc_class_name_TouchQueryRow
+.objc_class_name_TouchModel
+.objc_class_name_TouchModelFactory
+.objc_class_name_MYDynamicObject
+
+_kTouchDatabaseChangeNotification
+_kTouchDocumentChangeNotification
+
+# Non-public symbols that are used by TDRouter and TDListener:
 .objc_class_name_TDDatabase
 .objc_class_name_TDView
 .objc_class_name_TDBlobStore

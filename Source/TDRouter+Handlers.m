@@ -29,6 +29,10 @@
 #import "TDPusher.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
+#import "TDJSON.h"
+
+#import "CollectionUtils.h"
+#import "Test.h"
 
 
 @implementation TDRouter (Handlers)

@@ -14,22 +14,22 @@
 //  and limitations under the License.
 
 #import <Cocoa/Cocoa.h>
-@class CouchQuery, CouchLiveQuery, RESTOperation;
+@class TouchQuery, TouchLiveQuery, RESTOperation;
 
 
-/** Simple controller for CouchDB demo apps.
-    This class acts as glue between a CouchQuery (a CouchDB view) and an NSArrayController.
+/** Simple controller for TouchDB demo apps.
+    This class acts as glue between a TouchQuery (a TouchDB view) and an NSArrayController.
     The app can then bind its UI controls to the NSArrayController and get basic CRUD operations
     without needing any code. */
 @interface DemoQuery : NSObject
 {
-    CouchLiveQuery* _query;
+    TouchLiveQuery* _query;
     RESTOperation* _op;
     NSMutableArray* _entries;
     Class _modelClass;
 }
 
-- (id) initWithQuery: (CouchQuery*)query;
+- (id) initWithQuery: (TouchQuery*)query;
 
 /** Class to instantiate for entries. Defaults to DemoItem. */
 @property (assign) Class modelClass;

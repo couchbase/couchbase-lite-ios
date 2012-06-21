@@ -21,7 +21,12 @@
 #import "TDMultipartWriter.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
+#import "TDJSON.h"
+#import "TDMisc.h"
+
 #import "ExceptionUtils.h"
+#import "CollectionUtils.h"
+#import "Test.h"
 
 #ifdef GNUSTEP
 #import <GNUstepBase/NSURL+GNUstepBase.h>
@@ -389,7 +394,7 @@ static NSArray* splitPath( NSURL* url ) {
         }
     }
 
-    [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
+    [_response.headers setObject: $sprintf(@"TouchDB %@", TDVersionString())
                           forKey: @"Server"];
 
     if (_response.body.isValidJSON)
