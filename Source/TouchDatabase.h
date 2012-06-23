@@ -20,6 +20,8 @@
     TouchModelFactory* _modelFactory;
 }
 
+/** The database's name. */
+@property (readonly) NSString* name;
 
 /** Instantiates a TDDocument object with the given ID.
     Doesn't touch the on-disk database; a document with that ID doesn't even need to exist yet.
@@ -57,7 +59,8 @@
 - (TDFilterBlock) filterNamed: (NSString*)filterName;
 
 
-/** Runs the block within a transaction. If the block returns NO, the transaction is rolled back. */
+/** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
+    Use this when performing bulk operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits. */
 - (BOOL) inTransaction: (BOOL(^)(void))block;
 
 

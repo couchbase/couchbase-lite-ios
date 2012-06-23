@@ -68,6 +68,11 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
+- (NSString*) name {
+    return _tddb.name;
+}
+
+
 - (BOOL) inTransaction: (BOOL(^)(void))block {
     return 200 == [_tddb inTransaction: ^TDStatus {
         return block() ? 200 : 999;

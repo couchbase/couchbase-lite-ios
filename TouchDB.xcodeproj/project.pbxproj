@@ -320,6 +320,9 @@
 		27E2E5A3159383E9005B9234 /* TouchAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* TouchAttachment.h */; };
 		27E2E5A4159383E9005B9234 /* TouchAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5A2159383E9005B9234 /* TouchAttachment.m */; };
 		27E2E5A5159383E9005B9234 /* TouchAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5A2159383E9005B9234 /* TouchAttachment.m */; };
+		27E2E5CD159533A5005B9234 /* TouchReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* TouchReplication.h */; };
+		27E2E5CE159533A5005B9234 /* TouchReplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5CC159533A5005B9234 /* TouchReplication.m */; };
+		27E2E5CF159533A5005B9234 /* TouchReplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5CC159533A5005B9234 /* TouchReplication.m */; };
 		27E4152F154F6E8500771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E41530154F6E9C00771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E7FAEC155D78C20025F93A /* TDChangeTracker_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E7FAEA155D78C20025F93A /* TDChangeTracker_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -711,6 +714,8 @@
 		27E11F0F14AD15940006B340 /* TDHTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDHTTPResponse.m; sourceTree = "<group>"; };
 		27E2E5A1159383E9005B9234 /* TouchAttachment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TouchAttachment.h; sourceTree = "<group>"; };
 		27E2E5A2159383E9005B9234 /* TouchAttachment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TouchAttachment.m; sourceTree = "<group>"; };
+		27E2E5CB159533A5005B9234 /* TouchReplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TouchReplication.h; sourceTree = "<group>"; };
+		27E2E5CC159533A5005B9234 /* TouchReplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TouchReplication.m; sourceTree = "<group>"; };
 		27E7FAEA155D78C20025F93A /* TDChangeTracker_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDChangeTracker_Tests.m; sourceTree = "<group>"; };
 		27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
@@ -1319,6 +1324,8 @@
 				27DA434915912AFD00F9E7B5 /* TouchView.m */,
 				27DA4310158FB79E00F9E7B5 /* TouchQuery.h */,
 				27DA4311158FB79E00F9E7B5 /* TouchQuery.m */,
+				27E2E5CB159533A5005B9234 /* TouchReplication.h */,
+				27E2E5CC159533A5005B9234 /* TouchReplication.m */,
 				27DA431A158FD9BA00F9E7B5 /* iOS */,
 				27DA435D15918C9600F9E7B5 /* Model */,
 			);
@@ -1529,6 +1536,7 @@
 				27DA435715918C8E00F9E7B5 /* TouchModel.h in Headers */,
 				27DA435A15918C8E00F9E7B5 /* TouchModelFactory.h in Headers */,
 				27E2E5A3159383E9005B9234 /* TouchAttachment.h in Headers */,
+				27E2E5CD159533A5005B9234 /* TouchReplication.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2088,6 +2096,7 @@
 				27DA435815918C8E00F9E7B5 /* TouchModel.m in Sources */,
 				27DA435B15918C8E00F9E7B5 /* TouchModelFactory.m in Sources */,
 				27E2E5A4159383E9005B9234 /* TouchAttachment.m in Sources */,
+				27E2E5CE159533A5005B9234 /* TouchReplication.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2214,6 +2223,7 @@
 				27DA435915918C8E00F9E7B5 /* TouchModel.m in Sources */,
 				27DA435C15918C8E00F9E7B5 /* TouchModelFactory.m in Sources */,
 				27E2E5A5159383E9005B9234 /* TouchAttachment.m in Sources */,
+				27E2E5CF159533A5005B9234 /* TouchReplication.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
