@@ -28,7 +28,7 @@
 static TDListener* sListener;
 #endif
 
-#undef ENABLE_REPLICATION
+#define ENABLE_REPLICATION
 
 
 #define kChangeGlowDuration 3.0
@@ -200,21 +200,21 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (void) observeReplication: (TouchPersistentReplication*)repl {
+- (void) observeReplication: (TouchReplication*)repl {
     [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"total" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
 }
 
-- (void) stopObservingReplication: (TouchPersistentReplication*)repl {
+- (void) stopObservingReplication: (TouchReplication*)repl {
     [repl removeObserver: self forKeyPath: @"completed"];
     [repl removeObserver: self forKeyPath: @"total"];
     [repl removeObserver: self forKeyPath: @"error"];
     [repl removeObserver: self forKeyPath: @"mode"];
 }
 
-- (void) forgetReplication: (TouchPersistentReplication**)repl {
+- (void) forgetReplication: (TouchReplication**)repl {
     if (*repl) {
         [self stopObservingReplication: *repl];
         [*repl release];

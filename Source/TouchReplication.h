@@ -6,8 +6,8 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-@class TouchDatabase, TDServer, TDReplicator;
+#import "TouchModel.h"
+@class TouchDatabase, TDDatabase, TDServer, TDReplicator;
 
 
 typedef enum {
@@ -18,25 +18,20 @@ typedef enum {
 } TouchReplicationMode;
 
 
-@interface TouchReplication : NSObject
+@interface TouchReplication : TouchModel
 {
     @private
-    TDServer* _server;
-    TDReplicator* _replicator;
-    TouchDatabase* _database;
-    NSURL* _remote;
-    bool _pull, _createTarget, _continuous;
-    NSString* _filter;
-    NSDictionary* _filterParams;
-    NSDictionary* _options;
-    NSDictionary* _headers;
-    NSDictionary* _oauth;
-    BOOL _running;
-    NSString* _taskID;
-    NSString* _status;
+    NSURL* _remoteURL;
+    bool _pull;
+    NSThread* _thread;
+    bool _started;
+    bool _running;
     unsigned _completed, _total;
     TouchReplicationMode _mode;
     NSError* _error;
+    
+    TDReplicator* _replicator;  // ONLY used on the server thread
+    TDDatabase* _serverDatabase;
 }
 
 /** The local database being replicated to/from. */
@@ -48,8 +43,15 @@ typedef enum {
 /** Does the replication pull from (as opposed to push to) the target? */
 @property (nonatomic, readonly) bool pull;
 
+
+#pragma mark - OPTIONS:
+
+/** Is this replication remembered persistently in the _replicator database?
+    Persistent continuous replications will automatically restart on the next launch. */
+@property bool persistent;
+
 /** Should the target database be created if it doesn't already exist? (Defaults to NO). */
-@property (nonatomic) bool createTarget;
+@property (nonatomic) bool create_target;
 
 /** Should the replication operate continuously, copying changes as soon as the source database is modified? (Defaults to NO). */
 @property (nonatomic) bool continuous;
@@ -61,7 +63,10 @@ typedef enum {
 
 /** Parameters to pass to the filter function.
     Should be a JSON-compatible dictionary. */
-@property (nonatomic, copy) NSDictionary* filterParams;
+@property (nonatomic, copy) NSDictionary* query_params;
+
+/** Sets the documents to specify as part of the replication. */
+@property (copy) NSArray *doc_ids;
 
 /** Extra HTTP headers to send in all requests to the remote server.
     Should map strings (header names) to strings. */
@@ -71,10 +76,8 @@ typedef enum {
     Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret", and optionally "signature_method". */
 @property (nonatomic, copy) NSDictionary* OAuth;
 
-/** Other options to be provided to the replicator.
-    These will be added to the JSON body of the POST to /_replicate. */
-@property (nonatomic, copy) NSDictionary* options;
 
+#pragma mark - STATUS:
 
 /** Starts the replication, asynchronously.
     @return  The operation to start replication, or nil if replication is already started. */
@@ -83,11 +86,7 @@ typedef enum {
 /** Stops replication, asynchronously. */
 - (void) stop;
 
-@property (nonatomic, readonly) BOOL running;
-
-/** The current status string, if active, else nil (observable).
-    Usually of the form "Processed 123 / 123 changes". */
-@property (nonatomic, readonly, copy) NSString* status;
+@property (nonatomic, readonly) bool running;
 
 /** The number of completed changes processed, if the task is active, else 0 (observable). */
 @property (nonatomic, readonly) unsigned completed;
@@ -101,3 +100,7 @@ typedef enum {
 
 
 @end
+
+
+/** This notification is posted by a TouchReplication when its progress changes. */
+extern NSString* const kTouchReplicationChangeNotification;

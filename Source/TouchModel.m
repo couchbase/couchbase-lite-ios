@@ -267,6 +267,17 @@
 
 #pragma mark - PROPERTIES:
 
+
+- (NSDictionary*) currentProperties {
+    NSMutableDictionary* properties = [_document.properties mutableCopy];
+    if (!properties)
+        properties = [[NSMutableDictionary alloc] init];
+    for (NSString* key in _changedNames)
+        [properties setValue: [_properties objectForKey: key] forKey: key];
+    return properties;
+}
+
+
 + (NSSet*) propertyNames {
     if (self == [TouchModel class])
         return [NSSet set]; // Ignore non-persisted properties declared on base TouchModel

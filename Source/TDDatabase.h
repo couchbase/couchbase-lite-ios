@@ -97,7 +97,6 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 @property (readonly, copy) NSString* name;
 @property (readonly) BOOL exists;
 @property (readonly) UInt64 totalDataSize;
-@property (assign, nonatomic) TouchDatabase* touchDatabase;
 
 @property (readonly) NSUInteger documentCount;
 @property (readonly) SequenceNumber lastSequence;
@@ -151,10 +150,8 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 // VIEWS & QUERIES:
 
+/** Return value has keys 'rows', 'total_rows', 'offset', 'update_seq' */
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
-
-- (NSDictionary*) getDocsWithIDs: (NSArray*)docIDs
-                         options: (const struct TDQueryOptions*)options;
 
 - (TDView*) viewNamed: (NSString*)name;
 

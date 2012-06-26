@@ -18,14 +18,15 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 @implementation TouchDatabase
 
 
-@synthesize tddb=_tddb;
+@synthesize tddb=_tddb, manager=_manager;
 
 
-- (id)initWithTDDatabase: (TDDatabase*)tddb
+- (id) initWithManager: (TouchDatabaseManager*)manager
+            TDDatabase: (TDDatabase*)tddb
 {
     self = [super init];
     if (self) {
-        Assert(!_tddb.touchDatabase);
+        _manager = [manager retain];
         _tddb = [tddb retain];
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(tddbNotification:) name: nil object: tddb];
@@ -36,10 +37,11 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
     [_modelFactory release];
     _tddb.touchDatabase = nil;
     [_tddb release];
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [_manager release];
     [super dealloc];
 }
 
@@ -119,6 +121,11 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
+- (TouchQuery*) queryAllDocuments {
+    return [[[TouchQuery alloc] initWithDatabase: self view: nil] autorelease];
+}
+
+
 #pragma mark - VIEWS:
 
 
@@ -155,6 +162,22 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 - (TDFilterBlock) filterNamed: (NSString*)filterName {
     return [_tddb filterNamed: filterName];
+}
+
+
+#pragma mark - REPLICATION:
+
+
+- (TouchReplication*) pushToURL: (NSURL*)url {
+    return [_manager replicationWithDatabase: self remote: url pull: NO create: YES];
+}
+
+- (TouchReplication*) pullFromURL: (NSURL*)url {
+    return [_manager replicationWithDatabase: self remote: url pull: YES create: YES];
+}
+
+- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
+    return [_manager createReplicationsBetween: self and: otherDbURL exclusively: exclusively];
 }
 
 

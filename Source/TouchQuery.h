@@ -25,7 +25,7 @@ typedef enum {
 {
     @private
     TouchDatabase* _database;
-    TDView* _view;
+    TDView* _view;              // nil for _all_docs query
     NSUInteger _limit, _skip;
     id _startKey, _endKey;
     NSString* _startKeyDocID;

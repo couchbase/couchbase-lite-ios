@@ -323,6 +323,8 @@
 		27E2E5CD159533A5005B9234 /* TouchReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* TouchReplication.h */; };
 		27E2E5CE159533A5005B9234 /* TouchReplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5CC159533A5005B9234 /* TouchReplication.m */; };
 		27E2E5CF159533A5005B9234 /* TouchReplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5CC159533A5005B9234 /* TouchReplication.m */; };
+		27E2E61715993CB4005B9234 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
+		27E2E61815993CB6005B9234 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
 		27E4152F154F6E8500771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E41530154F6E9C00771FC5 /* TDStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* TDStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E7FAEC155D78C20025F93A /* TDChangeTracker_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E7FAEA155D78C20025F93A /* TDChangeTracker_Tests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -2139,6 +2141,7 @@
 				279CE39014D1EDA0009F3FA6 /* Test.m in Sources */,
 				27DA435E159230AA00F9E7B5 /* TDRouter.m in Sources */,
 				27DA4360159230B100F9E7B5 /* TDRouter+Handlers.m in Sources */,
+				27E2E61815993CB6005B9234 /* TDURLProtocol.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2304,6 +2307,7 @@
 				DA147C0E14BCA98A0052DA4D /* TDHTTPResponse.m in Sources */,
 				27DA435F159230AC00F9E7B5 /* TDRouter.m in Sources */,
 				27DA4361159230B200F9E7B5 /* TDRouter+Handlers.m in Sources */,
+				27E2E61715993CB4005B9234 /* TDURLProtocol.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

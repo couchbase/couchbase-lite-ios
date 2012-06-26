@@ -340,13 +340,6 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
             touchDatabase=_touchDatabase;
 
 
-- (TouchDatabase*) touchDatabase {
-    if (!_touchDatabase)
-        _touchDatabase = [[[TouchDatabase alloc] initWithTDDatabase: self] autorelease];
-    return _touchDatabase;
-}
-
-
 - (UInt64) totalDataSize {
     NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: NULL];
     if (!attrs)
@@ -872,7 +865,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 //FIX: This has a lot of code in common with -[TDView queryWithOptions:status:]. Unify the two!
-- (NSDictionary*) getDocsWithIDs: (NSArray*)docIDs options: (const TDQueryOptions*)options {
+- (NSDictionary*) getAllDocs: (const TDQueryOptions*)options {
     if (!options)
         options = &kDefaultTDQueryOptions;
     
@@ -884,8 +877,8 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     NSMutableString* sql = [NSMutableString stringWithFormat:
                             @"SELECT revs.doc_id, docid, revid, deleted %@ FROM revs, docs WHERE",
                              (options->includeDocs ? @", json, sequence" : @"")];
-    if (docIDs)
-        [sql appendFormat: @" docid IN (%@)", [TDDatabase joinQuotedStrings: docIDs]];
+    if (options->keys)
+        [sql appendFormat: @" docid IN (%@)", [TDDatabase joinQuotedStrings: options->keys]];
     else
         [sql appendString: @" deleted=0"];
     [sql appendString: @" AND current=1 AND docs.doc_id = revs.doc_id"];
@@ -958,11 +951,6 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                  {@"total_rows", $object(totalRows)},
                  {@"offset", $object(options->skip)},
                  {@"update_seq", update_seq ? $object(update_seq) : nil});
-}
-
-
-- (NSDictionary*) getAllDocs: (const TDQueryOptions*)options {
-    return [self getDocsWithIDs: nil options: options];
 }
 
 

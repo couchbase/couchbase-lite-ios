@@ -24,8 +24,8 @@
 @implementation TouchQuery
 
 
+// A nil view refers to 'all documents'
 - (id) initWithDatabase: (TouchDatabase*)database view: (TDView*)view {
-    NSParameterAssert(view);
     self = [super init];
     if (self) {
         _database = [database retain];
@@ -94,11 +94,20 @@
         .inclusiveEnd = YES,
     };
     
-    TDStatus status = [_view updateIndex];
-    if (TDStatusIsError(status))
-        return nil;
-    SequenceNumber lastSequence = _view.lastSequenceIndexed;
-    NSArray* rows = [_view queryWithOptions: &options status: &status];
+    NSArray* rows;
+    SequenceNumber lastSequence;
+    if (_view) {
+        TDStatus status = [_view updateIndex];
+        if (TDStatusIsError(status))
+            return nil;
+        lastSequence = _view.lastSequenceIndexed;
+        rows = [_view queryWithOptions: &options status: &status];
+    } else {
+        NSDictionary* result = [_database.tddb getAllDocs: &options];
+        lastSequence = [[result objectForKey: @"update_seq"] longLongValue];
+        rows = [result objectForKey: @"rows"];
+    }
+    
     if (rows)
         _lastSequence = lastSequence;
     return rows;
@@ -114,7 +123,7 @@
 
 
 - (TouchQueryEnumerator*) rowsIfChanged {
-    if (_view.database.lastSequence == _lastSequence)
+    if (_database.tddb.lastSequence == _lastSequence)
         return nil;
     return self.rows;
 }

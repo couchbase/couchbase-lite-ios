@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TouchDatabase, TDDatabaseManager;
+@class TouchDatabase, TouchReplication, TouchLiveQuery;
+@class TDDatabaseManager, TDServer;
 
 
 /** Top-level TouchDB object; manages a collection of databases like a CouchDB server. */
@@ -15,6 +16,9 @@
 {
     @private
     TDDatabaseManager* _mgr;
+    TDServer* _server;
+    TouchLiveQuery* _replicationsQuery;
+    NSMutableArray* _replications;
 }
 
 /** A shared per-process instance. This should only be used on the main thread. */
@@ -41,5 +45,6 @@
 
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;
+
 
 @end

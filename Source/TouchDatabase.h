@@ -8,13 +8,15 @@
 
 #import <Foundation/Foundation.h>
 #import "TDDatabase+Insertion.h"
-@class TDDatabase, TDCache, TouchDocument, TouchView, TouchModelFactory;
+@class TouchDatabaseManager, TouchDocument, TouchView, TouchQuery, TouchReplication, TouchModelFactory;
+@class TDDatabase, TDCache;
 
 
 /** A TouchDB database. */
 @interface TouchDatabase : NSObject
 {
     @private
+    TouchDatabaseManager* _manager;
     TDDatabase* _tddb;    
     TDCache* _docCache;
     TouchModelFactory* _modelFactory;
@@ -22,6 +24,9 @@
 
 /** The database's name. */
 @property (readonly) NSString* name;
+
+/** The database manager that owns this database. */
+@property (readonly) TouchDatabaseManager* manager;
 
 /** Instantiates a TDDocument object with the given ID.
     Doesn't touch the on-disk database; a document with that ID doesn't even need to exist yet.
@@ -39,6 +44,10 @@
 /** Empties the cache of recently used TDDocument objects.
     API calls will now instantiate and return new instances. */
 - (void) clearDocumentCache;
+
+
+/** Returns a query that matches all documents in the database. */
+- (TouchQuery*) queryAllDocuments;
 
 
 /** Returns a TouchView object for the view with the given name.
@@ -62,6 +71,11 @@
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
     Use this when performing bulk operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits. */
 - (BOOL) inTransaction: (BOOL(^)(void))block;
+
+
+- (TouchReplication*) pushToURL: (NSURL*)url;
+- (TouchReplication*) pullFromURL: (NSURL*)url;
+- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
 
 
 @end

@@ -365,14 +365,16 @@ TestCase(TDView_AllDocsQuery) {
 
     // Get specific documents:
     options = kDefaultTDQueryOptions;
-    query = [db getDocsWithIDs: $array() options: &options];
+    options.keys = $array();
+    query = [db getAllDocs: &options];
     CAssertEqual(query, $dict({@"rows", $array()},
                               {@"total_rows", $object(0)},
                               {@"offset", $object(0)}));
     
     // Get specific documents:
     options = kDefaultTDQueryOptions;
-    query = [db getDocsWithIDs: $array([expectedRow[2] objectForKey: @"id"]) options: &options];
+    options.keys = $array([expectedRow[2] objectForKey: @"id"]);
+    query = [db getAllDocs: &options];
     CAssertEqual(query, $dict({@"rows", $array(expectedRow[2])},
                               {@"total_rows", $object(1)},
                               {@"offset", $object(0)}));

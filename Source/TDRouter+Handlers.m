@@ -252,8 +252,9 @@
     NSArray* docIDs = [body objectForKey: @"keys"];
     if (![docIDs isKindOfClass: [NSArray class]])
         return kTDStatusBadParam;
+    options.keys = docIDs;
     
-    NSDictionary* result = [db getDocsWithIDs: docIDs options: &options];
+    NSDictionary* result = [db getAllDocs: &options];
     if (!result)
         return kTDStatusDBError;
     _response.bodyObject = result;

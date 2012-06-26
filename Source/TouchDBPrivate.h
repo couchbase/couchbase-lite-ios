@@ -7,10 +7,29 @@
 //
 
 #import "TouchDB.h"
+@class TDServer;
+
+
+@interface TDDatabase ()
+@property (assign, nonatomic) TouchDatabase* touchDatabase;
+@end
+
+
+@interface TouchDatabaseManager ()
+@property (readonly) TDServer* tdServer;
+- (TouchReplication*) replicationWithDatabase: (TouchDatabase*)db
+                                       remote: (NSURL*)remote
+                                         pull: (BOOL)pull
+                                       create: (BOOL)create;
+- (NSArray*) createReplicationsBetween: (TouchDatabase*)database
+and: (NSURL*)otherDbURL
+exclusively: (bool)exclusively;
+@end
 
 
 @interface TouchDatabase ()
-- (id) initWithTDDatabase: (TDDatabase*)tddb;
+- (id) initWithManager: (TouchDatabaseManager*)manager
+            TDDatabase: (TDDatabase*)tddb;
 @property (readonly, nonatomic) TDDatabase* tddb;
 @end
 
@@ -50,4 +69,16 @@
 
 @interface TouchQuery ()
 - (id) initWithDatabase: (TouchDatabase*)database view: (TDView*)view;
+@end
+
+
+@interface TouchReplication ()
+- (id) initWithDatabase: (TouchDatabase*)database
+                 remote: (NSURL*)remote
+                   pull: (BOOL)pull;
+@end
+
+
+@interface TouchModel ()
+@property (readonly) NSDictionary* currentProperties;
 @end

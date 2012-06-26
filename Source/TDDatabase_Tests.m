@@ -177,7 +177,8 @@ TestCase(TDDatabase_EmptyDoc) {
     TDRevision* rev = putDoc(db, $dict());
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.includeDocs = YES;
-    [db getDocsWithIDs: $array(rev.docID) options: &options]; // raises an exception :(
+    options.keys = $array(rev.docID);
+    [db getAllDocs: &options]; // raises an exception :(
 }
 
 

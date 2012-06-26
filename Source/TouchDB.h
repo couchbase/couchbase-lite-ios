@@ -21,3 +21,4 @@
 #import "TouchView.h"
 #import "TouchQuery.h"
 #import "TouchModel.h"
+#import "TouchReplication.h"

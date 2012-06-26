@@ -18,6 +18,9 @@
 #import "TDServer.h"
 #import "TDInternal.h"
 #import "MYBlockUtils.h"
+#import "CollectionUtils.h"
+#import "Logging.h"
+#import "Test.h"
 
 
 #define kScheme @"touchdb"
