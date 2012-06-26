@@ -112,13 +112,13 @@
     if (_input)
         return _input;
     Assert(!_output, @"Already open");
-    LogTo(TDMultiStreamWriter, @"%@: Open!", self);
 #ifdef GNUSTEP
     Assert(NO, @"Unimplemented CFStreamCreateBoundPair");   // TODO: Add this to GNUstep base fw
 #else
     CFStreamCreateBoundPair(NULL, (CFReadStreamRef*)&_input, (CFWriteStreamRef*)&_output,
                             _bufferSize);
 #endif
+    LogTo(TDMultiStreamWriter, @"%@: Opened input=%p, output=%p", self, _input, _output);
     [self opened];
     return _input;
 }
@@ -220,7 +220,8 @@
 - (BOOL) writeToOutput {
     Assert(_bufferLength > 0);
     NSInteger bytesWritten = [_output write: _buffer maxLength: _bufferLength];
-    LogTo(TDMultiStreamWriter, @"%@:   Wrote %d (of %u) bytes to _output", self, bytesWritten, _bufferLength);
+    LogTo(TDMultiStreamWriter, @"%@:   Wrote %d (of %u) bytes to _output (total %lld of %lld)",
+          self, bytesWritten, _bufferLength, _totalBytesWritten+bytesWritten, _length);
     if (bytesWritten <= 0) {
         [self setErrorFrom: _output];
         return NO;
@@ -248,7 +249,11 @@
             break;
             
         case NSStreamEventHasSpaceAvailable:
-            if (![self writeToOutput]) {
+            if (_input.streamStatus < NSStreamStatusOpen) {
+                // CFNetwork workaround; see https://github.com/couchbaselabs/TouchDB-iOS/issues/99
+                LogTo(TDMultiStreamWriter, @"%@:   Input isn't open; waiting...", self);
+                [self performSelector: @selector(retryWrite:) withObject: stream afterDelay: 0.1];
+            } else if (![self writeToOutput]) {
                 LogTo(TDMultiStreamWriter, @"%@:   At end -- closing _output!", self);
                 if (_totalBytesWritten != _length && !_error)
                     Warn(@"%@ wrote %lld bytes, but expected length was %lld!",
@@ -257,6 +262,11 @@
             }
             break;
     }
+}
+
+
+- (void) retryWrite: (NSStream*)stream {
+    [self stream: stream handleEvent: NSStreamEventHasSpaceAvailable];
 }
 
 
