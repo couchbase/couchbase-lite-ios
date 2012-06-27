@@ -249,7 +249,7 @@
             break;
             
         case NSStreamEventHasSpaceAvailable:
-            if (_input.streamStatus < NSStreamStatusOpen) {
+            if (_input && _input.streamStatus < NSStreamStatusOpen) {
                 // CFNetwork workaround; see https://github.com/couchbaselabs/TouchDB-iOS/issues/99
                 LogTo(TDMultiStreamWriter, @"%@:   Input isn't open; waiting...", self);
                 [self performSelector: @selector(retryWrite:) withObject: stream afterDelay: 0.1];
@@ -260,6 +260,11 @@
                          _totalBytesWritten, _length);
                 [self close];
             }
+            break;
+            
+        case NSStreamEventEndEncountered:
+            // This means the _input stream was closed before reading all the data.
+            [self close];
             break;
     }
 }

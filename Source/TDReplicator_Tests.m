@@ -52,6 +52,7 @@ static void deleteRemoteDB(void) {
             error = [err retain];
         }
                                 ];
+    [request start];
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                                  beforeDate: timeout])

@@ -122,7 +122,7 @@ TestCase(TDMultipartDownloader) {
     urlStr = [urlStr stringByAppendingString: @"?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;
-    [[[TDMultipartDownloader alloc] initWithURL: url
+    [[[[TDMultipartDownloader alloc] initWithURL: url
                                        database: db
                                      authorizer: nil
                                  requestHeaders: nil
@@ -146,7 +146,7 @@ TestCase(TDMultipartDownloader) {
          }
          CAssertEq(db.attachmentStore.count, attachments.count);
          done = YES;
-    }] autorelease];
+    }] autorelease] start];
     
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];

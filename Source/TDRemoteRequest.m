@@ -57,21 +57,19 @@
             [_request setValue:value forHTTPHeaderField:key];
         }];
         
-        LogTo(RemoteRequest, @"%@: Starting...", self);
         [self setupRequest: _request withBody: body];
         
         NSString* authHeader = [authorizer authorizeURLRequest: _request
                                                       forRealm: nil];
         if (authHeader)
             [_request setValue: authHeader forHTTPHeaderField: @"Authorization"];
-        
-        [self start];
     }
     return self;
 }
 
 
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
+    // subclasses can override this.
 }
 
 
@@ -81,6 +79,7 @@
 
 
 - (void) start {
+    LogTo(RemoteRequest, @"%@: Starting...", self);
     Assert(!_connection);
     _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
     // Retaining myself shouldn't be necessary, because NSURLConnection is documented as retaining

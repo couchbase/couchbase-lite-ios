@@ -112,6 +112,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 }
 
 - (void) stop {
+    setObj(&_uploaderQueue, nil);
+    _uploading = NO;
     [self stopObserving];
     [super stop];
 }
@@ -259,9 +261,9 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     [self asyncTaskStarted];
 
     NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeID(rev.docID));
-    LogTo(SyncVerbose, @"%@: PUT .%@ (multipart, %lldkb)", self, path, bodyStream.length/1024);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    [[[TDMultipartUploader alloc] initWithURL: [NSURL URLWithString: urlStr]
+    TDMultipartUploader* uploader = [[[TDMultipartUploader alloc]
+                                  initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
                                    authorizer: _authorizer
                                requestHeaders: self.requestHeaders
@@ -274,9 +276,28 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                   }
                   self.changesProcessed++;
                   [self asyncTasksFinished: 1];
+                                     
+                  _uploading = NO;
+                  [self startNextUpload];
               }
      ] autorelease];
+    LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
+    if (!_uploaderQueue)
+        _uploaderQueue = [[NSMutableArray alloc] init];
+    [_uploaderQueue addObject: uploader];
+    [self startNextUpload];
     return YES;
+}
+
+
+- (void) startNextUpload {
+    if (!_uploading && _uploaderQueue.count > 0) {
+        _uploading = YES;
+        TDMultipartUploader* uploader = [_uploaderQueue objectAtIndex: 0];
+        LogTo(SyncVerbose, @"%@: Starting %@", self, uploader);
+        [uploader start];
+        [_uploaderQueue removeObjectAtIndex: 0];
+    }
 }
 
 

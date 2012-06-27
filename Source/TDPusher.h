@@ -15,6 +15,8 @@
 {
     BOOL _createTarget;
     BOOL _observing;
+    BOOL _uploading;
+    NSMutableArray* _uploaderQueue;
 }
 
 @property BOOL createTarget;

@@ -31,7 +31,7 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
     bool _dontLog404;
 }
 
-/** Creates and starts a request; when finished, the onCompletion block will be called. */
+/** Creates a request; call -start to send it on its way. */
 - (id) initWithMethod: (NSString*)method 
                   URL: (NSURL*)url 
                  body: (id)body
@@ -42,9 +42,11 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 /** In some cases a kTDStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;
 
+/** Starts a request; when finished, the onCompletion block will be called. */
+- (void) start;
+
 // protected:
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;
-- (void) start;
 - (void) clearConnection;
 - (void) cancelWithStatus: (int)status;
 - (void) respondWithResult: (id)result error: (NSError*)error;

@@ -366,7 +366,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     LogTo(SyncVerbose, @"%@: GET .%@", self, path);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    [[[TDMultipartDownloader alloc] initWithURL: [NSURL URLWithString: urlStr]
+    TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
+                                    initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
                                      authorizer: _authorizer
                                  requestHeaders: self.requestHeaders
@@ -390,6 +391,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             [self pullRemoteRevisions];
         }
      ] autorelease];
+    [dl start];
 }
 
 
