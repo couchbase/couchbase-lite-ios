@@ -45,6 +45,10 @@ NSString* TDUnquoteString( NSString* param );
 /** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
 BOOL TDIsOfflineError( NSError* error );
 
+/** Returns YES if this is a network/HTTP error that is likely to be transient.
+    Examples are timeout, connection lost, 502 Bad Gateway... */
+BOOL TDMayBeTransientError( NSError* error );
+
 /** Returns YES if this error appears to be due to a creating a file/dir that already exists. */
 BOOL TDIsFileExistsError( NSError* error );
 

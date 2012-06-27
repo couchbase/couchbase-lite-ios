@@ -196,6 +196,21 @@ BOOL TDIsFileExistsError( NSError* error ) {
 }
 
 
+BOOL TDMayBeTransientError( NSError* error ) {
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    if ($equal(domain, NSURLErrorDomain)) {
+        return code == NSURLErrorTimedOut || code == NSURLErrorCannotConnectToHost
+                                          || code == NSURLErrorNetworkConnectionLost;
+    } else if ($equal(domain, TDHTTPErrorDomain)) {
+        // Internal Server Error, Bad Gateway, Service Unavailable or Gateway Timeout:
+        return code == 500 || code == 502 || code == 503 || code == 504;
+    } else {
+        return NO;
+    }
+}
+
+
 NSURL* TDURLWithoutQuery( NSURL* url ) {
 #ifdef GNUSTEP
     // No CFURL on GNUstep :(

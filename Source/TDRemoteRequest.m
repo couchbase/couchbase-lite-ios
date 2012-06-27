@@ -25,8 +25,9 @@
 #import "Test.h"
 
 
-// Max number of retry attempts for a transient failure
+// Max number of retry attempts for a transient failure, and the backoff time formula
 #define kMaxRetries 2
+#define RetryDelay(COUNT) (4 << (COUNT))        // COUNT starts at 0
 
 
 @implementation TDRemoteRequest
@@ -79,6 +80,8 @@
 
 
 - (void) start {
+    if (!_request)
+        return;     // -clearConnection already called
     LogTo(RemoteRequest, @"%@: Starting...", self);
     Assert(!_connection);
     _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
@@ -119,20 +122,26 @@
 }
 
 
+- (BOOL) retry {
+    // Note: This assumes all requests are idempotent, since even though we got an error back, the
+    // request might have succeeded on the remote server, and by retrying we'd be issuing it again.
+    // PUT and POST requests aren't generally idempotent, but the ones sent by the replicator are.
+    
+    if (_retryCount >= kMaxRetries)
+        return NO;
+    NSTimeInterval delay = RetryDelay(_retryCount);
+    ++_retryCount;
+    LogTo(RemoteRequest, @"%@: Will retry in %g sec", self, delay);
+    // assumes _connection already failed or canceled.
+    [_connection autorelease];
+    _connection = nil;
+    [self performSelector: @selector(start) withObject: nil afterDelay: delay];
+    return YES;
+}
+
+
 - (void) cancelWithStatus: (int)status {
     [_connection cancel];
-
-    if (status >= 500 && status != 501 && status <= 504 && _retryCount < kMaxRetries) {
-        // Retry on Internal Server Error, Bad Gateway, Service Unavailable or Gateway Timeout:
-        NSTimeInterval delay = 1<<_retryCount;
-        ++_retryCount;
-        LogTo(RemoteRequest, @"%@: Will retry in %g sec", self, delay);
-        [_connection autorelease];
-        _connection = nil;
-        [self performSelector: @selector(start) withObject: nil afterDelay: delay];
-        return;
-    }
-    
     [self connection: _connection didFailWithError: TDStatusToNSError(status, _request.URL)];
 }
 
@@ -163,6 +172,11 @@
         if (!(_dontLog404 && error.code == kTDStatusNotFound && $equal(error.domain, TDHTTPErrorDomain)))
             Log(@"%@: Got error %@", self, error);
     }
+    
+    // If the error is likely transient, retry:
+    if (TDMayBeTransientError(error) && [self retry])
+        return;
+    
     [self clearConnection];
     [self respondWithResult: nil error: error];
 }
