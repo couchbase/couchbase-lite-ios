@@ -28,7 +28,7 @@
 
 
 // Maximum number of revisions to fetch simultaneously
-#define kMaxOpenHTTPConnections 8
+#define kMaxOpenHTTPConnections 99
 
 // ?limit= param for _changes feed: max # of revs to get in one batch. Smaller values reduce
 // latency since we can't parse till the entire result arrives in longpoll mode. But larger
