@@ -63,7 +63,7 @@
 - (NSString*) changesFeedPath {
     static NSString* const kModeNames[3] = {@"normal", @"longpoll", @"continuous"};
     NSMutableString* path;
-    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=%.0f",
+    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&timeout=90000",    //TEMP
                                               kModeNames[_mode], _heartbeat*1000.0];
     if (_includeConflicts)
         [path appendString: @"&style=all_docs"];
@@ -84,7 +84,27 @@
 }
 
 - (NSURL*) changesFeedURL {
-    NSMutableString* urlStr = [[_databaseURL.absoluteString mutableCopy] autorelease];
+    // Really ugly workaround for CFNetwork, to make sure that long-running connections like these
+    // don't end up using the same socket pool as regular connections to the same host; otherwise
+    // the regular connections can get stuck indefinitely behind a long-running one.
+    // (This substitution appends a "." to the host name, if it didn't already end with one.)
+    NSURL* url = _databaseURL;
+    UInt8 urlBytes[1024];
+    CFIndex nBytes = CFURLGetBytes((CFURLRef)url, urlBytes, sizeof(urlBytes) - 1);
+    if (nBytes > 0) {
+        CFRange range;
+        CFURLGetByteRangeForComponent((CFURLRef)url, kCFURLComponentHost, &range);
+        CFIndex end = range.location + range.length - 1;   // index of separator after the host
+        if (range.length > 2 && urlBytes[end-1] != '.') {
+            memmove(&urlBytes[end+1], &urlBytes[end], nBytes - end);
+            urlBytes[end] = '.';
+            url = NSMakeCollectable(CFURLCreateWithBytes(NULL, urlBytes, nBytes + 1,
+                                                         NSUTF8StringEncoding, NULL));
+            [url autorelease];
+        }
+    }
+    
+    NSMutableString* urlStr = [[url.absoluteString mutableCopy] autorelease];
     if (![urlStr hasSuffix: @"/"])
         [urlStr appendString: @"/"];
     [urlStr appendString: self.changesFeedPath];
