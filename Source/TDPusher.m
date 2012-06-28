@@ -246,11 +246,9 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
                 [bodyStream addData: rev.asJSON];
             }
-            UInt64 length;
-            NSInputStream *stream = [_db inputStreamForAttachmentDict: attachment length: &length];
             NSString* disposition = $sprintf(@"attachment; filename=%@", TDQuoteString(attachmentName));
             [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
-            [bodyStream addStream: stream length: length];
+            [bodyStream addFileURL: [_db fileForAttachmentDict: attachment]];
         }
     }
     if (!bodyStream)

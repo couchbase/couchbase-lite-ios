@@ -23,8 +23,6 @@
 
 @interface TDMultiStreamWriter () <NSStreamDelegate>
 @property (readwrite, retain) NSError* error;
-- (BOOL) openNextInput;
-- (BOOL) refillBuffer;
 @end
 
 
@@ -54,19 +52,24 @@
 }
 
 
-- (void)dealloc {
+- (void) dealloc {
     [self close];
+    free(_buffer);
+    [_inputs release];
+    [_currentInput release];
     [_output release];
-    [_input release];
     [_error release];
     [super dealloc];
 }
 
 
+- (void) addInput: (id)input length: (UInt64)length {
+    [_inputs addObject: input];
+    _length += length;
+}
+
 - (void) addStream: (NSInputStream*)stream length: (UInt64)length {
-    [_inputs addObject: stream];
-    if (_length >= 0)
-        _length += length;
+    [self addInput: stream length: length];
 }
 
 - (void) addStream: (NSInputStream*)stream {
@@ -77,19 +80,19 @@
 
 - (void) addData: (NSData*)data {
     if (data.length > 0)
-        [self addStream: [NSInputStream inputStreamWithData: data] length: data.length];
+        [self addInput: data length: data.length];
+}
+
+- (BOOL) addFileURL: (NSURL*)url {
+    NSNumber* fileSizeObj;
+    if (![url getResourceValue: &fileSizeObj forKey: NSURLFileSizeKey error: nil])
+        return NO;
+    [self addInput: url length: fileSizeObj.unsignedLongLongValue];
+    return YES;
 }
 
 - (BOOL) addFile: (NSString*)path {
-    NSDictionary* info = [[NSFileManager defaultManager] attributesOfItemAtPath: path error: NULL];
-    if (!info)
-        return NO;
-
-    NSInputStream* input = [NSInputStream inputStreamWithFileAtPath: path];
-    if (!input)
-        return NO;
-    [self addStream: input length: [info fileSize]];
-    return YES;
+    return [self addFileURL: [NSURL fileURLWithPath: path]];
 }
 
 
@@ -102,6 +105,9 @@
 
 
 - (void) opened {
+    setObj(&_error, nil);
+    _totalBytesWritten = 0;
+    
     _output.delegate = self;
     [_output scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSDefaultRunLoopMode];
     [_output open];
@@ -120,7 +126,7 @@
 #endif
     LogTo(TDMultiStreamWriter, @"%@: Opened input=%p, output=%p", self, _input, _output);
     [self opened];
-    return _input;
+    return [_input autorelease];
 }
 
 
@@ -137,30 +143,41 @@
     LogTo(TDMultiStreamWriter, @"%@: Closed", self);
     [_output close];
     _output.delegate = nil;
+    setObj(&_output, nil);
+    _input = nil;
     
-    free(_buffer);
-    _buffer = NULL;
-    _bufferSize = 0;
+    _bufferLength = 0;
     
     [_currentInput close];
-    _currentInput = nil;
-    [_inputs release];
-    _inputs = nil;
+    setObj(&_currentInput, nil);
+    _nextInputIndex = 0;
 }
 
 
 #pragma mark - I/O:
 
 
+- (NSInputStream*) streamForInput: (id)input {
+    if ([input isKindOfClass: [NSData class]])
+        return [NSInputStream inputStreamWithData: input];
+    else if ([input isKindOfClass: [NSURL class]] && [input isFileURL])
+        return [NSInputStream inputStreamWithFileAtPath: [input path]];
+    else if ([input isKindOfClass: [NSInputStream class]])
+        return input;
+    else
+        Assert(NO, @"Invalid input class %@ for TDMultiStreamWriter", [input class]);
+}
+
+
 // Close the current input stream and open the next one, assigning it to _currentInput.
 - (BOOL) openNextInput {
     if (_currentInput) {
         [_currentInput close];
-        [_inputs removeObjectAtIndex: 0];
-        _currentInput = nil;
+        setObj(&_currentInput, nil);
     }
-    if (_inputs.count > 0) {
-        _currentInput = [_inputs objectAtIndex: 0];     // already retained by the array
+    if (_nextInputIndex < _inputs.count) {
+        _currentInput = [[self streamForInput: [_inputs objectAtIndex: _nextInputIndex]] retain];
+        ++_nextInputIndex;
         [_currentInput open];
         return YES;
     }
@@ -244,8 +261,8 @@
     LogTo(TDMultiStreamWriter, @"%@: Received event 0x%x", self, event);
     switch (event) {
         case NSStreamEventOpenCompleted:
-            [self openNextInput];
-            [self refillBuffer];
+            if ([self openNextInput])
+                [self refillBuffer];
             break;
             
         case NSStreamEventHasSpaceAvailable:
@@ -311,6 +328,9 @@ TestCase(TDMultiStreamWriter_Sync) {
         Log(@"Buffer size = %u", bufSize);
         TDMultiStreamWriter* mp = createWriter(bufSize);
         NSData* outputBytes = [mp allOutput];
+        CAssertEqual(outputBytes.my_UTF8ToString, kExpectedOutputString);
+        // Run it a second time to make sure re-opening works:
+        outputBytes = [mp allOutput];
         CAssertEqual(outputBytes.my_UTF8ToString, kExpectedOutputString);
     }
 }

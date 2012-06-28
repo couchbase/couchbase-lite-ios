@@ -15,6 +15,7 @@
 {
     @private
     NSMutableArray* _inputs;
+    NSUInteger _nextInputIndex;
     NSInputStream* _currentInput;
     uint8_t* _buffer;
     NSUInteger _bufferSize, _bufferLength;
@@ -29,6 +30,7 @@
 - (void) addStream: (NSInputStream*)stream length: (UInt64)length;
 - (void) addStream: (NSInputStream*)stream;
 - (void) addData: (NSData*)data;
+- (BOOL) addFileURL: (NSURL*)fileURL;
 - (BOOL) addFile: (NSString*)path;
 
 /** Total length of the stream.
@@ -55,5 +57,6 @@
 - (NSData*) allOutput;
 
 // protected:
+- (void) addInput: (id)input length: (UInt64)length;
 - (void) opened;
 @end
