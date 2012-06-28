@@ -63,7 +63,7 @@
 - (NSString*) changesFeedPath {
     static NSString* const kModeNames[3] = {@"normal", @"longpoll", @"continuous"};
     NSMutableString* path;
-    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&timeout=90000",    //TEMP
+    path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=%.0f",
                                               kModeNames[_mode], _heartbeat*1000.0];
     if (_includeConflicts)
         [path appendString: @"&style=all_docs"];
