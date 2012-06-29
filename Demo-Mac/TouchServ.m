@@ -87,6 +87,8 @@ int main (int argc, const char * argv[])
         
         [[NSRunLoop currentRunLoop] run];
         
+        [listener release];
+        [server release];
     }
     return 0;
 }

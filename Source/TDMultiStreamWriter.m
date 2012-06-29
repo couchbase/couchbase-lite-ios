@@ -199,7 +199,7 @@
     NSInteger totalBytesRead = 0;
     while (len > 0 && _currentInput) {
         NSInteger bytesRead = [_currentInput read: buffer maxLength: len];
-        LogTo(TDMultiStreamWriter, @"%@:     read %d bytes from %@", self, bytesRead, _currentInput);
+        LogTo(TDMultiStreamWriter, @"%@:     read %d bytes from %@", self, (int)bytesRead, _currentInput);
         if (bytesRead > 0) {
             // Got some data from the stream:
             totalBytesRead += bytesRead;
@@ -227,7 +227,7 @@
         return NO;
     }
     _bufferLength += bytesRead;
-    LogTo(TDMultiStreamWriter, @"%@:   refilled buffer to %u bytes", self, _bufferLength);
+    LogTo(TDMultiStreamWriter, @"%@:   refilled buffer to %u bytes", self, (unsigned)_bufferLength);
     //LogTo(TDMultiStreamWriter, @"%@:   buffer is now \"%.*s\"", self, _bufferLength, _buffer);
     return YES;
 }
@@ -238,7 +238,7 @@
     Assert(_bufferLength > 0);
     NSInteger bytesWritten = [_output write: _buffer maxLength: _bufferLength];
     LogTo(TDMultiStreamWriter, @"%@:   Wrote %d (of %u) bytes to _output (total %lld of %lld)",
-          self, bytesWritten, _bufferLength, _totalBytesWritten+bytesWritten, _length);
+          self, (int)bytesWritten, (unsigned)_bufferLength, _totalBytesWritten+bytesWritten, _length);
     if (bytesWritten <= 0) {
         [self setErrorFrom: _output];
         return NO;
@@ -258,7 +258,7 @@
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)event {
     if (stream != _output)
         return;
-    LogTo(TDMultiStreamWriter, @"%@: Received event 0x%x", self, event);
+    LogTo(TDMultiStreamWriter, @"%@: Received event 0x%x", self, (unsigned)event);
     switch (event) {
         case NSStreamEventOpenCompleted:
             if ([self openNextInput])
@@ -274,7 +274,7 @@
                 LogTo(TDMultiStreamWriter, @"%@:   At end -- closing _output!", self);
                 if (_totalBytesWritten != _length && !_error)
                     Warn(@"%@ wrote %lld bytes, but expected length was %lld!",
-                         _totalBytesWritten, _length);
+                         self, _totalBytesWritten, _length);
                 [self close];
             }
             break;
@@ -282,6 +282,8 @@
         case NSStreamEventEndEncountered:
             // This means the _input stream was closed before reading all the data.
             [self close];
+            break;
+        default:
             break;
     }
 }
@@ -372,7 +374,7 @@ TestCase(TDMultiStreamWriter_Sync) {
             Log(@"NSStreamEventHasBytesAvailable");
             uint8_t buffer[10];
             NSInteger length = [_stream read: buffer maxLength: sizeof(buffer)];
-            Log(@"    read %d bytes", length);
+            Log(@"    read %d bytes", (int)length);
             //Assert(length > 0);
             [_output appendBytes: buffer length: length];
             break;

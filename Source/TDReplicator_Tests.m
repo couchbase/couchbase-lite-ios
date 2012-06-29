@@ -186,7 +186,7 @@ TestCase(TDPuller_FromCouchApp) {
     for (NSString* name in attachments) { 
         NSDictionary* attachment = [attachments objectForKey: name];
         NSData* data = [TDBase64 decode: [attachment objectForKey: @"data"]];
-        Log(@"Attachment %@: %u bytes", name, data.length);
+        Log(@"Attachment %@: %u bytes", name, (unsigned)data.length);
         CAssert(data);
         CAssertEq([data length], [[attachment objectForKey: @"length"] unsignedLongLongValue]);
     }

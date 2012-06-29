@@ -27,7 +27,7 @@
 
 
 + (NSData *)dataWithJSONObject:(id)object
-                       options:(TDJSONWritingOptions)options
+                       options:(NSJSONWritingOptions)options
                          error:(NSError **)error
 {
     if ((options & TDJSONWritingAllowFragments)

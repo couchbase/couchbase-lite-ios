@@ -151,8 +151,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 - (void) postProgressChanged {
     LogTo(SyncVerbose, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)", 
-          self, _changesProcessed, _changesTotal,
-          _active, _batcher.count, _asyncTaskCount, _online);
+          self, (unsigned)_changesProcessed, (unsigned)_changesTotal,
+          _active, (unsigned)_batcher.count, _asyncTaskCount, _online);
     NSNotification* n = [NSNotification notificationWithName: TDReplicatorProgressChangedNotification
                                                       object: self];
     [[NSNotificationQueue defaultQueue] enqueueNotification: n
@@ -198,8 +198,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     // The cycle is broken in -stopped when I release _batcher.
     _batcher = [[TDBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
                  processor:^(NSArray *inbox) {
-                     LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%i sequences)",
-                           self, inbox.count);
+                     LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%u sequences)",
+                           self, (unsigned)inbox.count);
                      TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
                      [self processInbox: revs];
                      [revs release];

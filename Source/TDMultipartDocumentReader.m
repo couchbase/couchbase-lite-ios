@@ -113,7 +113,8 @@
 
 
 - (BOOL) finish {
-    LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)", self, _attachmentsByDigest.count);
+    LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)",
+          self, (unsigned)_attachmentsByDigest.count);
     if (_multipartReader) {
         if (!_multipartReader.finished) {
             Warn(@"%@: received incomplete MIME multipart response", self);
@@ -143,7 +144,8 @@
     if (!_document)
         _jsonBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
     else {
-        LogTo(SyncVerbose, @"%@: Starting attachment #%u...", self, _attachmentsByDigest.count + 1);
+        LogTo(SyncVerbose, @"%@: Starting attachment #%u...",
+              self, (unsigned)_attachmentsByDigest.count + 1);
         _curAttachment = [[_database attachmentWriter] retain];
         
         // See whether the attachment name is in the headers.
@@ -183,7 +185,7 @@
             TDBlobKey key = _curAttachment.blobKey;
             NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
             LogTo(SyncVerbose, @"%@: Finished attachment #%u: len=%uk, digest=%@, SHA1=%@",
-                  self, _attachmentsByDigest.count+1, (unsigned)_curAttachment.length/1024,
+                  self, (unsigned)_attachmentsByDigest.count+1, (unsigned)_curAttachment.length/1024,
                   md5Str, keyData);
         }
 #endif
@@ -269,7 +271,7 @@
     }
     if (nAttachmentsInDoc < _attachmentsByDigest.count) {
         Warn(@"%@: More MIME bodies (%u) than attachments (%u)",
-            self, _attachmentsByDigest.count, nAttachmentsInDoc);
+            self, (unsigned)_attachmentsByDigest.count, (unsigned)nAttachmentsInDoc);
         return NO;
     }
     

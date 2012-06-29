@@ -120,7 +120,7 @@
 }
 
 - (NSDictionary *) httpHeaders {
-    LogTo(TDListenerVerbose, @"%@ answers httpHeaders={%d headers}", self, _response.headers.count);
+    LogTo(TDListenerVerbose, @"%@ answers httpHeaders={%u headers}", self, (unsigned)_response.headers.count);
     return _response.headers;
 }
 
@@ -171,7 +171,7 @@
             [_data autorelease];
             _data = nil;
         }
-        LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, result.length);
+        LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, (unsigned)result.length);
         return result;
     }
 }

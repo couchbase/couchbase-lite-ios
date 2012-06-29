@@ -18,7 +18,7 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 
 /** Asynchronous HTTP request; a fairly simple wrapper around NSURLConnection that calls a completion block when ready. */
 @interface TDRemoteRequest : NSObject <NSURLConnectionDelegate
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE || defined(__MAC_10_8)
                                                               , NSURLConnectionDataDelegate
 #endif
                                                                                            >

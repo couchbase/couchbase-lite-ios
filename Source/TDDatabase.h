@@ -63,7 +63,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     NSString* _name;
     FMDatabase *_fmdb;
     BOOL _open;
-    NSInteger _transactionLevel;
+    int _transactionLevel;
     NSMutableDictionary* _views;
     NSMutableDictionary* _validations;
     NSMutableDictionary* _filters;

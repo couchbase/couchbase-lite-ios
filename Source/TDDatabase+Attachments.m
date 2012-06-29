@@ -199,8 +199,8 @@
         }
         NSData* keyData = [r dataNoCopyForColumnIndex: 0];
         if (keyData.length != sizeof(TDBlobKey)) {
-            Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
-                 self, sequence, filename, keyData.length);
+            Warn(@"%@: Attachment %lld.'%@' has bogus key size %u",
+                 self, sequence, filename, (unsigned)keyData.length);
             *outStatus = kTDStatusCorruptError;
             return nil;
         }
@@ -597,7 +597,7 @@
     NSInteger numDeleted = [_attachments deleteBlobsExceptWithKeys: allKeys];
     if (numDeleted < 0)
         return kTDStatusAttachmentError;
-    Log(@"Deleted %d attachments", numDeleted);
+    Log(@"Deleted %d attachments", (int)numDeleted);
     return kTDStatusOK;
 }
 
