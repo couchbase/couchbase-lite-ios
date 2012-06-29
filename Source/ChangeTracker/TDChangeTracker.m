@@ -170,6 +170,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
 
 
 static NSURL* AddDotToURLHost( NSURL* url ) {
+    CAssert(url);
     UInt8 urlBytes[1024];
     CFIndex nBytes = CFURLGetBytes((CFURLRef)url, urlBytes, sizeof(urlBytes) - 1);
     if (nBytes > 0) {
@@ -183,9 +184,13 @@ static NSURL* AddDotToURLHost( NSURL* url ) {
                 // Alright, insert the '.' after end:
                 memmove(&urlBytes[end+2], &urlBytes[end+1], nBytes - end);
                 urlBytes[end+1] = '.';
-                url = NSMakeCollectable(CFURLCreateWithBytes(NULL, urlBytes, nBytes + 1,
-                                                             NSUTF8StringEncoding, NULL));
-                [url autorelease];
+                NSURL* newURL = NSMakeCollectable(CFURLCreateWithBytes(NULL, urlBytes, nBytes + 1,
+                                                                       NSUTF8StringEncoding, NULL));
+                if (newURL)
+                    url = [newURL autorelease];
+                else
+                    Warn(@"AddDotToURLHost: Failed to add dot to <%@> -- result is <%.*s>",
+                         url, nBytes+1, urlBytes);
             }
         }
     }
