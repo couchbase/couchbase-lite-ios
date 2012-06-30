@@ -140,7 +140,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         }
     }
     NSURL* remote = [NSURL URLWithString: [remoteDict objectForKey: @"url"]];
-    if (!remote || ![remote.scheme hasPrefix: @"http"])
+    if (![$array(@"http", @"https", @"touchdb") containsObject: remote.scheme.lowercaseString])
         return kTDStatusBadRequest;
     if (outDatabase) {
         *outDatabase = db;

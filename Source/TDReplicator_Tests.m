@@ -299,6 +299,21 @@ TestCase(ParseReplicatorProperties) {
     CAssertEq(createTarget, YES);
     CAssertEq(headers, nil);
     
+    props = $dict({@"source", @"touchdb:///foo"},
+                  {@"target", @"foo"});
+    CAssertEq(200, [replManager parseReplicatorProperties: props
+                                               toDatabase: &db
+                                                   remote: &remote
+                                                   isPush: &isPush
+                                             createTarget: &createTarget
+                                                  headers: &headers
+                                               authorizer: NULL]);
+    CAssertEq(db, localDB);
+    CAssertEqual(remote, $url(@"touchdb:///foo"));
+    CAssertEq(isPush, NO);
+    CAssertEq(createTarget, NO);
+    CAssertEq(headers, nil);
+    
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
                                     {@"consumer_key", @"consumer_key"},
                                     {@"token_secret", @"token_secret"},
