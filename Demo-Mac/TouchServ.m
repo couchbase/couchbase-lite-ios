@@ -57,6 +57,7 @@ int main (int argc, const char * argv[])
             Warn(@"FATAL: Error initializing TouchDB: %@", error);
             exit(1);
         }
+        [TDURLProtocol setServer: server];
         
         // Start a listener socket:
         TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
@@ -71,7 +72,7 @@ int main (int argc, const char * argv[])
                 listener.readOnly = YES;
             } else if (strcmp(argv[i], "--auth") == 0) {
                 srandomdev();
-                NSString* password = [NSString stringWithFormat: @"%x", random()];
+                NSString* password = [NSString stringWithFormat: @"%lx", random()];
                 listener.passwords = [NSDictionary dictionaryWithObject: password
                                                                  forKey: @"touchdb"];
                 Log(@"Auth required: user='touchdb', password='%@'", password);

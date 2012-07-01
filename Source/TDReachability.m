@@ -34,9 +34,10 @@ static void ClientCallback(SCNetworkReachabilityRef target,
 
 
 - (id) initWithHostName: (NSString*)hostName {
-    Assert(hostName);
     self = [super init];
     if (self) {
+        if (!hostName.length)
+            hostName = @"localhost";
         _hostName = [hostName copy];
         _ref = SCNetworkReachabilityCreateWithName(NULL, [_hostName UTF8String]);
         SCNetworkReachabilityContext context = {0, self};
