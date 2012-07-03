@@ -34,7 +34,14 @@
     request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     request.timeoutInterval = 6.02e23;
     
-    // Add headers.
+    // Override the default Host: header to use the hostname _without_ the "." suffix
+    // (the suffix appears to confuse Cloudant / BigCouch's HTTP server.)
+    NSString* host = _databaseURL.host;
+    if (_databaseURL.port)
+        host = [host stringByAppendingFormat: @":%@", _databaseURL.port];
+    [request setValue: host forHTTPHeaderField: @"Host"];
+    
+    // Add custom headers.
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
     }];
