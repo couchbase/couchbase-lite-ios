@@ -94,9 +94,9 @@
 }
 
 
-- (BOOL) delayResponeHeaders {  // [sic]
+- (BOOL) delayResponseHeaders {
     @synchronized(self) {
-        LogTo(TDListenerVerbose, @"%@ answers delayResponeHeaders=%d", self, !_response);
+        LogTo(TDListenerVerbose, @"%@ answers delayResponseHeaders=%d", self, !_response);
         if (!_response)
             _delayedHeaders = YES;
         return !_response;
