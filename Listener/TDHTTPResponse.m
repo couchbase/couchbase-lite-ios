@@ -217,9 +217,11 @@
 
 
 - (void)connectionDidClose {
-    _connection = nil;
-    [_data release];
-    _data = nil;
+    @synchronized(self) {
+        _connection = nil;
+        [_data release];
+        _data = nil;
+    }
 }
 
 
