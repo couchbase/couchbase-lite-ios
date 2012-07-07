@@ -418,6 +418,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 // Notified that some database is being deleted; delete any associated replication document:
 - (void) someDbDeleted: (NSNotification*)n {
+    if (!_replicatorDB.exists)
+        return;
     TDDatabase* db = n.object;
     if ([_dbManager.allOpenDatabases indexOfObjectIdenticalTo: db] == NSNotFound)
         return;
