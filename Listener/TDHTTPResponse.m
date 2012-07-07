@@ -57,15 +57,17 @@
             };
         }
         
-        // Run the router, synchronously:
+        // Run the router, asynchronously:
         LogTo(TDListenerVerbose, @"%@: Starting...", self);
         [router start];
+        [self retain];      // will be released in -cleanUp
         LogTo(TDListenerVerbose, @"%@: Returning from -init", self);
     }
     return self;
 }
 
 - (void)dealloc {
+    LogTo(TDListenerVerbose, @"DEALLOC %@", self);
     [_router release];
     [_response release];
     [_data release];
@@ -183,19 +185,26 @@
 }
 
 
+- (void) cleanUp {
+    // Break cycles:
+    _router.onResponseReady = nil;
+    _router.onDataAvailable = nil;
+    _router.onFinished = nil;
+    if (!_finished) {
+        _finished = true;
+        [self autorelease];
+    }
+}
+
+
 - (void) onFinished {
     @synchronized(self) {
         if (_finished)
             return;
-        _finished = true;
         _askedIfChunked = true;
+        [self cleanUp];
 
         LogTo(TDListenerVerbose, @"%@ Finished!", self);
-
-        // Break cycles:
-        _router.onResponseReady = nil;
-        _router.onDataAvailable = nil;
-        _router.onFinished = nil;
 
         if (!_chunked || _offset == 0) {
             // Response finished immediately, before the connection asked for any data, so we're free
@@ -221,6 +230,7 @@
         _connection = nil;
         [_data release];
         _data = nil;
+        [self cleanUp];
     }
 }
 
