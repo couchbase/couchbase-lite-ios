@@ -62,7 +62,7 @@
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
-		2751D4E4151BAE7000F7FD57 /* TDDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */; };
+		2751D4E4151BAE7000F7FD57 /* TDDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2751D4E5151BAE7000F7FD57 /* TDDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */; };
 		2751D4E6151BAE7000F7FD57 /* TDDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */; };
 		2753156E14ACEFC90065964D /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155114ACEFC90065964D /* DDData.h */; };
@@ -185,7 +185,7 @@
 		27A073EC14C0BB6200F52FE7 /* TDMisc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A073EA14C0BB6200F52FE7 /* TDMisc.h */; };
 		27A073ED14C0BB6200F52FE7 /* TDMisc.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A073EB14C0BB6200F52FE7 /* TDMisc.m */; };
 		27A073EE14C0BB6200F52FE7 /* TDMisc.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A073EB14C0BB6200F52FE7 /* TDMisc.m */; };
-		27A720A0152B959100C0A0E8 /* TDAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* TDAttachment.h */; };
+		27A720A0152B959100C0A0E8 /* TDAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* TDAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27A720A1152B959100C0A0E8 /* TDAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* TDAttachment.m */; };
 		27A720A2152B959100C0A0E8 /* TDAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* TDAttachment.m */; };
 		27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
@@ -308,6 +308,8 @@
 		27F074AB11CD5D7A00E9A2AB /* TDBody.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* TDBody.m */; };
 		27F0751311CDC7F900E9A2AB /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		27F0751811CDC80A00E9A2AB /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
+		27F08C8A15A7A30D003C3E2B /* TDDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27F08C8B15A7A31B003C3E2B /* TDAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* TDAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27F12887156ABE24008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; };
 		27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; };
 		27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; };
@@ -1437,6 +1439,8 @@
 				27B0B8041492BDE800A817AD /* TDPusher.h in Headers */,
 				27B0B8051492BDE800A817AD /* TouchDB.h in Headers */,
 				27E41530154F6E9C00771FC5 /* TDStatus.h in Headers */,
+				27F08C8A15A7A30D003C3E2B /* TDDatabaseManager.h in Headers */,
+				27F08C8B15A7A31B003C3E2B /* TDAttachment.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

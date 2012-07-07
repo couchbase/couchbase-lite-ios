@@ -77,6 +77,43 @@
 }
 
 
+- (void)connection:(NSURLConnection *)connection
+        willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+{
+    id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    if (challenge.proposedCredential) {
+        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+        return;
+    }
+    
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    NSString* host = space.host;
+    if (challenge.previousFailureCount == 0 && [host hasSuffix: @"."] && !space.isProxy) {
+        host = [host substringToIndex: host.length - 1];
+        if ([host caseInsensitiveCompare: _databaseURL.host] == 0) {
+            // Challenge is for the hostname with the "." appended. Try without it:
+            NSURLProtectionSpace* newSpace = [[NSURLProtectionSpace alloc]
+                                                       initWithHost: host
+                                                               port: space.port
+                                                           protocol: space.protocol
+                                                              realm: space.realm
+                                               authenticationMethod: space.authenticationMethod];
+            NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage] defaultCredentialForProtectionSpace: newSpace];
+            if (cred) {
+                [sender useCredential: cred forAuthenticationChallenge: challenge];
+                return;
+            }
+        }
+    }
+    
+    // Give up:
+    Log(@"%@: Auth failed: No credential for {host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+        self, space.host, (int)space.port, space.protocol, space.realm,
+        space.authenticationMethod);
+    [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
+}
+
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     _retryCount = 0;  // successful TCP connection
     TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
