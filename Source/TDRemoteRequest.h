@@ -27,6 +27,7 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
     NSMutableURLRequest* _request;
     TDRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
+    int _status;
     UInt8 _retryCount;
     bool _dontLog404;
 }

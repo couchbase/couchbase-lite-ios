@@ -157,10 +157,10 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    int status = (int) ((NSHTTPURLResponse*)response).statusCode;
-    LogTo(RemoteRequest, @"%@: Got response, status %d", self, status);
-    if (TDStatusIsError(status)) 
-        [self cancelWithStatus: status];
+    _status = (int) ((NSHTTPURLResponse*)response).statusCode;
+    LogTo(RemoteRequest, @"%@: Got response, status %d", self, _status);
+    if (TDStatusIsError(_status)) 
+        [self cancelWithStatus: _status];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
@@ -224,13 +224,16 @@
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     LogTo(RemoteRequest, @"%@: Finished loading", self);
     id result = nil;
-    if (_jsonBuffer)
-        result = [TDJSON JSONObjectWithData: _jsonBuffer options: 0 error: NULL];
     NSError* error = nil;
-    if (!result) {
-        Warn(@"%@: %@ %@ returned unparseable data '%@'",
-             self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
-        error = TDStatusToNSError(kTDStatusUpstreamError, _request.URL);
+    if (_jsonBuffer.length > 0) {
+        result = [TDJSON JSONObjectWithData: _jsonBuffer options: 0 error: NULL];
+        if (!result) {
+            Warn(@"%@: %@ %@ returned unparseable data '%@'",
+                 self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
+            error = TDStatusToNSError(kTDStatusUpstreamError, _request.URL);
+        }
+    } else {
+        result = $dict();
     }
     [self clearConnection];
     [self respondWithResult: result error: error];
