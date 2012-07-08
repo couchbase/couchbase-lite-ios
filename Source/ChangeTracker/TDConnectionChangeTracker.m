@@ -89,17 +89,23 @@
     NSURLProtectionSpace* space = challenge.protectionSpace;
     NSString* host = space.host;
     if (challenge.previousFailureCount == 0 && [host hasSuffix: @"."] && !space.isProxy) {
-        host = [host substringToIndex: host.length - 1];
-        if ([host caseInsensitiveCompare: _databaseURL.host] == 0) {
+        NSString* hostWithoutDot = [host substringToIndex: host.length - 1];
+        if ([hostWithoutDot caseInsensitiveCompare: _databaseURL.host] == 0) {
             // Challenge is for the hostname with the "." appended. Try without it:
+            host = hostWithoutDot;
             NSURLProtectionSpace* newSpace = [[NSURLProtectionSpace alloc]
                                                        initWithHost: host
                                                                port: space.port
                                                            protocol: space.protocol
                                                               realm: space.realm
                                                authenticationMethod: space.authenticationMethod];
-            NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage] defaultCredentialForProtectionSpace: newSpace];
+            NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
+                                                    defaultCredentialForProtectionSpace: newSpace];
             if (cred) {
+                LogTo(ChangeTracker, @"%@: Using credential '%@' for "
+                                      "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+                    self, cred.user, host, (int)space.port, space.protocol, space.realm,
+                    space.authenticationMethod);
                 [sender useCredential: cred forAuthenticationChallenge: challenge];
                 return;
             }
@@ -107,8 +113,8 @@
     }
     
     // Give up:
-    Log(@"%@: Auth failed: No credential for {host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
-        self, space.host, (int)space.port, space.protocol, space.realm,
+    Log(@"%@: Continuing without credential for {host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+        self, host, (int)space.port, space.protocol, space.realm,
         space.authenticationMethod);
     [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
 }
