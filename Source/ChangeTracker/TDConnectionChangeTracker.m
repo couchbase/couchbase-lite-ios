@@ -20,13 +20,11 @@
 #import "TDStatus.h"
 
 
-#define kMaxRetries 4               // Number of retry attempts on failure to open TCP connection
-#define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
-
-
 @implementation TDConnectionChangeTracker
 
 - (BOOL) start {
+    if(_connection)
+        return NO;
     [super start];
     _inputBuffer = [[NSMutableData alloc] init];
     
@@ -69,8 +67,6 @@
 
 
 - (void) stop {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(start)
-                                               object: nil];    // cancel pending retries
     if (_connection)
         [_connection cancel];
     [super stop];
@@ -122,13 +118,14 @@
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    _retryCount = 0;  // successful TCP connection
     TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(ChangeTracker, @"%@: Got response, status %d", self, status);
     if (TDStatusIsError(status)) {
         Warn(@"%@: Got status %i", self, status);
-        self.error = TDStatusToNSError(status, self.changesFeedURL);
-        [self stop];
+        [self connection: connection
+              didFailWithError: TDStatusToNSError(status, self.changesFeedURL)];
+    } else {
+        _retryCount = 0;  // successful connection
     }
 }
 
@@ -138,19 +135,8 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    // This is called for an error with the socket, _not_ an HTTP error status.
-    // In this case we should retry, since the network might be flaky.
-    if (++_retryCount <= kMaxRetries) {
-        [self clearConnection];
-        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << (_retryCount-1));
-        Log(@"%@: Connection error, retrying in %.1f sec: %@",
-            self, retryDelay, error.localizedDescription);
-        [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
-    } else {
-        Warn(@"%@: Can't connect, giving up: %@", self, error);
-        self.error = error;
-        [self stopped];
-    }
+    [self clearConnection];
+    [self failedWithError: error];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {

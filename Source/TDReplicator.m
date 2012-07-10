@@ -24,7 +24,12 @@
 #import "TDInternal.h"
 #import "TDMisc.h"
 #import "TDBase64.h"
+#import "MYBlockUtils.h"
 #import "MYURLUtils.h"
+
+#if TARGET_OS_IPHONE
+#import <UIKit/UIApplication.h>
+#endif
 
 
 #define kProcessDelay 0.5
@@ -74,6 +79,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     
     self = [super init];
     if (self) {
+        _thread = [NSThread currentThread];
         _db = db;
         _remote = [remote retain];
         _continuous = continuous;
@@ -88,6 +94,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 - (void)dealloc {
     [self stop];
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
     [_remote release];
     [_host stop];
     [_host release];
@@ -211,6 +218,13 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     self.running = YES;
     _startTime = CFAbsoluteTimeGetCurrent();
     
+#if TARGET_OS_IPHONE
+    // Register for foreground/background transition notifications, on iOS:
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appBackgrounding:)
+                                                 name: UIApplicationDidEnterBackgroundNotification
+                                               object: nil];
+#endif
+    
     // Start reachability checks. (This creates another ref cycle, because
     // the block also retains a ref to self. Cycle is also broken in -stopped.)
     _online = NO;
@@ -232,6 +246,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     LogTo(Sync, @"%@ STOPPING...", self);
     [_batcher flush];
     _continuous = NO;
+#if TARGET_OS_IPHONE
+    // Unregister for background transition notifications, on iOS:
+    [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                 name: UIApplicationDidEnterBackgroundNotification
+                                               object: nil];
+#endif
     if (_asyncTaskCount == 0)
         [self stopped];
 }
@@ -287,6 +307,17 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     else if (host.reachabilityKnown)
         [self goOffline];
 }
+
+
+#if TARGET_OS_IPHONE
+- (void) appBackgrounding: (NSNotification*)n {
+    // Danger: This is called on the main thread!
+    MYOnThread(_thread, ^{
+        LogTo(Sync, @"%@: App going into background", self);
+        [self stop];
+    });
+}
+#endif
 
 
 - (void) asyncTaskStarted {

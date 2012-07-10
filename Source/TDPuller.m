@@ -159,6 +159,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
+- (BOOL) goOnline {
+    if ([super goOnline])
+        return YES;
+    // If we were already online (i.e. server is reachable) but got a reachability-change event,
+    // tell the tracker to retry in case it's in retry mode after a transient failure. (I.e. the
+    // state of the network might be better now.)
+    if (_running && _online)
+        [_changeTracker retry];
+    return NO;
+}
+
+
 - (BOOL) goOffline {
     if (![super goOffline])
         return NO;
