@@ -101,6 +101,7 @@
                                                authenticationMethod: space.authenticationMethod];
             NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
                                                     defaultCredentialForProtectionSpace: newSpace];
+            [newSpace release];
             if (cred) {
                 LogTo(ChangeTracker, @"%@: Using credential '%@' for "
                                       "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
