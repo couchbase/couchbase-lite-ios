@@ -350,7 +350,7 @@ TestCase(TDMultipartReader_Simple) {
                                       $dict());
 
     for (NSUInteger chunkSize = 1; chunkSize <= mime.length; ++chunkSize) {
-        Log(@"--- chunkSize = %u", chunkSize);
+        Log(@"--- chunkSize = %u", (unsigned)chunkSize);
         TestMultipartReaderDelegate* delegate = [[[TestMultipartReaderDelegate alloc] init] autorelease];
         TDMultipartReader* reader = [[[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: delegate] autorelease];
         CAssert(!reader.finished);

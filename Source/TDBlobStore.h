@@ -45,10 +45,14 @@ typedef struct TDBlobKey {
 @property (readonly) NSArray* allKeys;
 @property (readonly) UInt64 totalDataSize;
 
-- (NSUInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep;
+- (NSInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep;
 
 + (TDBlobKey) keyForBlob: (NSData*)blob;
 + (NSData*) keyDataForBlob: (NSData*)blob;
+
+/** Returns the path of the file storing the attachment with the given key, or nil.
+    DO NOT MODIFY THIS FILE! */
+- (NSString*) pathForKey: (TDBlobKey)key;
 
 @end
 

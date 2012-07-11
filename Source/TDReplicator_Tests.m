@@ -52,6 +52,7 @@ static void deleteRemoteDB(void) {
             error = [err retain];
         }
                                 ];
+    [request start];
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                                  beforeDate: timeout])
@@ -185,7 +186,7 @@ TestCase(TDPuller_FromCouchApp) {
     for (NSString* name in attachments) { 
         NSDictionary* attachment = [attachments objectForKey: name];
         NSData* data = [TDBase64 decode: [attachment objectForKey: @"data"]];
-        Log(@"Attachment %@: %u bytes", name, data.length);
+        Log(@"Attachment %@: %u bytes", name, (unsigned)data.length);
         CAssert(data);
         CAssertEq([data length], [[attachment objectForKey: @"length"] unsignedLongLongValue]);
     }
@@ -296,6 +297,21 @@ TestCase(ParseReplicatorProperties) {
     CAssertEqual(remote, $url(@"http://example.com"));
     CAssertEq(isPush, YES);
     CAssertEq(createTarget, YES);
+    CAssertEq(headers, nil);
+    
+    props = $dict({@"source", @"touchdb:///foo"},
+                  {@"target", @"foo"});
+    CAssertEq(200, [replManager parseReplicatorProperties: props
+                                               toDatabase: &db
+                                                   remote: &remote
+                                                   isPush: &isPush
+                                             createTarget: &createTarget
+                                                  headers: &headers
+                                               authorizer: NULL]);
+    CAssertEq(db, localDB);
+    CAssertEqual(remote, $url(@"touchdb:///foo"));
+    CAssertEq(isPush, NO);
+    CAssertEq(createTarget, NO);
     CAssertEq(headers, nil);
     
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},

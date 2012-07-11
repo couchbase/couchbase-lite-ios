@@ -6,7 +6,7 @@ and technical advice from Damien Katz and Filipe Manana
 
 **TouchDB** is a lightweight [Apache CouchDB][1]-compatible database engine suitable for embedding into mobile or desktop apps. Think of it this way: If CouchDB is MySQL, then TouchDB is SQLite.
 
-By "_CouchDB-compatible_" I mean that it can replicate with CouchDB, and that its data model and high-level design are "Couch-like" enough to make it familiar to CouchDB/Couchbase developers. Its API will _not_ be identical and it may not support some CouchDB features (like user accounts) that aren't useful in mobile apps. Its implementation is _not_ based on CouchDB's (it's not even written in Erlang.) It _does_ support replication to and from CouchDB.
+By "_CouchDB-compatible_" I mean that it can replicate with CouchDB, and that its data model and high-level design are "Couch-like" enough to make it familiar to CouchDB/Couchbase developers. Its REST API is nearly identical, though it doesn't support a few CouchDB features, like user accounts, that aren't useful in mobile apps. Its implementation is _not_ based on CouchDB's (it's not even written in Erlang.) It _does_ support replication to and from CouchDB.
 
 By "_suitable for embedding into mobile apps_", I mean that it meets the following requirements:
 
@@ -43,20 +43,18 @@ More documentation is available on the [wiki][2].
 
 ## Development Status ##
 
-TouchDB went alpha in January 2012 with version 0.45.
+TouchDB went beta in June 2012 with [version 0.8][16].
 
-Current versions (0.75 as of this writing) are close to being beta candidates.
-
-Beta should arrive by summer.
+We don't have a formal schedule for 1.0, but expect the blessed event by the end of summer.
 
 ## Building TouchDB ##
 
 ### On a Mac ###
 
-For full details see the [wiki page][7]. The gist of it is:
+For full details see the [wiki page][7]. The basic steps are:
 
  1. Clone the TouchDB repository to your local disk.
- 2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the [FMDB][5], [MYUtilities][6], and [CocoaHTTPServer][9] repos into the vendor/ subdirectory.
+ 2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the dependent library repos (such as [FMDB][5] and [MYUtilities][6]) into the vendor/ subdirectory.
  3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
 
 ### With GNUstep ###
@@ -78,3 +76,4 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [13]: http://wiki.gnustep.org/index.php/Platform_compatibility
 [14]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/BUILDING.txt
 [15]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/SETUP.txt
+[16]: https://github.com/couchbaselabs/TouchDB-iOS/commit/ee47a8ab49fee46df377f35717c129c4abc894d0

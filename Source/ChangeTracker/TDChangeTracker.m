@@ -24,6 +24,9 @@
 #define kDefaultHeartbeat (5 * 60.0)
 
 
+static NSURL* AddDotToURLHost( NSURL* url );
+
+
 @interface TDChangeTracker ()
 @property (readwrite, copy, nonatomic) id lastSequenceID;
 @end
@@ -84,7 +87,13 @@
 }
 
 - (NSURL*) changesFeedURL {
-    NSMutableString* urlStr = [[_databaseURL.absoluteString mutableCopy] autorelease];
+    // Really ugly workaround for CFNetwork, to make sure that long-running connections like these
+    // don't end up using the same socket pool as regular connections to the same host; otherwise
+    // the regular connections can get stuck indefinitely behind a long-running one.
+    // (This substitution appends a "." to the host name, if it didn't already end with one.)
+    NSURL* url = AddDotToURLHost(_databaseURL);
+
+    NSMutableString* urlStr = [[url.absoluteString mutableCopy] autorelease];
     if (![urlStr hasSuffix: @"/"])
         [urlStr appendString: @"/"];
     [urlStr appendString: self.changesFeedPath];
@@ -158,3 +167,51 @@
 }
 
 @end
+
+
+static NSURL* AddDotToURLHost( NSURL* url ) {
+    CAssert(url);
+    UInt8 urlBytes[1024];
+    CFIndex nBytes = CFURLGetBytes((CFURLRef)url, urlBytes, sizeof(urlBytes) - 1);
+    if (nBytes > 0) {
+        CFRange range;
+        CFURLGetByteRangeForComponent((CFURLRef)url, kCFURLComponentHost, &range);
+        if (range.length >= 2) {
+            CFIndex end = range.location + range.length - 1;
+            if (urlBytes[end] == '/' || urlBytes[end] == ':')
+                --end;
+            if (isalpha(urlBytes[end])) {
+                // Alright, insert the '.' after end:
+                memmove(&urlBytes[end+2], &urlBytes[end+1], nBytes - end);
+                urlBytes[end+1] = '.';
+                NSURL* newURL = (id)(CFURLCreateWithBytes(NULL, urlBytes, nBytes + 1,
+                                                          kCFStringEncodingUTF8, NULL));
+                if (newURL)
+                    url = [newURL autorelease];
+                else
+                    Warn(@"AddDotToURLHost: Failed to add dot to <%@> -- result is <%.*s>",
+                         url, (int)nBytes+1, urlBytes);
+            }
+        }
+    }
+    return url;
+}
+
+
+#if DEBUG
+static NSString* addDot( NSString* urlStr ) {
+    return AddDotToURLHost([NSURL URLWithString: urlStr]).absoluteString;
+}
+
+TestCase(AddDotToURLHost) {
+    CAssertEqual(addDot(@"http://x/y"),                 @"http://x./y");
+    CAssertEqual(addDot(@"http://foo.com"),             @"http://foo.com.");
+    CAssertEqual(addDot(@"http://foo.com/"),            @"http://foo.com./");
+    CAssertEqual(addDot(@"http://foo.com/bar"),         @"http://foo.com./bar");
+    CAssertEqual(addDot(@"http://foo.com:123/"),        @"http://foo.com.:123/");
+    CAssertEqual(addDot(@"http://user:pass@foo.com/"),  @"http://user:pass@foo.com./");
+    CAssertEqual(addDot(@"http://foo.com./"),           @"http://foo.com./");
+    CAssertEqual(addDot(@"http://localhost/"),          @"http://localhost./");
+    CAssertEqual(addDot(@"http://10.0.1.12/"),          @"http://10.0.1.12/");
+}
+#endif

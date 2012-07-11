@@ -301,8 +301,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         rev.sequence = [_pendingSequences addValue: rev.remoteSequenceID];
     }
     LogTo(Sync, @"%@ queued %u remote revisions from seq=%@ (%u in bulk, %u individually)",
-          self, inbox.count, [[[inbox allRevisions] objectAtIndex: 0] remoteSequenceID],
-          numBulked, inbox.count-numBulked);
+          self, (unsigned)inbox.count, [[[inbox allRevisions] objectAtIndex: 0] remoteSequenceID],
+          numBulked, (unsigned)(inbox.count-numBulked));
     
     [self pullRemoteRevisions];
 }
@@ -366,7 +366,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     LogTo(SyncVerbose, @"%@: GET .%@", self, path);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    [[[TDMultipartDownloader alloc] initWithURL: [NSURL URLWithString: urlStr]
+    TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
+                                    initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
                                      authorizer: _authorizer
                                  requestHeaders: self.requestHeaders
@@ -390,6 +391,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             [self pullRemoteRevisions];
         }
      ] autorelease];
+    [dl start];
 }
 
 
@@ -399,7 +401,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSUInteger nRevs = bulkRevs.count;
     if (nRevs == 0)
         return;
-    LogTo(Sync, @"%@ bulk-fetching %u remote revisions...", self, nRevs);
+    LogTo(Sync, @"%@ bulk-fetching %u remote revisions...", self, (unsigned)nRevs);
     LogTo(SyncVerbose, @"%@ bulk-fetching remote revisions: %@", self, bulkRevs);
     
     [self asyncTaskStarted];
@@ -418,7 +420,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       // We only add a document if it doesn't have attachments, and if its
                       // revID matches the one we asked for.
                       NSArray* rows = $castIf(NSArray, [result objectForKey: @"rows"]);
-                      LogTo(Sync, @"%@ checking %u bulk-fetched remote revisions", self, rows.count);
+                      LogTo(Sync, @"%@ checking %u bulk-fetched remote revisions",
+                            self, (unsigned)rows.count);
                       for (NSDictionary* row in rows) {
                           NSDictionary* doc = $castIf(NSDictionary, [row objectForKey: @"doc"]);
                           if (doc && ![doc objectForKey: @"_attachments"]) {
@@ -437,7 +440,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   // Any leftover revisions that didn't get matched will be fetched individually:
                   if (remainingRevs.count) {
                       LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
-                            self, remainingRevs.count, nRevs);
+                            self, (unsigned)remainingRevs.count, (unsigned)nRevs);
                       for (TDRevision* rev in remainingRevs)
                           [self queueRemoteRevision: rev];
                       [self pullRemoteRevisions];
@@ -455,7 +458,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {
-    LogTo(SyncVerbose, @"%@ inserting %u revisions...", self, downloads.count);
+    LogTo(SyncVerbose, @"%@ inserting %u revisions...", self, (unsigned)downloads.count);
     CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         
     [_db beginTransaction];
@@ -506,7 +509,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     time = CFAbsoluteTimeGetCurrent() - time;
     LogTo(Sync, @"%@ inserted %u revs in %.3f sec (%.1f/sec)",
-          self, downloads.count, time, downloads.count/time);
+          self, (unsigned)downloads.count, time, downloads.count/time);
     
     [self asyncTasksFinished: downloads.count];
     self.changesProcessed += downloads.count;

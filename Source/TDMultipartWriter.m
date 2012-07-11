@@ -57,7 +57,7 @@
 }
 
 
-- (void) addStream: (NSInputStream*)partStream length:(UInt64)length {
+- (void) addInput: (id)part length:(UInt64)length {
     NSData* separator = _separatorData;
     if (_nextPartsHeaders.count) {
         NSMutableString* headers = [NSMutableString stringWithFormat: @"\r\n--%@\r\n", _boundary];
@@ -68,18 +68,20 @@
         separator = [headers dataUsingEncoding: NSUTF8StringEncoding];
         [self setNextPartsHeaders: nil];
     }
-    [super addStream: [NSInputStream inputStreamWithData: separator] length: separator.length];
-    [super addStream: partStream length: length];
+    [super addInput: separator length: separator.length];
+    [super addInput: part length: length];
 }
 
 
 - (void) opened {
-    // Append the final boundary:
-    NSString* trailerStr = $sprintf(@"\r\n--%@--", _boundary);
-    NSData* trailerData = [trailerStr dataUsingEncoding: NSUTF8StringEncoding];
-    [super addStream: [NSInputStream inputStreamWithData: trailerData] length: 0];
-    // _length was already adjusted for this in -init
-    
+    if (!_addedFinalBoundary) {
+        // Append the final boundary:
+        NSString* trailerStr = $sprintf(@"\r\n--%@--", _boundary);
+        NSData* trailerData = [trailerStr dataUsingEncoding: NSUTF8StringEncoding];
+        [super addInput: trailerData length: 0];
+        // _length was already adjusted for this in -init
+        _addedFinalBoundary = YES;
+    }
     [super opened];
 }
 

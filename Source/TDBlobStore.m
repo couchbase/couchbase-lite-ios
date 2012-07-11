@@ -153,7 +153,7 @@
         if ([[self class] getKey: &key forFilename: filename])
             return [NSData dataWithBytes: &key length: sizeof(key)];
         else
-            return nil;
+            return (id)nil;
     }];
 }
 
@@ -184,12 +184,13 @@
 }
 
 
-- (NSUInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep {
+- (NSInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSArray* blob = [fmgr contentsOfDirectoryAtPath: _path error: NULL];
     if (!blob)
         return 0;
     NSUInteger numDeleted = 0;
+    BOOL errors = NO;
     NSMutableData* curKeyData = [NSMutableData dataWithLength: sizeof(TDBlobKey)];
     for (NSString* filename in blob) {
         if ([[self class] getKey: curKeyData.mutableBytes forFilename: filename]) {
@@ -198,12 +199,14 @@
                 if ([fmgr removeItemAtPath: [_path stringByAppendingPathComponent: filename]
                                  error: &error])
                     ++numDeleted;
-                else
+                else {
+                    errors = YES;
                     Warn(@"%@: Failed to delete '%@': %@", self, filename, error);
+                }
             }
         }
     }
-    return numDeleted;
+    return errors ? -1 : numDeleted;
 }
 
 

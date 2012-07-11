@@ -34,7 +34,14 @@
     request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     request.timeoutInterval = 6.02e23;
     
-    // Add headers.
+    // Override the default Host: header to use the hostname _without_ the "." suffix
+    // (the suffix appears to confuse Cloudant / BigCouch's HTTP server.)
+    NSString* host = _databaseURL.host;
+    if (_databaseURL.port)
+        host = [host stringByAppendingFormat: @":%@", _databaseURL.port];
+    [request setValue: host forHTTPHeaderField: @"Host"];
+    
+    // Add custom headers.
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
     }];
@@ -67,6 +74,50 @@
     if (_connection)
         [_connection cancel];
     [super stop];
+}
+
+
+- (void)connection:(NSURLConnection *)connection
+        willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+{
+    id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    if (challenge.proposedCredential) {
+        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+        return;
+    }
+    
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    NSString* host = space.host;
+    if (challenge.previousFailureCount == 0 && [host hasSuffix: @"."] && !space.isProxy) {
+        NSString* hostWithoutDot = [host substringToIndex: host.length - 1];
+        if ([hostWithoutDot caseInsensitiveCompare: _databaseURL.host] == 0) {
+            // Challenge is for the hostname with the "." appended. Try without it:
+            host = hostWithoutDot;
+            NSURLProtectionSpace* newSpace = [[NSURLProtectionSpace alloc]
+                                                       initWithHost: host
+                                                               port: space.port
+                                                           protocol: space.protocol
+                                                              realm: space.realm
+                                               authenticationMethod: space.authenticationMethod];
+            NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
+                                                    defaultCredentialForProtectionSpace: newSpace];
+            [newSpace release];
+            if (cred) {
+                LogTo(ChangeTracker, @"%@: Using credential '%@' for "
+                                      "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+                    self, cred.user, host, (int)space.port, space.protocol, space.realm,
+                    space.authenticationMethod);
+                [sender useCredential: cred forAuthenticationChallenge: challenge];
+                return;
+            }
+        }
+    }
+    
+    // Give up:
+    Log(@"%@: Continuing without credential for {host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+        self, host, (int)space.port, space.protocol, space.realm,
+        space.authenticationMethod);
+    [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
 }
 
 

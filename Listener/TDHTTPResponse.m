@@ -57,15 +57,17 @@
             };
         }
         
-        // Run the router, synchronously:
+        // Run the router, asynchronously:
         LogTo(TDListenerVerbose, @"%@: Starting...", self);
         [router start];
+        [self retain];      // will be released in -cleanUp
         LogTo(TDListenerVerbose, @"%@: Returning from -init", self);
     }
     return self;
 }
 
 - (void)dealloc {
+    LogTo(TDListenerVerbose, @"DEALLOC %@", self);
     [_router release];
     [_response release];
     [_data release];
@@ -94,9 +96,9 @@
 }
 
 
-- (BOOL) delayResponeHeaders {  // [sic]
+- (BOOL) delayResponseHeaders {
     @synchronized(self) {
-        LogTo(TDListenerVerbose, @"%@ answers delayResponeHeaders=%d", self, !_response);
+        LogTo(TDListenerVerbose, @"%@ answers delayResponseHeaders=%d", self, !_response);
         if (!_response)
             _delayedHeaders = YES;
         return !_response;
@@ -120,7 +122,7 @@
 }
 
 - (NSDictionary *) httpHeaders {
-    LogTo(TDListenerVerbose, @"%@ answers httpHeaders={%d headers}", self, _response.headers.count);
+    LogTo(TDListenerVerbose, @"%@ answers httpHeaders={%u headers}", self, (unsigned)_response.headers.count);
     return _response.headers;
 }
 
@@ -171,7 +173,7 @@
             [_data autorelease];
             _data = nil;
         }
-        LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, result.length);
+        LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, (unsigned)result.length);
         return result;
     }
 }
@@ -183,19 +185,26 @@
 }
 
 
+- (void) cleanUp {
+    // Break cycles:
+    _router.onResponseReady = nil;
+    _router.onDataAvailable = nil;
+    _router.onFinished = nil;
+    if (!_finished) {
+        _finished = true;
+        [self autorelease];
+    }
+}
+
+
 - (void) onFinished {
     @synchronized(self) {
         if (_finished)
             return;
-        _finished = true;
         _askedIfChunked = true;
+        [self cleanUp];
 
         LogTo(TDListenerVerbose, @"%@ Finished!", self);
-
-        // Break cycles:
-        _router.onResponseReady = nil;
-        _router.onDataAvailable = nil;
-        _router.onFinished = nil;
 
         if (!_chunked || _offset == 0) {
             // Response finished immediately, before the connection asked for any data, so we're free
@@ -217,9 +226,12 @@
 
 
 - (void)connectionDidClose {
-    _connection = nil;
-    [_data release];
-    _data = nil;
+    @synchronized(self) {
+        _connection = nil;
+        [_data release];
+        _data = nil;
+        [self cleanUp];
+    }
 }
 
 

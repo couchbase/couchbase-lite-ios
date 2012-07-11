@@ -140,7 +140,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         }
     }
     NSURL* remote = [NSURL URLWithString: [remoteDict objectForKey: @"url"]];
-    if (!remote || ![remote.scheme hasPrefix: @"http"])
+    if (![$array(@"http", @"https", @"touchdb") containsObject: remote.scheme.lowercaseString])
         return kTDStatusBadRequest;
     if (outDatabase) {
         *outDatabase = db;
@@ -198,32 +198,16 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         return NO;
     }
     
-    // "_"-prefixed keys cannot be added:
-    NSDictionary* curProperties = context.currentRevision.properties;
-    for (NSString* key in newProperties) {
-        if ([key hasPrefix: @"_"] &&
-                !$equal(key, @"_id") && !$equal(key, @"_rev") &&
-                !$equal([curProperties objectForKey: key], [newProperties objectForKey: key])) {
-            context.errorMessage = $sprintf(@"Cannot add a '%@' property", key);
-            return NO;
-        }
-    }
-    
     // Only certain keys can be changed or removed:
     NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", nil];
     NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params",
                                                       @"heartbeat", @"feed", nil];
-    for (NSString* key in curProperties) {
-        id newValue = [newProperties objectForKey: key];
-        if (!newValue && [deletableProperties containsObject: key])
-            ;
-        else if (![mutableProperties containsObject: key] &&
-                !$equal([curProperties objectForKey: key], newValue)) {
-            context.errorMessage = $sprintf(@"Cannot modify the '%@' property", key);
-            return NO;
-        }
-    }
-    return YES;
+    return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
+        if (![context currentRevision])
+            return ![key hasPrefix: @"_"];
+        NSSet* allowed = newValue ? mutableProperties : deletableProperties;
+        return [allowed containsObject: key];
+    }];
 }
 
 
@@ -434,6 +418,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 // Notified that some database is being deleted; delete any associated replication document:
 - (void) someDbDeleted: (NSNotification*)n {
+    if (!_replicatorDB.exists)
+        return;
     TDDatabase* db = n.object;
     if ([_dbManager.allOpenDatabases indexOfObjectIdenticalTo: db] == NSNotFound)
         return;

@@ -199,8 +199,8 @@
         }
         NSData* keyData = [r dataNoCopyForColumnIndex: 0];
         if (keyData.length != sizeof(TDBlobKey)) {
-            Warn(@"%@: Attachment %lld.'%@' has bogus key size %d",
-                 self, sequence, filename, keyData.length);
+            Warn(@"%@: Attachment %lld.'%@' has bogus key size %u",
+                 self, sequence, filename, (unsigned)keyData.length);
             *outStatus = kTDStatusCorruptError;
             return nil;
         }
@@ -292,8 +292,7 @@
 }
 
 
-- (NSInputStream*) inputStreamForAttachmentDict: (NSDictionary*)attachmentDict
-                                         length: (UInt64*)outLength
+- (NSURL*) fileForAttachmentDict: (NSDictionary*)attachmentDict
 {
     NSString* digest = [attachmentDict objectForKey: @"digest"];
     if (![digest hasPrefix: @"sha1-"])
@@ -301,7 +300,7 @@
     NSData* keyData = [TDBase64 decode: [digest substringFromIndex: 5]];
     if (!keyData)
         return nil;
-    return [_attachments blobInputStreamForKey: *(TDBlobKey*)keyData.bytes length: outLength];
+    return [NSURL fileURLWithPath: [_attachments pathForKey: *(TDBlobKey*)keyData.bytes]];
 }
 
 
@@ -476,11 +475,9 @@
     for (NSString* attachmentName in attachments) {
         NSDictionary* attachment = [attachments objectForKey: attachmentName];
         if ([attachment objectForKey: @"follows"]) {
-            UInt64 length;
-            NSInputStream *stream = [self inputStreamForAttachmentDict: attachment length: &length];
             NSString* disposition = $sprintf(@"attachment; filename=%@", TDQuoteString(attachmentName));
             [writer setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
-            [writer addStream: stream length: length];
+            [writer addFileURL: [self fileForAttachmentDict: attachment]];
         }
     }
     return [writer autorelease];
@@ -600,7 +597,7 @@
     NSInteger numDeleted = [_attachments deleteBlobsExceptWithKeys: allKeys];
     if (numDeleted < 0)
         return kTDStatusAttachmentError;
-    Log(@"Deleted %d attachments", numDeleted);
+    Log(@"Deleted %d attachments", (int)numDeleted);
     return kTDStatusOK;
 }
 

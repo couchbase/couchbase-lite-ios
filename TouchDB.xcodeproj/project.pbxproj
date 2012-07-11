@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
+		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		2700BC5E14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */; };
 		2700BC5F14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */; };
 		270B3DFD1489359000E0A926 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DFC1489359000E0A926 /* SenTestingKit.framework */; };
@@ -62,7 +62,7 @@
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */; };
-		2751D4E4151BAE7000F7FD57 /* TDDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */; };
+		2751D4E4151BAE7000F7FD57 /* TDDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2751D4E5151BAE7000F7FD57 /* TDDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */; };
 		2751D4E6151BAE7000F7FD57 /* TDDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */; };
 		2753156E14ACEFC90065964D /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155114ACEFC90065964D /* DDData.h */; };
@@ -91,14 +91,14 @@
 		275315E414ACF1130065964D /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155214ACEFC90065964D /* DDData.m */; };
 		275315E514ACF1130065964D /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155414ACEFC90065964D /* DDNumber.m */; };
 		275315E614ACF1130065964D /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155614ACEFC90065964D /* DDRange.m */; };
-		275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155814ACEFC90065964D /* HTTPAuthenticationRequest.m */; };
-		275315E814ACF1130065964D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; };
-		275315E914ACF1130065964D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; };
-		275315EA14ACF1130065964D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; };
-		275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; };
-		275315F014ACF1130065964D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; };
-		275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; };
-		275315F214ACF1130065964D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; };
+		275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155814ACEFC90065964D /* HTTPAuthenticationRequest.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315E814ACF1130065964D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315E914ACF1130065964D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315EA14ACF1130065964D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315F014ACF1130065964D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315F214ACF1130065964D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		275315F314ACF1C20065964D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7069C148864BA00F0F099 /* Foundation.framework */; };
 		275315F514ACF1CC0065964D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		275315F814ACF2500065964D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F714ACF2500065964D /* CoreServices.framework */; };
@@ -185,7 +185,7 @@
 		27A073EC14C0BB6200F52FE7 /* TDMisc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A073EA14C0BB6200F52FE7 /* TDMisc.h */; };
 		27A073ED14C0BB6200F52FE7 /* TDMisc.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A073EB14C0BB6200F52FE7 /* TDMisc.m */; };
 		27A073EE14C0BB6200F52FE7 /* TDMisc.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A073EB14C0BB6200F52FE7 /* TDMisc.m */; };
-		27A720A0152B959100C0A0E8 /* TDAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* TDAttachment.h */; };
+		27A720A0152B959100C0A0E8 /* TDAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* TDAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27A720A1152B959100C0A0E8 /* TDAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* TDAttachment.m */; };
 		27A720A2152B959100C0A0E8 /* TDAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* TDAttachment.m */; };
 		27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
@@ -308,6 +308,8 @@
 		27F074AB11CD5D7A00E9A2AB /* TDBody.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* TDBody.m */; };
 		27F0751311CDC7F900E9A2AB /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		27F0751811CDC80A00E9A2AB /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
+		27F08C8A15A7A30D003C3E2B /* TDDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27F08C8B15A7A31B003C3E2B /* TDAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* TDAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27F12887156ABE24008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; };
 		27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; };
 		27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; };
@@ -324,9 +326,9 @@
 		27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; };
 		27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
-		DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; };
-		DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
-		DA147C0E14BCA98A0052DA4D /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; };
+		DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		DA147C0E14BCA98A0052DA4D /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		DA147C1314BCAA870052DA4D /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155214ACEFC90065964D /* DDData.m */; };
 		DA147C1414BCAA870052DA4D /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155414ACEFC90065964D /* DDNumber.m */; };
 		DA147C1514BCAA870052DA4D /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155614ACEFC90065964D /* DDRange.m */; };
@@ -868,32 +870,10 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				27F0744611CD4B6D00E9A2AB /* TDDatabase.h */,
-				27F0744711CD4B6D00E9A2AB /* TDDatabase.m */,
-				2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */,
-				274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */,
-				2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */,
-				27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */,
-				2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */,
-				27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */,
-				2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */,
-				2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */,
-				2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */,
-				2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */,
-				279EB2CC149140DE00E74185 /* TDView.h */,
-				279EB2CD149140DE00E74185 /* TDView.m */,
-				27F074A911CD5D7A00E9A2AB /* TDBody.h */,
-				27F074AA11CD5D7A00E9A2AB /* TDBody.m */,
-				270B3E3714898DF200E0A926 /* TDRevision.h */,
-				270B3E3814898DF200E0A926 /* TDRevision.m */,
-				27A7209E152B959100C0A0E8 /* TDAttachment.h */,
-				27A7209F152B959100C0A0E8 /* TDAttachment.m */,
-				27C706401486BBD500F0F099 /* TDServer.h */,
-				27C706411486BBD500F0F099 /* TDServer.m */,
-				27731EFD1493FA3100815D67 /* TDBlobStore.h */,
-				27731EFE1493FA3100815D67 /* TDBlobStore.m */,
+				270DC1A415ADE195002A2AF4 /* Database */,
 				279EB2D7149192C700E74185 /* Router */,
 				27821BB4148E7D590099B373 /* Replicator */,
+				27E2E62E159A26A1005B9234 /* Networking */,
 				279EB2D8149192DF00E74185 /* Support */,
 				2713789014BCCA7B0058C5CD /* Tests */,
 			);
@@ -918,6 +898,37 @@
 				270FE0C814C5008C005FF647 /* TouchServ */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		270DC1A415ADE195002A2AF4 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				27F0744611CD4B6D00E9A2AB /* TDDatabase.h */,
+				27F0744711CD4B6D00E9A2AB /* TDDatabase.m */,
+				2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */,
+				274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */,
+				2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */,
+				27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */,
+				2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */,
+				27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */,
+				2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */,
+				2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */,
+				2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */,
+				2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */,
+				279EB2CC149140DE00E74185 /* TDView.h */,
+				279EB2CD149140DE00E74185 /* TDView.m */,
+				27F074A911CD5D7A00E9A2AB /* TDBody.h */,
+				27F074AA11CD5D7A00E9A2AB /* TDBody.m */,
+				270B3E3714898DF200E0A926 /* TDRevision.h */,
+				270B3E3814898DF200E0A926 /* TDRevision.m */,
+				27A7209E152B959100C0A0E8 /* TDAttachment.h */,
+				27A7209F152B959100C0A0E8 /* TDAttachment.m */,
+				27C706401486BBD500F0F099 /* TDServer.h */,
+				27C706411486BBD500F0F099 /* TDServer.m */,
+				27731EFD1493FA3100815D67 /* TDBlobStore.h */,
+				27731EFE1493FA3100815D67 /* TDBlobStore.m */,
+			);
+			name = Database;
 			sourceTree = "<group>";
 		};
 		2713789014BCCA7B0058C5CD /* Tests */ = {
@@ -1114,16 +1125,6 @@
 				270F5704156AE0BF000FEB8F /* TDAuthorizer.m */,
 				27F128AF156AC1C8008465C2 /* TDOAuth1Authorizer.h */,
 				27F128B0156AC1C9008465C2 /* TDOAuth1Authorizer.m */,
-				279906E1149A65B7003D4338 /* TDRemoteRequest.h */,
-				279906E2149A65B8003D4338 /* TDRemoteRequest.m */,
-				27103F8114E9CE4400DF7209 /* TDReachability.h */,
-				27103F8214E9CE4400DF7209 /* TDReachability.m */,
-				279CE3FE14D749A7009F3FA6 /* TDMultipartReader.h */,
-				279CE3FF14D749A7009F3FA6 /* TDMultipartReader.m */,
-				2766EFFB14DC7B37009ECCA8 /* TDMultiStreamWriter.h */,
-				2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */,
-				2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */,
-				2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */,
 				279C7E2C14F424090004A1E8 /* TDSequenceMap.h */,
 				279C7E2D14F424090004A1E8 /* TDSequenceMap.m */,
 				27A073EA14C0BB6200F52FE7 /* TDMisc.h */,
@@ -1250,6 +1251,23 @@
 				27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */,
 			);
 			path = "google-toolbox-for-mac";
+			sourceTree = "<group>";
+		};
+		27E2E62E159A26A1005B9234 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				279906E1149A65B7003D4338 /* TDRemoteRequest.h */,
+				279906E2149A65B8003D4338 /* TDRemoteRequest.m */,
+				279CE3FE14D749A7009F3FA6 /* TDMultipartReader.h */,
+				279CE3FF14D749A7009F3FA6 /* TDMultipartReader.m */,
+				2766EFFB14DC7B37009ECCA8 /* TDMultiStreamWriter.h */,
+				2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */,
+				2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */,
+				2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */,
+				27103F8114E9CE4400DF7209 /* TDReachability.h */,
+				27103F8214E9CE4400DF7209 /* TDReachability.m */,
+			);
+			name = Networking;
 			sourceTree = "<group>";
 		};
 		27F0746C11CD51A200E9A2AB /* FMDB */ = {
@@ -1429,6 +1447,8 @@
 				27B0B8041492BDE800A817AD /* TDPusher.h in Headers */,
 				27B0B8051492BDE800A817AD /* TouchDB.h in Headers */,
 				27E41530154F6E9C00771FC5 /* TDStatus.h in Headers */,
+				27F08C8A15A7A30D003C3E2B /* TDDatabaseManager.h in Headers */,
+				27F08C8B15A7A31B003C3E2B /* TDAttachment.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1688,7 +1708,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0440;
 			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "TouchDB" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2264,8 +2284,9 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CURRENT_PROJECT_VERSION = 0.8;
+				CURRENT_PROJECT_VERSION = 0.9;
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2285,8 +2306,9 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CURRENT_PROJECT_VERSION = 0.8;
+				CURRENT_PROJECT_VERSION = 0.9;
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -2302,6 +2324,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = "";
@@ -2322,6 +2345,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2345,6 +2369,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2370,6 +2395,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
@@ -2426,8 +2452,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2455,8 +2482,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_POSTPROCESSING = YES;
@@ -2701,7 +2729,6 @@
 					"\"$(SRCROOT)/Demo-iOS/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2756,6 +2783,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2769,7 +2798,9 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "TouchDB Demo";
+				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -2778,6 +2809,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2790,7 +2823,9 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "TouchDB Demo";
+				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -2800,6 +2835,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/TouchDBiOS.dst;
@@ -2824,6 +2860,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				COPY_PHASE_STRIP = YES;
 				DSTROOT = /tmp/TouchDBiOS.dst;

@@ -91,7 +91,6 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: TDDatabaseChangeNotification object: _db];
-        [self asyncTaskStarted];  // prevents -stopped from being called when other tasks finish
     }
 }
 
@@ -102,7 +101,6 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         [[NSNotificationCenter defaultCenter] removeObserver: self
                                                         name: TDDatabaseChangeNotification
                                                       object: _db];
-        [self asyncTasksFinished: 1];
     }
 }
 
@@ -114,6 +112,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 }
 
 - (void) stop {
+    setObj(&_uploaderQueue, nil);
+    _uploading = NO;
     [self stopObserving];
     [super stop];
 }
@@ -157,14 +157,14 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
             __block SequenceNumber lastInboxSequence = 0;
-            NSArray* docsToSend = [changes.allRevisions my_map: ^(TDRevision* rev) {
+            NSArray* docsToSend = [changes.allRevisions my_map: ^id(TDRevision* rev) {
                 NSDictionary* properties;
                 @autoreleasepool {
                     // Is this revision in the server's 'missing' list?
                     NSDictionary* revResults = [results objectForKey: [rev docID]];
                     NSArray* missing = [revResults objectForKey: @"missing"];
                     if (![missing containsObject: [rev revID]])
-                        return (id)nil;
+                        return nil;
                     
                     // Get the revision's properties:
                     TDContentOptions options = kTDIncludeAttachments | kTDIncludeRevs
@@ -195,14 +195,14 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 }
                 lastInboxSequence = rev.sequence;
                 Assert([properties objectForKey: @"_id"]);
-                return (id)[properties autorelease];
+                return [properties autorelease];
             }];
             
             // Post the revisions to the destination. "new_edits":false means that the server should
             // use the given _rev IDs instead of making up new ones.
             NSUInteger numDocsToSend = docsToSend.count;
             if (numDocsToSend > 0) {
-                LogTo(Sync, @"%@: Sending %u revisions", self, numDocsToSend);
+                LogTo(Sync, @"%@: Sending %u revisions", self, (unsigned)numDocsToSend);
                 LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
                 self.changesTotal += numDocsToSend;
                 [self asyncTaskStarted];
@@ -246,11 +246,9 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
                 [bodyStream addData: rev.asJSON];
             }
-            UInt64 length;
-            NSInputStream *stream = [_db inputStreamForAttachmentDict: attachment length: &length];
             NSString* disposition = $sprintf(@"attachment; filename=%@", TDQuoteString(attachmentName));
             [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
-            [bodyStream addStream: stream length: length];
+            [bodyStream addFileURL: [_db fileForAttachmentDict: attachment]];
         }
     }
     if (!bodyStream)
@@ -261,9 +259,9 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     [self asyncTaskStarted];
 
     NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeID(rev.docID));
-    LogTo(SyncVerbose, @"%@: PUT .%@ (multipart, %lldkb)", self, path, bodyStream.length/1024);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    [[[TDMultipartUploader alloc] initWithURL: [NSURL URLWithString: urlStr]
+    TDMultipartUploader* uploader = [[[TDMultipartUploader alloc]
+                                  initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
                                    authorizer: _authorizer
                                requestHeaders: self.requestHeaders
@@ -276,9 +274,28 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                   }
                   self.changesProcessed++;
                   [self asyncTasksFinished: 1];
+                                     
+                  _uploading = NO;
+                  [self startNextUpload];
               }
      ] autorelease];
+    LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
+    if (!_uploaderQueue)
+        _uploaderQueue = [[NSMutableArray alloc] init];
+    [_uploaderQueue addObject: uploader];
+    [self startNextUpload];
     return YES;
+}
+
+
+- (void) startNextUpload {
+    if (!_uploading && _uploaderQueue.count > 0) {
+        _uploading = YES;
+        TDMultipartUploader* uploader = [_uploaderQueue objectAtIndex: 0];
+        LogTo(SyncVerbose, @"%@: Starting %@", self, uploader);
+        [uploader start];
+        [_uploaderQueue removeObjectAtIndex: 0];
+    }
 }
 
 

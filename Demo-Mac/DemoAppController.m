@@ -269,6 +269,9 @@ int main (int argc, const char * argv[]) {
             value = 1;
             tooltip = @"Syncing data...";
             break;
+        default:
+            NSAssert(NO, @"Illegal mode");
+            break;
     }
     _syncStatusView.intValue = value;
     _syncStatusView.toolTip = tooltip;

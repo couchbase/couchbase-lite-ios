@@ -91,7 +91,8 @@
 
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)", self, _reader.attachmentCount);
+    LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)",
+          self, (unsigned)_reader.attachmentCount);
     if (![_reader finish]) {
         [self cancelWithStatus: _reader.status];
         return;
@@ -122,7 +123,7 @@ TestCase(TDMultipartDownloader) {
     urlStr = [urlStr stringByAppendingString: @"?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;
-    [[[TDMultipartDownloader alloc] initWithURL: url
+    [[[[TDMultipartDownloader alloc] initWithURL: url
                                        database: db
                                      authorizer: nil
                                  requestHeaders: nil
@@ -139,14 +140,14 @@ TestCase(TDMultipartDownloader) {
              CAssert(writer);
              CAssert([writer install]);
              NSData* blob = [db.attachmentStore blobForKey: writer.blobKey];
-             Log(@"Found %u bytes of data for attachment %@", blob.length, attachment);
+             Log(@"Found %u bytes of data for attachment %@", (unsigned)blob.length, attachment);
              NSNumber* lengthObj = [attachment objectForKey: @"encoded_length"] ?: [attachment objectForKey: @"length"];
              CAssertEq(blob.length, [lengthObj unsignedLongLongValue]);
              CAssertEq(writer.length, blob.length);
          }
          CAssertEq(db.attachmentStore.count, attachments.count);
          done = YES;
-    }] autorelease];
+    }] autorelease] start];
     
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
