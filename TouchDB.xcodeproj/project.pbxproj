@@ -870,30 +870,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				27F0744611CD4B6D00E9A2AB /* TDDatabase.h */,
-				27F0744711CD4B6D00E9A2AB /* TDDatabase.m */,
-				2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */,
-				274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */,
-				2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */,
-				27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */,
-				2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */,
-				27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */,
-				2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */,
-				2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */,
-				2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */,
-				2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */,
-				279EB2CC149140DE00E74185 /* TDView.h */,
-				279EB2CD149140DE00E74185 /* TDView.m */,
-				27F074A911CD5D7A00E9A2AB /* TDBody.h */,
-				27F074AA11CD5D7A00E9A2AB /* TDBody.m */,
-				270B3E3714898DF200E0A926 /* TDRevision.h */,
-				270B3E3814898DF200E0A926 /* TDRevision.m */,
-				27A7209E152B959100C0A0E8 /* TDAttachment.h */,
-				27A7209F152B959100C0A0E8 /* TDAttachment.m */,
-				27C706401486BBD500F0F099 /* TDServer.h */,
-				27C706411486BBD500F0F099 /* TDServer.m */,
-				27731EFD1493FA3100815D67 /* TDBlobStore.h */,
-				27731EFE1493FA3100815D67 /* TDBlobStore.m */,
+				270DC1A415ADE195002A2AF4 /* Database */,
 				279EB2D7149192C700E74185 /* Router */,
 				27821BB4148E7D590099B373 /* Replicator */,
 				27E2E62E159A26A1005B9234 /* Networking */,
@@ -921,6 +898,37 @@
 				270FE0C814C5008C005FF647 /* TouchServ */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		270DC1A415ADE195002A2AF4 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				27F0744611CD4B6D00E9A2AB /* TDDatabase.h */,
+				27F0744711CD4B6D00E9A2AB /* TDDatabase.m */,
+				2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */,
+				274C391B149FAE0000A5E89B /* TDDatabase+Attachments.m */,
+				2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */,
+				27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */,
+				2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */,
+				27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */,
+				2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */,
+				2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */,
+				2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */,
+				2751D4E3151BAE7000F7FD57 /* TDDatabaseManager.m */,
+				279EB2CC149140DE00E74185 /* TDView.h */,
+				279EB2CD149140DE00E74185 /* TDView.m */,
+				27F074A911CD5D7A00E9A2AB /* TDBody.h */,
+				27F074AA11CD5D7A00E9A2AB /* TDBody.m */,
+				270B3E3714898DF200E0A926 /* TDRevision.h */,
+				270B3E3814898DF200E0A926 /* TDRevision.m */,
+				27A7209E152B959100C0A0E8 /* TDAttachment.h */,
+				27A7209F152B959100C0A0E8 /* TDAttachment.m */,
+				27C706401486BBD500F0F099 /* TDServer.h */,
+				27C706411486BBD500F0F099 /* TDServer.m */,
+				27731EFD1493FA3100815D67 /* TDBlobStore.h */,
+				27731EFE1493FA3100815D67 /* TDBlobStore.m */,
+			);
+			name = Database;
 			sourceTree = "<group>";
 		};
 		2713789014BCCA7B0058C5CD /* Tests */ = {
@@ -1700,7 +1708,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0440;
 			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "TouchDB" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2316,6 +2324,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = "";
@@ -2336,6 +2345,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2359,6 +2369,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2384,6 +2395,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
@@ -2442,6 +2454,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2471,6 +2484,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_POSTPROCESSING = YES;
@@ -2770,6 +2784,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2795,6 +2810,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (
