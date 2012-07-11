@@ -23,6 +23,7 @@
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "Test.h"
+#import "MYURLUtils.h"
 
 
 // Max number of retry attempts for a transient failure, and the backoff time formula
@@ -41,7 +42,6 @@
 - (id) initWithMethod: (NSString*)method 
                   URL: (NSURL*)url 
                  body: (id)body
-           authorizer: (id<TDAuthorizer>)authorizer
        requestHeaders: (NSDictionary *)requestHeaders
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
@@ -59,13 +59,20 @@
         }];
         
         [self setupRequest: _request withBody: body];
-        
-        NSString* authHeader = [authorizer authorizeURLRequest: _request
-                                                      forRealm: nil];
-        if (authHeader)
-            [_request setValue: authHeader forHTTPHeaderField: @"Authorization"];
+
     }
     return self;
+}
+
+
+- (id<TDAuthorizer>) authorizer {
+    return _authorizer;
+}
+
+- (void) setAuthorizer: (id<TDAuthorizer>)authorizer {
+    setObj(&_authorizer, authorizer);
+    [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
+              forHTTPHeaderField: @"Authorization"];
 }
 
 
@@ -107,6 +114,7 @@
 - (void)dealloc {
     [self clearConnection];
     [_onCompletion release];
+    [_authorizer release];
     [super dealloc];
 }
 
@@ -122,6 +130,20 @@
 }
 
 
+- (void) startAfterDelay: (NSTimeInterval)delay {
+    // assumes _connection already failed or canceled.
+    [_connection autorelease];
+    _connection = nil;
+    [self performSelector: @selector(start) withObject: nil afterDelay: delay];
+}
+
+
+- (void) cancelWithStatus: (int)status {
+    [_connection cancel];
+    [self connection: _connection didFailWithError: TDStatusToNSError(status, _request.URL)];
+}
+
+
 - (BOOL) retry {
     // Note: This assumes all requests are idempotent, since even though we got an error back, the
     // request might have succeeded on the remote server, and by retrying we'd be issuing it again.
@@ -132,17 +154,30 @@
     NSTimeInterval delay = RetryDelay(_retryCount);
     ++_retryCount;
     LogTo(RemoteRequest, @"%@: Will retry in %g sec", self, delay);
-    // assumes _connection already failed or canceled.
-    [_connection autorelease];
-    _connection = nil;
-    [self performSelector: @selector(start) withObject: nil afterDelay: delay];
+    [self startAfterDelay: delay];
     return YES;
 }
 
 
-- (void) cancelWithStatus: (int)status {
+- (bool) retryWithCredential {
+    if (_authorizer || _challenged)
+        return false;
+    _challenged = YES;
+    NSURLProtectionSpace* space = [_request.URL
+                                my_protectionSpaceWithRealm: nil
+                                       authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
+    NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
+                                    defaultCredentialForProtectionSpace: space];
+    if (!cred) {
+        LogTo(RemoteRequest, @"Got 401 but no stored credential found (with nil realm)");
+        return false;
+    }
+
     [_connection cancel];
-    [self connection: _connection didFailWithError: TDStatusToNSError(status, _request.URL)];
+    self.authorizer = [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
+    LogTo(RemoteRequest, @"Got 401 but retrying with %@", _authorizer);
+    [self startAfterDelay: 0.0];
+    return true;
 }
 
 
@@ -153,12 +188,19 @@
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     LogTo(RemoteRequest, @"Got challenge: %@", challenge);
+    _challenged = true;
     [challenge.sender performDefaultHandlingForAuthenticationChallenge: challenge];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     _status = (int) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, _status);
+    if (_status == 401) {
+        // CouchDB says we're unauthorized but it didn't present a 'WWW-Authenticate' header
+        // (it actually does this on purpose...) Let's see if we have a credential we can try:
+        if ([self retryWithCredential])
+            return;
+    }
     if (TDStatusIsError(_status)) 
         [self cancelWithStatus: _status];
 }

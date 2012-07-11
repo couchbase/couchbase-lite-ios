@@ -15,6 +15,7 @@
 
 #import <Foundation/Foundation.h>
 @class TDChangeTracker;
+@protocol TDAuthorizer;
 
 
 @protocol TDChangeTrackerClient <NSObject>
@@ -46,6 +47,7 @@ typedef enum TDChangeTrackerMode {
     NSDictionary* _filterParameters;
     NSTimeInterval _heartbeat;
     NSDictionary* _requestHeaders;
+    id<TDAuthorizer> _authorizer;
     unsigned _retryCount;
 }
 
@@ -63,6 +65,7 @@ typedef enum TDChangeTrackerMode {
 @property (retain, nonatomic) NSError* error;
 @property (assign, nonatomic) id<TDChangeTrackerClient> client;
 @property (retain, nonatomic) NSDictionary *requestHeaders;
+@property (retain, nonatomic) id<TDAuthorizer> authorizer;
 
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;

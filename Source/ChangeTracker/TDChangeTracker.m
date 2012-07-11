@@ -17,6 +17,7 @@
 
 #import "TDChangeTracker.h"
 #import "TDConnectionChangeTracker.h"
+#import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
 
@@ -40,7 +41,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
-@synthesize requestHeaders = _requestHeaders;
+@synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
@@ -115,6 +116,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
     [_lastSequenceID release];
     [_error release];
     [_requestHeaders release];
+    [_authorizer release];
     [super dealloc];
 }
 

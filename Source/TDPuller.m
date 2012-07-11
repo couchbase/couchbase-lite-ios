@@ -112,20 +112,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.limit = kChangesFeedLimit;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
+    _changeTracker.authorizer = _authorizer;
     unsigned heartbeat = $castIf(NSNumber, [_options objectForKey: @"heartbeat"]).unsignedIntValue;
     if (heartbeat >= 15000)
         _changeTracker.heartbeat = heartbeat / 1000.0;
     
     NSMutableDictionary* headers = $mdict({@"User-Agent", [TDRemoteRequest userAgentHeader]});
     [headers addEntriesFromDictionary: _requestHeaders];
-    if (_authorizer) {
-        NSURL* url = _changeTracker.changesFeedURL;
-        NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
-        NSString* authorization = [_authorizer authorizeURLRequest: request
-                                                          forRealm: nil];
-        if (authorization)
-            [headers setObject: authorization forKey: @"Authorization"];
-    }
     _changeTracker.requestHeaders = headers;
     
     [_changeTracker start];
@@ -381,7 +374,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
                                     initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
-                                     authorizer: _authorizer
                                  requestHeaders: self.requestHeaders
                                    onCompletion:
         ^(TDMultipartDownloader* download, NSError *error) {
@@ -403,6 +395,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             [self pullRemoteRevisions];
         }
      ] autorelease];
+    dl.authorizer = _authorizer;
     [dl start];
 }
 

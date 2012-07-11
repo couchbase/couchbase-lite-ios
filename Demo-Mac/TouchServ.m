@@ -10,7 +10,7 @@
 #import <TouchDB/TouchDB.h>
 #import <TouchDB/TDRouter.h>
 #import <TouchDBListener/TDListener.h>
-#import <TouchDB/TDReplicator.h>
+#import <TouchDB/TDPusher.h>
 #import <TouchDB/TDDatabaseManager.h>
 #import <TouchDB/TDDatabase+Replication.h>
 
@@ -46,7 +46,7 @@ static NSString* GetServerPath() {
 }
 
 
-static bool doReplicate( TDServer* server, const char* replArg, BOOL pull) {
+static bool doReplicate( TDServer* server, const char* replArg, BOOL pull, BOOL createTarget) {
     NSURL* remote = [NSMakeCollectable(CFURLCreateWithBytes(NULL, (const UInt8*)replArg,
                                                            strlen(replArg),
                                                            kCFStringEncodingUTF8, NULL)) autorelease];
@@ -83,6 +83,8 @@ static bool doReplicate( TDServer* server, const char* replArg, BOOL pull) {
         }
         [db open];
         repl = [db replicatorWithRemoteURL: remote push: !pull continuous: NO];
+        if (createTarget && !pull)
+            ((TDPusher*)repl).createTarget = YES;
         if (!repl)
             fprintf(stderr, "Unable to create replication.\n");
         [repl start];
@@ -117,7 +119,7 @@ int main (int argc, const char * argv[])
         listener.TXTRecordDictionary = [NSDictionary dictionaryWithObject: value forKey: @"Key"];
         
         const char* replArg = NULL;
-        BOOL pull = NO;
+        BOOL pull = NO, createTarget = NO;
         
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
@@ -128,18 +130,20 @@ int main (int argc, const char * argv[])
                 listener.passwords = [NSDictionary dictionaryWithObject: password
                                                                  forKey: @"touchdb"];
                 Log(@"Auth required: user='touchdb', password='%@'", password);
-            } else if  (strcmp(argv[i], "--pull") == 0) {
+            } else if (strcmp(argv[i], "--pull") == 0) {
                 replArg = argv[i+1];
                 pull = YES;
-            } else if  (strcmp(argv[i], "--push") == 0) {
+            } else if (strcmp(argv[i], "--push") == 0) {
                 replArg = argv[i+1];
+            } else if (strcmp(argv[i], "--create-target") == 0) {
+                createTarget = YES;
             }
         }
         
         [listener start];
         
         if (replArg) {
-            if (!doReplicate(server, replArg, pull))
+            if (!doReplicate(server, replArg, pull, createTarget))
                 return 1;
         } else {
             Log(@"TouchServ %@ is listening%@ on port %d ... relax!",

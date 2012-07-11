@@ -20,7 +20,6 @@
 
 - (id) initWithURL: (NSURL *)url
           streamer: (TDMultipartWriter*)writer
-        authorizer: (id<TDAuthorizer>)authorizer
     requestHeaders: (NSDictionary *) requestHeaders
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
@@ -28,7 +27,6 @@
     self = [super initWithMethod: @"PUT" 
                              URL: url 
                             body: writer
-                      authorizer: authorizer
                   requestHeaders: requestHeaders 
                     onCompletion: onCompletion];
     if (self) {

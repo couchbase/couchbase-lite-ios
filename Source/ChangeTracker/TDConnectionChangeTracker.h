@@ -17,6 +17,7 @@
     NSURLConnection* _connection;
     NSMutableData* _inputBuffer;
     CFAbsoluteTime _startTime;
+    bool _challenged;
 }
 
 @end

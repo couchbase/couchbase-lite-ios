@@ -263,7 +263,6 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     TDMultipartUploader* uploader = [[[TDMultipartUploader alloc]
                                   initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
-                                   authorizer: _authorizer
                                requestHeaders: self.requestHeaders
                                  onCompletion: ^(id response, NSError *error) {
                   if (error) {
@@ -279,6 +278,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                   [self startNextUpload];
               }
      ] autorelease];
+    uploader.authorizer = _authorizer;
     LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
     if (!_uploaderQueue)
         _uploaderQueue = [[NSMutableArray alloc] init];

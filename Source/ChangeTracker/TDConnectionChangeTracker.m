@@ -16,8 +16,10 @@
 // <http://wiki.apache.org/couchdb/HTTP_database_API#Changes>
 
 #import "TDConnectionChangeTracker.h"
+#import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
+#import "MYURLUtils.h"
 
 
 @implementation TDConnectionChangeTracker
@@ -38,7 +40,13 @@
     if (_databaseURL.port)
         host = [host stringByAppendingFormat: @":%@", _databaseURL.port];
     [request setValue: host forHTTPHeaderField: @"Host"];
-    
+
+    // Add authorization:
+    if (_authorizer) {
+        [request setValue: [_authorizer authorizeURLRequest: request forRealm: nil]
+                 forHTTPHeaderField: @"Authorization"];
+    }
+
     // Add custom headers.
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
@@ -73,9 +81,33 @@
 }
 
 
+- (bool) retryWithCredential {
+    if (_authorizer || _challenged)
+        return false;
+    _challenged = YES;
+    NSURLProtectionSpace* space = [_databaseURL
+                                my_protectionSpaceWithRealm: nil
+                                       authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
+    NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
+                                    defaultCredentialForProtectionSpace: space];
+    if (!cred) {
+        LogTo(ChangeTracker, @"Got 401 but no stored credential found (with nil realm)");
+        return false;
+    }
+
+    [_connection cancel];
+    self.authorizer = [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
+    LogTo(ChangeTracker, @"Got 401 but retrying with %@", _authorizer);
+    [self clearConnection];
+    [self start];
+    return true;
+}
+
+
 - (void)connection:(NSURLConnection *)connection
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
+    _challenged = true;
     id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
     if (challenge.proposedCredential) {
         [sender performDefaultHandlingForAuthenticationChallenge: challenge];
@@ -120,6 +152,12 @@
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(ChangeTracker, @"%@: Got response, status %d", self, status);
+    if (status == 401) {
+        // CouchDB says we're unauthorized but it didn't present a 'WWW-Authenticate' header
+        // (it actually does this on purpose...) Let's see if we have a credential we can try:
+        if ([self retryWithCredential])
+            return;
+    }
     if (TDStatusIsError(status)) {
         Warn(@"%@: Got status %i", self, status);
         [self connection: connection

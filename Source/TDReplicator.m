@@ -360,9 +360,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     TDRemoteJSONRequest *req = [[TDRemoteJSONRequest alloc] initWithMethod: method
                                                                         URL: url
                                                                        body: body
-                                                                 authorizer: _authorizer
                                                              requestHeaders: self.requestHeaders 
                                                               onCompletion: onCompletion];
+    req.authorizer = _authorizer;
     [req start];
     return [req autorelease];
 }

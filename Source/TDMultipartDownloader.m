@@ -26,14 +26,12 @@
 
 - (id) initWithURL: (NSURL*)url
           database: (TDDatabase*)database
-        authorizer: (id<TDAuthorizer>)authorizer
     requestHeaders: (NSDictionary *) requestHeaders
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
     self = [super initWithMethod: @"GET" 
                              URL: url 
                             body: nil
-                      authorizer: authorizer
                   requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
@@ -125,7 +123,6 @@ TestCase(TDMultipartDownloader) {
     __block BOOL done = NO;
     [[[[TDMultipartDownloader alloc] initWithURL: url
                                        database: db
-                                     authorizer: nil
                                  requestHeaders: nil
                                    onCompletion: ^(id result, NSError * error)
      {

@@ -42,6 +42,10 @@
     return nil;
 }
 
+- (NSString*) description {
+    return $sprintf(@"%@[%@/****]", self.class, _credential.user);
+}
+
 @end
 
 
