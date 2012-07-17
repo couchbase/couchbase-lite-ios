@@ -831,6 +831,32 @@ TestCase(TDDatabase_FindMissingRevisions) {
 }
 
 
+TestCase(TDDatabase_Purge) {
+    TDDatabase* db = createDB();
+    TDRevision* rev1 = putDoc(db, $dict({@"_id", @"doc"}, {@"key", @"1"}));
+    TDRevision* rev2 = putDoc(db, $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"}));
+    TDRevision* rev3 = putDoc(db, $dict({@"_id", @"doc"}, {@"_rev", rev2.revID}, {@"key", @"3"}));
+
+    // Try to purge rev2, which should fail since it's not a leaf:
+    NSDictionary* toPurge = $dict({@"doc", $array(rev2.revID)});
+    NSDictionary* result;
+    CAssertEq([db purgeRevisions: toPurge result: &result], kTDStatusOK);
+    CAssertEqual(result, $dict({@"doc", $array()}));
+    CAssertEq([[result objectForKey: @"doc"] count], 0u);
+
+    // Purge rev3:
+    toPurge = $dict({@"doc", $array(rev3.revID)});
+    CAssertEq([db purgeRevisions: toPurge result: &result], kTDStatusOK);
+    CAssertEqual([result allKeys], $array(@"doc"));
+    NSSet* purged = [NSSet setWithArray: [result objectForKey: @"doc"]];
+    NSSet* expectedPurged = [NSSet setWithObjects: rev1.revID, rev2.revID, rev3.revID, nil];
+    CAssertEqual(purged, expectedPurged);
+
+    TDRevisionList* remainingRevs = [db getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
+    CAssertEq(remainingRevs.count, 0u);
+}
+
+
 TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_CRUD);
     RequireTestCase(TDDatabase_DeleteWithProperties);
@@ -842,6 +868,7 @@ TestCase(TDDatabase) {
     RequireTestCase(TDDatabase_ReplicatorSequences);
     RequireTestCase(TDDatabase_LocalDocs);
     RequireTestCase(TDDatabase_FindMissingRevisions);
+    RequireTestCase(TDDatabase_Purge);
 }
 
 

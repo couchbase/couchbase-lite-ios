@@ -358,21 +358,17 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-- (TDStatus) compact {
-    // Can't delete any rows because that would lose revision tree history.
-    // But we can remove the JSON of non-current revisions, which is most of the space.
-    Log(@"TDDatabase: Deleting JSON of old revisions...");
-    if (![_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"])
-        return kTDStatusDBError;
-    
-    Log(@"Deleting old attachments...");
-    TDStatus status = [self garbageCollectAttachments];
-
-    Log(@"Vacuuming SQLite database...");
-    if (![_fmdb executeUpdate: @"VACUUM"])
-        return kTDStatusDBError;
-    
-    Log(@"...Finished database compaction.");
+- (TDStatus) inTransaction: (TDStatus(^)())block {
+    TDStatus status;
+    [self beginTransaction];
+    @try {
+        status = block();
+    } @catch (NSException* x) {
+        Warn(@"Exception raised during -inTransaction: %@", x);
+        status = kTDStatusException;
+    } @finally {
+        [self endTransaction: !TDStatusIsError(status)];
+    }
     return status;
 }
 
