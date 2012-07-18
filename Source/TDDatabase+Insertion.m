@@ -587,55 +587,70 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
             if (!docNumericID) {
                 continue;  // no such document; skip it
             }
-            NSArray* revIDs = [docsToRevs objectForKey: docID];
-
-            // Iterate over all the revisions of the doc, in reverse sequence order.
-            // Keep track of all the sequences to delete, i.e. the given revs and their ancestors,
-            // but not any non-given leaf revs or their ancestors.
-            FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, sequence, parent FROM revs "
-                                                   "WHERE doc_id=? ORDER BY sequence DESC",
-                              $object(docNumericID)];
-            if (!r)
-                return kTDStatusDBError;
-            NSMutableSet* seqsToPurge = [NSMutableSet set];
-            NSMutableSet* seqsToKeep = [NSMutableSet set];
-            NSMutableSet* revsToPurge = [NSMutableSet set];
-            while ([r next]) {
-                NSString* revID = [r stringForColumnIndex: 0];
-                id sequence = $object([r longLongIntForColumnIndex: 1]);
-                id parent = $object([r longLongIntForColumnIndex: 2]);
-                if (([seqsToPurge containsObject: sequence] || [revIDs containsObject: revID]) &&
-                        ![seqsToKeep containsObject: sequence]) {
-                    // Purge it and maybe its parent:
-                    [seqsToPurge addObject: sequence];
-                    [revsToPurge addObject: revID];
-                    if ([parent longLongValue] > 0)
-                        [seqsToPurge addObject: parent];
-                } else {
-                    // Keep it and its parent:
-                    [seqsToPurge removeObject: sequence];
-                    [revsToPurge removeObject: revID];
-                    [seqsToKeep addObject: parent];
-                }
-            }
-            [r close];
-            [seqsToPurge minusSet: seqsToKeep];
-
-            LogTo(TDDatabase, @"Purging doc '%@' revs (%@); asked for (%@)",
-                  docID, [revsToPurge.allObjects componentsJoinedByString: @", "],
-                  [revIDs componentsJoinedByString: @", "]);
-
-            if (seqsToPurge.count) {
-                // Now delete the sequences to be purged.
-                NSString* sql = $sprintf(@"DELETE FROM revs WHERE sequence in (%@)",
-                                         [seqsToPurge.allObjects componentsJoinedByString: @","]);
-                if (![_fmdb executeUpdate: sql])
+            NSArray* revsPurged;
+            NSArray* revIDs = $castIf(NSArray, [docsToRevs objectForKey: docID]);
+            if (!revIDs) {
+                return kTDStatusBadParam;
+            } else if (revIDs.count == 0) {
+                revsPurged = $array();
+            } else if ([revIDs containsObject: @"*"]) {
+                // Delete all revisions if magic "*" revision ID is given:
+                if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=?",
+                                           $object(docNumericID)]) {
                     return kTDStatusDBError;
-                if ((NSUInteger)_fmdb.changes != seqsToPurge.count)
-                    Warn(@"purgeRevisions: Only %i sequences deleted of (%@)",
-                         _fmdb.changes, [seqsToPurge.allObjects componentsJoinedByString: @","]);
+                }
+                revsPurged = $array(@"*");
+                
+            } else {
+                // Iterate over all the revisions of the doc, in reverse sequence order.
+                // Keep track of all the sequences to delete, i.e. the given revs and ancestors,
+                // but not any non-given leaf revs or their ancestors.
+                FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, sequence, parent FROM revs "
+                                                       "WHERE doc_id=? ORDER BY sequence DESC",
+                                  $object(docNumericID)];
+                if (!r)
+                    return kTDStatusDBError;
+                NSMutableSet* seqsToPurge = [NSMutableSet set];
+                NSMutableSet* seqsToKeep = [NSMutableSet set];
+                NSMutableSet* revsToPurge = [NSMutableSet set];
+                while ([r next]) {
+                    NSString* revID = [r stringForColumnIndex: 0];
+                    id sequence = $object([r longLongIntForColumnIndex: 1]);
+                    id parent = $object([r longLongIntForColumnIndex: 2]);
+                    if (([seqsToPurge containsObject: sequence] || [revIDs containsObject:revID]) &&
+                            ![seqsToKeep containsObject: sequence]) {
+                        // Purge it and maybe its parent:
+                        [seqsToPurge addObject: sequence];
+                        [revsToPurge addObject: revID];
+                        if ([parent longLongValue] > 0)
+                            [seqsToPurge addObject: parent];
+                    } else {
+                        // Keep it and its parent:
+                        [seqsToPurge removeObject: sequence];
+                        [revsToPurge removeObject: revID];
+                        [seqsToKeep addObject: parent];
+                    }
+                }
+                [r close];
+                [seqsToPurge minusSet: seqsToKeep];
+
+                LogTo(TDDatabase, @"Purging doc '%@' revs (%@); asked for (%@)",
+                      docID, [revsToPurge.allObjects componentsJoinedByString: @", "],
+                      [revIDs componentsJoinedByString: @", "]);
+
+                if (seqsToPurge.count) {
+                    // Now delete the sequences to be purged.
+                    NSString* sql = $sprintf(@"DELETE FROM revs WHERE sequence in (%@)",
+                                           [seqsToPurge.allObjects componentsJoinedByString: @","]);
+                    if (![_fmdb executeUpdate: sql])
+                        return kTDStatusDBError;
+                    if ((NSUInteger)_fmdb.changes != seqsToPurge.count)
+                        Warn(@"purgeRevisions: Only %i sequences deleted of (%@)",
+                             _fmdb.changes, [seqsToPurge.allObjects componentsJoinedByString:@","]);
+                }
+                revsPurged = revsToPurge.allObjects;
             }
-            [result setObject: revsToPurge.allObjects forKey: docID];
+            [result setObject: revsPurged forKey: docID];
         }
         return kTDStatusOK;
     }];

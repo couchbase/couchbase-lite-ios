@@ -207,6 +207,20 @@
 }
 
 
+- (TDStatus) do_POST_purge: (TDDatabase*)db {
+    // <http://wiki.apache.org/couchdb/Purge_Documents>
+    NSDictionary* body = self.bodyAsDictionary;
+    if (!body)
+        return kTDStatusBadJSON;
+    NSDictionary* purgedDocs;
+    TDStatus status = [db purgeRevisions: body result: &purgedDocs];
+    if (TDStatusIsError(status))
+        return status;
+    _response.bodyObject = $dict({@"purged", purgedDocs});
+    return status;
+}
+
+
 - (TDStatus) do_GET_all_docs: (TDDatabase*)db {
     if ([self cacheWithEtag: $sprintf(@"%lld", db.lastSequence)])
         return kTDStatusNotModified;
