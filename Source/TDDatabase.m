@@ -838,6 +838,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     NSMutableArray* views = $marray();
     while ([r next])
         [views addObject: [self viewNamed: [r stringForColumnIndex: 0]]];
+    [r close];
     return views;
 }
 
