@@ -41,6 +41,7 @@
             return nil;
         }
         _replications = [[NSMutableArray alloc] init];
+        LogTo(TouchDatabase, @"Created %@", self);
     }
     return self;
 }
@@ -62,9 +63,16 @@
 }
 
 
+- (NSString*) description {
+    return $sprintf(@"%@[%@]", [self class], _mgr.directory);
+}
+
+
 - (TDServer*) tdServer {
-    if (!_server)
+    if (!_server) {
         _server = [[TDServer alloc] initWithDirectory: _mgr.directory error: nil];
+        LogTo(TouchDatabase, @"%@ created %@", self, _server);
+    }
     return _server;
 }
 

@@ -18,6 +18,9 @@ typedef enum {
 } TouchReplicationMode;
 
 
+/** A 'push' or 'pull' replication between a local and a remote database.
+    Replications can be one-shot, continuous or persistent.
+    Saving a replication makes it persistent. */
 @interface TouchReplication : TouchModel
 {
     @private

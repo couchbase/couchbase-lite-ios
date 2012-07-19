@@ -8,11 +8,14 @@
 
 #import <Foundation/Foundation.h>
 #import <TouchDB/TouchDB.h>
+#import <TouchDB/TDServer.h>
+#import <TouchDB/TDURLProtocol.h>
 #import <TouchDB/TDRouter.h>
 #import <TouchDBListener/TDListener.h>
 #import <TouchDB/TDPusher.h>
 #import <TouchDB/TDDatabaseManager.h>
 #import <TouchDB/TDDatabase+Replication.h>
+#import "TDMisc.h"
 
 #if DEBUG
 #import "Logging.h"
@@ -74,8 +77,8 @@ static bool doReplicate( TDServer* server, const char* replArg, BOOL pull, BOOL 
                     fprintf(stderr, "Couldn't delete existing database '%s'\n", dbName.UTF8String);
                     return;
                 }
-                db = [dbm databaseNamed: dbName];
             }
+            db = [dbm databaseNamed: dbName];
         }
         if (!db) {
             fprintf(stderr, "No such database '%s'\n", dbName.UTF8String);
@@ -131,10 +134,10 @@ int main (int argc, const char * argv[])
                                                                  forKey: @"touchdb"];
                 Log(@"Auth required: user='touchdb', password='%@'", password);
             } else if (strcmp(argv[i], "--pull") == 0) {
-                replArg = argv[i+1];
+                replArg = argv[++i];
                 pull = YES;
             } else if (strcmp(argv[i], "--push") == 0) {
-                replArg = argv[i+1];
+                replArg = argv[++i];
             } else if (strcmp(argv[i], "--create-target") == 0) {
                 createTarget = YES;
             }

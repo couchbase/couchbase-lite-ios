@@ -280,7 +280,7 @@ int main (int argc, const char * argv[]) {
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
-    TouchPersistentReplication* repl = object;
+    TouchReplication* repl = object;
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
             unsigned completed = _pull.completed + _push.completed;
