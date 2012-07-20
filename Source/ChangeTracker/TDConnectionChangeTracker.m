@@ -85,11 +85,8 @@
     if (_authorizer || _challenged)
         return false;
     _challenged = YES;
-    NSURLProtectionSpace* space = [_databaseURL
-                                my_protectionSpaceWithRealm: nil
-                                       authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
-    NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                    defaultCredentialForProtectionSpace: space];
+    NSURLCredential* cred = [_databaseURL my_credentialForRealm: nil
+                                           authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
     if (!cred) {
         LogTo(ChangeTracker, @"Got 401 but no stored credential found (with nil realm)");
         return false;
@@ -107,8 +104,15 @@
 - (void)connection:(NSURLConnection *)connection
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
-    _challenged = true;
     id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    NSString* authMethod = [[challenge protectionSpace] authenticationMethod];
+    if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
+        // TODO: Check trust of server cert
+        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+        return;
+    }
+
+    _challenged = true;
     if (challenge.proposedCredential) {
         [sender performDefaultHandlingForAuthenticationChallenge: challenge];
         return;

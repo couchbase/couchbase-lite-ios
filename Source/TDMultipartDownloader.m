@@ -67,17 +67,21 @@
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    [super connection: connection didReceiveResponse: response];
-    if (!_connection)
-        return;
+    TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
+    if (status < 300) {
+        // Check the content type to see whether it's a multipart response:
+        NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
+        NSString* contentType = [headers objectForKey: @"Content-Type"];
+        if ([contentType hasPrefix: @"text/plain"])
+            contentType = nil;      // Workaround for CouchDB returning JSON docs with text/plain type
+        if (![_reader setContentType: contentType]) {
+            LogTo(RemoteRequest, @"%@ got invalid Content-Type '%@'", self, contentType);
+            [self cancelWithStatus: _reader.status];
+            return;
+        }
+    }
     
-    // Check the content type to see whether it's a multipart response:
-    NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
-    NSString* contentType = [headers objectForKey: @"Content-Type"];
-    if ([contentType hasPrefix: @"text/plain"])
-        contentType = nil;      // Workaround for CouchDB returning JSON docs with text/plain type
-    if (![_reader setContentType: contentType])
-        [self cancelWithStatus: _reader.status];
+    [super connection: connection didReceiveResponse: response];
 }
 
 
