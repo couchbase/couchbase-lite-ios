@@ -55,6 +55,15 @@
 }
 
 
+- (NSInputStream *)connection:(NSURLConnection *)connection
+            needNewBodyStream:(NSURLRequest *)request
+{
+    LogTo(TDRemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
+    [_multipartWriter close];
+    return [_multipartWriter openForInputStream];
+}
+
+
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     if ($equal(error.domain, NSURLErrorDomain) && error.code == NSURLErrorRequestBodyStreamExhausted) {
         // The connection is complaining that the body input stream closed prematurely.
