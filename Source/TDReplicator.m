@@ -24,6 +24,7 @@
 #import "TDInternal.h"
 #import "TDMisc.h"
 #import "TDBase64.h"
+#import "TDCanonicalJSON.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
 
@@ -376,22 +377,27 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 /** This is the _local document ID stored on the remote server to keep track of state.
-    Its ID is based on the local database ID (the private one, to make the result unguessable)
-    and the remote database's URL. */
+    It's based on the local database UUID (the private one, to make the result unguessable),
+    the remote database's URL, and the filter name and parameters (if any). */
 - (NSString*) remoteCheckpointDocID {
-    NSString* input = $sprintf(@"%@\n%@\n%i", _db.privateUUID, _remote.absoluteString, self.isPush);
-    return TDHexSHA1Digest([input dataUsingEncoding: NSUTF8StringEncoding]);
+    NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
+                                       {@"remoteURL", _remote.absoluteString},
+                                       {@"push", $object(self.isPush)},
+                                       {@"filter", _filterName},
+                                       {@"filterParams", _filterParameters});
+    return TDHexSHA1Digest([TDCanonicalJSON canonicalData: spec]);
 }
 
 
 - (void) fetchRemoteCheckpointDoc {
     _lastSequenceChanged = NO;
-    NSString* localLastSequence = [_db lastSequenceWithRemoteURL: _remote push: self.isPush];
+    NSString* checkpointID = self.remoteCheckpointDocID;
+    NSString* localLastSequence = [_db lastSequenceWithCheckpointID: checkpointID];
     
     [self asyncTaskStarted];
     TDRemoteJSONRequest* request = 
         [self sendAsyncRequest: @"GET"
-                          path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
+                          path: [@"/_local/" stringByAppendingString: checkpointID]
                           body: nil
                   onCompletion: ^(id response, NSError* error) {
                   // Got the response:
@@ -444,8 +450,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [body setValue: _lastSequence forKey: @"lastSequence"];
     
     _savingCheckpoint = YES;
+    NSString* checkpointID = self.remoteCheckpointDocID;
     [self sendAsyncRequest: @"PUT"
-                      path: [@"/_local/" stringByAppendingString: self.remoteCheckpointDocID]
+                      path: [@"/_local/" stringByAppendingString: checkpointID]
                       body: body
               onCompletion: ^(id response, NSError* error) {
                   _savingCheckpoint = NO;
@@ -459,12 +466,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                       if (rev)
                           [body setObject: rev forKey: @"_rev"];
                       self.remoteCheckpoint = body;
+                      [_db setLastSequence: _lastSequence withCheckpointID: checkpointID];
                   }
                   if (_overdueForSave)
                       [self saveLastSequence];      // start a save that was waiting on me
               }
      ];
-    [_db setLastSequence: _lastSequence withRemoteURL: _remote push: self.isPush];
 }
 
 

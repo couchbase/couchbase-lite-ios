@@ -721,18 +721,16 @@ TestCase(TDDatabase_StubOutAttachmentsBeforeRevPos) {
 TestCase(TDDatabase_ReplicatorSequences) {
     RequireTestCase(TDDatabase_CRUD);
     TDDatabase* db = createDB();
-    NSURL* remote = [NSURL URLWithString: @"http://iriscouch.com/"];
-    CAssertNil([db lastSequenceWithRemoteURL: remote push: NO]);
-    CAssertNil([db lastSequenceWithRemoteURL: remote push: YES]);
-    [db setLastSequence: @"lastpull" withRemoteURL: remote push: NO];
-    CAssertEqual([db lastSequenceWithRemoteURL: remote push: NO], @"lastpull");
-    CAssertNil([db lastSequenceWithRemoteURL: remote push: YES]);
-    [db setLastSequence: @"newerpull" withRemoteURL: remote push: NO];
-    CAssertEqual([db lastSequenceWithRemoteURL: remote push: NO], @"newerpull");
-    CAssertNil([db lastSequenceWithRemoteURL: remote push: YES]);
-    [db setLastSequence: @"lastpush" withRemoteURL: remote push: YES];
-    CAssertEqual([db lastSequenceWithRemoteURL: remote push: NO], @"newerpull");
-    CAssertEqual([db lastSequenceWithRemoteURL: remote push: YES], @"lastpush");
+    CAssertNil([db lastSequenceWithCheckpointID: @"pull"]);
+    [db setLastSequence: @"lastpull" withCheckpointID: @"pull"];
+    CAssertEqual([db lastSequenceWithCheckpointID: @"pull"], @"lastpull");
+    CAssertNil([db lastSequenceWithCheckpointID: @"push"]);
+    [db setLastSequence: @"newerpull" withCheckpointID: @"pull"];
+    CAssertEqual([db lastSequenceWithCheckpointID: @"pull"], @"newerpull");
+    CAssertNil([db lastSequenceWithCheckpointID: @"push"]);
+    [db setLastSequence: @"lastpush" withCheckpointID: @"push"];
+    CAssertEqual([db lastSequenceWithCheckpointID: @"pull"], @"newerpull");
+    CAssertEqual([db lastSequenceWithCheckpointID: @"push"], @"lastpush");
 }
 
 
