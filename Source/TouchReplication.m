@@ -46,7 +46,6 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
         self.autosaves = NO;
         self.source = pull ? remote.absoluteString : database.name;
         self.target = pull ? database.name : remote.absoluteString;
-        _thread = [NSThread currentThread];
         // Give the caller a chance to customize parameters like .filter before calling -start,
         // but make sure -start will be run even if the caller doesn't call it.
         [self performSelector: @selector(start) withObject: nil afterDelay: 0.0];
@@ -59,7 +58,6 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 - (id) initWithDocument:(TouchDocument *)document {
     self = [super initWithDocument: document];
     if (self) {
-        _thread = [NSThread currentThread];
         self.autosaves = YES;  // turn on autosave for all persistent replications
         
         NSString* urlStr = self.sourceURLStr;
@@ -73,7 +71,7 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(bg_replicationProgressChanged:)
                                                      name: TDReplicatorProgressChangedNotification
-                                                   object: _replicator];
+                                                   object: _bg_replicator];
     }
     return self;
 }
@@ -83,7 +81,7 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [_remoteURL release];
-    [_serverDatabase release];
+    [_bg_serverDatabase release];
     [super dealloc];
 }
 
@@ -206,9 +204,11 @@ static inline BOOL isLocalDBName(NSString* url) {
     if (_started || self.persistent)
         return;
     _started = YES;
-    
+    _mainThread = [NSThread currentThread];
+
     [self.database.manager.tdServer tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
-        [self bg_startReplicator: dbmgr 
+        // This runs on the server thread:
+        [self bg_startReplicator: dbmgr
                           dbName: self.localDatabase.name
                           remote: self.remoteURL
                             pull: self.pull
@@ -224,7 +224,7 @@ static inline BOOL isLocalDBName(NSString* url) {
         return;
     [self.database.manager.tdServer tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
         // This runs on the server thread:
-        [_replicator stop];
+        [_bg_replicator stop];
     }];
 }
 
@@ -253,7 +253,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 #pragma mark - BACKGROUND OPERATIONS:
 
 
-// This runs on the server thread:
+// CAREFUL: This is called on the server's background thread!
 - (void) bg_startReplicator: (TDDatabaseManager*)server_dbmgr
                      dbName: (NSString*)dbName
                      remote: (NSURL*)remote
@@ -263,8 +263,8 @@ static inline BOOL isLocalDBName(NSString* url) {
                     options: (NSDictionary*)options
 {
     // The setup should use parameters, not ivars, because the ivars may change on the main thread.
-    _serverDatabase = [[server_dbmgr databaseNamed: dbName] retain];
-    TDReplicator* repl = [_serverDatabase replicatorWithRemoteURL: remote
+    _bg_serverDatabase = [[server_dbmgr databaseNamed: dbName] retain];
+    TDReplicator* repl = [_bg_serverDatabase replicatorWithRemoteURL: remote
                                                              push: !pull
                                                        continuous: continuous];
     if (!repl)
@@ -277,11 +277,11 @@ static inline BOOL isLocalDBName(NSString* url) {
         ((TDPusher*)repl).createTarget = createTarget;
     [repl start];
     
-    _replicator = [repl retain];
+    _bg_replicator = [repl retain];
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(bg_replicationProgressChanged:)
                                                  name: TDReplicatorProgressChangedNotification
-                                               object: _replicator];
+                                               object: _bg_replicator];
     [self bg_replicationProgressChanged: nil];
 }
 
@@ -290,12 +290,12 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (void) bg_replicationProgressChanged: (NSNotification*)n
 {
     TDReplicator* tdReplicator;
-    if (_replicator) {
-        tdReplicator = _replicator;
+    if (_bg_replicator) {
+        tdReplicator = _bg_replicator;
     } else {
         // I get this notification for every TDReplicator, so quickly weed out non-matching ones:
         tdReplicator = n.object;
-        if (tdReplicator.db != _serverDatabase)
+        if (tdReplicator.db != _bg_serverDatabase)
             return;
         if (!$equal(tdReplicator.remote, _remoteURL) || tdReplicator.isPush == _pull)
             return;
@@ -311,16 +311,16 @@ static inline BOOL isLocalDBName(NSString* url) {
         mode = tdReplicator.active ? kTouchReplicationActive : kTouchReplicationIdle;
     
     // Communicate its state back to the main thread:
-    MYOnThread(_thread, ^{
+    MYOnThread(_mainThread, ^{
         [self updateMode: mode
                    error: tdReplicator.error
                processed: tdReplicator.changesProcessed
                  ofTotal: tdReplicator.changesTotal];
     });
     
-    if (_replicator && mode == kTouchReplicationStopped) {
-        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: _replicator];
-        setObj(&_replicator, nil);
+    if (_bg_replicator && mode == kTouchReplicationStopped) {
+        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: _bg_replicator];
+        setObj(&_bg_replicator, nil);
     }
 }
 

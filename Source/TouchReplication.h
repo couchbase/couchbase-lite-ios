@@ -20,21 +20,21 @@ typedef enum {
 
 /** A 'push' or 'pull' replication between a local and a remote database.
     Replications can be one-shot, continuous or persistent.
-    Saving a replication makes it persistent. */
+    TouchReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
 @interface TouchReplication : TouchModel
 {
     @private
     NSURL* _remoteURL;
     bool _pull;
-    NSThread* _thread;
+    NSThread* _mainThread;
     bool _started;
     bool _running;
     unsigned _completed, _total;
     TouchReplicationMode _mode;
     NSError* _error;
     
-    TDReplicator* _replicator;  // ONLY used on the server thread
-    TDDatabase* _serverDatabase;
+    TDReplicator* _bg_replicator;       // ONLY used on the server thread
+    TDDatabase* _bg_serverDatabase;     // ONLY used on the server thread
 }
 
 /** The local database being replicated to/from. */

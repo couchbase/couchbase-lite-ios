@@ -1,6 +1,6 @@
 //
 //  TouchModel.m
-//  CouchCocoa
+//  TouchDB
 //
 //  Created by Jens Alfke on 8/26/11.
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
@@ -11,6 +11,7 @@
 #import "TouchDBPrivate.h"
 #import "TDMisc.h"
 #import "TDBase64.h"
+#import <objc/runtime.h>
 
 
 @interface TouchModel ()
@@ -421,47 +422,36 @@
     [self setValue: docID ofProperty: property];
 }
 
-NS_INLINE NSString *getterKey(SEL sel) {
-    return [NSString stringWithUTF8String:sel_getName(sel)];
-}
-
-static id getDataProperty(TouchModel *self, SEL _cmd) {
-    return [self getDataProperty: getterKey(_cmd)];
-}
-
-static id getDateProperty(TouchModel *self, SEL _cmd) {
-    return [self getDateProperty: getterKey(_cmd)];
-}
-
-static id getModelProperty(TouchModel *self, SEL _cmd) {
-    return [self getModelProperty: getterKey(_cmd)];
-}
-
-static void setModelProperty(TouchModel *self, SEL _cmd, id value) {
-    return [self setModel: value forProperty: [MYDynamicObject setterKey: _cmd]];
-}
-
-
-+ (IMP) impForGetterOfClass: (Class)propertyClass {
++ (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     if (propertyClass == Nil || propertyClass == [NSString class]
              || propertyClass == [NSNumber class] || propertyClass == [NSArray class]
              || propertyClass == [NSDictionary class])
-        return [super impForGetterOfClass: propertyClass];  // Basic classes (including 'id')
-    else if (propertyClass == [NSData class])
-        return (IMP)getDataProperty;
-    else if (propertyClass == [NSDate class])
-        return (IMP)getDateProperty;
-    else if ([propertyClass isSubclassOfClass: [TouchModel class]])
-        return (IMP)getModelProperty;
-    else 
+        return [super impForGetterOfProperty: property ofClass: propertyClass];  // Basic classes (including 'id')
+    else if (propertyClass == [NSData class]) {
+        return imp_implementationWithBlock(^id(TouchModel* receiver) {
+            return [receiver getDataProperty: property];
+        });
+    } else if (propertyClass == [NSDate class]) {
+        return imp_implementationWithBlock(^id(TouchModel* receiver) {
+            return [receiver getDateProperty: property];
+        });
+    } else if ([propertyClass isSubclassOfClass: [TouchModel class]]) {
+        return imp_implementationWithBlock(^id(TouchModel* receiver) {
+            return [receiver getModelProperty: property];
+        });
+    } else {
         return NULL;  // Unsupported
+    }
 }
 
-+ (IMP) impForSetterOfClass: (Class)propertyClass {
-    if ([propertyClass isSubclassOfClass: [TouchModel class]])
-        return (IMP)setModelProperty;
-    else 
-        return [super impForSetterOfClass: propertyClass];
++ (IMP) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
+    if ([propertyClass isSubclassOfClass: [TouchModel class]]) {
+        return imp_implementationWithBlock(^(TouchModel* receiver, TouchModel* value) {
+            [receiver setModel: value forProperty: property];
+        });
+    } else {
+        return [super impForSetterOfProperty: property ofClass: propertyClass];
+    }
 }
 
 

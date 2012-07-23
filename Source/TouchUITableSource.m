@@ -1,6 +1,6 @@
 //
 //  TDUITableSource.m
-//  CouchCocoa
+//  TouchDB
 //
 //  Created by Jens Alfke on 8/2/11.
 //  Copyright 2011 Couchbase, Inc. All rights reserved.

@@ -1,6 +1,6 @@
 //
 //  TouchModelFactory.m
-//  CouchCocoa
+//  TouchDB
 //
 //  Created by Jens Alfke on 11/22/11.
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
