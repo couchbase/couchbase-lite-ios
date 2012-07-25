@@ -202,13 +202,14 @@
     id document = [TDJSON JSONObjectWithData: _jsonBuffer
                                      options: TDJSONReadingMutableContainers
                                        error: NULL];
-    setObj(&_jsonBuffer, nil);
     if (![document isKindOfClass: [NSDictionary class]]) {
         Warn(@"%@: received unparseable JSON data '%@'",
              self, [_jsonBuffer my_UTF8ToString]);
+        setObj(&_jsonBuffer, nil);
         _status = kTDStatusUpstreamError;
         return NO;
     }
+    setObj(&_jsonBuffer, nil);
     _document = [document retain];
     return YES;
 }
