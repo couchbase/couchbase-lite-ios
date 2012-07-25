@@ -84,4 +84,4 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [15]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/SETUP.txt
 [16]: https://github.com/couchbaselabs/TouchDB-iOS/downloads
 [17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
-[18]: https://github.com/couchbaselabs/TouchDB-iOS-Demo
+[18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo
