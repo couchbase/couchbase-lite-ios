@@ -20,6 +20,7 @@
 #import "TDBase64.h"
 #import "TDMisc.h"
 #import "CollectionUtils.h"
+#import "MYStreamUtils.h"
 
 
 @implementation TDMultipartDocumentReader
@@ -44,7 +45,6 @@
 }
 
 
-
 - (id) initWithDatabase: (TDDatabase*)database
 {
     Assert(database);
@@ -64,6 +64,7 @@
     [_document release];
     [_attachmentsByName autorelease];
     [_attachmentsByDigest autorelease];
+    [_completionBlock release];
     [super dealloc];
 }
 
@@ -132,6 +133,81 @@
     }
     _status = kTDStatusCreated;
     return YES;
+}
+
+
+#pragma mark - ASYNCHRONOUS MODE:
+
+
++ (TDStatus) readStream: (NSInputStream*)stream
+                 ofType: (NSString*)contentType
+             toDatabase: (TDDatabase*)database
+                   then: (TDMultipartDocumentReaderCompletionBlock)onCompletion
+{
+    TDMultipartDocumentReader* reader = [[[self alloc] initWithDatabase: database] autorelease];
+    return [reader readStream: stream ofType: contentType then: onCompletion];
+}
+
+
+- (TDStatus) readStream: (NSInputStream*)stream
+                 ofType: (NSString*)contentType
+                   then: (TDMultipartDocumentReaderCompletionBlock)completionBlock
+{
+    if ([self setContentType: contentType]) {
+        LogTo(SyncVerbose, @"%@: Reading from input stream...", self);
+        [self retain];  // balanced by release in -finishAsync:
+        _completionBlock = [completionBlock copy];
+        [stream open];
+        stream.delegate = self;
+        [stream scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
+    }
+    return _status;
+}
+
+
+- (void) stream: (NSInputStream*)stream handleEvent: (NSStreamEvent)eventCode {
+    BOOL finish = NO;
+    switch (eventCode) {
+        case NSStreamEventHasBytesAvailable:
+            finish = ![self readFromStream: stream];
+            break;
+        case NSStreamEventEndEncountered:
+            finish = YES;
+            break;
+        case NSStreamEventErrorOccurred:
+            Warn(@"%@: error reading from stream: %@", self, stream.streamError);
+            _status = kTDStatusUpstreamError;
+            finish = YES;
+            break;
+        default:
+            break;
+    }
+    if (finish)
+        [self finishAsync: stream];
+}
+
+
+- (BOOL) readFromStream: (NSInputStream*)stream {
+    BOOL readOK = [stream my_readData: ^(NSData *data) {
+        [self appendData: data];
+    }];
+    if (!readOK) {
+        Warn(@"%@: error reading from stream: %@", self, stream.streamError);
+        _status = kTDStatusUpstreamError;
+    }
+    return !TDStatusIsError(_status);
+}
+
+
+- (void) finishAsync: (NSInputStream*)stream {
+    stream.delegate = nil;
+    [stream close];
+    if (!TDStatusIsError(_status))
+        [self finish];
+    _completionBlock(self);
+    [_completionBlock release];
+    _completionBlock = nil;
+    [self release];  // balances -retain in -readStream:
 }
 
 

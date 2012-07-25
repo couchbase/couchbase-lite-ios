@@ -257,15 +257,6 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
-- (void) sendResponse {
-    if (!_responseSent) {
-        _responseSent = YES;
-        if (_onResponseReady)
-            _onResponseReady(_response);
-    }
-}
-
-
 - (TDStatus) route {
     // Refer to: http://wiki.apache.org/couchdb/Complete_HTTP_API_Reference
     
@@ -390,40 +381,57 @@ static NSArray* splitPath( NSURL* url ) {
         [_response reset];
     }
     
+    // If response is ready (nonzero status), tell my client about it:
+    if (status > 0) {
+        _response.internalStatus = status;
+        [self sendResponseHeaders];
+        [self sendResponseBodyAndFinish: !_waiting];
+    } else {
+        _waiting = YES;
+    }
+    
+    // If I will keep running asynchronously (i.e. a _changes feed handler), listen for the
+    // database closing so I can stop then:
+    if (_waiting)
+        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
+                                                     name: TDDatabaseWillCloseNotification
+                                                   object: _db];
+}
+
+
+- (void) sendResponseHeaders {
+    if (_responseSent)
+        return;
+    _responseSent = YES;
+
+    [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
+                          forKey: @"Server"];
+
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
     if (accept && !$equal(accept, @"*/*")) {
         NSString* responseType = _response.baseContentType;
         if (responseType && [accept rangeOfString: responseType].length == 0) {
             LogTo(TDRouter, @"Error kTDStatusNotAcceptable: Can't satisfy request Accept: %@", accept);
-            status = kTDStatusNotAcceptable;
+            _response.internalStatus = kTDStatusNotAcceptable;
             [_response reset];
         }
     }
 
-    [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
-                          forKey: @"Server"];
-
     if (_response.body.isValidJSON)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
 
-    // If response is ready (nonzero status), tell my client about it:
-    if (status > 0) {
-        _response.internalStatus = status;
-        [self sendResponse];
-        if (_onDataAvailable && _response.body) {
-            _onDataAvailable(_response.body.asJSON, !_waiting);
-        }
-        if (!_waiting) 
-            [self finished];
+    if (_onResponseReady)
+        _onResponseReady(_response);
+}
+
+
+- (void) sendResponseBodyAndFinish: (BOOL)finished {
+    if (_onDataAvailable && _response.body) {
+        _onDataAvailable(_response.body.asJSON, finished);
     }
-    
-    // If I will keep running asynchronously (i.e. a _changes feed handler), listen for the
-    // database closing so I can stop then:
-    if (_running)
-        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
-                                                     name: TDDatabaseWillCloseNotification
-                                                   object: _db];
+    if (finished)
+        [self finished];
 }
 
 
@@ -473,9 +481,9 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (void) dbClosing: (NSNotification*)n {
     LogTo(TDRouter, @"Database closing! Returning error 500");
-    if (_responseSent) {
+    if (!_responseSent) {
         _response.internalStatus = 500;
-        [self sendResponse];
+        [self sendResponseHeaders];
     }
     [self finished];
 }

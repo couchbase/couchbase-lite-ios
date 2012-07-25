@@ -68,7 +68,8 @@ typedef void (^OnFinishedBlock)();
 @property (readonly) NSDictionary* bodyAsDictionary;
 @property (readonly) NSString* ifMatch;
 - (TDStatus) openDB;
-- (void) sendResponse;
+- (void) sendResponseHeaders;
+- (void) sendResponseBodyAndFinish: (BOOL)finished;
 - (void) finished;
 @end
 

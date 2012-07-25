@@ -448,12 +448,10 @@
 
     if (_longpoll) {
         Log(@"TDRouter: Sending longpoll response");
-        [self sendResponse];
+        [self sendResponseHeaders];
         NSDictionary* body = [self responseBodyForChanges: $array(rev) since: 0];
         _response.body = [TDBody bodyWithProperties: body];
-        if (_onDataAvailable)
-            _onDataAvailable(_response.body.asJSON, YES);
-        [self finished];
+        [self sendResponseBodyAndFinish: YES];
     } else {
         Log(@"TDRouter: Sending continous change chunk");
         [self sendContinuousChange: rev];
@@ -499,7 +497,7 @@
     if (continuous || (_longpoll && changes.count==0)) {
         // Response is going to stay open (continuous, or hanging GET):
         if (continuous) {
-            [self sendResponse];
+            [self sendResponseHeaders];
             for (TDRevision* rev in changes) 
                 [self sendContinuousChange: rev];
         }
@@ -508,7 +506,6 @@
                                                      name: TDDatabaseChangeNotification
                                                    object: db];
         // Don't close connection; more data to come
-        _waiting = YES;
         return 0;
     } else {
         // Return a response immediately and close the connection:
@@ -723,13 +720,45 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (TDBody*) documentBodyFromRequest: (TDStatus*)outStatus {
+- (TDStatus) readDocumentBodyThen: (TDStatus(^)(TDBody*))block {
+    TDStatus status;
     NSString* contentType = [_request valueForHTTPHeaderField: @"Content-Type"];
-    NSDictionary* properties = [TDMultipartDocumentReader readData: _request.HTTPBody
-                                                            ofType: contentType
-                                                        toDatabase: _db
-                                                            status: outStatus];
-    return properties ? [TDBody bodyWithProperties: properties] : nil;
+    NSInputStream* bodyStream = _request.HTTPBodyStream;
+    if (bodyStream) {
+        block = [[block copy] autorelease];
+        status = [TDMultipartDocumentReader readStream: bodyStream
+                                                ofType: contentType
+                                            toDatabase: _db
+                                                  then: ^(TDMultipartDocumentReader* reader) {
+            // Called when the reader is done reading/parsing the stream:
+            TDStatus status = reader.status;
+            if (!TDStatusIsError(status)) {
+                NSDictionary* properties = reader.document;
+                if (properties)
+                    status = block([TDBody bodyWithProperties: properties]);
+                else
+                    status = kTDStatusBadRequest;
+            }
+            _response.internalStatus = status;
+            [self finished];
+        }];
+
+        if (TDStatusIsError(status))
+            return status;
+        // Don't close connection; more data to come
+        return 0;
+
+    } else {
+        NSDictionary* properties = [TDMultipartDocumentReader readData: _request.HTTPBody
+                                                                ofType: contentType
+                                                            toDatabase: _db
+                                                                status: &status];
+        if (TDStatusIsError(status))
+            return status;
+        else if (!properties)
+            return kTDStatusBadRequest;
+        return block([TDBody bodyWithProperties: properties]);
+    }
 }
 
 
@@ -737,32 +766,28 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     TDStatus status = [self openDB];
     if (TDStatusIsError(status))
         return status;
-    TDBody* body = [self documentBodyFromRequest: &status];
-    if (!body)
-        return status;
-    return [self update: db docID: nil body: body deleting: NO];
+    return [self readDocumentBodyThen: ^(TDBody *body) {
+        return [self update: db docID: nil body: body deleting: NO];
+    }];
 }
 
 
 - (TDStatus) do_PUT: (TDDatabase*)db docID: (NSString*)docID {
-    TDStatus status;
-    TDBody* body = [self documentBodyFromRequest: &status];
-    if (!body)
-        return status;
-    
-    if (![self query: @"new_edits"] || [self boolQuery: @"new_edits"]) {
-        // Regular PUT:
-        return [self update: db docID: docID body: body deleting: NO];
-    } else {
-        // PUT with new_edits=false -- forcible insertion of existing revision:
-        TDRevision* rev = [[[TDRevision alloc] initWithBody: body] autorelease];
-        if (!rev)
-            return kTDStatusBadJSON;
-        if (!$equal(rev.docID, docID) || !rev.revID)
-            return kTDStatusBadID;
-        NSArray* history = [TDDatabase parseCouchDBRevisionHistory: body.properties];
-        return [_db forceInsert: rev revisionHistory: history source: nil];
-    }
+    return [self readDocumentBodyThen: ^TDStatus(TDBody *body) {
+        if (![self query: @"new_edits"] || [self boolQuery: @"new_edits"]) {
+            // Regular PUT:
+            return [self update: db docID: docID body: body deleting: NO];
+        } else {
+            // PUT with new_edits=false -- forcible insertion of existing revision:
+            TDRevision* rev = [[[TDRevision alloc] initWithBody: body] autorelease];
+            if (!rev)
+                return kTDStatusBadJSON;
+            if (!$equal(rev.docID, docID) || !rev.revID)
+                return kTDStatusBadID;
+            NSArray* history = [TDDatabase parseCouchDBRevisionHistory: body.properties];
+            return [_db forceInsert: rev revisionHistory: history source: nil];
+        }
+    }];
 }
 
 
