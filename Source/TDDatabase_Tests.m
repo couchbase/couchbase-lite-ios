@@ -337,7 +337,11 @@ TestCase(TDDatabase_RevTree) {
     // Make sure the revision with the higher revID wins the conflict:
     TDRevision* current = [db getDocumentWithID: rev.docID revisionID: nil options: 0];
     CAssertEqual(current, conflict);
-    
+
+    // Check that the list of conflicts is accurate:
+    TDRevisionList* conflictingRevs = [db getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES];
+    CAssertEqual(conflictingRevs.allRevisions, $array(conflict, rev));
+
     // Get the _changes feed and verify only the winner is in it:
     TDChangesOptions options = kDefaultTDChangesOptions;
     TDRevisionList* changes = [db changesSinceSequence: 0 options: &options filter: NULL];

@@ -615,16 +615,6 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
 }
 
 
-- (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID {
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID < 0)
-        return nil;
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid FROM revs WHERE doc_id=? AND current "
-                                           "ORDER BY revid DESC OFFSET 1", $object(docNumericID)];
-    return revIDsFromResultSet(r);
-}
-
-
 - (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev limit: (unsigned)limit {
     int generation = rev.generation;
     if (generation <= 1)
