@@ -106,8 +106,10 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     @param commit  If YES, commits; if NO, aborts and rolls back, undoing all changes made since the matching -beginTransaction call, *including* any committed nested transactions. */
 - (BOOL) endTransaction: (BOOL)commit;
 
-/** Compacts the database storage by removing the bodies and attachments of obsolete revisions. */
-- (TDStatus) compact;
+/** Executes the block within a database transaction.
+    If the block returns a non-OK status, the transaction is aborted/rolled back.
+    Any exception raised by the block will be caught and treated as kTDStatusException. */
+- (TDStatus) inTransaction: (TDStatus(^)())block;
 
 // DOCUMENTS:
 

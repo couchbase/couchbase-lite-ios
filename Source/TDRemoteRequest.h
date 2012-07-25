@@ -25,20 +25,23 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 {
     @protected
     NSMutableURLRequest* _request;
+    id<TDAuthorizer> _authorizer;
     TDRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
     int _status;
     UInt8 _retryCount;
     bool _dontLog404;
+    bool _challenged;
 }
 
 /** Creates a request; call -start to send it on its way. */
 - (id) initWithMethod: (NSString*)method 
                   URL: (NSURL*)url 
                  body: (id)body
-           authorizer: (id<TDAuthorizer>)authorizer
        requestHeaders: (NSDictionary *)requestHeaders
          onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
+
+@property (retain, nonatomic) id<TDAuthorizer>authorizer;
 
 /** In some cases a kTDStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;

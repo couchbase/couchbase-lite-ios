@@ -54,11 +54,8 @@
 
 @interface TDDatabase (Replication_Internal)
 - (void) stopAndForgetReplicator: (TDReplicator*)repl;
-- (NSString*) lastSequenceWithRemoteURL: (NSURL*)url
-                                   push: (BOOL)push;
-- (BOOL) setLastSequence: (NSString*)lastSequence
-           withRemoteURL: (NSURL*)url
-                    push: (BOOL)push;
+- (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
+- (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;
 + (NSString*) joinQuotedStrings: (NSArray*)strings;
 @end
 

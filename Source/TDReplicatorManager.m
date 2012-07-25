@@ -27,6 +27,11 @@
 #import "TDOAuth1Authorizer.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
+#import "MYBlockUtils.h"
+
+#if TARGET_OS_IPHONE
+#import <UIKit/UIApplication.h>
+#endif
 
 
 NSString* const kTDReplicatorDatabaseName = @"_replicator";
@@ -47,6 +52,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
         _dbManager = dbManager;
         _replicatorDB = [[dbManager databaseNamed: kTDReplicatorDatabaseName] retain];
         Assert(_replicatorDB);
+        _thread = [NSThread currentThread];
     }
     return self;
 }
@@ -71,6 +77,13 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(someDbDeleted:)
                                                  name: TDDatabaseWillBeDeletedNotification
                                                object: nil];
+#if TARGET_OS_IPHONE
+    // Register for foreground/background transition notifications, on iOS:
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appForegrounding:)
+                                                 name: UIApplicationWillEnterForegroundNotification
+                                               object: nil];
+#endif
+    
 }
 
 
@@ -273,6 +286,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 // A replication document has been created, so create the matching TDReplicator:
 - (void) processInsertion: (TDRevision*)rev {
+    if ([_replicatorsByDocID objectForKey: rev.docID])
+        return;
     LogTo(Sync, @"ReplicatorManager: %@ was created", rev);
     NSDictionary* properties = rev.properties;
     TDDatabase* localDb;
@@ -368,10 +383,21 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     for (NSDictionary* row in allDocs) {
         NSDictionary* docProps = [row objectForKey: @"doc"];
         NSString* state = [docProps objectForKey: @"_replication_state"];
-        if (state==nil || $equal(state, @"triggered"))
+        if (state==nil || $equal(state, @"triggered") ||
+                    [[docProps objectForKey: @"continuous"] boolValue]) {
             [self processInsertion: [TDRevision revisionWithProperties: docProps]];
+        }
     }
     LogTo(Sync, @"ReplicatorManager done scanning.");
+}
+
+
+- (void) appForegrounding: (NSNotification*)n {
+    // Danger: This is called on the main thread!
+    MYOnThread(_thread, ^{
+        LogTo(Sync, @"App activated -- restarting all replications");
+        [self processAllDocs];
+    });
 }
 
 

@@ -15,6 +15,7 @@
 
 #import <Foundation/Foundation.h>
 @class TDChangeTracker;
+@protocol TDAuthorizer;
 
 
 @protocol TDChangeTrackerClient <NSObject>
@@ -46,6 +47,8 @@ typedef enum TDChangeTrackerMode {
     NSDictionary* _filterParameters;
     NSTimeInterval _heartbeat;
     NSDictionary* _requestHeaders;
+    id<TDAuthorizer> _authorizer;
+    unsigned _retryCount;
 }
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
@@ -62,6 +65,7 @@ typedef enum TDChangeTrackerMode {
 @property (retain, nonatomic) NSError* error;
 @property (assign, nonatomic) id<TDChangeTrackerClient> client;
 @property (retain, nonatomic) NSDictionary *requestHeaders;
+@property (retain, nonatomic) id<TDAuthorizer> authorizer;
 
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
@@ -71,9 +75,15 @@ typedef enum TDChangeTrackerMode {
 - (BOOL) start;
 - (void) stop;
 
+/** Asks the tracker to retry connecting, _if_ it's currently disconnected but waiting to retry.
+    This should be called when the reachability of the remote host changes, or when the
+    app is reactivated. */
+- (void) retry;
+
 // Protected
 @property (readonly) NSString* changesFeedPath;
 - (void) setUpstreamError: (NSString*)message;
+- (void) failedWithError: (NSError*)error;
 - (NSInteger) receivedPollResponse: (NSData*)body;
 - (void) stopped; // override this
 

@@ -150,7 +150,6 @@ static void ClientCallback(SCNetworkReachabilityRef target,
                            SCNetworkReachabilityFlags flags,
                            void *info)
 {
-    Log(@"callback!");
     [(TDReachability*)info flagsChanged: flags];
 }
 

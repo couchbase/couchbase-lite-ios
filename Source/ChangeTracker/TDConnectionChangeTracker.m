@@ -16,17 +16,17 @@
 // <http://wiki.apache.org/couchdb/HTTP_database_API#Changes>
 
 #import "TDConnectionChangeTracker.h"
+#import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
-
-
-#define kMaxRetries 4               // Number of retry attempts on failure to open TCP connection
-#define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
+#import "MYURLUtils.h"
 
 
 @implementation TDConnectionChangeTracker
 
 - (BOOL) start {
+    if(_connection)
+        return NO;
     [super start];
     _inputBuffer = [[NSMutableData alloc] init];
     
@@ -40,7 +40,13 @@
     if (_databaseURL.port)
         host = [host stringByAppendingFormat: @":%@", _databaseURL.port];
     [request setValue: host forHTTPHeaderField: @"Host"];
-    
+
+    // Add authorization:
+    if (_authorizer) {
+        [request setValue: [_authorizer authorizeURLRequest: request forRealm: nil]
+                 forHTTPHeaderField: @"Authorization"];
+    }
+
     // Add custom headers.
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
@@ -69,11 +75,29 @@
 
 
 - (void) stop {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(start)
-                                               object: nil];    // cancel pending retries
     if (_connection)
         [_connection cancel];
     [super stop];
+}
+
+
+- (bool) retryWithCredential {
+    if (_authorizer || _challenged)
+        return false;
+    _challenged = YES;
+    NSURLCredential* cred = [_databaseURL my_credentialForRealm: nil
+                                           authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
+    if (!cred) {
+        LogTo(ChangeTracker, @"Got 401 but no stored credential found (with nil realm)");
+        return false;
+    }
+
+    [_connection cancel];
+    self.authorizer = [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
+    LogTo(ChangeTracker, @"Got 401 but retrying with %@", _authorizer);
+    [self clearConnection];
+    [self start];
+    return true;
 }
 
 
@@ -81,6 +105,14 @@
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    NSString* authMethod = [[challenge protectionSpace] authenticationMethod];
+    if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
+        // TODO: Check trust of server cert
+        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+        return;
+    }
+
+    _challenged = true;
     if (challenge.proposedCredential) {
         [sender performDefaultHandlingForAuthenticationChallenge: challenge];
         return;
@@ -122,13 +154,20 @@
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    _retryCount = 0;  // successful TCP connection
     TDStatus status = (TDStatus) ((NSHTTPURLResponse*)response).statusCode;
     LogTo(ChangeTracker, @"%@: Got response, status %d", self, status);
+    if (status == 401) {
+        // CouchDB says we're unauthorized but it didn't present a 'WWW-Authenticate' header
+        // (it actually does this on purpose...) Let's see if we have a credential we can try:
+        if ([self retryWithCredential])
+            return;
+    }
     if (TDStatusIsError(status)) {
         Warn(@"%@: Got status %i", self, status);
-        self.error = TDStatusToNSError(status, self.changesFeedURL);
-        [self stop];
+        [self connection: connection
+              didFailWithError: TDStatusToNSError(status, self.changesFeedURL)];
+    } else {
+        _retryCount = 0;  // successful connection
     }
 }
 
@@ -138,19 +177,8 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    // This is called for an error with the socket, _not_ an HTTP error status.
-    // In this case we should retry, since the network might be flaky.
-    if (++_retryCount <= kMaxRetries) {
-        [self clearConnection];
-        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << (_retryCount-1));
-        Log(@"%@: Connection error, retrying in %.1f sec: %@",
-            self, retryDelay, error.localizedDescription);
-        [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
-    } else {
-        Warn(@"%@: Can't connect, giving up: %@", self, error);
-        self.error = error;
-        [self stopped];
-    }
+    [self clearConnection];
+    [self failedWithError: error];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {

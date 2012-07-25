@@ -112,20 +112,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.limit = kChangesFeedLimit;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
+    _changeTracker.authorizer = _authorizer;
     unsigned heartbeat = $castIf(NSNumber, [_options objectForKey: @"heartbeat"]).unsignedIntValue;
     if (heartbeat >= 15000)
         _changeTracker.heartbeat = heartbeat / 1000.0;
     
     NSMutableDictionary* headers = $mdict({@"User-Agent", [TDRemoteRequest userAgentHeader]});
     [headers addEntriesFromDictionary: _requestHeaders];
-    if (_authorizer) {
-        NSURL* url = _changeTracker.changesFeedURL;
-        NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
-        NSString* authorization = [_authorizer authorizeURLRequest: request
-                                                          forRealm: nil];
-        if (authorization)
-            [headers setObject: authorization forKey: @"Authorization"];
-    }
     _changeTracker.requestHeaders = headers;
     
     [_changeTracker start];
@@ -156,6 +149,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) stopped {
     setObj(&_downloadsToInsert, nil);
     [super stopped];
+}
+
+
+- (BOOL) goOnline {
+    if ([super goOnline])
+        return YES;
+    // If we were already online (i.e. server is reachable) but got a reachability-change event,
+    // tell the tracker to retry in case it's in retry mode after a transient failure. (I.e. the
+    // state of the network might be better now.)
+    if (_running && _online)
+        [_changeTracker retry];
+    return NO;
 }
 
 
@@ -369,7 +374,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
                                     initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
-                                     authorizer: _authorizer
                                  requestHeaders: self.requestHeaders
                                    onCompletion:
         ^(TDMultipartDownloader* download, NSError *error) {
@@ -391,6 +395,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             [self pullRemoteRevisions];
         }
      ] autorelease];
+    dl.authorizer = _authorizer;
     [dl start];
 }
 

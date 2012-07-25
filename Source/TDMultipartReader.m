@@ -76,6 +76,8 @@ static NSData* kCRLFCRLF;
     _buffer = nil;
     [_headers release];
     _headers = nil;
+    [_boundary release];
+    _boundary = nil;
 }
 
 

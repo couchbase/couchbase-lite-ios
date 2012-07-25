@@ -44,6 +44,15 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
 - (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock;
 - (TDValidationBlock) validationNamed: (NSString*)validationName;
 
+/** Compacts the database storage by removing the bodies and attachments of obsolete revisions. */
+- (TDStatus) compact;
+
+/** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
+    @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
+    @param outResult  On success will point to an NSDictionary with the same form as docsToRev, containing the doc/revision IDs that were actually removed. */
+- (TDStatus) purgeRevisions: (NSDictionary*)docsToRevs
+                     result: (NSDictionary**)outResult;
+
 @end
 
 

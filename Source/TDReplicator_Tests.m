@@ -44,7 +44,6 @@ static void deleteRemoteDB(void) {
     TDRemoteRequest* request = [[TDRemoteRequest alloc] initWithMethod: @"DELETE"
                                                                    URL: url
                                                                   body: nil
-                                                            authorizer: nil
                                                         requestHeaders: nil
                                                           onCompletion:
         ^(id result, NSError *err) {

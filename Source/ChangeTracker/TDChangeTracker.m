@@ -17,11 +17,15 @@
 
 #import "TDChangeTracker.h"
 #import "TDConnectionChangeTracker.h"
+#import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
 
 
 #define kDefaultHeartbeat (5 * 60.0)
+
+#define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
+#define kMaxRetryDelay 300.0        // ...but will never get longer than this
 
 
 static NSURL* AddDotToURLHost( NSURL* url );
@@ -37,7 +41,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
-@synthesize requestHeaders = _requestHeaders;
+@synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
 
 - (id)initWithDatabaseURL: (NSURL*)databaseURL
                      mode: (TDChangeTrackerMode)mode
@@ -112,6 +116,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
     [_lastSequenceID release];
     [_error release];
     [_requestHeaders release];
+    [_authorizer release];
     [super dealloc];
 }
 
@@ -126,16 +131,44 @@ static NSURL* AddDotToURLHost( NSURL* url );
 }
 
 - (void) stop {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(retry)
+                                               object: nil];    // cancel pending retries
     [self stopped];
 }
 
 - (void) stopped {
+    _retryCount = 0;
     // Clear client ref so its -changeTrackerStopped: won't be called again during -dealloc
     id<TDChangeTrackerClient> client = _client;
     _client = nil;
     if ([client respondsToSelector: @selector(changeTrackerStopped:)])
         [client changeTrackerStopped: self];    // note: this method might release/dealloc me
 }
+
+
+- (void) failedWithError: (NSError*)error {
+    // If the error may be transient (flaky network, server glitch), retry:
+    if (TDMayBeTransientError(error)) {
+        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << MIN(_retryCount-1, 31U));
+        retryDelay = MIN(retryDelay, kMaxRetryDelay);
+        Log(@"%@: Connection error, retrying in %.1f sec: %@",
+            self, retryDelay, error.localizedDescription);
+        [self performSelector: @selector(retry) withObject: nil afterDelay: retryDelay];
+    } else {
+        Warn(@"%@: Can't connect, giving up: %@", self, error);
+        self.error = error;
+        [self stopped];
+    }
+}
+
+
+- (void) retry {
+    if ([self start]) {
+        [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(retry)
+                                                   object: nil];    // cancel pending retries
+    }
+}
+
 
 - (BOOL) receivedChange: (NSDictionary*)change {
     if (![change isKindOfClass: [NSDictionary class]])
