@@ -17,6 +17,7 @@
 
 #import "TDConnectionChangeTracker.h"
 #import "TDAuthorizer.h"
+#import "TDRemoteRequest.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
 #import "MYURLUtils.h"
@@ -105,10 +106,33 @@
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
-    NSString* authMethod = [[challenge protectionSpace] authenticationMethod];
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    NSString* authMethod = space.authenticationMethod;
+
+    // Is this challenge for the DB hostname with the "." appended (the one in the URL request)?
+    BOOL challengeIsForDottedHost = NO;
+    NSString* host = space.host;
+    if ([host hasSuffix: @"."] && !space.isProxy) {
+        NSString* hostWithoutDot = [host substringToIndex: host.length - 1];
+        challengeIsForDottedHost = ([hostWithoutDot caseInsensitiveCompare: _databaseURL.host] == 0);
+    }
+
     if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
-        // TODO: Check trust of server cert
-        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+        // Verify trust of SSL server cert:
+        SecTrustRef trust = challenge.protectionSpace.serverTrust;
+        if (challengeIsForDottedHost) {
+            // Update the policy with the correct original hostname (without the "." suffix):
+            host = _databaseURL.host;
+            SecPolicyRef policy = SecPolicyCreateSSL(YES, (CFStringRef)host);
+            SecTrustSetPolicies(trust, policy);
+            CFRelease(policy);
+        }
+        if ([TDRemoteRequest checkTrust: trust forHost: host]) {
+            [sender useCredential: [NSURLCredential credentialForTrust: trust]
+                    forAuthenticationChallenge: challenge];
+        } else {
+            [sender cancelAuthenticationChallenge: challenge];
+        }
         return;
     }
 
@@ -118,30 +142,26 @@
         return;
     }
     
-    NSURLProtectionSpace* space = challenge.protectionSpace;
-    NSString* host = space.host;
-    if (challenge.previousFailureCount == 0 && [host hasSuffix: @"."] && !space.isProxy) {
-        NSString* hostWithoutDot = [host substringToIndex: host.length - 1];
-        if ([hostWithoutDot caseInsensitiveCompare: _databaseURL.host] == 0) {
-            // Challenge is for the hostname with the "." appended. Try without it:
-            host = hostWithoutDot;
-            NSURLProtectionSpace* newSpace = [[NSURLProtectionSpace alloc]
-                                                       initWithHost: host
-                                                               port: space.port
-                                                           protocol: space.protocol
-                                                              realm: space.realm
-                                               authenticationMethod: space.authenticationMethod];
-            NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                                    defaultCredentialForProtectionSpace: newSpace];
-            [newSpace release];
-            if (cred) {
-                LogTo(ChangeTracker, @"%@: Using credential '%@' for "
-                                      "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
-                    self, cred.user, host, (int)space.port, space.protocol, space.realm,
-                    space.authenticationMethod);
-                [sender useCredential: cred forAuthenticationChallenge: challenge];
-                return;
-            }
+    if (challengeIsForDottedHost && challenge.previousFailureCount == 0) {
+        // Look up a credential for the original hostname without the "." suffix:
+        host = _databaseURL.host;
+        NSURLProtectionSpace* newSpace = [[NSURLProtectionSpace alloc]
+                                                   initWithHost: host
+                                                           port: space.port
+                                                       protocol: space.protocol
+                                                          realm: space.realm
+                                           authenticationMethod: space.authenticationMethod];
+        NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
+                                                defaultCredentialForProtectionSpace: newSpace];
+        [newSpace release];
+        if (cred) {
+            // Found a credential, so use it:
+            LogTo(ChangeTracker, @"%@: Using credential '%@' for "
+                                  "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+                self, cred.user, host, (int)space.port, space.protocol, space.realm,
+                space.authenticationMethod);
+            [sender useCredential: cred forAuthenticationChallenge: challenge];
+            return;
         }
     }
     

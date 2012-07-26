@@ -184,22 +184,54 @@
 - (void)connection:(NSURLConnection *)connection
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
-    NSString* authMethod = [[challenge protectionSpace] authenticationMethod];
+    id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    NSString* authMethod = space.authenticationMethod;
     LogTo(RemoteRequest, @"Got challenge: %@ (%@)", challenge, authMethod);
     if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic)) {
         _challenged = true;
         if (challenge.previousFailureCount == 0) {
-            NSURLCredential* cred = [_request.URL my_credentialForRealm: challenge.protectionSpace.realm
+            NSURLCredential* cred = [_request.URL my_credentialForRealm: space.realm
                                                    authenticationMethod: authMethod];
             if (cred) {
-                [challenge.sender useCredential: cred forAuthenticationChallenge:challenge];
+                [sender useCredential: cred forAuthenticationChallenge:challenge];
                 return;
             }
         }
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
-        // TODO: Check trust of server cert
+        SecTrustRef trust = space.serverTrust;
+        if ([[self class] checkTrust: trust forHost: space.host]) {
+            [sender useCredential: [NSURLCredential credentialForTrust: trust]
+                    forAuthenticationChallenge: challenge];
+        } else {
+            [sender cancelAuthenticationChallenge: challenge];
+        }
     }
-    [challenge.sender performDefaultHandlingForAuthenticationChallenge: challenge];
+    [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+}
+
+
++ (BOOL) checkTrust: (SecTrustRef)trust forHost: (NSString*)host {
+    SecTrustResultType trustResult;
+    OSStatus err = SecTrustEvaluate(trust, &trustResult);
+    if (err == noErr && (trustResult == kSecTrustResultProceed ||
+                         trustResult == kSecTrustResultUnspecified)) {
+        return YES;
+    } else {
+        Warn(@"TouchDB: SSL server <%@> not trusted (err=%d, trustResult=%d); cert chain follows:",
+             host, err, trustResult);
+        NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
+        for (NSDictionary* property in trustProperties) {
+            Warn(@"    %@: error = %@",
+                 [property objectForKey: kSecPropertyTypeTitle],
+                 [property objectForKey: kSecPropertyTypeError]);
+        }
+        SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+        [(NSData*)SecCertificateCopyData(cert) writeToFile: @"/tmp/cert" atomically: YES];//TEMP
+        [trustProperties release];
+        return NO;
+    }
+
 }
 
 
