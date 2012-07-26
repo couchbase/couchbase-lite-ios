@@ -218,17 +218,24 @@
                          trustResult == kSecTrustResultUnspecified)) {
         return YES;
     } else {
-        Warn(@"TouchDB: SSL server <%@> not trusted (err=%d, trustResult=%d); cert chain follows:",
-             host, err, trustResult);
+        Warn(@"TouchDB: SSL server <%@> not trusted (err=%d, trustResult=%u); cert chain follows:",
+             host, (int)err, (unsigned)trustResult);
+#if TARGET_OS_IPHONE
+        for (CFIndex i = 0; i < SecTrustGetCertificateCount(trust); ++i) {
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, i);
+            CFStringRef subject = SecCertificateCopySubjectSummary(cert);
+            Warn(@"    %@", subject);
+            CFRelease(subject);
+        }
+#else
         NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
         for (NSDictionary* property in trustProperties) {
             Warn(@"    %@: error = %@",
                  [property objectForKey: kSecPropertyTypeTitle],
                  [property objectForKey: kSecPropertyTypeError]);
         }
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
-        [(NSData*)SecCertificateCopyData(cert) writeToFile: @"/tmp/cert" atomically: YES];//TEMP
         [trustProperties release];
+#endif
         return NO;
     }
 

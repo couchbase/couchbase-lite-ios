@@ -23,6 +23,9 @@
 #import "MYURLUtils.h"
 
 
+static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
+
+
 @implementation TDConnectionChangeTracker
 
 - (BOOL) start {
@@ -124,8 +127,10 @@
             // Update the policy with the correct original hostname (without the "." suffix):
             host = _databaseURL.host;
             SecPolicyRef policy = SecPolicyCreateSSL(YES, (CFStringRef)host);
-            SecTrustSetPolicies(trust, policy);
+            trust = CopyTrustWithPolicy(trust, policy);
             CFRelease(policy);
+        } else {
+            CFRetain(trust);
         }
         if ([TDRemoteRequest checkTrust: trust forHost: host]) {
             [sender useCredential: [NSURLCredential credentialForTrust: trust]
@@ -133,6 +138,7 @@
         } else {
             [sender cancelAuthenticationChallenge: challenge];
         }
+        CFRelease(trust);
         return;
     }
 
@@ -238,3 +244,20 @@
 }
 
 @end
+
+
+static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy) {
+#if TARGET_OS_IPHONE
+    CFIndex nCerts = SecTrustGetCertificateCount(trust);
+    CFMutableArrayRef certs = CFArrayCreateMutable(NULL, nCerts, &kCFTypeArrayCallBacks);
+    for (CFIndex i = 0; i < nCerts; ++i)
+        CFArrayAppendValue(certs, SecTrustGetCertificateAtIndex(trust, i));
+    OSStatus err = SecTrustCreateWithCertificates(certs, policy, &trust);
+    CAssertEq(err, noErr);
+    return trust;
+#else
+    SecTrustSetPolicies(trust, policy);
+    CFRetain(trust);
+    return trust;
+#endif
+}
