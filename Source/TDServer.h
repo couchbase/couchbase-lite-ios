@@ -32,3 +32,10 @@
 - (void) close;
 
 @end
+
+
+/** Starts a TDServer and registers it with TDURLProtocol so you can call it using the CouchDB-compatible REST API.
+    @param serverDirectory  The top-level directory where you want the server to store databases. Will be created if it does not already exist.
+    @param outError  An error will be stored here if the function returns nil.
+    @return  The root URL of the REST API, or nil if the server failed to start. */
+NSURL* TDStartServer(NSString* serverDirectory, NSError** outError);
