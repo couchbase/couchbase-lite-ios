@@ -70,9 +70,10 @@
 }
 
 - (void) setAuthorizer: (id<TDAuthorizer>)authorizer {
-    setObj(&_authorizer, authorizer);
-    [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
-              forHTTPHeaderField: @"Authorization"];
+    if (ifSetObj(&_authorizer, authorizer)) {
+        [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
+                  forHTTPHeaderField: @"Authorization"];
+    }
 }
 
 
