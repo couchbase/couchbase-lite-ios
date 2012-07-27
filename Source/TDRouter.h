@@ -28,6 +28,7 @@ typedef void (^OnFinishedBlock)();
     TDDatabase* _db;
     BOOL _waiting;
     BOOL _responseSent;
+    BOOL _processRanges;
     OnAccessCheckBlock _onAccessCheck;
     OnResponseReadyBlock _onResponseReady;
     OnDataAvailableBlock _onDataAvailable;
@@ -39,6 +40,8 @@ typedef void (^OnFinishedBlock)();
 }
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;
+
+@property BOOL processRanges;
 
 @property (copy) OnAccessCheckBlock onAccessCheck;
 @property (copy) OnResponseReadyBlock onResponseReady;

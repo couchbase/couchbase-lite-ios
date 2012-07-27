@@ -19,7 +19,8 @@
     BOOL _askedIfChunked;
     BOOL _chunked;
     BOOL _delayedHeaders;
-    NSMutableData* _data;       // Data received, waiting to be read by the connection
+    NSData* _data;              // Data received, waiting to be read by the connection
+    BOOL _dataMutable;          // Is _data an NSMutableData?
     UInt64 _dataOffset;         // Offset in response of 1st byte of _data
     UInt64 _offset;             // Offset in response for next readData
 }

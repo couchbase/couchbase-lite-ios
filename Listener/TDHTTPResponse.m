@@ -130,10 +130,17 @@
 - (void) onDataAvailable: (NSData*)data finished: (BOOL)finished {
     @synchronized(self) {
         LogTo(TDListenerVerbose, @"%@ adding %u bytes", self, (unsigned)data.length);
-        if (_data)
-            [_data appendData: data];
-        else
-            _data = [data mutableCopy];
+        if (!_data) {
+            _data = [data copy];
+            _dataMutable = NO;
+        } else {
+            if (!_dataMutable) {
+                [_data autorelease];
+                _data = [_data mutableCopy];
+                _dataMutable = YES;
+            }
+            [(NSMutableData*)_data appendData: data];
+        }
         if (finished)
             [self onFinished];
         else if (_chunked)
@@ -216,8 +223,12 @@
             BOOL pretty = [_router boolQuery: @"pretty"];
 #endif
             if (pretty) {
-                [_data release];
-                _data = [_response.body.asPrettyJSON mutableCopy];
+                NSString* contentType = [_response.headers objectForKey: @"Content-Type"];
+                if ([contentType hasPrefix: @"application/json"]) {
+                    NSAssert(_data.length < 100000, @"Data too long"); //TEMP
+                    [_data release];
+                    _data = [_response.body.asPrettyJSON mutableCopy];
+                }
             }
         }
         [_connection responseHasAvailableData: self];

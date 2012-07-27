@@ -22,6 +22,7 @@
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
 #import "ExceptionUtils.h"
+#import "MYRegexUtils.h"
 
 #ifdef GNUSTEP
 #import <GNUstepBase/NSURL+GNUstepBase.h>
@@ -52,6 +53,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
         _dbManager = [dbManager retain];
         _request = [request retain];
         _response = [[TDResponse alloc] init];
+        _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
             _longpoll = NO;
             _changesIncludeDocs = NO;
@@ -66,6 +68,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     self = [self initWithDatabaseManager: nil request: request];
     if (self) {
         _server = [server retain];
+        _processRanges = YES;
     }
     return self;
 }
@@ -90,7 +93,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 
 @synthesize onAccessCheck=_onAccessCheck, onResponseReady=_onResponseReady,
             onDataAvailable=_onDataAvailable, onFinished=_onFinished,
-            request=_request, response=_response;
+            request=_request, response=_response, processRanges=_processRanges;
 
 
 - (NSDictionary*) queries {
@@ -370,6 +373,15 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) run {
+    if (WillLogTo(TDRouter)) {
+        NSMutableString* output = [NSMutableString stringWithFormat: @"%@ %@",
+                                   _request.HTTPMethod, _request.URL];
+        NSDictionary* headers = _request.allHTTPHeaderFields;
+        for (NSString* key in headers)
+            [output appendFormat: @"\n\t%@: %@\n", key, [headers objectForKey: key]];
+        LogTo(TDRouter, @"%@", output);
+    }
+    
     Assert(_dbManager);
     // Call the appropriate handler method:
     TDStatus status;
@@ -384,6 +396,7 @@ static NSArray* splitPath( NSURL* url ) {
     // If response is ready (nonzero status), tell my client about it:
     if (status > 0) {
         _response.internalStatus = status;
+        [self processRequestRanges];
         [self sendResponseHeaders];
         [self sendResponseBodyAndFinish: !_waiting];
     } else {
@@ -399,6 +412,79 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
+- (void) processRequestRanges {
+    if (!_processRanges || _response.status != 200 || !($equal(_request.HTTPMethod, @"GET") ||
+                                                        $equal(_request.HTTPMethod, @"HEAD"))) {
+        return;
+    }
+
+    [_response setValue: @"bytes" ofHeader: @"Accept-Ranges"];
+
+    NSData* body = _response.body.asJSON;  // misnomer; may not be JSON
+    NSUInteger bodyLength = body.length;
+    if (bodyLength == 0)
+        return;
+
+    // Range requests: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
+    NSString* rangeHeader = [_request valueForHTTPHeaderField: @"Range"];
+    if (!rangeHeader)
+        return;
+
+    // Parse the header value into 'from' and 'to' range strings:
+    static NSRegularExpression* regex;
+    if (!regex)
+        regex = [$regex(@"^bytes=(\\d+)?-(\\d+)?$") retain];
+    NSTextCheckingResult *match = [regex firstMatchInString: rangeHeader options: 0
+                                                      range: NSMakeRange(0, rangeHeader.length)];
+    if (!match) {
+        Warn(@"Invalid request Range header value: '%@'", rangeHeader);
+        return;
+    }
+    NSString *fromStr=nil, *toStr = nil;
+    NSRange r = [match rangeAtIndex: 1];
+    if (r.length)
+        fromStr = [rangeHeader substringWithRange: r];
+    r = [match rangeAtIndex: 2];
+    if (r.length)
+        toStr = [rangeHeader substringWithRange: r];
+
+    // Now convert those into the integer offsets (remember that 'to' is inclusive):
+    NSUInteger from, to;
+    if (fromStr.length > 0) {
+        from = (NSUInteger)fromStr.integerValue;
+        if (toStr.length > 0)
+            to = MIN((NSUInteger)toStr.integerValue, bodyLength - 1);
+        else
+            to = bodyLength - 1;
+        if (to < from)
+            return;  // invalid range
+    } else if (toStr.length > 0) {
+        to = bodyLength - 1;
+        from = bodyLength - MIN((NSUInteger)toStr.integerValue, bodyLength);
+    } else {
+        return;  // "-" is an invalid range
+    }
+
+    if (from >= bodyLength || to < from) {
+        _response.status = 416; // Requested Range Not Satisfiable
+        NSString* contentRangeStr = $sprintf(@"bytes */%llu", (uint64_t)bodyLength);
+        [_response setValue: contentRangeStr ofHeader: @"Content-Range"];
+        _response.body = nil;
+        return;
+    }
+
+    body = [body subdataWithRange: NSMakeRange(from, to - from + 1)];
+    _response.body = [TDBody bodyWithJSON: body];  // not actually JSON
+
+    // Content-Range: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16
+    NSString* contentRangeStr = $sprintf(@"bytes %llu-%llu/%llu",
+                                         (uint64_t)from, (uint64_t)to, (uint64_t)bodyLength);
+    [_response setValue: contentRangeStr ofHeader: @"Content-Range"];
+    _response.status = 206; // Partial Content
+    LogTo(TDRouter, @"Content-Range: %@", contentRangeStr);
+}
+
+
 - (void) sendResponseHeaders {
     if (_responseSent)
         return;
@@ -409,7 +495,7 @@ static NSArray* splitPath( NSURL* url ) {
 
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
-    if (accept && !$equal(accept, @"*/*")) {
+    if (accept && [accept rangeOfString: @"*/*"].length == 0) {
         NSString* responseType = _response.baseContentType;
         if (responseType && [accept rangeOfString: responseType].length == 0) {
             LogTo(TDRouter, @"Error kTDStatusNotAcceptable: Can't satisfy request Accept: %@", accept);
@@ -420,6 +506,12 @@ static NSArray* splitPath( NSURL* url ) {
 
     if (_response.body.isValidJSON)
         [_response setValue: @"application/json" ofHeader: @"Content-Type"];
+
+    if (_response.status == 200 && ($equal(_request.HTTPMethod, @"GET") ||
+                                    $equal(_request.HTTPMethod, @"HEAD"))) {
+        if (![_response.headers objectForKey: @"Cache-Control"])
+            [_response setValue: @"must-revalidate" ofHeader: @"Cache-Control"];
+    }
 
     if (_onResponseReady)
         _onResponseReady(_response);
@@ -436,6 +528,14 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) finished {
+    if (WillLogTo(TDRouter)) {
+        NSMutableString* output = [NSMutableString stringWithFormat: @"Response -- status=%d, body=%llu bytes",
+                                   _response.status, (uint64_t)_response.body.asJSON.length];
+        NSDictionary* headers = _response.headers;
+        for (NSString* key in headers)
+            [output appendFormat: @"\n\t%@: %@\n", key, [headers objectForKey: key]];
+        LogTo(TDRouter, @"%@", output);
+    }
     OnFinishedBlock onFinished = [_onFinished retain];
     [self stopNow];
     if (onFinished)

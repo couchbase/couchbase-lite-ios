@@ -73,6 +73,7 @@
     // Create a TDRouter:
     TDRouter* router = [[TDRouter alloc] initWithServer: ((TDHTTPServer*)config.server).tdServer
                                                 request: urlRequest];
+    router.processRanges = NO;  // The HTTP server framework does this already
     TDHTTPResponse* response = [[[TDHTTPResponse alloc] initWithRouter: router
                                                          forConnection: self] autorelease];
     
