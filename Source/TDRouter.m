@@ -376,6 +376,10 @@ static NSArray* splitPath( NSURL* url ) {
     if (WillLogTo(TDRouter)) {
         NSMutableString* output = [NSMutableString stringWithFormat: @"%@ %@",
                                    _request.HTTPMethod, _request.URL];
+        if (_request.HTTPBodyStream)
+            [output appendString: @" + body stream"];
+        else if (_request.HTTPBody.length > 0)
+            [output appendFormat: @" + %llu-byte body", (uint64_t)_request.HTTPBody.length];
         NSDictionary* headers = _request.allHTTPHeaderFields;
         for (NSString* key in headers)
             [output appendFormat: @"\n\t%@: %@\n", key, [headers objectForKey: key]];
