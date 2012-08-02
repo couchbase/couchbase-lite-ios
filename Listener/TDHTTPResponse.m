@@ -224,8 +224,7 @@
 #endif
             if (pretty) {
                 NSString* contentType = [_response.headers objectForKey: @"Content-Type"];
-                if ([contentType hasPrefix: @"application/json"]) {
-                    NSAssert(_data.length < 100000, @"Data too long"); //TEMP
+                if ([contentType hasPrefix: @"application/json"] && _data.length < 100000) {
                     [_data release];
                     _data = [_response.body.asPrettyJSON mutableCopy];
                 }

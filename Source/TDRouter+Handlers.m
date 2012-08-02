@@ -942,7 +942,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if ([self cacheWithEtag: $sprintf(@"%lld", _db.lastSequence)])  // conditional GET
         return kTDStatusNotModified;
 
-    TDView* view = [self compileView: @"@@TEMP@@" fromProperties: props];
+    TDView* view = [self compileView: @"@@TEMPVIEW@@" fromProperties: props];
     if (!view)
         return kTDStatusDBError;
     @try {

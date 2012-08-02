@@ -96,7 +96,7 @@
     // Retaining myself shouldn't be necessary, because NSURLConnection is documented as retaining
     // its delegate while it's running. But GNUstep doesn't (currently) do this, so for
     // compatibility I retain myself until the connection completes (see -clearConnection.)
-    // TEMP: Remove this and the [self autorelease] below when I get the fix from GNUstep.
+    // TODO: Remove this and the [self autorelease] below when I get the fix from GNUstep.
     [self retain];
 }
 
