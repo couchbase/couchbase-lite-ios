@@ -71,7 +71,7 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [2]: https://github.com/couchbaselabs/TouchDB-iOS/wiki
 [3]: http://couchbase.com
 [4]: https://github.com/couchbaselabs/CouchCocoa
-[5]: https://github.com/touchbaselabs/fmdb
+[5]: https://github.com/couchbaselabs/fmdb
 [6]: https://bitbucket.org/snej/myutilities/overview
 [7]: https://github.com/couchbaselabs/TouchDB-iOS/wiki/Building-TouchDB
 [8]: https://github.com/ccgus/
