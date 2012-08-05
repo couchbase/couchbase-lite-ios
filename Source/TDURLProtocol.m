@@ -141,7 +141,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
     }
     
     NSThread* loaderThread = [NSThread currentThread];
-    _router = [[TDRouter alloc] initWithServer: server request: self.request];
+    _router = [[TDRouter alloc] initWithServer: server request: self.request isLocal: YES];
     _router.onResponseReady = ^(TDResponse* routerResponse) {
         [self performSelector: @selector(onResponseReady:)
                      onThread: loaderThread

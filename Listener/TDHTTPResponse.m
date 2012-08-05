@@ -36,6 +36,8 @@
 - (id) initWithRouter: (TDRouter*)router forConnection:(TDHTTPConnection*)connection {
     self = [super init];
     if (self) {
+        EnableLog(YES);
+        EnableLogTo(TDListenerVerbose, YES);
         _router = [router retain];
         _connection = connection;
         router.onResponseReady = ^(TDResponse* r) {
@@ -213,7 +215,7 @@
 
         LogTo(TDListenerVerbose, @"%@ Finished!", self);
 
-        if (!_chunked || _offset == 0) {
+        if ((!_chunked || _offset == 0) && ![_router.request.HTTPMethod isEqualToString: @"HEAD"]) {
             // Response finished immediately, before the connection asked for any data, so we're free
             // to massage the response:
             LogTo(TDListenerVerbose, @"%@ prettifying response body", self);

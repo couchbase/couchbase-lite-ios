@@ -26,6 +26,7 @@ typedef void (^OnFinishedBlock)();
     NSDictionary* _queries;
     TDResponse* _response;
     TDDatabase* _db;
+    BOOL _local;
     BOOL _waiting;
     BOOL _responseSent;
     BOOL _processRanges;
@@ -39,7 +40,7 @@ typedef void (^OnFinishedBlock)();
     BOOL _changesIncludeDocs;
 }
 
-- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;
+- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request isLocal: (BOOL)isLocal;
 
 @property BOOL processRanges;
 

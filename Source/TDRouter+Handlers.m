@@ -629,19 +629,40 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     TDAttachmentEncoding encoding = kTDAttachmentEncodingNone;
     NSString* acceptEncoding = [_request valueForHTTPHeaderField: @"Accept-Encoding"];
     BOOL acceptEncoded = (acceptEncoding && [acceptEncoding rangeOfString: @"gzip"].length > 0);
-    
-    NSData* contents = [_db getAttachmentForSequence: rev.sequence
-                                               named: attachment
-                                                type: &type
-                                            encoding: (acceptEncoded ? &encoding : NULL)
-                                              status: &status];
-    if (!contents)
-        return status;
+
+    if ($equal(_request.HTTPMethod, @"HEAD")) {
+        NSString* filePath = [_db getAttachmentPathForSequence: rev.sequence
+                                                         named: attachment
+                                                          type: &type
+                                                      encoding: &encoding
+                                                        status: &status];
+        if (!filePath)
+            return status;
+        if (_local) {
+            // Let in-app clients know the location of the attachment file:
+            [_response setValue: [[NSURL fileURLWithPath: filePath] absoluteString]
+                       ofHeader: @"Location"];
+        }
+        UInt64 size = [[[NSFileManager defaultManager] attributesOfItemAtPath: filePath
+                                                                          error: nil]
+                                    fileSize];
+        if (size)
+            [_response setValue: $sprintf(@"%llu", size) ofHeader: @"Content-Length"];
+        
+    } else {
+        NSData* contents = [_db getAttachmentForSequence: rev.sequence
+                                                   named: attachment
+                                                    type: &type
+                                                encoding: (acceptEncoded ? &encoding : NULL)
+                                                  status: &status];
+        if (!contents)
+            return status;
+        _response.body = [TDBody bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
+    }
     if (type)
         [_response setValue: type ofHeader: @"Content-Type"];
     if (encoding == kTDAttachmentEncodingGZIP)
         [_response setValue: @"gzip" ofHeader: @"Content-Encoding"];
-    _response.body = [TDBody bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
     return kTDStatusOK;
 }
 

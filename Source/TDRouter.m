@@ -53,6 +53,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
         _dbManager = [dbManager retain];
         _request = [request retain];
         _response = [[TDResponse alloc] init];
+        _local = YES;
         _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
             _longpoll = NO;
@@ -62,12 +63,16 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     return self;
 }
 
-- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request {
+- (id) initWithServer: (TDServer*)server
+              request: (NSURLRequest*)request
+              isLocal: (BOOL)isLocal
+{
     NSParameterAssert(server);
     NSParameterAssert(request);
     self = [self initWithDatabaseManager: nil request: request];
     if (self) {
         _server = [server retain];
+        _local = isLocal;
         _processRanges = YES;
     }
     return self;
@@ -382,7 +387,7 @@ static NSArray* splitPath( NSURL* url ) {
             [output appendFormat: @" + %llu-byte body", (uint64_t)_request.HTTPBody.length];
         NSDictionary* headers = _request.allHTTPHeaderFields;
         for (NSString* key in headers)
-            [output appendFormat: @"\n\t%@: %@\n", key, [headers objectForKey: key]];
+            [output appendFormat: @"\n\t%@: %@", key, [headers objectForKey: key]];
         LogTo(TDRouter, @"%@", output);
     }
     
@@ -523,7 +528,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) sendResponseBodyAndFinish: (BOOL)finished {
-    if (_onDataAvailable && _response.body) {
+    if (_onDataAvailable && _response.body && !$equal(_request.HTTPMethod, @"HEAD")) {
         _onDataAvailable(_response.body.asJSON, finished);
     }
     if (finished)
@@ -537,7 +542,7 @@ static NSArray* splitPath( NSURL* url ) {
                                    _response.status, (uint64_t)_response.body.asJSON.length];
         NSDictionary* headers = _response.headers;
         for (NSString* key in headers)
-            [output appendFormat: @"\n\t%@: %@\n", key, [headers objectForKey: key]];
+            [output appendFormat: @"\n\t%@: %@", key, [headers objectForKey: key]];
         LogTo(TDRouter, @"%@", output);
     }
     OnFinishedBlock onFinished = [_onFinished retain];

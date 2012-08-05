@@ -52,6 +52,13 @@ typedef enum {
                             encoding: (TDAttachmentEncoding*)outEncoding
                               status: (TDStatus*)outStatus;
 
+/** Returns the location of an attachment's file in the blob store. */
+- (NSString*) getAttachmentPathForSequence: (SequenceNumber)sequence
+                                     named: (NSString*)filename
+                                      type: (NSString**)outType
+                                  encoding: (TDAttachmentEncoding*)outEncoding
+                                    status: (TDStatus*)outStatus;
+
 /** Uses the "digest" field of the attachment dict to look up the attachment in the store and return a file URL to it. DO NOT MODIFY THIS FILE! */
 - (NSURL*) fileForAttachmentDict: (NSDictionary*)attachmentDict;
 
