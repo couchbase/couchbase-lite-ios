@@ -215,9 +215,37 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", nil];
     NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params",
                                                       @"heartbeat", @"feed", nil];
+    NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
     return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context currentRevision])
             return ![key hasPrefix: @"_"];
+        
+        // allow change of 'headers' and 'auth' in target and source
+        if ([partialMutableProperties containsObject:key]) {
+            NSDictionary *old = $castIf(NSDictionary, oldValue);
+            NSDictionary *nuu = $castIf(NSDictionary, newValue);
+            if ([oldValue isKindOfClass:[NSString class]]) {
+                old = [NSDictionary dictionaryWithObject:oldValue forKey:@"url"];
+            }
+            if ([newValue isKindOfClass:[NSString class]]) {
+                nuu = [NSDictionary dictionaryWithObject:newValue forKey:@"url"];
+            }
+            NSMutableSet* changedKeys = [[NSMutableSet alloc] init];
+            for (NSString *subKey in old.allKeys) {
+                if (!$equal([old objectForKey: subKey], [nuu objectForKey: subKey])) {
+                    [changedKeys addObject:subKey];
+                }
+            }
+            for (NSString *subKey in nuu.allKeys) {
+                if (![old objectForKey:subKey]) {
+                    [changedKeys addObject:subKey];
+                }
+            }
+            NSSet* mutableSubProperties = [NSSet setWithObjects:@"headers", @"auth", nil];
+            [changedKeys minusSet:mutableSubProperties];
+            return [changedKeys count] == 0;
+        }
+        
         NSSet* allowed = newValue ? mutableProperties : deletableProperties;
         return [allowed containsObject: key];
     }];
