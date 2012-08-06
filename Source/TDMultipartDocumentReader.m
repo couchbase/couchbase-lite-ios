@@ -31,6 +31,10 @@
                 toDatabase: (TDDatabase*)database
                     status: (TDStatus*)outStatus
 {
+    if (data.length == 0) {
+        *outStatus = kTDStatusBadJSON;
+        return nil;
+    }
     NSDictionary* result = nil;
     TDMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];
     if ([reader setContentType: contentType]

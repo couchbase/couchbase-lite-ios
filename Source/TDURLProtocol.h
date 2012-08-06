@@ -18,6 +18,10 @@
 /** The root URL served by this protocol, "touchdb:///". */
 + (NSURL*) rootURL;
 
+/** An alternate root URL with HTTP scheme; use this for CouchApps in UIWebViews.
+    (This URL will have the hostname of the touchdb: URL with ".touchdb." appended.) */
++ (NSURL*) HTTPURLForServerURL: (NSURL*)serverURL;
+
 /** Registers a TDServer instance with a URL hostname.
     'touchdb:' URLs with that hostname will be routed to that server.
     If the server is nil, that hostname is unregistered, and URLs with that hostname will cause a host-not-found error.
