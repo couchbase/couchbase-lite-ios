@@ -730,6 +730,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDChangesOptions*)options
                                   filter: (TDFilterBlock)filter
+                                  params: (NSDictionary*)filterParams
 {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     if (!options) options = &kDefaultTDChangesOptions;
@@ -764,7 +765,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                           intoRevision: rev
                                options: options->contentOptions];
             }
-            if (!filter || filter(rev))
+            if (!filter || filter(rev, filterParams))
                 [changes addRev: rev];
             [rev release];
         }

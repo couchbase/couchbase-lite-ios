@@ -37,6 +37,7 @@ typedef void (^OnFinishedBlock)();
     BOOL _running;
     BOOL _longpoll;
     TDFilterBlock _changesFilter;
+    NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
 }
 
@@ -65,6 +66,7 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) boolQuery: (NSString*)param;
 - (int) intQuery: (NSString*)param defaultValue: (int)defaultValue;
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
+- (NSMutableDictionary*) jsonQueries;
 - (BOOL) cacheWithEtag: (NSString*)etag;
 - (TDContentOptions) contentOptions;
 - (BOOL) getQueryOptions: (struct TDQueryOptions*)options;

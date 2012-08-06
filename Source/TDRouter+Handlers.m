@@ -443,7 +443,7 @@
 - (void) dbChanged: (NSNotification*)n {
     TDRevision* rev = [n.userInfo objectForKey: @"rev"];
     
-    if (_changesFilter && !_changesFilter(rev))
+    if (_changesFilter && !_changesFilter(rev, _changesFilterParams))
         return;
 
     if (_longpoll) {
@@ -485,11 +485,13 @@
         _changesFilter = [[_db filterNamed: filterName] retain];
         if (!_changesFilter)
             return kTDStatusNotFound;
+        _changesFilterParams = [self.jsonQueries copy];
     }
     
     TDRevisionList* changes = [db changesSinceSequence: since
                                                options: &options
-                                                filter: _changesFilter];
+                                                filter: _changesFilter
+                                                params: _changesFilterParams];
     if (!changes)
         return kTDStatusDBError;
     

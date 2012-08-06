@@ -82,7 +82,9 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     options.includeConflicts = YES;
     // Process existing changes since the last push:
     TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
-                                                options: &options filter: filter];
+                                                options: &options
+                                                 filter: filter
+                                                 params: _filterParameters];
     if (changes.count > 0)
         [self processInbox: changes];
     
@@ -126,7 +128,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         return;
     TDRevision* rev = [userInfo objectForKey: @"rev"];
     TDFilterBlock filter = self.filter;
-    if (filter && !filter(rev))
+    if (filter && !filter(rev, _filterParameters))
         return;
     [self addToInbox: rev];
 }

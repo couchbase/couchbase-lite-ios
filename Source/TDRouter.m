@@ -88,6 +88,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     [_path release];
     [_db release];
     [_changesFilter release];
+    [_changesFilterParams release];
     [_onAccessCheck release];
     [_onResponseReady release];
     [_onDataAvailable release];
@@ -148,6 +149,18 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     if (!result)
         Warn(@"TDRouter: invalid JSON in query param ?%@=%@", param, value);
     return result;
+}
+
+- (NSMutableDictionary*) jsonQueries {
+    NSMutableDictionary* queries = $mdict();
+    [self.queries enumerateKeysAndObjectsUsingBlock: ^(NSString* param, NSString* value, BOOL *stop) {
+        id parsed = [TDJSON JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
+                                       options: TDJSONReadingAllowFragments
+                                         error: nil];
+        if (parsed)
+            [queries setObject: parsed forKey: param];
+    }];
+    return queries;
 }
 
 
