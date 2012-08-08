@@ -230,7 +230,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             if ([newValue isKindOfClass:[NSString class]]) {
                 nuu = [NSDictionary dictionaryWithObject:newValue forKey:@"url"];
             }
-            NSMutableSet* changedKeys = [[NSMutableSet alloc] init];
+            NSMutableSet* changedKeys = [NSMutableSet set];
             for (NSString *subKey in old.allKeys) {
                 if (!$equal([old objectForKey: subKey], [nuu objectForKey: subKey])) {
                     [changedKeys addObject:subKey];
