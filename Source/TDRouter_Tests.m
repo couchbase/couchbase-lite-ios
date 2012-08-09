@@ -400,14 +400,10 @@ TestCase(TDRouter_ContinuousChanges) {
 }
 
 
-TestCase(TDRouter_GetAttachment) {
-    TDDatabaseManager* server = createDBManager();
+static NSDictionary* createDocWithAttachments(TDDatabaseManager* server,
+                                              NSData* attach1, NSData* attach2) {
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
-
-    // Create a document with an attachment:
-    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSString* base64 = [TDBase64 encode: attach1];
-    NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
     NSString* base642 = [TDBase64 encode: attach2];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                            {@"data", base64})},
@@ -417,9 +413,18 @@ TestCase(TDRouter_GetAttachment) {
     NSDictionary* props = $dict({@"message", @"hello"},
                                 {@"_attachments", attachmentDict});
 
-    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", props, kTDStatusCreated, nil);
+    return SendBody(server, @"PUT", @"/db/doc1", props, kTDStatusCreated, nil);
+}
+
+
+TestCase(TDRouter_GetAttachment) {
+    TDDatabaseManager* server = createDBManager();
+
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
+    NSDictionary* result = createDocWithAttachments(server, attach1, attach2);
     NSString* revID = [result objectForKey: @"rev"];
-    
+
     // Now get the attachment via its URL:
     TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil, nil);
     CAssertEq(response.status, kTDStatusOK);
@@ -459,6 +464,7 @@ TestCase(TDRouter_GetAttachment) {
                                          {@"revpos", $object(1)})}));
 
     // Update the document but not the attachments:
+    NSDictionary *attachmentDict, *props;
     attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                              {@"stub", $true})},
                            {@"path/to/attachment",
@@ -485,6 +491,36 @@ TestCase(TDRouter_GetAttachment) {
                                                                      {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                                                      {@"revpos", $object(1)})})}));
     [server close];
+}
+
+
+TestCase(TDRouter_GetRange) {
+    TDDatabaseManager* server = createDBManager();
+
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
+    createDocWithAttachments(server, attach1, attach2);
+
+    TDResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach",
+                                       $dict({@"Range", @"bytes=5-15"}),
+                                       nil);
+    CAssertEq(response.status, 206);
+    CAssertEqual([response.headers objectForKey: @"Content-Range"], @"bytes 5-15/27");
+    CAssertEqual(response.body.asJSON, [@"is the body" dataUsingEncoding: NSUTF8StringEncoding]);
+
+    response = SendRequest(server, @"GET", @"/db/doc1/attach",
+                                       $dict({@"Range", @"bytes=12-"}),
+                                       nil);
+    CAssertEq(response.status, 206);
+    CAssertEqual([response.headers objectForKey: @"Content-Range"], @"bytes 12-26/27");
+    CAssertEqual(response.body.asJSON, [@"body of attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+
+    response = SendRequest(server, @"GET", @"/db/doc1/attach",
+                                       $dict({@"Range", @"bytes=-7"}),
+                                       nil);
+    CAssertEq(response.status, 206);
+    CAssertEqual([response.headers objectForKey: @"Content-Range"], @"bytes 20-26/27");
+    CAssertEqual(response.body.asJSON, [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]);
 }
 
 

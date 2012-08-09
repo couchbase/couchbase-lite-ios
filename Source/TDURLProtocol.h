@@ -18,6 +18,10 @@
 /** The root URL served by this protocol, "touchdb:///". */
 + (NSURL*) rootURL;
 
+/** An alternate root URL with HTTP scheme; use this for CouchApps in UIWebViews.
+    (This URL will have the hostname of the touchdb: URL with ".touchdb." appended.) */
++ (NSURL*) HTTPURLForServerURL: (NSURL*)serverURL;
+
 /** Registers a TDServer instance with a URL hostname.
     'touchdb:' URLs with that hostname will be routed to that server.
     If the server is nil, that hostname is unregistered, and URLs with that hostname will cause a host-not-found error.
@@ -40,3 +44,10 @@
 + (TDServer*) server;
 
 @end
+
+
+/** Starts a TDServer and registers it with TDURLProtocol so you can call it using the CouchDB-compatible REST API.
+ @param serverDirectory  The top-level directory where you want the server to store databases. Will be created if it does not already exist.
+ @param outError  An error will be stored here if the function returns nil.
+ @return  The root URL of the REST API, or nil if the server failed to start. */
+NSURL* TDStartServer(NSString* serverDirectory, NSError** outError);

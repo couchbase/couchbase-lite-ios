@@ -93,8 +93,9 @@ TestCase(TDPusher) {
     [db open];
     
     __block int filterCalls = 0;
-    [db defineFilter: @"filter" asBlock: ^BOOL(TDRevision *revision) {
-        Log(@"Test filter called on %@, properties = %@", revision, revision.properties);
+    [db defineFilter: @"filter" asBlock: ^BOOL(TDRevision *revision, NSDictionary* params) {
+        Log(@"Test filter called with params = %@", params);
+        Log(@"Rev = %@, properties = %@", revision, revision.properties);
         CAssert(revision.properties);
         ++filterCalls;
         return YES;

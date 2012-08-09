@@ -186,7 +186,7 @@ TestCase(TDView_MapConflicts) {
 TestCase(TDView_ConflictWinner) {
     // If a view is re-indexed, and a document in the view has gone into conflict,
     // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
-    //TEMP RequireTestCase(TDView_Index);
+    RequireTestCase(TDView_Index);
     TDDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     TDRevision* leaf1 = [docs objectAtIndex: 1];

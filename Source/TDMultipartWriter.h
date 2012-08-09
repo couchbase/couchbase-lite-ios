@@ -16,9 +16,8 @@
     @private
     NSString* _boundary;
     NSString* _contentType;
-    NSData* _separatorData;
+    NSData* _finalBoundary;
     NSDictionary* _nextPartsHeaders;
-    BOOL _addedFinalBoundary;
 }
 
 /** Initializes an instance.

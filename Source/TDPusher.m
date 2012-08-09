@@ -20,6 +20,7 @@
 #import "TDMultipartUploader.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
+#import "TDCanonicalJSON.h"
 
 
 static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
@@ -82,7 +83,9 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     options.includeConflicts = YES;
     // Process existing changes since the last push:
     TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
-                                                options: &options filter: filter];
+                                                options: &options
+                                                 filter: filter
+                                                 params: _filterParameters];
     if (changes.count > 0)
         [self processInbox: changes];
     
@@ -126,7 +129,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         return;
     TDRevision* rev = [userInfo objectForKey: @"rev"];
     TDFilterBlock filter = self.filter;
-    if (filter && !filter(rev))
+    if (filter && !filter(rev, _filterParameters))
         return;
     [self addToInbox: rev];
 }
@@ -233,10 +236,12 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 
 - (BOOL) uploadMultipartRevision: (TDRevision*)rev {
-    // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream:
+    // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream.
+    // It's important to scan the _attachments entries in the same order in which they will appear
+    // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
     TDMultipartWriter* bodyStream = nil;
     NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
-    for (NSString* attachmentName in attachments) {
+    for (NSString* attachmentName in [TDCanonicalJSON orderedKeys: attachments]) {
         NSDictionary* attachment = [attachments objectForKey: attachmentName];
         if ([attachment objectForKey: @"follows"]) {
             if (!bodyStream) {
@@ -244,10 +249,17 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 bodyStream = [[[TDMultipartWriter alloc] initWithContentType: @"multipart/related"
                                                                       boundary: nil] autorelease];
                 [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
-                [bodyStream addData: rev.asJSON];
+                // Use canonical JSON encoder so that _attachments keys will be written in the
+                // same order that this for loop is processing the attachments.
+                NSData* json = [TDCanonicalJSON canonicalData: rev.properties];
+                [bodyStream addData: json];
             }
             NSString* disposition = $sprintf(@"attachment; filename=%@", TDQuoteString(attachmentName));
-            [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
+            NSString* contentType = [attachment objectForKey: @"type"];
+            NSString* contentEncoding = [attachment objectForKey: @"encoding"];
+            [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition},
+                                                   {@"Content-Type", contentType},
+                                                   {@"Content-Encoding", contentEncoding})];
             [bodyStream addFileURL: [_db fileForAttachmentDict: attachment]];
         }
     }

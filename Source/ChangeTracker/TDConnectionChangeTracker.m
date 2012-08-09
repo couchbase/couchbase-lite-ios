@@ -17,9 +17,13 @@
 
 #import "TDConnectionChangeTracker.h"
 #import "TDAuthorizer.h"
+#import "TDRemoteRequest.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
 #import "MYURLUtils.h"
+
+
+static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
 
 
 @implementation TDConnectionChangeTracker
@@ -85,11 +89,8 @@
     if (_authorizer || _challenged)
         return false;
     _challenged = YES;
-    NSURLProtectionSpace* space = [_databaseURL
-                                my_protectionSpaceWithRealm: nil
-                                       authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
-    NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                    defaultCredentialForProtectionSpace: space];
+    NSURLCredential* cred = [_databaseURL my_credentialForRealm: nil
+                                           authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
     if (!cred) {
         LogTo(ChangeTracker, @"Got 401 but no stored credential found (with nil realm)");
         return false;
@@ -107,37 +108,66 @@
 - (void)connection:(NSURLConnection *)connection
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
-    _challenged = true;
     id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    NSString* authMethod = space.authenticationMethod;
+
+    // Is this challenge for the DB hostname with the "." appended (the one in the URL request)?
+    BOOL challengeIsForDottedHost = NO;
+    NSString* host = space.host;
+    if ([host hasSuffix: @"."] && !space.isProxy) {
+        NSString* hostWithoutDot = [host substringToIndex: host.length - 1];
+        challengeIsForDottedHost = ([hostWithoutDot caseInsensitiveCompare: _databaseURL.host] == 0);
+    }
+
+    if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
+        // Verify trust of SSL server cert:
+        SecTrustRef trust = challenge.protectionSpace.serverTrust;
+        if (challengeIsForDottedHost) {
+            // Update the policy with the correct original hostname (without the "." suffix):
+            host = _databaseURL.host;
+            SecPolicyRef policy = SecPolicyCreateSSL(YES, (CFStringRef)host);
+            trust = CopyTrustWithPolicy(trust, policy);
+            CFRelease(policy);
+        } else {
+            CFRetain(trust);
+        }
+        if ([TDRemoteRequest checkTrust: trust forHost: host]) {
+            [sender useCredential: [NSURLCredential credentialForTrust: trust]
+                    forAuthenticationChallenge: challenge];
+        } else {
+            [sender cancelAuthenticationChallenge: challenge];
+        }
+        CFRelease(trust);
+        return;
+    }
+
+    _challenged = true;
     if (challenge.proposedCredential) {
         [sender performDefaultHandlingForAuthenticationChallenge: challenge];
         return;
     }
     
-    NSURLProtectionSpace* space = challenge.protectionSpace;
-    NSString* host = space.host;
-    if (challenge.previousFailureCount == 0 && [host hasSuffix: @"."] && !space.isProxy) {
-        NSString* hostWithoutDot = [host substringToIndex: host.length - 1];
-        if ([hostWithoutDot caseInsensitiveCompare: _databaseURL.host] == 0) {
-            // Challenge is for the hostname with the "." appended. Try without it:
-            host = hostWithoutDot;
-            NSURLProtectionSpace* newSpace = [[NSURLProtectionSpace alloc]
-                                                       initWithHost: host
-                                                               port: space.port
-                                                           protocol: space.protocol
-                                                              realm: space.realm
-                                               authenticationMethod: space.authenticationMethod];
-            NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                                    defaultCredentialForProtectionSpace: newSpace];
-            [newSpace release];
-            if (cred) {
-                LogTo(ChangeTracker, @"%@: Using credential '%@' for "
-                                      "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
-                    self, cred.user, host, (int)space.port, space.protocol, space.realm,
-                    space.authenticationMethod);
-                [sender useCredential: cred forAuthenticationChallenge: challenge];
-                return;
-            }
+    if (challengeIsForDottedHost && challenge.previousFailureCount == 0) {
+        // Look up a credential for the original hostname without the "." suffix:
+        host = _databaseURL.host;
+        NSURLProtectionSpace* newSpace = [[NSURLProtectionSpace alloc]
+                                                   initWithHost: host
+                                                           port: space.port
+                                                       protocol: space.protocol
+                                                          realm: space.realm
+                                           authenticationMethod: space.authenticationMethod];
+        NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
+                                                defaultCredentialForProtectionSpace: newSpace];
+        [newSpace release];
+        if (cred) {
+            // Found a credential, so use it:
+            LogTo(ChangeTracker, @"%@: Using credential '%@' for "
+                                  "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+                self, cred.user, host, (int)space.port, space.protocol, space.realm,
+                space.authenticationMethod);
+            [sender useCredential: cred forAuthenticationChallenge: challenge];
+            return;
         }
     }
     
@@ -214,3 +244,20 @@
 }
 
 @end
+
+
+static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy) {
+#if TARGET_OS_IPHONE
+    CFIndex nCerts = SecTrustGetCertificateCount(trust);
+    CFMutableArrayRef certs = CFArrayCreateMutable(NULL, nCerts, &kCFTypeArrayCallBacks);
+    for (CFIndex i = 0; i < nCerts; ++i)
+        CFArrayAppendValue(certs, SecTrustGetCertificateAtIndex(trust, i));
+    OSStatus err = SecTrustCreateWithCertificates(certs, policy, &trust);
+    CAssertEq(err, noErr);
+    return trust;
+#else
+    SecTrustSetPolicies(trust, policy);
+    CFRetain(trust);
+    return trust;
+#endif
+}

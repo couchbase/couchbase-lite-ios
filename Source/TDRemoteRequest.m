@@ -70,9 +70,10 @@
 }
 
 - (void) setAuthorizer: (id<TDAuthorizer>)authorizer {
-    setObj(&_authorizer, authorizer);
-    [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
-              forHTTPHeaderField: @"Authorization"];
+    if (ifSetObj(&_authorizer, authorizer)) {
+        [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
+                  forHTTPHeaderField: @"Authorization"];
+    }
 }
 
 
@@ -95,7 +96,7 @@
     // Retaining myself shouldn't be necessary, because NSURLConnection is documented as retaining
     // its delegate while it's running. But GNUstep doesn't (currently) do this, so for
     // compatibility I retain myself until the connection completes (see -clearConnection.)
-    // TEMP: Remove this and the [self autorelease] below when I get the fix from GNUstep.
+    // TODO: Remove this and the [self autorelease] below when I get the fix from GNUstep.
     [self retain];
 }
 
@@ -163,11 +164,8 @@
     if (_authorizer || _challenged)
         return false;
     _challenged = YES;
-    NSURLProtectionSpace* space = [_request.URL
-                                my_protectionSpaceWithRealm: nil
-                                       authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
-    NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                    defaultCredentialForProtectionSpace: space];
+    NSURLCredential* cred = [_request.URL my_credentialForRealm: nil
+                                           authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
     if (!cred) {
         LogTo(RemoteRequest, @"Got 401 but no stored credential found (with nil realm)");
         return false;
@@ -175,7 +173,7 @@
 
     [_connection cancel];
     self.authorizer = [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
-    LogTo(RemoteRequest, @"Got 401 but retrying with %@", _authorizer);
+    LogTo(RemoteRequest, @"%@ retrying with %@", self, _authorizer);
     [self startAfterDelay: 0.0];
     return true;
 }
@@ -187,10 +185,63 @@
 - (void)connection:(NSURLConnection *)connection
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
-    LogTo(RemoteRequest, @"Got challenge: %@", challenge);
-    _challenged = true;
-    [challenge.sender performDefaultHandlingForAuthenticationChallenge: challenge];
+    id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    NSString* authMethod = space.authenticationMethod;
+    LogTo(RemoteRequest, @"Got challenge: %@ (%@)", challenge, authMethod);
+    if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic)) {
+        _challenged = true;
+        if (challenge.previousFailureCount == 0) {
+            NSURLCredential* cred = [_request.URL my_credentialForRealm: space.realm
+                                                   authenticationMethod: authMethod];
+            if (cred) {
+                [sender useCredential: cred forAuthenticationChallenge:challenge];
+                return;
+            }
+        }
+    } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
+        SecTrustRef trust = space.serverTrust;
+        if ([[self class] checkTrust: trust forHost: space.host]) {
+            [sender useCredential: [NSURLCredential credentialForTrust: trust]
+                    forAuthenticationChallenge: challenge];
+        } else {
+            [sender cancelAuthenticationChallenge: challenge];
+        }
+    }
+    [sender performDefaultHandlingForAuthenticationChallenge: challenge];
 }
+
+
++ (BOOL) checkTrust: (SecTrustRef)trust forHost: (NSString*)host {
+    SecTrustResultType trustResult;
+    OSStatus err = SecTrustEvaluate(trust, &trustResult);
+    if (err == noErr && (trustResult == kSecTrustResultProceed ||
+                         trustResult == kSecTrustResultUnspecified)) {
+        return YES;
+    } else {
+        Warn(@"TouchDB: SSL server <%@> not trusted (err=%d, trustResult=%u); cert chain follows:",
+             host, (int)err, (unsigned)trustResult);
+#if TARGET_OS_IPHONE
+        for (CFIndex i = 0; i < SecTrustGetCertificateCount(trust); ++i) {
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, i);
+            CFStringRef subject = SecCertificateCopySubjectSummary(cert);
+            Warn(@"    %@", subject);
+            CFRelease(subject);
+        }
+#else
+        NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
+        for (NSDictionary* property in trustProperties) {
+            Warn(@"    %@: error = %@",
+                 [property objectForKey: kSecPropertyTypeTitle],
+                 [property objectForKey: kSecPropertyTypeError]);
+        }
+        [trustProperties release];
+#endif
+        return NO;
+    }
+
+}
+
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     _status = (int) ((NSHTTPURLResponse*)response).statusCode;
@@ -205,9 +256,30 @@
         [self cancelWithStatus: _status];
 }
 
+
+- (NSURLRequest *)connection:(NSURLConnection *)connection
+             willSendRequest:(NSURLRequest *)request
+            redirectResponse:(NSURLResponse *)response
+{
+    // The redirected request needs to be authorized again:
+    if (![request valueForHTTPHeaderField: @"Authorization"]) {
+        NSMutableURLRequest* nuRequest = [[request mutableCopy] autorelease];
+        NSString* auth;
+        if (_authorizer)
+            auth = [_authorizer authorizeURLRequest: nuRequest forRealm: nil];
+        else
+            auth = [_request valueForHTTPHeaderField: @"Authorization"];
+        [nuRequest setValue: auth forHTTPHeaderField: @"Authorization"];
+        request = nuRequest;
+    }
+    return request;
+}
+
+
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     LogTo(RemoteRequest, @"%@: Got %lu bytes", self, (unsigned long)data.length);
 }
+
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     if (WillLog()) {
@@ -228,6 +300,7 @@
     [self clearConnection];
     [self respondWithResult: self error: nil];
 }
+
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection
                   willCacheResponse:(NSCachedURLResponse *)cachedResponse
