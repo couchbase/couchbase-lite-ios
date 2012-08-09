@@ -59,7 +59,7 @@ static id<TDViewCompiler> sCompiler;
 
 
 @synthesize database=_db, name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock,
-            collation=_collation;
+            collation=_collation, mapContentOptions=_mapContentOptions;
 
 
 - (int) viewID {
@@ -293,7 +293,7 @@ static id fromJSON( NSData* json ) {
                 NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
                                                                   sequence: sequence
-                                                                   options: 0];
+                                                                   options: _mapContentOptions];
                 if (!properties) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
