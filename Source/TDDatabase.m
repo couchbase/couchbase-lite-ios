@@ -418,11 +418,9 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
-    id localSeq=nil, updateSeq=nil, revs=nil, revsInfo=nil, conflicts=nil;
+    id localSeq=nil, revs=nil, revsInfo=nil, conflicts=nil;
     if (options & kTDIncludeLocalSeq)
         localSeq = $object(sequence);
-    if (options & kTDIncludeUpdateSeq)
-        updateSeq = $object(sequence);
 
     if (options & kTDIncludeRevs) {
         revs = [self getRevisionHistoryDict: rev];
@@ -452,7 +450,6 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                  {@"_deleted", (rev.deleted ? $true : nil)},
                  {@"_attachments", attachmentsDict},
                  {@"_local_seq", localSeq},
-                 {@"_update_seq", updateSeq},
                  {@"_revisions", revs},
                  {@"_revs_info", revsInfo},
                  {@"_conflicts", conflicts});

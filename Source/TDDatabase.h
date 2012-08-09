@@ -39,7 +39,6 @@ enum {
     kTDLeaveAttachmentsEncoded = 32,        // i.e. don't decode
     kTDBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
     kTDNoBody = 128,                        // omit regular doc body properties
-    kTDIncludeUpdateSeq = 256,              // adds '_update_seq' property (same as _local_seq)
 };
 
 
