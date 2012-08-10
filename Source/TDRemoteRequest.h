@@ -49,6 +49,9 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 /** Starts a request; when finished, the onCompletion block will be called. */
 - (void) start;
 
+/** Stops the request, calling the onCompletion block. */
+- (void) stop;
+
 // protected:
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;
 - (void) clearConnection;

@@ -371,7 +371,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     LogTo(SyncVerbose, @"%@: GET .%@", self, path);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
+    __block TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
                                     initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
                                  requestHeaders: self.requestHeaders
@@ -389,12 +389,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             }
             
             // Note that we've finished this task:
+            [self removeRemoteRequest: dl];
             [self asyncTasksFinished: 1];
             --_httpConnectionCount;
             // Start another task if there are still revisions waiting to be pulled:
             [self pullRemoteRevisions];
         }
      ] autorelease];
+    [self addRemoteRequest: dl];
     dl.authorizer = _authorizer;
     [dl start];
 }

@@ -109,6 +109,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [_authorizer release];
     [_options release];
     [_requestHeaders release];
+    [_remoteRequests release];
     [super dealloc];
 }
 
@@ -190,6 +191,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 - (void) setError:(NSError *)error {
+    if (error.code == NSURLErrorCancelled && $equal(error.domain, NSURLErrorDomain))
+        return;
+    
     if (ifSetObj(&_error, error))
         [self postProgressChanged];
 }
@@ -253,7 +257,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                                                  name: UIApplicationDidEnterBackgroundNotification
                                                object: nil];
 #endif
-    if (_asyncTaskCount == 0)
+    [self stopRemoteRequests];
+    if (_running && _asyncTaskCount == 0)
         [self stopped];
 }
 
@@ -350,6 +355,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
+#pragma mark - HTTP REQUESTS:
+
+
 - (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)relativePath
                                      body: (id)body
@@ -358,15 +366,41 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSURL* url = [NSURL URLWithString: urlStr];
-    TDRemoteJSONRequest *req = [[TDRemoteJSONRequest alloc] initWithMethod: method
+    onCompletion = [[onCompletion copy] autorelease];
+    __block TDRemoteJSONRequest *req = [[TDRemoteJSONRequest alloc] initWithMethod: method
                                                                         URL: url
                                                                        body: body
                                                              requestHeaders: self.requestHeaders 
-                                                              onCompletion: onCompletion];
+                                                              onCompletion:
+                                ^(id result, NSError* error) {
+                                    onCompletion(result, error);
+                                    [self removeRemoteRequest: req];
+                                }];
     req.authorizer = _authorizer;
+    [self addRemoteRequest: req];
     [req start];
     return [req autorelease];
 }
+
+
+- (void) addRemoteRequest: (TDRemoteRequest*)request {
+    if (!_remoteRequests)
+        _remoteRequests = [[NSMutableArray alloc] init];
+    [_remoteRequests addObject: request];
+}
+
+- (void) removeRemoteRequest: (TDRemoteRequest*)request {
+    [_remoteRequests removeObjectIdenticalTo: request];
+}
+
+
+- (void) stopRemoteRequests {
+    // Copy _remoteRequests because it may change during the iteration
+    NSArray* requests = [[_remoteRequests copy] autorelease];
+    [requests makeObjectsPerformSelector: @selector(stop)];
+    [_remoteRequests removeAllObjects];
+}
+
 
 #pragma mark - CHECKPOINT STORAGE:
 

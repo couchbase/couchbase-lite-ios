@@ -38,6 +38,7 @@ extern NSString* TDReplicatorStoppedNotification;
     NSError* _error;
     NSString* _sessionID;
     TDBatcher* _batcher;
+    NSMutableArray* _remoteRequests;
     int _asyncTaskCount;
     NSUInteger _changesProcessed, _changesTotal;
     CFAbsoluteTime _startTime;
@@ -73,7 +74,7 @@ extern NSString* TDReplicatorStoppedNotification;
 - (void) start;
 
 /** Request to stop the replicator.
-    Any pending asynchronous operations will be finished first.
+    Any pending asynchronous operations will be canceled.
     TDReplicatorStoppedNotification will be posted when it finally stops. */
 - (void) stop;
 

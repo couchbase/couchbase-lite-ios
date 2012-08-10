@@ -139,6 +139,22 @@
 }
 
 
+- (void) stop {
+    if (_connection) {
+        LogTo(RemoteRequest, @"%@: Stopped", self);
+        [_connection cancel];
+    }
+    [self clearConnection];
+    if (_onCompletion) {
+        NSError* error = [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCancelled
+                                         userInfo: nil];
+        [self respondWithResult: nil error: error];
+        [_onCompletion release];   // break cycles
+        _onCompletion = nil;
+    }
+}
+
+
 - (void) cancelWithStatus: (int)status {
     [_connection cancel];
     [self connection: _connection didFailWithError: TDStatusToNSError(status, _request.URL)];

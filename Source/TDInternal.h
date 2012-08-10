@@ -102,6 +102,8 @@
                                      path: (NSString*)relativePath
                                      body: (id)body
                              onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
+- (void) addRemoteRequest: (TDRemoteRequest*)request;
+- (void) removeRemoteRequest: (TDRemoteRequest*)request;
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;
