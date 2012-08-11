@@ -440,7 +440,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         TDRevisionList* revs = [self getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
         if (revs.count > 1) {
             conflicts = [revs.allRevisions my_map: ^(id aRev) {
-                return $equal(aRev, rev) ? nil : [aRev revID];
+                return ($equal(aRev, rev) || [(TDRevision*)aRev deleted]) ? nil : [aRev revID];
             }];
         }
     }
