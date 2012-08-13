@@ -249,7 +249,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     if (!_running)
         return;
     LogTo(Sync, @"%@ STOPPING...", self);
-    [_batcher flush];
+    [_batcher flushAll];
     _continuous = NO;
 #if TARGET_OS_IPHONE
     // Unregister for background transition notifications, on iOS:
@@ -347,6 +347,14 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     Assert(_running);
     LogTo(SyncVerbose, @"%@: Received #%lld %@", self, rev.sequence, rev);
     [_batcher queueObject: rev];
+    [self updateActive];
+}
+
+
+- (void) addRevsToInbox: (TDRevisionList*)revs {
+    Assert(_running);
+    LogTo(SyncVerbose, @"%@: Received %llu revs", self, (UInt64)revs.count);
+    [_batcher queueObjects: revs.allRevisions];
     [self updateActive];
 }
 

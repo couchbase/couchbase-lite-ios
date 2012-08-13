@@ -97,6 +97,7 @@
 - (void) maybeCreateRemoteDB;
 - (void) beginReplicating;
 - (void) addToInbox: (TDRevision*)rev;
+- (void) addRevsToInbox: (TDRevisionList*)revs;
 - (void) processInbox: (TDRevisionList*)inbox;  // override this
 - (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)relativePath

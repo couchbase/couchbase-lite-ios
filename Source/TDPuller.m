@@ -142,7 +142,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     setObj(&_bulkRevsToPull, nil);
     [super stop];
     
-    [_downloadsToInsert flush];
+    [_downloadsToInsert flushAll];
 }
 
 
@@ -223,7 +223,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             self.error = error;
     }
     
-    [_batcher flush];
+    [_batcher flushAll];
     if (!_continuous)
         [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
 }

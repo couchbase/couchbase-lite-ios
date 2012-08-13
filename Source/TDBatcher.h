@@ -10,12 +10,14 @@
 
 
 /** Utility that queues up objects until the queue fills up or a time interval elapses,
-    then passes all the objects at once to a client-supplied processor block. */
+    then passes objects, in groups of its capacity, to a client-supplied processor block. */
 @interface TDBatcher : NSObject
 {
     NSUInteger _capacity;
     NSTimeInterval _delay;
     NSMutableArray* _inbox;
+    bool _scheduled;
+    NSTimeInterval _scheduledDelay;
     void (^_processor)(NSArray*);
 }
 
@@ -26,7 +28,13 @@
 @property (readonly) NSUInteger count;
 
 - (void) queueObject: (id)object;
+- (void) queueObjects: (NSArray*)objects;
 
+/** Sends queued objects to the processor block (up to the capacity). */
 - (void) flush;
+
+/** Sends _all_ the queued objects at once to the processor block.
+    After this method returns, all the queued objects will have been processed.*/
+- (void) flushAll;
 
 @end

@@ -17,6 +17,7 @@
 #import <TouchDB/TDDatabase.h>
 #import "TDDatabase+Insertion.h"
 #import <TouchDB/TDRevision.h>
+#import "TDBatcher.h"
 #import "TDMultipartUploader.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
@@ -82,12 +83,11 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     TDChangesOptions options = kDefaultTDChangesOptions;
     options.includeConflicts = YES;
     // Process existing changes since the last push:
-    TDRevisionList* changes = [_db changesSinceSequence: [_lastSequence longLongValue] 
-                                                options: &options
-                                                 filter: filter
-                                                 params: _filterParameters];
-    if (changes.count > 0)
-        [self processInbox: changes];
+    [self addRevsToInbox: [_db changesSinceSequence: [_lastSequence longLongValue]
+                                            options: &options
+                                             filter: filter
+                                             params: _filterParameters]];
+    [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
     if (_continuous) {
