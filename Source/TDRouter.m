@@ -22,6 +22,7 @@
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
 #import "ExceptionUtils.h"
+#import "MYRegexUtils.h"
 
 #ifdef GNUSTEP
 #import <GNUstepBase/NSURL+GNUstepBase.h>
@@ -52,6 +53,8 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
         _dbManager = [dbManager retain];
         _request = [request retain];
         _response = [[TDResponse alloc] init];
+        _local = YES;
+        _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
             _longpoll = NO;
             _changesIncludeDocs = NO;
@@ -60,12 +63,17 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     return self;
 }
 
-- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request {
+- (id) initWithServer: (TDServer*)server
+              request: (NSURLRequest*)request
+              isLocal: (BOOL)isLocal
+{
     NSParameterAssert(server);
     NSParameterAssert(request);
     self = [self initWithDatabaseManager: nil request: request];
     if (self) {
         _server = [server retain];
+        _local = isLocal;
+        _processRanges = YES;
     }
     return self;
 }
@@ -80,6 +88,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     [_path release];
     [_db release];
     [_changesFilter release];
+    [_changesFilterParams release];
     [_onAccessCheck release];
     [_onResponseReady release];
     [_onDataAvailable release];
@@ -90,7 +99,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 
 @synthesize onAccessCheck=_onAccessCheck, onResponseReady=_onResponseReady,
             onDataAvailable=_onDataAvailable, onFinished=_onFinished,
-            request=_request, response=_response;
+            request=_request, response=_response, processRanges=_processRanges;
 
 
 - (NSDictionary*) queries {
@@ -140,6 +149,18 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     if (!result)
         Warn(@"TDRouter: invalid JSON in query param ?%@=%@", param, value);
     return result;
+}
+
+- (NSMutableDictionary*) jsonQueries {
+    NSMutableDictionary* queries = $mdict();
+    [self.queries enumerateKeysAndObjectsUsingBlock: ^(NSString* param, NSString* value, BOOL *stop) {
+        id parsed = [TDJSON JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
+                                       options: TDJSONReadingAllowFragments
+                                         error: nil];
+        if (parsed)
+            [queries setObject: parsed forKey: param];
+    }];
+    return queries;
 }
 
 
@@ -257,15 +278,6 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
-- (void) sendResponse {
-    if (!_responseSent) {
-        _responseSent = YES;
-        if (_onResponseReady)
-            _onResponseReady(_response);
-    }
-}
-
-
 - (TDStatus) route {
     // Refer to: http://wiki.apache.org/couchdb/Complete_HTTP_API_Reference
     
@@ -379,6 +391,19 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) run {
+    if (WillLogTo(TDRouter)) {
+        NSMutableString* output = [NSMutableString stringWithFormat: @"%@ %@",
+                                   _request.HTTPMethod, _request.URL];
+        if (_request.HTTPBodyStream)
+            [output appendString: @" + body stream"];
+        else if (_request.HTTPBody.length > 0)
+            [output appendFormat: @" + %llu-byte body", (uint64_t)_request.HTTPBody.length];
+        NSDictionary* headers = _request.allHTTPHeaderFields;
+        for (NSString* key in headers)
+            [output appendFormat: @"\n\t%@: %@", key, [headers objectForKey: key]];
+        LogTo(TDRouter, @"%@", output);
+    }
+    
     Assert(_dbManager);
     // Call the appropriate handler method:
     TDStatus status;
@@ -390,44 +415,149 @@ static NSArray* splitPath( NSURL* url ) {
         [_response reset];
     }
     
-    // Check for a mismatch between the Accept request header and the response type:
-    NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
-    if (accept && !$equal(accept, @"*/*")) {
-        NSString* responseType = _response.baseContentType;
-        if (responseType && [accept rangeOfString: responseType].length == 0) {
-            LogTo(TDRouter, @"Error kTDStatusNotAcceptable: Can't satisfy request Accept: %@", accept);
-            status = kTDStatusNotAcceptable;
-            [_response reset];
-        }
-    }
-
-    [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
-                          forKey: @"Server"];
-
-    if (_response.body.isValidJSON)
-        [_response setValue: @"application/json" ofHeader: @"Content-Type"];
-
     // If response is ready (nonzero status), tell my client about it:
     if (status > 0) {
         _response.internalStatus = status;
-        [self sendResponse];
-        if (_onDataAvailable && _response.body) {
-            _onDataAvailable(_response.body.asJSON, !_waiting);
-        }
-        if (!_waiting) 
-            [self finished];
+        [self processRequestRanges];
+        [self sendResponseHeaders];
+        [self sendResponseBodyAndFinish: !_waiting];
+    } else {
+        _waiting = YES;
     }
     
     // If I will keep running asynchronously (i.e. a _changes feed handler), listen for the
     // database closing so I can stop then:
-    if (_running)
+    if (_waiting)
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
                                                      name: TDDatabaseWillCloseNotification
                                                    object: _db];
 }
 
 
+- (void) processRequestRanges {
+    if (!_processRanges || _response.status != 200 || !($equal(_request.HTTPMethod, @"GET") ||
+                                                        $equal(_request.HTTPMethod, @"HEAD"))) {
+        return;
+    }
+
+    [_response setValue: @"bytes" ofHeader: @"Accept-Ranges"];
+
+    NSData* body = _response.body.asJSON;  // misnomer; may not be JSON
+    NSUInteger bodyLength = body.length;
+    if (bodyLength == 0)
+        return;
+
+    // Range requests: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
+    NSString* rangeHeader = [_request valueForHTTPHeaderField: @"Range"];
+    if (!rangeHeader)
+        return;
+
+    // Parse the header value into 'from' and 'to' range strings:
+    static NSRegularExpression* regex;
+    if (!regex)
+        regex = [$regex(@"^bytes=(\\d+)?-(\\d+)?$") retain];
+    NSTextCheckingResult *match = [regex firstMatchInString: rangeHeader options: 0
+                                                      range: NSMakeRange(0, rangeHeader.length)];
+    if (!match) {
+        Warn(@"Invalid request Range header value: '%@'", rangeHeader);
+        return;
+    }
+    NSString *fromStr=nil, *toStr = nil;
+    NSRange r = [match rangeAtIndex: 1];
+    if (r.length)
+        fromStr = [rangeHeader substringWithRange: r];
+    r = [match rangeAtIndex: 2];
+    if (r.length)
+        toStr = [rangeHeader substringWithRange: r];
+
+    // Now convert those into the integer offsets (remember that 'to' is inclusive):
+    NSUInteger from, to;
+    if (fromStr.length > 0) {
+        from = (NSUInteger)fromStr.integerValue;
+        if (toStr.length > 0)
+            to = MIN((NSUInteger)toStr.integerValue, bodyLength - 1);
+        else
+            to = bodyLength - 1;
+        if (to < from)
+            return;  // invalid range
+    } else if (toStr.length > 0) {
+        to = bodyLength - 1;
+        from = bodyLength - MIN((NSUInteger)toStr.integerValue, bodyLength);
+    } else {
+        return;  // "-" is an invalid range
+    }
+
+    if (from >= bodyLength || to < from) {
+        _response.status = 416; // Requested Range Not Satisfiable
+        NSString* contentRangeStr = $sprintf(@"bytes */%llu", (uint64_t)bodyLength);
+        [_response setValue: contentRangeStr ofHeader: @"Content-Range"];
+        _response.body = nil;
+        return;
+    }
+
+    body = [body subdataWithRange: NSMakeRange(from, to - from + 1)];
+    _response.body = [TDBody bodyWithJSON: body];  // not actually JSON
+
+    // Content-Range: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16
+    NSString* contentRangeStr = $sprintf(@"bytes %llu-%llu/%llu",
+                                         (uint64_t)from, (uint64_t)to, (uint64_t)bodyLength);
+    [_response setValue: contentRangeStr ofHeader: @"Content-Range"];
+    _response.status = 206; // Partial Content
+    LogTo(TDRouter, @"Content-Range: %@", contentRangeStr);
+}
+
+
+- (void) sendResponseHeaders {
+    if (_responseSent)
+        return;
+    _responseSent = YES;
+
+    [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
+                          forKey: @"Server"];
+
+    // Check for a mismatch between the Accept request header and the response type:
+    NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
+    if (accept && [accept rangeOfString: @"*/*"].length == 0) {
+        NSString* responseType = _response.baseContentType;
+        if (responseType && [accept rangeOfString: responseType].length == 0) {
+            LogTo(TDRouter, @"Error kTDStatusNotAcceptable: Can't satisfy request Accept: %@", accept);
+            _response.internalStatus = kTDStatusNotAcceptable;
+            [_response reset];
+        }
+    }
+
+    if (_response.body.isValidJSON)
+        [_response setValue: @"application/json" ofHeader: @"Content-Type"];
+
+    if (_response.status == 200 && ($equal(_request.HTTPMethod, @"GET") ||
+                                    $equal(_request.HTTPMethod, @"HEAD"))) {
+        if (![_response.headers objectForKey: @"Cache-Control"])
+            [_response setValue: @"must-revalidate" ofHeader: @"Cache-Control"];
+    }
+
+    if (_onResponseReady)
+        _onResponseReady(_response);
+}
+
+
+- (void) sendResponseBodyAndFinish: (BOOL)finished {
+    if (_onDataAvailable && _response.body && !$equal(_request.HTTPMethod, @"HEAD")) {
+        _onDataAvailable(_response.body.asJSON, finished);
+    }
+    if (finished)
+        [self finished];
+}
+
+
 - (void) finished {
+    if (WillLogTo(TDRouter)) {
+        NSMutableString* output = [NSMutableString stringWithFormat: @"Response -- status=%d, body=%llu bytes",
+                                   _response.status, (uint64_t)_response.body.asJSON.length];
+        NSDictionary* headers = _response.headers;
+        for (NSString* key in headers)
+            [output appendFormat: @"\n\t%@: %@", key, [headers objectForKey: key]];
+        LogTo(TDRouter, @"%@", output);
+    }
     OnFinishedBlock onFinished = [_onFinished retain];
     [self stopNow];
     if (onFinished)
@@ -473,9 +603,9 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (void) dbClosing: (NSNotification*)n {
     LogTo(TDRouter, @"Database closing! Returning error 500");
-    if (_responseSent) {
+    if (!_responseSent) {
         _response.internalStatus = 500;
-        [self sendResponse];
+        [self sendResponseHeaders];
     }
     [self finished];
 }

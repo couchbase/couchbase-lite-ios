@@ -70,9 +70,10 @@
 }
 
 - (void) setAuthorizer: (id<TDAuthorizer>)authorizer {
-    setObj(&_authorizer, authorizer);
-    [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
-              forHTTPHeaderField: @"Authorization"];
+    if (ifSetObj(&_authorizer, authorizer)) {
+        [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
+                  forHTTPHeaderField: @"Authorization"];
+    }
 }
 
 
@@ -95,7 +96,7 @@
     // Retaining myself shouldn't be necessary, because NSURLConnection is documented as retaining
     // its delegate while it's running. But GNUstep doesn't (currently) do this, so for
     // compatibility I retain myself until the connection completes (see -clearConnection.)
-    // TEMP: Remove this and the [self autorelease] below when I get the fix from GNUstep.
+    // TODO: Remove this and the [self autorelease] below when I get the fix from GNUstep.
     [self retain];
 }
 
@@ -184,22 +185,61 @@
 - (void)connection:(NSURLConnection *)connection
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
-    NSString* authMethod = [[challenge protectionSpace] authenticationMethod];
+    id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    NSString* authMethod = space.authenticationMethod;
     LogTo(RemoteRequest, @"Got challenge: %@ (%@)", challenge, authMethod);
     if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic)) {
         _challenged = true;
         if (challenge.previousFailureCount == 0) {
-            NSURLCredential* cred = [_request.URL my_credentialForRealm: challenge.protectionSpace.realm
+            NSURLCredential* cred = [_request.URL my_credentialForRealm: space.realm
                                                    authenticationMethod: authMethod];
             if (cred) {
-                [challenge.sender useCredential: cred forAuthenticationChallenge:challenge];
+                [sender useCredential: cred forAuthenticationChallenge:challenge];
                 return;
             }
         }
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
-        // TODO: Check trust of server cert
+        SecTrustRef trust = space.serverTrust;
+        if ([[self class] checkTrust: trust forHost: space.host]) {
+            [sender useCredential: [NSURLCredential credentialForTrust: trust]
+                    forAuthenticationChallenge: challenge];
+        } else {
+            [sender cancelAuthenticationChallenge: challenge];
+        }
     }
-    [challenge.sender performDefaultHandlingForAuthenticationChallenge: challenge];
+    [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+}
+
+
++ (BOOL) checkTrust: (SecTrustRef)trust forHost: (NSString*)host {
+    SecTrustResultType trustResult;
+    OSStatus err = SecTrustEvaluate(trust, &trustResult);
+    if (err == noErr && (trustResult == kSecTrustResultProceed ||
+                         trustResult == kSecTrustResultUnspecified)) {
+        return YES;
+    } else {
+        Warn(@"TouchDB: SSL server <%@> not trusted (err=%d, trustResult=%u); cert chain follows:",
+             host, (int)err, (unsigned)trustResult);
+#if TARGET_OS_IPHONE
+        for (CFIndex i = 0; i < SecTrustGetCertificateCount(trust); ++i) {
+            SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, i);
+            CFStringRef subject = SecCertificateCopySubjectSummary(cert);
+            Warn(@"    %@", subject);
+            CFRelease(subject);
+        }
+#else
+        NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
+        for (NSDictionary* property in trustProperties) {
+            Warn(@"    %@: error = %@",
+                 [property objectForKey: kSecPropertyTypeTitle],
+                 [property objectForKey: kSecPropertyTypeError]);
+        }
+        [trustProperties release];
+#endif
+        return NO;
+    }
+
 }
 
 

@@ -185,6 +185,26 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
 }
 
 
+static double readNumber(const char* start, const char* end, char** endOfNumber) {
+    CAssert(end > start);
+    // First copy the string into a zero-terminated buffer so we can safely call strtod:
+    size_t len = end - start;
+    char buf[50];
+    char* str = (len < sizeof(buf)) ? buf : malloc(len + 1);
+    if (!str)
+        return 0.0;
+    memcpy(str, start, len);
+    str[len] = '\0';
+    
+    char* endInStr;
+    double result = strtod(str, &endInStr);
+    *endOfNumber = (char*)start + (endInStr - str);
+    if (len >= sizeof(buf))
+        free(str);
+    return result;
+}
+
+
 int TDCollateJSON(void *context,
                int len1, const void * chars1,
                int len2, const void * chars2)
@@ -217,7 +237,15 @@ int TDCollateJSON(void *context,
                 break;
             case kNumber: {
                 char* next1, *next2;
-                int diff = dcmp( strtod(str1, &next1), strtod(str2, &next2) );
+                int diff;
+                if (depth == 0) {
+                    // At depth 0, be careful not to fall off the end of the input, because there
+                    // won't be any delimiters (']' or '}') after the number!
+                    diff = dcmp( readNumber(str1, chars1 + len1, &next1),
+                                 readNumber(str2, chars2 + len2, &next2) );
+                } else {
+                    diff = dcmp( strtod(str1, &next1), strtod(str2, &next2) );
+                }
                 if (diff)
                     return diff;    // Numbers don't match
                 str1 = next1;
@@ -285,73 +313,88 @@ TestCase(TDCollateConvertEscape) {
     testEscape("\\u0000", 0);
 }
 
+static int collate(void *mode, const void * str1, const void * str2) {
+    // Be evil and put numeric garbage past the ends of str1 and str2 (see bug #138):
+    size_t len1 = strlen(str1), len2 = strlen(str2);
+    char buf1[len1 + 3], buf2[len2 + 3];
+    strcpy(buf1, str1);
+    strcat(buf1, "99");
+    strcpy(buf2, str2);
+    strcat(buf2, "88");
+    return TDCollateJSON(mode, (int)len1, buf1, (int)len2, buf2);
+}
+
 TestCase(TDCollateScalars) {
     RequireTestCase(TDCollateConvertEscape);
     void* mode = kTDCollateJSON_Unicode;
-    CAssertEq(TDCollateJSON(mode, 0, "true", 0, "false"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "false", 0, "true"), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "null", 0, "17"), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "123", 0, "1"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "123", 0, "0123.0"), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "123", 0, "\"123\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"123\""), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1235\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"12\\/34\"", 0, "\"12/34\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"\\/1234\"", 0, "\"/1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\\/\"", 0, "\"1234/\""), 0);
+    CAssertEq(collate(mode, "true", "false"), 1);
+    CAssertEq(collate(mode, "false", "true"), -1);
+    CAssertEq(collate(mode, "null", "17"), -1);
+    CAssertEq(collate(mode, "1", "1"), 0);
+    CAssertEq(collate(mode, "123", "1"), 1);
+    CAssertEq(collate(mode, "123", "0123.0"), 0);
+    CAssertEq(collate(mode, "123", "\"123\""), -1);
+    CAssertEq(collate(mode, "\"1234\"", "\"123\""), 1);
+    CAssertEq(collate(mode, "\"1234\"", "\"1235\""), -1);
+    CAssertEq(collate(mode, "\"1234\"", "\"1234\""), 0);
+    CAssertEq(collate(mode, "\"12\\/34\"", "\"12/34\""), 0);
+    CAssertEq(collate(mode, "\"\\/1234\"", "\"/1234\""), 0);
+    CAssertEq(collate(mode, "\"1234\\/\"", "\"1234/\""), 0);
 #ifndef GNUSTEP     // FIXME: GNUstep doesn't support Unicode collation yet
-    CAssertEq(TDCollateJSON(mode, 0, "\"a\"", 0, "\"A\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"A\"", 0, "\"aa\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"B\"", 0, "\"aa\""), 1);
+    CAssertEq(collate(mode, "\"a\"", "\"A\""), -1);
+    CAssertEq(collate(mode, "\"A\"", "\"aa\""), -1);
+    CAssertEq(collate(mode, "\"B\"", "\"aa\""), 1);
 #endif
 }
 
 TestCase(TDCollateASCII) {
     RequireTestCase(TDCollateConvertEscape);
     void* mode = kTDCollateJSON_ASCII;
-    CAssertEq(TDCollateJSON(mode, 0, "true", 0, "false"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "false", 0, "true"), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "null", 0, "17"), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "123", 0, "1"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "123", 0, "0123.0"), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "123", 0, "\"123\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"123\""), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1235\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\"", 0, "\"1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"12\\/34\"", 0, "\"12/34\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"\\/1234\"", 0, "\"/1234\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"1234\\/\"", 0, "\"1234/\""), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "\"A\"", 0, "\"a\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"B\"", 0, "\"a\""), -1);
+    CAssertEq(collate(mode, "true", "false"), 1);
+    CAssertEq(collate(mode, "false", "true"), -1);
+    CAssertEq(collate(mode, "null", "17"), -1);
+    CAssertEq(collate(mode, "123", "1"), 1);
+    CAssertEq(collate(mode, "123", "0123.0"), 0);
+    CAssertEq(collate(mode, "123", "\"123\""), -1);
+    CAssertEq(collate(mode, "\"1234\"", "\"123\""), 1);
+    CAssertEq(collate(mode, "\"1234\"", "\"1235\""), -1);
+    CAssertEq(collate(mode, "\"1234\"", "\"1234\""), 0);
+    CAssertEq(collate(mode, "\"12\\/34\"", "\"12/34\""), 0);
+    CAssertEq(collate(mode, "\"\\/1234\"", "\"/1234\""), 0);
+    CAssertEq(collate(mode, "\"1234\\/\"", "\"1234/\""), 0);
+    CAssertEq(collate(mode, "\"A\"", "\"a\""), -1);
+    CAssertEq(collate(mode, "\"B\"", "\"a\""), -1);
 }
 
 TestCase(TDCollateRaw) {
     void* mode = kTDCollateJSON_Raw;
-    CAssertEq(TDCollateJSON(mode, 0, "false", 0, "17"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "false", 0, "true"), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "null", 0, "true"), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "[\"A\"]", 0, "\"A\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "\"A\"", 0, "\"a\""), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "[\"b\"]", 0, "[\"b\",\"c\",\"a\"]"), -1);
+    CAssertEq(collate(mode, "false", "17"), 1);
+    CAssertEq(collate(mode, "false", "true"), -1);
+    CAssertEq(collate(mode, "null", "true"), -1);
+    CAssertEq(collate(mode, "[\"A\"]", "\"A\""), -1);
+    CAssertEq(collate(mode, "\"A\"", "\"a\""), -1);
+    CAssertEq(collate(mode, "[\"b\"]", "[\"b\",\"c\",\"a\"]"), -1);
 }
 
 TestCase(TDCollateArrays) {
     void* mode = kTDCollateJSON_Unicode;
-    CAssertEq(TDCollateJSON(mode, 0, "[]", 0, "\"foo\""), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "[]", 0, "[]"), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "[true]", 0, "[true]"), 0);
-    CAssertEq(TDCollateJSON(mode, 0, "[false]", 0, "[null]"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "[]", 0, "[null]"), -1);
-    CAssertEq(TDCollateJSON(mode, 0, "[123]", 0, "[45]"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "[123]", 0, "[45,67]"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "[123.4,\"wow\"]", 0, "[123.40,789]"), 1);
+    CAssertEq(collate(mode, "[]", "\"foo\""), 1);
+    CAssertEq(collate(mode, "[]", "[]"), 0);
+    CAssertEq(collate(mode, "[true]", "[true]"), 0);
+    CAssertEq(collate(mode, "[false]", "[null]"), 1);
+    CAssertEq(collate(mode, "[]", "[null]"), -1);
+    CAssertEq(collate(mode, "[123]", "[45]"), 1);
+    CAssertEq(collate(mode, "[123]", "[45,67]"), 1);
+    CAssertEq(collate(mode, "[123.4,\"wow\"]", "[123.40,789]"), 1);
+    CAssertEq(collate(mode, "[5,\"wow\"]", "[5,\"wow\"]"), 0);
+    CAssertEq(collate(mode, "[5,\"wow\"]", "1"), 1);
+    CAssertEq(collate(mode, "1", "[5,\"wow\"]"), -1);
 }
 
 TestCase(TDCollateNestedArrays) {
     void* mode = kTDCollateJSON_Unicode;
-    CAssertEq(TDCollateJSON(mode, 0, "[[]]", 0, "[]"), 1);
-    CAssertEq(TDCollateJSON(mode, 0, "[1,[2,3],4]", 0, "[1,[2,3.1],4,5,6]"), -1);
+    CAssertEq(collate(mode, "[[]]", "[]"), 1);
+    CAssertEq(collate(mode, "[1,[2,3],4]", "[1,[2,3.1],4,5,6]"), -1);
 }
 
 TestCase(TDCollateUnicodeStrings) {
@@ -359,9 +402,9 @@ TestCase(TDCollateUnicodeStrings) {
     // That includes "\unnnn" for non-ASCII chars, and "\t", "\b", etc.
     RequireTestCase(TDCollateConvertEscape);
     void* mode = kTDCollateJSON_Unicode;
-    CAssertEq(TDCollateJSON(mode, 0, encode(@"fréd"), 0, encode(@"fréd")), 0);
-    CAssertEq(TDCollateJSON(mode, 0, encode(@"ømø"), 0, encode(@"omo")), 1);
-    CAssertEq(TDCollateJSON(mode, 0, encode(@"\t"), 0, encode(@" ")), -1);
-    CAssertEq(TDCollateJSON(mode, 0, encode(@"\001"), 0, encode(@" ")), -1);
+    CAssertEq(collate(mode, encode(@"fréd"), encode(@"fréd")), 0);
+    CAssertEq(collate(mode, encode(@"ømø"), encode(@"omo")), 1);
+    CAssertEq(collate(mode, encode(@"\t"), encode(@" ")), -1);
+    CAssertEq(collate(mode, encode(@"\001"), encode(@" ")), -1);
 }
 #endif

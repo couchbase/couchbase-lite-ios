@@ -143,6 +143,17 @@
 
 
 
+NSURL* TDStartServer(NSString* serverDirectory, NSError** outError) {
+    CAssert(![TDURLProtocol server], @"A TDServer is already running");
+    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: serverDirectory
+                                                        error: outError] autorelease];
+    if (!tdServer)
+        return nil;
+    return [TDURLProtocol registerServer: tdServer forHostname: nil];
+}
+
+
+
 
 TestCase(TDServer) {
     RequireTestCase(TDDatabaseManager);

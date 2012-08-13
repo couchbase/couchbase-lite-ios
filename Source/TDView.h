@@ -69,6 +69,7 @@ typedef enum {
     TDMapBlock _mapBlock;
     TDReduceBlock _reduceBlock;
     TDViewCollation _collation;
+    TDContentOptions _mapContentOptions;
 }
 
 - (void) deleteView;
@@ -80,6 +81,7 @@ typedef enum {
 @property (readonly) TDReduceBlock reduceBlock;
 
 @property TDViewCollation collation;
+@property TDContentOptions mapContentOptions;
 
 - (BOOL) setMapBlock: (TDMapBlock)mapBlock
          reduceBlock: (TDReduceBlock)reduceBlock

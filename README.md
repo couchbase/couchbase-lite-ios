@@ -17,7 +17,11 @@ By "_suitable for embedding into mobile apps_", I mean that it meets the followi
 
 And by "_mobile apps_" I'm focusing on iOS and [Android][11], although there's no reason we couldn't extend this to other platforms like Windows Phone. And it's not limited to mobile OSs -- the Objective-C implementation runs on Mac OS as well, and on Linux and other Unix-like OSs via [GNUstep][12].
 
-More documentation is available on the [wiki][2].
+## More Information
+
+* There's lots more information on the [wiki][2].
+* There's a "Grocery Sync" [demo app][18] for iOS, that implements a simple shared to-do list.
+* Or if you want to ask questions or get help, join the [mailing list][17].
 
 ## Platforms ##
 
@@ -43,13 +47,15 @@ More documentation is available on the [wiki][2].
 
 ## Development Status ##
 
-TouchDB went beta in June 2012. The current stable release is [version 0.9][16].
+TouchDB went beta in June 2012. The current stable release is beta 3, [version 0.92][16].
 
 We don't have a formal schedule for 1.0, but expect the blessed event by the end of summer.
 
 ## Building TouchDB ##
 
 ### On a Mac ###
+
+(You might prefer to just [download][16] the latest stable release. But if you want to build it yourself...)
 
 For full details see the [wiki page][7]. The basic steps are:
 
@@ -65,7 +71,7 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [2]: https://github.com/couchbaselabs/TouchDB-iOS/wiki
 [3]: http://couchbase.com
 [4]: https://github.com/couchbaselabs/CouchCocoa
-[5]: https://github.com/touchbaselabs/fmdb
+[5]: https://github.com/couchbaselabs/fmdb
 [6]: https://bitbucket.org/snej/myutilities/overview
 [7]: https://github.com/couchbaselabs/TouchDB-iOS/wiki/Building-TouchDB
 [8]: https://github.com/ccgus/
@@ -77,3 +83,5 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [14]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/BUILDING.txt
 [15]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/SETUP.txt
 [16]: https://github.com/couchbaselabs/TouchDB-iOS/downloads
+[17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
+[18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo

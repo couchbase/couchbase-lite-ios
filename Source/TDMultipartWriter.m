@@ -27,11 +27,11 @@
     if (self) {
         _contentType = [type copy];
         _boundary = [(boundary ?: TDCreateUUID()) copy];
-        NSString* separatorStr = $sprintf(@"\r\n--%@\r\n\r\n", _boundary);
-        _separatorData = [[separatorStr dataUsingEncoding: NSUTF8StringEncoding] retain];
-        // Account for the final boundary to be written by -open. Add it in now, because the
+        // Account for the final boundary to be written by -opened. Add its length now, because the
         // client is probably going to ask for my .length *before* it calls -open.
-        _length += _separatorData.length - 2;
+        NSString* finalBoundaryStr = $sprintf(@"\r\n--%@--", _boundary);
+        _finalBoundary = [[finalBoundaryStr dataUsingEncoding: NSUTF8StringEncoding] retain];
+        _length += _finalBoundary.length;
     }
     return self;
 }
@@ -39,7 +39,7 @@
 
 - (void)dealloc {
     [_boundary release];
-    [_separatorData release];
+    [_finalBoundary release];
     [super dealloc];
 }
 
@@ -58,29 +58,34 @@
 
 
 - (void) addInput: (id)part length:(UInt64)length {
-    NSData* separator = _separatorData;
-    if (_nextPartsHeaders.count) {
-        NSMutableString* headers = [NSMutableString stringWithFormat: @"\r\n--%@\r\n", _boundary];
-        for (NSString* name in _nextPartsHeaders) {
-            [headers appendFormat: @"%@: %@\r\n", name, [_nextPartsHeaders objectForKey: name]];
-        }
-        [headers appendString: @"\r\n"];
-        separator = [headers dataUsingEncoding: NSUTF8StringEncoding];
-        [self setNextPartsHeaders: nil];
+    NSMutableString* headers = [NSMutableString stringWithFormat: @"\r\n--%@\r\n", _boundary];
+    [headers appendFormat: @"Content-Length: %llu\r\n", length];
+    for (NSString* name in _nextPartsHeaders) {
+        // Strip any CR or LF in the header value. This isn't real quoting, just enough to ensure
+        // a spoofer can't add bogus headers by putting CRLF into a header value!
+        NSMutableString* value = [[_nextPartsHeaders objectForKey: name] mutableCopy];
+        [value replaceOccurrencesOfString: @"\r" withString: @""
+                                  options: 0 range: NSMakeRange(0, value.length)];
+        [value replaceOccurrencesOfString: @"\n" withString: @""
+                                  options: 0 range: NSMakeRange(0, value.length)];
+        [headers appendFormat: @"%@: %@\r\n", name, value];
+        [value release];
     }
+    [headers appendString: @"\r\n"];
+    NSData* separator = [headers dataUsingEncoding: NSUTF8StringEncoding];
+    [self setNextPartsHeaders: nil];
+
     [super addInput: separator length: separator.length];
     [super addInput: part length: length];
 }
 
 
 - (void) opened {
-    if (!_addedFinalBoundary) {
+    if (_finalBoundary) {
         // Append the final boundary:
-        NSString* trailerStr = $sprintf(@"\r\n--%@--", _boundary);
-        NSData* trailerData = [trailerStr dataUsingEncoding: NSUTF8StringEncoding];
-        [super addInput: trailerData length: 0];
+        [super addInput: _finalBoundary length: 0];
         // _length was already adjusted for this in -init
-        _addedFinalBoundary = YES;
+        setObj(&_finalBoundary, nil);
     }
     [super opened];
 }
@@ -100,7 +105,7 @@
 
 
 TestCase(TDMultipartWriter) {
-    NSString* expectedOutput = @"\r\n--BOUNDARY\r\n\r\n<part the first>\r\n--BOUNDARY\r\nContent-Type: something\r\n\r\n<2nd part>\r\n--BOUNDARY--";
+    NSString* expectedOutput = @"\r\n--BOUNDARY\r\nContent-Length: 16\r\n\r\n<part the first>\r\n--BOUNDARY\r\nContent-Length: 10\r\nContent-Type: something\r\n\r\n<2nd part>\r\n--BOUNDARY--";
     RequireTestCase(TDMultiStreamWriter);
     for (unsigned bufSize = 1; bufSize < expectedOutput.length+1; ++bufSize) {
         TDMultipartWriter* mp = [[[TDMultipartWriter alloc] initWithContentType: @"foo/bar" 

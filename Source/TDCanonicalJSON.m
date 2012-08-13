@@ -136,11 +136,15 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 }
 
 
++ (NSArray*) orderedKeys: (NSDictionary*)dict {
+    return [[dict allKeys] sortedArrayUsingFunction: &compareCanonStrings context: NULL];
+}
+
+
 - (void) encodeDictionary: (NSDictionary*)dict {
     [_output appendString: @"{"];
-    NSArray* keys = [[dict allKeys] sortedArrayUsingFunction: &compareCanonStrings context: NULL];
     BOOL first = YES;
-    for (NSString* key in keys) {
+    for (NSString* key in [[self class] orderedKeys: dict]) {
         Assert([key isKindOfClass: [NSString class]], @"Can't encode %@ as dict key in JSON",
                [key class]);
         if (_ignoreKeyPrefix && [key hasPrefix: _ignoreKeyPrefix] 

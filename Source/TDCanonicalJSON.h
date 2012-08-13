@@ -41,4 +41,8 @@
 /** Convenience method that instantiates a TDCanonicalJSON object and uses it to encode the object, returning a string. */
 + (NSString*) canonicalString: (id)rootObject;
 
+
+/** Returns a dictionary's keys in the same order in which they would be written out in canonical JSON. */
++ (NSArray*) orderedKeys: (NSDictionary*)dict;
+
 @end

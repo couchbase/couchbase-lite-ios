@@ -149,8 +149,9 @@ static NSURL* AddDotToURLHost( NSURL* url );
 - (void) failedWithError: (NSError*)error {
     // If the error may be transient (flaky network, server glitch), retry:
     if (TDMayBeTransientError(error)) {
-        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << MIN(_retryCount-1, 31U));
+        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << MIN(_retryCount, 16U));
         retryDelay = MIN(retryDelay, kMaxRetryDelay);
+        ++_retryCount;
         Log(@"%@: Connection error, retrying in %.1f sec: %@",
             self, retryDelay, error.localizedDescription);
         [self performSelector: @selector(retry) withObject: nil afterDelay: retryDelay];

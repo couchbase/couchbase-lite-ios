@@ -421,7 +421,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     id localSeq=nil, revs=nil, revsInfo=nil, conflicts=nil;
     if (options & kTDIncludeLocalSeq)
         localSeq = $object(sequence);
-    
+
     if (options & kTDIncludeRevs) {
         revs = [self getRevisionHistoryDict: rev];
     }
@@ -615,16 +615,6 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
 }
 
 
-- (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID {
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID < 0)
-        return nil;
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid FROM revs WHERE doc_id=? AND current "
-                                           "ORDER BY revid DESC OFFSET 1", $object(docNumericID)];
-    return revIDsFromResultSet(r);
-}
-
-
 - (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev limit: (unsigned)limit {
     int generation = rev.generation;
     if (generation <= 1)
@@ -740,6 +730,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDChangesOptions*)options
                                   filter: (TDFilterBlock)filter
+                                  params: (NSDictionary*)filterParams
 {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     if (!options) options = &kDefaultTDChangesOptions;
@@ -774,7 +765,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                           intoRevision: rev
                                options: options->contentOptions];
             }
-            if (!filter || filter(rev))
+            if (!filter || filter(rev, filterParams))
                 [changes addRev: rev];
             [rev release];
         }

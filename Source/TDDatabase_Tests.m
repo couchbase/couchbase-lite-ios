@@ -124,18 +124,21 @@ TestCase(TDDatabase_CRUD) {
     CAssertEq(status, kTDStatusConflict);
     
     // Check the changes feed, with and without filters:
-    TDRevisionList* changes = [db changesSinceSequence: 0 options: NULL filter: NULL];
+    TDRevisionList* changes = [db changesSinceSequence: 0 options: NULL filter: NULL params: nil];
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
+
+    TDFilterBlock filter = ^BOOL(TDRevision *revision, NSDictionary* params) {
+        NSString* status = [params objectForKey: @"status"];
+        return [[revision.properties objectForKey: @"status"] isEqual: status];
+    };
     
-    changes = [db changesSinceSequence: 0 options: NULL filter:^BOOL(TDRevision *revision) {
-        return [[revision.properties objectForKey: @"status"] isEqual: @"updated!"];
-    }];
+    changes = [db changesSinceSequence: 0 options: NULL
+                                filter: filter params: $dict({@"status", @"updated!"})];
     CAssertEq(changes.count, 1u);
     
-    changes = [db changesSinceSequence: 0 options: NULL filter:^BOOL(TDRevision *revision) {
-        return [[revision.properties objectForKey: @"status"] isEqual: @"not updated!"];
-    }];
+    changes = [db changesSinceSequence: 0 options: NULL
+                                filter: filter params: $dict({@"status", @"not updated!"})];
     CAssertEq(changes.count, 0u);
         
     // Delete it:
@@ -157,7 +160,7 @@ TestCase(TDDatabase_CRUD) {
     CAssertNil(readRev);
     
     // Check the changes feed again after the deletion:
-    changes = [db changesSinceSequence: 0 options: NULL filter: NULL];
+    changes = [db changesSinceSequence: 0 options: NULL filter: NULL params: nil];
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
     
@@ -337,13 +340,17 @@ TestCase(TDDatabase_RevTree) {
     // Make sure the revision with the higher revID wins the conflict:
     TDRevision* current = [db getDocumentWithID: rev.docID revisionID: nil options: 0];
     CAssertEqual(current, conflict);
-    
+
+    // Check that the list of conflicts is accurate:
+    TDRevisionList* conflictingRevs = [db getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES];
+    CAssertEqual(conflictingRevs.allRevisions, $array(conflict, rev));
+
     // Get the _changes feed and verify only the winner is in it:
     TDChangesOptions options = kDefaultTDChangesOptions;
-    TDRevisionList* changes = [db changesSinceSequence: 0 options: &options filter: NULL];
+    TDRevisionList* changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil];
     CAssertEqual(changes.allRevisions, $array(conflict, other));
     options.includeConflicts = YES;
-    changes = [db changesSinceSequence: 0 options: &options filter: NULL];
+    changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil];
     CAssertEqual(changes.allRevisions, $array(rev, conflict, other));
 }
 

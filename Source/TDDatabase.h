@@ -25,7 +25,7 @@ extern NSString* const TDDatabaseWillBeDeletedNotification;
 
 
 /** Filter block, used in changes feeds and replication. */
-typedef BOOL (^TDFilterBlock) (TDRevision* revision);
+typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 
 
 /** Options for what metadata to include in document bodies */
@@ -38,7 +38,7 @@ enum {
     kTDIncludeLocalSeq = 16,                // adds '_local_seq' property
     kTDLeaveAttachmentsEncoded = 32,        // i.e. don't decode
     kTDBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
-    kTDNoBody = 128                         // omit regular doc body properties
+    kTDNoBody = 128,                        // omit regular doc body properties
 };
 
 
@@ -134,8 +134,6 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                     onlyCurrent: (BOOL)onlyCurrent;
 
-- (NSArray*) getConflictingRevisionIDsOfDocID: (NSString*)docID;
-
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
     Does not return revisions whose bodies have been compacted away, or deletion markers. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev
@@ -159,7 +157,8 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 - (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDChangesOptions*)options
-                                  filter: (TDFilterBlock)filter;
+                                  filter: (TDFilterBlock)filter
+                                  params: (NSDictionary*)filterParams;
 
 /** Define or clear a named filter function. These aren't used directly by TDDatabase, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;

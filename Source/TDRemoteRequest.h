@@ -58,6 +58,9 @@ typedef void (^TDRemoteRequestCompletionBlock)(id result, NSError* error);
 // The value to use for the User-Agent HTTP header.
 + (NSString*) userAgentHeader;
 
+// Shared subroutines to handle NSURLAuthenticationMethodServerTrust challenges
++ (BOOL) checkTrust: (SecTrustRef)trust forHost: (NSString*)host;
+
 @end
 
 

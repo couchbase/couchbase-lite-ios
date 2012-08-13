@@ -36,6 +36,8 @@
 - (id) initWithRouter: (TDRouter*)router forConnection:(TDHTTPConnection*)connection {
     self = [super init];
     if (self) {
+        EnableLog(YES);
+        EnableLogTo(TDListenerVerbose, YES);
         _router = [router retain];
         _connection = connection;
         router.onResponseReady = ^(TDResponse* r) {
@@ -130,10 +132,17 @@
 - (void) onDataAvailable: (NSData*)data finished: (BOOL)finished {
     @synchronized(self) {
         LogTo(TDListenerVerbose, @"%@ adding %u bytes", self, (unsigned)data.length);
-        if (_data)
-            [_data appendData: data];
-        else
-            _data = [data mutableCopy];
+        if (!_data) {
+            _data = [data copy];
+            _dataMutable = NO;
+        } else {
+            if (!_dataMutable) {
+                [_data autorelease];
+                _data = [_data mutableCopy];
+                _dataMutable = YES;
+            }
+            [(NSMutableData*)_data appendData: data];
+        }
         if (finished)
             [self onFinished];
         else if (_chunked)
@@ -206,7 +215,7 @@
 
         LogTo(TDListenerVerbose, @"%@ Finished!", self);
 
-        if (!_chunked || _offset == 0) {
+        if ((!_chunked || _offset == 0) && ![_router.request.HTTPMethod isEqualToString: @"HEAD"]) {
             // Response finished immediately, before the connection asked for any data, so we're free
             // to massage the response:
             LogTo(TDListenerVerbose, @"%@ prettifying response body", self);
@@ -216,8 +225,11 @@
             BOOL pretty = [_router boolQuery: @"pretty"];
 #endif
             if (pretty) {
-                [_data release];
-                _data = [_response.body.asPrettyJSON mutableCopy];
+                NSString* contentType = [_response.headers objectForKey: @"Content-Type"];
+                if ([contentType hasPrefix: @"application/json"] && _data.length < 100000) {
+                    [_data release];
+                    _data = [_response.body.asPrettyJSON mutableCopy];
+                }
             }
         }
         [_connection responseHasAvailableData: self];

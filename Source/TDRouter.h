@@ -26,8 +26,10 @@ typedef void (^OnFinishedBlock)();
     NSDictionary* _queries;
     TDResponse* _response;
     TDDatabase* _db;
+    BOOL _local;
     BOOL _waiting;
     BOOL _responseSent;
+    BOOL _processRanges;
     OnAccessCheckBlock _onAccessCheck;
     OnResponseReadyBlock _onResponseReady;
     OnDataAvailableBlock _onDataAvailable;
@@ -35,10 +37,13 @@ typedef void (^OnFinishedBlock)();
     BOOL _running;
     BOOL _longpoll;
     TDFilterBlock _changesFilter;
+    NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
 }
 
-- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request;
+- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request isLocal: (BOOL)isLocal;
+
+@property BOOL processRanges;
 
 @property (copy) OnAccessCheckBlock onAccessCheck;
 @property (copy) OnResponseReadyBlock onResponseReady;
@@ -61,6 +66,7 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) boolQuery: (NSString*)param;
 - (int) intQuery: (NSString*)param defaultValue: (int)defaultValue;
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
+- (NSMutableDictionary*) jsonQueries;
 - (BOOL) cacheWithEtag: (NSString*)etag;
 - (TDContentOptions) contentOptions;
 - (BOOL) getQueryOptions: (struct TDQueryOptions*)options;
@@ -68,7 +74,8 @@ typedef void (^OnFinishedBlock)();
 @property (readonly) NSDictionary* bodyAsDictionary;
 @property (readonly) NSString* ifMatch;
 - (TDStatus) openDB;
-- (void) sendResponse;
+- (void) sendResponseHeaders;
+- (void) sendResponseBodyAndFinish: (BOOL)finished;
 - (void) finished;
 @end
 

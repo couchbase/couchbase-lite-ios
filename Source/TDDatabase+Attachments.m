@@ -175,16 +175,16 @@
 }
 
 
-/** Returns the content and MIME type of an attachment */
-- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
-                               named: (NSString*)filename
-                                type: (NSString**)outType
-                            encoding: (TDAttachmentEncoding*)outEncoding
-                              status: (TDStatus*)outStatus
+/** Returns the location of an attachment's file in the blob store. */
+- (NSString*) getAttachmentPathForSequence: (SequenceNumber)sequence
+                                     named: (NSString*)filename
+                                      type: (NSString**)outType
+                                  encoding: (TDAttachmentEncoding*)outEncoding
+                                    status: (TDStatus*)outStatus
 {
     Assert(sequence > 0);
     Assert(filename);
-    NSData* contents = nil;
+    NSString* filePath = nil;
     FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
                       $object(sequence), filename];
@@ -204,24 +204,46 @@
             *outStatus = kTDStatusCorruptError;
             return nil;
         }
-        contents = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
-        if (!contents) {
-            Warn(@"%@: Failed to load attachment %lld.'%@'", self, sequence, filename);
-            *outStatus = kTDStatusCorruptError;
-            return nil;
-        }
+        filePath = [_attachments pathForKey: *(TDBlobKey*)keyData.bytes];
         *outStatus = kTDStatusOK;
         if (outType)
             *outType = [r stringForColumnIndex: 1];
         
-        TDAttachmentEncoding encoding = [r intForColumnIndex: 2];
-        if (outEncoding)
-            *outEncoding = encoding;
-        else
-            contents = [self decodeAttachment: contents encoding: encoding];
+        *outEncoding = [r intForColumnIndex: 2];
     } @finally {
         [r close];
     }
+    return filePath;
+}
+
+
+/** Returns the content and MIME type of an attachment */
+- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
+                               named: (NSString*)filename
+                                type: (NSString**)outType
+                            encoding: (TDAttachmentEncoding*)outEncoding
+                              status: (TDStatus*)outStatus
+{
+    TDAttachmentEncoding encoding;
+    NSString* filePath = [self getAttachmentPathForSequence: sequence
+                                                      named: filename
+                                                       type: outType
+                                                   encoding: &encoding
+                                                     status: outStatus];
+    if (!filePath)
+        return nil;
+    NSError* error;
+    NSData* contents = [NSData dataWithContentsOfFile: filePath options: NSDataReadingMappedIfSafe
+                                                error: &error];
+    if (!contents) {
+        Warn(@"%@: Failed to load attachment %lld.'%@' -- %@", self, sequence, filename, error);
+        *outStatus = kTDStatusCorruptError;
+        return nil;
+    }
+    if (outEncoding)
+        *outEncoding = encoding;
+    else
+        contents = [self decodeAttachment: contents encoding: encoding];
     return contents;
 }
 

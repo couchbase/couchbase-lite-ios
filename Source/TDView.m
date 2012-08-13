@@ -59,7 +59,7 @@ static id<TDViewCompiler> sCompiler;
 
 
 @synthesize database=_db, name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock,
-            collation=_collation;
+            collation=_collation, mapContentOptions=_mapContentOptions;
 
 
 - (int) viewID {
@@ -293,7 +293,7 @@ static id fromJSON( NSData* json ) {
                 NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
                                                                   sequence: sequence
-                                                                   options: 0];
+                                                                   options: _mapContentOptions];
                 if (!properties) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
@@ -400,7 +400,7 @@ static id fromJSON( NSData* json ) {
         [args addObject: $object(options->skip)];
     }
     
-    LogTo(View, @"Query %@: %@", _name, sql);
+    LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
     
     FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r)
@@ -474,6 +474,8 @@ static id groupKey(id key, unsigned groupLevel) {
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
                 }
+                LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
+                      _name, toJSONString(key), toJSONString(value));
                 [keysToReduce addObject: key];
                 [valuesToReduce addObject: value ?: $null];
                 lastKey = key;
@@ -499,6 +501,8 @@ static id groupKey(id key, unsigned groupLevel) {
                                                               options: options->content];
                     }
                 }
+                LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
+                      _name, toJSONString(key), toJSONString(value), toJSONString(docID));
                 [rows addObject: $dict({@"id",  docID},
                                        {@"key", key},
                                        {@"value", value},
@@ -512,6 +516,8 @@ static id groupKey(id key, unsigned groupLevel) {
             // Finish the last group (or the entire list, if no grouping):
             id key = group ? groupKey(lastKey, groupLevel) : $null;
             id reduced = _reduceBlock ? _reduceBlock(keysToReduce, valuesToReduce,NO) : nil;
+            LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
+                  _name, toJSONString(key), toJSONString(reduced));
             [rows addObject: $dict({@"key", key},
                                    {@"value", (reduced ?: $null)})];
         }
@@ -521,6 +527,7 @@ static id groupKey(id key, unsigned groupLevel) {
     
     [r close];
     *outStatus = kTDStatusOK;
+    LogTo(View, @"Query %@: Returning %u rows", _name, (unsigned)rows.count);
     return rows;
 }
 
