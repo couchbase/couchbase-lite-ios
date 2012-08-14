@@ -280,27 +280,30 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (BOOL) goOffline {
-    if (!_online || !_running)
+    if (!_online)
         return NO;
     LogTo(Sync, @"%@: Going offline", self);
     _online = NO;
+    [self stopRemoteRequests];
     [self postProgressChanged];
     return YES;
 }
 
 
 - (BOOL) goOnline {
-    if (_online || !_running)
+    if (_online)
         return NO;
     LogTo(Sync, @"%@: Going online", self);
     _online = YES;
-    
-    [_lastSequence release];
-    _lastSequence = nil;
-    self.error = nil;
 
-    [self fetchRemoteCheckpointDoc];
-    [self postProgressChanged];
+    if (_running) {
+        [_lastSequence release];
+        _lastSequence = nil;
+        self.error = nil;
+
+        [self fetchRemoteCheckpointDoc];
+        [self postProgressChanged];
+    }
     return YES;
 }
 
@@ -403,6 +406,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) stopRemoteRequests {
+    if (!_remoteRequests)
+        return;
+    LogTo(Sync, @"Stopping %u remote requests", (unsigned)_remoteRequests.count);
     // Clear _remoteRequests before iterating, to ensure that re-entrant calls to this won't
     // try to re-stop any of the requests. (Re-entrant calls are possible due to replicator
     // error handling when it receives the 'canceled' errors from the requests I'm stopping.)
