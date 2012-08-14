@@ -381,8 +381,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                                                              requestHeaders: self.requestHeaders 
                                                               onCompletion:
                                 ^(id result, NSError* error) {
-                                    onCompletion(result, error);
                                     [self removeRemoteRequest: req];
+                                    onCompletion(result, error);
                                 }];
     req.authorizer = _authorizer;
     [self addRemoteRequest: req];
@@ -403,10 +403,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) stopRemoteRequests {
-    // Copy _remoteRequests because it may change during the iteration
-    NSArray* requests = [[_remoteRequests copy] autorelease];
+    // Clear _remoteRequests before iterating, to ensure that re-entrant calls to this won't
+    // try to re-stop any of the requests. (Re-entrant calls are possible due to replicator
+    // error handling when it receives the 'canceled' errors from the requests I'm stopping.)
+    NSArray* requests = [_remoteRequests autorelease];
+    _remoteRequests = nil;
     [requests makeObjectsPerformSelector: @selector(stop)];
-    [_remoteRequests removeAllObjects];
 }
 
 
