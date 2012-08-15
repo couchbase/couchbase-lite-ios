@@ -772,9 +772,10 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     }
     [r close];
     
-    if (options->sortBySequence)
+    if (options->sortBySequence) {
         [changes sortBySequence];
-    [changes limit: options->limit];
+        [changes limit: options->limit];
+    }
     return changes;
 }
 
