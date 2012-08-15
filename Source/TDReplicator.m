@@ -418,6 +418,13 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
+- (NSArray*) activeRequestsStatus {
+    return [_remoteRequests my_map: ^id(TDRemoteRequest* request) {
+        return request.statusInfo;
+    }];
+}
+
+
 #pragma mark - CHECKPOINT STORAGE:
 
 

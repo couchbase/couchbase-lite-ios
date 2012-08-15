@@ -151,6 +151,7 @@
                                        {@"continuous", (repl.continuous ? $true : nil)},
                                        {@"status", status},
                                        {@"progress", progress},
+                                       {@"x_active_requests", repl.activeRequestsStatus},
                                        {@"error", error})];
         }
     }

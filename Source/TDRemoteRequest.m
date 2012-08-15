@@ -125,6 +125,11 @@
 }
 
 
+- (NSMutableDictionary*) statusInfo {
+    return $mdict({@"URL", _request.URL}, {@"method", _request.HTTPMethod});
+}
+
+
 - (void) respondWithResult: (id)result error: (NSError*)error {
     Assert(result || error);
     _onCompletion(result, error);
