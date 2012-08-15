@@ -126,7 +126,7 @@
 
 
 - (NSMutableDictionary*) statusInfo {
-    return $mdict({@"URL", _request.URL}, {@"method", _request.HTTPMethod});
+    return $mdict({@"URL", _request.URL.absoluteString}, {@"method", _request.HTTPMethod});
 }
 
 
