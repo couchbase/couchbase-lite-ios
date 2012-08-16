@@ -36,6 +36,17 @@
 #endif
 
 
+static id<TDAuthorizer> authorizer(void) {
+#if 1
+    return nil;
+#else
+    NSURLCredential* cred = [NSURLCredential credentialWithUser: @"XXXX" password: @"XXXX"
+                                                    persistence:NSURLCredentialPersistenceNone];
+    return [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
+#endif
+}
+
+
 static void deleteRemoteDB(void) {
     Log(@"Deleting %@", kRemoteDBURLStr);
     NSURL* url = [NSURL URLWithString: kRemoteDBURLStr];
@@ -51,6 +62,7 @@ static void deleteRemoteDB(void) {
             error = [err retain];
         }
                                 ];
+    request.authorizer = authorizer();
     [request start];
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
@@ -69,6 +81,7 @@ static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* 
     if (push)
         ((TDPusher*)repl).createTarget = YES;
     repl.filterName = filter;
+    repl.authorizer = authorizer();
     [repl start];
     
     CAssert(repl.running);
