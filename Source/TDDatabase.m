@@ -113,8 +113,13 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 - (BOOL) open {
     if (_open)
         return YES;
-    LogTo(TDDatabase, @"Open %@", _path);
-    if (![_fmdb open])
+    int flags = SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
+    if (_readOnly)
+        flags |= SQLITE_OPEN_READONLY;
+    else
+        flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    LogTo(TDDatabase, @"Open %@ (flags=%X)", _path, flags);
+    if (![_fmdb openWithFlags: flags])
         return NO;
     
     // Register CouchDB-compatible JSON collation functions:
@@ -323,7 +328,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     [super dealloc];
 }
 
-@synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments;
+@synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments, readOnly=_readOnly;
 
 
 - (UInt64) totalDataSize {

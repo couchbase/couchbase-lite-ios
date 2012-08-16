@@ -86,7 +86,7 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-@synthesize directory = _dir;
+@synthesize directory = _dir, readOnly=_readOnly;
 
 
 #pragma mark - DATABASES:
@@ -115,6 +115,7 @@ static NSCharacterSet* kIllegalNameChars;
         if (!path)
             return nil;
         db = [[TDDatabase alloc] initWithPath: path];
+        db.readOnly = _readOnly;
         if (!create && !db.exists) {
             [db release];
             return nil;

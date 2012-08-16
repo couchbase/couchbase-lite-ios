@@ -15,6 +15,7 @@
 {
     @private
     NSString* _dir;
+    BOOL _readOnly;
     NSMutableDictionary* _databases;
     TDReplicatorManager* _replicatorManager;
 }
@@ -24,6 +25,8 @@
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
 
 @property (readonly) NSString* directory;
+
+@property (nonatomic) BOOL readOnly;
 
 - (TDDatabase*) databaseNamed: (NSString*)name;
 - (TDDatabase*) existingDatabaseNamed: (NSString*)name;
