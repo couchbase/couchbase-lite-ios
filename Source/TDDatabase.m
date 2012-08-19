@@ -792,7 +792,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 - (TDFilterBlock) filterNamed: (NSString*)filterName {
-    return [_filters objectForKey: filterName];
+    return _filters[filterName];
 }
 
 
@@ -804,13 +804,13 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         return nil;
     if (!_views)
         _views = [[NSMutableDictionary alloc] init];
-    [_views setObject: view forKey: view.name];
+    _views[view.name] = view;
     return view;
 }
 
 
 - (TDView*) viewNamed: (NSString*)name {
-    TDView* view = [_views objectForKey: name];
+    TDView* view = _views[name];
     if (view)
         return view;
     return [self registerView: [[[TDView alloc] initWithDatabase: self name: name] autorelease]];
@@ -818,7 +818,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 - (TDView*) existingViewNamed: (NSString*)name {
-    TDView* view = [_views objectForKey: name];
+    TDView* view = _views[name];
     if (view)
         return view;
     view = [[[TDView alloc] initWithDatabase: self name: name] autorelease];

@@ -83,7 +83,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   if (error)
                       self.error = error;
                   else
-                      [self gotEndingSequence: [[result objectForKey: @"update_seq"] description]];
+                      [self gotEndingSequence: [result[@"update_seq"] description]];
                   [self asyncTasksFinished: 1];
               }];
     
@@ -113,7 +113,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.authorizer = _authorizer;
-    unsigned heartbeat = $castIf(NSNumber, [_options objectForKey: @"heartbeat"]).unsignedIntValue;
+    unsigned heartbeat = $castIf(NSNumber, _options[@"heartbeat"]).unsignedIntValue;
     if (heartbeat >= 15000)
         _changeTracker.heartbeat = heartbeat / 1000.0;
     
@@ -174,16 +174,16 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Got a _changes feed entry from the TDChangeTracker.
 - (void) changeTrackerReceivedChange: (NSDictionary*)change {
-    NSString* lastSequenceID = [[change objectForKey: @"seq"] description];
-    NSString* docID = [change objectForKey: @"id"];
+    NSString* lastSequenceID = [change[@"seq"] description];
+    NSString* docID = change[@"id"];
     if (docID) {
         if ([TDDatabase isValidDocumentID: docID]) {
-            BOOL deleted = [[change objectForKey: @"deleted"] isEqual: (id)kCFBooleanTrue];
-            NSArray* changes = $castIf(NSArray, [change objectForKey: @"changes"]);
+            BOOL deleted = [change[@"deleted"] isEqual: (id)kCFBooleanTrue];
+            NSArray* changes = $castIf(NSArray, change[@"changes"]);
             for (NSDictionary* changeDict in changes) {
                 @autoreleasepool {
                     // Push each revision info to the inbox
-                    NSString* revID = $castIf(NSString, [changeDict objectForKey: @"rev"]);
+                    NSString* revID = $castIf(NSString, changeDict[@"rev"]);
                     if (!revID)
                         continue;
                     TDPulledRevision* rev = [[TDPulledRevision alloc] initWithDocID: docID revID: revID
@@ -306,7 +306,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         rev.sequence = [_pendingSequences addValue: rev.remoteSequenceID];
     }
     LogTo(Sync, @"%@ queued %u remote revisions from seq=%@ (%u in bulk, %u individually)",
-          self, (unsigned)inbox.count, [[[inbox allRevisions] objectAtIndex: 0] remoteSequenceID],
+          self, (unsigned)inbox.count, ((TDPulledRevision*)inbox[0]).remoteSequenceID,
           numBulked, (unsigned)(inbox.count-numBulked));
     
     [self pullRemoteRevisions];
@@ -328,7 +328,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         NSUInteger nBulk = MIN(_bulkRevsToPull.count, kMaxRevsToGetInBulk);
         if (nBulk == 1) {
             // Rather than pulling a single revision in 'bulk', just pull it normally:
-            [self queueRemoteRevision: [_bulkRevsToPull objectAtIndex: 0]];
+            [self queueRemoteRevision: _bulkRevsToPull[0]];
             [_bulkRevsToPull removeObjectAtIndex: 0];
             nBulk = 0;
         }
@@ -345,7 +345,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 if (queue.count == 0)
                     break;  // both queues are empty
             }
-            [self pullRemoteRevision: [queue objectAtIndex: 0]];
+            [self pullRemoteRevision: queue[0]];
             [queue removeObjectAtIndex: 0];
         }
     }
@@ -427,16 +427,16 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       // Process the resulting rows' documents.
                       // We only add a document if it doesn't have attachments, and if its
                       // revID matches the one we asked for.
-                      NSArray* rows = $castIf(NSArray, [result objectForKey: @"rows"]);
+                      NSArray* rows = $castIf(NSArray, result[@"rows"]);
                       LogTo(Sync, @"%@ checking %u bulk-fetched remote revisions",
                             self, (unsigned)rows.count);
                       for (NSDictionary* row in rows) {
-                          NSDictionary* doc = $castIf(NSDictionary, [row objectForKey: @"doc"]);
-                          if (doc && ![doc objectForKey: @"_attachments"]) {
+                          NSDictionary* doc = $castIf(NSDictionary, row[@"doc"]);
+                          if (doc && !doc[@"_attachments"]) {
                               TDRevision* rev = [TDRevision revisionWithProperties: doc];
                               NSUInteger pos = [remainingRevs indexOfObject: rev];
                               if (pos != NSNotFound) {
-                                  rev.sequence = [[remainingRevs objectAtIndex: pos] sequence];
+                                  rev.sequence = [remainingRevs[pos] sequence];
                                   [remainingRevs removeObjectAtIndex: pos];
                                   [_downloadsToInsert queueObject: rev];
                                   [self asyncTaskStarted];

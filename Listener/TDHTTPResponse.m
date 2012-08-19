@@ -225,7 +225,7 @@
             BOOL pretty = [_router boolQuery: @"pretty"];
 #endif
             if (pretty) {
-                NSString* contentType = [_response.headers objectForKey: @"Content-Type"];
+                NSString* contentType = (_response.headers)[@"Content-Type"];
                 if ([contentType hasPrefix: @"application/json"] && _data.length < 100000) {
                     [_data release];
                     _data = [_response.body.asPrettyJSON mutableCopy];

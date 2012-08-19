@@ -100,7 +100,7 @@ typedef void (^OnFinishedBlock)();
 @property (nonatomic, readonly) NSString* baseContentType;
 
 - (void) reset;
-- (void) setValue: (NSString*)value ofHeader: (NSString*)header;
+- (void) setObject: (NSString*)value forKeyedSubscript:(NSString*)header;
 
 - (void) setMultipartBody: (TDMultipartWriter*)mp;
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type;

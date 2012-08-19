@@ -302,7 +302,7 @@ static id fromJSON( NSData* json ) {
                 if (conflicts) {
                     // Add a "_conflicts" property if there were conflicting revisions:
                     NSMutableDictionary* mutableProps = [[properties mutableCopy] autorelease];
-                    [mutableProps setObject: conflicts forKey: @"_conflicts"];
+                    mutableProps[@"_conflicts"] = conflicts;
                     properties = mutableProps;
                 }
                 
@@ -416,7 +416,7 @@ static bool groupTogether(id key1, id key2, unsigned groupLevel) {
         return [key1 isEqual: key2];
     unsigned end = MIN(groupLevel, MIN([key1 count], [key2 count]));
     for (unsigned i = 0; i< end; ++i) {
-        if (![[key1 objectAtIndex: i] isEqual: [key2 objectAtIndex: i]])
+        if (![key1[i] isEqual: key2[i]])
             return false;
     }
     return true;
@@ -485,10 +485,10 @@ static id groupKey(id key, unsigned groupLevel) {
                 NSString* docID = [r stringForColumnIndex: 2];
                 id docContents = nil;
                 if (options->includeDocs) {
-                    NSString* linkedID = [$castIf(NSDictionary, value) objectForKey: @"_id"];
+                    NSString* linkedID = $castIf(NSDictionary, value)[@"_id"];
                     if (linkedID) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                        NSString* linkedRev = [value objectForKey: @"_rev"]; // usually nil
+                        NSString* linkedRev = value[@"_rev"]; // usually nil
                         TDRevision* linked = [_db getDocumentWithID: linkedID
                                                          revisionID: linkedRev
                                                             options: options->content];
@@ -557,7 +557,7 @@ static id groupKey(id key, unsigned groupLevel) {
     double total = 0;
     for (NSNumber* value in values)
         total += value.doubleValue;
-    return [NSNumber numberWithDouble: total];
+    return @(total);
 }
 
 

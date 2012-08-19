@@ -63,7 +63,7 @@
     for (NSString* name in _nextPartsHeaders) {
         // Strip any CR or LF in the header value. This isn't real quoting, just enough to ensure
         // a spoofer can't add bogus headers by putting CRLF into a header value!
-        NSMutableString* value = [[_nextPartsHeaders objectForKey: name] mutableCopy];
+        NSMutableString* value = [_nextPartsHeaders[name] mutableCopy];
         [value replaceOccurrencesOfString: @"\r" withString: @""
                                   options: 0 range: NSMakeRange(0, value.length)];
         [value replaceOccurrencesOfString: @"\n" withString: @""

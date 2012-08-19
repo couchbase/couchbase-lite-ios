@@ -118,7 +118,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
                     equals.location = component.length;
                 NSString* key = [component substringToIndex: equals.location];
                 NSString* value = [component substringFromIndex: NSMaxRange(equals)];
-                [queries setObject: value forKey: key];
+                queries[key] = value;
             }
             _queries = [queries copy];
         }
@@ -128,7 +128,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 
 
 - (NSString*) query: (NSString*)param {
-    return [[self.queries objectForKey: param]
+    return [(self.queries)[param]
                     stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
 }
 
@@ -163,7 +163,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
                                        options: TDJSONReadingAllowFragments
                                          error: nil];
         if (parsed)
-            [queries setObject: parsed forKey: param];
+            queries[param] = parsed;
     }];
     return queries;
 }
@@ -171,7 +171,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 
 - (BOOL) cacheWithEtag: (NSString*)etag {
     NSString* eTag = $sprintf(@"\"%@\"", etag);
-    [_response setValue: eTag ofHeader: @"Etag"];
+    _response[@"Etag"] = eTag;
     return $equal(eTag, [_request valueForHTTPHeaderField: @"If-None-Match"]);
 }
 
@@ -300,7 +300,7 @@ static NSArray* splitPath( NSURL* url ) {
         
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
-        NSString* dbName = [_path objectAtIndex: 0];
+        NSString* dbName = _path[0];
         if ([dbName hasPrefix: @"_"] && ![TDDatabaseManager isValidDatabaseName: dbName]) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else {
@@ -319,7 +319,7 @@ static NSArray* splitPath( NSURL* url ) {
         TDStatus status = [self openDB];
         if (TDStatusIsError(status))
             return status;
-        NSString* name = [_path objectAtIndex: 1];
+        NSString* name = _path[1];
         if (![name hasPrefix: @"_"]) {
             // Regular document
             if (![TDDatabase isValidDocumentID: name])
@@ -329,8 +329,8 @@ static NSArray* splitPath( NSURL* url ) {
             // "_design/____" and "_local/____" are document names
             if (pathLen <= 2)
                 return kTDStatusNotFound;
-            docID = [name stringByAppendingPathComponent: [_path objectAtIndex: 2]];
-            [_path replaceObjectAtIndex: 1 withObject: docID];
+            docID = [name stringByAppendingPathComponent: _path[2]];
+            _path[1] = docID;
             [_path removeObjectAtIndex: 2];
             --pathLen;
         } else if ([name hasPrefix: @"_design/"] || [name hasPrefix: @"_local/"]) {
@@ -351,7 +351,7 @@ static NSArray* splitPath( NSURL* url ) {
     NSString* attachmentName = nil;
     if (docID && pathLen > 2) {
         // Interpret attachment name:
-        attachmentName = [_path objectAtIndex: 2];
+        attachmentName = _path[2];
         if ([attachmentName hasPrefix: @"_"] && [docID hasPrefix: @"_design/"]) {
             // Design-doc attribute like _info or _view
             [message replaceOccurrencesOfString: @":docID:" withString: @":designDocID:"
@@ -359,7 +359,7 @@ static NSArray* splitPath( NSURL* url ) {
             docID = [docID substringFromIndex: 8];  // strip the "_design/" prefix
             [message appendString: [attachmentName substringFromIndex: 1]];
             [message appendString: @":"];
-            attachmentName = pathLen > 3 ? [_path objectAtIndex: 3] : nil;
+            attachmentName = pathLen > 3 ? _path[3] : nil;
         } else {
             [message appendString: @"attachment:"];
             if (pathLen > 3)
@@ -405,7 +405,7 @@ static NSArray* splitPath( NSURL* url ) {
             [output appendFormat: @" + %llu-byte body", (uint64_t)_request.HTTPBody.length];
         NSDictionary* headers = _request.allHTTPHeaderFields;
         for (NSString* key in headers)
-            [output appendFormat: @"\n\t%@: %@", key, [headers objectForKey: key]];
+            [output appendFormat: @"\n\t%@: %@", key, headers[key]];
         LogTo(TDRouter, @"%@", output);
     }
     
@@ -445,7 +445,7 @@ static NSArray* splitPath( NSURL* url ) {
         return;
     }
 
-    [_response setValue: @"bytes" ofHeader: @"Accept-Ranges"];
+    _response[@"Accept-Ranges"] = @"bytes";
 
     NSData* body = _response.body.asJSON;  // misnomer; may not be JSON
     NSUInteger bodyLength = body.length;
@@ -495,7 +495,7 @@ static NSArray* splitPath( NSURL* url ) {
     if (from >= bodyLength || to < from) {
         _response.status = 416; // Requested Range Not Satisfiable
         NSString* contentRangeStr = $sprintf(@"bytes */%llu", (uint64_t)bodyLength);
-        [_response setValue: contentRangeStr ofHeader: @"Content-Range"];
+        _response[@"Content-Range"] = contentRangeStr;
         _response.body = nil;
         return;
     }
@@ -506,7 +506,7 @@ static NSArray* splitPath( NSURL* url ) {
     // Content-Range: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16
     NSString* contentRangeStr = $sprintf(@"bytes %llu-%llu/%llu",
                                          (uint64_t)from, (uint64_t)to, (uint64_t)bodyLength);
-    [_response setValue: contentRangeStr ofHeader: @"Content-Range"];
+    _response[@"Content-Range"] = contentRangeStr;
     _response.status = 206; // Partial Content
     LogTo(TDRouter, @"Content-Range: %@", contentRangeStr);
 }
@@ -517,8 +517,7 @@ static NSArray* splitPath( NSURL* url ) {
         return;
     _responseSent = YES;
 
-    [_response.headers setObject: $sprintf(@"TouchDB %g", TouchDBVersionNumber)
-                          forKey: @"Server"];
+    (_response.headers)[@"Server"] = $sprintf(@"TouchDB %g", TouchDBVersionNumber);
 
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
@@ -532,12 +531,12 @@ static NSArray* splitPath( NSURL* url ) {
     }
 
     if (_response.body.isValidJSON)
-        [_response setValue: @"application/json" ofHeader: @"Content-Type"];
+        _response[@"Content-Type"] = @"application/json";
 
     if (_response.status == 200 && ($equal(_request.HTTPMethod, @"GET") ||
                                     $equal(_request.HTTPMethod, @"HEAD"))) {
-        if (![_response.headers objectForKey: @"Cache-Control"])
-            [_response setValue: @"must-revalidate" ofHeader: @"Cache-Control"];
+        if (!(_response.headers)[@"Cache-Control"])
+            _response[@"Cache-Control"] = @"must-revalidate";
     }
 
     if (_onResponseReady)
@@ -560,7 +559,7 @@ static NSArray* splitPath( NSURL* url ) {
                                    _response.status, (uint64_t)_response.body.asJSON.length];
         NSDictionary* headers = _response.headers;
         for (NSString* key in headers)
-            [output appendFormat: @"\n\t%@: %@", key, [headers objectForKey: key]];
+            [output appendFormat: @"\n\t%@: %@", key, headers[key]];
         LogTo(TDRouter, @"%@", output);
     }
     OnFinishedBlock onFinished = [_onFinished retain];
@@ -654,23 +653,23 @@ static NSArray* splitPath( NSURL* url ) {
     self.status = TDStatusToHTTPStatus(internalStatus, &statusMsg);
     setObjCopy(&_statusMsg, statusMsg);
     if (_status < 300) {
-        if (!_body && ![_headers objectForKey: @"Content-Type"]) {
+        if (!_body && !_headers[@"Content-Type"]) {
             self.body = [TDBody bodyWithJSON:
                                     [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
         }
     } else {
         self.bodyObject = $dict({@"status", @(_status)},
                                 {@"error", statusMsg});
-        [self setValue: @"application/json" ofHeader: @"Content-Type"];
+        self[@"Content-Type"]= @"application/json";
     }
 }
 
-- (void) setValue: (NSString*)value ofHeader: (NSString*)header {
+- (void)setObject: (NSString*)value forKeyedSubscript:(NSString*)header {
     [_headers setValue: value forKey: header];
 }
 
 - (NSString*) baseContentType {
-    NSString* type = [_headers objectForKey: @"Content-Type"];
+    NSString* type = _headers[@"Content-Type"];
     if (!type)
         return nil;
     NSRange r = [type rangeOfString: @";"];
@@ -690,7 +689,7 @@ static NSArray* splitPath( NSURL* url ) {
 - (void) setMultipartBody: (TDMultipartWriter*)mp {
     // OPT: Would be better to stream this than shoving all the data into _body.
     self.body = [TDBody bodyWithJSON: mp.allOutput];
-    [self setValue: mp.contentType ofHeader: @"Content-Type"];
+    self[@"Content-Type"] = mp.contentType;
 }
 
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type {

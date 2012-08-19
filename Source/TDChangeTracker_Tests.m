@@ -49,6 +49,10 @@
                                        beforeDate: timeout])
         ;
     [tracker stop];
+    if ([timeout timeIntervalSinceNow] <= 0) {
+        Warn(@"Timeout contacting %@", tracker.databaseURL);
+        return;
+    }
     AssertNil(tracker.error);
     CAssertEqual(_changes, expectedChanges);
 }

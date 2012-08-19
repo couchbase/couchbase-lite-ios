@@ -36,7 +36,7 @@
 
 - (void) setResponseLocation: (NSURL*)url {
     // Strip anything after the URL's path (i.e. the query string)
-    [_response setValue: TDURLWithoutQuery(url).absoluteString ofHeader: @"Location"];
+    _response[@"Location"] = TDURLWithoutQuery(url).absoluteString;
 }
 
 
@@ -75,15 +75,15 @@
     if (TDStatusIsError(status))
         return status;
     
-    BOOL continuous = [$castIf(NSNumber, [body objectForKey: @"continuous"]) boolValue];
-    BOOL cancel = [$castIf(NSNumber, [body objectForKey: @"cancel"]) boolValue];
+    BOOL continuous = [$castIf(NSNumber, body[@"continuous"]) boolValue];
+    BOOL cancel = [$castIf(NSNumber, body[@"cancel"]) boolValue];
     if (!cancel) {
         // Start replication:
         TDReplicator* repl = [db replicatorWithRemoteURL: remote push: push continuous: continuous];
         if (!repl)
             return kTDStatusServerError;
-        repl.filterName = $castIf(NSString, [body objectForKey: @"filter"]);;
-        repl.filterParameters = $castIf(NSDictionary, [body objectForKey: @"query_params"]);
+        repl.filterName = $castIf(NSString, body[@"filter"]);;
+        repl.filterParameters = $castIf(NSDictionary, body[@"query_params"]);
         repl.options = body;
         repl.requestHeaders = headers;
         repl.authorizer = authorizer;
@@ -246,7 +246,7 @@
     NSDictionary* body = self.bodyAsDictionary;
     if (!body)
         return kTDStatusBadJSON;
-    NSArray* docIDs = [body objectForKey: @"keys"];
+    NSArray* docIDs = body[@"keys"];
     if (![docIDs isKindOfClass: [NSArray class]])
         return kTDStatusBadParam;
     
@@ -261,12 +261,12 @@
 - (TDStatus) do_POST_bulk_docs: (TDDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
     NSDictionary* body = self.bodyAsDictionary;
-    NSArray* docs = $castIf(NSArray, [body objectForKey: @"docs"]);
+    NSArray* docs = $castIf(NSArray, body[@"docs"]);
     if (!docs)
         return kTDStatusBadParam;
-    id allObj = [body objectForKey: @"all_or_nothing"];
+    id allObj = body[@"all_or_nothing"];
     BOOL allOrNothing = (allObj && allObj != $false);
-    BOOL noNewEdits = ([body objectForKey: @"new_edits"] == $false);
+    BOOL noNewEdits = (body[@"new_edits"] == $false);
 
     BOOL ok = NO;
     NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
@@ -274,7 +274,7 @@
     @try{
         for (NSDictionary* doc in docs) {
             @autoreleasepool {
-                NSString* docID = [doc objectForKey: @"_id"];
+                NSString* docID = doc[@"_id"];
                 TDRevision* rev;
                 TDStatus status;
                 TDBody* docBody = [TDBody bodyWithProperties: doc];
@@ -326,7 +326,7 @@
     if (!body)
         return kTDStatusBadJSON;
     for (NSString* docID in body) {
-        NSArray* revIDs = [body objectForKey: docID];
+        NSArray* revIDs = body[docID];
         if (![revIDs isKindOfClass: [NSArray class]])
             return kTDStatusBadParam;
         for (NSString* revID in revIDs) {
@@ -344,20 +344,20 @@
     NSMutableDictionary* diffs = $mdict();
     for (TDRevision* rev in revs) {
         NSString* docID = rev.docID;
-        NSMutableArray* revs = [[diffs objectForKey: docID] objectForKey: @"missing"];
+        NSMutableArray* revs = diffs[docID][@"missing"];
         if (!revs) {
             revs = $marray();
-            [diffs setObject: $mdict({@"missing", revs}) forKey: docID];
+            diffs[docID] = $mdict({@"missing", revs});
         }
         [revs addObject: rev.revID];
     }
     
     // Add the possible ancestors for each missing revision:
     for (NSString* docID in diffs) {
-        NSMutableDictionary* docInfo = [diffs objectForKey: docID];
+        NSMutableDictionary* docInfo = diffs[docID];
         int maxGen = 0;
         NSString* maxRevID = nil;
-        for (NSString* revID in [docInfo objectForKey: @"missing"]) {
+        for (NSString* revID in docInfo[@"missing"]) {
             int gen;
             if ([TDRevision parseRevID: revID intoGeneration: &gen andSuffix: NULL] && gen > maxGen) {
                 maxGen = gen;
@@ -368,7 +368,7 @@
         NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0];
         [rev release];
         if (ancestors)
-            [docInfo setObject: ancestors forKey: @"possible_ancestors"];
+            docInfo[@"possible_ancestors"] = ancestors;
     }
                                     
     _response.bodyObject = diffs;
@@ -416,7 +416,7 @@
     for (TDRevision* rev in changes) {
         NSString* docID = rev.docID;
         if ($equal(docID, lastDocID)) {
-            [[lastEntry objectForKey: @"changes"] addObject: $dict({@"rev", rev.revID})];
+            [lastEntry[@"changes"] addObject: $dict({@"rev", rev.revID})];
         } else {
             lastEntry = [self changeDictForRev: rev];
             [entries addObject: lastEntry];
@@ -425,12 +425,12 @@
     }
     // After collecting revisions, sort by sequence:
     [entries sortUsingComparator: ^NSComparisonResult(id e1, id e2) {
-        return TDSequenceCompare([[e1 objectForKey: @"seq"] longLongValue],
-                                 [[e2 objectForKey: @"seq"] longLongValue]);
+        return TDSequenceCompare([e1[@"seq"] longLongValue],
+                                 [e2[@"seq"] longLongValue]);
     }];
     if (entries.count > limit)
         [entries removeObjectsInRange: NSMakeRange(limit, entries.count - limit)];
-    id lastSeq = [entries.lastObject objectForKey: @"seq"] ?: @(since);
+    id lastSeq = (entries.lastObject)[@"seq"] ?: @(since);
     return $dict({@"results", entries}, {@"last_seq", lastSeq});
 }
 
@@ -447,7 +447,7 @@
 
 
 - (void) dbChanged: (NSNotification*)n {
-    TDRevision* rev = [n.userInfo objectForKey: @"rev"];
+    TDRevision* rev = (n.userInfo)[@"rev"];
     
     if (_changesFilter && !_changesFilter(rev, _changesFilterParams))
         return;
@@ -649,14 +649,13 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             return status;
         if (_local) {
             // Let in-app clients know the location of the attachment file:
-            [_response setValue: [[NSURL fileURLWithPath: filePath] absoluteString]
-                       ofHeader: @"Location"];
+            _response[@"Location"] = [[NSURL fileURLWithPath: filePath] absoluteString];
         }
         UInt64 size = [[[NSFileManager defaultManager] attributesOfItemAtPath: filePath
                                                                           error: nil]
                                     fileSize];
         if (size)
-            [_response setValue: $sprintf(@"%llu", size) ofHeader: @"Content-Length"];
+            _response[@"Content-Length"] = $sprintf(@"%llu", size);
         
     } else {
         NSData* contents = [_db getAttachmentForSequence: rev.sequence
@@ -669,9 +668,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         _response.body = [TDBody bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
     }
     if (type)
-        [_response setValue: type ofHeader: @"Content-Type"];
+        _response[@"Content-Type"] = type;
     if (encoding == kTDAttachmentEncodingGZIP)
-        [_response setValue: @"gzip" ofHeader: @"Content-Encoding"];
+        _response[@"Content-Encoding"] = @"gzip";
     return kTDStatusOK;
 }
 
@@ -689,15 +688,15 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSString* prevRevID;
     
     if (!deleting) {
-        deleting = $castIf(NSNumber, [body propertyForKey: @"_deleted"]).boolValue;
+        deleting = $castIf(NSNumber, body[@"_deleted"]).boolValue;
         if (!docID) {
             // POST's doc ID may come from the _id field of the JSON body.
-            docID = [body propertyForKey: @"_id"];
+            docID = body[@"_id"];
             if (!docID && deleting)
                 return kTDStatusBadID;
         }
         // PUT's revision ID comes from the JSON body.
-        prevRevID = [body propertyForKey: @"_rev"];
+        prevRevID = body[@"_rev"];
     } else {
         // DELETE's revision ID comes from the ?rev= query param
         prevRevID = [self query: @"rev"];
@@ -863,8 +862,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (TDView*) compileView: (NSString*)viewName fromProperties: (NSDictionary*)viewProps {
-    NSString* language = [viewProps objectForKey: @"language"] ?: @"javascript";
-    NSString* mapSource = [viewProps objectForKey: @"map"];
+    NSString* language = viewProps[@"language"] ?: @"javascript";
+    NSString* mapSource = viewProps[@"map"];
     if (!mapSource)
         return nil;
     TDMapBlock mapBlock = [[TDView compiler] compileMapFunction: mapSource language: language];
@@ -872,7 +871,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         Warn(@"View %@ has unknown map function: %@", viewName, mapSource);
         return nil;
     }
-    NSString* reduceSource = [viewProps objectForKey: @"reduce"];
+    NSString* reduceSource = viewProps[@"reduce"];
     TDReduceBlock reduceBlock = NULL;
     if (reduceSource) {
         reduceBlock =[[TDView compiler] compileReduceFunction: reduceSource language: language];
@@ -885,8 +884,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     TDView* view = [_db viewNamed: viewName];
     [view setMapBlock: mapBlock reduceBlock: reduceBlock version: @"1"];
     
-    NSDictionary* options = $castIf(NSDictionary, [viewProps objectForKey: @"options"]);
-    if ($equal([options objectForKey: @"collation"], @"raw"))
+    NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
+    if ($equal(options[@"collation"], @"raw"))
         view.collation = kTDViewCollationRaw;
     return view;
 }
@@ -902,8 +901,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                       revisionID: nil options: 0];
         if (!rev)
             return kTDStatusNotFound;
-        NSDictionary* views = $castIf(NSDictionary, [rev.properties objectForKey: @"views"]);
-        NSDictionary* viewProps = $castIf(NSDictionary, [views objectForKey: viewName]);
+        NSDictionary* views = $castIf(NSDictionary, (rev.properties)[@"views"]);
+        NSDictionary* viewProps = $castIf(NSDictionary, views[viewName]);
         if (!viewProps)
             return kTDStatusNotFound;
         // If there is a CouchDB view, see if it can be compiled from source:
@@ -948,7 +947,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (TDStatus) do_POST: (TDDatabase*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
-    NSArray* keys = $castIf(NSArray, [self.bodyAsDictionary objectForKey: @"keys"]);
+    NSArray* keys = $castIf(NSArray, (self.bodyAsDictionary)[@"keys"]);
     if (!keys)
         return kTDStatusBadParam;
     return [self queryDesignDoc: designDoc view: viewName keys: keys];

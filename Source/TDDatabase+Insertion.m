@@ -113,7 +113,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     MD5_Update(&ctx, &deletedByte, 1);
     
     for (NSString* attName in [attachments.allKeys sortedArrayUsingSelector: @selector(compare:)]) {
-        TDAttachment* attachment = [attachments objectForKey: attName];
+        TDAttachment* attachment = attachments[attName];
         MD5_Update(&ctx, &attachment->blobKey, sizeof(attachment->blobKey));
     }
     
@@ -137,12 +137,12 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 /** Extracts the history of revision IDs (in reverse chronological order) from the _revisions key */
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties {
     NSDictionary* revisions = $castIf(NSDictionary,
-                                      [docProperties objectForKey: @"_revisions"]);
+                                      docProperties[@"_revisions"]);
     if (!revisions)
         return nil;
     // Extract the history, expanding the numeric prefixes:
-    NSArray* revIDs = $castIf(NSArray, [revisions objectForKey: @"ids"]);
-    __block int start = [$castIf(NSNumber, [revisions objectForKey: @"start"]) intValue];
+    NSArray* revIDs = $castIf(NSArray, revisions[@"ids"]);
+    __block int start = [$castIf(NSNumber, revisions[@"start"]) intValue];
     if (start)
         revIDs = [revIDs my_map: ^(id revID) {return $sprintf(@"%d-%@", start--, revID);}];
     return revIDs;
@@ -173,7 +173,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     NSMutableDictionary* properties = [[NSMutableDictionary alloc] initWithCapacity: origProps.count];
     for (NSString* key in origProps) {
         if (![key hasPrefix: @"_"]  || [sSpecialKeysToLeave member: key]) {
-            [properties setObject: [origProps objectForKey: key] forKey: key];
+            properties[key] = origProps[key];
         } else if (![sSpecialKeysToRemove member: key]) {
             Log(@"TDDatabase: Invalid top-level key '%@' in document to be inserted", key);
             [properties release];
@@ -439,7 +439,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     if (historyCount == 0) {
         history = @[revID];
         historyCount = 1;
-    } else if (!$equal([history objectAtIndex: 0], revID))
+    } else if (!$equal(history[0], revID))
         return kTDStatusBadID;
     
     BOOL success = NO;
@@ -464,7 +464,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         if (_validations.count > 0) {
             TDRevision* oldRev = nil;
             for (NSUInteger i = 1; i<historyCount; ++i) {
-                oldRev = [localRevs revWithDocID: docID revID: [history objectAtIndex: i]];
+                oldRev = [localRevs revWithDocID: docID revID: history[i]];
                 if (oldRev)
                     break;
             }
@@ -479,7 +479,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         SequenceNumber sequence = 0;
         SequenceNumber localParentSequence = 0;
         for (NSInteger i = historyCount - 1; i>=0; --i) {
-            NSString* revID = [history objectAtIndex: i];
+            NSString* revID = history[i];
             TDRevision* localRev = [localRevs revWithDocID: docID revID: revID];
             if (localRev) {
                 // This revision is known locally. Remember its sequence as the parent of the next one:
@@ -588,7 +588,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                 continue;  // no such document; skip it
             }
             NSArray* revsPurged;
-            NSArray* revIDs = $castIf(NSArray, [docsToRevs objectForKey: docID]);
+            NSArray* revIDs = $castIf(NSArray, docsToRevs[docID]);
             if (!revIDs) {
                 return kTDStatusBadParam;
             } else if (revIDs.count == 0) {
@@ -650,7 +650,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                 }
                 revsPurged = revsToPurge.allObjects;
             }
-            [result setObject: revsPurged forKey: docID];
+            result[docID] = revsPurged;
         }
         return kTDStatusOK;
     }];
@@ -671,7 +671,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
 }
 
 - (TDValidationBlock) validationNamed: (NSString*)validationName {
-    return [_validations objectForKey: validationName];
+    return _validations[validationName];
 }
 
 
@@ -738,12 +738,12 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         NSDictionary* cur = self.currentRevision.properties;
         NSDictionary* nuu = _newRevision.properties;
         for (NSString* key in cur.allKeys) {
-            if (!$equal([cur objectForKey: key], [nuu objectForKey: key])
+            if (!$equal(cur[key], nuu[key])
                     && ![key isEqualToString: @"_rev"])
                 [changedKeys addObject: key];
         }
         for (NSString* key in nuu.allKeys) {
-            if (![cur objectForKey: key]
+            if (!cur[key]
                     && ![key isEqualToString: @"_rev"] && ![key isEqualToString: @"_id"])
                 [changedKeys addObject: key];
         }
@@ -776,7 +776,7 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     NSDictionary* cur = self.currentRevision.properties;
     NSDictionary* nuu = _newRevision.properties;
     for (NSString* key in self.changedKeys) {
-        if (!enumerator(key, [cur objectForKey: key], [nuu objectForKey: key])) {
+        if (!enumerator(key, cur[key], nuu[key])) {
             if (!_errorMessage)
                 self.errorMessage = $sprintf(@"Illegal change to '%@' property", key);
             return NO;

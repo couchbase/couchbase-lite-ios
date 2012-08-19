@@ -40,6 +40,8 @@ typedef SInt64 SequenceNumber;
 @property (copy) NSDictionary* properties;
 @property (copy) NSData* asJSON;
 
+- (id) objectForKeyedSubscript: (NSString*)key;  // enables subscript access in Xcode 4.4+
+
 @property SequenceNumber sequence;
 
 - (NSComparisonResult) compareSequences: (TDRevision*)rev;
@@ -79,6 +81,8 @@ typedef SInt64 SequenceNumber;
 @property (readonly) NSArray* allRevisions;
 @property (readonly) NSArray* allDocIDs;
 @property (readonly) NSArray* allRevIDs;
+
+- (TDRevision*) objectAtIndexedSubscript: (NSUInteger)index;  // enables subscript access in XC4.4+
 
 - (void) addRev: (TDRevision*)rev;
 - (void) removeRev: (TDRevision*)rev;

@@ -253,8 +253,8 @@
         NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
         for (NSDictionary* property in trustProperties) {
             Warn(@"    %@: error = %@",
-                 [property objectForKey: kSecPropertyTypeTitle],
-                 [property objectForKey: kSecPropertyTypeError]);
+                 property[(id)kSecPropertyTypeTitle],
+                 property[(id)kSecPropertyTypeError]);
         }
         [trustProperties release];
 #endif

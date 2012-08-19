@@ -136,7 +136,7 @@ static NSData* kCRLFCRLF;
                 return NO;
             NSString* key = trim([header substringToIndex: colon.location]);
             NSString* value = trim([header substringFromIndex: NSMaxRange(colon)]);
-            [_headers setObject: value forKey: key];
+            _headers[key] = value;
         }
     }
     return YES;
