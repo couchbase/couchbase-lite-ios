@@ -52,7 +52,7 @@
 }
 
 - (TDStatus) do_GET_all_dbs {
-    NSArray* dbs = _dbManager.allDatabaseNames ?: $array();
+    NSArray* dbs = _dbManager.allDatabaseNames ?: @[];
     _response.body = [[[TDBody alloc] initWithArray: dbs] autorelease];
     return kTDStatusOK;
 }
@@ -137,12 +137,12 @@
                 NSUInteger total = repl.changesTotal;
                 status = $sprintf(@"Processed %u / %u changes",
                                   (unsigned)processed, (unsigned)total);
-                progress = (total>0) ? $object(lroundf(100*(processed / (float)total))) : nil;
+                progress = (total>0) ? @(lroundf(100*(processed / (float)total))) : nil;
             }
             NSArray* error = nil;
             NSError* errorObj = repl.error;
             if (errorObj)
-                error = $array($object(errorObj.code), errorObj.localizedDescription);
+                error = @[@(errorObj.code), errorObj.localizedDescription];
 
             [activity addObject: $dict({@"type", @"Replication"},
                                        {@"task", repl.sessionID},
@@ -165,7 +165,7 @@
     // CouchDB _session API, so that apps that call it (such as Futon!) won't barf.
     _response.bodyObject = $dict({@"ok", $true},
                                  {@"userCtx", $dict({@"name", $null},
-                                                    {@"roles", $array(@"_admin")})});
+                                                    {@"roles", @[@"_admin"]})});
     return kTDStatusOK;
 }
 
@@ -184,9 +184,9 @@
         return kTDStatusDBError;
     _response.bodyObject = $dict({@"db_name", db.name},
                                  {@"db_uuid", db.publicUUID},
-                                 {@"doc_count", $object(num_docs)},
-                                 {@"update_seq", $object(update_seq)},
-                                 {@"disk_size", $object(db.totalDataSize)});
+                                 {@"doc_count", @(num_docs)},
+                                 {@"update_seq", @(update_seq)},
+                                 {@"disk_size", @(db.totalDataSize)});
     return kTDStatusOK;
 }
 
@@ -390,7 +390,7 @@
 
 
 - (NSDictionary*) changeDictForRev: (TDRevision*)rev {
-    return $dict({@"seq", $object(rev.sequence)},
+    return $dict({@"seq", @(rev.sequence)},
                  {@"id",  rev.docID},
                  {@"changes", $marray($dict({@"rev", rev.revID}))},
                  {@"deleted", rev.deleted ? $true : nil},
@@ -401,7 +401,7 @@
     NSArray* results = [changes my_map: ^(id rev) {return [self changeDictForRev: rev];}];
     if (changes.count > 0)
         since = [[changes lastObject] sequence];
-    return $dict({@"results", results}, {@"last_seq", $object(since)});
+    return $dict({@"results", results}, {@"last_seq", @(since)});
 }
 
 
@@ -430,7 +430,7 @@
     }];
     if (entries.count > limit)
         [entries removeObjectsInRange: NSMakeRange(limit, entries.count - limit)];
-    id lastSeq = [entries.lastObject objectForKey: @"seq"] ?: $object(since);
+    id lastSeq = [entries.lastObject objectForKey: @"seq"] ?: @(since);
     return $dict({@"results", entries}, {@"last_seq", lastSeq});
 }
 
@@ -455,7 +455,7 @@
     if (_longpoll) {
         Log(@"TDRouter: Sending longpoll response");
         [self sendResponseHeaders];
-        NSDictionary* body = [self responseBodyForChanges: $array(rev) since: 0];
+        NSDictionary* body = [self responseBodyForChanges: @[rev] since: 0];
         _response.body = [TDBody bodyWithProperties: body];
         [self sendResponseBodyAndFinish: YES];
     } else {
@@ -933,10 +933,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSArray* rows = [view queryWithOptions: &options status: &status];
     if (!rows)
         return status;
-    id updateSeq = options.updateSeq ? $object(lastSequenceIndexed) : nil;
+    id updateSeq = options.updateSeq ? @(lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
-                                 {@"total_rows", $object(rows.count)},
-                                 {@"offset", $object(options.skip)},
+                                 {@"total_rows", @(rows.count)},
+                                 {@"offset", @(options.skip)},
                                  {@"update_seq", updateSeq});
     return kTDStatusOK;
 }
@@ -984,10 +984,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         NSArray* rows = [view queryWithOptions: &options status: &status];
         if (!rows)
             return status;
-        id updateSeq = options.updateSeq ? $object(view.lastSequenceIndexed) : nil;
+        id updateSeq = options.updateSeq ? @(view.lastSequenceIndexed) : nil;
         _response.bodyObject = $dict({@"rows", rows},
-                                     {@"total_rows", $object(rows.count)},
-                                     {@"offset", $object(options.skip)},
+                                     {@"total_rows", @(rows.count)},
+                                     {@"offset", @(options.skip)},
                                      {@"update_seq", updateSeq});
         return kTDStatusOK;
     } @finally {

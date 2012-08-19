@@ -439,7 +439,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 - (NSString*) remoteCheckpointDocID {
     NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
                                        {@"remoteURL", _remote.absoluteString},
-                                       {@"push", $object(self.isPush)},
+                                       {@"push", @(self.isPush)},
                                        {@"filter", _filterName},
                                        {@"filterParams", _filterParameters});
     return TDHexSHA1Digest([TDCanonicalJSON canonicalData: spec]);

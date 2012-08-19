@@ -117,14 +117,14 @@
     Assert(sequence > 0);
     Assert(attachment.isValid);
     NSData* keyData = [NSData dataWithBytes: &attachment->blobKey length: sizeof(TDBlobKey)];
-    id encodedLengthObj = attachment->encoding ? $object(attachment->encodedLength) : nil;
+    id encodedLengthObj = attachment->encoding ? @(attachment->encodedLength) : nil;
     if (![_fmdb executeUpdate: @"INSERT INTO attachments "
                                   "(sequence, filename, key, type, encoding, length, encoded_length, revpos) "
                                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                                 $object(sequence), attachment.name, keyData,
-                                 attachment.contentType, $object(attachment->encoding),
-                                 $object(attachment->length), encodedLengthObj,
-                                 $object(attachment->revpos)]) {
+                                 @(sequence), attachment.name, keyData,
+                                 attachment.contentType, @(attachment->encoding),
+                                 @(attachment->length), encodedLengthObj,
+                                 @(attachment->revpos)]) {
         return kTDStatusDBError;
     }
     return kTDStatusCreated;
@@ -144,8 +144,8 @@
                     "(sequence, filename, key, type, encoding, encoded_Length, length, revpos) "
                     "SELECT ?, ?, key, type, encoding, encoded_Length, length, revpos "
                         "FROM attachments WHERE sequence=? AND filename=?",
-                    $object(toSequence), name,
-                    $object(fromSequence), name]) {
+                    @(toSequence), name,
+                    @(fromSequence), name]) {
         return kTDStatusDBError;
     }
     if (_fmdb.changes == 0) {
@@ -184,7 +184,7 @@
     NSString* filePath = nil;
     FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
-                      $object(sequence), filename];
+                      @(sequence), filename];
     if (!r) {
         *outStatus = kTDStatusDBError;
         return nil;
@@ -253,7 +253,7 @@
     FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT filename, key, type, encoding, length, encoded_length, revpos "
                        "FROM attachments WHERE sequence=?",
-                      $object(sequence)];
+                      @(sequence)];
     if (!r)
         return nil;
     if (![r next]) {
@@ -291,7 +291,7 @@
                 data = [self decodeAttachment: data encoding: encoding];
             } else {
                 encodingStr = @"gzip";  // the only encoding I know
-                encodedLengthObj = $object(encodedLength);
+                encodedLengthObj = @(encodedLength);
             }
         }
 
@@ -301,9 +301,9 @@
                                       {@"digest", digestStr},
                                       {@"content_type", [r stringForColumnIndex: 2]},
                                       {@"encoding", encodingStr},
-                                      {@"length", $object(length)},
+                                      {@"length", @(length)},
                                       {@"encoded_length", encodedLengthObj},
-                                      {@"revpos", $object([r intForColumnIndex: 6])})
+                                      {@"revpos", @([r intForColumnIndex: 6])})
                         forKey: [r stringForColumnIndex: 0]];
     } while ([r next]);
     [r close];
@@ -488,7 +488,7 @@
 {
     TDMultipartWriter* writer = [[TDMultipartWriter alloc] initWithContentType: contentType 
                                                                       boundary: nil];
-    [writer setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
+    [writer setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
     [writer addData: rev.asJSON];
     NSDictionary* attachments = [rev.properties objectForKey: @"_attachments"];
     for (NSString* attachmentName in attachments) {
@@ -541,7 +541,7 @@
             }
         } else {
             // If this creates a new doc, it needs a body:
-            oldRev.body = [TDBody bodyWithProperties: $dict()];
+            oldRev.body = [TDBody bodyWithProperties: @{}];
         }
         
         // Create a new revision:
@@ -556,7 +556,7 @@
                     "(sequence, filename, key, type, encoding, encoded_length, length, revpos) "
                     "SELECT ?, filename, key, type, encoding, encoded_length, length, revpos "
                     "FROM attachments WHERE sequence=? AND filename != ?",
-                                        $object(newRev.sequence), $object(oldRev.sequence),
+                                        @(newRev.sequence), @(oldRev.sequence),
                                         filename]) {
                 *outStatus = kTDStatusDBError;
                 return nil;

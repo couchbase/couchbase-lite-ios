@@ -109,9 +109,9 @@ static id<TDViewCompiler> sCompiler;
         return;
     [_db beginTransaction];
     [_db.fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?",
-                             $object(_viewID)];
+                             @(_viewID)];
     [_db.fmdb executeUpdate: @"UPDATE views SET lastsequence=0 WHERE view_id=?",
-                             $object(_viewID)];
+                             @(_viewID)];
     [_db endTransaction: YES];
 }
 
@@ -185,13 +185,13 @@ static id fromJSON( NSData* json ) {
         BOOL ok;
         if (lastSequence == 0) {
             // If the lastSequence has been reset to 0, make sure to remove all map results:
-            ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?", $object(_viewID)];
+            ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?", @(_viewID)];
         } else {
             // Delete all obsolete map results (ones from since-replaced revisions):
             ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence IN ("
                                             "SELECT parent FROM revs WHERE sequence>? "
                                                 "AND parent>0 AND parent<=?)",
-                                      $object(_viewID), $object(lastSequence), $object(lastSequence)];
+                                      @(_viewID), @(lastSequence), @(lastSequence)];
         }
         if (!ok)
             return kTDStatusDBError;
@@ -209,7 +209,7 @@ static id fromJSON( NSData* json ) {
             LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
             if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
                                         "(?, ?, ?, ?)",
-                                        $object(viewID), $object(sequence), keyJSON, valueJSON])
+                                        @(viewID), @(sequence), keyJSON, valueJSON])
                 ++inserted;
             else
                 emitFailed = YES;
@@ -220,7 +220,7 @@ static id fromJSON( NSData* json ) {
                                  "WHERE sequence>? AND current!=0 AND deleted=0 "
                                  "AND revs.doc_id = docs.doc_id "
                                  "ORDER BY revs.doc_id, revid DESC",
-                                 $object(lastSequence)];
+                                 @(lastSequence)];
         if (!r)
             return kTDStatusDBError;
 
@@ -254,7 +254,7 @@ static id fromJSON( NSData* json ) {
                                     @"SELECT revid, sequence FROM revs "
                                      "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
                                      "ORDER BY revID DESC",
-                                    $object(doc_id), $object(lastSequence)];
+                                    @(doc_id), @(lastSequence)];
                     while ([r2 next]) {
                         NSString* oldRevID = [r2 stringForColumnIndex:0];
                         if (!conflicts)
@@ -266,7 +266,7 @@ static id fromJSON( NSData* json ) {
                             first = NO;
                             SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
                             [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
-                                                 $object(_viewID), $object(oldSequence)];
+                                                 @(_viewID), @(oldSequence)];
                             if (TDCompareRevIDs(oldRevID, revID) > 0) {
                                 // It still 'wins' the conflict, so it's the one that
                                 // should be mapped [again], not the current revision!
@@ -275,7 +275,7 @@ static id fromJSON( NSData* json ) {
                                 revID = oldRevID;
                                 sequence = oldSequence;
                                 json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
-                                        $object(sequence)];
+                                        @(sequence)];
                             }
                         }
                     }
@@ -316,7 +316,7 @@ static id fromJSON( NSData* json ) {
         
         // Finally, record the last revision sequence number that was indexed:
         if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
-                                   $object(dbMaxSequence), $object(viewID)])
+                                   @(dbMaxSequence), @(viewID)])
             return kTDStatusDBError;
         
         LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
@@ -354,7 +354,7 @@ static id fromJSON( NSData* json ) {
     if (options->includeDocs)
         [sql appendString: @", revid, json, revs.sequence"];
     [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
-    NSMutableArray* args = $marray($object(_viewID));
+    NSMutableArray* args = $marray(@(_viewID));
 
     if (options->keys) {
         [sql appendString:@" AND key in ("];
@@ -393,11 +393,11 @@ static id fromJSON( NSData* json ) {
         [sql appendString: @" DESC"];
     if (options->limit != kDefaultTDQueryOptions.limit) {
         [sql appendString: @" LIMIT ?"];
-        [args addObject: $object(options->limit)];
+        [args addObject: @(options->limit)];
     }
     if (options->skip > 0) {
         [sql appendString: @" OFFSET ?"];
-        [args addObject: $object(options->skip)];
+        [args addObject: @(options->skip)];
     }
     
     LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
@@ -539,7 +539,7 @@ static id groupKey(id key, unsigned groupLevel) {
 
     FMResultSet* r = [_db.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
                                               "WHERE view_id=? ORDER BY key",
-                                             $object(_viewID)];
+                                             @(_viewID)];
     if (!r)
         return nil;
     NSMutableArray* result = $marray();

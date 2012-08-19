@@ -92,7 +92,7 @@
 
 
 - (void) queueObject: (id)object {
-    [self queueObjects: $array(object)];
+    [self queueObjects: @[object]];
 }
 
 

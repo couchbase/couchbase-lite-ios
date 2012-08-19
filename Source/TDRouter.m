@@ -223,7 +223,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     if (error)
         return NO;
     if (key)
-        options->keys = $array(key);
+        options->keys = @[key];
     return YES;
 }
 
@@ -659,7 +659,7 @@ static NSArray* splitPath( NSURL* url ) {
                                     [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
         }
     } else {
-        self.bodyObject = $dict({@"status", $object(_status)},
+        self.bodyObject = $dict({@"status", @(_status)},
                                 {@"error", statusMsg});
         [self setValue: @"application/json" ofHeader: @"Content-Type"];
     }

@@ -335,10 +335,10 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
 
 
 TestCase(TDPusher_findCommonAncestor) {
-    NSDictionary* revDict = $dict({@"ids", $array(@"second", @"first")}, {@"start", $object(2)});
+    NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
     TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_revisions", revDict})];
-    CAssertEq(findCommonAncestor(rev, $array()), 0);
-    CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"1-nope")), 0);
-    CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"1-first")), 1);
-    CAssertEq(findCommonAncestor(rev, $array(@"3-noway", @"2-second", @"1-first")), 2);
+    CAssertEq(findCommonAncestor(rev, @[]), 0);
+    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-nope"]), 0);
+    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-first"]), 1);
+    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"2-second", @"1-first"]), 2);
 }

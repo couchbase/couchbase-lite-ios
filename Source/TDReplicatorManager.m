@@ -153,7 +153,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         }
     }
     NSURL* remote = [NSURL URLWithString: [remoteDict objectForKey: @"url"]];
-    if (![$array(@"http", @"https", @"touchdb") containsObject: remote.scheme.lowercaseString])
+    if (![@[@"http", @"https", @"touchdb"] containsObject: remote.scheme.lowercaseString])
         return kTDStatusBadRequest;
     if (outDatabase) {
         *outDatabase = db;
@@ -306,7 +306,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     NSMutableDictionary* update = $mdict({@"_replication_id", repl.sessionID});
     if (!$equal(state, [rev.properties objectForKey: @"_replication_state"])) {
         [update setObject: state forKey: @"_replication_state"];
-        [update setObject: $object(time(NULL)) forKey: @"_replication_state_time"];
+        [update setObject: @(time(NULL)) forKey: @"_replication_state_time"];
     }
     [self updateDoc: rev withProperties: update];
 }

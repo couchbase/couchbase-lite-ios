@@ -243,6 +243,12 @@ static void roundtripFloat( double n ) {
             [json my_UTF8ToString], delta, [reconstituted doubleValue], n);
 }
 
+TestCase(TDCanonicalJSON_Encoding) {
+    CAssertEqual([TDCanonicalJSON canonicalString: $true], @"true");
+    CAssertEqual([TDCanonicalJSON canonicalString: $false], @"false");
+    CAssertEqual([TDCanonicalJSON canonicalString: $null], @"null");
+}
+
 TestCase(TDCanonicalJSON_RoundTrip) {
     roundtrip($true);
     roundtrip($false);
@@ -279,14 +285,14 @@ TestCase(TDCanonicalJSON_RoundTrip) {
     roundtrip(@"\001");
     roundtrip(@"\u1234");
     
-    roundtrip($array());
-    roundtrip($array($array()));
-    roundtrip($array(@"foo", @"bar", $null));
+    roundtrip(@[]);
+    roundtrip(@[@[]]);
+    roundtrip(@[@"foo", @"bar", $null]);
     
-    roundtrip($dict());
-    roundtrip($dict({@"key", @"value"}));
-    roundtrip($dict({@"\"key\"", $false}));
-    roundtrip($dict({@"\"key\"", $false}, {@"", $dict()}));
+    roundtrip(@{});
+    roundtrip(@{@"key": @"value"});
+    roundtrip(@{@"\"key\"": $false});
+    roundtrip(@{@"\"key\"": $false, @"": @{}});
 }
 
 #endif

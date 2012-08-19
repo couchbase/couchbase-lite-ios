@@ -112,13 +112,13 @@ TestCase(TDRouter_Server) {
     Send(server, @"GET", @"/", kTDStatusOK, $dict({@"TouchDB", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
                                           {@"version", [TDRouter versionString]}));
-    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, $array());
+    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, @[]);
     Send(server, @"GET", @"/non-existent", kTDStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kTDStatusBadID, nil);
     Send(server, @"PUT", @"/", kTDStatusBadRequest, nil);
     NSDictionary* response = Send(server, @"POST", @"/", kTDStatusBadRequest, nil);
     
-    CAssertEqual([response objectForKey: @"status"], $object(400));
+    CAssertEqual([response objectForKey: @"status"], @(400));
     CAssertEqual([response objectForKey: @"error"], @"bad request");
     
     NSDictionary* session = Send(server, @"GET", @"/_session", kTDStatusOK, nil);
@@ -139,11 +139,11 @@ TestCase(TDRouter_Databases) {
     
     Send(server, @"PUT", @"/database", kTDStatusDuplicate, nil);
     Send(server, @"PUT", @"/database2", kTDStatusCreated, nil);
-    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, $array(@"database", @"database2"));
+    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, @[@"database", @"database2"]);
     dbInfo = Send(server, @"GET", @"/database2", kTDStatusOK, nil);
     CAssertEqual([dbInfo objectForKey: @"db_name"], @"database2");
     Send(server, @"DELETE", @"/database2", kTDStatusOK, nil);
-    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, $array(@"database"));
+    Send(server, @"GET", @"/_all_dbs", kTDStatusOK, @[@"database"]);
 
     Send(server, @"PUT", @"/database%2Fwith%2Fslashes", kTDStatusCreated, nil);
     dbInfo = Send(server, @"GET", @"/database%2Fwith%2Fslashes", kTDStatusOK, nil);
@@ -184,8 +184,8 @@ TestCase(TDRouter_Docs) {
 
     // _all_docs:
     result = Send(server, @"GET", @"/db/_all_docs", kTDStatusOK, nil);
-    CAssertEqual([result objectForKey: @"total_rows"], $object(3));
-    CAssertEqual([result objectForKey: @"offset"], $object(0));
+    CAssertEqual([result objectForKey: @"total_rows"], @3);
+    CAssertEqual([result objectForKey: @"offset"], @0);
     NSArray* rows = [result objectForKey: @"rows"];
     CAssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
                                     {@"value", $dict({@"rev", revID})}),
@@ -205,29 +205,29 @@ TestCase(TDRouter_Docs) {
     
     // _changes:
     Send(server, @"GET", @"/db/_changes", kTDStatusOK,
-         $dict({@"last_seq", $object(5)},
+         $dict({@"last_seq", @5},
                {@"results", $array($dict({@"id", @"doc3"},
                                          {@"changes", $array($dict({@"rev", revID3}))},
-                                         {@"seq", $object(3)}),
+                                         {@"seq", @3}),
                                    $dict({@"id", @"doc2"},
                                          {@"changes", $array($dict({@"rev", revID2}))},
-                                         {@"seq", $object(4)}),
+                                         {@"seq", @4}),
                                    $dict({@"id", @"doc1"},
                                          {@"changes", $array($dict({@"rev", revID}))},
-                                         {@"seq", $object(5)},
+                                         {@"seq", @5},
                                          {@"deleted", $true}))}));
     CheckCacheable(server, @"/db/_changes");
     
     // _changes with ?since:
     Send(server, @"GET", @"/db/_changes?since=4", kTDStatusOK,
-         $dict({@"last_seq", $object(5)},
+         $dict({@"last_seq", @5},
                {@"results", $array($dict({@"id", @"doc1"},
                                          {@"changes", $array($dict({@"rev", revID}))},
-                                         {@"seq", $object(5)},
+                                         {@"seq", @5},
                                          {@"deleted", $true}))}));
     Send(server, @"GET", @"/db/_changes?since=5", kTDStatusOK,
-         $dict({@"last_seq", $object(5)},
-               {@"results", $array()}));
+         $dict({@"last_seq", @5},
+               {@"results", @[]}));
     [server close];
 }
 
@@ -252,8 +252,8 @@ TestCase(TDRouter_LocalDocs) {
 
     // Local doc should not appear in _changes feed:
     Send(server, @"GET", @"/db/_changes", kTDStatusOK,
-         $dict({@"last_seq", $object(0)},
-               {@"results", $array()}));
+         $dict({@"last_seq", @0},
+               {@"results", @[]}));
     [server close];
 }
 
@@ -273,8 +273,8 @@ TestCase(TDRouter_AllDocs) {
     
     // _all_docs:
     result = Send(server, @"GET", @"/db/_all_docs", kTDStatusOK, nil);
-    CAssertEqual([result objectForKey: @"total_rows"], $object(3));
-    CAssertEqual([result objectForKey: @"offset"], $object(0));
+    CAssertEqual([result objectForKey: @"total_rows"], @3);
+    CAssertEqual([result objectForKey: @"offset"], @0);
     NSArray* rows = [result objectForKey: @"rows"];
     CAssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
                                     {@"value", $dict({@"rev", revID})}),
@@ -286,8 +286,8 @@ TestCase(TDRouter_AllDocs) {
     
     // ?include_docs:
     result = Send(server, @"GET", @"/db/_all_docs?include_docs=true", kTDStatusOK, nil);
-    CAssertEqual([result objectForKey: @"total_rows"], $object(3));
-    CAssertEqual([result objectForKey: @"offset"], $object(0));
+    CAssertEqual([result objectForKey: @"total_rows"], @3);
+    CAssertEqual([result objectForKey: @"offset"], @0);
     rows = [result objectForKey: @"rows"];
     CAssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
                                     {@"value", $dict({@"rev", revID})},
@@ -324,11 +324,11 @@ TestCase(TDRouter_Views) {
 
     // Query the view and check the result:
     Send(server, @"GET", @"/db/_design/design/_view/view", kTDStatusOK,
-         $dict({@"offset", $object(0)},
+         $dict({@"offset", @0},
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
                                 $dict({@"id", @"doc2"}, {@"key", @"guten tag"}),
                                 $dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
-               {@"total_rows", $object(3)}));
+               {@"total_rows", @3}));
     
     // Check the ETag:
     TDResponse* response = SendRequest(server, @"GET", @"/db/_design/design/_view/view", nil, nil);
@@ -347,7 +347,7 @@ TestCase(TDRouter_Views) {
     response = SendRequest(server, @"GET", @"/db/_design/design/_view/view",
                            $dict({@"If-None-Match", etag}), nil);
     CAssertEq(response.status, kTDStatusOK);
-    CAssertEqual([ParseJSONResponse(response) objectForKey: @"total_rows"], $object(4));
+    CAssertEqual([ParseJSONResponse(response) objectForKey: @"total_rows"], @4);
     [server close];
 }
 
@@ -454,14 +454,14 @@ TestCase(TDRouter_GetAttachment) {
     CAssertEqual([response.body.properties objectForKey: @"_attachments"],
                  $dict({@"attach", $dict({@"data", [TDBase64 encode: attach1]}, 
                                         {@"content_type", @"text/plain"},
-                                        {@"length", $object(attach1.length)},
+                                        {@"length", @(attach1.length)},
                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
-                                         {@"revpos", $object(1)})},
+                                         {@"revpos", @1})},
                        {@"path/to/attachment", $dict({@"data", [TDBase64 encode: attach2]}, 
                                          {@"content_type", @"text/plain"},
-                                         {@"length", $object(attach2.length)},
+                                         {@"length", @(attach2.length)},
                                          {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
-                                         {@"revpos", $object(1)})}));
+                                         {@"revpos", @1})}));
 
     // Update the document but not the attachments:
     NSDictionary *attachmentDict, *props;
@@ -482,14 +482,14 @@ TestCase(TDRouter_GetAttachment) {
          $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"aloha"},
                {@"_attachments", $dict({@"attach", $dict({@"stub", $true}, 
                                                          {@"content_type", @"text/plain"},
-                                                         {@"length", $object(attach1.length)},
+                                                         {@"length", @(attach1.length)},
                                                          {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
-                                                         {@"revpos", $object(1)})},
+                                                         {@"revpos", @1})},
                                        {@"path/to/attachment", $dict({@"stub", $true}, 
                                                                      {@"content_type", @"text/plain"},
-                                                                     {@"length", $object(attach2.length)},
+                                                                     {@"length", @(attach2.length)},
                                                                      {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
-                                                                     {@"revpos", $object(1)})})}));
+                                                                     {@"revpos", @1})})}));
     [server close];
 }
 
@@ -531,7 +531,7 @@ TestCase(TDRouter_PutMultipart) {
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                                           {@"length", $object(36)},
+                                                           {@"length", @(36)},
                                                            {@"content_type", @"text/plain"},
                                                            {@"follows", $true})});
     NSDictionary* props = $dict({@"message", @"hello"},
@@ -611,16 +611,16 @@ TestCase(TDRouter_RevsDiff) {
     NSString* doc1r3ID = [doc1r3 objectForKey: @"rev"];
     
     SendBody(server, @"POST", @"/db/_revs_diff",
-             $dict({@"11111", $array(doc1r2ID, @"3-foo")},
-                   {@"22222", $array(doc2r1ID)},
-                   {@"33333", $array(@"10-bar")},
-                   {@"99999", $array(@"6-six")}),
+             $dict({@"11111", @[doc1r2ID, @"3-foo"]},
+                   {@"22222", @[doc2r1ID]},
+                   {@"33333", @[@"10-bar"]},
+                   {@"99999", @[@"6-six"]}),
              kTDStatusOK,
-             $dict({@"11111", $dict({@"missing", $array(@"3-foo")},
-                                    {@"possible_ancestors", $array(doc1r2ID, doc1r1ID)})},
-                   {@"33333", $dict({@"missing", $array(@"10-bar")},
-                                    {@"possible_ancestors", $array(doc3r1ID)})},
-                   {@"99999", $dict({@"missing", $array(@"6-six")})}
+             $dict({@"11111", $dict({@"missing", @[@"3-foo"]},
+                                    {@"possible_ancestors", @[doc1r2ID, doc1r1ID]})},
+                   {@"33333", $dict({@"missing", @[@"10-bar"]},
+                                    {@"possible_ancestors", @[doc3r1ID]})},
+                   {@"99999", $dict({@"missing", @[@"6-six"]})}
                    ));
     
     // Compact the database -- this will null out the JSON of doc1r1 & doc1r2,
@@ -628,16 +628,16 @@ TestCase(TDRouter_RevsDiff) {
     Send(server, @"POST", @"/db/_compact", kTDStatusAccepted, nil);
     
     SendBody(server, @"POST", @"/db/_revs_diff",
-             $dict({@"11111", $array(doc1r2ID, @"4-foo")},
-                   {@"22222", $array(doc2r1ID)},
-                   {@"33333", $array(@"10-bar")},
-                   {@"99999", $array(@"6-six")}),
+             $dict({@"11111", @[doc1r2ID, @"4-foo"]},
+                   {@"22222", @[doc2r1ID]},
+                   {@"33333", @[@"10-bar"]},
+                   {@"99999", @[@"6-six"]}),
              kTDStatusOK,
-             $dict({@"11111", $dict({@"missing", $array(@"4-foo")},
-                                    {@"possible_ancestors", $array(doc1r3ID)})},
-                   {@"33333", $dict({@"missing", $array(@"10-bar")},
-                                    {@"possible_ancestors", $array(doc3r1ID)})},
-                   {@"99999", $dict({@"missing", $array(@"6-six")})}
+             $dict({@"11111", $dict({@"missing", @[@"4-foo"]},
+                                    {@"possible_ancestors", @[doc1r3ID]})},
+                   {@"33333", $dict({@"missing", @[@"10-bar"]},
+                                    {@"possible_ancestors", @[doc3r1ID]})},
+                   {@"99999", $dict({@"missing", @[@"6-six"]})}
                    ));
     [server close];
 }

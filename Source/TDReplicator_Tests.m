@@ -118,7 +118,7 @@ TestCase(TDPusher) {
 
     // Create some documents:
     NSMutableDictionary* props = $mdict({@"_id", @"doc1"},
-                                        {@"foo", $object(1)}, {@"bar", $false});
+                                        {@"foo", @1}, {@"bar", $false});
     TDStatus status;
     TDRevision* rev1 = [db putRevision: [TDRevision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
@@ -131,7 +131,7 @@ TestCase(TDPusher) {
     CAssertEq(status, kTDStatusCreated);
     
     props = $mdict({@"_id", @"doc2"},
-                   {@"baz", $object(666)}, {@"fnord", $true});
+                   {@"baz", @(666)}, {@"fnord", $true});
     [db putRevision: [TDRevision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusCreated);
@@ -167,7 +167,7 @@ TestCase(TDPuller) {
     TDRevision* doc = [db getDocumentWithID: @"doc1" revisionID: nil options: 0];
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"2-"]);
-    CAssertEqual([doc.properties objectForKey: @"foo"], $object(1));
+    CAssertEqual([doc.properties objectForKey: @"foo"], @1);
     
     doc = [db getDocumentWithID: @"doc2" revisionID: nil options: 0];
     CAssert(doc);
@@ -218,7 +218,7 @@ TestCase(TDReplicatorManager) {
     
     // Try some bogus validation docs that will fail the validator function:
     TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
-                                                                {@"target", $object(7)})];
+                                                                {@"target", @7})];
 #pragma unused (rev) // some of the 'rev=' assignments below are unnecessary
     TDStatus status;
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
