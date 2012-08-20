@@ -151,6 +151,7 @@
                                        {@"continuous", (repl.continuous ? $true : nil)},
                                        {@"status", status},
                                        {@"progress", progress},
+                                       {@"x_active_requests", repl.activeRequestsStatus},
                                        {@"error", error})];
         }
     }
@@ -404,7 +405,10 @@
 }
 
 
-- (NSDictionary*) responseBodyForChangesWithConflicts: (NSArray*)changes since: (UInt64)since {
+- (NSDictionary*) responseBodyForChangesWithConflicts: (NSArray*)changes
+                                                since: (UInt64)since
+                                                limit: (NSUInteger)limit
+{
     // Assumes the changes are grouped by docID so that conflicts will be adjacent.
     NSMutableArray* entries = [NSMutableArray arrayWithCapacity: changes.count];
     NSString* lastDocID = nil;
@@ -424,6 +428,8 @@
         return TDSequenceCompare([[e1 objectForKey: @"seq"] longLongValue],
                                  [[e2 objectForKey: @"seq"] longLongValue]);
     }];
+    if (entries.count > limit)
+        [entries removeObjectsInRange: NSMakeRange(limit, entries.count - limit)];
     id lastSeq = [entries.lastObject objectForKey: @"seq"] ?: $object(since);
     return $dict({@"results", entries}, {@"last_seq", lastSeq});
 }
@@ -513,7 +519,8 @@
         // Return a response immediately and close the connection:
         if (options.includeConflicts)
             _response.bodyObject = [self responseBodyForChangesWithConflicts: changes.allRevisions
-                                                                       since: since];
+                                                                       since: since
+                                                                       limit: options.limit];
         else
             _response.bodyObject = [self responseBodyForChanges: changes.allRevisions since: since];
         return kTDStatusOK;

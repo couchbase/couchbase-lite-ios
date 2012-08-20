@@ -62,6 +62,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     NSString* _path;
     NSString* _name;
     FMDatabase *_fmdb;
+    BOOL _readOnly;
     BOOL _open;
     int _transactionLevel;
     NSMutableDictionary* _views;
@@ -78,6 +79,9 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (BOOL) deleteDatabase: (NSError**)outError;
 
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path;
+
+/** Should the database file be opened in read-only mode? */
+@property BOOL readOnly;
 
 /** Replaces the database with a copy of another database.
     This is primarily used to install a canned database on first launch of an app, in which case you should first check .exists to avoid replacing the database if it exists already. The canned database would have been copied into your app bundle at build time.

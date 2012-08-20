@@ -117,9 +117,6 @@
     Assert(sequence > 0);
     Assert(attachment.isValid);
     NSData* keyData = [NSData dataWithBytes: &attachment->blobKey length: sizeof(TDBlobKey)];
-    if (attachment->encodedLength > attachment->length)
-        Warn(@"Encoded attachment bigger than original: %llu > %llu for key %@",
-             attachment->encodedLength, attachment->length, keyData);
     id encodedLengthObj = attachment->encoding ? $object(attachment->encodedLength) : nil;
     if (![_fmdb executeUpdate: @"INSERT INTO attachments "
                                   "(sequence, filename, key, type, encoding, length, encoded_length, revpos) "

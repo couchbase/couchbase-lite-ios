@@ -142,7 +142,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     setObj(&_bulkRevsToPull, nil);
     [super stop];
     
-    [_downloadsToInsert flush];
+    [_downloadsToInsert flushAll];
 }
 
 
@@ -223,7 +223,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             self.error = error;
     }
     
-    [_batcher flush];
+    [_batcher flushAll];
     if (!_continuous)
         [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
 }
@@ -371,7 +371,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     LogTo(SyncVerbose, @"%@: GET .%@", self, path);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
+    __block TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
                                     initWithURL: [NSURL URLWithString: urlStr]
                                        database: _db
                                  requestHeaders: self.requestHeaders
@@ -382,19 +382,22 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 self.error = error;
                 self.changesProcessed++;
             } else {
-                rev.properties = download.document;
+                TDRevision* gotRev = [TDRevision revisionWithProperties: download.document];
+                gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                [_downloadsToInsert queueObject: rev];
+                [_downloadsToInsert queueObject: gotRev];
                 [self asyncTaskStarted];
             }
             
             // Note that we've finished this task:
+            [self removeRemoteRequest: dl];
             [self asyncTasksFinished: 1];
             --_httpConnectionCount;
             // Start another task if there are still revisions waiting to be pulled:
             [self pullRemoteRevisions];
         }
      ] autorelease];
+    [self addRemoteRequest: dl];
     dl.authorizer = _authorizer;
     [dl start];
 }

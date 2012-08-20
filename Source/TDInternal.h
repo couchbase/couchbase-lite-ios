@@ -97,11 +97,14 @@
 - (void) maybeCreateRemoteDB;
 - (void) beginReplicating;
 - (void) addToInbox: (TDRevision*)rev;
+- (void) addRevsToInbox: (TDRevisionList*)revs;
 - (void) processInbox: (TDRevisionList*)inbox;  // override this
 - (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)relativePath
                                      body: (id)body
                              onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
+- (void) addRemoteRequest: (TDRemoteRequest*)request;
+- (void) removeRemoteRequest: (TDRemoteRequest*)request;
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;

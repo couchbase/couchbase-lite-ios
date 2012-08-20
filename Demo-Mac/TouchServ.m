@@ -149,6 +149,7 @@ int main (int argc, const char * argv[])
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
                 listener.readOnly = YES;
+                [server tellDatabaseManager: ^(TDDatabaseManager *mgr) { mgr.readOnly = YES; }];
             } else if (strcmp(argv[i], "--auth") == 0) {
                 srandomdev();
                 NSString* password = [NSString stringWithFormat: @"%lx", random()];
