@@ -382,9 +382,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 self.error = error;
                 self.changesProcessed++;
             } else {
-                rev.properties = download.document;
+                TDRevision* gotRev = [TDRevision revisionWithProperties: download.document];
+                gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                [_downloadsToInsert queueObject: rev];
+                [_downloadsToInsert queueObject: gotRev];
                 [self asyncTaskStarted];
             }
             
