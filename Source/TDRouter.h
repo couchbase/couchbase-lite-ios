@@ -88,6 +88,7 @@ typedef void (^OnFinishedBlock)();
     TDStatus _internalStatus;
     int _status;
     NSString* _statusMsg;
+    NSString* _statusReason;
     NSMutableDictionary* _headers;
     TDBody* _body;
 }
@@ -95,6 +96,7 @@ typedef void (^OnFinishedBlock)();
 @property (nonatomic) TDStatus internalStatus;
 @property (nonatomic) int status;
 @property (nonatomic, readonly) NSString* statusMsg;
+@property (nonatomic, copy) NSString* statusReason;
 @property (nonatomic, retain) NSMutableDictionary* headers;
 @property (nonatomic, retain) TDBody* body;
 @property (nonatomic, copy) id bodyObject;

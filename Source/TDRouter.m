@@ -634,6 +634,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (void)dealloc {
     [_statusMsg release];
+    [_statusReason release];
     [_headers release];
     [_body release];
     [super dealloc];
@@ -645,7 +646,7 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 @synthesize status=_status, internalStatus=_internalStatus, statusMsg=_statusMsg,
-            headers=_headers, body=_body;
+            statusReason=_statusReason, headers=_headers, body=_body;
 
 - (void) setInternalStatus:(TDStatus)internalStatus {
     _internalStatus = internalStatus;
@@ -659,7 +660,8 @@ static NSArray* splitPath( NSURL* url ) {
         }
     } else {
         self.bodyObject = $dict({@"status", @(_status)},
-                                {@"error", statusMsg});
+                                {@"error", statusMsg},
+                                {@"reason", _statusReason});
         self[@"Content-Type"]= @"application/json";
     }
 }

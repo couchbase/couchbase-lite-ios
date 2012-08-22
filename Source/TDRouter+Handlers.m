@@ -567,6 +567,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             if (acceptMultipart)
                 options &= ~kTDIncludeAttachments;
             rev = [db getDocumentWithID: docID revisionID: revID options: options];
+            if (!rev) {
+                if (!revID && [db getDocNumericID: docID] > 0)
+                    _response.statusReason = @"deleted";
+                else
+                    _response.statusReason = @"missing";
+            }
         }
 
         if (!rev)
