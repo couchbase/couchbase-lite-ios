@@ -448,6 +448,12 @@
 
 - (void) dbChanged: (NSNotification*)n {
     TDRevision* rev = (n.userInfo)[@"rev"];
+
+    if (!_changesIncludeConflicts) {
+        rev = [_db newWinnerAfterRev: rev];
+        if (!rev)
+            return;
+    }
     
     if (_changesFilter && !_changesFilter(rev, _changesFilterParams))
         return;
@@ -479,8 +485,9 @@
     // Get options:
     TDChangesOptions options = kDefaultTDChangesOptions;
     _changesIncludeDocs = [self boolQuery: @"include_docs"];
+    _changesIncludeConflicts = $equal([self query: @"style"], @"all_docs");
     options.includeDocs = _changesIncludeDocs;
-    options.includeConflicts = $equal([self query: @"style"], @"all_docs");
+    options.includeConflicts = _changesIncludeConflicts;
     options.contentOptions = [self contentOptions];
     options.sortBySequence = !options.includeConflicts;
     options.limit = [self intQuery: @"limit" defaultValue: options.limit];
@@ -517,7 +524,7 @@
         return 0;
     } else {
         // Return a response immediately and close the connection:
-        if (options.includeConflicts)
+        if (_changesIncludeConflicts)
             _response.bodyObject = [self responseBodyForChangesWithConflicts: changes.allRevisions
                                                                        since: since
                                                                        limit: options.limit];

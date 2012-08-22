@@ -39,6 +39,7 @@ typedef void (^OnFinishedBlock)();
     TDFilterBlock _changesFilter;
     NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
+    BOOL _changesIncludeConflicts;
 }
 
 - (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request isLocal: (BOOL)isLocal;

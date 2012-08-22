@@ -146,6 +146,12 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
 - (NSString*) findCommonAncestorOf: (TDRevision*)rev withRevIDs: (NSArray*)revIDs;
 
+/** Does this revision affect the winning revision of the document?
+    (If this revision is a deletion, did it delete the previous winner?
+    Otherwise, does it become the winner?)
+    If so, return the new winner; else nil. */
+- (TDRevision*) newWinnerAfterRev: (TDRevision*)rev;
+
 // VIEWS & QUERIES:
 
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;

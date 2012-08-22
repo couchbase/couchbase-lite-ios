@@ -312,7 +312,9 @@ TestCase(TDDatabase_RevTree) {
     CAssertEq(status, kTDStatusCreated);
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, rev, history);
-    
+    CAssertEqual([db newWinnerAfterRev: rev], rev);
+
+
     TDRevision* conflict = [[[TDRevision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO] autorelease];
     conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
                                 {@"message", @"yo"});
@@ -321,7 +323,8 @@ TestCase(TDDatabase_RevTree) {
     CAssertEq(status, kTDStatusCreated);
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, conflict, history);
-    
+    CAssertEqual([db newWinnerAfterRev: conflict], conflict);
+
     // Add an unrelated document:
     TDRevision* other = [[[TDRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO] autorelease];
     other.properties = $dict({@"language", @"jp"});
@@ -352,6 +355,24 @@ TestCase(TDDatabase_RevTree) {
     options.includeConflicts = YES;
     changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil];
     CAssertEqual(changes.allRevisions, (@[rev, conflict, other]));
+
+    // Delete the current winning rev, leaving the other one:
+    TDRevision* del1 = [[[TDRevision alloc] initWithDocID: conflict.docID revID: nil deleted: YES] autorelease];
+    del1 = [db putRevision: del1 prevRevisionID: conflict.revID
+             allowConflict: NO status: &status];
+    CAssertEq(status, 200);
+    current = [db getDocumentWithID: rev.docID revisionID: nil options: 0];
+    CAssertEqual(current, rev);
+    CAssertEqual([db newWinnerAfterRev: del1], rev);
+
+    // Delete the remaining rev:
+    TDRevision* del2 = [[[TDRevision alloc] initWithDocID: rev.docID revID: nil deleted: YES] autorelease];
+    del2 = [db putRevision: del2 prevRevisionID: rev.revID
+             allowConflict: NO status: &status];
+    CAssertEq(status, 200);
+    current = [db getDocumentWithID: rev.docID revisionID: nil options: 0];
+    CAssertEq(current, nil);
+    CAssertEqual([db newWinnerAfterRev: del2], del2);
 }
 
 
