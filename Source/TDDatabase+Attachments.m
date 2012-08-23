@@ -516,7 +516,9 @@
     
     [self beginTransaction];
     @try {
-        TDRevision* oldRev = [[TDRevision alloc] initWithDocID: docID revID: oldRevID deleted: NO];
+        TDRevision* oldRev = [[[TDRevision alloc] initWithDocID: docID
+                                                          revID: oldRevID
+                                                        deleted: NO] autorelease];
         if (oldRevID) {
             // Load existing revision if this is a replacement:
             *outStatus = [self loadRevisionBody: oldRev options: 0];
