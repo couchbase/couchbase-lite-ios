@@ -15,7 +15,7 @@ typedef SInt64 SequenceNumber;
 
 
 /** Stores information about a revision -- its docID, revID, and whether it's deleted. It can also store the sequence number and document contents (they can be added after creation). */
-@interface TDRevision : NSObject
+@interface TDRevision : NSObject <NSCopying>
 {
     @private
     NSString* _docID, *_revID;

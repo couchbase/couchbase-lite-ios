@@ -52,7 +52,6 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
         _dbManager = dbManager;
         _replicatorDB = [[dbManager databaseNamed: kTDReplicatorDatabaseName] retain];
         Assert(_replicatorDB);
-        _thread = [NSThread currentThread];
     }
     return self;
 }
@@ -72,7 +71,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
          }];
     [self processAllDocs];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
-                                                 name: TDDatabaseChangeNotification
+                                                 name: TDDatabaseChangesNotification
                                                object: _replicatorDB];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(someDbDeleted:)
                                                  name: TDDatabaseWillBeDeletedNotification
@@ -422,7 +421,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 - (void) appForegrounding: (NSNotification*)n {
     // Danger: This is called on the main thread!
-    MYOnThread(_thread, ^{
+    MYOnThread(_replicatorDB.thread, ^{
         LogTo(Sync, @"App activated -- restarting all replications");
         [self processAllDocs];
     });
@@ -433,20 +432,22 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 - (void) dbChanged: (NSNotification*)n {
     if (_updateInProgress)
         return;
-    TDRevision* rev = [n.userInfo objectForKey: @"rev"];
-    LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
-    NSString* docID = rev.docID;
-    if ([docID hasPrefix: @"_"])
-        return;
-    if (rev.deleted) {
-        TDReplicator* repl = [_replicatorsByDocID objectForKey: docID];
-        if (repl)
-            [self processDeletion: rev ofReplicator: repl];
-    } else {
-        if ([_replicatorDB loadRevisionBody: rev options: 0])
-            [self processRevision: rev];
-        else
-            Warn(@"Unable to load body of %@", rev);
+    for (NSDictionary* change in [n.userInfo objectForKey: @"changes"]) {
+        TDRevision* rev = [change objectForKey: @"rev"];
+        LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
+        NSString* docID = rev.docID;
+        if ([docID hasPrefix: @"_"])
+            continue;
+        if (rev.deleted) {
+            TDReplicator* repl = [_replicatorsByDocID objectForKey: docID];
+            if (repl)
+                [self processDeletion: rev ofReplicator: repl];
+        } else {
+            if ([_replicatorDB loadRevisionBody: rev options: 0])
+                [self processRevision: rev];
+            else
+                Warn(@"Unable to load body of %@", rev);
+        }
     }
 }
 

@@ -43,7 +43,7 @@ _TDURLWithoutQuery
 _TDSequenceCompare
 _TDVersionString
 
-_TDDatabaseChangeNotification
+_TDDatabaseChangesNotification
 _TDDatabaseWillCloseNotification
 _TDReplicatorProgressChangedNotification
 _TDReplicatorStoppedNotification

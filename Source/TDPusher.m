@@ -93,7 +93,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_continuous) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
-                                                     name: TDDatabaseChangeNotification object: _db];
+                                                     name: TDDatabaseChangesNotification object: _db];
     }
 }
 
@@ -102,7 +102,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_observing) {
         _observing = NO;
         [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                        name: TDDatabaseChangeNotification
+                                                        name: TDDatabaseChangesNotification
                                                       object: _db];
     }
 }
@@ -123,15 +123,16 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 
 - (void) dbChanged: (NSNotification*)n {
-    NSDictionary* userInfo = n.userInfo;
-    // Skip revisions that originally came from the database I'm syncing to:
-    if ([[userInfo objectForKey: @"source"] isEqual: _remote])
-        return;
-    TDRevision* rev = [userInfo objectForKey: @"rev"];
-    TDFilterBlock filter = self.filter;
-    if (filter && !filter(rev, _filterParameters))
-        return;
-    [self addToInbox: rev];
+    NSArray* changes = [n.userInfo objectForKey: @"changes"];
+    for (NSDictionary* change in changes) {
+        // Skip revisions that originally came from the database I'm syncing to:
+        if (![[change objectForKey: @"source"] isEqual: _remote]) {
+            TDRevision* rev = [change objectForKey: @"rev"];
+            TDFilterBlock filter = self.filter;
+            if (!filter || filter(rev, _filterParameters))
+                [self addToInbox: rev];
+        }
+    }
 }
 
 

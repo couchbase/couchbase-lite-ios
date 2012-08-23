@@ -275,7 +275,7 @@
         properties = [[NSMutableDictionary alloc] init];
     for (NSString* key in _changedNames)
         [properties setValue: [_properties objectForKey: key] forKey: key];
-    return properties;
+    return [properties autorelease];
 }
 
 

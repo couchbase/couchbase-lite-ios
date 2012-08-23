@@ -82,6 +82,11 @@
 #pragma mark - BODY
 
 
+- (NSData*) newBody {
+    return _body ? self.body : nil;
+}
+
+
 - (NSData*) body {
     if (_body) {
         if ([_body isKindOfClass: [NSData class]])
@@ -124,7 +129,7 @@
 
 
 // Goes through an _attachments dictionary and replaces any values that are TouchAttachment objects
-// with proper JSON metadata dicts. It registers the attachment bodes with the blob store and sets
+// with proper JSON metadata dicts. It registers the attachment bodies with the blob store and sets
 // the metadata 'digest' and 'follows' properties accordingly.
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (TouchDatabase*)database
@@ -133,19 +138,21 @@
     return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
         TouchAttachment* attachment = $castIf(TouchAttachment, value);
         if (attachment) {
-            // Copy attachment body into the database's blob store:
-            // OPT: If _body is an NSURL, could just copy the file without reading into RAM
-            NSData* body = attachment.body;
-            TDBlobStoreWriter* writer = tddb.attachmentWriter;
-            [writer appendData: body];
-            [writer finish];
-            // Replace the attachment object with a metadata dictionary pointing at the stored blob:
+            // Replace the attachment object with a metadata dictionary:
             NSMutableDictionary* metadata = [[attachment.metadata mutableCopy] autorelease];
-            [metadata setObject: writer.MD5DigestString forKey: @"digest"];
-            [metadata setObject: $object(body.length) forKey: @"length"];
-            [metadata setObject: $true forKey: @"follows"];
             value = metadata;
-            [tddb rememberAttachmentWriter: writer];
+            NSData* body = attachment.newBody;
+            if (body) {
+                // Copy attachment body into the database's blob store:
+                // OPT: If _body is an NSURL, could just copy the file without reading into RAM
+                TDBlobStoreWriter* writer = tddb.attachmentWriter;
+                [writer appendData: body];
+                [writer finish];
+                [metadata setObject: $object(body.length) forKey: @"length"];
+                [metadata setObject: writer.MD5DigestString forKey: @"digest"];
+                [metadata setObject: $true forKey: @"follows"];
+                [tddb rememberAttachmentWriter: writer];
+            }
         }
         return value;
     }];

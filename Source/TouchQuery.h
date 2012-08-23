@@ -26,6 +26,7 @@ typedef enum {
     @private
     TouchDatabase* _database;
     TDView* _view;              // nil for _all_docs query
+    BOOL _temporaryView;
     NSUInteger _limit, _skip;
     id _startKey, _endKey;
     NSString* _startKeyDocID;
@@ -122,9 +123,6 @@ typedef enum {
 
 /** The number of rows returned in this enumerator */
 @property (readonly) NSUInteger count;
-
-/** The total number of rows in the query (excluding options like limit, skip, etc.) */
-@property (readonly) NSUInteger totalCount;
 
 /** The database's current sequenceNumber at the time the view was generated. */
 @property (readonly) NSUInteger sequenceNumber;

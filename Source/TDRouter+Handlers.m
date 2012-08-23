@@ -446,20 +446,27 @@
 
 
 - (void) dbChanged: (NSNotification*)n {
-    TDRevision* rev = [n.userInfo objectForKey: @"rev"];
-    
-    if (_changesFilter && !_changesFilter(rev, _changesFilterParams))
-        return;
+    NSMutableArray* changes = $marray();
+    for (NSDictionary* change in [n.userInfo objectForKey: @"changes"]) {
+        TDRevision* rev = [change objectForKey: @"rev"];
+        
+        if (_changesFilter && !_changesFilter(rev, _changesFilterParams))
+            continue;
+
+        [changes addObject: rev];
+
+        if (!_longpoll) {
+            Log(@"TDRouter: Sending continous change chunk");
+            [self sendContinuousChange: rev];
+        }
+    }
 
     if (_longpoll) {
         Log(@"TDRouter: Sending longpoll response");
         [self sendResponseHeaders];
-        NSDictionary* body = [self responseBodyForChanges: $array(rev) since: 0];
+        NSDictionary* body = [self responseBodyForChanges: changes since: 0];
         _response.body = [TDBody bodyWithProperties: body];
         [self sendResponseBodyAndFinish: YES];
-    } else {
-        Log(@"TDRouter: Sending continous change chunk");
-        [self sendContinuousChange: rev];
     }
 }
 
@@ -510,7 +517,7 @@
         }
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(dbChanged:)
-                                                     name: TDDatabaseChangeNotification
+                                                     name: TDDatabaseChangesNotification
                                                    object: db];
         // Don't close connection; more data to come
         return 0;

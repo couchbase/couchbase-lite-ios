@@ -23,7 +23,6 @@ extern NSString* TDReplicatorStoppedNotification;
 @interface TDReplicator : NSObject
 {
     @protected
-    NSThread* _thread;
     TDDatabase* _db;
     NSURL* _remote;
     TDReachability* _host;

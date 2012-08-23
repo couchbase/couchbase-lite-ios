@@ -26,8 +26,10 @@
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
+#import "MYBlockUtils.h"
 
 
+NSString* const TDDatabaseChangesNotification = @"TDDatabaseChanges";
 NSString* const TDDatabaseWillCloseNotification = @"TDDatabaseWillClose";
 NSString* const TDDatabaseWillBeDeletedNotification = @"TDDatabaseWillBeDeleted";
 
@@ -71,6 +73,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         _fmdb.logsErrors = WillLogTo(TDDatabase);
 #endif
         _fmdb.traceExecution = WillLogTo(TDDatabaseVerbose);
+        _thread = [[NSThread currentThread] retain];
     }
     return self;
 }
@@ -332,12 +335,14 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     [_filters release];
     [_attachments release];
     [_pendingAttachmentsByDigest release];
+    [_changesToNotify release];
+    [_thread release];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [super dealloc];
 }
 
 @synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments,
-            touchDatabase=_touchDatabase;
+            touchDatabase=_touchDatabase, thread=_thread;
 
 
 - (UInt64) totalDataSize {
@@ -346,6 +351,18 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         return 0;
     return attrs.fileSize + _attachments.totalDataSize;
 }
+
+
+- (NSString*) privateUUID {
+    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='privateUUID'"];
+}
+
+- (NSString*) publicUUID {
+    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='publicUUID'"];
+}
+
+
+#pragma mark - TRANSACTIONS:
 
 
 - (BOOL) beginTransaction {
@@ -364,10 +381,12 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         LogTo(TDDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
         if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)])
             return NO;
+        [_changesToNotify removeAllObjects];
     }
     if (![_fmdb executeUpdate: $sprintf(@"RELEASE tdb%d", _transactionLevel)])
         return NO;
     --_transactionLevel;
+    [self postChangeNotifications];
     return YES;
 }
 
@@ -386,12 +405,43 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-- (NSString*) privateUUID {
-    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='privateUUID'"];
+/** Posts a local NSNotification of a new revision of a document. */
+- (void) notifyChange: (TDRevision*)rev source: (NSURL*)source
+{
+    NSDictionary* userInfo = $dict({@"rev", rev},
+                                   {@"source", source});
+    if (!_changesToNotify)
+        _changesToNotify = [[NSMutableArray alloc] init];
+    [_changesToNotify addObject: userInfo];
+    [self postChangeNotifications];
 }
 
-- (NSString*) publicUUID {
-    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='publicUUID'"];
+
+- (void) postChangeNotifications {
+    if (_transactionLevel == 0 && _changesToNotify.count > 0) {
+        LogTo(TDDatabase, @"Posting %u change notifications", (unsigned)_changesToNotify.count);
+        NSArray* changes = [_changesToNotify autorelease];
+        _changesToNotify = nil;
+        [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseChangesNotification
+                                                            object: self
+                                                          userInfo: $dict({@"changes", changes})];
+    }
+}
+
+
+- (void) dbChanged: (NSNotification*)n {
+    TDDatabase* senderDB = n.object;
+    if (senderDB != self && [senderDB.path isEqualToString: _path]) {
+        for (NSDictionary* changes in [n.userInfo objectForKey: @"changes"]) {
+            // TDRevision objects have mutable state inside, so copy this one first:
+            TDRevision* rev = [[changes objectForKey: @"rev"] copy];
+            NSURL* source = [changes objectForKey: @"source"];
+            MYOnThread(_thread, ^{
+                [self notifyChange: rev source: source];
+            });
+            [rev release];
+        }
+    }
 }
 
 
@@ -852,6 +902,15 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         return kTDStatusDBError;
     [_views removeObjectForKey: name];
     return _fmdb.changes ? kTDStatusOK : kTDStatusNotFound;
+}
+
+
+- (TDView*) makeAnonymousView {
+    for (int n = 1; true; ++n) {
+        NSString* name = $sprintf(@"$anon$%d", n);
+        if ([_fmdb intForQuery: @"SELECT count(*) FROM views WHERE name=?", name] <= 0)
+            return [self viewNamed: name];
+    }
 }
 
 

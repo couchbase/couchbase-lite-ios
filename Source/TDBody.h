@@ -10,7 +10,7 @@
 
 
 /** A request/response/document body, stored as either JSON or an NSDictionary. */
-@interface TDBody : NSObject 
+@interface TDBody : NSObject <NSCopying>
 {
     @private
     NSData* _json;

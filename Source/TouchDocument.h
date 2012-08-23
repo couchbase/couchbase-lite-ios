@@ -8,7 +8,7 @@
 
 #import "TouchDatabase.h"
 #import "TDCache.h"
-@class TouchRevision, TouchQueryRow;
+@class TouchRevision, TouchAttachment, TouchQueryRow;
 
 
 /** A TouchDB document (as opposed to any specific revision of it.) */
@@ -25,6 +25,11 @@
 @property (readonly) TouchDatabase* database;
 
 @property (readonly) NSString* documentID;
+@property (readonly) NSString* abbreviatedID;
+
+@property (readonly) BOOL isDeleted;
+
+- (BOOL) deleteDocument: (NSError**)outError;
 
 #pragma mark REVISIONS:
 
@@ -36,6 +41,9 @@
 
 /** The revision with the specified ID. */
 - (TouchRevision*) revisionWithID: (NSString*)revisionID;
+
+- (NSArray*) getRevisionHistory: (NSError**)outError;
+- (NSArray*) getConflictingRevisions: (NSError**)outError;
 
 
 #pragma mark PROPERTIES:
@@ -54,6 +62,7 @@
 
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties property.) */
 - (TouchRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
+
 
 #pragma mark MODEL:
 

@@ -80,7 +80,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     
     self = [super init];
     if (self) {
-        _thread = [NSThread currentThread];
         _db = db;
         _remote = [remote retain];
         _continuous = continuous;
@@ -313,7 +312,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 #if TARGET_OS_IPHONE
 - (void) appBackgrounding: (NSNotification*)n {
     // Danger: This is called on the main thread!
-    MYOnThread(_thread, ^{
+    MYOnThread(_db.thread, ^{
         LogTo(Sync, @"%@: App going into background", self);
         [self stop];
     });

@@ -32,6 +32,7 @@
                                               revID: (NSString*)revID
                                            sequence: (SequenceNumber)sequence
                                             options: (TDContentOptions)options;
+- (void) notifyChange: (TDRevision*)rev source: (NSURL*)source;
 @end
 
 @interface TDDatabase (Insertion_Internal)

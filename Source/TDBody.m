@@ -52,6 +52,14 @@
     return [[[self alloc] initWithJSON: json] autorelease];
 }
 
+- (id) copyWithZone: (NSZone*)zone {
+    TDBody* body = [[[self class] allocWithZone: zone] init];
+    body->_object = [_object copy];
+    body->_json = [_json copy];
+    body->_error = _error;
+    return body;
+}
+
 @synthesize error=_error;
 
 - (BOOL) isValidJSON {

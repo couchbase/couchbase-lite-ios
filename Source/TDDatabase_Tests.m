@@ -73,16 +73,19 @@ TestCase(TDDatabase_CRUD) {
     
     // Make sure the database-changed notifications have the right data in them (see issue #93)
     id observer = [[NSNotificationCenter defaultCenter]
-                   addObserverForName: TDDatabaseChangeNotification
+                   addObserverForName: TDDatabaseChangesNotification
                    object: db
                    queue: nil
                    usingBlock: ^(NSNotification* n) {
-                       TDRevision* rev = [n.userInfo objectForKey: @"rev"];
-                       CAssert(rev);
-                       CAssert(rev.docID);
-                       CAssert(rev.revID);
-                       CAssertEqual([rev.properties objectForKey: @"_id"], rev.docID);
-                       CAssertEqual([rev.properties objectForKey: @"_rev"], rev.revID);
+                       NSArray* changes = [n.userInfo objectForKey: @"changes"];
+                       for (NSDictionary* change in changes) {
+                           TDRevision* rev = [change objectForKey: @"rev"];
+                           CAssert(rev);
+                           CAssert(rev.docID);
+                           CAssert(rev.revID);
+                           CAssertEqual([rev.properties objectForKey: @"_id"], rev.docID);
+                           CAssertEqual([rev.properties objectForKey: @"_rev"], rev.revID);
+                       }
                    }];
     
     // Create a document:

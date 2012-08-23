@@ -36,6 +36,16 @@
 }
 
 
+- (id)initWithDatabase: (TouchDatabase*)database mapBlock: (TDMapBlock)mapBlock {
+    TDView* view = [database.tddb makeAnonymousView];
+    if (self = [self initWithDatabase: database view: view]) {
+        _temporaryView = YES;
+        [view setMapBlock: mapBlock reduceBlock: nil version: @""];
+    }
+    return self;
+}
+
+
 - (id) initWithQuery: (TouchQuery*)query {
     self = [self initWithDatabase: query->_database view: query->_view];
     if (self) {
@@ -58,8 +68,10 @@
 
 - (void) dealloc
 {
-    [_database release];
+    if (_temporaryView)
+        [_view deleteView];
     [_view release];
+    [_database release];
     [_startKey release];
     [_endKey release];
     [_startKeyDocID release];
@@ -97,11 +109,19 @@
     NSArray* rows;
     SequenceNumber lastSequence;
     if (_view) {
-        TDStatus status = [_view updateIndex];
-        if (TDStatusIsError(status))
-            return nil;
+        TDStatus status;
         lastSequence = _view.lastSequenceIndexed;
+        if (_stale == kTDStaleNever || lastSequence <= 0) {
+            status = [_view updateIndex];
+            if (TDStatusIsError(status)) {
+                Warn(@"Failed to update view index: %d", status);
+                return nil;
+            }
+            lastSequence = _view.lastSequenceIndexed;
+        }
         rows = [_view queryWithOptions: &options status: &status];
+        // TODO: Implement kTDStaleUpdateAfter
+        
     } else {
         NSDictionary* result = [_database.tddb getAllDocs: &options];
         lastSequence = [[result objectForKey: @"update_seq"] longLongValue];
@@ -192,7 +212,7 @@
 @implementation TouchQueryEnumerator
 
 
-@synthesize totalCount=_totalCount, sequenceNumber=_sequenceNumber;
+@synthesize sequenceNumber=_sequenceNumber;
 
 
 - (id) initWithDatabase: (TouchDatabase*)database

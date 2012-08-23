@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "TDDatabase+Insertion.h"
+#import "TDView.h"
 @class TouchDatabaseManager, TouchDocument, TouchView, TouchQuery, TouchReplication, TouchModelFactory;
 @class TDDatabase, TDCache;
 
@@ -27,6 +28,11 @@
 
 /** The database manager that owns this database. */
 @property (readonly) TouchDatabaseManager* manager;
+
+- (BOOL) deleteDatabase: (NSError**)outError;
+
+@property (readonly) NSUInteger documentCount;
+@property (readonly) SequenceNumber lastSequenceNumber;
 
 /** Instantiates a TDDocument object with the given ID.
     Doesn't touch the on-disk database; a document with that ID doesn't even need to exist yet.
@@ -49,6 +55,7 @@
 /** Returns a query that matches all documents in the database. */
 - (TouchQuery*) queryAllDocuments;
 
+- (TouchQuery*) slowQueryWithMap: (TDMapBlock)mapBlock;
 
 /** Returns a TouchView object for the view with the given name.
     (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the TouchView is assigned a map function.) */

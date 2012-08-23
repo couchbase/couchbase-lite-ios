@@ -44,11 +44,34 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
+- (NSString*) description {
+    return $sprintf(@"%@[%@]", [self class], self.abbreviatedID);
+}
+
+
 @synthesize database=_database, documentID=_docID, modelObject=_modelObject;
+
+
+- (NSString*) abbreviatedID {
+    NSMutableString* abbrev = [[self.documentID mutableCopy] autorelease];
+    if (abbrev.length > 10)
+        [abbrev replaceCharactersInRange: NSMakeRange(4, abbrev.length - 8) withString: @".."];
+    return abbrev;
+}
 
 
 - (NSString*) cacheKey {
     return _docID;
+}
+
+
+- (BOOL) deleteDocument: (NSError**)outError {
+    return [self.currentRevision deleteDocument: outError] != nil;
+}
+
+
+- (BOOL) isDeleted {
+    return self.currentRevision.isDeleted;
 }
 
 
@@ -73,11 +96,19 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
-- (TouchRevision*) revisionWithID: (NSString*)revID  {
-    TDRevision* rev = [_database.tddb getDocumentWithID: _docID revisionID: revID options: 0];
+- (TouchRevision*) revisionFromRev: (TDRevision*)rev {
     if (!rev)
         return nil;
-    return [[[TouchRevision alloc] initWithDocument: self revision: rev] autorelease];
+    else if ($equal(rev.revID, _currentRevision.revisionID))
+        return _currentRevision;
+    else
+        return [[[TouchRevision alloc] initWithDocument: self revision: rev] autorelease];
+}
+
+
+- (TouchRevision*) revisionWithID: (NSString*)revID  {
+    return [self revisionFromRev: [_database.tddb getDocumentWithID: _docID revisionID: revID
+                                                            options: 0]];
 }
 
 
@@ -85,10 +116,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 - (void) revisionAdded: (TDRevision*)rev source: (NSURL*)source {
     if (_currentRevision && TDCompareRevIDs(rev.revID, _currentRevision.revisionID) > 0) {
         [_currentRevision autorelease];
-        if (rev.deleted)
-            _currentRevision = nil;
-        else
-            _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
+        _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
     }
 
     if ([_modelObject respondsToSelector: @selector(touchDocumentChanged:)])
@@ -116,6 +144,19 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
+- (NSArray*) getRevisionHistory: (NSError**)outError {
+    return [self.currentRevision getRevisionHistory: outError];
+}
+
+
+- (NSArray*) getConflictingRevisions: (NSError**)outError {
+    TDRevisionList* revs = [_database.tddb getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
+    return [revs.allRevisions my_map: ^(TDRevision* rev) {
+        return [self revisionFromRev: rev];
+    }];
+}
+
+
 #pragma mark - PROPERTIES:
 
 
@@ -135,6 +176,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
                        prevRevID: (NSString*)prevID
                            error: (NSError**)outError
 {
+    // Process _attachments dict, converting TouchAttachments to dicts:
     NSDictionary* attachments = [properties objectForKey: @"_attachments"];
     if (attachments.count) {
         NSDictionary* expanded = [TouchAttachment installAttachmentBodies: attachments

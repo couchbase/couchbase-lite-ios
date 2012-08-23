@@ -47,25 +47,29 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 
 - (void) tddbNotification: (NSNotification*)n {
-    if ([n.name isEqualToString: TDDatabaseChangeNotification]) {
-        TDRevision* rev = [n.userInfo objectForKey: @"rev"];
-        NSURL* source = [n.userInfo objectForKey: @"source"];
-        [[self cachedDocumentWithID: rev.docID] revisionAdded: rev source: source];
+    if ([n.name isEqualToString: TDDatabaseChangesNotification]) {
+        for (NSDictionary* change in [n.userInfo objectForKey: @"changes"]) {
+            TDRevision* rev = [change objectForKey: @"rev"];
+            NSURL* source = [change objectForKey: @"source"];
+            
+            [[self cachedDocumentWithID: rev.docID] revisionAdded: rev source: source];
 
-        // Post a database-changed notification, but only post one per runloop cycle by using
-        // a notification queue. If the current notification has the "external" flag, make sure it
-        // gets posted by clearing any pending instance of the notification that doesn't have the flag.
-        NSDictionary* userInfo = source ? $dict({@"external", $true}) : nil;
-        NSNotification* n = [NSNotification notificationWithName: kTouchDatabaseChangeNotification
-                                                          object: self
-                                                        userInfo: userInfo];
-        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-        if (source != nil)
-            [queue dequeueNotificationsMatching: n coalesceMask: NSNotificationCoalescingOnSender];
-        [queue enqueueNotification: n
-                      postingStyle: NSPostASAP 
-                      coalesceMask: NSNotificationCoalescingOnSender
-                          forModes: [NSArray arrayWithObject: NSRunLoopCommonModes]];
+            // Post a database-changed notification, but only post one per runloop cycle by using
+            // a notification queue. If the current notification has the "external" flag, make sure
+            // it gets posted by clearing any pending instance of the notification that doesn't have
+            // the flag.
+            NSDictionary* userInfo = source ? $dict({@"external", $true}) : nil;
+            NSNotification* n = [NSNotification notificationWithName: kTouchDatabaseChangeNotification
+                                                              object: self
+                                                            userInfo: userInfo];
+            NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
+            if (source != nil)
+                [queue dequeueNotificationsMatching: n coalesceMask: NSNotificationCoalescingOnSender];
+            [queue enqueueNotification: n
+                          postingStyle: NSPostASAP 
+                          coalesceMask: NSNotificationCoalescingOnSender
+                              forModes: [NSArray arrayWithObject: NSRunLoopCommonModes]];
+        }
     }
 }
 
@@ -84,6 +88,11 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 - (BOOL) create: (NSError**)outError {
     return [_tddb open: outError];
+}
+
+
+- (BOOL) deleteDatabase: (NSError**)outError {
+    return [_tddb deleteDatabase: outError];
 }
 
 
@@ -126,6 +135,15 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
+- (NSUInteger) documentCount {
+    return _tddb.documentCount;
+}
+
+- (SequenceNumber) lastSequenceNumber {
+    return _tddb.lastSequence;
+}
+
+
 #pragma mark - VIEWS:
 
 
@@ -139,6 +157,11 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
     return [_tddb.allViews my_map:^id(TDView* view) {
         return [[[TouchView alloc] initWithDatabase: self view: view] autorelease];
     }];
+}
+
+
+- (TouchQuery*) slowQueryWithMap: (TDMapBlock)mapBlock {
+    return [[[TouchQuery alloc] initWithDatabase: self mapBlock: mapBlock] autorelease];
 }
 
 

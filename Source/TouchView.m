@@ -13,8 +13,7 @@
 @implementation TouchView
 
 
-- (id)initWithDatabase: (TouchDatabase*)database view: (TDView*)view
-{
+- (id)initWithDatabase: (TouchDatabase*)database view: (TDView*)view {
     self = [super init];
     if (self) {
         _database = [database retain];
@@ -25,8 +24,8 @@
 
 - (void)dealloc
 {
-    [_database release];
     [_view release];
+    [_database release];
     [super dealloc];
 }
 

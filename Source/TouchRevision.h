@@ -55,6 +55,10 @@
 /** Deletes the document by creating a new deletion-marker revision. */
 - (TouchRevision*) deleteDocument: (NSError**)outError;
 
+#pragma mark - HISTORY:
+
+- (NSArray*) getRevisionHistory: (NSError**)outError;
+
 #pragma mark ATTACHMENTS
 
 /** The names of all attachments (array of strings). */
@@ -62,5 +66,8 @@
 
 /** Looks up the attachment with the given name (without fetching its contents yet). */
 - (TouchAttachment*) attachmentNamed: (NSString*)name;
+
+/** All attachments, as TouchAttachment objects. */
+@property (readonly) NSArray* attachments;
 
 @end

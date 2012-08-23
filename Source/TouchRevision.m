@@ -31,12 +31,16 @@
 }
 
 
+- (NSString*) description {
+    return $sprintf(@"%@[%@/%@]", [self class], _document.abbreviatedID, _rev.revID);
+}
+
+
 @synthesize document=_document, rev=_rev;
 
-- (TouchDatabase*) database    {return _document.database;}
+- (TouchDatabase*) database {return _document.database;}
 - (NSString*) revisionID    {return _rev.revID;}
-
-- (BOOL) isDeleted          {return [self.properties objectForKey: @"_deleted"] != nil;}
+- (BOOL) isDeleted          {return _rev.deleted;}
 
 
 - (SequenceNumber) sequence {
@@ -83,10 +87,26 @@
 }
 
 
+- (NSArray*) getRevisionHistory: (NSError**)outError {
+    NSMutableArray* history = $marray();
+    for (TDRevision* rev in [self.database.tddb getRevisionHistory: _rev]) {
+        TouchRevision* revision;
+        if ($equal(rev.revID, _rev.revID))
+            revision = self;
+        else
+            revision = [_document revisionFromRev: rev];
+        [history insertObject: revision atIndex: 0];  // reverse into forwards order
+    }
+    return history;
+}
+
+
 #pragma mark - SAVING:
 
 
-- (TouchRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
+- (TouchRevision*) putProperties: (NSDictionary*)properties
+                           error: (NSError**)outError
+{
     return [_document putProperties: properties
                           prevRevID: _rev.revID
                               error: outError];
@@ -121,6 +141,13 @@
     if (!metadata)
         return nil;
     return [[[TouchAttachment alloc] initWithRevision: self name: name metadata: metadata] autorelease];
+}
+
+
+- (NSArray*) attachments {
+    return [self.attachmentNames my_map: ^(NSString* name) {
+        return [self attachmentNamed: name];
+    }];
 }
 
 

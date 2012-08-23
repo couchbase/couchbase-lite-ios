@@ -17,7 +17,6 @@
     @private
     TDDatabaseManager* _mgr;
     TDServer* _server;
-    TouchLiveQuery* _replicationsQuery;
     NSMutableArray* _replications;
 }
 

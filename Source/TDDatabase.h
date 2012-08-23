@@ -13,9 +13,9 @@
 struct TDQueryOptions;      // declared in TDView.h
 
 
-/** NSNotification posted when a document is updated.
-    The userInfo key "rev" has a TDRevision* as its value. */
-extern NSString* const TDDatabaseChangeNotification;
+/** NSNotification posted when one or more documents have been updated.
+    The userInfo key "changes" contains an array of {rev: TDRevision, source: NSURL} */
+extern NSString* const TDDatabaseChangesNotification;
 
 /** NSNotification posted when a database is closing. */
 extern NSString* const TDDatabaseWillCloseNotification;
@@ -27,7 +27,7 @@ extern NSString* const TDDatabaseWillBeDeletedNotification;
 /** Filter block, used in changes feeds and replication. */
 typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 
-#define FILTERBLOCK(BLOCK) ^BOOL(TDRevision* revision) {BLOCK}
+#define FILTERBLOCK(BLOCK) ^BOOL(TDRevision* revision, NSDictionary* params) {BLOCK}
 
 
 /** Options for what metadata to include in document bodies */
@@ -66,6 +66,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     FMDatabase *_fmdb;
     BOOL _open;
     int _transactionLevel;
+    NSThread* _thread;
     NSMutableDictionary* _views;
     NSMutableDictionary* _validations;
     NSMutableDictionary* _filters;
@@ -73,6 +74,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
     TouchDatabase* _touchDatabase;
+    NSMutableArray* _changesToNotify;
 }    
         
 - (id) initWithPath: (NSString*)path;
@@ -95,6 +97,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 @property (readonly) NSString* path;
 @property (readonly, copy) NSString* name;
+@property (readonly) NSThread* thread;
 @property (readonly) BOOL exists;
 @property (readonly) UInt64 totalDataSize;
 
@@ -154,6 +157,8 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (TDView*) viewNamed: (NSString*)name;
 
 - (TDView*) existingViewNamed: (NSString*)name;
+
+- (TDView*) makeAnonymousView;
 
 @property (readonly) NSArray* allViews;
 

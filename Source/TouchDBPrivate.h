@@ -37,6 +37,7 @@ exclusively: (bool)exclusively;
 @interface TouchDocument ()
 - (id)initWithDatabase: (TouchDatabase*)database
             documentID: (NSString*)docID;
+- (TouchRevision*) revisionFromRev: (TDRevision*)rev;
 - (void) revisionAdded: (TDRevision*)rev source: (NSURL*)source;
 - (void) loadCurrentRevisionFrom: (TouchQueryRow*)row;
 - (TouchRevision*) putProperties: (NSDictionary*)properties
@@ -69,6 +70,7 @@ exclusively: (bool)exclusively;
 
 @interface TouchQuery ()
 - (id) initWithDatabase: (TouchDatabase*)database view: (TDView*)view;
+- (id)initWithDatabase: (TouchDatabase*)database mapBlock: (TDMapBlock)mapBlock;
 @end
 
 

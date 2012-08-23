@@ -144,6 +144,8 @@
 		27846FBC15D475DF0030122F /* MYStreamUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 27846FB715D475DF0030122F /* MYStreamUtils.h */; };
 		27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB815D475DF0030122F /* MYStreamUtils.m */; };
 		27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB815D475DF0030122F /* MYStreamUtils.m */; };
+		27846FF115D5C8250030122F /* APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FF015D5C8250030122F /* APITests.m */; };
+		27846FF215D5C8250030122F /* APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FF015D5C8250030122F /* APITests.m */; };
 		278B0CA0152A8B1900577747 /* TDCanonicalJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 278B0C9E152A8B1900577747 /* TDCanonicalJSON.h */; };
 		278B0CA1152A8B1900577747 /* TDCanonicalJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 278B0C9F152A8B1900577747 /* TDCanonicalJSON.m */; };
 		278B0CA2152A8B1900577747 /* TDCanonicalJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 278B0C9F152A8B1900577747 /* TDCanonicalJSON.m */; };
@@ -565,6 +567,7 @@
 		27846FB615D475DF0030122F /* MYRegexUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYRegexUtils.m; sourceTree = "<group>"; };
 		27846FB715D475DF0030122F /* MYStreamUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYStreamUtils.h; sourceTree = "<group>"; };
 		27846FB815D475DF0030122F /* MYStreamUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYStreamUtils.m; sourceTree = "<group>"; };
+		27846FF015D5C8250030122F /* APITests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = APITests.m; sourceTree = "<group>"; };
 		278B0C9E152A8B1900577747 /* TDCanonicalJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDCanonicalJSON.h; sourceTree = "<group>"; };
 		278B0C9F152A8B1900577747 /* TDCanonicalJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDCanonicalJSON.m; sourceTree = "<group>"; };
 		278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYURLUtils.h; sourceTree = "<group>"; };
@@ -1085,6 +1088,14 @@
 			name = Replicator;
 			sourceTree = "<group>";
 		};
+		27846FEE15D5C7DE0030122F /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				27846FF015D5C8250030122F /* APITests.m */,
+			);
+			name = Tests;
+			sourceTree = "<group>";
+		};
 		279EB2D7149192C700E74185 /* Router */ = {
 			isa = PBXGroup;
 			children = (
@@ -1255,6 +1266,7 @@
 				27DA4311158FB79E00F9E7B5 /* TouchQuery.m */,
 				27E2E5CB159533A5005B9234 /* TouchReplication.h */,
 				27E2E5CC159533A5005B9234 /* TouchReplication.m */,
+				27846FEE15D5C7DE0030122F /* Tests */,
 				27DA431A158FD9BA00F9E7B5 /* iOS */,
 				27DA435D15918C9600F9E7B5 /* Model */,
 			);
@@ -1935,6 +1947,7 @@
 				27E2E5CE159533A5005B9234 /* TouchReplication.m in Sources */,
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
+				27846FF115D5C8250030122F /* APITests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2065,6 +2078,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27846FF215D5C8250030122F /* APITests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2202,6 +2216,7 @@
 			baseConfigurationReference = 27F074F811CDC71800E9A2AB /* MYUtilities_Debug.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CURRENT_PROJECT_VERSION = 0.91;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -2224,6 +2239,7 @@
 			baseConfigurationReference = 27F074F911CDC71800E9A2AB /* MYUtilities_Release.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CURRENT_PROJECT_VERSION = 0.91;
 				GCC_C_LANGUAGE_STANDARD = c99;

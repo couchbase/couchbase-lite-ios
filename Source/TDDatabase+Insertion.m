@@ -35,9 +35,6 @@
 #endif
 
 
-NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
-
-
 @interface TDValidationContext : NSObject <TDValidationContext>
 {
     @private
@@ -189,18 +186,6 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
     NSData* json = [TDCanonicalJSON canonicalData: properties];
     [properties release];
     return json;
-}
-
-
-/** Posts a local NSNotification of a new revision of a document. */
-- (void) notifyChange: (TDRevision*)rev source: (NSURL*)source
-{
-    NSDictionary* userInfo = $dict({@"rev", rev},
-                                   {@"seq", $object(rev.sequence)},
-                                   {@"source", source});
-    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseChangeNotification
-                                                        object: self
-                                                      userInfo: userInfo];
 }
 
 
