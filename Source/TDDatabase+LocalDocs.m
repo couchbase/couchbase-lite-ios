@@ -44,8 +44,8 @@
             if (!properties)
                 return nil;
         }
-        [properties setObject: docID forKey: @"_id"];
-        [properties setObject: gotRevID forKey: @"_rev"];
+        properties[@"_id"] = docID;
+        properties[@"_rev"] = gotRevID;
         result = [[[TDRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO] autorelease];
         result.properties = properties;
     }

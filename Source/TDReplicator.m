@@ -439,7 +439,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 - (NSString*) remoteCheckpointDocID {
     NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
                                        {@"remoteURL", _remote.absoluteString},
-                                       {@"push", $object(self.isPush)},
+                                       {@"push", @(self.isPush)},
                                        {@"filter", _filterName},
                                        {@"filterParams", _filterParameters});
     return TDHexSHA1Digest([TDCanonicalJSON canonicalData: spec]);
@@ -466,7 +466,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                       response = $castIf(NSDictionary, response);
                       self.remoteCheckpoint = response;
                       NSString* remoteLastSequence = $castIf(NSString,
-                                                        [response objectForKey: @"lastSequence"]);
+                                                        response[@"lastSequence"]);
 
                       if ($equal(remoteLastSequence, localLastSequence)) {
                           _lastSequence = [localLastSequence retain];
@@ -519,9 +519,9 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                       Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
                       // TODO: If error is 401 or 403, and this is a pull, remember that remote is read-only and don't attempt to read its checkpoint next time.
                   } else {
-                      id rev = [response objectForKey: @"rev"];
+                      id rev = response[@"rev"];
                       if (rev)
-                          [body setObject: rev forKey: @"_rev"];
+                          body[@"_rev"] = rev;
                       self.remoteCheckpoint = body;
                       [_db setLastSequence: _lastSequence withCheckpointID: checkpointID];
                   }

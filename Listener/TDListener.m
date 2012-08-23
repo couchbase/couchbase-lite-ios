@@ -85,7 +85,7 @@
 }
 
 - (NSString*) passwordForUser:(NSString *)username {
-    return [_passwords objectForKey: username];
+    return _passwords[username];
 }
 
 

@@ -109,7 +109,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (TDDatabase*) databaseNamed: (NSString*)name create: (BOOL)create {
-    TDDatabase* db = [_databases objectForKey: name];
+    TDDatabase* db = _databases[name];
     if (!db) {
         NSString* path = [self pathForName: name];
         if (!path)
@@ -121,7 +121,7 @@ static NSCharacterSet* kIllegalNameChars;
             return nil;
         }
         db.name = name;
-        [_databases setObject: db forKey: name];
+        _databases[name] = db;
         [db release];
     }
     return db;
@@ -153,7 +153,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 - (NSArray*) allDatabaseNames {
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: NULL];
-    files = [files pathsMatchingExtensions: $array(kDBExtension)];
+    files = [files pathsMatchingExtensions: @[kDBExtension]];
     return [files my_map: ^(id filename) {
         return [[filename stringByDeletingPathExtension]
                                 stringByReplacingOccurrencesOfString: @":" withString: @"/"];
@@ -206,11 +206,11 @@ TestCase(TDDatabaseManager) {
     
     CAssertEq([dbm databaseNamed: @"foo"], db);
     
-    CAssertEqual(dbm.allDatabaseNames, $array());    // because foo doesn't exist yet
+    CAssertEqual(dbm.allDatabaseNames, @[]);    // because foo doesn't exist yet
     
     CAssert([db open]);
     CAssert(db.exists);
-    CAssertEqual(dbm.allDatabaseNames, $array(@"foo"));    // because foo doesn't exist yet
+    CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);    // because foo doesn't exist yet
 }
 
 #endif

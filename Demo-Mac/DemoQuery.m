@@ -104,7 +104,7 @@
 
 
 - (CouchModel*)objectInEntriesAtIndex: (NSUInteger)index {
-    return [_entries objectAtIndex: index];
+    return _entries[index];
 }
 
 
@@ -116,7 +116,7 @@
 
 
 - (void) removeObjectFromEntriesAtIndex: (NSUInteger)index {
-    CouchModel* item = [_entries objectAtIndex: index];
+    CouchModel* item = _entries[index];
     item.database = nil;
     [_entries removeObjectAtIndex: index];
 }

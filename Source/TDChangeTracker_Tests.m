@@ -49,6 +49,10 @@
                                        beforeDate: timeout])
         ;
     [tracker stop];
+    if ([timeout timeIntervalSinceNow] <= 0) {
+        Warn(@"Timeout contacting %@", tracker.databaseURL);
+        return;
+    }
     AssertNil(tracker.error);
     CAssertEqual(_changes, expectedChanges);
 }
@@ -100,16 +104,16 @@ TestCase(TDChangeTracker) {
     TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
     NSURL* url = [NSURL URLWithString: @"http://snej.iriscouch.com/tdpuller_test1"];
     TDChangeTracker* tracker = [[[TDConnectionChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: nil client: tester] autorelease];
-    NSArray* expected = $array($dict({@"seq", $object(1)},
+    NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"foo"},
                                      {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
-                               $dict({@"seq", $object(2)},
+                               $dict({@"seq", @2},
                                      {@"id", @"attach"},
                                      {@"changes", $array($dict({@"rev", @"1-a7e2aad2bc8084b9041433182e292d8e"}))}),
-                               $dict({@"seq", $object(5)},
+                               $dict({@"seq", @5},
                                      {@"id", @"bar"},
                                      {@"changes", $array($dict({@"rev", @"1-16f4304cd5ad8779fb40cb6bbbed60f5"}))}),
-                               $dict({@"seq", $object(6)},
+                               $dict({@"seq", @6},
                                      {@"id", @"08a5cb4cc83156401c85bbe40e0007de"},
                                      {@"deleted", $true},
                                      {@"changes", $array($dict({@"rev", @"3-cbdb323dec78588cfea63bf7bb5a246f"}))}) );
@@ -122,16 +126,16 @@ TestCase(TDChangeTracker_SSL) {
     TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
     NSURL* url = [NSURL URLWithString: @"https://snej.iriscouch.com/tdpuller_test1"];
     TDChangeTracker* tracker = [[[TDConnectionChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester] autorelease];
-    NSArray* expected = $array($dict({@"seq", $object(1)},
+    NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"foo"},
                                      {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
-                               $dict({@"seq", $object(2)},
+                               $dict({@"seq", @2},
                                      {@"id", @"attach"},
                                      {@"changes", $array($dict({@"rev", @"1-a7e2aad2bc8084b9041433182e292d8e"}))}),
-                               $dict({@"seq", $object(5)},
+                               $dict({@"seq", @5},
                                      {@"id", @"bar"},
                                      {@"changes", $array($dict({@"rev", @"1-16f4304cd5ad8779fb40cb6bbbed60f5"}))}),
-                               $dict({@"seq", $object(6)},
+                               $dict({@"seq", @6},
                                      {@"id", @"08a5cb4cc83156401c85bbe40e0007de"},
                                      {@"deleted", $true},
                                      {@"changes", $array($dict({@"rev", @"3-cbdb323dec78588cfea63bf7bb5a246f"}))}) );
@@ -146,7 +150,7 @@ TestCase(TDChangeTracker_Auth) {
     addTemporaryCredential(url, @"snejdom", @"dummy", @"dummy");
 
     TDChangeTracker* tracker = [[[TDConnectionChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester] autorelease];
-    NSArray* expected = $array($dict({@"seq", $object(1)},
+    NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"something"},
                                      {@"changes", $array($dict({@"rev", @"1-967a00dff5e02add41819138abb3284d"}))}) );
     [tester run: tracker expectingChanges: expected];

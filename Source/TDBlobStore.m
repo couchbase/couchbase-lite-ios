@@ -263,7 +263,7 @@
         }
         NSDictionary* attributes = nil;
 #if TARGET_OS_IPHONE
-        attributes = $dict({NSFileProtectionKey, NSFileProtectionCompleteUnlessOpen});
+        attributes = @{NSFileProtectionKey: NSFileProtectionCompleteUnlessOpen};
 #endif
         if (![[NSFileManager defaultManager] createFileAtPath: _tempPath
                                                      contents: nil

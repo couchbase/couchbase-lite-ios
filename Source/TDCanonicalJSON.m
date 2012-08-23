@@ -156,7 +156,7 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
             [_output appendString: @","];
         [self encodeString: key];
         [_output appendString: @":"];
-        [self encode: [dict objectForKey: key]];
+        [self encode: dict[key]];
     }
     [_output appendString: @"}"];
 }
@@ -232,7 +232,7 @@ static void roundtrip( id obj ) {
 }
 
 static void roundtripFloat( double n ) {
-    NSData* json = [TDCanonicalJSON canonicalData: [NSNumber numberWithDouble: n]];
+    NSData* json = [TDCanonicalJSON canonicalData: @(n)];
     NSError* error;
     id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
     CAssert(reconstituted, @"`%@` was unparseable: %@",
@@ -243,17 +243,23 @@ static void roundtripFloat( double n ) {
             [json my_UTF8ToString], delta, [reconstituted doubleValue], n);
 }
 
+TestCase(TDCanonicalJSON_Encoding) {
+    CAssertEqual([TDCanonicalJSON canonicalString: $true], @"true");
+    CAssertEqual([TDCanonicalJSON canonicalString: $false], @"false");
+    CAssertEqual([TDCanonicalJSON canonicalString: $null], @"null");
+}
+
 TestCase(TDCanonicalJSON_RoundTrip) {
     roundtrip($true);
     roundtrip($false);
     roundtrip($null);
     
-    roundtrip([NSNumber numberWithInt: 0]);
-    roundtrip([NSNumber numberWithInt: INT_MAX]);
-    roundtrip([NSNumber numberWithInt: INT_MIN]);
-    roundtrip([NSNumber numberWithUnsignedInt: UINT_MAX]);
-    roundtrip([NSNumber numberWithLongLong: INT64_MAX]);
-    roundtrip([NSNumber numberWithUnsignedLongLong: UINT64_MAX]);
+    roundtrip(@0);
+    roundtrip(@INT_MAX);
+    roundtrip(@INT_MIN);
+    roundtrip(@UINT_MAX);
+    roundtrip(@INT64_MAX);
+    roundtrip(@UINT64_MAX);
     
     roundtripFloat(111111.111111);
     roundtripFloat(M_PI);
@@ -279,14 +285,14 @@ TestCase(TDCanonicalJSON_RoundTrip) {
     roundtrip(@"\001");
     roundtrip(@"\u1234");
     
-    roundtrip($array());
-    roundtrip($array($array()));
-    roundtrip($array(@"foo", @"bar", $null));
+    roundtrip(@[]);
+    roundtrip(@[@[]]);
+    roundtrip(@[@"foo", @"bar", $null]);
     
-    roundtrip($dict());
-    roundtrip($dict({@"key", @"value"}));
-    roundtrip($dict({@"\"key\"", $false}));
-    roundtrip($dict({@"\"key\"", $false}, {@"", $dict()}));
+    roundtrip(@{});
+    roundtrip(@{@"key": @"value"});
+    roundtrip(@{@"\"key\"": $false});
+    roundtrip(@{@"\"key\"": $false, @"": @{}});
 }
 
 #endif

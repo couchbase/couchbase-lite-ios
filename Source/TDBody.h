@@ -33,6 +33,6 @@
 @property (readonly) BOOL error;
 
 @property (readonly) NSDictionary* properties;
-- (id) propertyForKey: (NSString*)key;
+- (id) objectForKeyedSubscript: (NSString*)key;  // enables subscript access in Xcode 4.4+
 
 @end
