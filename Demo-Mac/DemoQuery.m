@@ -104,7 +104,7 @@
 
 
 - (TouchModel*)objectInEntriesAtIndex: (NSUInteger)index {
-    return [self._entries objectAtIndex: index];
+    return self._entries[index];
 }
 
 
@@ -116,7 +116,7 @@
 
 
 - (void) removeObjectFromEntriesAtIndex: (NSUInteger)index {
-    TouchModel* item = [self._entries objectAtIndex: index];
+    TouchModel* item = self._entries[index];
     item.database = nil;
     [_entries removeObjectAtIndex: index];
 }

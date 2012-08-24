@@ -37,6 +37,7 @@ extern NSString* TDReplicatorStoppedNotification;
     NSError* _error;
     NSString* _sessionID;
     TDBatcher* _batcher;
+    NSMutableArray* _remoteRequests;
     int _asyncTaskCount;
     NSUInteger _changesProcessed, _changesTotal;
     CFAbsoluteTime _startTime;
@@ -72,7 +73,7 @@ extern NSString* TDReplicatorStoppedNotification;
 - (void) start;
 
 /** Request to stop the replicator.
-    Any pending asynchronous operations will be finished first.
+    Any pending asynchronous operations will be canceled.
     TDReplicatorStoppedNotification will be posted when it finally stops. */
 - (void) stop;
 
@@ -99,5 +100,8 @@ extern NSString* TDReplicatorStoppedNotification;
 /** Approximate total number of changes to transfer.
     This is only an estimate and its value will change during replication. It starts at zero and returns to zero when replication stops. */
 @property (readonly, nonatomic) NSUInteger changesTotal;
+
+/** JSON-compatible array of status info about active remote HTTP requests. */
+@property (readonly) NSArray* activeRequestsStatus;
 
 @end

@@ -125,6 +125,11 @@
 }
 
 
+- (NSMutableDictionary*) statusInfo {
+    return $mdict({@"URL", _request.URL.absoluteString}, {@"method", _request.HTTPMethod});
+}
+
+
 - (void) respondWithResult: (id)result error: (NSError*)error {
     Assert(result || error);
     _onCompletion(result, error);
@@ -136,6 +141,22 @@
     [_connection autorelease];
     _connection = nil;
     [self performSelector: @selector(start) withObject: nil afterDelay: delay];
+}
+
+
+- (void) stop {
+    if (_connection) {
+        LogTo(RemoteRequest, @"%@: Stopped", self);
+        [_connection cancel];
+    }
+    [self clearConnection];
+    if (_onCompletion) {
+        NSError* error = [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCancelled
+                                         userInfo: nil];
+        [self respondWithResult: nil error: error];
+        [_onCompletion release];   // break cycles
+        _onCompletion = nil;
+    }
 }
 
 
@@ -232,8 +253,8 @@
         NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
         for (NSDictionary* property in trustProperties) {
             Warn(@"    %@: error = %@",
-                 [property objectForKey: kSecPropertyTypeTitle],
-                 [property objectForKey: kSecPropertyTypeError]);
+                 property[(id)kSecPropertyTypeTitle],
+                 property[(id)kSecPropertyTypeError]);
         }
         [trustProperties release];
 #endif

@@ -135,7 +135,12 @@
     if ([[NSFileManager defaultManager] isReadableFileAtPath: path])
         return YES;
     NSError* error;
-    if (![blob writeToFile: path options: NSDataWritingAtomic error: &error]) {
+    if (![blob writeToFile: path
+                   options: NSDataWritingAtomic
+#if TARGET_OS_IPHONE
+                            | NSDataWritingFileProtectionCompleteUnlessOpen
+#endif
+                     error: &error]) {
         Warn(@"TDBlobStore: Couldn't write to %@: %@", path, error);
         return NO;
     }
@@ -256,7 +261,16 @@
             [self release];
             return nil;
         }
-        [[NSFileManager defaultManager] createFileAtPath: _tempPath contents: nil attributes: nil];
+        NSDictionary* attributes = nil;
+#if TARGET_OS_IPHONE
+        attributes = @{NSFileProtectionKey: NSFileProtectionCompleteUnlessOpen};
+#endif
+        if (![[NSFileManager defaultManager] createFileAtPath: _tempPath
+                                                     contents: nil
+                                                   attributes: attributes]) {
+            [self release];
+            return nil;
+        }
         _out = [[NSFileHandle fileHandleForWritingAtPath: _tempPath] retain];
         if (!_out) {
             [self release];

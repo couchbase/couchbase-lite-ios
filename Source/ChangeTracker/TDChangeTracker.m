@@ -81,7 +81,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
     if (_filterName) {
         [path appendFormat: @"&filter=%@", TDEscapeURLParam(_filterName)];
         for (NSString* key in _filterParameters) {
-            id value = [_filterParameters objectForKey: key];
+            id value = _filterParameters[key];
             [path appendFormat: @"&%@=%@", TDEscapeURLParam(key), 
                                            TDEscapeURLParam([value description])];
         }
@@ -174,11 +174,11 @@ static NSURL* AddDotToURLHost( NSURL* url );
 - (BOOL) receivedChange: (NSDictionary*)change {
     if (![change isKindOfClass: [NSDictionary class]])
         return NO;
-    id seq = [change objectForKey: @"seq"];
+    id seq = change[@"seq"];
     if (!seq) {
         // If a continuous feed closes (e.g. if its database is deleted), the last line it sends
         // will indicate the last_seq. This is normal, just ignore it and return success:
-        return [change objectForKey: @"last_seq"] != nil;
+        return change[@"last_seq"] != nil;
     }
     [_client changeTrackerReceivedChange: change];
     self.lastSequenceID = seq;
@@ -190,7 +190,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
         return -1;
     id changeObj = [TDJSON JSONObjectWithData: body options: 0 error: NULL];
     NSDictionary* changeDict = $castIf(NSDictionary, changeObj);
-    NSArray* changes = $castIf(NSArray, [changeDict objectForKey: @"results"]);
+    NSArray* changes = $castIf(NSArray, changeDict[@"results"]);
     if (!changes)
         return -1;
     for (NSDictionary* change in changes) {

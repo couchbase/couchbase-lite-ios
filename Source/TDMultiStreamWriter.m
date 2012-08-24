@@ -176,7 +176,7 @@
         setObj(&_currentInput, nil);
     }
     if (_nextInputIndex < _inputs.count) {
-        _currentInput = [[self streamForInput: [_inputs objectAtIndex: _nextInputIndex]] retain];
+        _currentInput = [[self streamForInput: _inputs[_nextInputIndex]] retain];
         ++_nextInputIndex;
         [_currentInput open];
         return YES;

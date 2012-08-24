@@ -74,7 +74,7 @@
 
 - (id) checkpointedValue {
     NSInteger index = (NSInteger)([self checkpointedSequence] - _firstValueSequence);
-    return (index >= 0) ? [_values objectAtIndex: index] : nil;
+    return (index >= 0) ? _values[index] : nil;
 }
 
 

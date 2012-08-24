@@ -68,7 +68,7 @@
     urlRequest.HTTPBody = request.body;
     NSDictionary* headers = request.allHeaderFields;
     for (NSString* header in headers)
-        [urlRequest setValue: [headers objectForKey: header] forHTTPHeaderField: header];
+        [urlRequest setValue: headers[header] forHTTPHeaderField: header];
     
     // Create a TDRouter:
     TDRouter* router = [[TDRouter alloc] initWithServer: ((TDHTTPServer*)config.server).tdServer

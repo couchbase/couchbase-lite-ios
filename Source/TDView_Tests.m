@@ -43,7 +43,7 @@ TestCase(TDView_Create) {
                          reduceBlock: NULL version: @"1"];
     CAssert(changed);
     
-    CAssertEqual(db.allViews, $array(view));
+    CAssertEqual(db.allViews, @[view]);
 
     changed = [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) { }
                     reduceBlock: NULL version: @"1"];
@@ -80,10 +80,10 @@ static NSArray* putDocs(TDDatabase* db) {
 static TDView* createView(TDDatabase* db) {
     TDView* view = [db viewNamed: @"aview"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
-        CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
-        if ([doc objectForKey: @"key"])
-            emit([doc objectForKey: @"key"], [doc objectForKey: @"_conflicts"]);
+        CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
+        CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
+        if (doc[@"key"])
+            emit(doc[@"key"], doc[@"_conflicts"]);
     } reduceBlock: NULL version: @"1"];
     return view;
 }
@@ -106,9 +106,9 @@ TestCase(TDView_Index) {
     
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", $object(1)}),
-                              $dict({@"key", @"\"three\""}, {@"seq", $object(3)}),
-                              $dict({@"key", @"\"two\""}, {@"seq", $object(2)}) ));
+    CAssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", @1}),
+                              $dict({@"key", @"\"three\""}, {@"seq", @3}),
+                              $dict({@"key", @"\"two\""}, {@"seq", @2}) ));
     // No-op reindex:
     CAssert(!view.stale);
     CAssertEq([view updateIndex], kTDStatusNotModified);
@@ -132,9 +132,9 @@ TestCase(TDView_Index) {
 
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", $object(6)}),
-                              $dict({@"key", @"\"four\""}, {@"seq", $object(7)}),
-                              $dict({@"key", @"\"one\""}, {@"seq", $object(1)}) ));
+    CAssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", @6}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @7}),
+                              $dict({@"key", @"\"one\""}, {@"seq", @1}) ));
     
     // Now do a real query:
     NSArray* rows = [view queryWithOptions: NULL status: &status];
@@ -153,21 +153,21 @@ TestCase(TDView_MapConflicts) {
     RequireTestCase(TDView_Index);
     TDDatabase *db = createDB();
     NSArray* docs = putDocs(db);
-    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    TDRevision* leaf1 = docs[1];
     
     // Create a conflict:
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
-    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
     
     TDView* view = [db viewNamed: @"conflicts"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        NSString* docID = [doc objectForKey: @"_id"];
-        NSArray* conflicts = $cast(NSArray, [doc objectForKey: @"_conflicts"]);
+        NSString* docID = doc[@"_id"];
+        NSArray* conflicts = $cast(NSArray, doc[@"_conflicts"]);
         if (conflicts) {
             Log(@"Doc %@, _conflicts = %@", docID, conflicts);
             emit(docID, conflicts);
@@ -179,7 +179,7 @@ TestCase(TDView_MapConflicts) {
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array($dict({@"key", @"\"44444\""},
                                     {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)},
-                                    {@"seq", $object(6)}) ));
+                                    {@"seq", @6}) ));
 }
 
 
@@ -189,24 +189,24 @@ TestCase(TDView_ConflictWinner) {
     RequireTestCase(TDView_Index);
     TDDatabase *db = createDB();
     NSArray* docs = putDocs(db);
-    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    TDRevision* leaf1 = docs[1];
     
     TDView* view = createView(db);
     CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
-                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)}),
-                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
-                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
-                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @2}),
+                              $dict({@"key", @"\"one\""},  {@"seq", @3}),
+                              $dict({@"key", @"\"three\""},{@"seq", @4}),
+                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
     
     // Create a conflict, won by the new revision:
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
-    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
     
@@ -214,12 +214,12 @@ TestCase(TDView_ConflictWinner) {
     CAssertEq([view updateIndex], kTDStatusOK);
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", $object(6)},
+    CAssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6},
                                     {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)}),
-                              $dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
-                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
-                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
-                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+                              $dict({@"key", @"\"five\""}, {@"seq", @5}),
+                              $dict({@"key", @"\"one\""},  {@"seq", @3}),
+                              $dict({@"key", @"\"three\""},{@"seq", @4}),
+                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
 }
 
 
@@ -229,24 +229,24 @@ TestCase(TDView_ConflictLoser) {
     // should be indexed again, this time with a '_conflicts' property.
     TDDatabase *db = createDB();
     NSArray* docs = putDocs(db);
-    TDRevision* leaf1 = [docs objectAtIndex: 1];
+    TDRevision* leaf1 = docs[1];
     
     TDView* view = createView(db);
     CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
-                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)}),
-                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
-                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
-                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @2}),
+                              $dict({@"key", @"\"one\""},  {@"seq", @3}),
+                              $dict({@"key", @"\"three\""},{@"seq", @4}),
+                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
     
     // Create a conflict, won by the new revision:
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-...."},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
     TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
-    TDStatus status = [db forceInsert: leaf2 revisionHistory: $array() source: nil];
+    TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
     
@@ -254,12 +254,12 @@ TestCase(TDView_ConflictLoser) {
     CAssertEq([view updateIndex], kTDStatusOK);
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", $object(5)}),
-                              $dict({@"key", @"\"four\""}, {@"seq", $object(2)},
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @2},
                                     {@"value", @"[\"1-....\"]"}),
-                              $dict({@"key", @"\"one\""},  {@"seq", $object(3)}),
-                              $dict({@"key", @"\"three\""},{@"seq", $object(4)}),
-                              $dict({@"key", @"\"two\""},  {@"seq", $object(1)}) ));
+                              $dict({@"key", @"\"one\""},  {@"seq", @3}),
+                              $dict({@"key", @"\"three\""},{@"seq", @4}),
+                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
 }
 
 
@@ -316,7 +316,7 @@ TestCase(TDView_Query) {
     
     // Specific keys:
     options = kDefaultTDQueryOptions;
-    options.keys = $array(@"two", @"four");
+    options.keys = @[@"two", @"four"];
     rows = [view queryWithOptions: &options status: &status];
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
@@ -342,30 +342,30 @@ TestCase(TDView_AllDocsQuery) {
     NSArray* expectedRows = $array(expectedRow[2], expectedRow[0], expectedRow[3], expectedRow[1],
                                    expectedRow[4]);
     CAssertEqual(query, $dict({@"rows", expectedRows},
-                              {@"total_rows", $object(5)},
-                              {@"offset", $object(0)}));
+                              {@"total_rows", @5},
+                              {@"offset", @0}));
 
     // Start/end key query:
     options = kDefaultTDQueryOptions;
     options.startKey = @"2";
     options.endKey = @"44444";
     query = [db getAllDocs: &options];
-    expectedRows = $array(expectedRow[0], expectedRow[3], expectedRow[1]);
+    expectedRows = @[expectedRow[0], expectedRow[3], expectedRow[1]];
     CAssertEqual(query, $dict({@"rows", expectedRows},
-                              {@"total_rows", $object(3)},
-                              {@"offset", $object(0)}));
+                              {@"total_rows", @3},
+                              {@"offset", @0}));
 
     // Start/end query without inclusive end:
     options.inclusiveEnd = NO;
     query = [db getAllDocs: &options];
-    expectedRows = $array(expectedRow[0], expectedRow[3]);
+    expectedRows = @[expectedRow[0], expectedRow[3]];
     CAssertEqual(query, $dict({@"rows", expectedRows},
-                              {@"total_rows", $object(2)},
-                              {@"offset", $object(0)}));
+                              {@"total_rows", @2},
+                              {@"offset", @0}));
 
     // Get specific documents:
     options = kDefaultTDQueryOptions;
-    options.keys = $array();
+    options.keys = @[];
     query = [db getAllDocs: &options];
     CAssertEqual(query, $dict({@"rows", $array()},
                               {@"total_rows", $object(0)},
@@ -373,7 +373,7 @@ TestCase(TDView_AllDocsQuery) {
     
     // Get specific documents:
     options = kDefaultTDQueryOptions;
-    options.keys = $array([expectedRow[2] objectForKey: @"id"]);
+    options.keys = @[(expectedRow[2])[@"id"]];
     query = [db getAllDocs: &options];
     CAssertEqual(query, $dict({@"rows", $array(expectedRow[2])},
                               {@"total_rows", $object(1)},
@@ -384,17 +384,17 @@ TestCase(TDView_AllDocsQuery) {
 TestCase(TDView_Reduce) {
     RequireTestCase(TDView_Query);
     TDDatabase *db = createDB();
-    putDoc(db, $dict({@"_id", @"CD"},      {@"cost", $object(8.99)}));
-    putDoc(db, $dict({@"_id", @"App"},     {@"cost", $object(1.95)}));
-    putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", $object(6.50)}));
+    putDoc(db, $dict({@"_id", @"CD"},      {@"cost", @(8.99)}));
+    putDoc(db, $dict({@"_id", @"App"},     {@"cost", @(1.95)}));
+    putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", @(6.50)}));
     
     TDView* view = [db viewNamed: @"totaler"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        CAssert([doc objectForKey: @"_id"] != nil, @"Missing _id in %@", doc);
-        CAssert([doc objectForKey: @"_rev"] != nil, @"Missing _rev in %@", doc);
-        id cost = [doc objectForKey: @"cost"];
+        CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
+        CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
+        id cost = doc[@"cost"];
         if (cost)
-            emit([doc objectForKey: @"_id"], cost);
+            emit(doc[@"_id"], cost);
     } reduceBlock: ^(NSArray* keys, NSArray* values, BOOL rereduce) {
         return [TDView totalValues: values];
     } version: @"1"];
@@ -402,9 +402,9 @@ TestCase(TDView_Reduce) {
     CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", $object(2)}),
-                              $dict({@"key", @"\"CD\""}, {@"value", @"8.99"}, {@"seq", $object(1)}),
-                              $dict({@"key", @"\"Dessert\""}, {@"value", @"6.5"}, {@"seq", $object(3)}) ));
+    CAssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", @2}),
+                              $dict({@"key", @"\"CD\""}, {@"value", @"8.99"}, {@"seq", @1}),
+                              $dict({@"key", @"\"Dessert\""}, {@"value", @"6.5"}, {@"seq", @3}) ));
 
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.reduce = YES;
@@ -412,7 +412,7 @@ TestCase(TDView_Reduce) {
     NSArray* reduced = [view queryWithOptions: &options status: &status];
     CAssertEq(status, kTDStatusOK);
     CAssertEq(reduced.count, 1u);
-    double result = [[[reduced objectAtIndex: 0] objectForKey: @"value"] doubleValue];
+    double result = [reduced[0][@"value"] doubleValue];
     CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
 }
 
@@ -421,22 +421,22 @@ TestCase(TDView_Grouped) {
     RequireTestCase(TDView_Reduce);
     TDDatabase *db = createDB();
     putDoc(db, $dict({@"_id", @"1"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
-                     {@"track", @"Ether"}, {@"time", $object(231)}));
+                     {@"track", @"Ether"}, {@"time", @(231)}));
     putDoc(db, $dict({@"_id", @"2"}, {@"artist", @"Gang Of Four"}, {@"album", @"Songs Of The Free"},
-                     {@"track", @"I Love A Man In Uniform"}, {@"time", $object(248)}));
+                     {@"track", @"I Love A Man In Uniform"}, {@"time", @(248)}));
     putDoc(db, $dict({@"_id", @"3"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
-                     {@"track", @"Natural's Not In It"}, {@"time", $object(187)}));
+                     {@"track", @"Natural's Not In It"}, {@"time", @(187)}));
     putDoc(db, $dict({@"_id", @"4"}, {@"artist", @"PiL"}, {@"album", @"Metal Box"},
-                     {@"track", @"Memories"}, {@"time", $object(309)}));
+                     {@"track", @"Memories"}, {@"time", @(309)}));
     putDoc(db, $dict({@"_id", @"5"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
-                     {@"track", @"Not Great Men"}, {@"time", $object(187)}));
+                     {@"track", @"Not Great Men"}, {@"time", @(187)}));
     
     TDView* view = [db viewNamed: @"grouper"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        emit($array([doc objectForKey: @"artist"],
-                    [doc objectForKey: @"album"], 
-                    [doc objectForKey: @"track"]),
-             [doc objectForKey: @"time"]);
+        emit($array(doc[@"artist"],
+                    doc[@"album"], 
+                    doc[@"track"]),
+             doc[@"time"]);
     } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
         return [TDView totalValues: values];
     } version: @"1"];
@@ -448,42 +448,42 @@ TestCase(TDView_Grouped) {
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
     CAssertEq(status, kTDStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", $null}, {@"value", $object(1162)})));
+    CAssertEqual(rows, $array($dict({@"key", $null}, {@"value", @(1162)})));
 
     options.group = YES;
     rows = [view queryWithOptions: &options status: &status];
     CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Ether")},
-                                    {@"value", $object(231)}),
+                                    {@"value", @(231)}),
                               $dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Natural's Not In It")},
-                                    {@"value", $object(187)}),
+                                    {@"value", @(187)}),
                               $dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Not Great Men")},
-                                    {@"value", $object(187)}),
+                                    {@"value", @(187)}),
                               $dict({@"key", $array(@"Gang Of Four", @"Songs Of The Free",
                                                     @"I Love A Man In Uniform")},
-                                    {@"value", $object(248)}),
+                                    {@"value", @(248)}),
                               $dict({@"key", $array(@"PiL", @"Metal Box",
                                                     @"Memories")}, 
-                                    {@"value", $object(309)})));
+                                    {@"value", @(309)})));
 
     options.groupLevel = 1;
     rows = [view queryWithOptions: &options status: &status];
     CAssertEq(status, kTDStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four")}, {@"value", $object(853)}),
-                              $dict({@"key", $array(@"PiL")}, {@"value", $object(309)})));
+    CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four"]}, {@"value", @(853)}),
+                              $dict({@"key", @[@"PiL"]}, {@"value", @(309)})));
     
     options.groupLevel = 2;
     rows = [view queryWithOptions: &options status: &status];
     CAssertEq(status, kTDStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!")},
-                                    {@"value", $object(605)}),
-                              $dict({@"key", $array(@"Gang Of Four", @"Songs Of The Free")},
-                                    {@"value", $object(248)}),
-                              $dict({@"key", $array(@"PiL", @"Metal Box")}, 
-                                    {@"value", $object(309)})));
+    CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four", @"Entertainment!"]},
+                                    {@"value", @(605)}),
+                              $dict({@"key", @[@"Gang Of Four", @"Songs Of The Free"]},
+                                    {@"value", @(248)}),
+                              $dict({@"key", @[@"PiL", @"Metal Box"]}, 
+                                    {@"value", @(309)})));
 }
 
 
@@ -498,11 +498,11 @@ TestCase(TDView_GroupedStrings) {
     
     TDView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-         NSString *name = [doc objectForKey: @"name"];
+         NSString *name = doc[@"name"];
          if (name)
-             emit([name substringToIndex:1], [NSNumber numberWithInt:1]);
+             emit([name substringToIndex:1], @1);
      } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
-         return [NSNumber numberWithUnsignedInteger:[values count]];
+         return @([values count]);
      } version:@"1.0"];
    
     CAssertEq([view updateIndex], kTDStatusOK);
@@ -512,20 +512,20 @@ TestCase(TDView_GroupedStrings) {
     TDStatus status;
     NSArray* rows = [view queryWithOptions: &options status: &status];
     CAssertEq(status, kTDStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", $object(2)}),
-                              $dict({@"key", @"J"}, {@"value", $object(2)}),
-                              $dict({@"key", @"N"}, {@"value", $object(1)})));
+    CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
+                              $dict({@"key", @"J"}, {@"value", @2}),
+                              $dict({@"key", @"N"}, {@"value", @1})));
 }
 
 
 TestCase(TDView_Collation) {
     // Based on CouchDB's "view_collation.js" test
-    NSArray* testKeys = [NSArray arrayWithObjects: $null,
+    NSArray* testKeys = @[$null,
                                                    $false,
                                                    $true,
-                                                   $object(0),
-                                                   $object(2.5),
-                                                   $object(10),
+                                                   @0,
+                                                   @(2.5),
+                                                   @(10),
                                                    @" ", @"_", @"~", 
                                                    @"a",
                                                    @"A",
@@ -534,12 +534,12 @@ TestCase(TDView_Collation) {
                                                    @"B",
                                                    @"ba",
                                                    @"bb",
-                                                   $array(@"a"),
-                                                   $array(@"b"),
-                                                   $array(@"b", @"c"),
-                                                   $array(@"b", @"c", @"a"),
-                                                   $array(@"b", @"d"),
-                                                   $array(@"b", @"d", @"e"), nil];
+                                                   @[@"a"],
+                                                   @[@"b"],
+                                                   @[@"b", @"c"],
+                                                   @[@"b", @"c", @"a"],
+                                                   @[@"b", @"d"],
+                                                   @[@"b", @"d", @"e"]];
     RequireTestCase(TDView_Query);
     TDDatabase *db = createDB();
     int i = 0;
@@ -548,7 +548,7 @@ TestCase(TDView_Collation) {
 
     TDView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        emit([doc objectForKey: @"name"], nil);
+        emit(doc[@"name"], nil);
     } reduceBlock: NULL version:@"1.0"];
     
     TDQueryOptions options = kDefaultTDQueryOptions;
@@ -557,23 +557,23 @@ TestCase(TDView_Collation) {
     CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
-        CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);
+        CAssertEqual(row[@"key"], testKeys[i++]);
 }
 
 
 TestCase(TDView_CollationRaw) {
-    NSArray* testKeys = [NSArray arrayWithObjects: $object(0),
-                                                   $object(2.5),
-                                                   $object(10),
+    NSArray* testKeys = @[@0,
+                                                   @(2.5),
+                                                   @(10),
                                                    $false,
                                                    $null,
                                                    $true,
-                                                   $array(@"a"),
-                                                   $array(@"b"),
-                                                   $array(@"b", @"c"),
-                                                   $array(@"b", @"c", @"a"),
-                                                   $array(@"b", @"d"),
-                                                   $array(@"b", @"d", @"e"),
+                                                   @[@"a"],
+                                                   @[@"b"],
+                                                   @[@"b", @"c"],
+                                                   @[@"b", @"c", @"a"],
+                                                   @[@"b", @"d"],
+                                                   @[@"b", @"d", @"e"],
                                                    @" ",
                                                    @"A",
                                                    @"B",
@@ -583,7 +583,7 @@ TestCase(TDView_CollationRaw) {
                                                    @"b",
                                                    @"ba",
                                                    @"bb",
-                                                   @"~", nil];
+                                                   @"~"];
     RequireTestCase(TDView_Query);
     TDDatabase *db = createDB();
     int i = 0;
@@ -592,7 +592,7 @@ TestCase(TDView_CollationRaw) {
 
     TDView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        emit([doc objectForKey: @"name"], nil);
+        emit(doc[@"name"], nil);
     } reduceBlock: NULL version:@"1.0"];
     view.collation = kTDViewCollationRaw;
     
@@ -602,7 +602,7 @@ TestCase(TDView_CollationRaw) {
     CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
-        CAssertEqual([row objectForKey: @"key"], [testKeys objectAtIndex: i++]);
+        CAssertEqual(row[@"key"], testKeys[i++]);
 }
 
 
@@ -619,9 +619,9 @@ TestCase(TDView_LinkedDocs) {
 
     TDView* view = [db viewNamed: @"linkview"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        NSString* key = [doc objectForKey: @"key"];
+        NSString* key = doc[@"key"];
         NSDictionary* value = nil;
-        int linkedID = [[doc objectForKey: @"_id"] intValue] - 11111;
+        int linkedID = [doc[@"_id"] intValue] - 11111;
         if (linkedID > 0)
             value = $dict({@"_id", $sprintf(@"%d", linkedID)});
         emit(key, value);

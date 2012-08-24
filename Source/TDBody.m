@@ -123,8 +123,8 @@
         return nil;
 }
 
-- (id) propertyForKey: (NSString*)key {
-    return [self.properties objectForKey: key];
+- (id) objectForKeyedSubscript: (NSString*)key {
+    return (self.properties)[key];
 }
 
 @end

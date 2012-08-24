@@ -189,7 +189,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
             return;
     }
     if (TDStatusIsError(status)) {
-        Warn(@"%@: Got status %i", self, status);
+        Warn(@"%@: Got status %i for %@", self, status, _databaseURL);
         [self connection: connection
               didFailWithError: TDStatusToNSError(status, self.changesFeedURL)];
     } else {

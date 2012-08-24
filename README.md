@@ -1,7 +1,7 @@
 # TouchDB #
 
 by Jens Alfke (jens@couchbase.com)  
-with contributions from Alexander Edge, Chris Kau, David Venable, Derek Clarkson, fcandalija, J Chris Anderson, Marty Schoch, Mike Lamb, Paul Mietz Egli  
+with contributions from Alexander Edge, Chris Kau, David Venable, Derek Clarkson, Fabien Franzen, fcandalija, J Chris Anderson, Marty Schoch, Mike Lamb, Paul Mietz Egli, Robin Lu  
 and technical advice from Damien Katz and Filipe Manana
 
 **TouchDB** is a lightweight [Apache CouchDB][1]-compatible database engine suitable for embedding into mobile or desktop apps. Think of it this way: If CouchDB is MySQL, then TouchDB is SQLite.
@@ -34,7 +34,7 @@ And by "_mobile apps_" I'm focusing on iOS and [Android][11], although there's n
 ## Requirements ##
 
  * It's written in Objective-C.
- * Xcode 4.3+ is required to build it (Clang 3.0+, with GNUstep).
+ * Xcode 4.4+ is required to build it (Clang 3.1+, with GNUstep).
  * Runtime system requirements for Apple platforms are iOS 5+, or Mac OS X 10.7.2+.
 
 ## License ##
@@ -50,6 +50,11 @@ And by "_mobile apps_" I'm focusing on iOS and [Android][11], although there's n
 TouchDB went beta in June 2012. The current stable release is beta 3, [version 0.92][16].
 
 We don't have a formal schedule for 1.0, but expect the blessed event by the end of summer.
+
+## Downloading TouchDB ##
+
+* [Stable builds][16] (releases, betas and candidates)
+* [Latest revisions][19] (built hourly after any commits. May not be stable; use at your own risk.)
 
 ## Building TouchDB ##
 
@@ -85,3 +90,4 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [16]: https://github.com/couchbaselabs/TouchDB-iOS/downloads
 [17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
 [18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo
+[19]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/

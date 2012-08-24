@@ -38,32 +38,76 @@
 }
 
 
+- (void) unschedule {
+    _scheduled = false;
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(processNow) object:nil];
+}
+
+
+- (void) scheduleWithDelay: (NSTimeInterval)delay {
+    if (_scheduled && delay < _scheduledDelay)
+        [self unschedule];
+    if (!_scheduled) {
+        _scheduled = true;
+        _scheduledDelay = delay;
+        [self performSelector: @selector(processNow) withObject: nil afterDelay: delay];
+    }
+}
+
+
 - (void) processNow {
-    if (_inbox.count == 0)
+    _scheduled = false;
+    NSArray* toProcess;
+    NSUInteger count = _inbox.count;
+    if (count == 0) {
         return;
-    NSMutableArray* toProcess = _inbox;
-    _inbox = nil;
+    } else if (count <= _capacity) {
+        toProcess = [_inbox autorelease];
+        _inbox = nil;
+    } else {
+        toProcess = [_inbox subarrayWithRange: NSMakeRange(0, _capacity)];
+        [_inbox removeObjectsInRange: NSMakeRange(0, _capacity)];
+        // There are more objects left, so schedule them Real Soon:
+        [self scheduleWithDelay: 0.0];
+    }
     _processor(toProcess);
-    [toProcess release];
+}
+
+
+- (void) queueObjects: (NSArray*)objects {
+    if (objects.count == 0)
+        return;
+    if (!_inbox)
+        _inbox = [[NSMutableArray alloc] init];
+    [_inbox addObjectsFromArray: objects];
+
+    if (_inbox.count < _capacity)
+        [self scheduleWithDelay: _delay];
+    else {
+        [self unschedule];
+        [self processNow];
+    }
 }
 
 
 - (void) queueObject: (id)object {
-    if (_inbox.count >= _capacity)
-        [self flush];
-    if (!_inbox) {
-        _inbox = [[NSMutableArray alloc] init];
-        [self performSelector: @selector(processNow) withObject: nil afterDelay: _delay];
-    }
-    [_inbox addObject: object];
+    [self queueObjects: @[object]];
 }
 
 
 - (void) flush {
-    if (_inbox) {
-        [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(processNow) object:nil];
-        [self processNow];
+    [self unschedule];
+    [self processNow];
+}
+
+
+- (void) flushAll {
+    if (_inbox.count > 0) {
+        [self unschedule];
+        NSArray* toProcess = [_inbox autorelease];
+        _inbox = nil;
+        _processor(toProcess);
     }
 }
 

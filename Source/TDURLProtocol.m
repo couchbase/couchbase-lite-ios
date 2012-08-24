@@ -92,7 +92,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
             int count = 0;
             do {
                 hostname = $sprintf(@"server%d", ++count);
-            } while ([sHostMap objectForKey: hostname]);
+            } while (sHostMap[hostname]);
         }
         [self registerServer: server forHostname: hostname];
         return [self rootURLForHostname: hostname];
@@ -109,7 +109,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 + (TDServer*) serverForHostname: (NSString*)hostname {
     @synchronized(self) {
-        return [sHostMap objectForKey: normalizeHostname(hostname)];
+        return sHostMap[normalizeHostname(hostname)];
     }
 }
 
@@ -309,7 +309,7 @@ TestCase(TDURLProtocol) {
     CAssert(body != nil);
     CAssert(response != nil);
     CAssertEq(response.statusCode, kTDStatusOK);
-    CAssertEqual([response.allHeaderFields objectForKey: @"Content-Type"], @"application/json");
+    CAssertEqual((response.allHeaderFields)[@"Content-Type"], @"application/json");
     CAssert([bodyStr rangeOfString: @"\"TouchDB\":\"Welcome\""].length > 0
             || [bodyStr rangeOfString: @"\"TouchDB\": \"Welcome\""].length > 0);
     [server close];

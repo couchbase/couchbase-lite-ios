@@ -48,7 +48,7 @@ int main (int argc, const char * argv[]) {
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
-    NSString* dbName = [bundleInfo objectForKey: @"DemoDatabase"];
+    NSString* dbName = bundleInfo[@"DemoDatabase"];
     if (!dbName) {
         NSLog(@"FATAL: Please specify a TouchDB database name in the app's Info.plist under the 'DemoDatabase' key");
         exit(1);
@@ -63,7 +63,7 @@ int main (int argc, const char * argv[]) {
     
     // Create a 'view' containing list items sorted by date:
     [[_database viewNamed: @"byDate"] setMapBlock: MAPBLOCK({
-        id date = [doc objectForKey: @"created_at"];
+        id date = doc[@"created_at"];
         if (date) emit(date, doc);
     }) version: @"1.0"];
     
@@ -71,7 +71,7 @@ int main (int argc, const char * argv[]) {
     [_database defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.deleted)
             return YES;
-        id date = [newRevision.properties objectForKey: @"created_at"];
+        id date = newRevision[@"created_at"];
         if (date && ! [TDJSON dateWithJSONObject: date]) {
             context.errorMessage = [@"invalid date " stringByAppendingString: date];
             return NO;
@@ -82,7 +82,7 @@ int main (int argc, const char * argv[]) {
     // And why not a filter, just to allow some simple testing of filtered _changes.
     // For example, try curl 'http://localhost:8888/demo-shopping/_changes?filter=default/checked'
     [_database defineFilter: @"checked" asBlock: FILTERBLOCK({
-        return [[revision.properties objectForKey: @"check"] boolValue];
+        return [revision[@"check"] boolValue];
     })];
 
     
@@ -229,8 +229,8 @@ int main (int argc, const char * argv[]) {
     [self forgetReplication: &_push];
     
     NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
-    _pull = [[repls objectAtIndex: 0] retain];
-    _push = [[repls objectAtIndex: 1] retain];
+    _pull = [repls[0] retain];
+    _push = [repls[1] retain];
     [self observeReplication: _pull];
     [self observeReplication: _push];
     
@@ -329,13 +329,13 @@ int main (int argc, const char * argv[]) {
     TDMapBlock mapBlock = NULL;
     if ([mapSource isEqualToString: @"(function (doc) {if (doc.a == 4) {emit(null, doc.b);}})"]) {
         mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
-            if ([[doc objectForKey: @"a"] isEqual: [NSNumber numberWithInt: 4]])
-                emit(nil, [doc objectForKey: @"b"]);
+            if ([doc[@"a"] isEqual: @4])
+                emit(nil, doc[@"b"]);
         };
     } else if ([mapSource isEqualToString: @"(function (doc) {emit(doc.foo, null);})"] ||
                [mapSource isEqualToString: @"function(doc) { emit(doc.foo, null); }"]) {
         mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
-            emit([doc objectForKey: @"foo"], nil);
+            emit(doc[@"foo"], nil);
         };
     }
     return [[mapBlock copy] autorelease];
@@ -370,7 +370,7 @@ int main (int argc, const char * argv[]) {
     NSArray* items = _tableController.arrangedObjects;
     if (row >= (NSInteger)items.count)
         return;                 // Don't know why I get called on illegal rows, but it happens...
-    TouchModel* item = [items objectAtIndex: row];
+    TouchModel* item = items[row];
     NSTimeInterval changedFor = item.timeSinceExternallyChanged;
     if (changedFor > 0 && changedFor < kChangeGlowDuration) {
         float fraction = (float)(1.0 - changedFor / kChangeGlowDuration);

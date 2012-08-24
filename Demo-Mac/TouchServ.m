@@ -35,7 +35,7 @@ static NSString* GetServerPath() {
     
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
                                                          NSUserDomainMask, YES);
-    NSString* path = [paths objectAtIndex:0];
+    NSString* path = paths[0];
     path = [path stringByAppendingPathComponent: bundleID];
     path = [path stringByAppendingPathComponent: @"TouchDB"];
     NSError* error = nil;
@@ -67,8 +67,8 @@ static bool doReplicate( TDServer* server, const char* replArg,
     }
 
     if (user && password) {
-        NSString* userStr = [NSString stringWithCString: user encoding: NSUTF8StringEncoding];
-        NSString* passStr = [NSString stringWithCString: password encoding: NSUTF8StringEncoding];
+        NSString* userStr = @(user);
+        NSString* passStr = @(password);
         Log(@"Setting credentials for user '%@'", userStr);
         NSURLCredential* cred;
         cred = [NSURLCredential credentialWithUser: userStr
@@ -152,6 +152,7 @@ int main (int argc, const char * argv[])
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
                 listener.readOnly = YES;
+                [server tellDatabaseManager: ^(TDDatabaseManager *mgr) { mgr.readOnly = YES; }];
             } else if (strcmp(argv[i], "--auth") == 0) {
                 srandomdev();
                 NSString* password = [NSString stringWithFormat: @"%lx", random()];
