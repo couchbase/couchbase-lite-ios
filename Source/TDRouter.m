@@ -61,8 +61,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
         _local = YES;
         _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
-            _longpoll = NO;
-            _changesIncludeDocs = NO;
+            _longpoll = _changesIncludeDocs = _changesIncludeConflicts = NO;
         }
     }
     return self;
