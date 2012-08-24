@@ -240,7 +240,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     // It's important to scan the _attachments entries in the same order in which they will appear
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
     TDMultipartWriter* bodyStream = nil;
-    NSDictionary* attachments = (rev.properties)[@"_attachments"];
+    NSDictionary* attachments = rev[@"_attachments"];
     for (NSString* attachmentName in [TDCanonicalJSON orderedKeys: attachments]) {
         NSDictionary* attachment = attachments[attachmentName];
         if (attachment[@"follows"]) {

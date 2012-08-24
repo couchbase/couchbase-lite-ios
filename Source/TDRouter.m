@@ -516,7 +516,7 @@ static NSArray* splitPath( NSURL* url ) {
         return;
     _responseSent = YES;
 
-    (_response.headers)[@"Server"] = $sprintf(@"TouchDB %g", TouchDBVersionNumber);
+    _response[@"Server"] = $sprintf(@"TouchDB %g", TouchDBVersionNumber);
 
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
@@ -534,7 +534,7 @@ static NSArray* splitPath( NSURL* url ) {
 
     if (_response.status == 200 && ($equal(_request.HTTPMethod, @"GET") ||
                                     $equal(_request.HTTPMethod, @"HEAD"))) {
-        if (!(_response.headers)[@"Cache-Control"])
+        if (!_response[@"Cache-Control"])
             _response[@"Cache-Control"] = @"must-revalidate";
     }
 
@@ -663,6 +663,10 @@ static NSArray* splitPath( NSURL* url ) {
                                 {@"reason", _statusReason});
         self[@"Content-Type"]= @"application/json";
     }
+}
+
+- (NSString*) objectForKeyedSubscript: (NSString*)header {
+    return _headers[header];
 }
 
 - (void)setObject: (NSString*)value forKeyedSubscript:(NSString*)header {

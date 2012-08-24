@@ -304,7 +304,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         state = @"completed";
     
     NSMutableDictionary* update = $mdict({@"_replication_id", repl.sessionID});
-    if (!$equal(state, (rev.properties)[@"_replication_state"])) {
+    if (!$equal(state, rev[@"_replication_state"])) {
         update[@"_replication_state"] = state;
         update[@"_replication_state_time"] = @(time(NULL));
     }
@@ -367,7 +367,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 // A replication document has been changed:
 - (void) processUpdate: (TDRevision*)rev {
-    if (!(rev.properties)[@"_replication_state"]) {
+    if (!rev[@"_replication_state"]) {
         // Client deleted the _replication_state property; restart the replicator:
         LogTo(Sync, @"ReplicatorManager: Restarting replicator for %@", rev);
         TDReplicator* repl = _replicatorsByDocID[rev.docID];

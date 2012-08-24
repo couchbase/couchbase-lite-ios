@@ -925,7 +925,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                       revisionID: nil options: 0];
         if (!rev)
             return kTDStatusNotFound;
-        NSDictionary* views = $castIf(NSDictionary, (rev.properties)[@"views"]);
+        NSDictionary* views = $castIf(NSDictionary, rev[@"views"]);
         NSDictionary* viewProps = $castIf(NSDictionary, views[viewName]);
         if (!viewProps)
             return kTDStatusNotFound;

@@ -373,7 +373,7 @@
                                    status: (TDStatus*)outStatus
 {
     // If there are no attachments in the new rev, there's nothing to do:
-    NSDictionary* revAttachments = (rev.properties)[@"_attachments"];
+    NSDictionary* revAttachments = rev[@"_attachments"];
     if (revAttachments.count == 0 || rev.deleted) {
         *outStatus = kTDStatusOK;
         return @{};
@@ -445,7 +445,7 @@
     Assert(rev);
     
     // If there are no attachments in the new rev, there's nothing to do:
-    NSDictionary* revAttachments = (rev.properties)[@"_attachments"];
+    NSDictionary* revAttachments = rev[@"_attachments"];
     if (revAttachments.count == 0 || rev.deleted)
         return kTDStatusOK;
     
@@ -489,7 +489,7 @@
                                                                       boundary: nil];
     [writer setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
     [writer addData: rev.asJSON];
-    NSDictionary* attachments = (rev.properties)[@"_attachments"];
+    NSDictionary* attachments = rev[@"_attachments"];
     for (NSString* attachmentName in attachments) {
         NSDictionary* attachment = attachments[attachmentName];
         if (attachment[@"follows"]) {
@@ -527,7 +527,7 @@
                     *outStatus = kTDStatusConflict;   // if some other revision exists, it's a conflict
                 return nil;
             }
-            NSDictionary* attachments = (oldRev.properties)[@"_attachments"];
+            NSDictionary* attachments = oldRev[@"_attachments"];
             if (!body && !attachments[filename]) {
                 *outStatus = kTDStatusAttachmentNotFound;
                 return nil;

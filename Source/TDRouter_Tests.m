@@ -451,7 +451,7 @@ TestCase(TDRouter_GetAttachment) {
     // Get the document with attachment data:
     response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil, nil);
     CAssertEq(response.status, kTDStatusOK);
-    CAssertEqual((response.body.properties)[@"_attachments"],
+    CAssertEqual((response.body)[@"_attachments"],
                  $dict({@"attach", $dict({@"data", [TDBase64 encode: attach1]}, 
                                         {@"content_type", @"text/plain"},
                                         {@"length", @(attach1.length)},
