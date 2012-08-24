@@ -82,7 +82,7 @@
 #pragma mark - BODY
 
 
-- (NSData*) newBody {
+- (NSData*) bodyIfNew {
     return _body ? self.body : nil;
 }
 
@@ -141,7 +141,7 @@
             // Replace the attachment object with a metadata dictionary:
             NSMutableDictionary* metadata = [[attachment.metadata mutableCopy] autorelease];
             value = metadata;
-            NSData* body = attachment.newBody;
+            NSData* body = attachment.bodyIfNew;
             if (body) {
                 // Copy attachment body into the database's blob store:
                 // OPT: If _body is an NSURL, could just copy the file without reading into RAM

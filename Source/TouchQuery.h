@@ -116,7 +116,6 @@ typedef enum {
     @private
     TouchDatabase* _database;
     NSArray* _rows;
-    NSUInteger _totalCount;
     NSUInteger _nextRow;
     NSUInteger _sequenceNumber;
 }
