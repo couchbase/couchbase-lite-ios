@@ -265,7 +265,7 @@ TestCase(TDReplicatorManager) {
     CAssert(newRepl.running);
 
     // Now delete the database, and check that the replication doc is deleted too:
-    CAssert([server deleteDatabaseNamed: @"foo"]);
+    CAssert([server deleteDatabase: sourceDB error: NULL]);
     CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0]);
     
     [server close];

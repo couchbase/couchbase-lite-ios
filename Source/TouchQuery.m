@@ -103,6 +103,7 @@
         .descending = _descending,
         .includeDocs = _prefetch,
         .updateSeq = YES,
+        .localSeq = _sequences,
         .inclusiveEnd = YES,
     };
     

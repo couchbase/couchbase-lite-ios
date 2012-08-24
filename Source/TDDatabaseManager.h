@@ -30,7 +30,7 @@
 - (TDDatabase*) databaseNamed: (NSString*)name;
 - (TDDatabase*) existingDatabaseNamed: (NSString*)name;
 
-- (BOOL) deleteDatabaseNamed: (NSString*)name;
+- (BOOL) deleteDatabase: (TDDatabase*)db error: (NSError**)outError;
 
 @property (readonly) NSArray* allDatabaseNames;
 @property (readonly) NSArray* allOpenDatabases;

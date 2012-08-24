@@ -207,7 +207,7 @@
 - (TDStatus) do_DELETE: (TDDatabase*)db {
     if ([self query: @"rev"])
         return kTDStatusBadID;  // CouchDB checks for this; probably meant to be a document deletion
-    return [_dbManager deleteDatabaseNamed: db.name] ? kTDStatusOK : kTDStatusNotFound;
+    return [_dbManager deleteDatabase: db error: NULL] ? kTDStatusOK : kTDStatusNotFound;
 }
 
 

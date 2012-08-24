@@ -8,6 +8,7 @@
 
 #import "TouchDBPrivate.h"
 #import "TDCache.h"
+#import "TDDatabaseManager.h"
 
 
 #define kDocRetainLimit 50
@@ -35,12 +36,17 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
+- (void) forgetDB {
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    _tddb.touchDatabase = nil;
+    setObj(&_tddb, nil);
+}
+
+
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [self forgetDB];
     [_modelFactory release];
-    _tddb.touchDatabase = nil;
-    [_tddb release];
     [_manager release];
     [super dealloc];
 }
@@ -92,7 +98,10 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
-    return [_tddb deleteDatabase: outError];
+    if (![_manager.tdManager deleteDatabase: _tddb error: outError])
+        return NO;
+    [self forgetDB];
+    return YES;
 }
 
 

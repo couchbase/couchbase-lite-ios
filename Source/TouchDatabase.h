@@ -20,7 +20,7 @@
     TouchDatabaseManager* _manager;
     TDDatabase* _tddb;    
     TDCache* _docCache;
-    TouchModelFactory* _modelFactory;
+    TouchModelFactory* _modelFactory;   // used in category method in TouchModelFactory.m
 }
 
 /** The database's name. */

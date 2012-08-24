@@ -545,32 +545,30 @@ TestCase(API_ViewWithLinkedDocs) {
 }
 
 
-
 TestCase(API_ViewOptions) {
     TouchDatabase* db = createEmptyDB();
-    [self createDocuments: 5];
-    
-    TouchDesignDocument* design = [db designDocumentWithName: @"mydesign"];
-    [design defineViewNamed: @"vu" map: @"function(doc){emit(doc._id,doc._local_seq);};"];
-    CAssertWait([design saveChanges]);
-    
-    TouchQuery* query = [design queryViewNamed: @"vu"];
+    createDocuments(db, 5);
+
+    TouchView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: ^(NSDictionary *doc, TDMapEmitBlock emit) {
+        emit(doc[@"_id"], doc[@"_local_seq"]);
+    } version: @"1"];
+        
+    TouchQuery* query = [view query];
     TouchQueryEnumerator* rows = query.rows;
     for (TouchQueryRow* row in rows) {
-        CAssertEqual(row.value, [NSNull null]);
+        CAssertEqual(row.value, nil);
         Log(@"row _id = %@, local_seq = %@", row.key, row.value);
     }
     
-    design.includeLocalSequence = YES;
-    CAssertWait([design saveChanges]);
+    query.sequences = YES;
     rows = query.rows;
     for (TouchQueryRow* row in rows) {
         CAssert([row.value isKindOfClass: [NSNumber class]], @"Unexpected value: %@", row.value);
         Log(@"row _id = %@, local_seq = %@", row.key, row.value);
     }
 }
-
-#endif // 0
+#endif
 
 
 TestCase(API) {
@@ -586,8 +584,9 @@ TestCase(API) {
     RequireTestCase(API_History);
     RequireTestCase(API_ChangeTracking);
     RequireTestCase(API_CreateView);
-    RequireTestCase(API_ViewWithLinkedDocs);
     RequireTestCase(API_Validation);
+    RequireTestCase(API_ViewWithLinkedDocs);
+//    RequireTestCase(API_ViewOptions);
 }
 
 #endif // DEBUG

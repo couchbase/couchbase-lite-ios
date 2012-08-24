@@ -17,6 +17,9 @@
 @implementation TouchDatabaseManager
 
 
+@synthesize tdManager=_mgr;
+
+
 + (TouchDatabaseManager*) sharedInstance {
     static TouchDatabaseManager* sInstance;
     static dispatch_once_t onceToken;

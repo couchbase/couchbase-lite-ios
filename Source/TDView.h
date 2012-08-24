@@ -41,6 +41,7 @@ typedef struct TDQueryOptions {
     BOOL descending;
     BOOL includeDocs;
     BOOL updateSeq;
+    BOOL localSeq;
     BOOL inclusiveEnd;
     BOOL reduce;
     BOOL group;
