@@ -447,12 +447,23 @@
 
 
 - (void) dbChanged: (NSNotification*)n {
-    TDRevision* rev = (n.userInfo)[@"rev"];
+    NSDictionary* userInfo = n.userInfo;
+    TDRevision* rev = userInfo[@"rev"];
+    TDRevision* winningRev = userInfo[@"winner"];
 
     if (!_changesIncludeConflicts) {
-        rev = [_db newWinnerAfterRev: rev];
-        if (!rev)
-            return;
+        if (!winningRev)
+            return;     // this change doesn't affect the winning rev ID, so no need to send it
+        else if (!$equal(winningRev, rev)) {
+            // This rev made a _different_ rev current, so substitute that one.
+            // We need to emit the current sequence # in the feed, so put it in the rev.
+            // This isn't correct internally (this is an old rev so it has an older sequence)
+            // but consumers of the _changes feed don't care about the internal state.
+            if (_changesIncludeDocs)
+                [_db loadRevisionBody: winningRev options: 0];
+            winningRev.sequence = rev.sequence;
+            rev = winningRev;
+        }
     }
     
     if (_changesFilter && !_changesFilter(rev, _changesFilterParams))

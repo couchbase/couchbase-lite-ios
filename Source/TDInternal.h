@@ -32,6 +32,8 @@
                                               revID: (NSString*)revID
                                            sequence: (SequenceNumber)sequence
                                             options: (TDContentOptions)options;
+- (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
+                               isDeleted: (BOOL*)outIsDeleted;
 @end
 
 @interface TDDatabase (Insertion_Internal)

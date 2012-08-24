@@ -736,66 +736,25 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 }
 
 
-/** Returns the rev ID of the 'winning' revision of this document.
-    If 'upToSequence' is positive, only sequences up to that number are considered. */
+/** Returns the rev ID of the 'winning' revision of this document, and whether it's deleted. */
 - (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
-                            upToSequence: (SequenceNumber)upToSequence
+                               isDeleted: (BOOL*)outIsDeleted
 {
-    if (docNumericID <= 0)
-        return nil;
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT max(revid) from revs "
-                                                    "WHERE doc_id=? and current=1 and deleted=0"];
-    if (upToSequence > 0)
-        [sql appendFormat: @" and sequence <= ?"];
-    return [_fmdb stringForQuery: sql, @(docNumericID), @(upToSequence)];
-}
-
-
-- (TDRevision*) newWinnerAfterRev: (TDRevision*)rev {
-    Assert(rev.sequence > 0);
-    SInt64 docNumericID = [self getDocNumericID: rev.docID];
     Assert(docNumericID > 0);
-    // First find the current winning rev ID:
-    NSString* winningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                 upToSequence: rev.sequence];
-    if (!rev.deleted) {
-        // If it's an update, check whether it's the current winner; if not, winner didn't change:
-        if ($equal(rev.revID, winningRevID))
-            return rev;
+    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs"
+                                           " WHERE doc_id=? and current=1"
+                                           " ORDER BY deleted asc, revid desc LIMIT 1",
+                                          @(docNumericID)];
+    NSString* revID = nil;
+    if ([r next]) {
+        revID = [r stringForColumnIndex: 0];
+        *outIsDeleted = [r boolForColumnIndex: 1];
     } else {
-        // If this deletion caused the entire doc to be deleted (no surviving conflicts),
-        // return it:
-        if (!winningRevID)
-            return rev;
-        // Else check whether the current winner was 'crowned' by this deletion, i.e.
-        // whether its rev ID is less than this rev's parent's. If it is, return it.
-        NSString* parentRevID = [self getParentRevID: rev];
-        if (parentRevID && TDCompareRevIDs(parentRevID, winningRevID) > 0)
-            return [[[TDRevision alloc] initWithDocID: rev.docID
-                                                revID: winningRevID
-                                              deleted: NO] autorelease];
+        *outIsDeleted = NO;
     }
-    // Default: It didn't change the winning rev ID
-    return nil;
+    [r close];
+    return revID;
 }
-
-
-#if 0 // unused so far
-- (NSDictionary*) getWinningRevIDsForDocNumericIDs: (NSArray*)docIDs {
-    NSString* sql = $sprintf(@"SELECT doc_id, max(revid) FROM revs WHERE doc_id in (%@) and current=1 and deleted=0 GROUP BY doc_id ORDER BY doc_id",
-                             [docIDs componentsJoinedByString: @","]);
-    FMResultSet* r = [_fmdb executeQuery: sql];
-    if (!r)
-        return nil;
-    NSMutableDictionary* result = $mdict();
-    while ([r next]) {
-        NSNumber* docNumericID = @([r longLongIntForColumnIndex: 1]);
-        NSString* revID = [r stringForColumnIndex: 2];
-        result[docNumericID] = revID;
-    }
-    return result;
-}
-#endif
 
 
 const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
