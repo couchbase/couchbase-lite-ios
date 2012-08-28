@@ -2,7 +2,7 @@
 
 .objc_class_name_TouchDatabase
 .objc_class_name_TouchDatabaseManager
-.objc_class_name_TouchTouchDocument
+.objc_class_name_TouchDocument
 .objc_class_name_TouchRevision
 .objc_class_name_TouchAttachment
 .objc_class_name_TouchView
@@ -29,8 +29,6 @@ _kTouchDocumentChangeNotification
 .objc_class_name_TDPusher
 .objc_class_name_TDPuller
 
-.objc_class_name_TDURLProtocol
-.objc_class_name_TDRouter
 .objc_class_name_TDServer
 .objc_class_name_TDDatabaseManager
 .objc_class_name_TDMultipartDocumentReader
