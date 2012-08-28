@@ -51,6 +51,10 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     if (self) {
         _dbManager = dbManager;
         _replicatorDB = [[dbManager databaseNamed: kTDReplicatorDatabaseName] retain];
+        if (!_replicatorDB) {
+            [self release];
+            return nil;
+        }
         Assert(_replicatorDB);
         _thread = [NSThread currentThread];
     }
