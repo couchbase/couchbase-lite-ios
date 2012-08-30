@@ -612,7 +612,7 @@ TestCase(TDView_LinkedDocs) {
     NSDictionary* docs[5];
     int i = 0;
     for (TDRevision* rev in revs) {
-        docs[i++] = [db getDocumentWithID: rev.docID revisionID: rev.revID options: 0].properties;
+        docs[i++] = [db getDocumentWithID: rev.docID revisionID: rev.revID].properties;
     }
 
     TDView* view = [db viewNamed: @"linkview"];

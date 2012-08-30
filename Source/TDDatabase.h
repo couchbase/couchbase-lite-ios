@@ -120,7 +120,10 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 - (TDRevision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID
-                          options: (TDContentOptions)options;
+                          options: (TDContentOptions)options
+                           status: (TDStatus*)outStatus;
+- (TDRevision*) getDocumentWithID: (NSString*)docID
+                       revisionID: (NSString*)revID;
 
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;

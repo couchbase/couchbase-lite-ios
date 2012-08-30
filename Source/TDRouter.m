@@ -300,12 +300,15 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = _path[0];
-        if ([dbName hasPrefix: @"_"] && ![TDDatabaseManager isValidDatabaseName: dbName]) {
+        BOOL validName = [TDDatabaseManager isValidDatabaseName: dbName];
+        if ([dbName hasPrefix: @"_"] && !validName) {
             [message appendString: dbName]; // special root path, like /_all_dbs
+        } else if (!validName) {
+            return kTDStatusBadID;
         } else {
             _db = [[_dbManager databaseNamed: dbName] retain];
             if (!_db)
-                return kTDStatusBadID;
+                return kTDStatusNotFound;
             [message appendString: @":"];
         }
     } else {

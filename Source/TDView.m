@@ -489,9 +489,11 @@ static id groupKey(id key, unsigned groupLevel) {
                     if (linkedID) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = value[@"_rev"]; // usually nil
+                        TDStatus linkedStatus;
                         TDRevision* linked = [_db getDocumentWithID: linkedID
                                                          revisionID: linkedRev
-                                                            options: options->content];
+                                                            options: options->content
+                                                             status: &linkedStatus];
                         docContents = linked ? linked.properties : $null;
                     } else {
                         docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 4]

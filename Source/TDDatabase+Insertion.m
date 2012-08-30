@@ -245,11 +245,6 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                           current: (BOOL)current
                              JSON: (NSData*)json
 {
-    // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
-    // has been lost due to compaction. Instead, store an empty zero-length blob.
-    if (json == nil)
-        json = [NSData data];
-    
     if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
                                 "VALUES (?, ?, ?, ?, ?, ?)",
                                @(docNumericID),
@@ -419,6 +414,13 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
         rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
         
         // Now insert the rev itself:
+        
+        // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
+        // is missing due to compaction or replication.
+        // Instead, store an empty zero-length blob.
+        if (json == nil)
+            json = [NSData data];
+        
         SequenceNumber sequence = [self insertRevision: rev
                                           docNumericID: docNumericID
                                         parentSequence: parentSequence
@@ -552,11 +554,9 @@ NSString* const TDDatabaseChangeNotification = @"TDDatabaseChange";
                 if (i==0) {
                     // Hey, this is the leaf revision we're inserting:
                     newRev = rev;
-                    if (!rev.deleted) {
-                        json = [self encodeDocumentJSON: rev];
-                        if (!json)
-                            return kTDStatusBadJSON;
-                    }
+                    json = [self encodeDocumentJSON: rev];
+                    if (!json)
+                        return kTDStatusBadJSON;
                     current = YES;
                 } else {
                     // It's an intermediate parent, so insert a stub:

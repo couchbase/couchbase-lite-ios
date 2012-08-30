@@ -164,12 +164,12 @@ TestCase(TDPuller) {
     replic8(db, kRemoteDBURLStr, NO, nil);
     CAssertEq(db.lastSequence, 3);
     
-    TDRevision* doc = [db getDocumentWithID: @"doc1" revisionID: nil options: 0];
+    TDRevision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"2-"]);
     CAssertEqual(doc[@"foo"], @1);
     
-    doc = [db getDocumentWithID: @"doc2" revisionID: nil options: 0];
+    doc = [db getDocumentWithID: @"doc2" revisionID: nil];
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"1-"]);
     CAssertEqual(doc[@"fnord"], $true);
@@ -192,8 +192,9 @@ TestCase(TDPuller_FromCouchApp) {
     [db open];
     
     replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
-    
-    TDRevision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kTDIncludeAttachments];
+
+    TDStatus status;
+    TDRevision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kTDIncludeAttachments status: &status];
     NSDictionary* attachments = rev[@"_attachments"];
     CAssertEq(attachments.count, 10u);
     for (NSString* name in attachments) { 
@@ -241,7 +242,7 @@ TestCase(TDReplicatorManager) {
     CAssertEq(status, kTDStatusCreated);
     
     // Get back the document and verify it's been updated with replicator properties:
-    TDRevision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0];
+    TDRevision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil];
     Log(@"Updated doc = %@", newRev.properties);
     CAssert(!$equal(newRev.revID, rev.revID), @"Replicator doc wasn't updated");
     NSString* sessionID = newRev[@"_replication_id"];
@@ -263,7 +264,7 @@ TestCase(TDReplicatorManager) {
     CAssertEq(status, kTDStatusCreated);
 
     // Get back the document and verify it's been updated with replicator properties:
-    newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0];
+    newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil];
     Log(@"Updated doc = %@", newRev.properties);
     sessionID = newRev[@"_replication_id"];
     CAssert([sessionID length] >= 10);
@@ -279,7 +280,7 @@ TestCase(TDReplicatorManager) {
 
     // Now delete the database, and check that the replication doc is deleted too:
     CAssert([server deleteDatabaseNamed: @"foo"]);
-    CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil options: 0]);
+    CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil]);
     
     [server close];
 }

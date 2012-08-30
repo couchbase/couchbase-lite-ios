@@ -44,7 +44,9 @@ static NSCharacterSet* kIllegalNameChars;
 + (TDDatabaseManager*) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
-    TDDatabaseManager* dbm = [[self alloc] initWithDirectory: path error: &error];
+    TDDatabaseManager* dbm = [[self alloc] initWithDirectory: path
+                                                     options: NULL
+                                                       error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
     return [dbm autorelease];

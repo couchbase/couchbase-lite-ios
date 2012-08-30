@@ -285,10 +285,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         
         if (status == kTDStatusConflict) {
             // Conflict -- doc has been updated, get the latest revision & try again:
+            TDStatus status2;
             currentRev = [_replicatorDB getDocumentWithID: currentRev.docID
-                                               revisionID: nil options: 0];
+                                               revisionID: nil options: 0
+                                                   status: &status2];
             if (!currentRev)
-                status = kTDStatusNotFound;   // doc's been deleted, apparently
+                status = status2;
         }
     } while (status == kTDStatusConflict);
     
@@ -462,7 +464,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     NSString* docID = [self docIDForReplicator: repl];
     if (!docID)
         return;  // If it's not a persistent replicator
-    TDRevision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil options: 0];
+    TDRevision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
     
     [self updateDoc: rev forReplicator: repl];
     
