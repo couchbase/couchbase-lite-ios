@@ -23,3 +23,5 @@ _TDDatabaseChangeNotification
 _TDDatabaseWillCloseNotification
 _TDReplicatorProgressChangedNotification
 _TDReplicatorStoppedNotification
+
+_kTDDatabaseManagerDefaultOptions
