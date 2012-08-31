@@ -910,14 +910,13 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
     
     // Generate the SELECT statement, based on the options:
-    NSMutableString* sql = [NSMutableString stringWithFormat:
-                            @"SELECT revs.doc_id, docid, revid, deleted %@ FROM revs, docs WHERE",
-                             (options->includeDocs ? @", json, sequence" : @"")];
+    NSMutableString* sql = [[@"SELECT revs.doc_id, docid, revid" mutableCopy] autorelease];
+    if (options->includeDocs)
+        [sql appendString: @", json, sequence"];
+    [sql appendString: @" FROM revs, docs WHERE"];
     if (docIDs)
-        [sql appendFormat: @" docid IN (%@)", [TDDatabase joinQuotedStrings: docIDs]];
-    else
-        [sql appendString: @" deleted=0"];
-    [sql appendString: @" AND current=1 AND docs.doc_id = revs.doc_id"];
+        [sql appendFormat: @" docid IN (%@) AND", [TDDatabase joinQuotedStrings: docIDs]];
+    [sql appendString: @" current=1 AND deleted=0 AND docs.doc_id = revs.doc_id"];
     
     NSMutableArray* args = $marray();
     id minKey = options->startKey, maxKey = options->endKey;
@@ -961,12 +960,11 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             
             NSString* docID = [r stringForColumnIndex: 1];
             NSString* revID = [r stringForColumnIndex: 2];
-            BOOL deleted = [r boolForColumnIndex: 3];
             NSDictionary* docContents = nil;
-            if (options->includeDocs && !deleted) {
+            if (options->includeDocs) {
                 // Fill in the document contents:
-                NSData* json = [r dataNoCopyForColumnIndex: 4];
-                SequenceNumber sequence = [r longLongIntForColumnIndex: 5];
+                NSData* json = [r dataNoCopyForColumnIndex: 3];
+                SequenceNumber sequence = [r longLongIntForColumnIndex: 4];
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID
                                                          revID: revID
@@ -975,8 +973,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             }
             NSDictionary* change = $dict({@"id",  docID},
                                          {@"key", docID},
-                                         {@"value", $dict({@"rev", revID},
-                                                          {@"deleted", (deleted ? $true : nil)})},
+                                         {@"value", $dict({@"rev", revID})},
                                          {@"doc", docContents});
             [rows addObject: change];
         }
