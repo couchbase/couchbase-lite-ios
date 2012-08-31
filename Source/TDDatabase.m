@@ -950,6 +950,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     
     int64_t lastDocID = 0;
     NSMutableArray* rows = $marray();
+    NSMutableDictionary* docs = docIDs ? $mdict() : nil;
     while ([r next]) {
         @autoreleasepool {
             // Only count the first rev for a given doc (the rest will be losing conflicts):
@@ -975,10 +976,39 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                          {@"key", docID},
                                          {@"value", $dict({@"rev", revID})},
                                          {@"doc", docContents});
-            [rows addObject: change];
+            if (docIDs)
+                [docs setObject: change forKey: docID];
+            else
+                [rows addObject: change];
         }
     }
     [r close];
+
+    // If given doc IDs, sort the output into that order, and add entries for missing docs:
+    if (docIDs) {
+        for (NSString* docID in docIDs) {
+            NSDictionary* change = docs[docID];
+            if (!change) {
+                NSString* revID = nil;
+                SInt64 docNumericID = [self getDocNumericID: docID];
+                if (docNumericID > 0) {
+                    BOOL deleted;
+                    revID = [self winningRevIDOfDocNumericID: docNumericID
+                                                   isDeleted: &deleted];
+                }
+                if (revID) {
+                    change = $dict({@"id",  docID},
+                                   {@"key", docID},
+                                   {@"value", $dict({@"rev", revID}, {@"deleted", $true})});
+                } else {
+                    change = $dict({@"key", docID},
+                                   {@"error", @"not_found"});
+                }
+            }
+            [rows addObject: change];
+        }
+    }
+
     NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
     return $dict({@"rows", rows},
                  {@"total_rows", @(totalRows)},
