@@ -490,11 +490,15 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     rev.missing = (json == nil);
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
     [rev release];
-    if (json==nil || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
+    if (json.length == 0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
         return extra;      // optimization, and workaround for issue #44
     NSMutableDictionary* docProperties = [TDJSON JSONObjectWithData: json
                                                             options: TDJSONReadingMutableContainers
                                                               error: NULL];
+    if (!docProperties) {
+        Warn(@"Unparseable JSON for doc=%@, rev=%@: %@", docID, revID, [json my_UTF8ToString]);
+        return extra;
+    }
     [docProperties addEntriesFromDictionary: extra];
     return docProperties;
 }
