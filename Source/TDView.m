@@ -292,6 +292,7 @@ static id fromJSON( NSData* json ) {
                 // Get the document properties, to pass to the map function:
                 NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
+                                                                   deleted: NO
                                                                   sequence: sequence
                                                                    options: _mapContentOptions];
                 if (!properties) {
@@ -499,6 +500,7 @@ static id groupKey(id key, unsigned groupLevel) {
                         docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 4]
                                                                 docID: docID
                                                                 revID: [r stringForColumnIndex: 3]
+                                                              deleted: NO
                                                              sequence: [r longLongIntForColumnIndex:5]
                                                               options: options->content];
                     }

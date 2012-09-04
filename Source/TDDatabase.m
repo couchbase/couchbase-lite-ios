@@ -482,10 +482,11 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 - (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
                                        docID: (NSString*)docID
                                        revID: (NSString*)revID
+                                     deleted: (BOOL)deleted
                                     sequence: (SequenceNumber)sequence
                                      options: (TDContentOptions)options
 {
-    TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: NO];
+    TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
     rev.sequence = sequence;
     rev.missing = (json == nil);
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
@@ -917,11 +918,15 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     NSMutableString* sql = [[@"SELECT revs.doc_id, docid, revid" mutableCopy] autorelease];
     if (options->includeDocs)
         [sql appendString: @", json, sequence"];
+    if (options->includeDeletedDocs)
+        [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
     if (docIDs)
         [sql appendFormat: @" docid IN (%@) AND", [TDDatabase joinQuotedStrings: docIDs]];
-    [sql appendString: @" current=1 AND deleted=0 AND docs.doc_id = revs.doc_id"];
-    
+    [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
+    if (!options->includeDeletedDocs)
+        [sql appendString: @" AND deleted=0"];
+
     NSMutableArray* args = $marray();
     id minKey = options->startKey, maxKey = options->endKey;
     BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
@@ -942,8 +947,9 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         [args addObject: maxKey];
     }
     
-    [sql appendFormat: @" ORDER BY docid %@, revid DESC LIMIT ? OFFSET ?",
-                       (options->descending ? @"DESC" : @"ASC")];
+    [sql appendFormat: @" ORDER BY docid %@, %@ revid DESC LIMIT ? OFFSET ?",
+                       (options->descending ? @"DESC" : @"ASC"),
+                       (options->includeDeletedDocs ? @"deleted ASC," : @"")];
     [args addObject: @(options->limit)];
     [args addObject: @(options->skip)];
     
@@ -965,6 +971,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             
             NSString* docID = [r stringForColumnIndex: 1];
             NSString* revID = [r stringForColumnIndex: 2];
+            BOOL deleted = options->includeDeletedDocs && [r boolForColumn: @"deleted"];
             NSDictionary* docContents = nil;
             if (options->includeDocs) {
                 // Fill in the document contents:
@@ -973,12 +980,15 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID
                                                          revID: revID
+                                                       deleted: deleted
                                                       sequence: sequence
                                                        options: options->content];
+                Assert(docContents);
             }
             NSDictionary* change = $dict({@"id",  docID},
                                          {@"key", docID},
-                                         {@"value", $dict({@"rev", revID})},
+                                         {@"value", $dict({@"rev", revID},
+                                                          {@"deleted", (deleted ?$true : nil)})},
                                          {@"doc", docContents});
             if (docIDs)
                 [docs setObject: change forKey: docID];

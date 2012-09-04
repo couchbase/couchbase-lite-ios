@@ -30,6 +30,7 @@
 - (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
                                               docID: (NSString*)docID
                                               revID: (NSString*)revID
+                                            deleted: (BOOL)deleted
                                            sequence: (SequenceNumber)sequence
                                             options: (TDContentOptions)options;
 - (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID

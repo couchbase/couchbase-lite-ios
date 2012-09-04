@@ -610,12 +610,16 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             _response.body = rev.body;
         
     } else {
+        // open_revs query:
         NSMutableArray* result;
         if ($equal(openRevsParam, @"all")) {
             // Get all conflicting revisions:
+            BOOL includeDeleted = [self boolQuery: @"include_deleted"];
             TDRevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
             result = [NSMutableArray arrayWithCapacity: allRevs.count];
             for (TDRevision* rev in allRevs.allRevisions) {
+                if (!includeDeleted && rev.deleted)
+                    continue;
                 TDStatus status = [_db loadRevisionBody: rev options: options];
                 if (status < 300)
                     [result addObject: $dict({@"ok", rev.properties})];
