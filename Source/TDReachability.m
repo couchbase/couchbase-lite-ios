@@ -45,10 +45,6 @@ static void ClientCallback(SCNetworkReachabilityRef target,
             [self release];
             return nil;
         }
-        
-        // See whether status is already known:
-        if (SCNetworkReachabilityGetFlags(_ref, &_reachabilityFlags))
-            _reachabilityKnown = YES;
     }
     return self;
 }
@@ -61,6 +57,11 @@ static void ClientCallback(SCNetworkReachabilityRef target,
     if (!SCNetworkReachabilityScheduleWithRunLoop(_ref, runLoop, kCFRunLoopCommonModes))
         return NO;
     _runLoop = (CFRunLoopRef) CFRetain(runLoop);
+
+    // See whether status is already known:
+    if (SCNetworkReachabilityGetFlags(_ref, &_reachabilityFlags))
+        _reachabilityKnown = YES;
+
     return YES;
 }
 
@@ -167,11 +168,6 @@ static void runReachability( NSString* hostname ) {
     CAssert(r);
     Log(@"TDReachability = %@", r);
     CAssertEqual(r.hostName, hostname);
-    if (r.reachabilityKnown) {
-        Log(@"Initially: known=%d, flags=%x --> reachable=%d",
-            r.reachabilityKnown, r.reachabilityFlags, r.reachable);
-        return;
-    }
     __block BOOL resolved = NO;
     r.onChange = ^{
         Log(@"onChange: known=%d, flags=%x --> reachable=%d",
@@ -181,10 +177,14 @@ static void runReachability( NSString* hostname ) {
             resolved = YES;
     };
     CAssert([r start]);
-    
-    while (!resolved) {
-        Log(@"waiting...");
-        [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
+
+    BOOL known = r.reachabilityKnown;
+    Log(@"Initially: known=%d, flags=%x --> reachable=%d", known, r.reachabilityFlags, r.reachable);
+    if (!known) {
+        while (!resolved) {
+            Log(@"waiting...");
+            [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
+        }
     }
     [r stop];
     Log(@"...done!");
