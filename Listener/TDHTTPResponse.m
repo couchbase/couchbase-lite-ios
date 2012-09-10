@@ -36,8 +36,8 @@
 - (id) initWithRouter: (TDRouter*)router forConnection:(TDHTTPConnection*)connection {
     self = [super init];
     if (self) {
-        EnableLog(YES);
-        EnableLogTo(TDListenerVerbose, YES);
+        //EnableLog(YES);
+        //EnableLogTo(TDListenerVerbose, YES);
         _router = [router retain];
         _connection = connection;
         router.onResponseReady = ^(TDResponse* r) {
