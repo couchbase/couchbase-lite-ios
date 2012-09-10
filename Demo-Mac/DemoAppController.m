@@ -77,7 +77,7 @@ int main (int argc, const char * argv[]) {
     design.validationBlock = VALIDATIONBLOCK({
         if (newRevision.deleted)
             return YES;
-        id date = (newRevision.properties)[@"created_at"];
+        id date = newRevision[@"created_at"];
         if (date && ! [RESTBody dateWithJSONObject: date]) {
             context.errorMessage = [@"invalid date " stringByAppendingString: date];
             return NO;
@@ -88,7 +88,7 @@ int main (int argc, const char * argv[]) {
     // And why not a filter, just to allow some simple testing of filtered _changes.
     // For example, try curl 'http://localhost:8888/demo-shopping/_changes?filter=default/checked'
     [design defineFilterNamed: @"checked" block: FILTERBLOCK({
-        return [(revision.properties)[@"check"] boolValue];
+        return [revision[@"check"] boolValue];
     })];
 
     

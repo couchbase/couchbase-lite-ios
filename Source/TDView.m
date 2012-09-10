@@ -292,6 +292,7 @@ static id fromJSON( NSData* json ) {
                 // Get the document properties, to pass to the map function:
                 NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
+                                                                   deleted: NO
                                                                   sequence: sequence
                                                                    options: _mapContentOptions];
                 if (!properties) {
@@ -489,14 +490,17 @@ static id groupKey(id key, unsigned groupLevel) {
                     if (linkedID) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = value[@"_rev"]; // usually nil
+                        TDStatus linkedStatus;
                         TDRevision* linked = [_db getDocumentWithID: linkedID
                                                          revisionID: linkedRev
-                                                            options: options->content];
+                                                            options: options->content
+                                                             status: &linkedStatus];
                         docContents = linked ? linked.properties : $null;
                     } else {
                         docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 4]
                                                                 docID: docID
                                                                 revID: [r stringForColumnIndex: 3]
+                                                              deleted: NO
                                                              sequence: [r longLongIntForColumnIndex:5]
                                                               options: options->content];
                     }

@@ -69,7 +69,8 @@
     [super dealloc];
 }
 
-@synthesize docID=_docID, revID=_revID, deleted=_deleted, body=_body, sequence=_sequence;
+@synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing,
+            body=_body, sequence=_sequence;
 
 - (unsigned) generation {
     return [[self class] generationFromRevID: _revID];

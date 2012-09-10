@@ -143,11 +143,8 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     }
 
     _challenged = true;
-    if (challenge.proposedCredential) {
-        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
-        return;
-    }
     
+    NSURLCredential* cred = nil;
     if (challengeIsForDottedHost && challenge.previousFailureCount == 0) {
         // Look up a credential for the original hostname without the "." suffix:
         host = _databaseURL.host;
@@ -157,9 +154,25 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
                                                        protocol: space.protocol
                                                           realm: space.realm
                                            authenticationMethod: space.authenticationMethod];
-        NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
+        cred = [[NSURLCredentialStorage sharedCredentialStorage]
                                                 defaultCredentialForProtectionSpace: newSpace];
         [newSpace release];
+    }
+
+    NSURLCredential* proposedCredential = challenge.proposedCredential;
+    if (proposedCredential) {
+        // Use the proposed credential unless the username doesn't match the one we want:
+        if (!cred || [cred.user isEqualToString: proposedCredential.user]) {
+            LogTo(ChangeTracker, @"%@: Using proposed credential '%@' for "
+                  "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+                  self, proposedCredential.user, host, (int)space.port, space.protocol, space.realm,
+                  space.authenticationMethod);
+            [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+            return;
+        }
+    }
+    
+    if (challengeIsForDottedHost && challenge.previousFailureCount == 0) {
         if (cred) {
             // Found a credential, so use it:
             LogTo(ChangeTracker, @"%@: Using credential '%@' for "

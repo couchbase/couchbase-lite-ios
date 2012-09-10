@@ -33,6 +33,7 @@ typedef enum {
     kTDStatusBadJSON        = 493,
     kTDStatusBadID          = 494,
     kTDStatusBadParam       = 495,
+    kTDStatusDeleted        = 496,      // Document deleted
     
     kTDStatusDBError        = 590,      // SQLite error
     kTDStatusCorruptError   = 591,      // bad data in database

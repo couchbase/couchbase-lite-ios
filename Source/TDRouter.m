@@ -61,8 +61,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
         _local = YES;
         _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
-            _longpoll = NO;
-            _changesIncludeDocs = NO;
+            _longpoll = _changesIncludeDocs = _changesIncludeConflicts = NO;
         }
     }
     return self;
@@ -206,6 +205,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     options->groupLevel = [self intQuery: @"group_level" defaultValue: options->groupLevel];
     options->descending = [self boolQuery: @"descending"];
     options->includeDocs = [self boolQuery: @"include_docs"];
+    options->includeDeletedDocs = [self boolQuery: @"include_deleted"];
     options->updateSeq = [self boolQuery: @"update_seq"];
     if ([self query: @"inclusive_end"])
         options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
@@ -301,12 +301,15 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = _path[0];
-        if ([dbName hasPrefix: @"_"] && ![TDDatabaseManager isValidDatabaseName: dbName]) {
+        BOOL validName = [TDDatabaseManager isValidDatabaseName: dbName];
+        if ([dbName hasPrefix: @"_"] && !validName) {
             [message appendString: dbName]; // special root path, like /_all_dbs
+        } else if (!validName) {
+            return kTDStatusBadID;
         } else {
             _db = [[_dbManager databaseNamed: dbName] retain];
             if (!_db)
-                return kTDStatusBadID;
+                return kTDStatusNotFound;
             [message appendString: @":"];
         }
     } else {
@@ -517,7 +520,7 @@ static NSArray* splitPath( NSURL* url ) {
         return;
     _responseSent = YES;
 
-    (_response.headers)[@"Server"] = $sprintf(@"TouchDB %g", TouchDBVersionNumber);
+    _response[@"Server"] = $sprintf(@"TouchDB %g", TouchDBVersionNumber);
 
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
@@ -535,7 +538,7 @@ static NSArray* splitPath( NSURL* url ) {
 
     if (_response.status == 200 && ($equal(_request.HTTPMethod, @"GET") ||
                                     $equal(_request.HTTPMethod, @"HEAD"))) {
-        if (!(_response.headers)[@"Cache-Control"])
+        if (!_response[@"Cache-Control"])
             _response[@"Cache-Control"] = @"must-revalidate";
     }
 
@@ -664,6 +667,10 @@ static NSArray* splitPath( NSURL* url ) {
                                 {@"reason", _statusReason});
         self[@"Content-Type"]= @"application/json";
     }
+}
+
+- (NSString*) objectForKeyedSubscript: (NSString*)header {
+    return _headers[header];
 }
 
 - (void)setObject: (NSString*)value forKeyedSubscript:(NSString*)header {

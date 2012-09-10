@@ -40,6 +40,7 @@ typedef struct TDQueryOptions {
     BOOL inclusiveEnd;
     BOOL reduce;
     BOOL group;
+    BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
 } TDQueryOptions;
 
 extern const TDQueryOptions kDefaultTDQueryOptions;

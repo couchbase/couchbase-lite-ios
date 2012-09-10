@@ -14,7 +14,8 @@ struct TDQueryOptions;      // declared in TDView.h
 
 
 /** NSNotification posted when a document is updated.
-    The userInfo key "rev" has a TDRevision* as its value. */
+    UserInfo keys: @"rev": the new TDRevision, @"source": NSURL of remote db pulled from,
+    @"winner": new winning TDRevision, _if_ it changed (often same as rev). */
 extern NSString* const TDDatabaseChangeNotification;
 
 /** NSNotification posted when a database is closing. */
@@ -119,7 +120,10 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 - (TDRevision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID
-                          options: (TDContentOptions)options;
+                          options: (TDContentOptions)options
+                           status: (TDStatus*)outStatus;
+- (TDRevision*) getDocumentWithID: (NSString*)docID
+                       revisionID: (NSString*)revID;
 
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;
@@ -145,12 +149,6 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
 - (NSString*) findCommonAncestorOf: (TDRevision*)rev withRevIDs: (NSArray*)revIDs;
-
-/** Does this revision affect the winning revision of the document?
-    (If this revision is a deletion, did it delete the previous winner?
-    Otherwise, does it become the winner?)
-    If so, return the new winner; else nil. */
-- (TDRevision*) newWinnerAfterRev: (TDRevision*)rev;
 
 // VIEWS & QUERIES:
 

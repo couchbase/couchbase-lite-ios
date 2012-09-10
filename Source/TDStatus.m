@@ -36,7 +36,8 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kTDStatusBadJSON,              400, @"Invalid JSON"},
     {kTDStatusBadID,                400, @"Invalid database/document/revision ID"},
     {kTDStatusBadParam,             400, @"Invalid parameter in JSON body"},
-    
+    {kTDStatusDeleted,              404, @"deleted"},
+
     {kTDStatusDBError,              500, @"Database error!"},
     {kTDStatusCorruptError,         500, @"Invalid data in database"},
     {kTDStatusAttachmentError,      500, @"Attachment store error"},

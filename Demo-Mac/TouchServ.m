@@ -126,36 +126,16 @@ int main (int argc, const char * argv[])
         EnableLog(YES);
         EnableLogTo(TDListener, YES);
 #endif
-        
-        NSError* error;
-        TDServer* server = [[TDServer alloc] initWithDirectory: GetServerPath() error: &error];
-        if (error) {
-            Warn(@"FATAL: Error initializing TouchDB: %@", error);
-            exit(1);
-        }
-        [TDURLProtocol setServer: server];
-        
-        // Start a listener socket:
-        TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
-        
-        // Advertise via Bonjour, and set a TXT record just as an example:
-        [listener setBonjourName: @"TouchServ" type: @"_touchdb._tcp."];
-        NSData* value = [@"value" dataUsingEncoding: NSUTF8StringEncoding];
-        listener.TXTRecordDictionary = [NSDictionary dictionaryWithObject: value forKey: @"Key"];
-        
+
+        TDDatabaseManagerOptions options = kTDDatabaseManagerDefaultOptions;
         const char* replArg = NULL, *user = NULL, *password = NULL;
-        BOOL pull = NO, createTarget = NO;
+        BOOL auth = NO, pull = NO, createTarget = NO;
         
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
-                listener.readOnly = YES;
-                [server tellDatabaseManager: ^(TDDatabaseManager *mgr) { mgr.readOnly = YES; }];
+                options.readOnly = YES;
             } else if (strcmp(argv[i], "--auth") == 0) {
-                srandomdev();
-                NSString* password = [NSString stringWithFormat: @"%lx", random()];
-                listener.passwords = [NSDictionary dictionaryWithObject: password
-                                                                 forKey: @"touchdb"];
-                Log(@"Auth required: user='touchdb', password='%@'", password);
+                auth = YES;
             } else if (strcmp(argv[i], "--pull") == 0) {
                 replArg = argv[++i];
                 pull = YES;
@@ -170,6 +150,32 @@ int main (int argc, const char * argv[])
             }
         }
 
+        NSError* error;
+        TDServer* server = [[TDServer alloc] initWithDirectory: GetServerPath()
+                                                       options: &options
+                                                         error: &error];
+        if (error) {
+            Warn(@"FATAL: Error initializing TouchDB: %@", error);
+            exit(1);
+        }
+        [TDURLProtocol setServer: server];
+        
+        // Start a listener socket:
+        TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
+        listener.readOnly = options.readOnly;
+
+        if (auth) {
+            srandomdev();
+            NSString* password = [NSString stringWithFormat: @"%lx", random()];
+            listener.passwords = @{@"touchdb": password};
+            Log(@"Auth required: user='touchdb', password='%@'", password);
+        }
+
+        // Advertise via Bonjour, and set a TXT record just as an example:
+        [listener setBonjourName: @"TouchServ" type: @"_touchdb._tcp."];
+        NSData* value = [@"value" dataUsingEncoding: NSUTF8StringEncoding];
+        listener.TXTRecordDictionary = @{@"Key": value};
+        
         [listener start];
         
         if (replArg) {

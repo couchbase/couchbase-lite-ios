@@ -317,10 +317,10 @@ static int collate(void *mode, const void * str1, const void * str2) {
     // Be evil and put numeric garbage past the ends of str1 and str2 (see bug #138):
     size_t len1 = strlen(str1), len2 = strlen(str2);
     char buf1[len1 + 3], buf2[len2 + 3];
-    strcpy(buf1, str1);
-    strcat(buf1, "99");
-    strcpy(buf2, str2);
-    strcat(buf2, "88");
+    strlcpy(buf1, str1, sizeof(buf1));
+    strlcat(buf1, "99", sizeof(buf1));
+    strlcpy(buf2, str2, sizeof(buf1));
+    strlcat(buf2, "88", sizeof(buf1));
     return TDCollateJSON(mode, (int)len1, buf1, (int)len2, buf2);
 }
 
