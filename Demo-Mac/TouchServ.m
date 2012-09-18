@@ -47,7 +47,7 @@ static NSString* GetServerPath() {
 
 
 static bool doReplicate( TDServer* server, const char* replArg,
-                        BOOL pull, BOOL createTarget,
+                        BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password)
 {
     NSURL* remote = [NSMakeCollectable(CFURLCreateWithBytes(NULL, (const UInt8*)replArg,
@@ -107,7 +107,7 @@ static bool doReplicate( TDServer* server, const char* replArg,
             return;
         }
         [db open];
-        repl = [db replicatorWithRemoteURL: remote push: !pull continuous: NO];
+        repl = [db replicatorWithRemoteURL: remote push: !pull continuous: continuous];
         if (createTarget && !pull)
             ((TDPusher*)repl).createTarget = YES;
         if (!repl)
@@ -129,7 +129,7 @@ int main (int argc, const char * argv[])
 
         TDDatabaseManagerOptions options = kTDDatabaseManagerDefaultOptions;
         const char* replArg = NULL, *user = NULL, *password = NULL;
-        BOOL auth = NO, pull = NO, createTarget = NO;
+        BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
         
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
@@ -143,6 +143,8 @@ int main (int argc, const char * argv[])
                 replArg = argv[++i];
             } else if (strcmp(argv[i], "--create-target") == 0) {
                 createTarget = YES;
+            } else if (strcmp(argv[i], "--continuous") == 0) {
+                continuous = YES;
             } else if (strcmp(argv[i], "--user") == 0) {
                 user = argv[++i];
             } else if (strcmp(argv[i], "--password") == 0) {
@@ -179,7 +181,7 @@ int main (int argc, const char * argv[])
         [listener start];
         
         if (replArg) {
-            if (!doReplicate(server, replArg, pull, createTarget, user, password))
+            if (!doReplicate(server, replArg, pull, createTarget, continuous, user, password))
                 return 1;
         } else {
             Log(@"TouchServ %@ is listening%@ on port %d ... relax!",
