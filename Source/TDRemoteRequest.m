@@ -273,7 +273,22 @@
         if ([self retryWithCredential])
             return;
     }
-    if (TDStatusIsError(_status)) 
+    
+#if DEBUG
+    if (!TDStatusIsError(_status)) {
+        // By setting the user default "TDFakeFailureRate" to a number between 0.0 and 1.0,
+        // you can artificially cause failures of that fraction of requests, for testing.
+        // The status will be 567, or the value of "TDFakeFailureStatus" if it's set.
+        NSUserDefaults* dflts = [NSUserDefaults standardUserDefaults];
+        float fakeFailureRate = [dflts floatForKey: @"TDFakeFailureRate"];
+        if (fakeFailureRate > 0.0 && random() < fakeFailureRate * 0x7FFFFFFF) {
+            AlwaysLog(@"***FAKE FAILURE: %@", self);
+            _status = (int)[dflts integerForKey: @"TDFakeFailureStatus"] ?: 567;
+        }
+    }
+#endif
+    
+    if (TDStatusIsError(_status))
         [self cancelWithStatus: _status];
 }
 
