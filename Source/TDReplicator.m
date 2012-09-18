@@ -36,6 +36,8 @@
 #define kProcessDelay 0.5
 #define kInboxCapacity 100
 
+#define kRetryDelay 60.0
+
 
 NSString* TDReplicatorProgressChangedNotification = @"TDReplicatorProgressChanged";
 NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
@@ -182,14 +184,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [self postProgressChanged];
 }
 
-- (void) updateActive {
-    BOOL active = _batcher.count > 0 || _asyncTaskCount > 0;
-    if (active != _active) {
-        self.active = active;
-        [self postProgressChanged];
-    }
-}
-
 - (void) setError:(NSError *)error {
     if (error.code == NSURLErrorCancelled && $equal(error.domain, NSURLErrorDomain))
         return;
@@ -258,6 +252,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                                                object: nil];
 #endif
     [self stopRemoteRequests];
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(retryIfReady) object: nil];
     if (_running && _asyncTaskCount == 0)
         [self stopped];
 }
@@ -276,6 +272,27 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [_host stop];
     setObj(&_host, nil);
     _db = nil;  // _db no longer tracks me so it won't notify me when it closes; clear ref now
+}
+
+
+// Called after a continuous replication has gone idle, but it failed to transfer some revisions
+// and so wants to try again in a minute. Should be overridden by subclasses.
+- (void) retry {
+}
+
+- (void) retryIfReady {
+    if (!_running)
+        return;
+
+    if (_online) {
+        LogTo(Sync, @"%@ RETRYING, to transfer missed revisions...", self);
+        _revisionsFailed = 0;
+        [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                 selector: @selector(retryIfReady) object: nil];
+        [self retry];
+    } else {
+        [self performSelector: @selector(retryIfReady) withObject: nil afterDelay: kRetryDelay];
+    }
 }
 
 
@@ -329,6 +346,29 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 #endif
 
 
+- (void) updateActive {
+    BOOL active = _batcher.count > 0 || _asyncTaskCount > 0;
+    if (active != _active) {
+        self.active = active;
+        [self postProgressChanged];
+        if (!_active) {
+            // Replicator is now idle. If it's not continuous, stop.
+            if (!_continuous) {
+                [self stopped];
+            } else if (_revisionsFailed > 0) {
+                LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
+                      self, _revisionsFailed, kRetryDelay);
+                [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                         selector: @selector(retryIfReady)
+                                                           object: nil];
+                [self performSelector: @selector(retryIfReady)
+                           withObject: nil afterDelay: kRetryDelay];
+            }
+        }
+    }
+}
+
+
 - (void) asyncTaskStarted {
     if (_asyncTaskCount++ == 0)
         [self updateActive];
@@ -340,8 +380,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     Assert(_asyncTaskCount >= 0);
     if (_asyncTaskCount == 0) {
         [self updateActive];
-        if (!_continuous)
-            [self stopped];
     }
 }
 
@@ -363,6 +401,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (void) processInbox: (NSArray*)inbox {
+}
+
+
+- (void) revisionFailed {
+    // Remember that some revisions failed to transfer, so we can later retry.
+    ++_revisionsFailed;
 }
 
 

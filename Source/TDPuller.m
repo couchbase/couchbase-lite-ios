@@ -77,19 +77,22 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     }
     
     // Get the current sequence number so we know when the pull has "caught up":
-    [self asyncTaskStarted];
+    setObj(&_endingSequence, nil);
+    [self asyncTaskStarted];        // waiting to catch up
     [self sendAsyncRequest: @"GET" path: @"/" body: nil
               onCompletion:^(id result, NSError *error) {
-                  if (error)
+                  if (error) {
                       self.error = error;
-                  else
+                      [self asyncTasksFinished: 1];
+                  } else {
                       [self gotEndingSequence: [result[@"update_seq"] description]];
-                  [self asyncTasksFinished: 1];
+                  }
               }];
     
     [_pendingSequences release];
     _pendingSequences = [[TDSequenceMap alloc] init];
-    
+
+    [_seenSequences release];
     _seenSequences = [[NSMutableArray alloc] init];
     if (_lastSequence)
         [_seenSequences addObject: _lastSequence];
@@ -143,6 +146,16 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [super stop];
     
     [_downloadsToInsert flushAll];
+}
+
+
+- (void) retry {
+    // This is called if I've gone idle but some revisions failed to be pulled.
+    // I should start the _changes feed over again, so I can retry all the revisions.
+    [super retry];
+
+    [_changeTracker stop];
+    [self beginReplicating];
 }
 
 
@@ -258,6 +271,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     LogTo(Sync, @"** Caught up, at sequence %@", _endingSequence);
     if (!_continuous)
         [_changeTracker stop];
+    [self asyncTasksFinished: 1];  // end the catch-up async task started in -beginReplicating
     // Might be useful to notify this fact to observers even in a continuous replication.
 }
 
@@ -380,6 +394,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             // OK, now we've got the response revision:
             if (error) {
                 self.error = error;
+                [self revisionFailed];
                 self.changesProcessed++;
             } else {
                 TDRevision* gotRev = [TDRevision revisionWithProperties: download.document];
@@ -422,6 +437,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               onCompletion:^(id result, NSError *error) {
                   if (error) {
                       self.error = error;
+                      [self revisionFailed];
                       self.changesProcessed += bulkRevs.count;
                   } else {
                       // Process the resulting rows' documents.
@@ -480,6 +496,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
                     self.error = TDStatusToNSError(kTDStatusUpstreamError, nil);
+                    [self revisionFailed];
                     continue;
                 }
                 LogTo(SyncVerbose, @"%@ inserting %@ %@",
@@ -492,6 +509,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                         LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
                     else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+                        [self revisionFailed];
                         self.error = TDStatusToNSError(status, nil);
                         continue;
                     }

@@ -90,7 +90,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
-    if (_continuous) {
+    if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: TDDatabaseChangeNotification object: _db];
@@ -107,12 +107,23 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     }
 }
 
+
+- (void) retry {
+    // This is called if I've gone idle but some revisions failed to be pushed.
+    // I should start the _changes feed over again, so I can retry all the revisions.
+    [super retry];
+
+    [self beginReplicating];
+}
+
+
 - (BOOL) goOffline {
     if (![super goOffline])
         return NO;
     [self stopObserving];
     return YES;
 }
+
 
 - (void) stop {
     setObj(&_uploaderQueue, nil);
@@ -155,6 +166,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
               onCompletion:^(NSDictionary* results, NSError* error) {
         if (error) {
             self.error = error;
+            [self revisionFailed];
             [self stop];
         } else if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
@@ -177,6 +189,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 #endif
                     if ([_db loadRevisionBody: rev options: options] >= 300) {
                         Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                        [self revisionFailed];
                         return nil;
                     }
                     properties = rev.properties;
@@ -216,6 +229,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                      onCompletion: ^(NSDictionary* response, NSError *error) {
                          if (error) {
                              self.error = error;
+                             [self revisionFailed];
                          } else {
                              LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
                              self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
@@ -279,6 +293,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                                  onCompletion: ^(id response, NSError *error) {
                   if (error) {
                       self.error = error;
+                      [self revisionFailed];
                   } else {
                       LogTo(SyncVerbose, @"%@: Sent %@, response=%@", self, rev, response);
                       self.lastSequence = $sprintf(@"%lld", rev.sequence);
