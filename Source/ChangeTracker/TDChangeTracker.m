@@ -193,9 +193,16 @@ static NSURL* AddDotToURLHost( NSURL* url );
     NSArray* changes = $castIf(NSArray, changeDict[@"results"]);
     if (!changes)
         return -1;
-    for (NSDictionary* change in changes) {
-        if (![self receivedChange: change])
-            return -1;
+
+    if ([_client respondsToSelector: @selector(changeTrackerReceivedChanges:)]) {
+        [_client changeTrackerReceivedChanges: changes];
+        if (changes.count > 0)
+            self.lastSequenceID = [[changes lastObject] objectForKey: @"seq"];
+    } else {
+        for (NSDictionary* change in changes) {
+            if (![self receivedChange: change])
+                return -1;
+        }
     }
     return changes.count;
 }

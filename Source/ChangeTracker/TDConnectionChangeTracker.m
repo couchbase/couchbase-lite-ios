@@ -244,7 +244,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     } else {
         // Poll again if there was no error, and either we're in longpoll mode or it looks like we
         // ran out of changes due to a _limit rather than because we hit the end.
-        restart = (numChanges > 0 && (_mode == kLongPoll || numChanges == (NSInteger)_limit));
+        restart = _mode == kLongPoll || numChanges == (NSInteger)_limit;
     }
     [input release];
     

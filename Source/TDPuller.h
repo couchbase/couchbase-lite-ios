@@ -16,8 +16,7 @@
 {
     @private
     TDChangeTracker* _changeTracker;
-    NSString* _endingSequence;          // Where to stop in noncontinuous pull
-    NSMutableArray* _seenSequences;     // Seq IDs received before _endingSequence is known
+    BOOL _caughtUp;                     // Have I received all current _changes entries?
     TDSequenceMap* _pendingSequences;   // Received but not yet copied into local DB
     NSMutableArray* _revsToPull;        // Queue of TDPulledRevisions to download
     NSMutableArray* _deletedRevsToPull; // Separate lower-priority of deleted TDPulledRevisions
