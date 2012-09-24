@@ -83,6 +83,7 @@ static NSData* kCRLFCRLF;
 
 - (void)dealloc {
     [self close];
+    [_error release];
     [super dealloc];
 }
 
@@ -122,8 +123,10 @@ static NSData* kCRLFCRLF;
 
 
 - (BOOL) parseHeaders: (NSString*)headersStr {
-    if (!headersStr)
+    if (!headersStr) {
+        self.error = @"Unparseable UTF-8 in headers";
         return NO;
+    }
     [_headers release];
     _headers = [[NSMutableDictionary alloc] init];
     BOOL first = YES;
@@ -132,8 +135,10 @@ static NSData* kCRLFCRLF;
             first = NO;     // first line is just the whitespace between separator and its CRLF
         else {
             NSRange colon = [header rangeOfString: @":"];
-            if (colon.length == 0)
+            if (colon.length == 0) {
+                self.error = @"Missing ':' in header line";
                 return NO;
+            }
             NSString* key = trim([header substringToIndex: colon.location]);
             NSString* value = trim([header substringFromIndex: NSMaxRange(colon)]);
             _headers[key] = value;
@@ -165,8 +170,14 @@ static NSData* kCRLFCRLF;
 }
 
 
-- (void) setFailed {
+- (NSString*) error {
+    return _error;
+}
+
+- (void) setError: (NSString*)error {
     _state = kFailed;
+    if (!_error)
+        _error = [error copy];
     [self close];
 }
          
@@ -235,10 +246,8 @@ static NSData* kCRLFCRLF;
                                                                  freeWhenDone: NO];
                     BOOL ok = [self parseHeaders: headers];
                     [headers release];
-                    if (!ok) {
-                        [self setFailed];
-                        return;
-                    }
+                    if (!ok)
+                        return;  // parseHeaders already set .error
                     [self deleteUpThrough: r];
                     [_delegate startedPart: _headers];
                     nextState = kInBody;
@@ -247,7 +256,7 @@ static NSData* kCRLFCRLF;
             }
                 
             default:
-                [self setFailed];
+                self.error = @"Unexpected data after end of MIME body";
                 return;
         }
         if (nextState > 0)
@@ -258,10 +267,6 @@ static NSData* kCRLFCRLF;
 
 - (BOOL) finished {
     return _state == kAtEnd;
-}
-
-- (BOOL) failed {
-    return _state == kFailed;
 }
 
 
@@ -362,7 +367,7 @@ TestCase(TDMultipartReader_Simple) {
             CAssert(r.location < mime.length, @"Parser didn't stop at end");
             r.length = MIN(chunkSize, mime.length - r.location);
             [reader appendData: [mime subdataWithRange: r]];
-            CAssert(!reader.failed, @"Reader got a parse error");
+            CAssert(!reader.error, @"Reader got a parse error: %@", reader.error);
             r.location += chunkSize;
         } while (!reader.finished);
         CAssertEqual(delegate.partList, expectedParts);

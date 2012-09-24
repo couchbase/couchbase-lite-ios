@@ -24,7 +24,6 @@ typedef enum {
     kTDStatusUnsupportedType= 415,
     
     kTDStatusServerError    = 500,
-    kTDStatusUpstreamError  = 502,      // aka Bad Gateway -- upstream server error
     
     // Non-HTTP errors:
     kTDStatusBadEncoding    = 490,
@@ -35,6 +34,7 @@ typedef enum {
     kTDStatusBadParam       = 495,
     kTDStatusDeleted        = 496,      // Document deleted
     
+    kTDStatusUpstreamError  = 589,      // Error from remote replication server
     kTDStatusDBError        = 590,      // SQLite error
     kTDStatusCorruptError   = 591,      // bad data in database
     kTDStatusAttachmentError= 592,      // problem with attachment store

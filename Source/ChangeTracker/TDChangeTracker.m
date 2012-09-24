@@ -185,14 +185,23 @@ static NSURL* AddDotToURLHost( NSURL* url );
     return YES;
 }
 
-- (NSInteger) receivedPollResponse: (NSData*)body {
-    if (!body)
+- (NSInteger) receivedPollResponse: (NSData*)body errorMessage: (NSString**)errorMessage {
+    if (!body) {
+        *errorMessage = @"No body in response";
         return -1;
-    id changeObj = [TDJSON JSONObjectWithData: body options: 0 error: NULL];
+    }
+    NSError* error;
+    id changeObj = [TDJSON JSONObjectWithData: body options: 0 error: &error];
+    if (!changeObj) {
+        *errorMessage = error.localizedDescription;
+        return -1;
+    }
     NSDictionary* changeDict = $castIf(NSDictionary, changeObj);
     NSArray* changes = $castIf(NSArray, changeDict[@"results"]);
-    if (!changes)
+    if (!changes) {
+        *errorMessage = @"No 'changes' array in response";
         return -1;
+    }
 
     if ([_client respondsToSelector: @selector(changeTrackerReceivedChanges:)]) {
         [_client changeTrackerReceivedChanges: changes];
@@ -200,8 +209,13 @@ static NSURL* AddDotToURLHost( NSURL* url );
             self.lastSequenceID = [[changes lastObject] objectForKey: @"seq"];
     } else {
         for (NSDictionary* change in changes) {
-            if (![self receivedChange: change])
+            if (![self receivedChange: change]) {
+                *errorMessage = $sprintf(@"Invalid change object: %@",
+                                         [TDJSON stringWithJSONObject: change
+                                                              options:TDJSONWritingAllowFragments
+                                                                error: nil]);
                 return -1;
+            }
         }
     }
     return changes.count;

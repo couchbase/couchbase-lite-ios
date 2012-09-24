@@ -225,7 +225,8 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     NSData* input = [_inputBuffer retain];
     LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
     BOOL restart = NO;
-    NSInteger numChanges = [self receivedPollResponse: input];
+    NSString* errorMessage = nil;
+    NSInteger numChanges = [self receivedPollResponse: input errorMessage: &errorMessage];
     if (numChanges < 0) {
         // Oops, unparseable response:
         if (_mode == kLongPoll && [input isEqualToData: [@"{\"results\":[\n"
@@ -240,7 +241,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
             }
         }
         if (!restart)
-            [self setUpstreamError: @"Unparseable server response"];
+            [self setUpstreamError: errorMessage];
     } else {
         // Poll again if there was no error, and either we're in longpoll mode or it looks like we
         // ran out of changes due to a _limit rather than because we hit the end.
