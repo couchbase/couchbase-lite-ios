@@ -193,7 +193,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
     NSError* error;
     id changeObj = [TDJSON JSONObjectWithData: body options: 0 error: &error];
     if (!changeObj) {
-        *errorMessage = error.localizedDescription;
+        *errorMessage = $sprintf(@"JSON parse error: %@", error.localizedDescription);
         return -1;
     }
     NSDictionary* changeDict = $castIf(NSDictionary, changeObj);
