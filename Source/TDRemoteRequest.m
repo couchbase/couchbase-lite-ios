@@ -220,6 +220,7 @@
                 return;
             }
         }
+        [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
         SecTrustRef trust = space.serverTrust;
         if ([[self class] checkTrust: trust forHost: space.host]) {
@@ -228,8 +229,9 @@
         } else {
             [sender cancelAuthenticationChallenge: challenge];
         }
+    } else {
+        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
     }
-    [sender performDefaultHandlingForAuthenticationChallenge: challenge];
 }
 
 
