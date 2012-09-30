@@ -65,7 +65,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
         [request setValue: value forHTTPHeaderField: key];
     }];
     
-    _connection = [[NSURLConnection connectionWithRequest: request delegate: self] retain];
+    _connection = [NSURLConnection connectionWithRequest: request delegate: self];
     _startTime = CFAbsoluteTimeGetCurrent();
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
@@ -73,9 +73,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
 
 
 - (void) clearConnection {
-    [_connection autorelease];
     _connection = nil;
-    [_inputBuffer release];
     _inputBuffer = nil;
 }
 
@@ -106,7 +104,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     }
 
     [_connection cancel];
-    self.authorizer = [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
+    self.authorizer = [[TDBasicAuthorizer alloc] initWithCredential: cred];
     LogTo(ChangeTracker, @"Got 401 but retrying with %@", _authorizer);
     [self clearConnection];
     [self start];
@@ -135,7 +133,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
         if (challengeIsForDottedHost) {
             // Update the policy with the correct original hostname (without the "." suffix):
             host = _databaseURL.host;
-            SecPolicyRef policy = SecPolicyCreateSSL(YES, (CFStringRef)host);
+            SecPolicyRef policy = SecPolicyCreateSSL(YES, (__bridge CFStringRef)host);
             trust = CopyTrustWithPolicy(trust, policy);
             CFRelease(policy);
         } else {
@@ -235,7 +233,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     // Now parse the entire response as a JSON document:
-    NSData* input = [_inputBuffer retain];
+    NSData* input = _inputBuffer;
     LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
     BOOL restart = NO;
     NSString* errorMessage = nil;
@@ -250,7 +248,6 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
         // ran out of changes due to a _limit rather than because we hit the end.
         restart = _mode == kLongPoll || numChanges == (NSInteger)_limit;
     }
-    [input release];
     
     [self clearConnection];
     

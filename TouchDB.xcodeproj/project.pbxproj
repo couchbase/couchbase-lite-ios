@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
 		2700BC5E14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */; };
 		2700BC5F14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700BC5B14B64AA600B5B297 /* TDRouter+Handlers.m */; };
 		270B3DFD1489359000E0A926 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DFC1489359000E0A926 /* SenTestingKit.framework */; };
@@ -36,7 +36,7 @@
 		270B3E3A14898DF200E0A926 /* TDRevision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* TDRevision.m */; };
 		270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E3F148D7F0000E0A926 /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
-		270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12862156ABE24008465C2 /* OARequestParameter.m */; };
+		270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12862156ABE24008465C2 /* OARequestParameter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		270F5705156AE0BF000FEB8F /* TDAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 270F5703156AE0BF000FEB8F /* TDAuthorizer.h */; };
 		270F5706156AE0BF000FEB8F /* TDAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 270F5704156AE0BF000FEB8F /* TDAuthorizer.m */; };
 		270F5707156AE0BF000FEB8F /* TDAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 270F5704156AE0BF000FEB8F /* TDAuthorizer.m */; };
@@ -91,36 +91,36 @@
 		275315E414ACF1130065964D /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155214ACEFC90065964D /* DDData.m */; };
 		275315E514ACF1130065964D /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155414ACEFC90065964D /* DDNumber.m */; };
 		275315E614ACF1130065964D /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155614ACEFC90065964D /* DDRange.m */; };
-		275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155814ACEFC90065964D /* HTTPAuthenticationRequest.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		275315E814ACF1130065964D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		275315E914ACF1130065964D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		275315EA14ACF1130065964D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; settings = {COMPILER_FLAGS = "-fobjc-arc -Wno-undeclared-selector"; }; };
-		275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		275315F014ACF1130065964D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		275315F214ACF1130065964D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155814ACEFC90065964D /* HTTPAuthenticationRequest.m */; };
+		275315E814ACF1130065964D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; };
+		275315E914ACF1130065964D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; };
+		275315EA14ACF1130065964D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; settings = {COMPILER_FLAGS = "-Wno-undeclared-selector"; }; };
+		275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; };
+		275315F014ACF1130065964D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; };
+		275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; };
+		275315F214ACF1130065964D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; };
 		275315F314ACF1C20065964D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7069C148864BA00F0F099 /* Foundation.framework */; };
 		275315F514ACF1CC0065964D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		275315F814ACF2500065964D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F714ACF2500065964D /* CoreServices.framework */; };
 		275315F914ACF2D70065964D /* TDListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315DE14ACF0A20065964D /* TDListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275315FC14ACF83C0065964D /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
-		275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
-		2753160014ACF9330065964D /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
-		2753160114ACF9330065964D /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
-		2753160214ACF9330065964D /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
+		275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		2753160014ACF9330065964D /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		2753160114ACF9330065964D /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		2753160214ACF9330065964D /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2753160C14ACFC2A0065964D /* TDHTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753160A14ACFC2A0065964D /* TDHTTPConnection.h */; };
 		2753160D14ACFC2A0065964D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
 		275F535015C04F7B00BAF578 /* MYStreamUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 275F534E15C04F7B00BAF578 /* MYStreamUtils.h */; };
-		275F535115C04F7B00BAF578 /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275F534F15C04F7B00BAF578 /* MYStreamUtils.m */; };
-		275F535215C04F7B00BAF578 /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275F534F15C04F7B00BAF578 /* MYStreamUtils.m */; };
+		275F535115C04F7B00BAF578 /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275F534F15C04F7B00BAF578 /* MYStreamUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		275F535215C04F7B00BAF578 /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275F534F15C04F7B00BAF578 /* MYStreamUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2766EFF814DB7F9F009ECCA8 /* TDMultipartWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */; };
 		2766EFF914DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */; };
 		2766EFFA14DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */; };
 		2766EFFD14DC7B37009ECCA8 /* TDMultiStreamWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFFB14DC7B37009ECCA8 /* TDMultiStreamWriter.h */; };
 		2766EFFE14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */; };
 		2766EFFF14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* TDMultiStreamWriter.m */; };
-		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
-		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
+		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* TDBlobStore.h */; };
 		27731F001493FA3100815D67 /* TDBlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* TDBlobStore.m */; };
 		27731F061495335B00815D67 /* TDBlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* TDBlobStore.m */; };
@@ -146,8 +146,8 @@
 		2773ADC814BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */; };
 		2773ADC914BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */; };
 		2781E3C915C31FDA00E970DC /* MYRegexUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 2781E3C715C31FDA00E970DC /* MYRegexUtils.h */; };
-		2781E3CA15C31FDA00E970DC /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 2781E3C815C31FDA00E970DC /* MYRegexUtils.m */; };
-		2781E3CB15C31FDA00E970DC /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 2781E3C815C31FDA00E970DC /* MYRegexUtils.m */; };
+		2781E3CA15C31FDA00E970DC /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 2781E3C815C31FDA00E970DC /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		2781E3CB15C31FDA00E970DC /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 2781E3C815C31FDA00E970DC /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27821BB8148E7D6F0099B373 /* TDReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* TDReplicator.m */; };
 		27821BBA148FF56D0099B373 /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
@@ -157,8 +157,8 @@
 		278B0CA1152A8B1900577747 /* TDCanonicalJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 278B0C9F152A8B1900577747 /* TDCanonicalJSON.m */; };
 		278B0CA2152A8B1900577747 /* TDCanonicalJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 278B0C9F152A8B1900577747 /* TDCanonicalJSON.m */; };
 		278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */; };
-		278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; };
-		278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; };
+		278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		279906E3149A65B8003D4338 /* TDRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* TDRemoteRequest.h */; };
 		279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* TDRemoteRequest.m */; };
 		279906E6149A65B8003D4338 /* TDRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* TDRemoteRequest.m */; };
@@ -170,11 +170,11 @@
 		279C7E2E14F424090004A1E8 /* TDSequenceMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 279C7E2C14F424090004A1E8 /* TDSequenceMap.h */; };
 		279C7E2F14F424090004A1E8 /* TDSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* TDSequenceMap.m */; };
 		279C7E3014F424090004A1E8 /* TDSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* TDSequenceMap.m */; };
-		279CE39014D1EDA0009F3FA6 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
+		279CE39014D1EDA0009F3FA6 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */; };
-		279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
-		279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
-		279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
+		279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		279CE40014D749A7009F3FA6 /* TDMultipartReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3FE14D749A7009F3FA6 /* TDMultipartReader.h */; };
 		279CE40114D749A7009F3FA6 /* TDMultipartReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3FF14D749A7009F3FA6 /* TDMultipartReader.m */; };
 		279CE40214D749A7009F3FA6 /* TDMultipartReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3FF14D749A7009F3FA6 /* TDMultipartReader.m */; };
@@ -196,7 +196,7 @@
 		27A720A2152B959100C0A0E8 /* TDAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* TDAttachment.m */; };
 		27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
 		27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; };
+		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27AA409D14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */; };
 		27AA409E14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* TDDatabase+Insertion.m */; };
 		27AA40A314AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA40A014AA8A6600E2A5FF /* TDDatabase+Replication.m */; };
@@ -227,12 +227,12 @@
 		27B0B7D71492B8A200A817AD /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
 		27B0B7D81492B8A200A817AD /* TDChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* TDChangeTracker.m */; };
 		27B0B7DB1492B8A200A817AD /* TDBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* TDBase64.m */; };
-		27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; };
-		27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747211CD51A200E9A2AB /* FMResultSet.m */; };
-		27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
-		27B0B7DF1492B8C100A817AD /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
-		27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
-		27B0B7E11492B8C100A817AD /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
+		27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747011CD51A200E9A2AB /* FMDatabase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0747211CD51A200E9A2AB /* FMResultSet.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27B0B7DF1492B8C100A817AD /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27B0B7E11492B8C100A817AD /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27B0B7F71492BC7A00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F61492BC7A00A817AD /* Foundation.framework */; };
 		27B0B7F91492BC8100A817AD /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F81492BC8000A817AD /* libsqlite3.dylib */; };
 		27B0B7FB1492BDE800A817AD /* TDDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* TDDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -277,12 +277,12 @@
 		27CF5D2D152F514A0015D7A9 /* TDStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* TDStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* TDStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* TDStatus.m */; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
-		27D90B1815601C340000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; };
-		27D90B1915601C350000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; };
+		27D90B1815601C340000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27D90B1915601C350000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27D90B1A15601F8C0000735E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FB02155DBDA20025F93A /* Security.framework */; };
 		27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */; };
-		27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; };
-		27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; };
+		27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90DA14DB24E800FC7118 /* GTMDefines.h */; };
 		27DB90DD14DB250500FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DC14DB250500FC7118 /* libz.dylib */; };
 		27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
@@ -316,34 +316,34 @@
 		27F0751811CDC80A00E9A2AB /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
 		27F08C8A15A7A30D003C3E2B /* TDDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* TDDatabaseManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27F08C8B15A7A31B003C3E2B /* TDAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* TDAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		27F12887156ABE24008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; };
-		27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; };
-		27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; };
-		27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12862156ABE24008465C2 /* OARequestParameter.m */; };
-		27F128A1156ABE24008465C2 /* OAToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12868156ABE24008465C2 /* OAToken.m */; };
-		27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F128A7156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m */; };
-		27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F128A7156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m */; };
+		27F12887156ABE24008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12862156ABE24008465C2 /* OARequestParameter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F128A1156ABE24008465C2 /* OAToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12868156ABE24008465C2 /* OAToken.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F128A7156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F128A7156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F128AB156AC004008465C2 /* NSMutableURLRequest+Parameters.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */; };
 		27F128B1156AC1CA008465C2 /* TDOAuth1Authorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F128AF156AC1C8008465C2 /* TDOAuth1Authorizer.h */; };
 		27F128B2156AC1CA008465C2 /* TDOAuth1Authorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F128B0156AC1C9008465C2 /* TDOAuth1Authorizer.m */; };
 		27F128B3156AC1CA008465C2 /* TDOAuth1Authorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F128B0156AC1C9008465C2 /* TDOAuth1Authorizer.m */; };
-		27F128B5156AC8B7008465C2 /* OAToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12868156ABE24008465C2 /* OAToken.m */; };
-		27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; };
-		27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; };
-		27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; };
+		27F128B5156AC8B7008465C2 /* OAToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12868156ABE24008465C2 /* OAToken.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
-		DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		DA147C0E14BCA98A0052DA4D /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; };
+		DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
+		DA147C0E14BCA98A0052DA4D /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; };
 		DA147C1314BCAA870052DA4D /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155214ACEFC90065964D /* DDData.m */; };
 		DA147C1414BCAA870052DA4D /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155414ACEFC90065964D /* DDNumber.m */; };
 		DA147C1514BCAA870052DA4D /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155614ACEFC90065964D /* DDRange.m */; };
 		DA147C1614BCAA8F0052DA4D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; };
-		DA147C1714BCAA9C0052DA4D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-fobjc-arc -Wno-undeclared-selector"; }; };
+		DA147C1714BCAA9C0052DA4D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-Wno-undeclared-selector"; }; };
 		DA147C1814BCAAAD0052DA4D /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155814ACEFC90065964D /* HTTPAuthenticationRequest.m */; };
 		DA147C1914BCAAAD0052DA4D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; };
 		DA147C1A14BCAAAD0052DA4D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; };
-		DA147C1B14BCAAAD0052DA4D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; settings = {COMPILER_FLAGS = "-fobjc-arc -Wno-undeclared-selector"; }; };
+		DA147C1B14BCAAAD0052DA4D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; settings = {COMPILER_FLAGS = "-Wno-undeclared-selector"; }; };
 		DA147C1C14BCAABE0052DA4D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; };
 		DA147C1D14BCAABE0052DA4D /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
 		DA147C1E14BCAABE0052DA4D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; };
@@ -1916,9 +1916,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
-				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
-				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
 				270B3E111489382F00E0A926 /* TDDatabase.m in Sources */,
 				270B3E121489382F00E0A926 /* TDBody.m in Sources */,
 				270B3E131489382F00E0A926 /* TDServer.m in Sources */,
@@ -1935,6 +1932,7 @@
 				279EB2DC1491C34300E74185 /* TDCollateJSON.m in Sources */,
 				27B0B7801491E76200A817AD /* TDView_Tests.m in Sources */,
 				27B0B797149290AB00A817AD /* TDChangeTracker.m in Sources */,
+				27ED9AA3163B01E2000C844A /* TDSocketChangeTracker.m in Sources */,
 				27B0B79F1492932800A817AD /* TDBase64.m in Sources */,
 				27731F001493FA3100815D67 /* TDBlobStore.m in Sources */,
 				279906E5149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
@@ -1942,18 +1940,12 @@
 				274C391E149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
 				27AA409D14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */,
 				27AA40A314AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */,
-				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
-				2753160014ACF9330065964D /* Logging.m in Sources */,
-				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
-				2753160214ACF9330065964D /* Test.m in Sources */,
 				2700BC5E14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */,
 				2773ADC814BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* TDMisc.m in Sources */,
-				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
 				279CE40114D749A7009F3FA6 /* TDMultipartReader.m in Sources */,
 				279CE40614D88032009F3FA6 /* TDBlobStore_Tests.m in Sources */,
 				279CE40B14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
-				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				2766EFF914DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */,
 				2766EFFE14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */,
 				27C5305514DF3A050078F886 /* TDMultipartUploader.m in Sources */,
@@ -1967,19 +1959,27 @@
 				27A720A1152B959100C0A0E8 /* TDAttachment.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* TDStatus.m in Sources */,
 				27E7FAED155D78DA0025F93A /* TDChangeTracker_Tests.m in Sources */,
+				270F5706156AE0BF000FEB8F /* TDAuthorizer.m in Sources */,
+				27F128B2156AC1CA008465C2 /* TDOAuth1Authorizer.m in Sources */,
+				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
+				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
+				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
+				2753160014ACF9330065964D /* Logging.m in Sources */,
+				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
+				2753160214ACF9330065964D /* Test.m in Sources */,
+				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
 				27D90B1815601C340000735E /* MYErrorUtils.m in Sources */,
 				278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
+				275F535115C04F7B00BAF578 /* MYStreamUtils.m in Sources */,
+				2781E3CA15C31FDA00E970DC /* MYRegexUtils.m in Sources */,
+				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
-				27F128B2156AC1CA008465C2 /* TDOAuth1Authorizer.m in Sources */,
 				27F128B5156AC8B7008465C2 /* OAToken.m in Sources */,
 				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */,
 				27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */,
 				270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */,
-				270F5706156AE0BF000FEB8F /* TDAuthorizer.m in Sources */,
-				275F535115C04F7B00BAF578 /* MYStreamUtils.m in Sources */,
-				2781E3CA15C31FDA00E970DC /* MYRegexUtils.m in Sources */,
-				27ED9AA3163B01E2000C844A /* TDSocketChangeTracker.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2053,26 +2053,17 @@
 				27B0B7D71492B8A200A817AD /* TDPusher.m in Sources */,
 				27B0B7D81492B8A200A817AD /* TDChangeTracker.m in Sources */,
 				27B0B7DB1492B8A200A817AD /* TDBase64.m in Sources */,
-				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
-				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,
-				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
-				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
-				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
-				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
 				27731F061495335B00815D67 /* TDBlobStore.m in Sources */,
 				279906E6149A65B8003D4338 /* TDRemoteRequest.m in Sources */,
 				279906F1149ABFC2003D4338 /* TDBatcher.m in Sources */,
 				274C391F149FAE0000A5E89B /* TDDatabase+Attachments.m in Sources */,
-				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
 				27AA409E14AA86AE00E2A5FF /* TDDatabase+Insertion.m in Sources */,
 				27AA40A414AA8A6600E2A5FF /* TDDatabase+Replication.m in Sources */,
 				2700BC5F14B64AA600B5B297 /* TDRouter+Handlers.m in Sources */,
 				2773ADC914BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */,
 				27A073EE14C0BB6200F52FE7 /* TDMisc.m in Sources */,
-				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
 				279CE40214D749A7009F3FA6 /* TDMultipartReader.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */,
-				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* TDMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* TDMultipartUploader.m in Sources */,
@@ -2085,6 +2076,18 @@
 				278B0CA2152A8B1900577747 /* TDCanonicalJSON.m in Sources */,
 				27A720A2152B959100C0A0E8 /* TDAttachment.m in Sources */,
 				27CF5D2E152F514A0015D7A9 /* TDStatus.m in Sources */,
+				27F128B3156AC1CA008465C2 /* TDOAuth1Authorizer.m in Sources */,
+				270F5707156AE0BF000FEB8F /* TDAuthorizer.m in Sources */,
+				27ED9AA4163B01E2000C844A /* TDSocketChangeTracker.m in Sources */,
+				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
+				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,
+				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
+				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
+				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
+				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
+				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
+				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
 				27F12887156ABE24008465C2 /* OAConsumer.m in Sources */,
@@ -2093,11 +2096,8 @@
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
-				27F128B3156AC1CA008465C2 /* TDOAuth1Authorizer.m in Sources */,
-				270F5707156AE0BF000FEB8F /* TDAuthorizer.m in Sources */,
 				275F535215C04F7B00BAF578 /* MYStreamUtils.m in Sources */,
 				2781E3CB15C31FDA00E970DC /* MYRegexUtils.m in Sources */,
-				27ED9AA4163B01E2000C844A /* TDSocketChangeTracker.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2308,6 +2308,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -2336,6 +2337,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -2361,6 +2363,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -2384,6 +2387,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;

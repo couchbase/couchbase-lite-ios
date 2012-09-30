@@ -16,7 +16,7 @@ static TDBlobStore* createStore(void) {
     NSError* error;
     TDBlobStore* store = [[TDBlobStore alloc] initWithPath: path error: &error];
     CAssert(store, @"Couldn't create TDBlobStore: %@", error);
-    return [store autorelease];
+    return store;
 }
 
 static void deleteStore(TDBlobStore* store) {
@@ -40,7 +40,7 @@ TestCase(TDBlobStoreBasic) {
 
 TestCase(TDBlobStoreWriter) {
     TDBlobStore* store = createStore();
-    TDBlobStoreWriter* writer = [[[TDBlobStoreWriter alloc] initWithStore: store] autorelease];
+    TDBlobStoreWriter* writer = [[TDBlobStoreWriter alloc] initWithStore: store];
     CAssert(writer);
     
     [writer appendData: [@"part 1, " dataUsingEncoding: NSUTF8StringEncoding]];

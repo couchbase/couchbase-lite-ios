@@ -34,8 +34,8 @@ static NSCharacterSet* kIllegalNameChars;
 
 + (void) initialize {
     if (self == [TDDatabaseManager class]) {
-        kIllegalNameChars = [[[NSCharacterSet characterSetWithCharactersInString: kLegalChars]
-                                        invertedSet] retain];
+        kIllegalNameChars = [[NSCharacterSet characterSetWithCharactersInString: kLegalChars]
+                                        invertedSet];
     }
 }
 
@@ -49,7 +49,7 @@ static NSCharacterSet* kIllegalNameChars;
                                                        error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
-    return [dbm autorelease];
+    return dbm;
 }
 
 + (TDDatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name {
@@ -77,7 +77,6 @@ static NSCharacterSet* kIllegalNameChars;
                                                              error: &error]) {
             if (!TDIsFileExistsError(error)) {
                 if (outError) *outError = error;
-                [self release];
                 return nil;
             }
         }
@@ -89,9 +88,6 @@ static NSCharacterSet* kIllegalNameChars;
 - (void)dealloc {
     LogTo(TDServer, @"DEALLOC %@", self);
     [self close];
-    [_dir release];
-    [_databases release];
-    [super dealloc];
 }
 
 
@@ -128,12 +124,10 @@ static NSCharacterSet* kIllegalNameChars;
         db = [[TDDatabase alloc] initWithPath: path];
         db.readOnly = _options.readOnly;
         if (!create && !db.exists) {
-            [db release];
             return nil;
         }
         db.name = name;
         _databases[name] = db;
-        [db release];
     }
     return db;
 }
@@ -180,7 +174,6 @@ static NSCharacterSet* kIllegalNameChars;
 - (void) close {
     LogTo(TDServer, @"CLOSE %@", self);
     [_replicatorManager stop];
-    [_replicatorManager release];
     _replicatorManager = nil;
     for (TDDatabase* db in _databases.allValues) {
         [db close];

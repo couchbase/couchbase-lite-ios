@@ -59,7 +59,7 @@ static void deleteRemoteDB(void) {
                                                           onCompletion:
         ^(id result, NSError *err) {
             finished = YES;
-            error = [err retain];
+            error = err;
         }
                                 ];
     request.authorizer = authorizer();
@@ -68,16 +68,14 @@ static void deleteRemoteDB(void) {
     while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                                  beforeDate: timeout])
         ;
-    [request release];
     CAssert(error == nil || error.code == kTDStatusNotFound, @"Couldn't delete remote: %@", error);
-    [error release];
 }
 
 
 static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* filter) {
     NSURL* remote = [NSURL URLWithString: urlStr];
-    TDReplicator* repl = [[[TDReplicator alloc] initWithDB: db remote: remote
-                                                        push: push continuous: NO] autorelease];
+    TDReplicator* repl = [[TDReplicator alloc] initWithDB: db remote: remote
+                                                        push: push continuous: NO];
     if (push)
         ((TDPusher*)repl).createTarget = YES;
     repl.filterName = filter;
@@ -257,7 +255,7 @@ TestCase(TDReplicatorManager) {
     CAssert(repl.running);
     
     // Delete the _replication_state property:
-    NSMutableDictionary* updatedProps = [[newRev.properties mutableCopy] autorelease];
+    NSMutableDictionary* updatedProps = [newRev.properties mutableCopy];
     [updatedProps removeObjectForKey: @"_replication_state"];
     rev = [TDRevision revisionWithProperties: updatedProps];
     rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
@@ -311,7 +309,7 @@ TestCase(ParseReplicatorProperties) {
     CAssertEqual(remote, $url(@"http://example.com"));
     CAssertEq(isPush, YES);
     CAssertEq(createTarget, YES);
-    CAssertEq(headers, nil);
+    CAssertEqual(headers, nil);
     
     props = $dict({@"source", @"touchdb:///foo"},
                   {@"target", @"foo"});
@@ -326,7 +324,7 @@ TestCase(ParseReplicatorProperties) {
     CAssertEqual(remote, $url(@"touchdb:///foo"));
     CAssertEq(isPush, NO);
     CAssertEq(createTarget, NO);
-    CAssertEq(headers, nil);
+    CAssertEqual(headers, nil);
     
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
                                     {@"consumer_key", @"consumer_key"},

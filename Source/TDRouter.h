@@ -97,8 +97,8 @@ typedef void (^OnFinishedBlock)();
 @property (nonatomic) int status;
 @property (nonatomic, readonly) NSString* statusMsg;
 @property (nonatomic, copy) NSString* statusReason;
-@property (nonatomic, retain) NSMutableDictionary* headers;
-@property (nonatomic, retain) TDBody* body;
+@property (nonatomic, strong) NSMutableDictionary* headers;
+@property (nonatomic, strong) TDBody* body;
 @property (nonatomic, copy) id bodyObject;
 @property (nonatomic, readonly) NSString* baseContentType;
 

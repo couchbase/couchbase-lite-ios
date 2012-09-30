@@ -51,12 +51,6 @@ static id<TDViewCompiler> sCompiler;
 }
 
 
-- (void)dealloc {
-    [_name release];
-    [_mapBlock release];
-    [_reduceBlock release];
-    [super dealloc];
-}
 
 
 @synthesize database=_db, name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock,
@@ -81,10 +75,8 @@ static id<TDViewCompiler> sCompiler;
 {
     Assert(mapBlock);
     Assert(version);
-    [_mapBlock autorelease];
-    _mapBlock = [mapBlock copy];
-    [_reduceBlock autorelease];
-    _reduceBlock = [reduceBlock copy];
+    _mapBlock = mapBlock; // copied implicitly in ARC
+    _reduceBlock = reduceBlock; // copied implicitly in ARC
     
     if (![_db open])
         return NO;
@@ -303,7 +295,7 @@ static id fromJSON( NSData* json ) {
                 
                 if (conflicts) {
                     // Add a "_conflicts" property if there were conflicting revisions:
-                    NSMutableDictionary* mutableProps = [[properties mutableCopy] autorelease];
+                    NSMutableDictionary* mutableProps = [properties mutableCopy];
                     mutableProps[@"_conflicts"] = conflicts;
                     properties = mutableProps;
                 }
@@ -514,8 +506,6 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
     TDLazyArrayOfJSON* lazyKeys = [[TDLazyArrayOfJSON alloc] initWithArray: keys];
     TDLazyArrayOfJSON* lazyVals = [[TDLazyArrayOfJSON alloc] initWithArray: values];
     id result = _reduceBlock(lazyKeys, lazyVals, NO);
-    [lazyKeys release];
-    [lazyVals release];
     return result ?: $null;
 }
 
@@ -543,7 +533,6 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
                                            {@"value", reduced})];
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
-                    [lastKeyData release];
                 }
                 lastKeyData = [keyData copy];
             }
@@ -562,9 +551,6 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
               _name, toJSONString(key), toJSONString(reduced));
         [rows addObject: $dict({@"key", key}, {@"value", reduced})];
     }
-    [keysToReduce release];
-    [valuesToReduce release];
-    [lastKeyData release];
     return rows;
 }
 
@@ -601,8 +587,7 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
 
 
 + (void) setCompiler: (id<TDViewCompiler>)compiler {
-    [sCompiler autorelease];
-    sCompiler = [compiler retain];
+    sCompiler = compiler;
 }
 
 + (id<TDViewCompiler>) compiler {

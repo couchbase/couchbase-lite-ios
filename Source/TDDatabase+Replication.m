@@ -62,7 +62,6 @@
                                                    object: nil];
     }
     [_activeReplicators addObject: repl];
-    [repl release];
     return repl;
 }
 

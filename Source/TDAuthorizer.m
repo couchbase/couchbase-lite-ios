@@ -25,16 +25,11 @@
     Assert(credential);
     self = [super init];
     if (self) {
-        _credential = [credential retain];
+        _credential = credential;
     }
     return self;
 }
 
-- (void)dealloc
-{
-    [_credential release];
-    [super dealloc];
-}
 
 - (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
                          forRealm: (NSString*)realm
@@ -49,7 +44,7 @@
     return nil;
 }
 
-- (CFStringRef) authorizeHTTPMessage: (CFHTTPMessageRef)message
+- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
                             forRealm: (NSString*)realm
 {
     NSString* username = _credential.user;
@@ -57,7 +52,7 @@
     if (username && password) {
         NSString* seekrit = $sprintf(@"%@:%@", username, password);
         seekrit = [TDBase64 encode: [seekrit dataUsingEncoding: NSUTF8StringEncoding]];
-        return (CFStringRef) [@"Basic " stringByAppendingString: seekrit];
+        return [@"Basic " stringByAppendingString: seekrit];
     }
     return nil;
 }
@@ -86,7 +81,6 @@
         else if ([algorithm isEqualToString: @"hmac-sha-256"])
             _hmacFunction = &TDHMACSHA256;
         else {
-            [self release];
             return nil;
         }
     }
@@ -94,13 +88,6 @@
 }
 
 
-- (void)dealloc
-{
-    [_key release];
-    [_identifier release];
-    [_issueTime release];
-    [super dealloc];
-}
 
 
 - (NSString*) authorizeMethod: (NSString*)httpMethod
@@ -145,15 +132,15 @@
 }
 
 
-- (CFStringRef) authorizeHTTPMessage: (CFHTTPMessageRef)message
-                            forRealm: (NSString*)realm
+- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
+                          forRealm: (NSString*)realm
 {
     if (!message)
         return nil;
-    NSString* method = [(id)CFHTTPMessageCopyRequestMethod(message) autorelease];
-    NSURL* url = [(id)CFHTTPMessageCopyRequestURL(message) autorelease];
-    NSData* body = [(id)CFHTTPMessageCopyBody(message) autorelease];
-    return (CFStringRef) [self authorizeMethod: method URL: url body: body];
+    NSString* method = CFBridgingRelease(CFHTTPMessageCopyRequestMethod(message));
+    NSURL* url = CFBridgingRelease(CFHTTPMessageCopyRequestURL(message));
+    NSData* body = CFBridgingRelease(CFHTTPMessageCopyBody(message));
+    return [self authorizeMethod: method URL: url body: body];
 }
 
 

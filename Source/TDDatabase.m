@@ -48,7 +48,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 + (TDDatabase*) createEmptyDBAtPath: (NSString*)path {
     if (!removeItemIfExists(path, NULL))
         return nil;
-    TDDatabase *db = [[[self alloc] initWithPath: path] autorelease];
+    TDDatabase *db = [[self alloc] initWithPath: path];
     if (!removeItemIfExists(db.attachmentStorePath, NULL))
         return nil;
     if (![db open])
@@ -70,6 +70,11 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         _fmdb.logsErrors = WillLogTo(TDDatabase);
 #endif
         _fmdb.traceExecution = WillLogTo(TDDatabaseVerbose);
+        if (0) {
+            // Appease the static analyzer by using these category ivars in this source file:
+            _validations = nil;
+            _pendingAttachmentsByDigest = nil;
+        }
     }
     return self;
 }
@@ -284,10 +289,12 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                                                         object: self];
     for (TDView* view in _views.allValues)
         [view databaseClosing];
-    setObj(&_views, nil);
-    for (TDReplicator* repl in [_activeReplicators.copy autorelease])
+    
+    _views = nil;
+    for (TDReplicator* repl in _activeReplicators.copy)
         [repl databaseClosing];
-    setObj(&_activeReplicators, nil);
+    
+    _activeReplicators = nil;
     
     if (![_fmdb close])
         return NO;
@@ -315,17 +322,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         //Warn(@"%@ dealloced without being closed first!", self);
         [self close];
     }
-    [_fmdb release];
-    [_path release];
-    [_name release];
-    [_views release];
-    [_activeReplicators release];
-    [_validations release];
-    [_filters release];
-    [_attachments release];
-    [_pendingAttachmentsByDigest release];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [super dealloc];
 }
 
 @synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments, readOnly=_readOnly;
@@ -490,7 +487,6 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     rev.sequence = sequence;
     rev.missing = (json == nil);
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
-    [rev release];
     if (json.length == 0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
         return extra;      // optimization, and workaround for issue #44
     NSMutableDictionary* docProperties = [TDJSON JSONObjectWithData: json
@@ -533,7 +529,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         if (!revID)
             revID = [r stringForColumnIndex: 0];
         BOOL deleted = [r boolForColumnIndex: 1];
-        result = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted] autorelease];
+        result = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
         result.sequence = [r longLongIntForColumnIndex: 2];
         
         if (options != kTDNoBody) {
@@ -609,14 +605,13 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     FMResultSet* r = [_fmdb executeQuery: sql, @(docNumericID)];
     if (!r)
         return nil;
-    TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
+    TDRevisionList* revs = [[TDRevisionList alloc] init];
     while ([r next]) {
         TDRevision* rev = [[TDRevision alloc] initWithDocID: docID
                                               revID: [r stringForColumnIndex: 1]
                                             deleted: [r boolForColumnIndex: 2]];
         rev.sequence = [r longLongIntForColumnIndex: 0];
         [revs addRev: rev];
-        [rev release];
     }
     [r close];
     return revs;
@@ -629,7 +624,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     if (docNumericID < 0)
         return nil;
     else if (docNumericID == 0)
-        return [[[TDRevisionList alloc] init] autorelease];  // no such document
+        return [[TDRevisionList alloc] init];  // no such document
     else
         return [self getAllRevisionsOfDocumentID: docID
                                        numericID: docNumericID
@@ -711,7 +706,6 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
             rev.sequence = sequence;
             rev.missing = [r boolForColumnIndex: 4];
             [history addObject: rev];
-            [rev release];
             lastSequence = [r longLongIntForColumnIndex: 1];
             if (lastSequence == 0)
                 break;
@@ -806,7 +800,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     FMResultSet* r = [_fmdb executeQuery: sql, @(lastSequence)];
     if (!r)
         return nil;
-    TDRevisionList* changes = [[[TDRevisionList alloc] init] autorelease];
+    TDRevisionList* changes = [[TDRevisionList alloc] init];
     int64_t lastDocID = 0;
     while ([r next]) {
         @autoreleasepool {
@@ -829,7 +823,6 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             }
             if (!filter || filter(rev, filterParams))
                 [changes addRev: rev];
-            [rev release];
         }
     }
     [r close];
@@ -845,7 +838,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock {
     if (!_filters)
         _filters = [[NSMutableDictionary alloc] init];
-    [_filters setValue: [[filterBlock copy] autorelease] forKey: filterName];
+    [_filters setValue: [filterBlock copy] forKey: filterName];
 }
 
 - (TDFilterBlock) filterNamed: (NSString*)filterName {
@@ -870,7 +863,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     TDView* view = _views[name];
     if (view)
         return view;
-    return [self registerView: [[[TDView alloc] initWithDatabase: self name: name] autorelease]];
+    return [self registerView: [[TDView alloc] initWithDatabase: self name: name]];
 }
 
 
@@ -878,7 +871,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     TDView* view = _views[name];
     if (view)
         return view;
-    view = [[[TDView alloc] initWithDatabase: self name: name] autorelease];
+    view = [[TDView alloc] initWithDatabase: self name: name];
     if (!view.viewID)
         return nil;
     return [self registerView: view];
@@ -915,7 +908,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
     
     // Generate the SELECT statement, based on the options:
-    NSMutableString* sql = [[@"SELECT revs.doc_id, docid, revid" mutableCopy] autorelease];
+    NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid" mutableCopy];
     if (options->includeDocs)
         [sql appendString: @", json, sequence"];
     if (options->includeDeletedDocs)
@@ -1044,7 +1037,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 #if DEBUG
 
 static TDRevision* mkrev(NSString* revID) {
-    return [[[TDRevision alloc] initWithDocID: @"docid" revID: revID deleted: NO] autorelease];
+    return [[TDRevision alloc] initWithDocID: @"docid" revID: revID deleted: NO];
 }
 
 

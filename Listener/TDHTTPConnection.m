@@ -75,10 +75,9 @@
                                                 request: urlRequest
                                                 isLocal: NO];
     router.processRanges = NO;  // The HTTP server framework does this already
-    TDHTTPResponse* response = [[[TDHTTPResponse alloc] initWithRouter: router
-                                                         forConnection: self] autorelease];
+    TDHTTPResponse* response = [[TDHTTPResponse alloc] initWithRouter: router
+                                                         forConnection: self];
     
-    [router release];
     return response;
 }
 

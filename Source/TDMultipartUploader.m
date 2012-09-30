@@ -30,7 +30,7 @@
                   requestHeaders: requestHeaders 
                     onCompletion: onCompletion];
     if (self) {
-        _multipartWriter = [writer retain];
+        _multipartWriter = writer;
         // It's important to set a Content-Length header -- without this, CFNetwork won't know the
         // length of the body stream, so it has to send the body chunked. But unfortunately CouchDB
         // doesn't correctly parse chunked multipart bodies:
@@ -43,10 +43,6 @@
 }
 
 
-- (void)dealloc {
-    [_multipartWriter release];
-    [super dealloc];
-}
 
 
 - (void) start {

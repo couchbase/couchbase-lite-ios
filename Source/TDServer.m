@@ -33,7 +33,7 @@
     TDServer* server = [[self alloc] initWithDirectory: path error: &error];
     Assert(server, @"Failed to create server at %@: %@", path, error);
     AssertEqual(server.directory, path);
-    return [server autorelease];
+    return server;
 }
 
 + (TDServer*) createEmptyAtTemporaryPath: (NSString*)name {
@@ -53,7 +53,6 @@
                                                         options: options
                                                           error: outError];
         if (!_manager) {
-            [self release];
             return nil;
         }
         
@@ -75,8 +74,6 @@
 {
     LogTo(TDServer, @"DEALLOC");
     if (_serverThread) Warn(@"%@ dealloced with _serverThread still set: %@", self, _serverThread);
-    [_manager release];
-    [super dealloc];
 }
 
 
@@ -87,7 +84,6 @@
             [TDURLProtocol unregisterServer: self];
             _stopRunLoop = YES;
         }];
-        [_serverThread release];
         _serverThread = nil;
     }
 }
@@ -100,24 +96,20 @@
 
 - (void) runServerThread {
     @autoreleasepool {
-        [[self retain] autorelease]; // ensure self stays alive till this method returns
-        
-        @autoreleasepool {
-            LogTo(TDServer, @"Server thread starting...");
+        LogTo(TDServer, @"Server thread starting...");
 
-            [[NSThread currentThread] setName:@"TouchDB"];
-            
+        [[NSThread currentThread] setName:@"TouchDB"];
+        
 #ifndef GNUSTEP
-            // Add a no-op source so the runloop won't stop on its own:
-            CFRunLoopSourceContext context = {};  // all zeros
-            CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
-            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
-            CFRelease(source);
+        // Add a no-op source so the runloop won't stop on its own:
+        CFRunLoopSourceContext context = {};  // all zeros
+        CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+        CFRelease(source);
 #endif
             
-            // Initialize the replicator, if it's enabled:
-            [_manager replicatorManager];
-        }
+        // Initialize the replicator, if it's enabled:
+        [_manager replicatorManager];
         
         // Now run:
         while (!_stopRunLoop && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
@@ -154,8 +146,8 @@
 
 NSURL* TDStartServer(NSString* serverDirectory, NSError** outError) {
     CAssert(![TDURLProtocol server], @"A TDServer is already running");
-    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: serverDirectory
-                                                        error: outError] autorelease];
+    TDServer* tdServer = [[TDServer alloc] initWithDirectory: serverDirectory
+                                                        error: outError];
     if (!tdServer)
         return nil;
     return [TDURLProtocol registerServer: tdServer forHostname: nil];

@@ -59,7 +59,7 @@ int main (int argc, const char * argv[]) {
     CouchTouchDBServer* server = [CouchTouchDBServer sharedInstance];
     NSAssert(!server.error, @"Error initializing TouchDB: %@", server.error);
 
-    _database = [[server databaseNamed: dbName] retain];
+    _database = [server databaseNamed: dbName];
     
     RESTOperation* op = [_database create];
     if (![op wait]) {
@@ -94,7 +94,7 @@ int main (int argc, const char * argv[]) {
     
     CouchQuery* q = [design queryViewNamed: @"byDate"];
     q.descending = YES;
-    self.query = [[[DemoQuery alloc] initWithQuery: q] autorelease];
+    self.query = [[DemoQuery alloc] initWithQuery: q];
     self.query.modelClass =_tableController.objectClass;
     
     // Start watching any persistent replications already configured:
@@ -220,22 +220,15 @@ int main (int argc, const char * argv[]) {
     [repl removeObserver: self forKeyPath: @"mode"];
 }
 
-- (void) forgetReplication: (CouchPersistentReplication**)repl {
-    if (*repl) {
-        [self stopObservingReplication: *repl];
-        [*repl release];
-        *repl = nil;
-    }
-}
-
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
-    [self forgetReplication: &_pull];
-    [self forgetReplication: &_push];
-    
+    if (_pull)
+        [self stopObservingReplication: _pull];
+    if (_push)
+        [self stopObservingReplication: _push];
     NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
-    _pull = [repls[0] retain];
-    _push = [repls[1] retain];
+    _pull = repls[0];
+    _push = repls[1];
     [self observeReplication: _pull];
     [self observeReplication: _push];
     
@@ -341,7 +334,7 @@ int main (int argc, const char * argv[]) {
             emit(doc[@"foo"], nil);
         };
     }
-    return [[mapBlock copy] autorelease];
+    return [mapBlock copy];
 }
 
 
@@ -354,7 +347,7 @@ int main (int argc, const char * argv[]) {
             return [TDView totalValues: values];
         };
     }
-    return [[reduceBlock copy] autorelease];
+    return [reduceBlock copy];
 }
 
 #endif

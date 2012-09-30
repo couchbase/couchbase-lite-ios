@@ -28,7 +28,6 @@
     if (self) {
         if (!docID && (revID || deleted)) {
             // Illegal rev
-            [self release];
             return nil;
         }
         _docID = docID.copy;
@@ -50,24 +49,17 @@
 }
 
 - (id) initWithProperties: (NSDictionary*)properties {
-    TDBody* body = [[[TDBody alloc] initWithProperties: properties] autorelease];
+    TDBody* body = [[TDBody alloc] initWithProperties: properties];
     if (!body) {
-        [self release];
         return nil;
     }
     return [self initWithBody: body];
 }
 
 + (TDRevision*) revisionWithProperties: (NSDictionary*)properties {
-    return [[[self alloc] initWithProperties: properties] autorelease];
+    return [[self alloc] initWithProperties: properties];
 }
 
-- (void)dealloc {
-    [_docID release];
-    [_revID release];
-    [_body release];
-    [super dealloc];
-}
 
 @synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing,
             body=_body, sequence=_sequence;
@@ -99,7 +91,6 @@
     BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: NULL];
     if (outSuffix)
         *outSuffix = [revID substringFromIndex: scanner.scanLocation];
-    [scanner release];
     return parsed && *outNum > 0 && (!outSuffix || (*outSuffix).length > 0);
 }
 
@@ -153,7 +144,6 @@
     [nuProperties setValue: docID forKey: @"_id"];
     [nuProperties setValue: revID forKey: @"_rev"];
     rev.properties = nuProperties;
-    [nuProperties release];
 
     return rev;
 }
@@ -182,10 +172,6 @@
     return self;
 }
 
-- (void)dealloc {
-    [_revs release];
-    [super dealloc];
-}
 
 - (NSString*) description {
     return _revs.description;

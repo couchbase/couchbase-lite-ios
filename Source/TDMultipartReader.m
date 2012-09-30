@@ -60,7 +60,6 @@ static NSData* kCRLFCRLF;
     self = [super init];
     if (self) {
         if (![self parseContentType: contentType]) {
-            [self release];
             return nil;
         }
         _delegate = delegate;
@@ -72,19 +71,9 @@ static NSData* kCRLFCRLF;
 
 
 - (void) close {
-    [_buffer release];
     _buffer = nil;
-    [_headers release];
     _headers = nil;
-    [_boundary release];
     _boundary = nil;
-}
-
-
-- (void)dealloc {
-    [self close];
-    [_error release];
-    [super dealloc];
 }
 
 
@@ -93,7 +82,7 @@ static NSData* kCRLFCRLF;
     // But there may be other ';'-separated params, and the boundary string may be quoted.
     // This is really not a full MIME type parser, but should work well enough for our needs.
     BOOL first = YES;
-    for (NSString* param in [contentType componentsSeparatedByString: @";"]) {
+    for (__strong NSString* param in [contentType componentsSeparatedByString: @";"]) {
         param = trim(param);
         if (first) {
             if (![param hasPrefix: @"multipart/"])
@@ -110,7 +99,7 @@ static NSData* kCRLFCRLF;
                 if (boundary.length < 1)
                     return NO;
                 boundary = [@"\r\n--" stringByAppendingString: boundary];
-                _boundary = [[boundary dataUsingEncoding: NSUTF8StringEncoding] retain];
+                _boundary = [boundary dataUsingEncoding: NSUTF8StringEncoding];
                 break;
             }
         }
@@ -127,7 +116,6 @@ static NSData* kCRLFCRLF;
         self.error = @"Unparseable UTF-8 in headers";
         return NO;
     }
-    [_headers release];
     _headers = [[NSMutableDictionary alloc] init];
     BOOL first = YES;
     for (NSString* header in [headersStr componentsSeparatedByString: @"\r\n"]) {
@@ -245,7 +233,6 @@ static NSData* kCRLFCRLF;
                                                                      encoding: NSUTF8StringEncoding
                                                                  freeWhenDone: NO];
                     BOOL ok = [self parseHeaders: headers];
-                    [headers release];
                     if (!ok)
                         return;  // parseHeaders already set .error
                     [self deleteUpThrough: r];
@@ -314,32 +301,25 @@ static NSData* kCRLFCRLF;
 
 - (void) finishedPart {
     Assert(_currentPartData);
-    [_currentPartData release];
     _currentPartData = nil;
     
 }
 
-- (void)dealloc {
-    [_currentPartData release];
-    [_partList release];
-    [_headersList release];
-    [super dealloc];
-}
 
 @end
 
 
 TestCase(TDMultipartReader_Types) {
-    TDMultipartReader* reader = [[[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: nil] autorelease];
+    TDMultipartReader* reader = [[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: nil];
     CAssertEqual(reader.boundary, [@"\r\n--BOUNDARY" dataUsingEncoding: NSUTF8StringEncoding]);
 
-    reader = [[[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=BOUNDARY" delegate: nil] autorelease];
+    reader = [[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=BOUNDARY" delegate: nil];
     CAssertEqual(reader.boundary, [@"\r\n--BOUNDARY" dataUsingEncoding: NSUTF8StringEncoding]);
     
-    reader = [[[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY" delegate: nil] autorelease];
+    reader = [[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY" delegate: nil];
     CAssertNil(reader);
 
-    reader = [[[TDMultipartReader alloc] initWithContentType: @"multipart/related;boundary=X" delegate: nil] autorelease];
+    reader = [[TDMultipartReader alloc] initWithContentType: @"multipart/related;boundary=X" delegate: nil];
     CAssertEqual(reader.boundary, [@"\r\n--X" dataUsingEncoding: NSUTF8StringEncoding]);
 }
 
@@ -358,8 +338,8 @@ TestCase(TDMultipartReader_Simple) {
 
     for (NSUInteger chunkSize = 1; chunkSize <= mime.length; ++chunkSize) {
         Log(@"--- chunkSize = %u", (unsigned)chunkSize);
-        TestMultipartReaderDelegate* delegate = [[[TestMultipartReaderDelegate alloc] init] autorelease];
-        TDMultipartReader* reader = [[[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: delegate] autorelease];
+        TestMultipartReaderDelegate* delegate = [[TestMultipartReaderDelegate alloc] init];
+        TDMultipartReader* reader = [[TDMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: delegate];
         CAssert(!reader.finished);
         
         NSRange r = {0, 0};

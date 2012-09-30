@@ -51,14 +51,13 @@
     if (self) {
         if([self class] == [TDChangeTracker class]) {
             // TDChangeTracker is abstract; instantiate a concrete subclass instead.
-            [self release];
             return [[TDSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
                                                                  mode: mode
                                                             conflicts: includeConflicts
                                                          lastSequence: lastSequenceID
                                                                client: client];
         }
-        _databaseURL = [databaseURL retain];
+        _databaseURL = databaseURL;
         _client = client;
         _mode = mode;
         _heartbeat = kDefaultHeartbeat;
@@ -96,7 +95,7 @@
 }
 
 - (NSURL*) changesFeedURL {
-    NSMutableString* urlStr = [[_databaseURL.absoluteString mutableCopy] autorelease];
+    NSMutableString* urlStr = [_databaseURL.absoluteString mutableCopy];
     if (![urlStr hasSuffix: @"/"])
         [urlStr appendString: @"/"];
     [urlStr appendString: self.changesFeedPath];
@@ -109,14 +108,6 @@
 
 - (void) dealloc {
     [self stop];
-    [_filterName release];
-    [_filterParameters release];
-    [_databaseURL release];
-    [_lastSequenceID release];
-    [_error release];
-    [_requestHeaders release];
-    [_authorizer release];
-    [super dealloc];
 }
 
 - (void) setUpstreamError: (NSString*)message {

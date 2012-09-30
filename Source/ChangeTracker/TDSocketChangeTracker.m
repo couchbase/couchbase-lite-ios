@@ -40,13 +40,13 @@
     [super start];
     
     CFHTTPMessageRef request = CFHTTPMessageCreateRequest(NULL, CFSTR("GET"),
-                                                          (CFURLRef)self.changesFeedURL,
+                                                          (__bridge CFURLRef)self.changesFeedURL,
                                                           kCFHTTPVersion1_1);
     Assert(request);
     
     // Add headers.
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        CFHTTPMessageSetHeaderFieldValue(request, (CFStringRef)key, (CFStringRef)value);
+        CFHTTPMessageSetHeaderFieldValue(request, (__bridge CFStringRef)key, (__bridge CFStringRef)value);
     }];
     
     if (_unauthResponse && _credential) {
@@ -54,17 +54,18 @@
         if (password) {
             CFIndex unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
             Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,
-                                                  (CFStringRef)_credential.user,
-                                                  (CFStringRef)password,
+                                                  (__bridge CFStringRef)_credential.user,
+                                                  (__bridge CFStringRef)password,
                                                   kCFHTTPAuthenticationSchemeBasic,
                                                   unauthStatus == 407));
         } else {
             Warn(@"%@: Unable to get password of %@", self, _credential);
         }
     } else if (_authorizer) {
-        CFStringRef authHeader = [_authorizer authorizeHTTPMessage: request forRealm: nil];
+        NSString* authHeader = [_authorizer authorizeHTTPMessage: request forRealm: nil];
         if (authHeader)
-            CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"), authHeader);
+            CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"),
+                                             (__bridge CFStringRef)(authHeader));
     }
 
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
@@ -87,7 +88,7 @@
     
     _inputBuffer = [[NSMutableData alloc] initWithCapacity: kReadLength];
     
-    _trackingInput = (NSInputStream*)cfInputStream;
+    _trackingInput = (NSInputStream*)CFBridgingRelease(cfInputStream);
     [_trackingInput setDelegate: self];
     [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     [_trackingInput open];
@@ -99,12 +100,8 @@
 
 - (void) clearConnection {
     [_trackingInput close];
-    [_trackingInput release];
     _trackingInput = nil;
-    
-    [_inputBuffer release];
     _inputBuffer = nil;
-    [_changeBuffer release];
     _changeBuffer = nil;
 }
 
@@ -123,8 +120,6 @@
 - (void)dealloc
 {
     if (_unauthResponse) CFRelease(_unauthResponse);
-    [_credential release];
-    [super dealloc];
 }
 
 
@@ -135,10 +130,9 @@
     SecTrustRef sslTrust = (SecTrustRef) CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
                                                                   kCFStreamPropertySSLPeerTrust);
     if (sslTrust) {
-        CFURLRef cfURL = CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
-                                                kCFStreamPropertyHTTPFinalURL);
-        BOOL trusted = [TDRemoteRequest checkTrust: sslTrust forHost: [(NSURL*)cfURL host]];
-        CFRelease(cfURL);
+        NSURL* url = CFBridgingRelease(CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
+                                                                kCFStreamPropertyHTTPFinalURL));
+        BOOL trusted = [TDRemoteRequest checkTrust: sslTrust forHost: url.host];
         CFRelease(sslTrust);
         if (!trusted) {
             //TODO: This error could be made more precise
@@ -157,8 +151,8 @@
     NSString* authenticationMethod;
     
     // Basic & digest auth: http://www.ietf.org/rfc/rfc2617.txt
-    CFStringRef str = CFHTTPMessageCopyHeaderFieldValue(response, CFSTR("WWW-Authenticate"));
-    NSString* authHeader = [NSMakeCollectable(str) autorelease];
+    NSString* authHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
+                                                                       CFSTR("WWW-Authenticate")));
     if (!authHeader)
         return nil;
     
@@ -201,7 +195,7 @@
     LogTo(ChangeTracker, @"%@ got status %ld", self, status);
     if ((status == 401 || status == 407) && !_credential
                                          && ![_requestHeaders objectForKey: @"Authorization"]) {
-        _credential = [[self credentialForResponse: response] retain];
+        _credential = [self credentialForResponse: response];
         LogTo(ChangeTracker, @"%@: Auth challenge; credential = %@", self, _credential);
         if (_credential) {
             // Recoverable auth failure -- try again with _credential:
@@ -227,7 +221,7 @@
 
 - (void) readEntireInput {
     // After one-shot or longpoll response is complete, parse it as a single JSON document:
-    NSData* input = [_inputBuffer retain];
+    NSData* input = _inputBuffer;
     LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
     BOOL restart = NO;
     NSString* errorMessage = nil;
@@ -242,7 +236,6 @@
         // ran out of changes due to a _limit rather than because we hit the end.
         restart = _mode == kLongPoll || numChanges == (NSInteger)_limit;
     }
-    [input release];
     
     [self clearConnection];
 
@@ -269,7 +262,7 @@
         Warn(@"%@: Unparseable response:\n%@", self, bodyStr);
     } else {
         Warn(@"%@: Response is invalid UTF-8; as CP1252:\n%@", self,
-             [[[NSString alloc] initWithData: body encoding: NSWindowsCP1252StringEncoding] autorelease]);
+             [[NSString alloc] initWithData: body encoding: NSWindowsCP1252StringEncoding]);
     }
     return NO;
 }
@@ -403,8 +396,6 @@
 
 
 - (void) stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
-    [[self retain] autorelease];  // Delegate calling -stop might otherwise dealloc me
-    
     switch (eventCode) {
         case NSStreamEventHasBytesAvailable: {
             LogTo(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);

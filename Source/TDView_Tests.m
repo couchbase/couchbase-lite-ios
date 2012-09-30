@@ -35,7 +35,7 @@ TestCase(TDView_Create) {
     CAssert(view);
     CAssertEq(view.database, db);
     CAssertEqual(view.name, @"aview");
-    CAssertNull(view.mapBlock);
+    CAssert(view.mapBlock == nil, nil);
     CAssertEq([db existingViewNamed: @"aview"], view);
 
     
@@ -58,7 +58,7 @@ TestCase(TDView_Create) {
 
 
 static TDRevision* putDoc(TDDatabase* db, NSDictionary* props) {
-    TDRevision* rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDRevision* rev = [[TDRevision alloc] initWithProperties: props];
     TDStatus status;
     TDRevision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(status < 300);
@@ -114,7 +114,7 @@ TestCase(TDView_Index) {
     CAssertEq([view updateIndex], kTDStatusNotModified);
     
     // Now add a doc and update a doc:
-    TDRevision* threeUpdated = [[[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
+    TDRevision* threeUpdated = [[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO];
     threeUpdated.properties = $dict({@"key", @"3hree"});
     TDStatus status;
     rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];
@@ -122,7 +122,7 @@ TestCase(TDView_Index) {
 
     TDRevision* rev4 = putDoc(db, $dict({@"key", @"four"}));
     
-    TDRevision* twoDeleted = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted:YES] autorelease];
+    TDRevision* twoDeleted = [[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted:YES];
     [db putRevision: twoDeleted prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
@@ -159,7 +159,7 @@ TestCase(TDView_MapConflicts) {
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
-    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDRevision* leaf2 = [[TDRevision alloc] initWithProperties: props];
     TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
@@ -205,7 +205,7 @@ TestCase(TDView_ConflictWinner) {
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
-    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDRevision* leaf2 = [[TDRevision alloc] initWithProperties: props];
     TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
@@ -245,7 +245,7 @@ TestCase(TDView_ConflictLoser) {
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-...."},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
-    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDRevision* leaf2 = [[TDRevision alloc] initWithProperties: props];
     TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
@@ -316,7 +316,8 @@ TestCase(TDView_Query) {
     
     // Specific keys:
     options = kDefaultTDQueryOptions;
-    options.keys = @[@"two", @"four"];
+    NSArray* keys = @[@"two", @"four"];
+    options.keys = keys;
     rows = [view queryWithOptions: &options status: &status];
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
@@ -384,7 +385,7 @@ TestCase(TDView_AllDocsQuery) {
 
     // Delete a document:
     TDRevision* del = docs[0];
-    del = [[[TDRevision alloc] initWithDocID: del.docID revID: del.revID deleted: YES] autorelease];
+    del = [[TDRevision alloc] initWithDocID: del.docID revID: del.revID deleted: YES];
     TDStatus status;
     del = [db putRevision: del prevRevisionID: del.revID allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusOK);

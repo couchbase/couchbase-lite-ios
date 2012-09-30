@@ -38,7 +38,6 @@
         NSData* json = [super dataWithJSONObject: object 
                                          options: (options & ~TDJSONWritingAllowFragments)
                                            error: NULL];
-        [object release];
         return [json subdataWithRange: NSMakeRange(1, json.length - 2)];
     } else {
         return [super dataWithJSONObject: object options: options error: error];
@@ -114,15 +113,9 @@
 - (id) initWithArray: (NSMutableArray*)array {
     self = [super init];
     if (self) {
-        _array = [array retain];
+        _array = array;
     }
     return self;
-}
-
-- (void)dealloc
-{
-    [_array release];
-    [super dealloc];
 }
 
 - (NSUInteger)count {

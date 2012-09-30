@@ -50,9 +50,8 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     self = [super init];
     if (self) {
         _dbManager = dbManager;
-        _replicatorDB = [[dbManager databaseNamed: kTDReplicatorDatabaseName] retain];
+        _replicatorDB = [dbManager databaseNamed: kTDReplicatorDatabaseName];
         if (!_replicatorDB) {
-            [self release];
             return nil;
         }
         Assert(_replicatorDB);
@@ -64,8 +63,6 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 - (void)dealloc {
     [self stop];
-    [_replicatorDB release];
-    [super dealloc];
 }
 
 
@@ -95,7 +92,6 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     LogTo(TDServer, @"STOP %@", self);
     [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [_replicatorsByDocID release];
     _replicatorsByDocID = nil;
 }
 
@@ -179,12 +175,11 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             NSString* token = $castIf(NSString, oauth[@"token"]);
             NSString* tokenSec = $castIf(NSString, oauth[@"token_secret"]);
             NSString* sigMethod = $castIf(NSString, oauth[@"signature_method"]);
-            *outAuthorizer = [[[TDOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
+            *outAuthorizer = [[TDOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
                                                                consumerSecret: consumerSec
                                                                         token: token
                                                                   tokenSecret: tokenSec
-                                                              signatureMethod: sigMethod]
-                              autorelease];
+                                                              signatureMethod: sigMethod];
             if (!*outAuthorizer)
                 return kTDStatusBadRequest;
         }
@@ -266,7 +261,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     do {
         // Create an updated revision by merging in the updates:
         NSDictionary* currentProperties = currentRev.properties;
-        NSMutableDictionary* updatedProperties = [[currentProperties mutableCopy] autorelease];
+        NSMutableDictionary* updatedProperties = [currentProperties mutableCopy];
         [updatedProperties addEntriesFromDictionary: updates];
         if ($equal(updatedProperties, currentProperties)) {
             status = kTDStatusOK;     // this is a no-op change
@@ -503,7 +498,6 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                               allowConflict: NO status: &status]) {
                 Warn(@"TDReplicatorManager: Couldn't delete replication doc %@", docProps);
             }
-            [delRev release];
         }
     }
 }

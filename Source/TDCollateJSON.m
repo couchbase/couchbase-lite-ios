@@ -179,8 +179,6 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
     NSString* str1 = createStringFromJSON(in1);
     NSString* str2 = createStringFromJSON(in2);
     int result = (int)[str1 localizedCompare: str2];
-    [str1 release];
-    [str2 release];
     return result;
 }
 

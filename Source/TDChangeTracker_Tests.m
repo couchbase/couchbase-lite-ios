@@ -19,8 +19,30 @@
 #import "MYURLUtils.h"
 
 
+void TestDictOf(void);
+void TestDictOf(void) {
+    NSDictionary *d = $dict({@"seq", @1},
+                            {@"id", @"foo"},
+                            {@"changes", @[@"hi"]});
+    CAssertEqual(d[@"seq"], @1);
+}
+
+
 #if DEBUG
 
+TestCase(DictOf) {
+    NSDictionary* z = @{@"hi": @"there"};
+    NSLog(@"%@",z);
+    //typedef struct { __unsafe_unretained id key; __unsafe_unretained id value; } Pair;
+    typedef id Pair[2];
+    typedef Pair Pairs[];
+    Pairs pairs= {
+        {@"changes", @[@"hi"]}
+    };
+    NSLog(@"it's %@", pairs[0][1]);
+    //NSDictionary* d = _dictof(pairs,sizeof(pairs)/sizeof(struct _dictpair));
+    //CAssertEqual(d[@"changes"], @[@"hi"]);
+}
 
 @interface TDChangeTrackerTester : NSObject <TDChangeTrackerClient>
 {
@@ -49,7 +71,7 @@
         Warn(@"Timeout contacting %@", tracker.databaseURL);
         return;
     }
-    AssertNil(tracker.error);
+    Assert(!tracker.error, nil);
     CAssertEqual(_changes, expectedChanges);
 }
 
@@ -76,11 +98,6 @@
     _running = NO;
 }
 
-- (void)dealloc
-{
-    [_changes release];
-    [super dealloc];
-}
 
 @end
 
@@ -99,9 +116,9 @@ static void addTemporaryCredential(NSURL* url, NSString* realm,
 TestCase(TDChangeTracker_Simple) {
     for (TDChangeTrackerMode mode = kOneShot; mode <= kContinuous; ++mode) {
         Log(@"Mode = %d ...", mode);
-        TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
+        TDChangeTrackerTester* tester = [[TDChangeTrackerTester alloc] init];
         NSURL* url = [NSURL URLWithString: @"http://snej.iriscouch.com/tdpuller_test1"];
-        TDChangeTracker* tracker = [[[TDChangeTracker alloc] initWithDatabaseURL: url mode: mode conflicts: NO lastSequence: nil client: tester] autorelease];
+        TDChangeTracker* tracker = [[TDChangeTracker alloc] initWithDatabaseURL: url mode: mode conflicts: NO lastSequence: nil client: tester];
         NSArray* expected = $array($dict({@"seq", @1},
                                          {@"id", @"foo"},
                                          {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
@@ -122,9 +139,9 @@ TestCase(TDChangeTracker_Simple) {
 
 TestCase(TDChangeTracker_SSL) {
     // The only difference here is the "https:" scheme in the URL.
-    TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
+    TDChangeTrackerTester* tester = [[TDChangeTrackerTester alloc] init];
     NSURL* url = [NSURL URLWithString: @"https://snej.iriscouch.com/tdpuller_test1"];
-    TDChangeTracker* tracker = [[[TDChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester] autorelease];
+    TDChangeTracker* tracker = [[TDChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"foo"},
                                      {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
@@ -144,11 +161,11 @@ TestCase(TDChangeTracker_SSL) {
 
 TestCase(TDChangeTracker_Auth) {
     // This database requires authentication to access at all.
-    TDChangeTrackerTester* tester = [[[TDChangeTrackerTester alloc] init] autorelease];
+    TDChangeTrackerTester* tester = [[TDChangeTrackerTester alloc] init];
     NSURL* url = [NSURL URLWithString: @"https://dummy@snej.iriscouch.com/tdpuller_test2_auth"];
     addTemporaryCredential(url, @"snejdom", @"dummy", @"dummy");
 
-    TDChangeTracker* tracker = [[[TDChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester] autorelease];
+    TDChangeTracker* tracker = [[TDChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"something"},
                                      {@"changes", $array($dict({@"rev", @"1-967a00dff5e02add41819138abb3284d"}))}) );

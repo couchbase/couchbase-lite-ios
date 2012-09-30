@@ -24,7 +24,7 @@ extern NSString* TDReplicatorStoppedNotification;
 {
     @protected
     NSThread* _thread;
-    TDDatabase* _db;
+    TDDatabase* __weak _db;
     NSURL* _remote;
     TDReachability* _host;
     BOOL _continuous;
@@ -56,7 +56,7 @@ extern NSString* TDReplicatorStoppedNotification;
              push: (BOOL)push
        continuous: (BOOL)continuous;
 
-@property (readonly) TDDatabase* db;
+@property (weak, readonly) TDDatabase* db;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
 @property (readonly) BOOL continuous;
@@ -67,7 +67,7 @@ extern NSString* TDReplicatorStoppedNotification;
 /** Optional dictionary of headers to be added to all requests to remote servers. */
 @property (copy) NSDictionary* requestHeaders;
 
-@property (retain) id<TDAuthorizer> authorizer;
+@property (strong) id<TDAuthorizer> authorizer;
 
 /** Starts the replicator.
     Replicators run asynchronously so nothing will happen until later.
@@ -91,7 +91,7 @@ extern NSString* TDReplicatorStoppedNotification;
 /** Latest error encountered while replicating.
     This is set to nil when starting. It may also be set to nil by the client if desired.
     Not all errors are fatal; if .running is still true, the replicator will retry. */
-@property (retain, nonatomic) NSError* error;
+@property (strong, nonatomic) NSError* error;
 
 /** A unique-per-process string identifying this replicator instance. */
 @property (copy, nonatomic) NSString* sessionID;

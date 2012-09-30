@@ -50,7 +50,7 @@
 
 
 - (TDBlobStoreWriter*) attachmentWriter {
-    return [[[TDBlobStoreWriter alloc] initWithStore: _attachments] autorelease];
+    return [[TDBlobStoreWriter alloc] initWithStore: _attachments];
 }
 
 
@@ -343,14 +343,13 @@
             NSDictionary* attachment = attachments[name];
             NSDictionary* editedAttachment = block(name, attachment);
             if (!editedAttachment) {
-                [editedProperties release];
                 return NO;  // block canceled
             }
             if (editedAttachment != attachment) {
                 if (!editedProperties) {
                     // Make the document properties and _attachments dictionary mutable:
                     editedProperties = [properties mutableCopy];
-                    editedAttachments = [[attachments mutableCopy] autorelease];
+                    editedAttachments = [attachments mutableCopy];
                     editedProperties[@"_attachments"] = editedAttachments;
                 }
                 editedAttachments[name] = editedAttachment;
@@ -358,7 +357,7 @@
         }
     }
     if (editedProperties) {
-        rev.properties = [editedProperties autorelease];
+        rev.properties = editedProperties;
         return YES;
     }
     return NO;
@@ -383,7 +382,7 @@
         if (!stubItOut && !addFollows)
             return attachment;  // no change
         // Need to modify attachment entry:
-        NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+        NSMutableDictionary* editedAttachment = [attachment mutableCopy];
         [editedAttachment removeObjectForKey: @"data"];
         if (stubItOut) {
             // ...then remove the 'data' and 'follows' key:
@@ -416,7 +415,7 @@
                                                        error: &error];
             if (!fileData)
                 return nil;
-            NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+            NSMutableDictionary* editedAttachment = [attachment mutableCopy];
             [editedAttachment removeObjectForKey: @"follows"];
             editedAttachment[@"data"] = [TDBase64 encode: fileData];
             return editedAttachment;
@@ -444,8 +443,8 @@
         // Create a TDAttachment object:
         NSDictionary* attachInfo = revAttachments[name];
         NSString* contentType = $castIf(NSString, attachInfo[@"content_type"]);
-        TDAttachment* attachment = [[[TDAttachment alloc] initWithName: name
-                                                           contentType: contentType] autorelease];
+        TDAttachment* attachment = [[TDAttachment alloc] initWithName: name
+                                                           contentType: contentType];
 
         NSString* newContentsBase64 = $castIf(NSString, attachInfo[@"data"]);
         if (newContentsBase64) {
@@ -557,7 +556,7 @@
             [writer addFileURL: [self fileForAttachmentDict: attachment]];
         }
     }
-    return [writer autorelease];
+    return writer;
 }
 
 
@@ -573,9 +572,9 @@
     if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID))
         return nil;
 
-    TDRevision* oldRev = [[[TDRevision alloc] initWithDocID: docID
+    TDRevision* oldRev = [[TDRevision alloc] initWithDocID: docID
                                                       revID: oldRevID
-                                                    deleted: NO] autorelease];
+                                                    deleted: NO];
     if (oldRevID) {
         // Load existing revision if this is a replacement:
         *outStatus = [self loadRevisionBody: oldRev options: 0];
@@ -590,7 +589,7 @@
     }
 
     // Update the _attachments dictionary:
-    NSMutableDictionary* attachments = [[oldRev[@"_attachments"] mutableCopy] autorelease];
+    NSMutableDictionary* attachments = [oldRev[@"_attachments"] mutableCopy];
     if (!attachments)
         attachments = $mdict();
     if (body) {
@@ -615,7 +614,7 @@
         }
         [attachments removeObjectForKey: filename];
     }
-    NSMutableDictionary* properties = [[oldRev.properties mutableCopy] autorelease];
+    NSMutableDictionary* properties = [oldRev.properties mutableCopy];
     properties[@"_attachments"] = attachments;
     oldRev.properties = properties;
 

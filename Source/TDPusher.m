@@ -132,7 +132,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 
 - (void) stop {
-    setObj(&_uploaderQueue, nil);
+    _uploaderQueue = nil;
     _uploading = NO;
     [self stopObserving];
     [super stop];
@@ -211,11 +211,11 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                         if (!_dontSendMultipart && [self uploadMultipartRevision: rev])
                             return nil;
                     }
-                    [properties retain];  // (to survive impending autorelease-pool drain)
+                      // (to survive impending autorelease-pool drain)
                 }
                 lastInboxSequence = rev.sequence;
                 Assert(properties[@"_id"]);
-                return [properties autorelease];
+                return properties;
             }];
             
             // Post the revisions to the destination:
@@ -283,8 +283,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         if (attachment[@"follows"]) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
-                bodyStream = [[[TDMultipartWriter alloc] initWithContentType: @"multipart/related"
-                                                                      boundary: nil] autorelease];
+                bodyStream = [[TDMultipartWriter alloc] initWithContentType: @"multipart/related"
+                                                                      boundary: nil];
                 [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
                 // Use canonical JSON encoder so that _attachments keys will be written in the
                 // same order that this for loop is processing the attachments.
@@ -309,7 +309,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
     NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeID(rev.docID));
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    __block TDMultipartUploader* uploader = [[[TDMultipartUploader alloc]
+    __block TDMultipartUploader* uploader = [[TDMultipartUploader alloc]
                                   initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
                                requestHeaders: self.requestHeaders
@@ -335,7 +335,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                   _uploading = NO;
                   [self startNextUpload];
               }
-     ] autorelease];
+     ];
     uploader.authorizer = _authorizer;
     [self addRemoteRequest: uploader];
     LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);

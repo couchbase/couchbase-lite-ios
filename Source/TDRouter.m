@@ -55,13 +55,15 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     NSParameterAssert(request);
     self = [super init];
     if (self) {
-        _dbManager = [dbManager retain];
-        _request = [request retain];
+        _dbManager = dbManager;
+        _request = request;
         _response = [[TDResponse alloc] init];
         _local = YES;
         _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
             _longpoll = _changesIncludeDocs = _changesIncludeConflicts = NO;
+            _changesFilter = NULL;
+            _changesFilterParams = nil;
         }
     }
     return self;
@@ -75,7 +77,7 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
     NSParameterAssert(request);
     self = [self initWithDatabaseManager: nil request: request];
     if (self) {
-        _server = [server retain];
+        _server = server;
         _local = isLocal;
         _processRanges = YES;
     }
@@ -84,20 +86,6 @@ extern double TouchDBVersionNumber; // Defined in Xcode-generated TouchDB_vers.c
 
 - (void)dealloc {
     [self stopNow];
-    [_dbManager release];
-    [_server release];
-    [_request release];
-    [_response release];
-    [_queries release];
-    [_path release];
-    [_db release];
-    [_changesFilter release];
-    [_changesFilterParams release];
-    [_onAccessCheck release];
-    [_onResponseReady release];
-    [_onDataAvailable release];
-    [_onFinished release];
-    [super dealloc];
 }
 
 
@@ -263,7 +251,11 @@ static NSArray* splitPath( NSURL* url ) {
 #ifdef GNUSTEP
     NSString* pathString = [url pathWithEscapes];
 #else
+    #ifdef __OBJC_GC__
     NSString* pathString = NSMakeCollectable(CFURLCopyPath((CFURLRef)url));
+    #else
+    NSString* pathString = (__bridge_transfer NSString *)CFURLCopyPath((__bridge CFURLRef)url);
+    #endif
 #endif
     NSMutableArray* path = $marray();
     for (NSString* comp in [pathString componentsSeparatedByString: @"/"]) {
@@ -277,7 +269,6 @@ static NSArray* splitPath( NSURL* url ) {
         }
     }
 #ifndef GNUSTEP
-    [pathString release];
 #endif
     return path;
 }
@@ -307,7 +298,7 @@ static NSArray* splitPath( NSURL* url ) {
         } else if (!validName) {
             return kTDStatusBadID;
         } else {
-            _db = [[_dbManager databaseNamed: dbName] retain];
+            _db = [_dbManager databaseNamed: dbName];
             if (!_db)
                 return kTDStatusNotFound;
             [message appendString: @":"];
@@ -463,7 +454,7 @@ static NSArray* splitPath( NSURL* url ) {
     // Parse the header value into 'from' and 'to' range strings:
     static NSRegularExpression* regex;
     if (!regex)
-        regex = [$regex(@"^bytes=(\\d+)?-(\\d+)?$") retain];
+        regex = $regex(@"^bytes=(\\d+)?-(\\d+)?$");
     NSTextCheckingResult *match = [regex firstMatchInString: rangeHeader options: 0
                                                       range: NSMakeRange(0, rangeHeader.length)];
     if (!match) {
@@ -565,11 +556,10 @@ static NSArray* splitPath( NSURL* url ) {
             [output appendFormat: @"\n\t%@: %@", key, headers[key]];
         LogTo(TDRouter, @"%@", output);
     }
-    OnFinishedBlock onFinished = [_onFinished retain];
+    OnFinishedBlock onFinished = _onFinished;
     [self stopNow];
     if (onFinished)
         onFinished();
-    [onFinished release];
 }
 
 
@@ -596,7 +586,7 @@ static NSArray* splitPath( NSURL* url ) {
         [self run];
     } else {
         [_server tellDatabaseManager: ^(TDDatabaseManager* dbm) {
-            _dbManager = [dbm retain];
+            _dbManager = dbm;
             [self run];
         }];
     }
@@ -635,17 +625,10 @@ static NSArray* splitPath( NSURL* url ) {
     return self;
 }
 
-- (void)dealloc {
-    [_statusMsg release];
-    [_statusReason release];
-    [_headers release];
-    [_body release];
-    [super dealloc];
-}
 
 - (void) reset {
     [_headers removeAllObjects];
-    setObj(&_body, nil);
+    _body = nil;
 }
 
 @synthesize status=_status, internalStatus=_internalStatus, statusMsg=_statusMsg,
@@ -655,7 +638,7 @@ static NSArray* splitPath( NSURL* url ) {
     _internalStatus = internalStatus;
     NSString* statusMsg;
     self.status = TDStatusToHTTPStatus(internalStatus, &statusMsg);
-    setObjCopy(&_statusMsg, statusMsg);
+    _statusMsg = statusMsg;
     if (_status < 300) {
         if (!_body && !_headers[@"Content-Type"]) {
             self.body = [TDBody bodyWithJSON:
@@ -704,7 +687,7 @@ static NSArray* splitPath( NSURL* url ) {
 - (void) setMultipartBody: (NSArray*)parts type: (NSString*)type {
     TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: type
                                                                       boundary: nil];
-    for (id part in parts) {
+    for (__strong id part in parts) {
         if (![part isKindOfClass: [NSData class]]) {
             part = [TDJSON dataWithJSONObject: part options: 0 error: NULL];
             [mp setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
@@ -712,7 +695,6 @@ static NSArray* splitPath( NSURL* url ) {
         [mp addData: part];
     }
     [self setMultipartBody: mp];
-    [mp release];
 }
 
 @end

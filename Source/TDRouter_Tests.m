@@ -49,7 +49,7 @@ static TDResponse* SendRequest(TDDatabaseManager* server, NSString* method, NSSt
             CAssertNil(error);
         }
     }
-    TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    TDRouter* router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     __block TDResponse* response = nil;
     __block NSUInteger dataLength = 0;
@@ -69,7 +69,7 @@ static id ParseJSONResponse(TDResponse* response) {
     NSString* jsonStr = nil;
     id result = nil;
     if (json) {
-        jsonStr = [[[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding] autorelease];
+        jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
         CAssert(jsonStr);
         NSError* error;
         result = [TDJSON JSONObjectWithData: json options: 0 error: &error];
@@ -359,7 +359,7 @@ TestCase(TDRouter_ContinuousChanges) {
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kTDStatusCreated, nil);
 
     __block TDResponse* response = nil;
-    __block NSMutableData* body = [NSMutableData data];
+    __weak NSMutableData* body = [NSMutableData data];
     __block BOOL finished = NO;
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///db/_changes?feed=continuous"];
@@ -395,7 +395,6 @@ TestCase(TDRouter_ContinuousChanges) {
     CAssert(!finished);
     
     [router stop];
-    [router release];
     [server close];
 }
 
@@ -669,7 +668,7 @@ TestCase(TDRouter_AccessCheck) {
     NSURL* url = [NSURL URLWithString: @"touchdb:///db/"];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = @"GET";
-    TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    TDRouter* router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     __block BOOL calledOnAccessCheck = NO;
     router.onAccessCheck = ^TDStatus(TDDatabase* accessDB, NSString* docID, SEL action) {
@@ -681,7 +680,7 @@ TestCase(TDRouter_AccessCheck) {
     CAssert(calledOnAccessCheck);
     CAssert(router.response.status == 200);
     
-    router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     calledOnAccessCheck = NO;
     router.onAccessCheck = ^TDStatus(TDDatabase* accessDB, NSString* docID, SEL action) {

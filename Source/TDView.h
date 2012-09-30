@@ -64,7 +64,7 @@ typedef enum {
 @interface TDView : NSObject
 {
     @private
-    TDDatabase* _db;
+    TDDatabase* __weak _db;
     NSString* _name;
     int _viewID;
     TDMapBlock _mapBlock;
