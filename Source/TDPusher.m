@@ -214,31 +214,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 return [properties autorelease];
             }];
             
-            // Post the revisions to the destination. "new_edits":false means that the server should
-            // use the given _rev IDs instead of making up new ones.
-            NSUInteger numDocsToSend = docsToSend.count;
-            if (numDocsToSend > 0) {
-                LogTo(Sync, @"%@: Sending %u revisions", self, (unsigned)numDocsToSend);
-                LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
-                self.changesTotal += numDocsToSend;
-                [self asyncTaskStarted];
-                [self sendAsyncRequest: @"POST"
-                             path: @"/_bulk_docs"
-                             body: $dict({@"docs", docsToSend},
-                                         {@"new_edits", $false})
-                     onCompletion: ^(NSDictionary* response, NSError *error) {
-                         if (error) {
-                             self.error = error;
-                             [self revisionFailed];
-                         } else {
-                             LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
-                             self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
-                         }
-                         self.changesProcessed += numDocsToSend;
-                         [self asyncTasksFinished: 1];
-                     }
-                 ];
-            }
+            // Post the revisions to the destination:
+            [self uploadBulkDocs: docsToSend changes: changes lastSequence: lastInboxSequence];
             
         } else {
             // If none of the revisions are new to the remote, just bump the lastSequence:
@@ -246,6 +223,47 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         }
         [self asyncTasksFinished: 1];
     }];
+}
+
+
+// Post the revisions to the destination. "new_edits":false means that the server should
+// use the given _rev IDs instead of making up new ones.
+- (void) uploadBulkDocs: (NSArray*)docsToSend
+                changes: (TDRevisionList*)changes
+           lastSequence: (SequenceNumber)lastInboxSequence
+{
+    NSUInteger numDocsToSend = docsToSend.count;
+    if (numDocsToSend == 0)
+        return;
+    LogTo(Sync, @"%@: Sending %u revisions", self, (unsigned)numDocsToSend);
+    LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
+    self.changesTotal += numDocsToSend;
+    [self asyncTaskStarted];
+    [self sendAsyncRequest: @"POST"
+                      path: @"/_bulk_docs"
+                      body: $dict({@"docs", docsToSend},
+                                  {@"new_edits", $false})
+              onCompletion: ^(NSDictionary* response, NSError *error) {
+                  if (!error) {
+                      for (NSDictionary* item in response[@"docs"]) {
+                          if (item[@"error"]) {
+                              // One of the docs failed to save:
+                              Warn(@"%@: _bulk_docs got an error: %@", self, item);
+                              error = TDStatusToNSError(kTDStatusUpstreamError, nil);
+                          }
+                      }
+                  }
+                  if (error) {
+                      self.error = error;
+                      [self revisionFailed];
+                  } else {
+                      LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
+                      self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
+                  }
+                  self.changesProcessed += numDocsToSend;
+                  [self asyncTasksFinished: 1];
+              }
+     ];
 }
 
 
