@@ -53,8 +53,10 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (!_createTarget)
         return;
     LogTo(Sync, @"Remote db might not exist; creating it...");
+    _creatingTarget = YES;
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
+        _creatingTarget = NO;
         if (error && error.code != kTDStatusDuplicate) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
@@ -72,7 +74,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 - (void) beginReplicating {
     // If we're still waiting to create the remote db, do nothing now. (This method will be
     // re-invoked after that request finishes; see -maybeCreateRemoteDB above.)
-    if (_createTarget)
+    if (_creatingTarget)
         return;
     
     TDFilterBlock filter = self.filter;
