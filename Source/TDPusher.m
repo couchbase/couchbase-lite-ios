@@ -247,7 +247,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                                   {@"new_edits", $false})
               onCompletion: ^(NSDictionary* response, NSError *error) {
                   if (!error) {
-                      for (NSDictionary* item in response[@"docs"]) {
+                      // _bulk_docs response is really an array, not a dictionary!
+                      for (NSDictionary* item in $castIf(NSArray, response)) {
                           if (item[@"error"]) {
                               // One of the docs failed to save:
                               Warn(@"%@: _bulk_docs got an error: %@", self, item);
