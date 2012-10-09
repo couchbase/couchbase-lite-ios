@@ -112,6 +112,8 @@
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;
 - (void) databaseClosing;
+- (void) revisionFailed;    // subclasses call this if a transfer fails
+- (void) retry;
 
 - (void) reachabilityChanged: (TDReachability*)host;
 - (BOOL) goOffline;

@@ -19,8 +19,9 @@
 
 
 @protocol TDChangeTrackerClient <NSObject>
-- (void) changeTrackerReceivedChange: (NSDictionary*)change;
 @optional
+- (void) changeTrackerReceivedChange: (NSDictionary*)change;
+- (void) changeTrackerReceivedChanges: (NSArray*)changes;
 - (void) changeTrackerStopped: (TDChangeTracker*)tracker;
 @end
 
@@ -60,13 +61,13 @@ typedef enum TDChangeTrackerMode {
 @property (readonly, nonatomic) NSURL* databaseURL;
 @property (readonly, nonatomic) NSString* databaseName;
 @property (readonly) NSURL* changesFeedURL;
-@property (readonly, nonatomic) TDChangeTrackerMode mode;
 @property (readonly, copy, nonatomic) id lastSequenceID;
 @property (retain, nonatomic) NSError* error;
 @property (assign, nonatomic) id<TDChangeTrackerClient> client;
 @property (retain, nonatomic) NSDictionary *requestHeaders;
 @property (retain, nonatomic) id<TDAuthorizer> authorizer;
 
+@property (nonatomic) TDChangeTrackerMode mode;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
 @property (nonatomic) unsigned limit;
@@ -84,7 +85,7 @@ typedef enum TDChangeTrackerMode {
 @property (readonly) NSString* changesFeedPath;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
-- (NSInteger) receivedPollResponse: (NSData*)body;
+- (NSInteger) receivedPollResponse: (NSData*)body errorMessage: (NSString**)errorMessage;
 - (void) stopped; // override this
 
 @end

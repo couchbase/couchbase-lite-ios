@@ -27,8 +27,7 @@ struct StatusMapEntry {
 
 static const struct StatusMapEntry kStatusMap[] = {
     {kTDStatusNotFound,             404, @"not_found"},           // for compatibility with CouchDB
-    {kTDStatusDuplicate,            412, @"Already exists"},        // really 'Precondition Failed'
-    {kTDStatusUpstreamError,        502, @"Remote server error"},   // really 'Bad Gateway'
+    {kTDStatusDuplicate,            412, @"Already exists"},      // really 'Precondition Failed'
 
     {kTDStatusBadEncoding,          400, @"Bad data encoding"},
     {kTDStatusBadAttachment,        400, @"Invalid attachment"},
@@ -38,6 +37,7 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kTDStatusBadParam,             400, @"Invalid parameter in JSON body"},
     {kTDStatusDeleted,              404, @"deleted"},
 
+    {kTDStatusUpstreamError,        502, @"Invalid response from remote replication server"},
     {kTDStatusDBError,              500, @"Database error!"},
     {kTDStatusCorruptError,         500, @"Invalid data in database"},
     {kTDStatusAttachmentError,      500, @"Attachment store error"},

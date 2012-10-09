@@ -19,6 +19,7 @@
     NSMutableData* _buffer;
     NSMutableDictionary* _headers;
     int _state;
+    NSString* _error;
 }
 
 /** Initializes the reader.
@@ -35,7 +36,7 @@
 @property (readonly) BOOL finished;
 
 /** Was there a fatal parse error? */
-@property (readonly) BOOL failed;
+@property (readonly) NSString* error;
 
 /** The MIME headers of the part currently being parsed.
     You can call this from your -appendToPart and/or -finishedPart overrides. */

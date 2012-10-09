@@ -5,6 +5,13 @@
 //  Created by Jens Alfke on 1/16/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import <Foundation/Foundation.h>
 #import <TouchDB/TouchDB.h>
@@ -47,7 +54,7 @@ static NSString* GetServerPath() {
 
 
 static bool doReplicate( TDServer* server, const char* replArg,
-                        BOOL pull, BOOL createTarget,
+                        BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password)
 {
     NSURL* remote = [NSMakeCollectable(CFURLCreateWithBytes(NULL, (const UInt8*)replArg,
@@ -107,7 +114,7 @@ static bool doReplicate( TDServer* server, const char* replArg,
             return;
         }
         [db open];
-        repl = [db replicatorWithRemoteURL: remote push: !pull continuous: NO];
+        repl = [db replicatorWithRemoteURL: remote push: !pull continuous: continuous];
         if (createTarget && !pull)
             ((TDPusher*)repl).createTarget = YES;
         if (!repl)
@@ -129,7 +136,7 @@ int main (int argc, const char * argv[])
 
         TDDatabaseManagerOptions options = kTDDatabaseManagerDefaultOptions;
         const char* replArg = NULL, *user = NULL, *password = NULL;
-        BOOL auth = NO, pull = NO, createTarget = NO;
+        BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
         
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
@@ -143,6 +150,8 @@ int main (int argc, const char * argv[])
                 replArg = argv[++i];
             } else if (strcmp(argv[i], "--create-target") == 0) {
                 createTarget = YES;
+            } else if (strcmp(argv[i], "--continuous") == 0) {
+                continuous = YES;
             } else if (strcmp(argv[i], "--user") == 0) {
                 user = argv[++i];
             } else if (strcmp(argv[i], "--password") == 0) {
@@ -179,7 +188,7 @@ int main (int argc, const char * argv[])
         [listener start];
         
         if (replArg) {
-            if (!doReplicate(server, replArg, pull, createTarget, user, password))
+            if (!doReplicate(server, replArg, pull, createTarget, continuous, user, password))
                 return 1;
         } else {
             Log(@"TouchServ %@ is listening%@ on port %d ... relax!",

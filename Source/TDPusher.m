@@ -53,8 +53,10 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (!_createTarget)
         return;
     LogTo(Sync, @"Remote db might not exist; creating it...");
+    _creatingTarget = YES;
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
+        _creatingTarget = NO;
         if (error && error.code != kTDStatusDuplicate) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
@@ -72,7 +74,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 - (void) beginReplicating {
     // If we're still waiting to create the remote db, do nothing now. (This method will be
     // re-invoked after that request finishes; see -maybeCreateRemoteDB above.)
-    if (_createTarget)
+    if (_creatingTarget)
         return;
     
     TDFilterBlock filter = self.filter;
@@ -90,7 +92,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
-    if (_continuous) {
+    if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: TDDatabaseChangeNotification object: _db];
@@ -107,12 +109,23 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     }
 }
 
+
+- (void) retry {
+    // This is called if I've gone idle but some revisions failed to be pushed.
+    // I should start the _changes feed over again, so I can retry all the revisions.
+    [super retry];
+
+    [self beginReplicating];
+}
+
+
 - (BOOL) goOffline {
     if (![super goOffline])
         return NO;
     [self stopObserving];
     return YES;
 }
+
 
 - (void) stop {
     setObj(&_uploaderQueue, nil);
@@ -155,6 +168,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
               onCompletion:^(NSDictionary* results, NSError* error) {
         if (error) {
             self.error = error;
+            [self revisionFailed];
             [self stop];
         } else if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
@@ -177,6 +191,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 #endif
                     if ([_db loadRevisionBody: rev options: options] >= 300) {
                         Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                        [self revisionFailed];
                         return nil;
                     }
                     properties = rev.properties;
@@ -201,30 +216,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 return [properties autorelease];
             }];
             
-            // Post the revisions to the destination. "new_edits":false means that the server should
-            // use the given _rev IDs instead of making up new ones.
-            NSUInteger numDocsToSend = docsToSend.count;
-            if (numDocsToSend > 0) {
-                LogTo(Sync, @"%@: Sending %u revisions", self, (unsigned)numDocsToSend);
-                LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
-                self.changesTotal += numDocsToSend;
-                [self asyncTaskStarted];
-                [self sendAsyncRequest: @"POST"
-                             path: @"/_bulk_docs"
-                             body: $dict({@"docs", docsToSend},
-                                         {@"new_edits", $false})
-                     onCompletion: ^(NSDictionary* response, NSError *error) {
-                         if (error) {
-                             self.error = error;
-                         } else {
-                             LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
-                             self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
-                         }
-                         self.changesProcessed += numDocsToSend;
-                         [self asyncTasksFinished: 1];
-                     }
-                 ];
-            }
+            // Post the revisions to the destination:
+            [self uploadBulkDocs: docsToSend changes: changes lastSequence: lastInboxSequence];
             
         } else {
             // If none of the revisions are new to the remote, just bump the lastSequence:
@@ -232,6 +225,48 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         }
         [self asyncTasksFinished: 1];
     }];
+}
+
+
+// Post the revisions to the destination. "new_edits":false means that the server should
+// use the given _rev IDs instead of making up new ones.
+- (void) uploadBulkDocs: (NSArray*)docsToSend
+                changes: (TDRevisionList*)changes
+           lastSequence: (SequenceNumber)lastInboxSequence
+{
+    NSUInteger numDocsToSend = docsToSend.count;
+    if (numDocsToSend == 0)
+        return;
+    LogTo(Sync, @"%@: Sending %u revisions", self, (unsigned)numDocsToSend);
+    LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
+    self.changesTotal += numDocsToSend;
+    [self asyncTaskStarted];
+    [self sendAsyncRequest: @"POST"
+                      path: @"/_bulk_docs"
+                      body: $dict({@"docs", docsToSend},
+                                  {@"new_edits", $false})
+              onCompletion: ^(NSDictionary* response, NSError *error) {
+                  if (!error) {
+                      // _bulk_docs response is really an array, not a dictionary!
+                      for (NSDictionary* item in $castIf(NSArray, response)) {
+                          if (item[@"error"]) {
+                              // One of the docs failed to save:
+                              Warn(@"%@: _bulk_docs got an error: %@", self, item);
+                              error = TDStatusToNSError(kTDStatusUpstreamError, nil);
+                          }
+                      }
+                  }
+                  if (error) {
+                      self.error = error;
+                      [self revisionFailed];
+                  } else {
+                      LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
+                      self.lastSequence = $sprintf(@"%lld", lastInboxSequence);
+                  }
+                  self.changesProcessed += numDocsToSend;
+                  [self asyncTasksFinished: 1];
+              }
+     ];
 }
 
 
@@ -279,6 +314,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                                  onCompletion: ^(id response, NSError *error) {
                   if (error) {
                       self.error = error;
+                      [self revisionFailed];
                   } else {
                       LogTo(SyncVerbose, @"%@: Sent %@, response=%@", self, rev, response);
                       self.lastSequence = $sprintf(@"%lld", rev.sequence);

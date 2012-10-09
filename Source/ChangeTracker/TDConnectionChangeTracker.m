@@ -225,26 +225,17 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     NSData* input = [_inputBuffer retain];
     LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
     BOOL restart = NO;
-    NSInteger numChanges = [self receivedPollResponse: input];
+    NSString* errorMessage = nil;
+    NSInteger numChanges = [self receivedPollResponse: input errorMessage: &errorMessage];
     if (numChanges < 0) {
         // Oops, unparseable response:
-        if (_mode == kLongPoll && [input isEqualToData: [@"{\"results\":[\n"
-                                                        dataUsingEncoding: NSUTF8StringEncoding]]) {
-            // Looks like the connection got closed by a proxy (like AWS' load balancer) before
-            // the server had an actual change to send.
-            NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
-            Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
-            if (elapsed >= 30.0 && elapsed < _heartbeat) {
-                self.heartbeat = elapsed * 0.75;
-                restart = YES;
-            }
-        }
+        restart = [self checkInvalidResponse: input];
         if (!restart)
-            [self setUpstreamError: @"Unparseable server response"];
+            [self setUpstreamError: errorMessage];
     } else {
         // Poll again if there was no error, and either we're in longpoll mode or it looks like we
         // ran out of changes due to a _limit rather than because we hit the end.
-        restart = (numChanges > 0 && (_mode == kLongPoll || numChanges == (NSInteger)_limit));
+        restart = _mode == kLongPoll || numChanges == (NSInteger)_limit;
     }
     [input release];
     
@@ -255,6 +246,28 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     else
         [self stopped];
 }
+
+- (BOOL) checkInvalidResponse: (NSData*)body {
+    NSString* bodyStr = [[body my_UTF8ToString] stringByTrimmingCharactersInSet:
+                                              [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (_mode == kLongPoll && $equal(bodyStr, @"{\"results\":[")) {
+        // Looks like the connection got closed by a proxy (like AWS' load balancer) before
+        // the server had an actual change to send.
+        NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
+        Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
+        if (elapsed >= 30.0) {
+            self.heartbeat = MIN(_heartbeat, elapsed * 0.75);
+            return YES;  // should restart connection
+        }
+    } else if (bodyStr) {
+        Warn(@"%@: Unparseable response:\n%@", self, bodyStr);
+    } else {
+        Warn(@"%@: Response is invalid UTF-8; as CP1252:\n%@", self,
+             [[[NSString alloc] initWithData: body encoding: NSWindowsCP1252StringEncoding] autorelease]);
+    }
+    return NO;
+}
+
 
 @end
 
