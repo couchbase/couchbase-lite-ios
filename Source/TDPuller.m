@@ -212,7 +212,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         _caughtUp = YES;
         if (_continuous)
             _changeTracker.mode = kLongPoll;
-        [self asyncTasksFinished: 1];  // balances task begun in beginReplicating
+        [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
     }
 }
 
@@ -237,6 +237,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_batcher flushAll];
     if (!_continuous)
         [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
+    if (!_caughtUp)
+        [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
 }
 
 
