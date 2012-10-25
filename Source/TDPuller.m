@@ -121,6 +121,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         [_changeTracker stop];
         if (!_continuous)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
+        if (!_caughtUp)
+            [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
     }
     setObj(&_changeTracker, nil);
     setObj(&_revsToPull, nil);
@@ -212,7 +214,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         _caughtUp = YES;
         if (_continuous)
             _changeTracker.mode = kLongPoll;
-        [self asyncTasksFinished: 1];  // balances task begun in beginReplicating
+        [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
     }
 }
 
@@ -237,6 +239,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_batcher flushAll];
     if (!_continuous)
         [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
+    if (!_caughtUp)
+        [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
 }
 
 
@@ -302,7 +306,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Start up some HTTP GETs, within our limit on the maximum simultaneous number
 - (void) pullRemoteRevisions {
-    while (_httpConnectionCount < kMaxOpenHTTPConnections) {
+    while (_db && _httpConnectionCount < kMaxOpenHTTPConnections) {
         NSUInteger nBulk = MIN(_bulkRevsToPull.count, kMaxRevsToGetInBulk);
         if (nBulk == 1) {
             // Rather than pulling a single revision in 'bulk', just pull it normally:

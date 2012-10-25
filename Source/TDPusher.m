@@ -97,6 +97,10 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: TDDatabaseChangeNotification object: _db];
     }
+
+#ifdef GNUSTEP    // TODO: Multipart upload on GNUstep
+    _dontSendMultipart = YES;
+#endif
 }
 
 
@@ -178,17 +182,15 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                 NSDictionary* properties;
                 @autoreleasepool {
                     // Is this revision in the server's 'missing' list?
-                    NSDictionary* revResults = results[[rev docID]];
+                    NSDictionary* revResults = results[rev.docID];
                     NSArray* missing = revResults[@"missing"];
                     if (![missing containsObject: [rev revID]])
                         return nil;
                     
                     // Get the revision's properties:
-                    TDContentOptions options = kTDIncludeAttachments | kTDIncludeRevs
-                                                                     | kTDBigAttachmentsFollow;
-#ifdef GNUSTEP
-                    options &= ~kTDBigAttachmentsFollow;    // TODO: Multipart upload on GNUstep
-#endif
+                    TDContentOptions options = kTDIncludeAttachments | kTDIncludeRevs;
+                    if (!_dontSendMultipart)
+                        options |= kTDBigAttachmentsFollow;
                     if ([_db loadRevisionBody: rev options: options] >= 300) {
                         Warn(@"%@: Couldn't get local contents of %@", self, rev);
                         [self revisionFailed];
@@ -206,7 +208,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                                        attachmentsFollow: NO];
                         properties = rev.properties;
                         // If the rev has huge attachments, send it under separate cover:
-                        if ([self uploadMultipartRevision: rev])
+                        if (!_dontSendMultipart && [self uploadMultipartRevision: rev])
                             return nil;
                     }
                     [properties retain];  // (to survive impending autorelease-pool drain)
@@ -313,8 +315,15 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                                requestHeaders: self.requestHeaders
                                  onCompletion: ^(id response, NSError *error) {
                   if (error) {
-                      self.error = error;
-                      [self revisionFailed];
+                      if ($equal(error.domain, TDHTTPErrorDomain)
+                                && error.code == kTDStatusUnsupportedType) {
+                          // Server doesn't like multipart, eh? Fall back to JSON.
+                          _dontSendMultipart = YES;
+                          [self uploadJSONRevision: rev];
+                      } else {
+                          self.error = error;
+                          [self revisionFailed];
+                      }
                   } else {
                       LogTo(SyncVerbose, @"%@: Sent %@, response=%@", self, rev, response);
                       self.lastSequence = $sprintf(@"%lld", rev.sequence);
@@ -335,6 +344,35 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     [_uploaderQueue addObject: uploader];
     [self startNextUpload];
     return YES;
+}
+
+
+// Fallback to upload a revision if uploadMultipartRevision failed due to the server's rejecting
+// multipart format.
+- (void) uploadJSONRevision: (TDRevision*)rev {
+    // Get the revision's properties:
+    NSError* error;
+    if (![_db inlineFollowingAttachmentsIn: rev error: &error]) {
+        self.error = error;
+        [self revisionFailed];
+        return;
+    }
+
+    [self asyncTaskStarted];
+    NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeID(rev.docID));
+    [self sendAsyncRequest: @"PUT"
+                      path: path
+                      body: rev.properties
+              onCompletion: ^(id response, NSError *error) {
+                  if (error) {
+                      self.error = error;
+                      [self revisionFailed];
+                  } else {
+                      LogTo(SyncVerbose, @"%@: Sent %@ (JSON), response=%@", self, rev, response);
+                      self.lastSequence = $sprintf(@"%lld", rev.sequence);
+                  }
+                  [self asyncTasksFinished: 1];
+              }];
 }
 
 

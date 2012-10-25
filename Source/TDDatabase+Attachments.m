@@ -322,50 +322,103 @@
 }
 
 
+// Calls the block on every attachment dictionary. The block can return a different dictionary,
+// which will be replaced in the rev's properties. If it returns nil, the operation aborts.
+// Returns YES if any changes were made.
++ (BOOL) mutateAttachmentsIn: (TDRevision*)rev
+                   withBlock: (NSDictionary*(^)(NSString*, NSDictionary*))block
+{
+    NSDictionary* properties = rev.properties;
+    NSMutableDictionary* editedProperties = nil;
+    NSDictionary* attachments = (id)properties[@"_attachments"];
+    NSMutableDictionary* editedAttachments = nil;
+    for (NSString* name in attachments) {
+        @autoreleasepool {
+            NSDictionary* attachment = attachments[name];
+            NSDictionary* editedAttachment = block(name, attachment);
+            if (!editedAttachment) {
+                [editedProperties release];
+                return NO;  // block canceled
+            }
+            if (editedAttachment != attachment) {
+                if (!editedProperties) {
+                    // Make the document properties and _attachments dictionary mutable:
+                    editedProperties = [properties mutableCopy];
+                    editedAttachments = [[attachments mutableCopy] autorelease];
+                    editedProperties[@"_attachments"] = editedAttachments;
+                }
+                editedAttachments[name] = editedAttachment;
+            }
+        }
+    }
+    if (editedProperties) {
+        rev.properties = [editedProperties autorelease];
+        return YES;
+    }
+    return NO;
+}
+
+
+// Replaces attachment data whose revpos is < minRevPos with stubs.
+// If attachmentsFollow==YES, replaces data with "follows" key.
 + (void) stubOutAttachmentsIn: (TDRevision*)rev
                  beforeRevPos: (int)minRevPos
             attachmentsFollow: (BOOL)attachmentsFollow
 {
     if (minRevPos <= 1 && !attachmentsFollow)
         return;
-    NSDictionary* properties = rev.properties;
-    NSMutableDictionary* editedProperties = nil;
-    NSDictionary* attachments = (id)properties[@"_attachments"];
-    NSMutableDictionary* editedAttachments = nil;
-    for (NSString* name in attachments) {
-        NSDictionary* attachment = attachments[name];
+    [self mutateAttachmentsIn: rev
+                    withBlock: ^NSDictionary *(NSString *name, NSDictionary *attachment) {
         int revPos = [attachment[@"revpos"] intValue];
         bool includeAttachment = (revPos == 0 || revPos >= minRevPos);
         bool stubItOut = !includeAttachment && !attachment[@"stub"];
         bool addFollows = includeAttachment && attachmentsFollow
                                             && !attachment[@"follows"];
-        if (stubItOut || addFollows) {
-            // Need to modify attachment entry:
-            if (!editedProperties) {
-                // Make the document properties and _attachments dictionary mutable:
-                editedProperties = [[properties mutableCopy] autorelease];
-                editedAttachments = [[attachments mutableCopy] autorelease];
-                editedProperties[@"_attachments"] = editedAttachments;
-            }
-            NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
-            [editedAttachment removeObjectForKey: @"data"];
-            if (stubItOut) {
-                // ...then remove the 'data' and 'follows' key:
-                [editedAttachment removeObjectForKey: @"follows"];
-                editedAttachment[@"stub"] = $true;
-                LogTo(SyncVerbose, @"Stubbed out attachment %@/'%@': revpos %d < %d",
-                      rev, name, revPos, minRevPos);
-            } else if (addFollows) {
-                [editedAttachment removeObjectForKey: @"stub"];
-                editedAttachment[@"follows"] = $true;
-                LogTo(SyncVerbose, @"Added 'follows' for attachment %@/'%@': revpos %d >= %d",
-                      rev, name, revPos, minRevPos);
-            }
-            editedAttachments[name] = editedAttachment;
+        if (!stubItOut && !addFollows)
+            return attachment;  // no change
+        // Need to modify attachment entry:
+        NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+        [editedAttachment removeObjectForKey: @"data"];
+        if (stubItOut) {
+            // ...then remove the 'data' and 'follows' key:
+            [editedAttachment removeObjectForKey: @"follows"];
+            editedAttachment[@"stub"] = $true;
+            LogTo(SyncVerbose, @"Stubbed out attachment %@/'%@': revpos %d < %d",
+                  rev, name, revPos, minRevPos);
+        } else if (addFollows) {
+            [editedAttachment removeObjectForKey: @"stub"];
+            editedAttachment[@"follows"] = $true;
+            LogTo(SyncVerbose, @"Added 'follows' for attachment %@/'%@': revpos %d >= %d",
+                  rev, name, revPos, minRevPos);
         }
-    }
-    if (editedProperties)
-        rev.properties = editedProperties;
+        return editedAttachment;
+    }];
+}
+
+
+// Replaces the "follows" key with the real attachment data in all attachments to 'doc'.
+- (BOOL) inlineFollowingAttachmentsIn: (TDRevision*)rev error: (NSError**)outError {
+    __block NSError *error = nil;
+    [[self class] mutateAttachmentsIn: rev
+                            withBlock:
+        ^NSDictionary *(NSString *name, NSDictionary *attachment) {
+            if (!attachment[@"follows"])
+                return attachment;
+            NSURL* fileURL = [self fileForAttachmentDict: attachment];
+            NSData* fileData = [NSData dataWithContentsOfURL: fileURL
+                                                     options: NSDataReadingMappedIfSafe
+                                                       error: &error];
+            if (!fileData)
+                return nil;
+            NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+            [editedAttachment removeObjectForKey: @"follows"];
+            editedAttachment[@"data"] = [TDBase64 encode: fileData];
+            return editedAttachment;
+        }
+     ];
+    if (outError)
+        *outError = error;
+    return (error == nil);
 }
 
 
