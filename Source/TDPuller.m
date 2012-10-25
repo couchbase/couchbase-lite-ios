@@ -306,7 +306,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Start up some HTTP GETs, within our limit on the maximum simultaneous number
 - (void) pullRemoteRevisions {
-    while (_httpConnectionCount < kMaxOpenHTTPConnections) {
+    while (_db && _httpConnectionCount < kMaxOpenHTTPConnections) {
         NSUInteger nBulk = MIN(_bulkRevsToPull.count, kMaxRevsToGetInBulk);
         if (nBulk == 1) {
             // Rather than pulling a single revision in 'bulk', just pull it normally:
