@@ -73,10 +73,12 @@
     TDRevision* rev = [[[self class] alloc] initWithDocID: _docID revID: _revID deleted: _deleted];
     rev->_body = [_body copy];
     rev->_sequence = _sequence;
+    rev->_missing = _missing;
     return rev;
 }
 
-@synthesize docID=_docID, revID=_revID, deleted=_deleted, body=_body, sequence=_sequence;
+@synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing,
+            body=_body, sequence=_sequence;
 
 - (unsigned) generation {
     return [[self class] generationFromRevID: _revID];

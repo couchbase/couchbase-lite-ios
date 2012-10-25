@@ -10,12 +10,20 @@
 @class TDDatabase, TDReplicatorManager;
 
 
+typedef struct TDDatabaseManagerOptions {
+    bool readOnly;
+    bool noReplicator;
+} TDDatabaseManagerOptions;
+
+extern const TDDatabaseManagerOptions kTDDatabaseManagerDefaultOptions;
+
+
 /** Manages a directory containing TDDatabases. */
 @interface TDDatabaseManager : NSObject 
 {
     @private
     NSString* _dir;
-    BOOL _readOnly;
+    TDDatabaseManagerOptions _options;
     NSMutableDictionary* _databases;
     TDReplicatorManager* _replicatorManager;
 }
@@ -24,11 +32,11 @@
 
 + (NSString*) defaultDirectory;
 
-- (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
+- (id) initWithDirectory: (NSString*)dirPath
+                 options: (const TDDatabaseManagerOptions*)options
+                   error: (NSError**)outError;
 
 @property (readonly) NSString* directory;
-
-@property (nonatomic) BOOL readOnly;
 
 - (TDDatabase*) databaseNamed: (NSString*)name;
 - (TDDatabase*) existingDatabaseNamed: (NSString*)name;

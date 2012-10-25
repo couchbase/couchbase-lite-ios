@@ -272,6 +272,7 @@ int main (int argc, const char * argv[]) {
     }
     _syncStatusView.intValue = value;
     _syncStatusView.toolTip = tooltip;
+    NSLog(@"SYNC status: %d, %@", value, tooltip);
 #endif
 }
 
@@ -281,6 +282,7 @@ int main (int argc, const char * argv[]) {
                          change:(NSDictionary *)change context:(void *)context
 {
     TouchReplication* repl = object;
+    NSLog(@"SYNC mode=%d", repl.mode);
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
             unsigned completed = _pull.completed + _push.completed;
@@ -297,6 +299,7 @@ int main (int argc, const char * argv[]) {
     } else if ([keyPath isEqualToString: @"error"]) {
         [self updateSyncStatusView];
         if (repl.error) {
+            NSLog(@"SYNC error: %@", repl.error);
             NSAlert* alert = [NSAlert alertWithMessageText: @"Replication failed"
                                              defaultButton: nil
                                            alternateButton: nil

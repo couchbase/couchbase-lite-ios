@@ -6,8 +6,7 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-@class TDDatabase, TDDatabaseManager;
+#import "TDDatabaseManager.h"
 
 
 /** Thread-safe top-level interface to TouchDB API.
@@ -22,6 +21,10 @@
 }
 
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
+
+- (id) initWithDirectory: (NSString*)dirPath
+                 options: (const TDDatabaseManagerOptions*)options
+                   error: (NSError**)outError;
 
 @property (readonly) NSString* directory;
 

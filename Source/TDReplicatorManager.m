@@ -51,6 +51,10 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     if (self) {
         _dbManager = dbManager;
         _replicatorDB = [[dbManager databaseNamed: kTDReplicatorDatabaseName] retain];
+        if (!_replicatorDB) {
+            [self release];
+            return nil;
+        }
         Assert(_replicatorDB);
     }
     return self;
@@ -280,10 +284,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         
         if (status == kTDStatusConflict) {
             // Conflict -- doc has been updated, get the latest revision & try again:
+            TDStatus status2;
             currentRev = [_replicatorDB getDocumentWithID: currentRev.docID
-                                               revisionID: nil options: 0];
+                                               revisionID: nil options: 0
+                                                   status: &status2];
             if (!currentRev)
-                status = kTDStatusNotFound;   // doc's been deleted, apparently
+                status = status2;
         }
     } while (status == kTDStatusConflict);
     
@@ -303,7 +309,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         state = @"completed";
     
     NSMutableDictionary* update = $mdict({@"_replication_id", repl.sessionID});
-    if (!$equal(state, (rev.properties)[@"_replication_state"])) {
+    if (!$equal(state, rev[@"_replication_state"])) {
         update[@"_replication_state"] = state;
         update[@"_replication_state_time"] = @(time(NULL));
     }
@@ -366,7 +372,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 // A replication document has been changed:
 - (void) processUpdate: (TDRevision*)rev {
-    if (!(rev.properties)[@"_replication_state"]) {
+    if (!rev[@"_replication_state"]) {
         // Client deleted the _replication_state property; restart the replicator:
         LogTo(Sync, @"ReplicatorManager: Restarting replicator for %@", rev);
         TDReplicator* repl = _replicatorsByDocID[rev.docID];
@@ -459,7 +465,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     NSString* docID = [self docIDForReplicator: repl];
     if (!docID)
         return;  // If it's not a persistent replicator
-    TDRevision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil options: 0];
+    TDRevision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
     
     [self updateDoc: rev forReplicator: repl];
     

@@ -36,8 +36,8 @@
 - (id) initWithRouter: (TDRouter*)router forConnection:(TDHTTPConnection*)connection {
     self = [super init];
     if (self) {
-        EnableLog(YES);
-        EnableLogTo(TDListenerVerbose, YES);
+        //EnableLog(YES);
+        //EnableLogTo(TDListenerVerbose, YES);
         _router = [router retain];
         _connection = connection;
         router.onResponseReady = ^(TDResponse* r) {
@@ -53,9 +53,15 @@
         if (connection.listener.readOnly) {
             router.onAccessCheck = ^TDStatus(TDDatabase* db, NSString* docID, SEL action) {
                 NSString* method = router.request.HTTPMethod;
-                if (![method isEqualToString: @"GET"] && ![method isEqualToString: @"HEAD"])
-                    return kTDStatusForbidden;
-                return kTDStatusOK;
+                if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"])
+                    return kTDStatusOK;
+                if ([method isEqualToString: @"POST"]) {
+                    NSString* actionStr = NSStringFromSelector(action);
+                    if ([actionStr isEqualToString: @"do_POST_all_docs:"]
+                            || [actionStr isEqualToString: @"do_POST_revs_diff:"])
+                        return kTDStatusOK;
+                }
+                return kTDStatusForbidden;
             };
         }
         

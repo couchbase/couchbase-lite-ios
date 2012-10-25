@@ -20,6 +20,9 @@
 #import "TDMisc.h"
 
 
+const TDDatabaseManagerOptions kTDDatabaseManagerDefaultOptions;
+
+
 @implementation TDDatabaseManager
 
 
@@ -41,7 +44,9 @@ static NSCharacterSet* kIllegalNameChars;
 + (TDDatabaseManager*) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
-    TDDatabaseManager* dbm = [[self alloc] initWithDirectory: path error: &error];
+    TDDatabaseManager* dbm = [[self alloc] initWithDirectory: path
+                                                     options: NULL
+                                                       error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
     return [dbm autorelease];
@@ -64,12 +69,16 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError {
+- (id) initWithDirectory: (NSString*)dirPath
+                 options: (const TDDatabaseManagerOptions*)options
+                   error: (NSError**)outError
+{
     if (outError) *outError = nil;
     self = [super init];
     if (self) {
         _dir = [dirPath copy];
         _databases = [[NSMutableDictionary alloc] init];
+        _options = options ? *options : kTDDatabaseManagerDefaultOptions;
         
         // Create the directory but don't fail if it already exists:
         NSError* error;
@@ -97,7 +106,7 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-@synthesize directory = _dir, readOnly=_readOnly;
+@synthesize directory = _dir;
 
 
 #pragma mark - DATABASES:
@@ -120,13 +129,15 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (TDDatabase*) databaseNamed: (NSString*)name create: (BOOL)create {
+    if (_options.readOnly)
+        create = NO;
     TDDatabase* db = _databases[name];
     if (!db) {
         NSString* path = [self pathForName: name];
         if (!path)
             return nil;
         db = [[TDDatabase alloc] initWithPath: path];
-        db.readOnly = _readOnly;
+        db.readOnly = _options.readOnly;
         if (!create && !db.exists) {
             [db release];
             return nil;
@@ -175,15 +186,6 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (TDReplicatorManager*) replicatorManager {
-    if (!_replicatorManager) {
-        _replicatorManager = [[TDReplicatorManager alloc] initWithDatabaseManager: self];
-        [_replicatorManager start];
-    }
-    return _replicatorManager;
-}
-
-
 - (void) close {
     LogTo(TDServer, @"CLOSE %@", self);
     [_replicatorManager stop];
@@ -193,6 +195,15 @@ static NSCharacterSet* kIllegalNameChars;
         [db close];
     }
     [_databases removeAllObjects];
+}
+
+
+- (TDReplicatorManager*) replicatorManager {
+    if (!_replicatorManager && !_options.noReplicator) {
+        _replicatorManager = [[TDReplicatorManager alloc] initWithDatabaseManager: self];
+        [_replicatorManager start];
+    }
+    return _replicatorManager;
 }
 
 

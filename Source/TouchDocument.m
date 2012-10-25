@@ -108,7 +108,8 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 
 - (TouchRevision*) revisionWithID: (NSString*)revID  {
     return [self revisionFromRev: [_database.tddb getDocumentWithID: _docID revisionID: revID
-                                                            options: 0]];
+                                                            options: 0
+                                                             status: NULL]];
 }
 
 

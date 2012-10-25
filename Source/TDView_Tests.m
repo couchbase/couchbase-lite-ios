@@ -363,7 +363,7 @@ TestCase(TDView_AllDocsQuery) {
                               {@"total_rows", @2},
                               {@"offset", @0}));
 
-    // Get specific documents:
+    // Get zero specific documents:
     options = kDefaultTDQueryOptions;
     options.keys = @[];
     query = [db getAllDocs: &options];
@@ -373,11 +373,31 @@ TestCase(TDView_AllDocsQuery) {
     
     // Get specific documents:
     options = kDefaultTDQueryOptions;
-    options.keys = @[(expectedRow[2])[@"id"]];
+    options.keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
     query = [db getAllDocs: &options];
-    CAssertEqual(query, $dict({@"rows", $array(expectedRow[2])},
-                              {@"total_rows", $object(1)},
-                              {@"offset", $object(0)}));
+    CAssertEqual(query, $dict({@"rows", @[expectedRow[2], expectedRow[3]]},
+                              {@"total_rows", @2},
+                              {@"offset", @0}));
+
+    // Delete a document:
+    TDRevision* del = docs[0];
+    del = [[[TDRevision alloc] initWithDocID: del.docID revID: del.revID deleted: YES] autorelease];
+    TDStatus status;
+    del = [db putRevision: del prevRevisionID: del.revID allowConflict: NO status: &status];
+    CAssertEq(status, kTDStatusOK);
+
+    // Get deleted doc, and one bogus one:
+    options = kDefaultTDQueryOptions;
+    options.keys = @[@"BOGUS", expectedRow[0][@"id"]];
+    query = [db getAllDocs: &options];
+    CAssertEqual(query, $dict({@"rows", @[$dict({@"key",  @"BOGUS"},
+                                                {@"error", @"not_found"}),
+                                          $dict({@"id",  del.docID},
+                                                {@"key", del.docID},
+                                                {@"value", $dict({@"rev", del.revID},
+                                                                 {@"deleted", $true})}) ]},
+                              {@"total_rows", @2},
+                              {@"offset", @0}));
 }
 
 
@@ -614,7 +634,7 @@ TestCase(TDView_LinkedDocs) {
     NSDictionary* docs[5];
     int i = 0;
     for (TDRevision* rev in revs) {
-        docs[i++] = [db getDocumentWithID: rev.docID revisionID: rev.revID options: 0].properties;
+        docs[i++] = [db getDocumentWithID: rev.docID revisionID: rev.revID].properties;
     }
 
     TDView* view = [db viewNamed: @"linkview"];

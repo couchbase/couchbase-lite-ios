@@ -201,7 +201,7 @@ TestCase(TDRouter_Docs) {
     revID = result[@"rev"];
     CAssert([revID hasPrefix: @"3-"]);
 
-    Send(server, @"GET", @"/db/doc1", kTDStatusNotFound, nil);
+    Send(server, @"GET", @"/db/doc1", kTDStatusDeleted, nil);
     
     // _changes:
     Send(server, @"GET", @"/db/_changes", kTDStatusOK,
@@ -451,7 +451,7 @@ TestCase(TDRouter_GetAttachment) {
     // Get the document with attachment data:
     response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil, nil);
     CAssertEq(response.status, kTDStatusOK);
-    CAssertEqual((response.body.properties)[@"_attachments"],
+    CAssertEqual((response.body)[@"_attachments"],
                  $dict({@"attach", $dict({@"data", [TDBase64 encode: attach1]}, 
                                         {@"content_type", @"text/plain"},
                                         {@"length", @(attach1.length)},
@@ -639,6 +639,24 @@ TestCase(TDRouter_RevsDiff) {
                                     {@"possible_ancestors", @[doc3r1ID]})},
                    {@"99999", $dict({@"missing", @[@"6-six"]})}
                    ));
+
+    // Check the revision history using _revs_info:
+    Send(server, @"GET", @"/db/11111?revs_info=true", 200,
+          @{ @"_id" : @"11111", @"_rev": doc1r3ID,
+             @"_revs_info": @[ @{ @"rev" : doc1r3ID, @"status": @"available" },
+                               @{ @"rev" : doc1r2ID, @"status": @"missing" },
+                               @{ @"rev" : doc1r1ID, @"status": @"missing" }
+         ]});
+
+    // Check the revision history using _revs:
+    Send(server, @"GET", @"/db/11111?revs=true", 200,
+         @{ @"_id" : @"11111", @"_rev": doc1r3ID,
+            @"_revisions": @{
+                @"start": @3,
+                @"ids": @[ [doc1r3ID substringFromIndex: 2], [doc1r2ID substringFromIndex: 2],
+                           [doc1r1ID substringFromIndex: 2] ]
+         } } );
+
     [server close];
 }
 

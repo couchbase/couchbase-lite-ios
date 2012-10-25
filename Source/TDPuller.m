@@ -28,7 +28,8 @@
 
 
 // Maximum number of revisions to fetch simultaneously
-#define kMaxOpenHTTPConnections 8
+// (This used to be 8, but sometimes connections got stuck and timed out. See #163)
+#define kMaxOpenHTTPConnections 4
 
 // ?limit= param for _changes feed: max # of revs to get in one batch. Smaller values reduce
 // latency since we can't parse till the entire result arrives in longpoll mode. But larger
@@ -60,8 +61,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_bulkRevsToPull release];
     [_downloadsToInsert release];
     [_pendingSequences release];
-    [_endingSequence release];
-    [_seenSequences release];
     [super dealloc];
 }
 
@@ -75,32 +74,19 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                       [self insertDownloads: downloads];
                                                   }];
     }
-    
-    // Get the current sequence number so we know when the pull has "caught up":
-    [self asyncTaskStarted];
-    [self sendAsyncRequest: @"GET" path: @"/" body: nil
-              onCompletion:^(id result, NSError *error) {
-                  if (error)
-                      self.error = error;
-                  else
-                      [self gotEndingSequence: [result[@"update_seq"] description]];
-                  [self asyncTasksFinished: 1];
-              }];
-    
+
     [_pendingSequences release];
     _pendingSequences = [[TDSequenceMap alloc] init];
-    
-    _seenSequences = [[NSMutableArray alloc] init];
-    if (_lastSequence)
-        [_seenSequences addObject: _lastSequence];
-    
+
+    _caughtUp = NO;
+    [self asyncTaskStarted];   // task: waiting to catch up
     [self startChangeTracker];
 }
 
 
 - (void) startChangeTracker {
     Assert(!_changeTracker);
-    TDChangeTrackerMode mode = _continuous ? kLongPoll : kOneShot;
+    TDChangeTrackerMode mode = (_continuous && _caughtUp) ? kLongPoll : kOneShot;
     
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[TDConnectionChangeTracker alloc] initWithDatabaseURL: _remote
@@ -135,6 +121,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         [_changeTracker stop];
         if (!_continuous)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
+        if (!_caughtUp)
+            [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
     }
     setObj(&_changeTracker, nil);
     setObj(&_revsToPull, nil);
@@ -143,6 +131,16 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [super stop];
     
     [_downloadsToInsert flushAll];
+}
+
+
+- (void) retry {
+    // This is called if I've gone idle but some revisions failed to be pulled.
+    // I should start the _changes feed over again, so I can retry all the revisions.
+    [super retry];
+
+    [_changeTracker stop];
+    [self beginReplicating];
 }
 
 
@@ -172,12 +170,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-// Got a _changes feed entry from the TDChangeTracker.
-- (void) changeTrackerReceivedChange: (NSDictionary*)change {
-    NSString* lastSequenceID = [change[@"seq"] description];
-    NSString* docID = change[@"id"];
-    if (docID) {
-        if ([TDDatabase isValidDocumentID: docID]) {
+// Got a _changes feed response from the TDChangeTracker.
+- (void) changeTrackerReceivedChanges: (NSArray*)changes {
+    LogTo(Sync, @"%@: Received %u changes", self, (unsigned)changes.count);
+    NSUInteger changeCount = 0;
+    for (NSDictionary* change in changes) {
+        @autoreleasepool {
+            // Process each change from the feed:
+            NSString* remoteSequenceID = [change[@"seq"] description];
+            NSString* docID = change[@"id"];
+            if (!docID || ![TDDatabase isValidDocumentID: docID])
+                continue;
+            
             BOOL deleted = [change[@"deleted"] isEqual: (id)kCFBooleanTrue];
             NSArray* changes = $castIf(NSArray, change[@"changes"]);
             for (NSDictionary* changeDict in changes) {
@@ -186,23 +190,32 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                     NSString* revID = $castIf(NSString, changeDict[@"rev"]);
                     if (!revID)
                         continue;
-                    TDPulledRevision* rev = [[TDPulledRevision alloc] initWithDocID: docID revID: revID
+                    TDPulledRevision* rev = [[TDPulledRevision alloc] initWithDocID: docID
+                                                                              revID: revID
                                                                             deleted: deleted];
-                    // Remember its remote sequence ID (opaque), and make up a numeric sequence based
-                    // on the order in which it appeared in the _changes feed:
-                    rev.remoteSequenceID = lastSequenceID;
+                    // Remember its remote sequence ID (opaque), and make up a numeric sequence
+                    // based on the order in which it appeared in the _changes feed:
+                    rev.remoteSequenceID = remoteSequenceID;
                     if (changes.count > 1)
                         rev.conflicted = true;
                     [self addToInbox: rev];
                     [rev release];
+
+                    changeCount++;
                 }
             }
-            self.changesTotal += changes.count;
-        } else {
-            Warn(@"%@: Received invalid doc ID from _changes: %@", self, change);
         }
     }
-    [self checkIfCaughtUp: lastSequenceID];
+    self.changesTotal += changeCount;
+
+    // We can tell we've caught up when the _changes feed returns less than we asked for:
+    if (!_caughtUp && changes.count < kChangesFeedLimit) {
+        LogTo(Sync, @"%@: Caught up with changes!", self);
+        _caughtUp = YES;
+        if (_continuous)
+            _changeTracker.mode = kLongPoll;
+        [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
+    }
 }
 
 
@@ -226,39 +239,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_batcher flushAll];
     if (!_continuous)
         [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
-}
-
-
-#pragma mark - CAUGHT-UP CHECK (FOR NON-CONTINUOUS REPLICATION):
-
-
-// Check whether 'sequence' has reached the _endingSequence, and if so, stop.
-- (void) checkIfCaughtUp: (NSString*)sequence {
-    if (!_endingSequence) {
-        // Don't know the ending sequence yet, so remember all sequences we've seen:
-        [_seenSequences addObject: sequence];
-    } else if ($equal(sequence, _endingSequence)) {
-        [self caughtUp];
-    }
-}
-
-// Found out what the ending sequence is. Remember it, and check if it's already been received:
-- (void) gotEndingSequence: (NSString*)endingSequence {
-    LogTo(Sync, @"Ending sequence = %@", endingSequence);
-    if (_endingSequence)
-        return;
-    _endingSequence = [endingSequence copy];
-    if ([_seenSequences containsObject: _endingSequence]) 
-        [self caughtUp];
-    setObj(&_seenSequences, nil);
-}
-
-
-- (void) caughtUp {
-    LogTo(Sync, @"** Caught up, at sequence %@", _endingSequence);
-    if (!_continuous)
-        [_changeTracker stop];
-    // Might be useful to notify this fact to observers even in a continuous replication.
+    if (!_caughtUp)
+        [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
 }
 
 
@@ -324,7 +306,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Start up some HTTP GETs, within our limit on the maximum simultaneous number
 - (void) pullRemoteRevisions {
-    while (_httpConnectionCount < kMaxOpenHTTPConnections) {
+    while (_db && _httpConnectionCount < kMaxOpenHTTPConnections) {
         NSUInteger nBulk = MIN(_bulkRevsToPull.count, kMaxRevsToGetInBulk);
         if (nBulk == 1) {
             // Rather than pulling a single revision in 'bulk', just pull it normally:
@@ -380,6 +362,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             // OK, now we've got the response revision:
             if (error) {
                 self.error = error;
+                [self revisionFailed];
                 self.changesProcessed++;
             } else {
                 TDRevision* gotRev = [TDRevision revisionWithProperties: download.document];
@@ -422,6 +405,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               onCompletion:^(id result, NSError *error) {
                   if (error) {
                       self.error = error;
+                      [self revisionFailed];
                       self.changesProcessed += bulkRevs.count;
                   } else {
                       // Process the resulting rows' documents.
@@ -480,6 +464,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
                     self.error = TDStatusToNSError(kTDStatusUpstreamError, nil);
+                    [self revisionFailed];
                     continue;
                 }
                 LogTo(SyncVerbose, @"%@ inserting %@ %@",
@@ -492,6 +477,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                         LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
                     else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
+                        [self revisionFailed];
                         self.error = TDStatusToNSError(status, nil);
                         continue;
                     }

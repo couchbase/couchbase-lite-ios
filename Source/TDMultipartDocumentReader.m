@@ -105,8 +105,9 @@
 - (BOOL) appendData:(NSData *)data {
     if (_multipartReader) {
         [_multipartReader appendData: data];
-        if (_multipartReader.failed) {
-            Warn(@"%@: received unparseable MIME multipart response", self);
+        if (_multipartReader.error) {
+            Warn(@"%@: received unparseable MIME multipart response: %@",
+                 self, _multipartReader.error);
             _status = kTDStatusUpstreamError;
             return NO;
         }

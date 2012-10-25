@@ -80,8 +80,8 @@
     char *dst = &out[0];
     for( size_t i=0; i<sizeof(key.bytes); i+=1 )
         dst += sprintf(dst,"%02X", key.bytes[i]);
-    strcat(out, ".");
-    strcat(out, kFileExtension);
+    strlcat(out, ".", sizeof(out));
+    strlcat(out, kFileExtension, sizeof(out));
     NSString* name =  [[NSString alloc] initWithCString: out encoding: NSASCIIStringEncoding];
     NSString* path = [_path stringByAppendingPathComponent: name];
     [name release];

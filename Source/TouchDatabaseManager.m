@@ -38,7 +38,9 @@
 - (id) initWithDirectory: (NSString*)directory error: (NSError**)outError {
     self = [super init];
     if (self) {
-        _mgr = [[TDDatabaseManager alloc] initWithDirectory: directory error: outError];
+        _mgr = [[TDDatabaseManager alloc] initWithDirectory: directory
+                                                    options: &kTDDatabaseManagerDefaultOptions
+                                                      error: outError];
         if (!_mgr) {
             [self release];
             return nil;

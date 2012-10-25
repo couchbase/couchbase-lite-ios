@@ -14,11 +14,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    NSError* error;
-    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: @"/tmp/touchdb_empty_app"
-                                                        error: &error] autorelease];
-    NSAssert(tdServer, @"Couldn't create server: %@", error);
-    [TDURLProtocol setServer: tdServer];
+    TouchDatabaseManager* mgr = [TouchDatabaseManager sharedInstance];
+    NSAssert(mgr, @"Couldn't initialize TouchDB");
     return YES;
 }
 

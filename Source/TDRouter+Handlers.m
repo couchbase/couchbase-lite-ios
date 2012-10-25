@@ -590,12 +590,14 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             includeAttachments = (options & kTDIncludeAttachments) != 0;
             if (acceptMultipart)
                 options &= ~kTDIncludeAttachments;
-            rev = [db getDocumentWithID: docID revisionID: revID options: options];
+            TDStatus status;
+            rev = [db getDocumentWithID: docID revisionID: revID options: options status: &status];
             if (!rev) {
-                if (!revID && [db getDocNumericID: docID] > 0)
+                if (status == kTDStatusDeleted)
                     _response.statusReason = @"deleted";
                 else
                     _response.statusReason = @"missing";
+                return status;
             }
         }
 
@@ -621,12 +623,16 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             _response.body = rev.body;
         
     } else {
+        // open_revs query:
         NSMutableArray* result;
         if ($equal(openRevsParam, @"all")) {
             // Get all conflicting revisions:
+            BOOL includeDeleted = [self boolQuery: @"include_deleted"];
             TDRevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
             result = [NSMutableArray arrayWithCapacity: allRevs.count];
             for (TDRevision* rev in allRevs.allRevisions) {
+                if (!includeDeleted && rev.deleted)
+                    continue;
                 TDStatus status = [_db loadRevisionBody: rev options: options];
                 if (status < 300)
                     [result addObject: $dict({@"ok", rev.properties})];
@@ -645,7 +651,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             for (NSString* revID in openRevs) {
                 if (![revID isKindOfClass: [NSString class]])
                     return kTDStatusBadID;
-                TDRevision* rev = [db getDocumentWithID: docID revisionID: revID options: options];
+                TDStatus status;
+                TDRevision* rev = [db getDocumentWithID: docID revisionID: revID
+                                                options: options status: &status];
                 if (rev)
                     [result addObject: $dict({@"ok", rev.properties})];
                 else
@@ -662,16 +670,17 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (TDStatus) do_GET: (TDDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
+    TDStatus status;
     TDRevision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
-                                    options: kTDNoBody];        // all we need is revID & sequence
+                                    options: kTDNoBody
+                                     status: &status];        // all we need is revID & sequence
     if (!rev)
-        return kTDStatusNotFound;
+        return status;
     if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET
         return kTDStatusNotModified;
     
     NSString* type = nil;
-    TDStatus status;
     TDAttachmentEncoding encoding = kTDAttachmentEncodingNone;
     NSString* acceptEncoding = [_request valueForHTTPHeaderField: @"Accept-Encoding"];
     BOOL acceptEncoded = (acceptEncoding && [acceptEncoding rangeOfString: @"gzip"].length > 0);
@@ -935,10 +944,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         // No TouchDB view is defined, or it hasn't had a map block assigned;
         // see if there's a CouchDB view definition we can compile:
         TDRevision* rev = [_db getDocumentWithID: [@"_design/" stringByAppendingString: designDoc]
-                                      revisionID: nil options: 0];
+                                      revisionID: nil];
         if (!rev)
             return kTDStatusNotFound;
-        NSDictionary* views = $castIf(NSDictionary, (rev.properties)[@"views"]);
+        NSDictionary* views = $castIf(NSDictionary, rev[@"views"]);
         NSDictionary* viewProps = $castIf(NSDictionary, views[viewName]);
         if (!viewProps)
             return kTDStatusNotFound;

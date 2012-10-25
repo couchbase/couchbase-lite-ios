@@ -143,11 +143,8 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     }
 
     _challenged = true;
-    if (challenge.proposedCredential) {
-        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
-        return;
-    }
     
+    NSURLCredential* cred = nil;
     if (challengeIsForDottedHost && challenge.previousFailureCount == 0) {
         // Look up a credential for the original hostname without the "." suffix:
         host = _databaseURL.host;
@@ -157,9 +154,29 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
                                                        protocol: space.protocol
                                                           realm: space.realm
                                            authenticationMethod: space.authenticationMethod];
-        NSURLCredential* cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                                defaultCredentialForProtectionSpace: newSpace];
+        NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
+        NSString* username = _databaseURL.user;
+        if (username)
+            cred = [[storage credentialsForProtectionSpace: newSpace] objectForKey: username];
+        else
+            cred = [storage defaultCredentialForProtectionSpace: newSpace];
         [newSpace release];
+    }
+
+    NSURLCredential* proposedCredential = challenge.proposedCredential;
+    if (proposedCredential) {
+        // Use the proposed credential unless the username doesn't match the one we want:
+        if (!cred || [cred.user isEqualToString: proposedCredential.user]) {
+            LogTo(ChangeTracker, @"%@: Using proposed credential '%@' for "
+                  "{host=<%@>, port=%d, protocol=%@ realm=%@ method=%@}",
+                  self, proposedCredential.user, host, (int)space.port, space.protocol, space.realm,
+                  space.authenticationMethod);
+            [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+            return;
+        }
+    }
+    
+    if (challengeIsForDottedHost && challenge.previousFailureCount == 0) {
         if (cred) {
             // Found a credential, so use it:
             LogTo(ChangeTracker, @"%@: Using credential '%@' for "
@@ -212,26 +229,17 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     NSData* input = [_inputBuffer retain];
     LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
     BOOL restart = NO;
-    NSInteger numChanges = [self receivedPollResponse: input];
+    NSString* errorMessage = nil;
+    NSInteger numChanges = [self receivedPollResponse: input errorMessage: &errorMessage];
     if (numChanges < 0) {
         // Oops, unparseable response:
-        if (_mode == kLongPoll && [input isEqualToData: [@"{\"results\":[\n"
-                                                        dataUsingEncoding: NSUTF8StringEncoding]]) {
-            // Looks like the connection got closed by a proxy (like AWS' load balancer) before
-            // the server had an actual change to send.
-            NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
-            Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
-            if (elapsed >= 30.0 && elapsed < _heartbeat) {
-                self.heartbeat = elapsed * 0.75;
-                restart = YES;
-            }
-        }
+        restart = [self checkInvalidResponse: input];
         if (!restart)
-            [self setUpstreamError: @"Unparseable server response"];
+            [self setUpstreamError: errorMessage];
     } else {
         // Poll again if there was no error, and either we're in longpoll mode or it looks like we
         // ran out of changes due to a _limit rather than because we hit the end.
-        restart = (numChanges > 0 && (_mode == kLongPoll || numChanges == (NSInteger)_limit));
+        restart = _mode == kLongPoll || numChanges == (NSInteger)_limit;
     }
     [input release];
     
@@ -242,6 +250,28 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     else
         [self stopped];
 }
+
+- (BOOL) checkInvalidResponse: (NSData*)body {
+    NSString* bodyStr = [[body my_UTF8ToString] stringByTrimmingCharactersInSet:
+                                              [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (_mode == kLongPoll && $equal(bodyStr, @"{\"results\":[")) {
+        // Looks like the connection got closed by a proxy (like AWS' load balancer) before
+        // the server had an actual change to send.
+        NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
+        Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
+        if (elapsed >= 30.0) {
+            self.heartbeat = MIN(_heartbeat, elapsed * 0.75);
+            return YES;  // should restart connection
+        }
+    } else if (bodyStr) {
+        Warn(@"%@: Unparseable response:\n%@", self, bodyStr);
+    } else {
+        Warn(@"%@: Response is invalid UTF-8; as CP1252:\n%@", self,
+             [[[NSString alloc] initWithData: body encoding: NSWindowsCP1252StringEncoding] autorelease]);
+    }
+    return NO;
+}
+
 
 @end
 

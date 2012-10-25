@@ -34,6 +34,7 @@ extern NSString* TDReplicatorStoppedNotification;
     NSDictionary* _remoteCheckpoint;
     BOOL _savingCheckpoint, _overdueForSave;
     BOOL _running, _online, _active;
+    unsigned _revisionsFailed;
     NSError* _error;
     NSString* _sessionID;
     TDBatcher* _batcher;

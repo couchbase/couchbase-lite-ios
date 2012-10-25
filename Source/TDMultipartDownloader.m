@@ -47,7 +47,7 @@
 
 
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
-    [request setValue: @"multipart/related" forHTTPHeaderField: @"Accept"];
+    [request setValue: @"multipart/related, application/json" forHTTPHeaderField: @"Accept"];
     request.HTTPBody = body;
 }
 

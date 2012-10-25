@@ -14,9 +14,11 @@
 @interface TDPusher : TDReplicator
 {
     BOOL _createTarget;
+    BOOL _creatingTarget;
     BOOL _observing;
     BOOL _uploading;
     NSMutableArray* _uploaderQueue;
+    BOOL _dontSendMultipart;
 }
 
 @property BOOL createTarget;

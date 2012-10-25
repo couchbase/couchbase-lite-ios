@@ -30,6 +30,7 @@
 - (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
                                               docID: (NSString*)docID
                                               revID: (NSString*)revID
+                                            deleted: (BOOL)deleted
                                            sequence: (SequenceNumber)sequence
                                             options: (TDContentOptions)options;
 - (void) notifyChange: (TDRevision*)rev
@@ -56,6 +57,7 @@
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence
                       toSequence: (SequenceNumber)toSequence;
+- (BOOL) inlineFollowingAttachmentsIn: (TDRevision*)rev error: (NSError**)outError;
 @end
 
 @interface TDDatabase (Replication_Internal)
@@ -115,6 +117,8 @@
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;
 - (void) databaseClosing;
+- (void) revisionFailed;    // subclasses call this if a transfer fails
+- (void) retry;
 
 - (void) reachabilityChanged: (TDReachability*)host;
 - (BOOL) goOffline;
