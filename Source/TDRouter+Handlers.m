@@ -453,7 +453,7 @@
 
 - (void) dbChanged: (NSNotification*)n {
     NSMutableArray* changes = $marray();
-    for (NSDictionary* change in [n.userInfo objectForKey: @"changes"]) {
+    for (NSDictionary* change in (n.userInfo)[@"changes"]) {
         TDRevision* rev = change[@"rev"];
         TDRevision* winningRev = change[@"winner"];
 

@@ -29,7 +29,14 @@
 
 @property (readonly) BOOL isDeleted;
 
+/** Deletes this document by adding a deletion revision.
+    This will be replicated to other databases. */
 - (BOOL) deleteDocument: (NSError**)outError;
+
+
+/** Purges this document from the database; this is more than deletion, it forgets entirely about it.
+    The purge will NOT be replicated to other databases. */
+- (BOOL) purgeDocument: (NSError**)outError;
 
 #pragma mark REVISIONS:
 
@@ -59,6 +66,9 @@
 
 /** Shorthand for [self.properties objectForKey: key]. */
 - (id) propertyForKey: (NSString*)key;
+
+/** Same as -propertyForKey:. Enables "[]" access in Xcode 4.4+ */
+- (id)objectForKeyedSubscript:(NSString*)key;
 
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties property.) */
 - (TouchRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;

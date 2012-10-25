@@ -110,28 +110,33 @@
     NSArray* rows;
     SequenceNumber lastSequence;
     if (_view) {
-        TDStatus status;
         lastSequence = _view.lastSequenceIndexed;
         if (_stale == kTDStaleNever || lastSequence <= 0) {
-            status = [_view updateIndex];
-            if (TDStatusIsError(status)) {
-                Warn(@"Failed to update view index: %d", status);
+            _status = [_view updateIndex];
+            if (TDStatusIsError(_status)) {
+                Warn(@"Failed to update view index: %d", _status);
                 return nil;
             }
             lastSequence = _view.lastSequenceIndexed;
         }
-        rows = [_view queryWithOptions: &options status: &status];
+        rows = [_view queryWithOptions: &options status: &_status];
         // TODO: Implement kTDStaleUpdateAfter
         
     } else {
         NSDictionary* result = [_database.tddb getAllDocs: &options];
-        lastSequence = [[result objectForKey: @"update_seq"] longLongValue];
-        rows = [result objectForKey: @"rows"];
+        _status = result ? kTDStatusOK :kTDStatusDBError; //FIX: getALlDocs should return status
+        lastSequence = [result[@"update_seq"] longLongValue];
+        rows = result[@"rows"];
     }
     
     if (rows)
         _lastSequence = lastSequence;
     return rows;
+}
+
+
+- (NSError*) error {
+    return TDStatusIsError(_status) ? TDStatusToNSError(_status, nil) : nil;
 }
 
 
@@ -262,8 +267,7 @@
 
 
 - (TouchQueryRow*) rowAtIndex: (NSUInteger)index {
-    return [[[TouchQueryRow alloc] initWithDatabase: _database
-                                             result: [_rows objectAtIndex:index]]
+    return [[[TouchQueryRow alloc] initWithDatabase: _database result: _rows[index]]
             autorelease];
 }
 
@@ -309,28 +313,28 @@
 }
 
 
-- (id) key                              {return [_result objectForKey: @"key"];}
-- (id) value                            {return [_result objectForKey: @"value"];}
-- (NSString*) sourceDocumentID          {return [_result objectForKey: @"id"];}
-- (NSDictionary*) documentProperties    {return [_result objectForKey: @"doc"];}
+- (id) key                              {return _result[@"key"];}
+- (id) value                            {return _result[@"value"];}
+- (NSString*) sourceDocumentID          {return _result[@"id"];}
+- (NSDictionary*) documentProperties    {return _result[@"doc"];}
 
 - (NSString*) documentID {
-    NSString* docID = [[_result objectForKey: @"doc"] objectForKey: @"_id"];
+    NSString* docID = _result[@"doc"][@"_id"];
     if (!docID)
-        docID = [_result objectForKey: @"id"];
+        docID = _result[@"id"];
     return docID;
 }
 
 - (NSString*) documentRevision {
     // Get the revision id from either the embedded document contents,
     // or the '_rev' or 'rev' value key:
-    NSString* rev = [[_result objectForKey: @"doc"] objectForKey: @"_rev"];
+    NSString* rev = _result[@"doc"][@"_rev"];
     if (!rev) {
         id value = self.value;
         if ([value isKindOfClass: [NSDictionary class]]) {      // $castIf would log a warning
-            rev = [value objectForKey: @"_rev"];
+            rev = value[@"_rev"];
             if (!rev)
-                rev = [value objectForKey: @"rev"];
+                rev = value[@"rev"];
         }
     }
     
@@ -341,9 +345,9 @@
 
 
 - (id) keyAtIndex: (NSUInteger)index {
-    id key = [_result objectForKey: @"key"];
+    id key = _result[@"key"];
     if ([key isKindOfClass:[NSArray class]])
-        return (index < [key count]) ? [key objectAtIndex: index] : nil;
+        return (index < [key count]) ? key[index] : nil;
     else
         return (index == 0) ? key : nil;
 }
@@ -365,7 +369,7 @@
 
 
 - (UInt64) localSequence {
-    id seq = [self.documentProperties objectForKey: @"_local_seq"];
+    id seq = (self.documentProperties)[@"_local_seq"];
     return $castIf(NSNumber, seq).unsignedLongLongValue;
 }
 

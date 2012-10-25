@@ -52,11 +52,12 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
+// Notified of a change in the TDDatabase:
 - (void) tddbNotification: (NSNotification*)n {
     if ([n.name isEqualToString: TDDatabaseChangesNotification]) {
-        for (NSDictionary* change in [n.userInfo objectForKey: @"changes"]) {
-            TDRevision* rev = [change objectForKey: @"rev"];
-            NSURL* source = [change objectForKey: @"source"];
+        for (NSDictionary* change in (n.userInfo)[@"changes"]) {
+            TDRevision* rev = change[@"winner"];
+            NSURL* source = change[@"source"];
             
             [[self cachedDocumentWithID: rev.docID] revisionAdded: rev source: source];
 
@@ -74,7 +75,7 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
             [queue enqueueNotification: n
                           postingStyle: NSPostASAP 
                           coalesceMask: NSNotificationCoalescingOnSender
-                              forModes: [NSArray arrayWithObject: NSRunLoopCommonModes]];
+                              forModes: @[NSRunLoopCommonModes]];
         }
     }
 }
@@ -121,6 +122,10 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
         [_docCache addResource: doc];
     }
     return doc;
+}
+
+- (TouchDocument*) objectForKeyedSubscript: (NSString*)key {
+    return [self documentWithID: key];
 }
 
 

@@ -126,7 +126,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (NSString*) sourceURLStr {
     id source = self.source;
     if ([source isKindOfClass: [NSDictionary class]])
-        source = [source objectForKey: @"url"];
+        source = source[@"url"];
     return $castIf(NSString, source);
 }
 
@@ -134,7 +134,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (NSString*) targetURLStr {
     id target = self.target;
     if ([target isKindOfClass: [NSDictionary class]])
-        target = [target objectForKey: @"url"];
+        target = target[@"url"];
     return $castIf(NSString, target);
 }
 
@@ -151,11 +151,11 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (NSDictionary*) remoteDictionary {
     id source = self.source;
     if ([source isKindOfClass: [NSDictionary class]] 
-            && !isLocalDBName([source objectForKey: @"url"]))
+            && !isLocalDBName(source[@"url"]))
         return source;
     id target = self.target;
     if ([target isKindOfClass: [NSDictionary class]] 
-            && !isLocalDBName([target objectForKey: @"url"]))
+            && !isLocalDBName(target[@"url"]))
         return target;
     return nil;
 }
@@ -177,7 +177,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (NSDictionary*) headers {
-    return [self.remoteDictionary objectForKey: @"headers"];
+    return (self.remoteDictionary)[@"headers"];
 }
 
 - (void) setHeaders: (NSDictionary*)headers {
@@ -185,12 +185,12 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 - (NSDictionary*) OAuth {
-    NSDictionary* auth = $castIf(NSDictionary, [self.remoteDictionary objectForKey: @"auth"]);
-    return [auth objectForKey: @"oauth"];
+    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
+    return auth[@"oauth"];
 }
 
 - (void) setOAuth: (NSDictionary*)oauth {
-    NSDictionary* auth = oauth ? [NSDictionary dictionaryWithObject: oauth forKey: @"oauth"] : nil;
+    NSDictionary* auth = oauth ? @{@"oauth": oauth} : nil;
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
@@ -269,10 +269,10 @@ static inline BOOL isLocalDBName(NSString* url) {
                                                        continuous: continuous];
     if (!repl)
         return;
-    repl.filterName = [options objectForKey: @"filter"];
-    repl.filterParameters = [options objectForKey: @"query_params"];
+    repl.filterName = options[@"filter"];
+    repl.filterParameters = options[@"query_params"];
     repl.options = options;
-    repl.requestHeaders = [options objectForKey: @"headers"];
+    repl.requestHeaders = options[@"headers"];
     if (!pull)
         ((TDPusher*)repl).createTarget = createTarget;
     [repl start];

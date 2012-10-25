@@ -11,6 +11,12 @@
 @class TDDatabaseManager, TDServer;
 
 
+typedef struct TouchDatabaseManagerOptions {
+    bool readOnly;
+    bool noReplicator;
+} TouchDatabaseManagerOptions;
+
+
 /** Top-level TouchDB object; manages a collection of databases like a CouchDB server. */
 @interface TouchDatabaseManager : NSObject
 {
@@ -27,8 +33,12 @@
 - (id)init;
 
 /** Starts up a database manager that stores its data at the given path.
-    @param directory  Path to data directory. If it doesn't already exist it will be created. */
-- (id) initWithDirectory: (NSString*)directory error: (NSError**)outError;
+    @param directory  Path to data directory. If it doesn't already exist it will be created.
+    @param options  If non-NULL, a pointer to options (read-only and no-replicator).
+    @param outError  On return, the error if any. */
+- (id) initWithDirectory: (NSString*)directory
+                 options: (const TouchDatabaseManagerOptions*)options
+                   error: (NSError**)outError;
 
 
 /** Releases all resources used by the TouchDatabaseManager instance and closes all its databases. */
@@ -37,6 +47,9 @@
 /** Returns the database with the given name, or nil if it doesn't exist.
     Multiple calls with the same name will return the same CouchDatabase instance. */
 - (TouchDatabase*) databaseNamed: (NSString*)name;
+
+/** Same as -databaseNamed:. Enables "[]" access in Xcode 4.4+ */
+- (TouchDatabase*) objectForKeyedSubscript: (NSString*)key;
 
 /** Returns the database with the given name, creating it if it didn't already exist.
     Multiple calls with the same name will return the same CouchDatabase instance. */

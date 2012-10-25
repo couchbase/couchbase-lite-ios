@@ -57,7 +57,7 @@
 - (void) rememberAttachmentWriter: (TDBlobStoreWriter*)writer {
     if (!_pendingAttachmentsByDigest)
         _pendingAttachmentsByDigest = [[NSMutableDictionary alloc] init];
-    [_pendingAttachmentsByDigest setObject: writer forKey: writer.MD5DigestString];
+    _pendingAttachmentsByDigest[writer.MD5DigestString] = writer;
 }
 
 

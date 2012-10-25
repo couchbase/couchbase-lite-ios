@@ -73,13 +73,17 @@
     NSMutableDictionary* props = [NSMutableDictionary dictionary];
     for (NSString* key in rep) {
         if (![key hasPrefix: @"_"])
-            [props setObject: [rep objectForKey: key] forKey: key];
+            props[key] = rep[key];
     }
     return props;
 }
 
 - (id) propertyForKey: (NSString*)key {
-    return [self.properties objectForKey: key];
+    return (self.properties)[key];
+}
+
+- (id)objectForKeyedSubscript:(NSString*)key {
+    return (self.properties)[key];
 }
 
 - (BOOL) propertiesAreLoaded {
@@ -122,12 +126,12 @@
 
 
 - (NSDictionary*) attachmentMetadata {
-    return $castIf(NSDictionary, [self.properties objectForKey: @"_attachments"]);
+    return $castIf(NSDictionary, (self.properties)[@"_attachments"]);
 }
 
 
 - (NSDictionary*) attachmentMetadataFor: (NSString*)name {
-    return $castIf(NSDictionary, [self.attachmentMetadata objectForKey: name]);
+    return $castIf(NSDictionary, (self.attachmentMetadata)[name]);
 }
 
 

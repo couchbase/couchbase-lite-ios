@@ -69,12 +69,12 @@
 
 
 - (NSString*) contentType {
-    return $castIf(NSString, [_metadata objectForKey: @"content_type"]);
+    return $castIf(NSString, _metadata[@"content_type"]);
 }
 
 
 - (UInt64) length {
-    NSNumber* lengthObj = $castIf(NSNumber, [_metadata objectForKey: @"length"]);
+    NSNumber* lengthObj = $castIf(NSNumber, _metadata[@"length"]);
     return lengthObj ? [lengthObj longLongValue] : 0;
 }
 
@@ -148,9 +148,9 @@
                 TDBlobStoreWriter* writer = tddb.attachmentWriter;
                 [writer appendData: body];
                 [writer finish];
-                [metadata setObject: $object(body.length) forKey: @"length"];
-                [metadata setObject: writer.MD5DigestString forKey: @"digest"];
-                [metadata setObject: $true forKey: @"follows"];
+                metadata[@"length"] = $object(body.length);
+                metadata[@"digest"] = writer.MD5DigestString;
+                metadata[@"follows"] = $true;
                 [tddb rememberAttachmentWriter: writer];
             }
         }

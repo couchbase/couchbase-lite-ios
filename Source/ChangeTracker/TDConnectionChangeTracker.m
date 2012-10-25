@@ -157,7 +157,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
         NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
         NSString* username = _databaseURL.user;
         if (username)
-            cred = [[storage credentialsForProtectionSpace: newSpace] objectForKey: username];
+            cred = [storage credentialsForProtectionSpace: newSpace][username];
         else
             cred = [storage defaultCredentialForProtectionSpace: newSpace];
         [newSpace release];

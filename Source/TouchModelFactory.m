@@ -47,7 +47,7 @@ static TouchModelFactory* sSharedInstance;
 
 
 - (Class) classForDocumentType: (NSString*)type {
-    id klass = [_typeDict objectForKey: type];
+    id klass = _typeDict[type];
     if (!klass && self != sSharedInstance)
         return [sSharedInstance classForDocumentType: type];
     if ([klass isKindOfClass: [NSString class]]) {

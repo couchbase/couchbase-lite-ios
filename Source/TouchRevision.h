@@ -44,6 +44,9 @@
 /** Shorthand for [self.properties objectForKey: key]. */
 - (id) propertyForKey: (NSString*)key;
 
+/** Same as -propertyForKey:. Enables "[]" access in Xcode 4.4+ */
+- (id) objectForKeyedSubscript: (NSString*)key;
+
 /** Has this object fetched its contents from the database yet? */
 @property (readonly) BOOL propertiesAreLoaded;
 

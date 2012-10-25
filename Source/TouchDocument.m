@@ -70,6 +70,18 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
+- (BOOL) purgeDocument: (NSError**)outError {
+    TDStatus status = [_database.tddb purgeRevisions: @{self.documentID : @"*"} result: nil];
+    if (TDStatusIsError(status)) {
+        if (outError) {
+            *outError = TDStatusToNSError(status, nil);
+            return NO;
+        }
+    }
+    return YES;
+}
+
+
 - (BOOL) isDeleted {
     return self.currentRevision.isDeleted;
 }
@@ -113,9 +125,9 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
-// Notification from the TouchDatabase that a (current) revision has been added to the database
+// Notification from the TouchDatabase that a (current, winning) revision has been added
 - (void) revisionAdded: (TDRevision*)rev source: (NSURL*)source {
-    if (_currentRevision && TDCompareRevIDs(rev.revID, _currentRevision.revisionID) > 0) {
+    if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
         [_currentRevision autorelease];
         _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
     }
@@ -166,7 +178,11 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 - (id) propertyForKey: (NSString*)key {
-    return [self.currentRevision.properties objectForKey: key];
+    return (self.currentRevision.properties)[key];
+}
+
+- (id)objectForKeyedSubscript:(NSString*)key {
+    return (self.currentRevision.properties)[key];
 }
 
 - (NSDictionary*) userProperties {
@@ -177,19 +193,23 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
                        prevRevID: (NSString*)prevID
                            error: (NSError**)outError
 {
+    id idProp = [properties objectForKey: @"_id"];
+    if (idProp && ![idProp isEqual: self.documentID])
+        Warn(@"Trying to PUT wrong _id to %@: %@", self, properties);
+
     // Process _attachments dict, converting TouchAttachments to dicts:
-    NSDictionary* attachments = [properties objectForKey: @"_attachments"];
+    NSDictionary* attachments = properties[@"_attachments"];
     if (attachments.count) {
         NSDictionary* expanded = [TouchAttachment installAttachmentBodies: attachments
                                                              intoDatabase: _database];
         if (expanded != attachments) {
             NSMutableDictionary* nuProperties = [[properties mutableCopy] autorelease];
-            [nuProperties setObject: expanded forKey: @"_attachments"];
+            nuProperties[@"_attachments"] = expanded;
             properties = nuProperties;
         }
     }
     
-    BOOL deleted = !properties || [[properties objectForKey: @"_deleted"] boolValue];
+    BOOL deleted = !properties || [properties[@"_deleted"] boolValue];
     TDRevision* rev = [[[TDRevision alloc] initWithDocID: _docID
                                                    revID: nil
                                                  deleted: deleted] autorelease];
@@ -205,7 +225,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 - (TouchRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
-    NSString* prevID = [properties objectForKey: @"_rev"];
+    NSString* prevID = properties[@"_rev"];
     return [self putProperties: properties prevRevID: prevID error: outError];
 }
 

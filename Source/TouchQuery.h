@@ -36,6 +36,7 @@ typedef enum {
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;
+    TDStatus _status;
 }
 
 /** The database that contains this view. */
@@ -75,11 +76,16 @@ typedef enum {
 @property NSUInteger groupLevel;
 
 /** If set to YES, the results will include the entire document contents of the associated rows.
-    These can be accessed via TDQueryRow's -documentContents property. */
+    These can be accessed via TouchQueryRow's -documentProperties property.
+    This can be a good optimization if you know you'll need the entire contents of each document.
+    (This property is equivalent to "include_docs" in the CouchDB API.) */
 @property BOOL prefetch;
 
 @property BOOL sequences;
 
+/** If non-nil, the error of the last execution of the query.
+    If nil, the last execution of the query was successful. */
+@property (readonly) NSError* error;
 
 /** Sends the query to the server and returns an enumerator over the result rows (Synchronous). */
 - (TouchQueryEnumerator*) rows;

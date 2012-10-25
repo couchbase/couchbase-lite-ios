@@ -140,7 +140,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 
 - (void) dbChanged: (NSNotification*)n {
-    NSArray* changes = [n.userInfo objectForKey: @"changes"];
+    NSArray* changes = (n.userInfo)[@"changes"];
     for (NSDictionary* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change[@"source"] isEqual: _remote]) {

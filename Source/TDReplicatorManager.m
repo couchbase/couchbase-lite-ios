@@ -439,7 +439,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     if (_updateInProgress)
         return;
     for (NSDictionary* change in n.userInfo[@"changes"]) {
-        TDRevision* rev = [change objectForKey: @"rev"];
+        TDRevision* rev = change[@"rev"];
         LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
         NSString* docID = rev.docID;
         if ([docID hasPrefix: @"_"])

@@ -206,7 +206,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
     if ([_client respondsToSelector: @selector(changeTrackerReceivedChanges:)]) {
         [_client changeTrackerReceivedChanges: changes];
         if (changes.count > 0)
-            self.lastSequenceID = [[changes lastObject] objectForKey: @"seq"];
+            self.lastSequenceID = [changes lastObject][@"seq"];
     } else {
         for (NSDictionary* change in changes) {
             if (![self receivedChange: change]) {

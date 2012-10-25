@@ -250,7 +250,7 @@
 + (BOOL) saveModels: (NSArray*)models error: (NSError**)outError {
     if (models.count == 0)
         return YES;
-    TouchDatabase* db = [[models objectAtIndex: 0] database];
+    TouchDatabase* db = [models[0] database];
     BOOL saved = [db inTransaction: ^{
         for (TouchModel* model in models) {
             NSAssert(model.database == db, @"Models must share a common db");
@@ -274,7 +274,7 @@
     if (!properties)
         properties = [[NSMutableDictionary alloc] init];
     for (NSString* key in _changedNames)
-        [properties setValue: [_properties objectForKey: key] forKey: key];
+        [properties setValue: _properties[key] forKey: key];
     return [properties autorelease];
 }
 
@@ -300,7 +300,7 @@
     if (!properties)
         properties = [[NSMutableDictionary alloc] init];
     for (NSString* key in _changedNames) {
-        id value = [_properties objectForKey: key];
+        id value = _properties[key];
         [properties setValue: [self externalizePropertyValue: value] forKey: key];
     }
     [properties setValue: self.attachmentDataToSave forKey: @"_attachments"];
@@ -321,7 +321,7 @@
 
 
 - (id) getValueOfProperty: (NSString*)property {
-    id value = [_properties objectForKey: property];
+    id value = _properties[property];
     if (!value && ![_changedNames containsObject: property]) {
         value = [_document propertyForKey: property];
     }
@@ -345,7 +345,7 @@
 
 
 - (NSData*) getDataProperty: (NSString*)property {
-    NSData* value = [_properties objectForKey: property];
+    NSData* value = _properties[property];
     if (!value) {
         id rawValue = [_document propertyForKey: property];
         if ([rawValue isKindOfClass: [NSString class]])
@@ -359,7 +359,7 @@
 }
 
 - (NSDate*) getDateProperty: (NSString*)property {
-    NSDate* value = [_properties objectForKey: property];
+    NSDate* value = _properties[property];
     if (!value) {
         id rawValue = [_document propertyForKey: property];
         if ([rawValue isKindOfClass: [NSString class]])
@@ -489,7 +489,7 @@
     
     NSMutableArray* nuNames = names ? [[names mutableCopy] autorelease] : [NSMutableArray array];
     for (NSString* name in _changedAttachments.allKeys) {
-        TouchAttachment* attach = [_changedAttachments objectForKey: name];
+        TouchAttachment* attach = _changedAttachments[name];
         if ([attach isKindOfClass: [TouchAttachment class]]) {
             if (![nuNames containsObject: name])
                 [nuNames addObject: name];
@@ -500,7 +500,7 @@
 }
 
 - (TouchAttachment*) attachmentNamed: (NSString*)name {
-    id attachment = [_changedAttachments objectForKey: name];
+    id attachment = _changedAttachments[name];
     if (attachment) {
         if ([attachment isKindOfClass: [TouchAttachment class]])
             return attachment;
@@ -519,8 +519,7 @@
     
     if (!_changedAttachments)
         _changedAttachments = [[NSMutableDictionary alloc] init];
-    [_changedAttachments setObject: (attachment ? attachment : [NSNull null])
-                            forKey: name];
+    _changedAttachments[name] = (attachment ? attachment : [NSNull null]);
     attachment.name = name;
     [self markNeedsSave];
 }
@@ -531,7 +530,7 @@
 
 
 - (NSDictionary*) attachmentDataToSave {
-    NSDictionary* attachments = [_document.properties objectForKey: @"_attachments"];
+    NSDictionary* attachments = (_document.properties)[@"_attachments"];
     if (!_changedAttachments)
         return attachments;
     
@@ -540,9 +539,9 @@
     for (NSString* name in _changedAttachments.allKeys) {
         // Yes, we are putting TDAttachment objects into the JSON-compatible dictionary.
         // The TouchDocument will process & convert these before actually storing the JSON.
-        TouchAttachment* attach = [_changedAttachments objectForKey: name];
+        TouchAttachment* attach = _changedAttachments[name];
         if ([attach isKindOfClass: [TouchAttachment class]])
-            [nuAttach setObject: attach forKey: name];
+            nuAttach[name] = attach;
         else
             [nuAttach removeObjectForKey: name];
     }

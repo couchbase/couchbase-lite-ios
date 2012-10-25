@@ -66,9 +66,9 @@ static const NSUInteger kDefaultRetainLimit = 50;
 - (void) addResource: (id<TDCacheable>)resource {
     resource.owningCache = self;
     NSString* key = resource.cacheKey;
-    NSAssert(![_map objectForKey: key], @"Caching duplicate items for '%@': %p, now %p",
-             key, [_map objectForKey: key], resource);
-    [_map setObject: resource forKey: key];
+    NSAssert(!_map[key], @"Caching duplicate items for '%@': %p, now %p",
+             key, _map[key], resource);
+    _map[key] = resource;
     if (_cache)
         [_cache setObject: resource forKey: key];
     else
@@ -77,7 +77,7 @@ static const NSUInteger kDefaultRetainLimit = 50;
 
 
 - (id<TDCacheable>) resourceWithCacheKey: (NSString*)docID {
-    id<TDCacheable> doc = [_map objectForKey: docID];
+    id<TDCacheable> doc = _map[docID];
     if (doc && _cache && ![_cache objectForKey:docID])
         [_cache setObject: doc forKey: docID];  // re-add doc to NSCache since it's recently used
     return doc;

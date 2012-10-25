@@ -440,7 +440,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 - (void) dbChanged: (NSNotification*)n {
     TDDatabase* senderDB = n.object;
     if (senderDB != self && [senderDB.path isEqualToString: _path]) {
-        for (NSDictionary* changes in [n.userInfo objectForKey: @"changes"]) {
+        for (NSDictionary* changes in (n.userInfo)[@"changes"]) {
             // TDRevision objects have mutable state inside, so copy this one first:
             TDRevision* rev = [changes[@"rev"] copy];
             TDRevision* winner = [changes[@"winner"] copy];
@@ -1071,7 +1071,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                           {@"deleted", (deleted ?$true : nil)})},
                                          {@"doc", docContents});
             if (options->keys)
-                [docs setObject: change forKey: docID];
+                docs[docID] = change;
             else
                 [rows addObject: change];
         }

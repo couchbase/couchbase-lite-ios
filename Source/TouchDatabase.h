@@ -40,6 +40,9 @@
     at a time with the same documentID. */
 - (TouchDocument*) documentWithID: (NSString*)docID;
 
+/** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
+- (TouchDocument*)objectForKeyedSubscript: (NSString*)key;
+
 /** Creates a TDDocument object with no current ID.
     The first time you PUT to that document, it will be created on the server (via a POST). */
 - (TouchDocument*) untitledDocument;

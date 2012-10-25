@@ -31,15 +31,20 @@
 
 
 - (id)init {
-    return [self initWithDirectory: [TDDatabaseManager defaultDirectory] error: nil];
+    return [self initWithDirectory: [TDDatabaseManager defaultDirectory]
+                           options: NULL
+                             error: nil];
 }
 
 
-- (id) initWithDirectory: (NSString*)directory error: (NSError**)outError {
+- (id) initWithDirectory: (NSString*)directory
+                 options: (const TouchDatabaseManagerOptions*)options
+                   error: (NSError**)outError {
     self = [super init];
     if (self) {
+        // NOTE: TouchDatabaseManagerOptions and TDDatabaseManagerOptions must have the same layout
         _mgr = [[TDDatabaseManager alloc] initWithDirectory: directory
-                                                    options: &kTDDatabaseManagerDefaultOptions
+                                                    options: (const TDDatabaseManagerOptions*)options
                                                       error: outError];
         if (!_mgr) {
             [self release];
@@ -105,6 +110,9 @@
     return [self databaseForDatabase: db];
 }
 
+- (TouchDatabase*) objectForKeyedSubscript:(NSString*)key {
+    return [self databaseNamed: key];
+}
 
 - (TouchDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
     TDDatabase* db = [_mgr databaseNamed: name];

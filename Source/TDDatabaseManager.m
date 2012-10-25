@@ -61,7 +61,7 @@ static NSCharacterSet* kIllegalNameChars;
 + (NSString*) defaultDirectory {
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
                                                          NSUserDomainMask, YES);
-    NSString* path = [paths objectAtIndex:0];
+    NSString* path = paths[0];
 #if !TARGET_OS_IPHONE
     path = [path stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]];
 #endif
