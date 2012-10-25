@@ -322,7 +322,7 @@
 
 - (id) getValueOfProperty: (NSString*)property {
     id value = _properties[property];
-    if (!value && ![_changedNames containsObject: property]) {
+    if (!value && !_isNew && ![_changedNames containsObject: property]) {
         value = [_document propertyForKey: property];
     }
     return value;

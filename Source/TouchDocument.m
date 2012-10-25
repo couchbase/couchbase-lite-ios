@@ -162,11 +162,22 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
-- (NSArray*) getConflictingRevisions: (NSError**)outError {
+- (NSArray*) getLeafRevisions: (NSError**)outError includeDeleted: (BOOL)includeDeleted {
     TDRevisionList* revs = [_database.tddb getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
-    return [revs.allRevisions my_map: ^(TDRevision* rev) {
+    return [revs.allRevisions my_map: ^TouchRevision*(TDRevision* rev) {
+        if (!includeDeleted && rev.deleted)
+            return nil;
         return [self revisionFromRev: rev];
     }];
+}
+
+- (NSArray*) getConflictingRevisions: (NSError**)outError {
+    return [self getLeafRevisions: outError includeDeleted: NO];
+}
+
+
+- (NSArray*) getLeafRevisions: (NSError**)outError {
+    return [self getLeafRevisions: outError includeDeleted: YES];
 }
 
 

@@ -57,11 +57,12 @@
 
 - (NSDictionary*) properties {
     NSDictionary* properties = _rev.properties;
-    if (!properties) {
+    if (!properties && !_checkedProperties) {
         TDStatus status = [self.database.tddb loadRevisionBody: _rev options: 0];
         if (TDStatusIsError(status))
             Warn(@"Couldn't load properties of %@: %d", self, status);
         properties = _rev.properties;
+        _checkedProperties = YES;
     }
     return properties;
 }

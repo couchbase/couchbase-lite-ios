@@ -16,6 +16,7 @@
     @private
     TouchDocument* _document;
     TDRevision* _rev;
+    BOOL _checkedProperties;
 }
 
 /** The document this is a revision of. */

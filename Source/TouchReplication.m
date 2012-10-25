@@ -237,14 +237,30 @@ static inline BOOL isLocalDBName(NSString* url) {
           processed: (NSUInteger)changesProcessed
             ofTotal: (NSUInteger)changesTotal
 {
-    if (mode != _mode || error != _error || changesProcessed != _completed
-            || changesTotal != _total) {
+    BOOL changed = NO;
+    if (mode != _mode) {
         self.mode = mode;
-        self.running = (mode > kTouchReplicationStopped);
+        changed = YES;
+    }
+    BOOL running = (mode > kTouchReplicationStopped);
+    if (running != _running) {
+        self.running = running;
+        changed = YES;
+    }
+    if (!$equal(error, _error)) {
         self.error = error;
+        changed = YES;
+    }
+    if (changesProcessed != _completed) {
         self.completed = changesProcessed;
+        changed = YES;
+    }
+    if (changesTotal != _total) {
         self.total = changesTotal;
-        [[NSNotificationCenter defaultCenter] 
+        changed = YES;
+    }
+    if (changed) {
+        [[NSNotificationCenter defaultCenter]
                         postNotificationName: kTouchReplicationChangeNotification object: self];
     }
 }

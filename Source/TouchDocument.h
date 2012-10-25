@@ -52,6 +52,11 @@
 - (NSArray*) getRevisionHistory: (NSError**)outError;
 - (NSArray*) getConflictingRevisions: (NSError**)outError;
 
+/** Returns all the leaf revisions in the document's revision tree,
+    including deleted revisions (i.e. previously-resolved conflicts.) */
+- (NSArray*) getLeafRevisions: (NSError**)outError;
+
+
 
 #pragma mark PROPERTIES:
 
