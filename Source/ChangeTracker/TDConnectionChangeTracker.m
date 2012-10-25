@@ -154,8 +154,12 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
                                                        protocol: space.protocol
                                                           realm: space.realm
                                            authenticationMethod: space.authenticationMethod];
-        cred = [[NSURLCredentialStorage sharedCredentialStorage]
-                                                defaultCredentialForProtectionSpace: newSpace];
+        NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
+        NSString* username = _databaseURL.user;
+        if (username)
+            cred = [[storage credentialsForProtectionSpace: newSpace] objectForKey: username];
+        else
+            cred = [storage defaultCredentialForProtectionSpace: newSpace];
         [newSpace release];
     }
 
