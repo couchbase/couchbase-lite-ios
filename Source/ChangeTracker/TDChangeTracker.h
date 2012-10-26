@@ -28,12 +28,12 @@
 
 typedef enum TDChangeTrackerMode {
     kOneShot,
-    kLongPoll
+    kLongPoll,
+    kContinuous
 } TDChangeTrackerMode;
 
 
-/** Reads the continuous-mode _changes feed of a database, and sends the individual change entries to its client's -changeTrackerReceivedChange:. 
-    This class is abstract. Instantiate TDConnectionChangeTracker instead. */
+/** Reads the continuous-mode _changes feed of a database, and sends the individual change entries to its client.  */
 @interface TDChangeTracker : NSObject <NSStreamDelegate>
 {
     @protected
@@ -86,6 +86,8 @@ typedef enum TDChangeTrackerMode {
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
 - (NSInteger) receivedPollResponse: (NSData*)body errorMessage: (NSString**)errorMessage;
+- (BOOL) receivedChanges: (NSArray*)changes errorMessage: (NSString**)errorMessage;
+- (BOOL) receivedChange: (NSDictionary*)change;
 - (void) stopped; // override this
 
 @end

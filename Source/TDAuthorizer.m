@@ -94,6 +94,8 @@
                          forRealm: (NSString*)realm
 {
     // <http://tools.ietf.org/html/draft-ietf-oauth-v2-http-mac-00>
+    if (!request)
+        return nil;
     NSString* nonce = $sprintf(@"%.0f:%@", -[_issueTime timeIntervalSinceNow], TDCreateUUID());
     NSURL* url = request.URL;
     NSString* ext = @"";  // not implemented yet

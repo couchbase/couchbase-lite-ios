@@ -17,7 +17,7 @@
 #import "TDDatabase+Insertion.h"
 #import "TDDatabase+Replication.h"
 #import <TouchDB/TDRevision.h>
-#import "TDConnectionChangeTracker.h"
+#import "TDChangeTracker.h"
 #import "TDAuthorizer.h"
 #import "TDBatcher.h"
 #import "TDMultipartDownloader.h"
@@ -89,11 +89,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     TDChangeTrackerMode mode = (_continuous && _caughtUp) ? kLongPoll : kOneShot;
     
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
-    _changeTracker = [[TDConnectionChangeTracker alloc] initWithDatabaseURL: _remote
-                                                                       mode: mode
-                                                                  conflicts: YES
-                                                               lastSequence: _lastSequence
-                                                                     client: self];
+    _changeTracker = [[TDChangeTracker alloc] initWithDatabaseURL: _remote
+                                                             mode: mode
+                                                        conflicts: YES
+                                                     lastSequence: _lastSequence
+                                                           client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
     _changeTracker.limit = kChangesFeedLimit;
     _changeTracker.filterName = _filterName;
