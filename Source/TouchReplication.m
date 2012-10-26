@@ -54,7 +54,7 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 }
 
 
-// Instantiate a persistent replication from an existing document
+// Instantiate a persistent replication from an existing document in the _replicator db
 - (id) initWithDocument:(TouchDocument *)document {
     self = [super initWithDocument: document];
     if (self) {
@@ -67,11 +67,15 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
             _pull = YES;
         _remoteURL = [[NSURL alloc] initWithString: urlStr];
 
-        // Observe all replication changes:
-        [[NSNotificationCenter defaultCenter] addObserver: self
+        [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
+                                                       to: ^(TDDatabase* tddb) {
+            _bg_serverDatabase = [tddb retain];
+            // Observe *all* replication changes:
+            [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(bg_replicationProgressChanged:)
                                                      name: TDReplicatorProgressChangedNotification
-                                                   object: _bg_replicator];
+                                                   object: nil];
+        }];
     }
     return self;
 }
@@ -281,8 +285,8 @@ static inline BOOL isLocalDBName(NSString* url) {
     // The setup should use parameters, not ivars, because the ivars may change on the main thread.
     _bg_serverDatabase = [[server_dbmgr databaseNamed: dbName] retain];
     TDReplicator* repl = [_bg_serverDatabase replicatorWithRemoteURL: remote
-                                                             push: !pull
-                                                       continuous: continuous];
+                                                                push: !pull
+                                                          continuous: continuous];
     if (!repl)
         return;
     repl.filterName = options[@"filter"];
@@ -309,7 +313,8 @@ static inline BOOL isLocalDBName(NSString* url) {
     if (_bg_replicator) {
         tdReplicator = _bg_replicator;
     } else {
-        // I get this notification for every TDReplicator, so quickly weed out non-matching ones:
+        // Persistent replications get this notification for every TDReplicator,
+        // so quickly weed out non-matching ones:
         tdReplicator = n.object;
         if (tdReplicator.db != _bg_serverDatabase)
             return;
