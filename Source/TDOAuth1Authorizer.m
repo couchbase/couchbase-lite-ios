@@ -79,6 +79,23 @@
     return authorization;
 }
 
+- (CFStringRef) authorizeHTTPMessage: (CFHTTPMessageRef)message
+                            forRealm: (NSString*)realm
+{
+    NSURL* url = [(id)CFHTTPMessageCopyRequestURL(message) autorelease];
+    OAMutableURLRequest* oarq = [[OAMutableURLRequest alloc] initWithURL: url
+                                                                consumer: _consumer
+                                                                   token: _token
+                                                                   realm: realm
+                                                       signatureProvider: _signatureProvider];
+    oarq.HTTPMethod = [(id)CFHTTPMessageCopyRequestMethod(message) autorelease];
+    oarq.HTTPBody = [(id)CFHTTPMessageCopyBody(message) autorelease];
+    [oarq prepare];
+    NSString* authorization = [oarq valueForHTTPHeaderField: @"Authorization"];
+    [oarq release];
+    return (CFStringRef)authorization;
+}
+
 @end
 
 

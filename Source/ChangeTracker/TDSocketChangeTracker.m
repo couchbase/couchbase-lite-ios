@@ -62,11 +62,9 @@
             Warn(@"%@: Unable to get password of %@", self, _credential);
         }
     } else if (_authorizer) {
-        NSString* authHeader = [_authorizer authorizeURLRequest: nil forRealm: nil];
-        if (authHeader) {
-            CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"),
-                                             (CFStringRef)authHeader);
-        }
+        CFStringRef authHeader = [_authorizer authorizeHTTPMessage: request forRealm: nil];
+        if (authHeader)
+            CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"), authHeader);
     }
 
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
