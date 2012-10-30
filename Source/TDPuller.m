@@ -27,9 +27,10 @@
 #import "ExceptionUtils.h"
 
 
-// Maximum number of revisions to fetch simultaneously
-// (This used to be 8, but sometimes connections got stuck and timed out. See #163)
-#define kMaxOpenHTTPConnections 4
+// Maximum number of revisions to fetch simultaneously. (CFNetwork will only send about 5
+// simultaneous requests, but by keeping a larger number in its queue we ensure that it doesn't
+// run out, even if the TD thread doesn't always have time to run.)
+#define kMaxOpenHTTPConnections 12
 
 // ?limit= param for _changes feed: max # of revs to get in one batch. Smaller values reduce
 // latency since we can't parse till the entire result arrives in longpoll mode. But larger
