@@ -214,6 +214,7 @@
     CFRelease(response);
     if (status >= 300) {
         self.error = TDStatusToNSError(status, self.changesFeedURL);
+        [self stop];
         return NO;
     }
     _retryCount = 0;
