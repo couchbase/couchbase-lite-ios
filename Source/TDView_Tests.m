@@ -671,7 +671,16 @@ TestCase(TDView_LinkedDocs) {
                                          {@"value", $dict({@"_id", @"11111"})},
                                          {@"doc", docs[2]}));
     CAssertEqual(rows, expectedRows);
-    
+}
+
+
+TestCase(TDView) {
+    RequireTestCase(TDView_MapConflicts);
+    RequireTestCase(TDView_ConflictWinner);
+    RequireTestCase(TDView_ConflictLoser);
+    RequireTestCase(TDView_LinkedDocs);
+    RequireTestCase(TDView_Collation);
+    RequireTestCase(TDView_CollationRaw);
 }
 
 

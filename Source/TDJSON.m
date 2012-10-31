@@ -107,3 +107,36 @@
 
 
 @end
+
+
+@implementation TDLazyArrayOfJSON
+
+- (id) initWithArray: (NSMutableArray*)array {
+    self = [super init];
+    if (self) {
+        _array = [array retain];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [_array release];
+    [super dealloc];
+}
+
+- (NSUInteger)count {
+    return _array.count;
+}
+
+- (id)objectAtIndex:(NSUInteger)index {
+    id obj = [_array objectAtIndex: index];
+    if ([obj isKindOfClass: [NSData class]]) {
+        obj = [TDJSON JSONObjectWithData: obj options: TDJSONReadingAllowFragments
+                                   error: nil];
+        [_array replaceObjectAtIndex: index withObject: obj];
+    }
+    return obj;
+}
+
+@end
