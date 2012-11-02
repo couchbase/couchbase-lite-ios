@@ -48,10 +48,17 @@ NSString* TDCreateUUID() {
     uuid_unparse_lower(uuid, cstr);
     return [[[NSString alloc] initWithCString: cstr encoding: NSASCIIStringEncoding] autorelease];
 #else
+    
     CFUUIDRef uuid = CFUUIDCreate(NULL);
-    NSString* str = NSMakeCollectable(CFUUIDCreateString(NULL, uuid));
+#ifdef __OBJC_GC__
+    CFStringRef uuidStrRef = CFUUIDCreateString(NULL, uuid);
+    NSString *uuidStr = (NSString *)uuidStrRef;
+    CFRelease(uuidStrRef);
+#else
+    NSString *uuidStr = (__bridge_transfer NSString *)CFUUIDCreateString(NULL, uuid);
+#endif
     CFRelease(uuid);
-    return [str autorelease];
+    return uuidStr;
 #endif
 }
 
@@ -89,9 +96,9 @@ NSString* TDHexFromBytes( const void* bytes, size_t length) {
     char *dst = &hex[0];
     for( size_t i=0; i<length; i+=1 )
         dst += sprintf(dst,"%02x", ((const uint8_t*)bytes)[i]); // important: generates lowercase!
-    return [[[NSString alloc] initWithBytes: hex
+    return [[NSString alloc] initWithBytes: hex
                                      length: 2*length
-                                   encoding: NSASCIIStringEncoding] autorelease];
+                                   encoding: NSASCIIStringEncoding];
 }
 
 
@@ -125,7 +132,12 @@ NSString* TDEscapeID( NSString* docOrRevID ) {
                                                                   (CFStringRef)docOrRevID,
                                                                   NULL, (CFStringRef)@"&/",
                                                                   kCFStringEncodingUTF8);
-    return [NSMakeCollectable(escaped) autorelease];
+    #ifdef __OBJC_GC__
+    return NSMakeCollectable(escaped);
+    #else
+    return (__bridge_transfer NSString *)escaped;
+    #endif
+
 #endif
 }
 
@@ -140,13 +152,17 @@ NSString* TDEscapeURLParam( NSString* param ) {
                                                                   (CFStringRef)param,
                                                                   NULL, (CFStringRef)@"&",
                                                                   kCFStringEncodingUTF8);
-    return [NSMakeCollectable(escaped) autorelease];
+    #ifdef __OBJC_GC__
+    return NSMakeCollectable(escaped);
+    #else
+    return (__bridge_transfer NSString *)escaped;
+    #endif
 #endif
 }
 
 
 NSString* TDQuoteString( NSString* param ) {
-    NSMutableString* quoted = [[param mutableCopy] autorelease];
+    NSMutableString* quoted = [param mutableCopy];
     [quoted replaceOccurrencesOfString: @"\\" withString: @"\\\\"
                                options: NSLiteralSearch
                                  range: NSMakeRange(0, quoted.length)];
@@ -167,7 +183,7 @@ NSString* TDUnquoteString( NSString* param ) {
     param = [param substringWithRange: NSMakeRange(1, param.length - 2)];
     if ([param rangeOfString: @"\\"].length == 0)
         return param;
-    NSMutableString* unquoted = [[param mutableCopy] autorelease];
+    NSMutableString* unquoted = [param mutableCopy];
     for (NSUInteger pos = 0; pos < unquoted.length; ) {
         NSRange r = [unquoted rangeOfString: @"\\"
                                     options: NSLiteralSearch
@@ -186,7 +202,7 @@ NSString* TDUnquoteString( NSString* param ) {
 NSString* TDAbbreviate( NSString* str ) {
     if (str.length <= 10)
         return str;
-    NSMutableString* abbrev = [[str mutableCopy] autorelease];
+    NSMutableString* abbrev = [str mutableCopy];
     [abbrev replaceCharactersInRange: NSMakeRange(4, abbrev.length - 8) withString: @".."];
     return abbrev;
 }
@@ -242,7 +258,7 @@ NSURL* TDURLWithoutQuery( NSURL* url ) {
     return [NSURL URLWithString: [str substringToIndex: q.location]];
 #else
     // Strip anything after the URL's path (i.e. the query string)
-    CFURLRef cfURL = (CFURLRef)url;
+    CFURLRef cfURL = (__bridge CFURLRef)url;
     CFRange range = CFURLGetByteRangeForComponent(cfURL, kCFURLComponentResourceSpecifier, NULL);
     if (range.length == 0) {
         return url;
@@ -252,8 +268,12 @@ NSURL* TDURLWithoutQuery( NSURL* url ) {
             return url;  // give up
         UInt8 bytes[size];
         CFURLGetBytes(cfURL, bytes, size);
-        cfURL = CFURLCreateWithBytes(NULL, bytes, range.location - 1, kCFStringEncodingUTF8, NULL);
-        return [NSMakeCollectable(cfURL) autorelease];
+        NSURL *url = (__bridge_transfer NSURL *)CFURLCreateWithBytes(NULL, bytes, range.location - 1, kCFStringEncodingUTF8, NULL);
+    #ifdef __OBJC_GC__
+        return NSMakeCollectable(url);
+    #else
+        return url;
+    #endif
     }
 #endif
 }

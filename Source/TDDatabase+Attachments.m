@@ -50,7 +50,7 @@
 
 
 - (TDBlobStoreWriter*) attachmentWriter {
-    return [[[TDBlobStoreWriter alloc] initWithStore: _attachments] autorelease];
+    return [[TDBlobStoreWriter alloc] initWithStore: _attachments];
 }
 
 
@@ -65,6 +65,14 @@
     if (!_pendingAttachmentsByDigest)
         _pendingAttachmentsByDigest = [[NSMutableDictionary alloc] init];
     [_pendingAttachmentsByDigest addEntriesFromDictionary: blobsByDigests];
+}
+
+
+- (void) rememberPendingKey: (TDBlobKey)key forDigest: (NSString*)digest {
+    if (!_pendingAttachmentsByDigest)
+        _pendingAttachmentsByDigest = [[NSMutableDictionary alloc] init];
+    NSData* keyData = [NSData dataWithBytes: &key length: sizeof(TDBlobKey)];
+    _pendingAttachmentsByDigest[digest] = keyData;
 }
 
 
@@ -92,10 +100,8 @@
             return kTDStatusAttachmentError;
         attachment->blobKey = [writer blobKey];
         attachment->length = [writer length];
-
         // Remove the writer but leave the blob-key behind for future use:
-        NSData* keyData = [NSData dataWithBytes: &attachment->blobKey length: sizeof(TDBlobKey)];
-        _pendingAttachmentsByDigest[digest] = keyData;
+        [self rememberPendingKey: attachment->blobKey forDigest: digest];
         return kTDStatusOK;
         
     } else if ([writer isKindOfClass: [NSData class]]) {
@@ -345,14 +351,13 @@
             NSDictionary* attachment = attachments[name];
             NSDictionary* editedAttachment = block(name, attachment);
             if (!editedAttachment) {
-                [editedProperties release];
                 return NO;  // block canceled
             }
             if (editedAttachment != attachment) {
                 if (!editedProperties) {
                     // Make the document properties and _attachments dictionary mutable:
                     editedProperties = [properties mutableCopy];
-                    editedAttachments = [[attachments mutableCopy] autorelease];
+                    editedAttachments = [attachments mutableCopy];
                     editedProperties[@"_attachments"] = editedAttachments;
                 }
                 editedAttachments[name] = editedAttachment;
@@ -360,7 +365,7 @@
         }
     }
     if (editedProperties) {
-        rev.properties = [editedProperties autorelease];
+        rev.properties = editedProperties;
         return YES;
     }
     return NO;
@@ -385,7 +390,7 @@
         if (!stubItOut && !addFollows)
             return attachment;  // no change
         // Need to modify attachment entry:
-        NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+        NSMutableDictionary* editedAttachment = [attachment mutableCopy];
         [editedAttachment removeObjectForKey: @"data"];
         if (stubItOut) {
             // ...then remove the 'data' and 'follows' key:
@@ -418,7 +423,7 @@
                                                        error: &error];
             if (!fileData)
                 return nil;
-            NSMutableDictionary* editedAttachment = [[attachment mutableCopy] autorelease];
+            NSMutableDictionary* editedAttachment = [attachment mutableCopy];
             [editedAttachment removeObjectForKey: @"follows"];
             editedAttachment[@"data"] = [TDBase64 encode: fileData];
             return editedAttachment;
@@ -446,8 +451,8 @@
         // Create a TDAttachment object:
         NSDictionary* attachInfo = revAttachments[name];
         NSString* contentType = $castIf(NSString, attachInfo[@"content_type"]);
-        TDAttachment* attachment = [[[TDAttachment alloc] initWithName: name
-                                                           contentType: contentType] autorelease];
+        TDAttachment* attachment = [[TDAttachment alloc] initWithName: name
+                                                           contentType: contentType];
 
         NSString* newContentsBase64 = $castIf(NSString, attachInfo[@"data"]);
         if (newContentsBase64) {
@@ -559,7 +564,7 @@
             [writer addFileURL: [self fileForAttachmentDict: attachment]];
         }
     }
-    return [writer autorelease];
+    return writer;
 }
 
 
@@ -574,89 +579,59 @@
     *outStatus = kTDStatusBadAttachment;
     if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID))
         return nil;
-    
-    [self beginTransaction];
-    @try {
-        TDRevision* oldRev = [[[TDRevision alloc] initWithDocID: docID
-                                                          revID: oldRevID
-                                                        deleted: NO] autorelease];
-        if (oldRevID) {
-            // Load existing revision if this is a replacement:
-            *outStatus = [self loadRevisionBody: oldRev options: 0];
-            if (TDStatusIsError(*outStatus)) {
-                if (*outStatus == kTDStatusNotFound && [self existsDocumentWithID: docID revisionID: nil])
-                    *outStatus = kTDStatusConflict;   // if some other revision exists, it's a conflict
-                return nil;
-            }
-            NSDictionary* attachments = oldRev[@"_attachments"];
-            if (!body && !attachments[filename]) {
-                *outStatus = kTDStatusAttachmentNotFound;
-                return nil;
-            }
-            // Remove the _attachments stubs so putRevision: doesn't copy the rows for me
-            // OPT: Would be better if I could tell loadRevisionBody: not to add it
-            if (attachments) {
-                NSMutableDictionary* properties = [oldRev.properties mutableCopy];
-                [properties removeObjectForKey: @"_attachments"];
-                oldRev.body = [TDBody bodyWithProperties: properties];
-                [properties release];
-            }
-        } else {
-            // If this creates a new doc, it needs a body:
-            oldRev.body = [TDBody bodyWithProperties: @{}];
-        }
-        
-        // Create a new revision:
-        TDRevision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID
-                                 allowConflict: NO status: outStatus];
-        if (!newRev)
+
+    TDRevision* oldRev = [[TDRevision alloc] initWithDocID: docID
+                                                      revID: oldRevID
+                                                    deleted: NO];
+    if (oldRevID) {
+        // Load existing revision if this is a replacement:
+        *outStatus = [self loadRevisionBody: oldRev options: 0];
+        if (TDStatusIsError(*outStatus)) {
+            if (*outStatus == kTDStatusNotFound && [self existsDocumentWithID: docID revisionID: nil])
+                *outStatus = kTDStatusConflict;   // if some other revision exists, it's a conflict
             return nil;
-        
-        if (oldRevID) {
-            // Copy all attachment rows _except_ for the one being updated:
-            if (![_fmdb executeUpdate: @"INSERT INTO attachments "
-                    "(sequence, filename, key, type, encoding, encoded_length, length, revpos) "
-                    "SELECT ?, filename, key, type, encoding, encoded_length, length, revpos "
-                    "FROM attachments WHERE sequence=? AND filename != ?",
-                                        @(newRev.sequence), @(oldRev.sequence),
-                                        filename]) {
-                *outStatus = kTDStatusDBError;
-                return nil;
-            }
         }
-        
-        if (body) {
-            // If not deleting, add a new attachment entry:
-            TDAttachment* attachment = [[TDAttachment alloc] initWithName: filename
-                                                              contentType: contentType];
-            [attachment autorelease];
-            attachment->length = body.length;
-            attachment->encoding = encoding;
-            attachment->revpos = newRev.generation;
-            if (encoding) {
-                attachment->encodedLength = attachment->length;
-                attachment->length = [self decodeAttachment: body encoding: encoding].length;
-                if (attachment->length == 0 && attachment->encodedLength > 0) {
-                    *outStatus = kTDStatusBadEncoding;     // failed to decode
-                    return nil;
-                }
-            }
-            
-            if (![self storeBlob: body creatingKey: &attachment->blobKey]) {
-                *outStatus = kTDStatusAttachmentError;
-                return nil;
-            }
-            
-            *outStatus = [self insertAttachment: attachment forSequence: newRev.sequence];
-            if (TDStatusIsError(*outStatus))
-                return nil;
-        }
-        
-        *outStatus = body ? kTDStatusCreated : kTDStatusOK;
-        return newRev;
-    } @finally {
-        [self endTransaction: (*outStatus < 300)];
+    } else {
+        // If this creates a new doc, it needs a body:
+        oldRev.body = [TDBody bodyWithProperties: @{}];
     }
+
+    // Update the _attachments dictionary:
+    NSMutableDictionary* attachments = [oldRev[@"_attachments"] mutableCopy];
+    if (!attachments)
+        attachments = $mdict();
+    if (body) {
+        TDBlobKey key;
+        if (![self storeBlob: body creatingKey: &key]) {
+            *outStatus = kTDStatusAttachmentError;
+            return nil;
+        }
+        NSString* digest = [@"sha1-" stringByAppendingString: [TDBase64 encode: &key
+                                                                        length: sizeof(key)]];
+        [self rememberPendingKey: key forDigest: digest];
+        NSString* encodingName = (encoding == kTDAttachmentEncodingGZIP) ? @"gzip" : nil;
+        attachments[filename] = $dict({@"digest", digest},
+                                      {@"length", @(body.length)},
+                                      {@"follows", $true},
+                                      {@"content_type", contentType},
+                                      {@"encoding", encodingName});
+    } else {
+        if (!attachments[filename]) {
+            *outStatus = kTDStatusAttachmentNotFound;
+            return nil;
+        }
+        [attachments removeObjectForKey: filename];
+    }
+    NSMutableDictionary* properties = [oldRev.properties mutableCopy];
+    properties[@"_attachments"] = attachments;
+    oldRev.properties = properties;
+
+    // Store a new revision with the updated _attachments:
+    TDRevision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID
+                             allowConflict: NO status: outStatus];
+    if (!body && *outStatus == kTDStatusCreated)
+        *outStatus = kTDStatusOK;
+    return newRev;
 }
 
 

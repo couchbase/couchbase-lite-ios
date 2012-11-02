@@ -75,7 +75,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     
     // TDReplicator is an abstract class; instantiating one actually instantiates a subclass.
     if ([self class] == [TDReplicator class]) {
-        [self release];
         Class klass = push ? [TDPusher class] : [TDPuller class];
         return [[klass alloc] initWithDB: db remote: remote push: push continuous: continuous];
     }
@@ -83,7 +82,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     self = [super init];
     if (self) {
         _db = db;
-        _remote = [remote retain];
+        _remote = remote;
         _continuous = continuous;
         Assert(push == self.isPush);
 
@@ -97,21 +96,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 - (void)dealloc {
     [self stop];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [_remote release];
     [_host stop];
-    [_host release];
-    [_filterName release];
-    [_filterParameters release];
-    [_lastSequence release];
-    [_remoteCheckpoint release];
-    [_batcher release];
-    [_sessionID release];
-    [_error release];
-    [_authorizer release];
-    [_options release];
-    [_requestHeaders release];
-    [_remoteRequests release];
-    [super dealloc];
 }
 
 
@@ -159,7 +144,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     if (!$equal(lastSequence, _lastSequence)) {
         LogTo(SyncVerbose, @"%@: Setting lastSequence to %@ (from %@)",
               self, lastSequence, _lastSequence);
-        [_lastSequence release];
         _lastSequence = [lastSequence copy];
         if (!_lastSequenceChanged) {
             _lastSequenceChanged = YES;
@@ -197,8 +181,11 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     if (error.code == NSURLErrorCancelled && $equal(error.domain, NSURLErrorDomain))
         return;
     
-    if (ifSetObj(&_error, error))
+    if (_error != error)
+    {
+        _error = error;
         [self postProgressChanged];
+    }
 }
 
 
@@ -217,7 +204,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                            self, (unsigned)inbox.count);
                      TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
                      [self processInbox: revs];
-                     [revs release];
                      LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
                      [self updateActive];
                  }
@@ -237,7 +223,12 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     // the block also retains a ref to self. Cycle is also broken in -stopped.)
     _online = NO;
     _host = [[TDReachability alloc] initWithHostName: _remote.host];
-    _host.onChange = ^{[self reachabilityChanged: _host];};
+    
+    __weak id weakSelf = self;
+    _host.onChange = ^{
+        TDReplicator *strongSelf = weakSelf;
+        [strongSelf reachabilityChanged:strongSelf->_host];
+    };
     [_host start];
     [self reachabilityChanged: _host];
 }
@@ -277,9 +268,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     [[NSNotificationCenter defaultCenter]
         postNotificationName: TDReplicatorStoppedNotification object: self];
     [self saveLastSequence];
-    setObj(&_batcher, nil);
+    
+    _batcher = nil;
     [_host stop];
-    setObj(&_host, nil);
+    _host = nil;
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -323,7 +315,6 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     _online = YES;
 
     if (_running) {
-        [_lastSequence release];
         _lastSequence = nil;
         self.error = nil;
 
@@ -430,20 +421,24 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: relativePath];
     NSURL* url = [NSURL URLWithString: urlStr];
-    onCompletion = [[onCompletion copy] autorelease];
-    __block TDRemoteJSONRequest *req = [[TDRemoteJSONRequest alloc] initWithMethod: method
-                                                                        URL: url
-                                                                       body: body
-                                                             requestHeaders: self.requestHeaders 
-                                                              onCompletion:
-                                ^(id result, NSError* error) {
-                                    [self removeRemoteRequest: req];
-                                    onCompletion(result, error);
-                                }];
+    onCompletion = [onCompletion copy];
+    
+    // under ARC, using variable req used directly inside the block results in a compiler error (it could have undefined value).
+    __weak TDReplicator *weakSelf = self;
+    __block TDRemoteJSONRequest *req = nil;
+    req = [[TDRemoteJSONRequest alloc] initWithMethod: method
+                                                  URL: url
+                                                 body: body
+                                       requestHeaders: self.requestHeaders
+                                         onCompletion: ^(id result, NSError* error) {
+        TDReplicator *strongSelf = weakSelf;
+        [strongSelf removeRemoteRequest: req];
+        onCompletion(result, error);
+    }];
     req.authorizer = _authorizer;
     [self addRemoteRequest: req];
     [req start];
-    return [req autorelease];
+    return req;
 }
 
 
@@ -465,7 +460,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     // Clear _remoteRequests before iterating, to ensure that re-entrant calls to this won't
     // try to re-stop any of the requests. (Re-entrant calls are possible due to replicator
     // error handling when it receives the 'canceled' errors from the requests I'm stopping.)
-    NSArray* requests = [_remoteRequests autorelease];
+    NSArray* requests = _remoteRequests;
     _remoteRequests = nil;
     [requests makeObjectsPerformSelector: @selector(stop)];
 }
@@ -522,7 +517,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                                                         response[@"lastSequence"]);
 
                       if ($equal(remoteLastSequence, localLastSequence)) {
-                          _lastSequence = [localLastSequence retain];
+                          _lastSequence = localLastSequence;
                           LogTo(Sync, @"%@: Replicating from lastSequence=%@", self, _lastSequence);
                       } else {
                           LogTo(Sync, @"%@: lastSequence mismatch: I had %@, remote had %@",
@@ -554,7 +549,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     _lastSequenceChanged = _overdueForSave = NO;
     
     LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
-    NSMutableDictionary* body = [[_remoteCheckpoint mutableCopy] autorelease];
+    NSMutableDictionary* body = [_remoteCheckpoint mutableCopy];
     if (!body)
         body = $mdict();
     [body setValue: _lastSequence forKey: @"lastSequence"];

@@ -62,7 +62,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 + (void) forgetServers {
     @synchronized(self) {
-        [sHostMap release];
         sHostMap = nil;
     }
 }
@@ -157,8 +156,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 - (void) dealloc {
     [_router stop];
-    [_router release];
-    [super dealloc];
 }
 
 
@@ -177,23 +174,29 @@ static NSString* normalizeHostname( NSString* hostname ) {
     
     NSThread* loaderThread = [NSThread currentThread];
     _router = [[TDRouter alloc] initWithServer: server request: self.request isLocal: YES];
+    
+    __weak id weakSelf = self;
+    
     _router.onResponseReady = ^(TDResponse* routerResponse) {
-        [self performSelector: @selector(onResponseReady:)
-                     onThread: loaderThread
-                   withObject: routerResponse
-                waitUntilDone: NO];
+        id strongSelf = weakSelf;
+        [strongSelf performSelector: @selector(onResponseReady:)
+                           onThread: loaderThread
+                         withObject: routerResponse
+                      waitUntilDone: NO];
     };
     _router.onDataAvailable = ^(NSData* data, BOOL finished) {
-        [self performSelector: @selector(onDataAvailable:)
-                     onThread: loaderThread
-                   withObject: data
-                waitUntilDone: NO];
+        id strongSelf = weakSelf;
+        [strongSelf performSelector: @selector(onDataAvailable:)
+                           onThread: loaderThread
+                         withObject: data
+                      waitUntilDone: NO];
     };
     _router.onFinished = ^{
-        [self performSelector: @selector(onFinished)
-                     onThread: loaderThread
-                   withObject: nil
-                waitUntilDone: NO];
+        id strongSelf = weakSelf;
+        [strongSelf performSelector: @selector(onFinished)
+                           onThread: loaderThread
+                         withObject: nil
+                      waitUntilDone: NO];
     };
     [_router start];
 }
@@ -210,7 +213,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
                                                             headerFields: routerResponse.headers];
     [self.client URLProtocol: self didReceiveResponse: response 
           cacheStoragePolicy: NSURLCacheStorageNotAllowed];
-    [response release];
 }
 
 
@@ -239,8 +241,8 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 NSURL* TDStartServer(NSString* serverDirectory, NSError** outError) {
     CAssert(![TDURLProtocol server], @"A TDServer is already running");
-    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: serverDirectory
-                                                        error: outError] autorelease];
+    TDServer* tdServer = [[TDServer alloc] initWithDirectory: serverDirectory
+                                                       error: outError];
     if (!tdServer)
         return nil;
     return [TDURLProtocol registerServer: tdServer forHostname: nil];
@@ -302,7 +304,7 @@ TestCase(TDURLProtocol) {
     NSData* body = [NSURLConnection sendSynchronousRequest: req 
                                          returningResponse: &response 
                                                      error: &error];
-    NSString* bodyStr = [[[NSString alloc] initWithData: body encoding: NSUTF8StringEncoding] autorelease];
+    NSString* bodyStr = [[NSString alloc] initWithData: body encoding: NSUTF8StringEncoding];
     Log(@"Response = %@", response);
     Log(@"MIME Type = %@", response.MIMEType);
     Log(@"Body = %@", bodyStr);

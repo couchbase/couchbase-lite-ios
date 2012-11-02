@@ -22,27 +22,27 @@ NSString* const TDHTTPErrorDomain = @"TDHTTP";
 struct StatusMapEntry {
     TDStatus status;
     int httpStatus;
-    NSString* message;
+    const char* message;
 };
 
 static const struct StatusMapEntry kStatusMap[] = {
-    {kTDStatusNotFound,             404, @"not_found"},           // for compatibility with CouchDB
-    {kTDStatusDuplicate,            412, @"Already exists"},      // really 'Precondition Failed'
+    {kTDStatusNotFound,             404, "not_found"},           // for compatibility with CouchDB
+    {kTDStatusDuplicate,            412, "Already exists"},      // really 'Precondition Failed'
 
-    {kTDStatusBadEncoding,          400, @"Bad data encoding"},
-    {kTDStatusBadAttachment,        400, @"Invalid attachment"},
-    {kTDStatusAttachmentNotFound,   404, @"Attachment not found"},
-    {kTDStatusBadJSON,              400, @"Invalid JSON"},
-    {kTDStatusBadID,                400, @"Invalid database/document/revision ID"},
-    {kTDStatusBadParam,             400, @"Invalid parameter in JSON body"},
-    {kTDStatusDeleted,              404, @"deleted"},
+    {kTDStatusBadEncoding,          400, "Bad data encoding"},
+    {kTDStatusBadAttachment,        400, "Invalid attachment"},
+    {kTDStatusAttachmentNotFound,   404, "Attachment not found"},
+    {kTDStatusBadJSON,              400, "Invalid JSON"},
+    {kTDStatusBadID,                400, "Invalid database/document/revision ID"},
+    {kTDStatusBadParam,             400, "Invalid parameter in JSON body"},
+    {kTDStatusDeleted,              404, "deleted"},
 
-    {kTDStatusUpstreamError,        502, @"Invalid response from remote replication server"},
-    {kTDStatusDBError,              500, @"Database error!"},
-    {kTDStatusCorruptError,         500, @"Invalid data in database"},
-    {kTDStatusAttachmentError,      500, @"Attachment store error"},
-    {kTDStatusCallbackError,        500, @"Application callback block failed"},
-    {kTDStatusException,            500, @"Internal error"},
+    {kTDStatusUpstreamError,        502, "Invalid response from remote replication server"},
+    {kTDStatusDBError,              500, "Database error!"},
+    {kTDStatusCorruptError,         500, "Invalid data in database"},
+    {kTDStatusAttachmentError,      500, "Attachment store error"},
+    {kTDStatusCallbackError,        500, "Application callback block failed"},
+    {kTDStatusException,            500, "Internal error"},
 };
 
 
@@ -50,7 +50,7 @@ int TDStatusToHTTPStatus( TDStatus status, NSString** outMessage ) {
     for (unsigned i=0; i < sizeof(kStatusMap)/sizeof(kStatusMap[0]); ++i) {
         if (kStatusMap[i].status == status) {
             if (outMessage)
-                *outMessage = kStatusMap[i].message;
+                *outMessage = [NSString stringWithUTF8String: kStatusMap[i].message];
             return kStatusMap[i].httpStatus;
         }
     }

@@ -27,8 +27,8 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 {
     self = [super init];
     if (self) {
-        _manager = [manager retain];
-        _tddb = [tddb retain];
+        _manager = manager;
+        _tddb = tddb;
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(tddbNotification:) name: nil object: tddb];
     }
@@ -39,16 +39,13 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 - (void) forgetDB {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     _tddb.touchDatabase = nil;
-    setObj(&_tddb, nil);
+    _tddb = nil;
 }
 
 
 - (void)dealloc
 {
     [self forgetDB];
-    [_modelFactory release];
-    [_manager release];
-    [super dealloc];
 }
 
 
@@ -114,7 +111,7 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
     if (!doc) {
         if (docID.length == 0)
             return nil;
-        doc = [[[TouchDocument alloc] initWithDatabase: self documentID: docID] autorelease];
+        doc = [[TouchDocument alloc] initWithDatabase: self documentID: docID];
         if (!doc)
             return nil;
         if (!_docCache)
@@ -145,7 +142,7 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 
 - (TouchQuery*) queryAllDocuments {
-    return [[[TouchQuery alloc] initWithDatabase: self view: nil] autorelease];
+    return [[TouchQuery alloc] initWithDatabase: self view: nil];
 }
 
 
@@ -163,19 +160,19 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 - (TouchView*) viewNamed: (NSString*)name {
     TDView* view = [_tddb viewNamed: name];
-    return view ? [[[TouchView alloc] initWithDatabase: self view: view] autorelease] : nil;
+    return view ? [[TouchView alloc] initWithDatabase: self view: view] : nil;
 }
 
 
 - (NSArray*) allViews {
     return [_tddb.allViews my_map:^id(TDView* view) {
-        return [[[TouchView alloc] initWithDatabase: self view: view] autorelease];
+        return [[TouchView alloc] initWithDatabase: self view: view];
     }];
 }
 
 
 - (TouchQuery*) slowQueryWithMap: (TDMapBlock)mapBlock {
-    return [[[TouchQuery alloc] initWithDatabase: self mapBlock: mapBlock] autorelease];
+    return [[TouchQuery alloc] initWithDatabase: self mapBlock: mapBlock];
 }
 
 

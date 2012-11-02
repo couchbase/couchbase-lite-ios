@@ -57,7 +57,7 @@
 
 - (TDStatus) do_GET_all_dbs {
     NSArray* dbs = _dbManager.allDatabaseNames ?: @[];
-    _response.body = [[[TDBody alloc] initWithArray: dbs] autorelease];
+    _response.body = [[TDBody alloc] initWithArray: dbs];
     return kTDStatusOK;
 }
 
@@ -159,7 +159,7 @@
                                        {@"error", error})];
         }
     }
-    _response.body = [[[TDBody alloc] initWithArray: activity] autorelease];
+    _response.body = [[TDBody alloc] initWithArray: activity];
     return kTDStatusOK;
 }
 
@@ -284,7 +284,7 @@
                 TDStatus status;
                 TDBody* docBody = [TDBody bodyWithProperties: doc];
                 if (noNewEdits) {
-                    rev = [[[TDRevision alloc] initWithBody: docBody] autorelease];
+                    rev = [[TDRevision alloc] initWithBody: docBody];
                     NSArray* history = [TDDatabase parseCouchDBRevisionHistory: doc];
                     status = rev ? [db forceInsert: rev revisionHistory: history source: nil] : kTDStatusBadParam;
                 } else {
@@ -326,7 +326,7 @@
 - (TDStatus) do_POST_revs_diff: (TDDatabase*)db {
     // http://wiki.apache.org/couchdb/HttpPostRevsDiff
     // Collect all of the input doc/revision IDs as TDRevisions:
-    TDRevisionList* revs = [[[TDRevisionList alloc] init] autorelease];
+    TDRevisionList* revs = [[TDRevisionList alloc] init];
     NSDictionary* body = self.bodyAsDictionary;
     if (!body)
         return kTDStatusBadJSON;
@@ -337,7 +337,6 @@
         for (NSString* revID in revIDs) {
             TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: NO];
             [revs addRev: rev];
-            [rev release];
         }
     }
     
@@ -371,7 +370,6 @@
         }
         TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
         NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0];
-        [rev release];
         if (ancestors)
             docInfo[@"possible_ancestors"] = ancestors;
     }
@@ -447,7 +445,6 @@
     [json appendBytes: "\n" length: 1];
     if (_onDataAvailable)
         _onDataAvailable(json, NO);
-    [json release];
 }
 
 
@@ -519,7 +516,7 @@
     
     NSString* filterName = [self query: @"filter"];
     if (filterName) {
-        _changesFilter = [[_db filterNamed: filterName] retain];
+        _changesFilter = [_db filterNamed: filterName];
         if (!_changesFilter)
             return kTDStatusNotFound;
         _changesFilterParams = [self.jsonQueries copy];
@@ -752,8 +749,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (!prevRevID)
         prevRevID = self.ifMatch;
 
-    TDRevision* rev = [[[TDRevision alloc] initWithDocID: docID revID: nil deleted: deleting]
-                            autorelease];
+    TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: nil deleted: deleting];
     if (!rev)
         return kTDStatusBadID;
     rev.body = body;
@@ -800,7 +796,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSString* contentType = [_request valueForHTTPHeaderField: @"Content-Type"];
     NSInputStream* bodyStream = _request.HTTPBodyStream;
     if (bodyStream) {
-        block = [[block copy] autorelease];
+        block = [block copy];
         status = [TDMultipartDocumentReader readStream: bodyStream
                                                 ofType: contentType
                                             toDatabase: _db
@@ -854,7 +850,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             return [self update: db docID: docID body: body deleting: NO];
         } else {
             // PUT with new_edits=false -- forcible insertion of existing revision:
-            TDRevision* rev = [[[TDRevision alloc] initWithBody: body] autorelease];
+            TDRevision* rev = [[TDRevision alloc] initWithBody: body];
             if (!rev)
                 return kTDStatusBadJSON;
             if (!$equal(rev.docID, docID) || !rev.revID)

@@ -25,7 +25,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 {
     self = [super init];
     if (self) {
-        _database = [database retain];
+        _database = database;
         _docID = [docID copy];
     }
     return self;
@@ -37,10 +37,6 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
     if (_modelObject)
         Warn(@"Deallocing %@ while it still has a modelObject %@", self, _modelObject);
     [_owningCache resourceBeingDealloced: self];
-    [_currentRevision release];
-    [_database release];
-    [_docID release];
-    [super dealloc];
 }
 
 
@@ -53,7 +49,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 
 
 - (NSString*) abbreviatedID {
-    NSMutableString* abbrev = [[self.documentID mutableCopy] autorelease];
+    NSMutableString* abbrev = [self.documentID mutableCopy];
     if (abbrev.length > 10)
         [abbrev replaceCharactersInRange: NSMakeRange(4, abbrev.length - 8) withString: @".."];
     return abbrev;
@@ -92,14 +88,14 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 
 - (TouchRevision*) currentRevision {
     if (!_currentRevision) {
-        _currentRevision = [[self revisionWithID: nil] retain];
+        _currentRevision = [self revisionWithID: nil];
     }
     return _currentRevision;
 }
 
 
 - (void) forgetCurrentRevision {
-    setObj(&_currentRevision, nil);
+    _currentRevision = nil;
 }
 
 
@@ -114,7 +110,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
     else if ($equal(rev.revID, _currentRevision.revisionID))
         return _currentRevision;
     else
-        return [[[TouchRevision alloc] initWithDocument: self revision: rev] autorelease];
+        return [[TouchRevision alloc] initWithDocument: self revision: rev];
 }
 
 
@@ -128,7 +124,6 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 // Notification from the TouchDatabase that a (current, winning) revision has been added
 - (void) revisionAdded: (TDRevision*)rev source: (NSURL*)source {
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
-        [_currentRevision autorelease];
         _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
     }
 
@@ -214,16 +209,16 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
         NSDictionary* expanded = [TouchAttachment installAttachmentBodies: attachments
                                                              intoDatabase: _database];
         if (expanded != attachments) {
-            NSMutableDictionary* nuProperties = [[properties mutableCopy] autorelease];
+            NSMutableDictionary* nuProperties = [properties mutableCopy];
             nuProperties[@"_attachments"] = expanded;
             properties = nuProperties;
         }
     }
     
     BOOL deleted = !properties || [properties[@"_deleted"] boolValue];
-    TDRevision* rev = [[[TDRevision alloc] initWithDocID: _docID
-                                                   revID: nil
-                                                 deleted: deleted] autorelease];
+    TDRevision* rev = [[TDRevision alloc] initWithDocID: _docID
+                                                  revID: nil
+                                                deleted: deleted];
     if (properties)
         rev.properties = properties;
     TDStatus status = 0;
@@ -232,7 +227,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
         if (outError) *outError = TDStatusToNSError(status, nil);
         return nil;
     }
-    return [[[TouchRevision alloc] initWithDocument: self revision: rev] autorelease];
+    return [[TouchRevision alloc] initWithDocument: self revision: rev];
 }
 
 - (TouchRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {

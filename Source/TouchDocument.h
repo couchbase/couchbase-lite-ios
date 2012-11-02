@@ -16,10 +16,10 @@
 {
     @private
     TouchDatabase* _database;
-    TDCache* _owningCache;
+    __weak TDCache* _owningCache;
     NSString* _docID;
     TouchRevision* _currentRevision;
-    id _modelObject;
+    __weak id _modelObject;
 }
 
 @property (readonly) TouchDatabase* database;
@@ -82,9 +82,9 @@
 #pragma mark MODEL:
 
 /** Optional reference to an application-defined model object representing this document.
- This property is unused and uninterpreted by TouchDB; use it for whatever you want.
- Note that this is not a strong/retained reference. */
-@property (assign) id modelObject;
+    This property is unused and uninterpreted by TouchDB; use it for whatever you want.
+    Note that this is not a strong/retained reference. */
+@property (weak) id modelObject;
 
 
 @end

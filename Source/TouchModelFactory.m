@@ -35,12 +35,6 @@ static TouchModelFactory* sSharedInstance;
 }
 
 
-- (void)dealloc {
-    [_typeDict release];
-    [super dealloc];
-}
-
-
 - (void) registerClass: (id)classOrName forDocumentType: (NSString*)type {
     [_typeDict setValue: classOrName forKey: type];
 }
@@ -87,8 +81,7 @@ static TouchModelFactory* sSharedInstance;
 }
 
 - (void) setModelFactory:(TouchModelFactory *)modelFactory {
-    [_modelFactory autorelease];
-    _modelFactory = [modelFactory retain];
+    _modelFactory = modelFactory;
 }
 
 @end

@@ -28,8 +28,8 @@
 - (id) initWithDatabase: (TouchDatabase*)database view: (TDView*)view {
     self = [super init];
     if (self) {
-        _database = [database retain];
-        _view = [view retain];
+        _database = database;
+        _view = view;
         _limit = kDefaultTDQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
     }
     return self;
@@ -70,14 +70,6 @@
 {
     if (_temporaryView)
         [_view deleteView];
-    [_view release];
-    [_database release];
-    [_startKey release];
-    [_endKey release];
-    [_startKeyDocID release];
-    [_endKeyDocID release];
-    [_keys release];
-    [super dealloc];
 }
 
 
@@ -88,7 +80,7 @@
 
 
 - (TouchLiveQuery*) asLiveQuery {
-    return [[[TouchLiveQuery alloc] initWithQuery: self] autorelease];
+    return [[TouchLiveQuery alloc] initWithQuery: self];
 }
 
 
@@ -144,7 +136,7 @@
     NSArray* rows = self.run;
     if (!rows)
         return nil;
-    return [[[TouchQueryEnumerator alloc] initWithDatabase: _database rows: rows] autorelease];
+    return [[TouchQueryEnumerator alloc] initWithDatabase: _database rows: rows];
 }
 
 
@@ -164,8 +156,6 @@
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [_rows release];
-    [super dealloc];
 }
 
 
@@ -182,13 +172,12 @@
         Log(@"TDLiveQuery: Initial row count is %lu", (unsigned long)_rows.count);
     }
     // Have to return a copy because the enumeration has to start at item #0 every time
-    return [[_rows copy] autorelease];
+    return [_rows copy];
 }
 
 
 - (void) setRows:(TouchQueryEnumerator *)rows {
-    [_rows autorelease];
-    _rows = [rows retain];
+    _rows = rows;
 }
 
 
@@ -227,12 +216,10 @@
     NSParameterAssert(database);
     self = [super init];
     if (self ) {
-        if (!rows) {
-            [self release];
+        if (!rows)
             return nil;
-        }
         _database = database;
-        _rows = [rows retain];
+        _rows = rows;
     }
     return self;
 }
@@ -241,13 +228,6 @@
 - (id) copyWithZone: (NSZone*)zone {
     return [[[self class] alloc] initWithDatabase: _database
                                              rows: _rows];
-}
-
-
-- (void) dealloc
-{
-    [_rows release];
-    [super dealloc];
 }
 
 
@@ -267,8 +247,7 @@
 
 
 - (TouchQueryRow*) rowAtIndex: (NSUInteger)index {
-    return [[[TouchQueryRow alloc] initWithDatabase: _database result: _rows[index]]
-            autorelease];
+    return [[TouchQueryRow alloc] initWithDatabase: _database result: _rows[index]];
 }
 
 
@@ -297,19 +276,12 @@
     if (self) {
         if (![result isKindOfClass: [NSDictionary class]]) {
             Warn(@"Unexpected row value in view results: %@", result);
-            [self release];
             return nil;
         }
         _database = database;
-        _result = [result retain];
+        _result = result;
     }
     return self;
-}
-
-
-- (void)dealloc {
-    [_result release];
-    [super dealloc];
 }
 
 

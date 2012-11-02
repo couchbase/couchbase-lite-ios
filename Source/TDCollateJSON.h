@@ -16,6 +16,13 @@ int TDCollateJSON(void *context,
                int len1, const void * chars1,
                int len2, const void * chars2);
 
+/** Collation that compares only a limited number of top-level collection items.
+    If the first 'arrayLimit' items of the top-level array/object have been parsed and are equal, it will stop and return 0. (This is useful for view result grouping.) */
+int TDCollateJSONLimited(void *context,
+                         int len1, const void * chars1,
+                         int len2, const void * chars2,
+                         unsigned arrayLimit);
+
 // CouchDB's default collation rules, including Unicode collation for strings
 #define kTDCollateJSON_Unicode ((void*)0)
 

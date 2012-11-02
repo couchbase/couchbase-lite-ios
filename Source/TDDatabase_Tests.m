@@ -51,7 +51,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 
 
 static TDRevision* putDoc(TDDatabase* db, NSDictionary* props) {
-    TDRevision* rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDRevision* rev = [[TDRevision alloc] initWithProperties: props];
     TDStatus status;
     TDRevision* result = [db putRevision: rev
                           prevRevisionID: props[@"_rev"]
@@ -90,8 +90,8 @@ TestCase(TDDatabase_CRUD) {
     
     // Create a document:
     NSMutableDictionary* props = $mdict({@"foo", @1}, {@"bar", $false});
-    TDBody* doc = [[[TDBody alloc] initWithProperties: props] autorelease];
-    TDRevision* rev1 = [[[TDRevision alloc] initWithBody: doc] autorelease];
+    TDBody* doc = [[TDBody alloc] initWithProperties: props];
+    TDRevision* rev1 = [[TDRevision alloc] initWithBody: doc];
     CAssert(rev1);
     TDStatus status;
     rev1 = [db putRevision: rev1 prevRevisionID: nil allowConflict: NO status: &status];
@@ -106,10 +106,10 @@ TestCase(TDDatabase_CRUD) {
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Now update it:
-    props = [[readRev.properties mutableCopy] autorelease];
+    props = [readRev.properties mutableCopy];
     props[@"status"] = @"updated!";
     doc = [TDBody bodyWithProperties: props];
-    TDRevision* rev2 = [[[TDRevision alloc] initWithBody: doc] autorelease];
+    TDRevision* rev2 = [[TDRevision alloc] initWithBody: doc];
     TDRevision* rev2Input = rev2;
     rev2 = [db putRevision: rev2 prevRevisionID: rev1.revID allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusCreated);
@@ -145,8 +145,8 @@ TestCase(TDDatabase_CRUD) {
     CAssertEq(changes.count, 0u);
         
     // Delete it:
-    TDRevision* revD = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
-    CAssertEq([db putRevision: revD prevRevisionID: nil allowConflict: NO status: &status], nil);
+    TDRevision* revD = [[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES];
+    CAssertEqual([db putRevision: revD prevRevisionID: nil allowConflict: NO status: &status], nil);
     CAssertEq(status, kTDStatusConflict);
     revD = [db putRevision: revD prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusOK);
@@ -154,7 +154,7 @@ TestCase(TDDatabase_CRUD) {
     CAssert([revD.revID hasPrefix: @"3-"]);
     
     // Delete nonexistent doc:
-    TDRevision* revFake = [[[TDRevision alloc] initWithDocID: @"fake" revID: nil deleted: YES] autorelease];
+    TDRevision* revFake = [[TDRevision alloc] initWithDocID: @"fake" revID: nil deleted: YES];
     [db putRevision: revFake prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusNotFound);
     
@@ -189,7 +189,8 @@ TestCase(TDDatabase_EmptyDoc) {
     TDRevision* rev = putDoc(db, $dict());
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.includeDocs = YES;
-    options.keys = @[rev.docID];
+    NSArray* keys = @[rev.docID];
+    options.keys = keys;
     [db getAllDocs: &options]; // raises an exception :(
 }
 
@@ -233,7 +234,7 @@ TestCase(TDDatabase_Validation) {
     
     // POST a valid new document:
     NSMutableDictionary* props = $mdict({@"name", @"Zaphod Beeblebrox"}, {@"towel", @"velvet"});
-    TDRevision* rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDRevision* rev = [[TDRevision alloc] initWithProperties: props];
     TDStatus status;
     validationCalled = NO;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
@@ -259,7 +260,7 @@ TestCase(TDDatabase_Validation) {
     
     // POST an invalid new document:
     props = $mdict({@"name", @"Vogon"}, {@"poetry", $true});
-    rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    rev = [[TDRevision alloc] initWithProperties: props];
     validationCalled = NO;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
@@ -267,7 +268,7 @@ TestCase(TDDatabase_Validation) {
 
     // PUT a valid new document with an ID:
     props = $mdict({@"_id", @"ford"}, {@"name", @"Ford Prefect"}, {@"towel", @"terrycloth"});
-    rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    rev = [[TDRevision alloc] initWithProperties: props];
     validationCalled = NO;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
@@ -275,7 +276,7 @@ TestCase(TDDatabase_Validation) {
     CAssertEqual(rev.docID, @"ford");
     
     // DELETE a document:
-    rev = [[[TDRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES] autorelease];
+    rev = [[TDRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     CAssert(rev.deleted);
     validationCalled = NO;
     rev = [db putRevision: rev prevRevisionID:  rev.revID allowConflict: NO status: &status];
@@ -284,7 +285,7 @@ TestCase(TDDatabase_Validation) {
 
     // PUT an invalid new document:
     props = $mdict({@"_id", @"petunias"}, {@"name", @"Pot of Petunias"});
-    rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    rev = [[TDRevision alloc] initWithProperties: props];
     validationCalled = NO;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
@@ -329,7 +330,7 @@ TestCase(TDDatabase_RevTree) {
                        noteInfo = changes[0];
                    }];
 
-    TDRevision* rev = [[[TDRevision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO] autorelease];
+    TDRevision* rev = [[TDRevision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     NSArray* history = @[rev.revID, @"3-thrice", @"2-too", @"1-won"];
     noteInfo = nil;
@@ -340,7 +341,7 @@ TestCase(TDDatabase_RevTree) {
     CAssertEqual(noteInfo, (@{ @"rev" : rev, @"winner": rev }));
 
 
-    TDRevision* conflict = [[[TDRevision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO] autorelease];
+    TDRevision* conflict = [[TDRevision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO];
     conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
                                 {@"message", @"yo"});
     NSArray* conflictHistory = @[conflict.revID, @"4-delta", @"3-gamma", @"2-too", @"1-won"];
@@ -352,7 +353,7 @@ TestCase(TDDatabase_RevTree) {
     CAssertEqual(noteInfo, (@{ @"rev" : conflict, @"winner": conflict }));
 
     // Add an unrelated document:
-    TDRevision* other = [[[TDRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO] autorelease];
+    TDRevision* other = [[TDRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO];
     other.properties = $dict({@"language", @"jp"});
     noteInfo = nil;
     status = [db forceInsert: other revisionHistory: @[other.revID] source: nil];
@@ -387,7 +388,7 @@ TestCase(TDDatabase_RevTree) {
     verifyHistory(db, conflict, conflictHistory, true);
 
     // Delete the current winning rev, leaving the other one:
-    TDRevision* del1 = [[[TDRevision alloc] initWithDocID: conflict.docID revID: nil deleted: YES] autorelease];
+    TDRevision* del1 = [[TDRevision alloc] initWithDocID: conflict.docID revID: nil deleted: YES];
     noteInfo = nil;
     del1 = [db putRevision: del1 prevRevisionID: conflict.revID
              allowConflict: NO status: &status];
@@ -399,13 +400,13 @@ TestCase(TDDatabase_RevTree) {
     verifyHistory(db, rev, history, true);
 
     // Delete the remaining rev:
-    TDRevision* del2 = [[[TDRevision alloc] initWithDocID: rev.docID revID: nil deleted: YES] autorelease];
+    TDRevision* del2 = [[TDRevision alloc] initWithDocID: rev.docID revID: nil deleted: YES];
     noteInfo = nil;
     del2 = [db putRevision: del2 prevRevisionID: rev.revID
              allowConflict: NO status: &status];
     CAssertEq(status, 200);
     current = [db getDocumentWithID: rev.docID revisionID: nil];
-    CAssertEq(current, nil);
+    CAssertEqual(current, nil);
 
     TDRevision* maxDel = TDCompareRevIDs(del1.revID, del2.revID) > 0 ? del1 : nil;
     CAssertEqual(noteInfo, (@{ @"rev" : del2, @"winner": maxDel }));
@@ -435,7 +436,7 @@ TestCase(TDDatabase_DuplicateRev) {
                                 {@"key", @"new-value"});
     TDRevision* rev2a = putDoc(db, props);
 
-    TDRevision* rev2b = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TDRevision* rev2b = [[TDRevision alloc] initWithProperties: props];
     TDStatus status;
     rev2b = [db putRevision: rev2b
              prevRevisionID: rev1.revID
@@ -457,7 +458,6 @@ static void insertAttachment(TDDatabase* db, NSData* blob,
                                  unsigned revpos)
 {
     TDAttachment* attachment = [[TDAttachment alloc] initWithName: name contentType: type];
-    [attachment autorelease];
     CAssert([db storeBlob: blob creatingKey: &attachment->blobKey], @"Failed to store blob");
     attachment->encoding = encoding;
     attachment->length = length;
@@ -805,8 +805,8 @@ TestCase(TDDatabase_LocalDocs) {
     // Create a document:
     NSMutableDictionary* props = $mdict({@"_id", @"_local/doc1"},
                                         {@"foo", @1}, {@"bar", $false});
-    TDBody* doc = [[[TDBody alloc] initWithProperties: props] autorelease];
-    TDRevision* rev1 = [[[TDRevision alloc] initWithBody: doc] autorelease];
+    TDBody* doc = [[TDBody alloc] initWithProperties: props];
+    TDRevision* rev1 = [[TDRevision alloc] initWithBody: doc];
     TDStatus status;
     rev1 = [db putLocalRevision: rev1 prevRevisionID: nil status: &status];
     CAssertEq(status, kTDStatusCreated);
@@ -822,10 +822,10 @@ TestCase(TDDatabase_LocalDocs) {
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Now update it:
-    props = [[readRev.properties mutableCopy] autorelease];
+    props = [readRev.properties mutableCopy];
     props[@"status"] = @"updated!";
     doc = [TDBody bodyWithProperties: props];
-    TDRevision* rev2 = [[[TDRevision alloc] initWithBody: doc] autorelease];
+    TDRevision* rev2 = [[TDRevision alloc] initWithBody: doc];
     TDRevision* rev2Input = rev2;
     rev2 = [db putLocalRevision: rev2 prevRevisionID: rev1.revID status: &status];
     CAssertEq(status, kTDStatusCreated);
@@ -843,14 +843,14 @@ TestCase(TDDatabase_LocalDocs) {
     CAssertEq(status, kTDStatusConflict);
     
     // Delete it:
-    TDRevision* revD = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES] autorelease];
-    CAssertEq([db putLocalRevision: revD prevRevisionID: nil status: &status], nil);
+    TDRevision* revD = [[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted: YES];
+    CAssertEqual([db putLocalRevision: revD prevRevisionID: nil status: &status], nil);
     CAssertEq(status, kTDStatusConflict);
     revD = [db putLocalRevision: revD prevRevisionID: rev2.revID status: &status];
     CAssertEq(status, kTDStatusOK);
     
     // Delete nonexistent doc:
-    TDRevision* revFake = [[[TDRevision alloc] initWithDocID: @"_local/fake" revID: nil deleted: YES] autorelease];
+    TDRevision* revFake = [[TDRevision alloc] initWithDocID: @"_local/fake" revID: nil deleted: YES];
     [db putLocalRevision: revFake prevRevisionID: nil status: &status];
     CAssertEq(status, kTDStatusNotFound);
     
@@ -876,10 +876,10 @@ TestCase(TDDatabase_FindMissingRevisions) {
     putDoc(db, $dict({@"_id", @"11111"}, {@"_rev", doc1r2.revID}, {@"_deleted", $true}));
     
     // Now call -findMissingRevisions:
-    TDRevision* revToFind1 = [[[TDRevision alloc] initWithDocID: @"11111" revID: @"3-bogus" deleted: NO] autorelease];
-    TDRevision* revToFind2 = [[[TDRevision alloc] initWithDocID: @"22222" revID: doc2r2.revID deleted: NO] autorelease];
-    TDRevision* revToFind3 = [[[TDRevision alloc] initWithDocID: @"99999" revID: @"9-huh" deleted: NO] autorelease];
-    TDRevisionList* revs = [[[TDRevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]] autorelease];
+    TDRevision* revToFind1 = [[TDRevision alloc] initWithDocID: @"11111" revID: @"3-bogus" deleted: NO];
+    TDRevision* revToFind2 = [[TDRevision alloc] initWithDocID: @"22222" revID: doc2r2.revID deleted: NO];
+    TDRevision* revToFind3 = [[TDRevision alloc] initWithDocID: @"99999" revID: @"9-huh" deleted: NO];
+    TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]];
     CAssert([db findMissingRevisions: revs]);
     CAssertEqual(revs.allRevisions, (@[revToFind1, revToFind3]));
     

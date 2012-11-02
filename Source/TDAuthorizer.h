@@ -17,6 +17,9 @@
 - (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
                          forRealm: (NSString*)realm;
 
+- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
+                          forRealm: (NSString*)realm;
+
 @end
 
 

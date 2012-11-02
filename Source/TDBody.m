@@ -39,17 +39,11 @@
     return self;
 }
 
-- (void)dealloc {
-    [_object release];
-    [_json release];
-    [super dealloc];
-}
-
 + (TDBody*) bodyWithProperties: (NSDictionary*)properties {
-    return [[[self alloc] initWithProperties: properties] autorelease];
+    return [[self alloc] initWithProperties: properties];
 }
 + (TDBody*) bodyWithJSON: (NSData*)json {
-    return [[[self alloc] initWithJSON: json] autorelease];
+    return [[self alloc] initWithJSON: json];
 }
 
 - (id) copyWithZone: (NSZone*)zone {
@@ -91,7 +85,7 @@
                                           options: TDJSONWritingPrettyPrinted
                                             error: NULL];
         if (json) {
-            NSMutableData* mjson = [[json mutableCopy] autorelease];
+            NSMutableData* mjson = [json mutableCopy];
             [mjson appendBytes: "\n" length: 1];
             return mjson;
         }

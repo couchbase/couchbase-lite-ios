@@ -41,7 +41,7 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
     NSParameterAssert(remote);
     self = [super initWithNewDocumentInDatabase: database];
     if (self) {
-        _remoteURL = [remote retain];
+        _remoteURL = remote;
         _pull = pull;
         self.autosaves = NO;
         self.source = pull ? remote.absoluteString : database.name;
@@ -69,7 +69,7 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 
         [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
                                                        to: ^(TDDatabase* tddb) {
-            _bg_serverDatabase = [tddb retain];
+            _bg_serverDatabase = tddb;
             // Observe *all* replication changes:
             [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(bg_replicationProgressChanged:)
@@ -84,9 +84,6 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [_remoteURL release];
-    [_bg_serverDatabase release];
-    [super dealloc];
 }
 
 
@@ -283,7 +280,7 @@ static inline BOOL isLocalDBName(NSString* url) {
                     options: (NSDictionary*)options
 {
     // The setup should use parameters, not ivars, because the ivars may change on the main thread.
-    _bg_serverDatabase = [[server_dbmgr databaseNamed: dbName] retain];
+    _bg_serverDatabase = [server_dbmgr databaseNamed: dbName];
     TDReplicator* repl = [_bg_serverDatabase replicatorWithRemoteURL: remote
                                                                 push: !pull
                                                           continuous: continuous];
@@ -297,7 +294,7 @@ static inline BOOL isLocalDBName(NSString* url) {
         ((TDPusher*)repl).createTarget = createTarget;
     [repl start];
     
-    _bg_replicator = [repl retain];
+    _bg_replicator = repl;
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(bg_replicationProgressChanged:)
                                                  name: TDReplicatorProgressChangedNotification
@@ -341,7 +338,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     
     if (_bg_replicator && mode == kTouchReplicationStopped) {
         [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: _bg_replicator];
-        setObj(&_bg_replicator, nil);
+        _bg_replicator = nil;
     }
 }
 

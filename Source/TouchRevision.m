@@ -18,16 +18,10 @@
 - (id)initWithDocument: (TouchDocument*)doc revision: (TDRevision*)rev {
     self = [super init];
     if (self) {
-        _document = [doc retain];
-        _rev = [rev retain];
+        _document = doc;
+        _rev = rev;
     }
     return self;
-}
-
-- (void)dealloc {
-    [_document release];
-    [_rev release];
-    [super dealloc];
 }
 
 
@@ -145,7 +139,7 @@
     NSDictionary* metadata = [self attachmentMetadataFor: name];
     if (!metadata)
         return nil;
-    return [[[TouchAttachment alloc] initWithRevision: self name: name metadata: metadata] autorelease];
+    return [[TouchAttachment alloc] initWithRevision: self name: name metadata: metadata];
 }
 
 

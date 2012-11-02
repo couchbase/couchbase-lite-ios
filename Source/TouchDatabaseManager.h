@@ -17,7 +17,7 @@ typedef struct TouchDatabaseManagerOptions {
 } TouchDatabaseManagerOptions;
 
 
-/** Top-level TouchDB object; manages a collection of databases like a CouchDB server. */
+/** Top-level TouchDB object; manages a collection of databases as a CouchDB server does. */
 @interface TouchDatabaseManager : NSObject
 {
     @private
@@ -29,10 +29,10 @@ typedef struct TouchDatabaseManagerOptions {
 /** A shared per-process instance. This should only be used on the main thread. */
 + (TouchDatabaseManager*) sharedInstance;
 
-/** Preferred initializer. Starts up an in-process server in the default Application Support directory. */
+/** Preferred initializer. Starts up an in-process server, on the current thread, that stores databases in the default Application Support directory. */
 - (id)init;
 
-/** Starts up a database manager that stores its data at the given path.
+/** Starts up a database manager, on the current thread, that stores its data at the given path.
     @param directory  Path to data directory. If it doesn't already exist it will be created.
     @param options  If non-NULL, a pointer to options (read-only and no-replicator).
     @param outError  On return, the error if any. */
@@ -52,7 +52,8 @@ typedef struct TouchDatabaseManagerOptions {
 - (TouchDatabase*) objectForKeyedSubscript: (NSString*)key;
 
 /** Returns the database with the given name, creating it if it didn't already exist.
-    Multiple calls with the same name will return the same CouchDatabase instance. */
+    Multiple calls with the same name will return the same CouchDatabase instance.
+     NOTE: Database names may not contain capital letters! */
 - (TouchDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError;
 
 /** An array of the names of all existing databases. */

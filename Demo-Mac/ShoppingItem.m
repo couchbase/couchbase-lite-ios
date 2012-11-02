@@ -24,12 +24,6 @@ static NSData* ImageJPEGData(NSImage* image);
 @implementation ShoppingItem
 
 
-- (void)dealloc {
-    [_picture release];
-    [super dealloc];
-}
-
-    
 @dynamic check, text, created_at;
 
 
@@ -60,10 +54,7 @@ static NSData* ImageJPEGData(NSImage* image);
         attachment = [[TouchAttachment alloc] initWithContentType: @"image/jpeg"
                                                              body: ImageJPEGData(picture)];
     [self addAttachment: attachment named: @"picture"];
-    [attachment release];
-    
-    [_picture release];
-    _picture = [picture retain];
+    _picture = picture;
 }
 
 

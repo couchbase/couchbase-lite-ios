@@ -40,9 +40,8 @@ static void ClientCallback(SCNetworkReachabilityRef target,
             hostName = @"localhost";
         _hostName = [hostName copy];
         _ref = SCNetworkReachabilityCreateWithName(NULL, [_hostName UTF8String]);
-        SCNetworkReachabilityContext context = {0, self};
+        SCNetworkReachabilityContext context = {0, (__bridge void *)(self)};
         if (!_ref || !SCNetworkReachabilitySetCallback(_ref, ClientCallback, &context)) {
-            [self release];
             return nil;
         }
     }
@@ -80,9 +79,6 @@ static void ClientCallback(SCNetworkReachabilityRef target,
         [self stop];
         CFRelease(_ref);
     }
-    [_onChange release];
-    [_hostName release];
-    [super dealloc];
 }
 
 
@@ -151,7 +147,7 @@ static void ClientCallback(SCNetworkReachabilityRef target,
                            SCNetworkReachabilityFlags flags,
                            void *info)
 {
-    [(TDReachability*)info flagsChanged: flags];
+    [(__bridge TDReachability*)info flagsChanged: flags];
 }
 
 
@@ -164,16 +160,19 @@ static void ClientCallback(SCNetworkReachabilityRef target,
 
 static void runReachability( NSString* hostname ) {
     Log(@"Test reachability of %@ ...", hostname);
-    TDReachability* r = [[[TDReachability alloc] initWithHostName: hostname] autorelease];
+    TDReachability* r = [[TDReachability alloc] initWithHostName: hostname];
     CAssert(r);
     Log(@"TDReachability = %@", r);
     CAssertEqual(r.hostName, hostname);
     __block BOOL resolved = NO;
+    
+    __weak TDReachability *weakR = r;
     r.onChange = ^{
+        TDReachability *strongR = weakR;
         Log(@"onChange: known=%d, flags=%x --> reachable=%d",
-            r.reachabilityKnown, r.reachabilityFlags, r.reachable);
-        Log(@"TDReachability = %@", r);
-        if (r.reachabilityKnown)
+            strongR.reachabilityKnown, strongR.reachabilityFlags, strongR.reachable);
+        Log(@"TDReachability = %@", strongR);
+        if (strongR.reachabilityKnown)
             resolved = YES;
     };
     CAssert([r start]);

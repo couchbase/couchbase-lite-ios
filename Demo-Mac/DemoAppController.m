@@ -55,8 +55,8 @@ int main (int argc, const char * argv[]) {
     }
     
     NSError* error;
-    _database = [[[TouchDatabaseManager sharedInstance] createDatabaseNamed: dbName
-                                                                      error: &error] retain];
+    _database = [[TouchDatabaseManager sharedInstance] createDatabaseNamed: dbName
+                                                                     error: &error];
     if (!_database) {
         NSAssert(NO, @"Error creating db: %@", error);
     }
@@ -88,8 +88,8 @@ int main (int argc, const char * argv[]) {
     
     TouchQuery* q = [[_database viewNamed: @"byDate"] query];
     q.descending = YES;
-    self.query = [[[DemoQuery alloc] initWithQuery: q
-                                        modelClass: _tableController.objectClass] autorelease];
+    self.query = [[DemoQuery alloc] initWithQuery: q
+                                       modelClass: _tableController.objectClass];
     
     // Start watching any persistent replications already configured:
     [self startContinuousSyncWith: self.syncURL];
@@ -214,23 +214,16 @@ int main (int argc, const char * argv[]) {
     [repl removeObserver: self forKeyPath: @"mode"];
 }
 
-- (void) forgetReplication: (TouchReplication**)repl {
-    if (*repl) {
-        [self stopObservingReplication: *repl];
-        [*repl release];
-        *repl = nil;
-    }
-}
-
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
 #ifdef ENABLE_REPLICATION
-    [self forgetReplication: &_pull];
-    [self forgetReplication: &_push];
-    
+    if (_pull)
+        [self stopObservingReplication: _pull];
+    if (_push)
+        [self stopObservingReplication: _push];
     NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
-    _pull = [repls[0] retain];
-    _push = [repls[1] retain];
+    _pull = repls[0];
+    _push = repls[1];
     [self observeReplication: _pull];
     [self observeReplication: _push];
     
@@ -341,7 +334,7 @@ int main (int argc, const char * argv[]) {
             emit(doc[@"foo"], nil);
         };
     }
-    return [[mapBlock copy] autorelease];
+    return [mapBlock copy];
 }
 
 
@@ -354,7 +347,7 @@ int main (int argc, const char * argv[]) {
             return [TDView totalValues: values];
         };
     }
-    return [[reduceBlock copy] autorelease];
+    return [reduceBlock copy];
 }
 
 #endif

@@ -51,7 +51,7 @@
 
 @property (readonly) BOOL isOpen;
 
-@property (readonly, retain) NSError* error;
+@property (readonly, strong) NSError* error;
 
 /** Convenience method that opens an output stream, collects all the data, and returns it. */
 - (NSData*) allOutput;

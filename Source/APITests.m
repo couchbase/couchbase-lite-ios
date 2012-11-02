@@ -97,7 +97,7 @@ TestCase(API_CreateRevisions) {
     TouchRevision* rev1 = doc.currentRevision;
     CAssert([rev1.revisionID hasPrefix: @"1-"]);
     
-    NSMutableDictionary* properties2 = [[properties mutableCopy] autorelease];
+    NSMutableDictionary* properties2 = [properties mutableCopy];
     properties2[@"tag"] = @4567;
     NSError* error;
     TouchRevision* rev2 = [rev1 putProperties: properties2 error: &error];
@@ -136,7 +136,6 @@ TestCase(API_SaveMultipleDocuments) {
         [properties setObject: @"updated!" forKey: @"misc"];
         [revisions addObject: revision];
         [revisionProperties addObject: properties];
-        [properties release];
     }
     
     CAssertWait([db putChanges: revisionProperties toRevisions: revisions]);
@@ -266,11 +265,11 @@ TestCase(API_History) {
                                 @1, @"tag",
                                 nil];
     TouchDocument* doc = createDocumentWithProperties(db, properties);
-    NSString* rev1ID = [[doc.currentRevisionID copy] autorelease];
+    NSString* rev1ID = [doc.currentRevisionID copy];
     Log(@"1st revision: %@", rev1ID);
     CAssert([rev1ID hasPrefix: @"1-"], @"1st revision looks wrong: '%@'", rev1ID);
     CAssertEqual(doc.userProperties, properties);
-    properties = [doc.properties.mutableCopy autorelease];
+    properties = doc.properties.mutableCopy;
     properties[@"tag"] = @2;
     CAssert(![properties isEqual: doc.properties]);
     NSError* error;
@@ -373,8 +372,8 @@ TestCase(API_CreateView) {
     CAssert(view);
     CAssertEq(view.database, db);
     CAssertEqual(view.name, @"vu");
-    CAssertNull(view.mapBlock);
-    CAssertNull(view.reduceBlock);
+    CAssert(view.mapBlock == NULL);
+    CAssert(view.reduceBlock == NULL);
 
     [view setMapBlock:^(NSDictionary *doc, TDMapEmitBlock emit) {
         emit(doc[@"sequence"], nil);

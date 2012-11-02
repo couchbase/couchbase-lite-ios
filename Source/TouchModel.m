@@ -63,7 +63,7 @@
                  self, document, model);
     } else if (self != [TouchModel class]) {
         // If invoked on a subclass of TouchModel, create an instance of that subclass:
-        model = [[[self alloc] initWithDocument: document] autorelease];
+        model = [[self alloc] initWithDocument: document];
     } else {
         // If invoked on TouchModel itself, ask the factory to instantiate the appropriate class:
         model = [document.database.modelFactory modelForDocument: document];
@@ -78,11 +78,6 @@
 {
     LogTo(TouchModel, @"%@ dealloc", self);
     _document.modelObject = nil;
-    [_document release];
-    [_properties release];
-    [_changedNames release];
-    [_changedAttachments release];
-    [super dealloc];
 }
 
 
@@ -103,14 +98,13 @@
 - (void) setDocument:(TouchDocument *)document {
     NSAssert(!_document && document, @"Can't change or clear document");
     NSAssert(document.modelObject == nil, @"Document already has a model");
-    _document = [document retain];
+    _document = document;
     _document.modelObject = self;
 }
 
 
 - (void) detachFromDocument {
     _document.modelObject = nil;
-    [_document release];
     _document = nil;
 }
 
@@ -174,7 +168,6 @@
         [removeKeys minusSet: _changedNames];
         [_properties removeObjectsForKeys: removeKeys.allObjects];
     } else {
-        [_properties release];
         _properties = nil;
     }
     
@@ -220,11 +213,8 @@
         return;
     self.needsSave = NO;
     _isNew = NO;
-    [_properties release];
     _properties = nil;
-    [_changedNames release];
     _changedNames = nil;
-    [_changedAttachments release];
     _changedAttachments = nil;
 }
 
@@ -275,7 +265,7 @@
         properties = [[NSMutableDictionary alloc] init];
     for (NSString* key in _changedNames)
         [properties setValue: _properties[key] forKey: key];
-    return [properties autorelease];
+    return properties;
 }
 
 
@@ -304,7 +294,7 @@
         [properties setValue: [self externalizePropertyValue: value] forKey: key];
     }
     [properties setValue: self.attachmentDataToSave forKey: @"_attachments"];
-    return [properties autorelease];
+    return properties;
 }
 
 
@@ -455,30 +445,6 @@
 }
 
 
-#pragma mark - KVO:
-
-
-// TouchDocuments (and transitively their models) have only weak references from the TouchDatabase,
-// so they may be dealloced if not used in a while. This is very bad if they have any observers, as
-// the observation reference will dangle and cause crashes or mysterious bugs.
-// To work around this, turn observation into a string reference by doing a retain.
-// This may result in reference cycles if two models observe each other; not sure what to do about
-// that yet!
-
-- (void) addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options context:(void *)context {
-    [super addObserver: observer forKeyPath: keyPath options: options context: context];
-    if (observer != self)
-        [self retain];
-}
-
-- (void) removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath {
-    [super removeObserver: observer forKeyPath: keyPath];
-    if (observer != self)
-        [self retain];
-    [self release];
-}
-
-
 #pragma mark - ATTACHMENTS:
 
 
@@ -487,7 +453,7 @@
     if (!_changedAttachments)
         return names;
     
-    NSMutableArray* nuNames = names ? [[names mutableCopy] autorelease] : [NSMutableArray array];
+    NSMutableArray* nuNames = names ? [names mutableCopy] : [NSMutableArray array];
     for (NSString* name in _changedAttachments.allKeys) {
         TouchAttachment* attach = _changedAttachments[name];
         if ([attach isKindOfClass: [TouchAttachment class]]) {
@@ -534,7 +500,7 @@
     if (!_changedAttachments)
         return attachments;
     
-    NSMutableDictionary* nuAttach = attachments ? [[attachments mutableCopy] autorelease]
+    NSMutableDictionary* nuAttach = attachments ? [attachments mutableCopy]
                                                 : [NSMutableDictionary dictionary];
     for (NSString* name in _changedAttachments.allKeys) {
         // Yes, we are putting TDAttachment objects into the JSON-compatible dictionary.

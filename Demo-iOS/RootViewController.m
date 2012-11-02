@@ -110,7 +110,7 @@
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
         if (date && ! [TDJSON dateWithJSONObject: date]) {
-            context.errorMessage = [@"invalid date " stringByAppendingString: date];
+            context.errorMessage = [@"invalid date " stringByAppendingString: [date description]];
             return NO;
         }
         return YES;

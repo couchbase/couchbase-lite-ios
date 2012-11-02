@@ -22,7 +22,7 @@
 
 
 @interface TDMultiStreamWriter () <NSStreamDelegate>
-@property (readwrite, retain) NSError* error;
+@property (readwrite, strong) NSError* error;
 @end
 
 
@@ -40,7 +40,6 @@
         _bufferSize = bufferSize;
         _buffer = malloc(_bufferSize);
         if (!_buffer) {
-            [self release];
             return nil;
         }
     }
@@ -55,11 +54,6 @@
 - (void) dealloc {
     [self close];
     free(_buffer);
-    [_inputs release];
-    [_currentInput release];
-    [_output release];
-    [_error release];
-    [super dealloc];
 }
 
 
@@ -105,7 +99,7 @@
 
 
 - (void) opened {
-    setObj(&_error, nil);
+    _error = nil;
     _totalBytesWritten = 0;
     
     _output.delegate = self;
@@ -121,12 +115,15 @@
 #ifdef GNUSTEP
     Assert(NO, @"Unimplemented CFStreamCreateBoundPair");   // TODO: Add this to GNUstep base fw
 #else
-    CFStreamCreateBoundPair(NULL, (CFReadStreamRef*)&_input, (CFWriteStreamRef*)&_output,
-                            _bufferSize);
+    CFReadStreamRef cfInput;
+    CFWriteStreamRef cfOutput;
+    CFStreamCreateBoundPair(NULL, &cfInput, &cfOutput, _bufferSize);
+    _input = CFBridgingRelease(cfInput);
+    _output = CFBridgingRelease(cfOutput);
 #endif
     LogTo(TDMultiStreamWriter, @"%@: Opened input=%p, output=%p", self, _input, _output);
     [self opened];
-    return [_input autorelease];
+    return _input;
 }
 
 
@@ -134,7 +131,7 @@
     Assert(output);
     Assert(!_output, @"Already open");
     Assert(!_input);
-    _output = [output retain];
+    _output = output;
     [self opened];
 }
 
@@ -143,13 +140,13 @@
     LogTo(TDMultiStreamWriter, @"%@: Closed", self);
     [_output close];
     _output.delegate = nil;
-    setObj(&_output, nil);
+    _output = nil;
     _input = nil;
     
     _bufferLength = 0;
     
     [_currentInput close];
-    setObj(&_currentInput, nil);
+    _currentInput = nil;
     _nextInputIndex = 0;
 }
 
@@ -173,10 +170,10 @@
 - (BOOL) openNextInput {
     if (_currentInput) {
         [_currentInput close];
-        setObj(&_currentInput, nil);
+        _currentInput = nil;
     }
     if (_nextInputIndex < _inputs.count) {
-        _currentInput = [[self streamForInput: _inputs[_nextInputIndex]] retain];
+        _currentInput = [self streamForInput: _inputs[_nextInputIndex]];
         ++_nextInputIndex;
         [_currentInput open];
         return YES;
@@ -318,7 +315,7 @@
 #define kExpectedOutputString @"<part the first, let us make it a bit longer for greater interest><2nd part, again unnecessarily prolonged for testing purposes beyond any reasonable length...>"
 
 static TDMultiStreamWriter* createWriter(unsigned bufSize) {
-    TDMultiStreamWriter* stream = [[[TDMultiStreamWriter alloc] initWithBufferSize: bufSize] autorelease];
+    TDMultiStreamWriter* stream = [[TDMultiStreamWriter alloc] initWithBufferSize: bufSize];
     [stream addData: [@"<part the first, let us make it a bit longer for greater interest>" dataUsingEncoding: NSUTF8StringEncoding]];
     [stream addData: [@"<2nd part, again unnecessarily prolonged for testing purposes beyond any reasonable length...>" dataUsingEncoding: NSUTF8StringEncoding]];
     CAssertEq(stream.length, (SInt64)kExpectedOutputString.length);
@@ -359,10 +356,6 @@ TestCase(TDMultiStreamWriter_Sync) {
     return self;
 }
 
-- (void)dealloc {
-    [_output release];
-    [super dealloc];
-}
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)event {
     AssertEq(stream, _stream);
@@ -394,7 +387,7 @@ TestCase(TDMultiStreamWriter_Async) {
     TDMultiStreamWriter* writer = createWriter(16);
     NSInputStream* input = [writer openForInputStream];
     CAssert(input);
-    TDMultiStreamWriterTester *tester = [[[TDMultiStreamWriterTester alloc] initWithStream: input] autorelease];
+    TDMultiStreamWriterTester *tester = [[TDMultiStreamWriterTester alloc] initWithStream: input];
     NSRunLoop* rl = [NSRunLoop currentRunLoop];
     [input scheduleInRunLoop: rl forMode: NSDefaultRunLoopMode];
     Log(@"Opening stream");

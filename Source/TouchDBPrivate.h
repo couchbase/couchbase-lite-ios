@@ -11,7 +11,7 @@
 
 
 @interface TDDatabase ()
-@property (assign, nonatomic) TouchDatabase* touchDatabase;
+@property (weak, nonatomic) TouchDatabase* touchDatabase;
 @end
 
 

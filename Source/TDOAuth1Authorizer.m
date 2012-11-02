@@ -34,7 +34,6 @@
     self = [super init];
     if (self) {
         if (!consumerKey || !consumerSecret || !token || !tokenSecret) {
-            [self release];
             return nil;
         }
         _consumer = [[OAConsumer alloc] initWithKey: consumerKey secret: consumerSecret];
@@ -45,7 +44,6 @@
             _signatureProvider = [[OAPlaintextSignatureProvider alloc] init];
         else {
             Warn(@"Unsupported signature method '%@'", signatureMethod);
-            [self release];
             return nil;
         }
     }
@@ -53,13 +51,6 @@
 }
 
 
-- (void)dealloc
-{
-    [_consumer release];
-    [_token release];
-    [_signatureProvider release];
-    [super dealloc];
-}
 
 
 // TDAuthorizer API:
@@ -75,8 +66,22 @@
     oarq.HTTPBody = request.HTTPBody;
     [oarq prepare];
     NSString* authorization = [oarq valueForHTTPHeaderField: @"Authorization"];
-    [oarq release];
     return authorization;
+}
+
+- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
+                          forRealm: (NSString*)realm
+{
+    NSURL* url = CFBridgingRelease(CFHTTPMessageCopyRequestURL(message));
+    OAMutableURLRequest* oarq = [[OAMutableURLRequest alloc] initWithURL: url
+                                                                consumer: _consumer
+                                                                   token: _token
+                                                                   realm: realm
+                                                       signatureProvider: _signatureProvider];
+    oarq.HTTPMethod = CFBridgingRelease(CFHTTPMessageCopyRequestMethod(message));
+    oarq.HTTPBody = CFBridgingRelease(CFHTTPMessageCopyBody(message));
+    [oarq prepare];
+    return [oarq valueForHTTPHeaderField: @"Authorization"];
 }
 
 @end

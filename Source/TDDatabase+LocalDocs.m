@@ -46,7 +46,7 @@
         }
         properties[@"_id"] = docID;
         properties[@"_rev"] = gotRevID;
-        result = [[[TDRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO] autorelease];
+        result = [[TDRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO];
         result.properties = properties;
     }
     [r close];
@@ -96,7 +96,7 @@
             return nil;
         }
         *outStatus = kTDStatusCreated;
-        return [[revision copyWithDocID: docID revID: newRevID] autorelease];
+        return [revision copyWithDocID: docID revID: newRevID];
         
     } else {
         // DELETE:

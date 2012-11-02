@@ -175,7 +175,6 @@
             properties[key] = origProps[key];
         } else if (![sSpecialKeysToRemove member: key]) {
             Log(@"TDDatabase: Invalid top-level key '%@' in document to be inserted", key);
-            [properties release];
             return nil;
         }
     }
@@ -184,7 +183,6 @@
     // to create the new revision ID, and we need to guarantee that equivalent revision bodies
     // result in equal revision IDs.
     NSData* json = [TDCanonicalJSON canonicalData: properties];
-    [properties release];
     return json;
 }
 
@@ -212,9 +210,9 @@
             if ($equal(winningRevID, newRev.revID))
                 return newRev;
             else {
-                TDRevision* winningRev = [[[TDRevision alloc] initWithDocID: newRev.docID
+                TDRevision* winningRev = [[TDRevision alloc] initWithDocID: newRev.docID
                                                                       revID: winningRevID
-                                                                    deleted: NO] autorelease];
+                                                                    deleted: NO];
                 return winningRev;
             }
         }
@@ -302,7 +300,6 @@
                 TDRevision* prevRev = [[TDRevision alloc] initWithDocID: docID revID: prevRevID
                                                                 deleted: NO];
                 status = [self validateRevision: rev previousRevision: prevRev];
-                [prevRev release];
                 if (TDStatusIsError(status)) {
                     *outStatus = status;
                     return nil;
@@ -396,7 +393,8 @@
             *outStatus = kTDStatusBadID;  // invalid previous revID (no numeric prefix)
             return nil;
         }
-        rev = [[rev copyWithDocID: docID revID: newRevID] autorelease];
+        Assert(docID);
+        rev = [rev copyWithDocID: docID revID: newRevID];
         
         // Now insert the rev itself:
         
@@ -545,8 +543,7 @@
                     current = YES;
                 } else {
                     // It's an intermediate parent, so insert a stub:
-                    newRev = [[[TDRevision alloc] initWithDocID: docID revID: revID deleted: NO]
-                                    autorelease];
+                    newRev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: NO];
                 }
 
                 // Insert it:
@@ -712,7 +709,7 @@
     if (validationBlock) {
         if (!_validations)
             _validations = [[NSMutableDictionary alloc] init];
-        [_validations setValue: [[validationBlock copy] autorelease] forKey: validationName];
+        [_validations setValue: [validationBlock copy] forKey: validationName];
     } else {
         [_validations removeObjectForKey: validationName];
     }
@@ -730,14 +727,13 @@
                                                                         revision: oldRev
                                                                      newRevision: newRev];
     TDStatus status = kTDStatusOK;
-    for (TDValidationBlock validationName in _validations) {
+    for (NSString* validationName in _validations) {
         TDValidationBlock validation = [self validationNamed: validationName];
         if (!validation(newRev, context)) {
             status = context.errorType;
             break;
         }
     }
-    [context release];
     return status;
 }
 
@@ -761,16 +757,11 @@
         _currentRevision = currentRevision;
         _newRevision = newRevision;
         _errorType = kTDStatusForbidden;
-        _errorMessage = [@"invalid document" retain];
+        _errorMessage = @"invalid document";
     }
     return self;
 }
 
-- (void)dealloc {
-    [_changedKeys release];
-    [_errorMessage release];
-    [super dealloc];
-}
 
 - (TDRevision*) currentRevision {
     if (_currentRevision)

@@ -30,7 +30,7 @@
     self = [super init];
     if (self != nil) {
         _modelClass = modelClass;
-        _query = [[query asLiveQuery] retain];
+        _query = [query asLiveQuery];
         _query.prefetch = YES;        // for efficiency, include docs on first load
         // Observe changes to _query.rows:
         [_query addObserver: self forKeyPath: @"rows" options: 0 context: NULL];
@@ -41,10 +41,7 @@
 
 - (void) dealloc
 {
-    [_entries release];
     [_query removeObserver: self forKeyPath: @"rows"];
-    [_query release];
-    [super dealloc];
 }
 
 
@@ -71,7 +68,6 @@
         NSLog(@"    ...entries changed! (was %u, now %u)", 
               (unsigned)_entries.count, (unsigned)entries.count);
         [self willChangeValueForKey: @"entries"];
-        [_entries release];
         _entries = [entries mutableCopy];
         [self didChangeValueForKey: @"entries"];
     }

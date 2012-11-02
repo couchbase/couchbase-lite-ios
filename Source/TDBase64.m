@@ -58,8 +58,8 @@ static int8_t kDecodingTable[256];
         output[index + 3] = (i + 2) < length ? kEncodingTable[(value >> 0)  & 0x3F] : '=';
     }
     
-    return [[[NSString alloc] initWithData:data
-                                  encoding:NSASCIIStringEncoding] autorelease];
+    return [[NSString alloc] initWithData:data
+                                  encoding:NSASCIIStringEncoding];
 }
 
 

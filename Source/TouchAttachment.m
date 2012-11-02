@@ -26,7 +26,7 @@
     NSParameterAssert(metadata);
     self = [super init];
     if (self) {
-        _rev = [rev retain];
+        _rev = rev;
         _name = [name copy];
         _metadata = [metadata copy];
     }
@@ -44,19 +44,11 @@
            @"Invalid attachment body: %@", body);
     self = [super init];
     if (self) {
-        _metadata = [$dict({@"content_type", contentType},
-                           {@"follows", $true}) retain];
-        _body = [body retain];
+        _metadata = $dict({@"content_type", contentType},
+                          {@"follows", $true});
+        _body = body;
     }
     return self;
-}
-
-
-- (void)dealloc {
-    [_rev release];
-    [_metadata release];
-    [_body release];
-    [super dealloc];
 }
 
 
@@ -124,7 +116,7 @@
         if (outError) *outError = TDStatusToNSError(status, nil);
         return nil;
     }
-    return [[[TouchRevision alloc] initWithDocument: self.document revision: newRev] autorelease];
+    return [[TouchRevision alloc] initWithDocument: self.document revision: newRev];
 }
 
 
@@ -139,7 +131,7 @@
         TouchAttachment* attachment = $castIf(TouchAttachment, value);
         if (attachment) {
             // Replace the attachment object with a metadata dictionary:
-            NSMutableDictionary* metadata = [[attachment.metadata mutableCopy] autorelease];
+            NSMutableDictionary* metadata = [attachment.metadata mutableCopy];
             value = metadata;
             NSData* body = attachment.bodyIfNew;
             if (body) {

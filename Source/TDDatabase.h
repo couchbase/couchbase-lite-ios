@@ -75,7 +75,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
     TDBlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
-    TouchDatabase* _touchDatabase;
+    __weak TouchDatabase* _touchDatabase;
     NSMutableArray* _changesToNotify;
 }    
         

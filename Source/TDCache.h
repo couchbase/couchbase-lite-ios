@@ -69,7 +69,7 @@
 
 @protocol TDCacheable <NSObject>
 
-@property (assign) TDCache* owningCache;
+@property (weak) TDCache* owningCache;
 @property (readonly) NSString* cacheKey;
 
 @end

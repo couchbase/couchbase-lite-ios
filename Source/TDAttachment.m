@@ -33,12 +33,6 @@
 }
 
 
-- (void)dealloc
-{
-    [_name release];
-    [_contentType release];
-    [super dealloc];
-}
 
 
 - (bool) isValid {

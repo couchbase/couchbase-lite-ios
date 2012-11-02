@@ -47,7 +47,6 @@
                                                     options: (const TDDatabaseManagerOptions*)options
                                                       error: outError];
         if (!_mgr) {
-            [self release];
             return nil;
         }
         _replications = [[NSMutableArray alloc] init];
@@ -59,17 +58,15 @@
 
 - (void) close {
     [_mgr close];
-    setObj(&_mgr, nil);
+    _mgr = nil;
     [_server close];
-    setObj(&_server, nil);
+    _server = nil;
 }
 
 
 - (void)dealloc
 {
-    [_replications release];
     [self close];
-    [super dealloc];
 }
 
 
@@ -95,8 +92,8 @@
 - (TouchDatabase*) databaseForDatabase: (TDDatabase*)tddb {
     TouchDatabase* touchDatabase = tddb.touchDatabase;
     if (!touchDatabase) {
-        touchDatabase = [[[TouchDatabase alloc] initWithManager: self 
-                                                     TDDatabase: tddb] autorelease];
+        touchDatabase = [[TouchDatabase alloc] initWithManager: self
+                                                    TDDatabase: tddb];
         tddb.touchDatabase = touchDatabase;
     }
     return touchDatabase;
@@ -126,7 +123,7 @@
 
 
 - (NSArray*) allReplications {
-    NSMutableArray* replications = [[_replications mutableCopy] autorelease];
+    NSMutableArray* replications = [_replications mutableCopy];
     TouchQuery* q = [[self databaseNamed: @"_replicator"] queryAllDocuments];
     for (TouchQueryRow* row in q.rows) {
         TouchReplication* repl = [TouchReplication modelForDocument: row.document];
@@ -152,7 +149,6 @@
                                                                  remote: remote
                                                                    pull: pull];
     [_replications addObject: repl];
-    [repl release];
     return repl;
 }
 

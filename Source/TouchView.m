@@ -16,17 +16,10 @@
 - (id)initWithDatabase: (TouchDatabase*)database view: (TDView*)view {
     self = [super init];
     if (self) {
-        _database = [database retain];
-        _view = [view retain];
+        _database = database;
+        _view = view;
     }
     return self;
-}
-
-- (void)dealloc
-{
-    [_view release];
-    [_database release];
-    [super dealloc];
 }
 
 
@@ -49,8 +42,8 @@
         return [_view setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
     } else {
         [_view deleteView];
-        setObj(&_view, nil);
-        setObj(&_database, nil);
+        _view = nil;
+        _database = nil;
         return YES;
     }
 }
@@ -62,7 +55,7 @@
 }
 
 - (TouchQuery*) query {
-    return [[[TouchQuery alloc] initWithDatabase: _database view: _view] autorelease];
+    return [[TouchQuery alloc] initWithDatabase: _database view: _view];
 }
 
 
