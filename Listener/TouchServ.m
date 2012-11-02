@@ -57,9 +57,9 @@ static bool doReplicate( TDServer* server, const char* replArg,
                         BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password)
 {
-    NSURL* remote = [NSMakeCollectable(CFURLCreateWithBytes(NULL, (const UInt8*)replArg,
+    NSURL* remote = CFBridgingRelease(CFURLCreateWithBytes(NULL, (const UInt8*)replArg,
                                                            strlen(replArg),
-                                                           kCFStringEncodingUTF8, NULL)) autorelease];
+                                                           kCFStringEncodingUTF8, NULL));
     if (!remote || !remote.scheme) {
         fprintf(stderr, "Invalid remote URL <%s>\n", replArg);
         return false;
@@ -82,12 +82,11 @@ static bool doReplicate( TDServer* server, const char* replArg,
         if (port == 0)
             port = [remote.scheme isEqualToString: @"https"] ? 443 : 80;
         NSURLProtectionSpace* space;
-        space = [[[NSURLProtectionSpace alloc] initWithHost: remote.host
-                                                       port: port
-                                                   protocol: remote.scheme
-                                                      realm: nil
-                                       authenticationMethod: NSURLAuthenticationMethodDefault]
-                 autorelease];
+        space = [[NSURLProtectionSpace alloc] initWithHost: remote.host
+                                                      port: port
+                                                  protocol: remote.scheme
+                                                     realm: nil
+                                      authenticationMethod: NSURLAuthenticationMethodDefault];
         [[NSURLCredentialStorage sharedCredentialStorage] setDefaultCredential: cred
                                                             forProtectionSpace: space];
     }
@@ -200,8 +199,6 @@ int main (int argc, const char * argv[])
         [[NSRunLoop currentRunLoop] run];
         
         Log(@"TouchServ quitting");
-        [listener release];
-        [server release];
     }
     return 0;
 }
