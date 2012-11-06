@@ -6,6 +6,26 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		275A29061649A54000B0D8EE /* All */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 275A29071649A54000B0D8EE /* Build configuration list for PBXAggregateTarget "All" */;
+			buildPhases = (
+			);
+			dependencies = (
+				275A290B1649A54500B0D8EE /* PBXTargetDependency */,
+				275A29131649A54F00B0D8EE /* PBXTargetDependency */,
+				275A290D1649A54700B0D8EE /* PBXTargetDependency */,
+				275A29151649A55200B0D8EE /* PBXTargetDependency */,
+				275A29171649A55500B0D8EE /* PBXTargetDependency */,
+				275A290F1649A54A00B0D8EE /* PBXTargetDependency */,
+				275A29111649A54C00B0D8EE /* PBXTargetDependency */,
+			);
+			name = All;
+			productName = All;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
 		270B3E111489382F00E0A926 /* TDDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* TDDatabase.m */; };
@@ -16,18 +36,18 @@
 		270B3E1D1489384700E0A926 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		270B3E201489390000E0A926 /* TouchDB.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* TouchDB.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		270B3E211489390F00E0A926 /* TDURLProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* TDURLProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		270B3E221489391E00E0A926 /* TDDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* TDDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		270B3E231489392100E0A926 /* TDBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* TDBody.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		270B3E241489392600E0A926 /* TDServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706401486BBD500F0F099 /* TDServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		270B3E251489392C00E0A926 /* TDRouter.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* TDRouter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E211489390F00E0A926 /* TDURLProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* TDURLProtocol.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E221489391E00E0A926 /* TDDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* TDDatabase.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E231489392100E0A926 /* TDBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* TDBody.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E241489392600E0A926 /* TDServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706401486BBD500F0F099 /* TDServer.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		270B3E251489392C00E0A926 /* TDRouter.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* TDRouter.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270B3E26148939BD00E0A926 /* TouchDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
 		270B3E27148939C500E0A926 /* TouchDB.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* TouchDB.framework */; };
-		270B3E2B1489581E00E0A926 /* TDPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* TDPuller.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E2B1489581E00E0A926 /* TDPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* TDPuller.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270B3E2C1489581E00E0A926 /* TDPuller.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E2A1489581E00E0A926 /* TDPuller.m */; };
-		270B3E3914898DF200E0A926 /* TDRevision.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* TDRevision.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E3914898DF200E0A926 /* TDRevision.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* TDRevision.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270B3E3A14898DF200E0A926 /* TDRevision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* TDRevision.m */; };
-		270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		270B3E3E148D7F0000E0A926 /* TDPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* TDPusher.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270B3E3F148D7F0000E0A926 /* TDPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* TDPusher.m */; };
 		270D6FC1164484190081812D /* TDSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D6FBF164484190081812D /* TDSocketChangeTracker.h */; };
 		270D6FC2164484190081812D /* TDSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 270D6FC0164484190081812D /* TDSocketChangeTracker.m */; };
@@ -44,11 +64,11 @@
 		27103F8514E9CE4400DF7209 /* TDReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* TDReachability.m */; };
 		27103F8814EA076600DF7209 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27103F8714EA076600DF7209 /* SystemConfiguration.framework */; };
 		2711CDDE14C6584A00505D55 /* TouchDBListener-Mac.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener-Mac.framework */; };
-		2711CDFD14C7590A00505D55 /* TDDatabase+Attachments.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2711CDFD14C7590A00505D55 /* TDDatabase+Attachments.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2711CDFE14C7590A00505D55 /* TDDatabase+Attachments.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFC14C7590A00505D55 /* TDDatabase+Attachments.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2711CE0014C7595900505D55 /* TDDatabase+Insertion.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2711CE0014C7595900505D55 /* TDDatabase+Insertion.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2711CE0114C7595900505D55 /* TDDatabase+Insertion.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFF14C7595900505D55 /* TDDatabase+Insertion.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2711CE0314C759BD00505D55 /* TDDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2711CE0314C759BD00505D55 /* TDDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2711CE0414C759BD00505D55 /* TDDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* TDDatabase+Replication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2711CE1414C75B6E00505D55 /* TDDatabase+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		272B85141523691700A90CB2 /* TDJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* TDJSON.h */; };
@@ -105,6 +125,10 @@
 		2753160214ACF9330065964D /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2753160C14ACFC2A0065964D /* TDHTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753160A14ACFC2A0065964D /* TDHTTPConnection.h */; };
 		2753160D14ACFC2A0065964D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
+		275A29021649A11900B0D8EE /* TouchDBPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* TouchDBPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275A29031649A11A00B0D8EE /* TouchDBPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* TouchDBPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275A29041649A12B00B0D8EE /* TouchAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* TouchAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275A29051649A13900B0D8EE /* TouchReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* TouchReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2766EFF814DB7F9F009ECCA8 /* TDMultipartWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFF614DB7F9F009ECCA8 /* TDMultipartWriter.h */; };
 		2766EFF914DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */; };
 		2766EFFA14DB7F9F009ECCA8 /* TDMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* TDMultipartWriter.m */; };
@@ -132,10 +156,10 @@
 		27731F3E14967A8400815D67 /* ConfigViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3B14967A8400815D67 /* ConfigViewController.xib */; };
 		27731F41149685A100815D67 /* list_area___checkbox___checked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3F149685A000815D67 /* list_area___checkbox___checked.png */; };
 		27731F42149685A100815D67 /* list_area___checkbox___unchecked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27731F40149685A100815D67 /* list_area___checkbox___unchecked.png */; };
-		2773ADC714BD1EB80027A292 /* TDDatabase+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2773ADC714BD1EB80027A292 /* TDDatabase+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* TDDatabase+LocalDocs.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2773ADC814BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */; };
 		2773ADC914BD1EB80027A292 /* TDDatabase+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* TDDatabase+LocalDocs.m */; };
-		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27821BB8148E7D6F0099B373 /* TDReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* TDReplicator.m */; };
 		27821BBA148FF56D0099B373 /* TDDatabase_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB9148FF56C0099B373 /* TDDatabase_Tests.m */; };
 		27821BBC149001B30099B373 /* TDReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDReplicator_Tests.m */; };
@@ -174,7 +198,7 @@
 		279CE40A14D8AA23009F3FA6 /* TDMultipartDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE40814D8AA23009F3FA6 /* TDMultipartDownloader.h */; };
 		279CE40B14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40914D8AA23009F3FA6 /* TDMultipartDownloader.m */; };
 		279CE40C14D8AA23009F3FA6 /* TDMultipartDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40914D8AA23009F3FA6 /* TDMultipartDownloader.m */; };
-		279EB2CE149140DE00E74185 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* TDView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		279EB2CE149140DE00E74185 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* TDView.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		279EB2CF149140DE00E74185 /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* TDView.m */; };
 		279EB2D11491442500E74185 /* TDInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D01491442500E74185 /* TDInternal.h */; };
 		279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* TDCollateJSON.h */; };
@@ -314,10 +338,10 @@
 		27E11F1014AD15940006B340 /* TDHTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E11F0E14AD15940006B340 /* TDHTTPResponse.h */; };
 		27E11F1114AD15940006B340 /* TDHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* TDHTTPResponse.m */; };
 		27E11F1214AD172F0006B340 /* TouchDBListener-Mac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* TouchDBListener-Mac.framework */; };
-		27E2E5A3159383E9005B9234 /* TouchAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* TouchAttachment.h */; };
+		27E2E5A3159383E9005B9234 /* TouchAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* TouchAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E2E5A4159383E9005B9234 /* TouchAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5A2159383E9005B9234 /* TouchAttachment.m */; };
 		27E2E5A5159383E9005B9234 /* TouchAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5A2159383E9005B9234 /* TouchAttachment.m */; };
-		27E2E5CD159533A5005B9234 /* TouchReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* TouchReplication.h */; };
+		27E2E5CD159533A5005B9234 /* TouchReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* TouchReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E2E5CE159533A5005B9234 /* TouchReplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5CC159533A5005B9234 /* TouchReplication.m */; };
 		27E2E5CF159533A5005B9234 /* TouchReplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5CC159533A5005B9234 /* TouchReplication.m */; };
 		27E2E61715993CB4005B9234 /* TDURLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* TDURLProtocol.m */; };
@@ -410,6 +434,55 @@
 			proxyType = 1;
 			remoteGlobalIDString = 270B3DE91489359000E0A926;
 			remoteInfo = TouchDB;
+		};
+		275A290A1649A54500B0D8EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270B3DE91489359000E0A926;
+			remoteInfo = "TouchDB-Mac";
+		};
+		275A290C1649A54700B0D8EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27B0B7E61492BB6B00A817AD;
+			remoteInfo = "TouchDB-iOS";
+		};
+		275A290E1649A54A00B0D8EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27C70693148864BA00F0F099;
+			remoteInfo = "TouchDB Mac Demo";
+		};
+		275A29101649A54C00B0D8EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27B0B80A1492C16300A817AD;
+			remoteInfo = "TouchDB iOS Demo";
+		};
+		275A29121649A54F00B0D8EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 275315D414ACF0A10065964D;
+			remoteInfo = "TouchDBListener-Mac";
+		};
+		275A29141649A55200B0D8EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA147C1F14BCAC3B0052DA4D;
+			remoteInfo = "TouchDBListener-iOS";
+		};
+		275A29161649A55500B0D8EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270FE0C714C5008C005FF647;
+			remoteInfo = TouchServ;
 		};
 		27B0B7F41492BC5B00A817AD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1272,7 +1345,7 @@
 				27DA435D15918C9600F9E7B5 /* Model */,
 			);
 			name = API;
-			path = Source;
+			path = Source/API;
 			sourceTree = "<group>";
 		};
 		27DA431A158FD9BA00F9E7B5 /* iOS */ = {
@@ -1403,6 +1476,20 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				270B3E201489390000E0A926 /* TouchDB.h in Headers */,
+				27821BBE14906FB60099B373 /* TouchDBPrefix.h in Headers */,
+				279EB2D11491442500E74185 /* TDInternal.h in Headers */,
+				279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */,
+				27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */,
+				27B0B79E1492932800A817AD /* TDBase64.h in Headers */,
+				27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */,
+				279906E3149A65B8003D4338 /* TDRemoteRequest.h in Headers */,
+				279906EE149ABFC2003D4338 /* TDBatcher.h in Headers */,
+				27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
+				2753156E14ACEFC90065964D /* DDData.h in Headers */,
+				2753157214ACEFC90065964D /* DDNumber.h in Headers */,
+				27E2E5A3159383E9005B9234 /* TouchAttachment.h in Headers */,
+				27E2E5CD159533A5005B9234 /* TouchReplication.h in Headers */,
 				270B3E231489392100E0A926 /* TDBody.h in Headers */,
 				270B3E221489391E00E0A926 /* TDDatabase.h in Headers */,
 				2711CDFD14C7590A00505D55 /* TDDatabase+Attachments.h in Headers */,
@@ -1417,18 +1504,6 @@
 				270B3E241489392600E0A926 /* TDServer.h in Headers */,
 				270B3E211489390F00E0A926 /* TDURLProtocol.h in Headers */,
 				279EB2CE149140DE00E74185 /* TDView.h in Headers */,
-				270B3E201489390000E0A926 /* TouchDB.h in Headers */,
-				27821BBE14906FB60099B373 /* TouchDBPrefix.h in Headers */,
-				279EB2D11491442500E74185 /* TDInternal.h in Headers */,
-				279EB2DB1491C34300E74185 /* TDCollateJSON.h in Headers */,
-				27B0B796149290AB00A817AD /* TDChangeTracker.h in Headers */,
-				27B0B79E1492932800A817AD /* TDBase64.h in Headers */,
-				27731EFF1493FA3100815D67 /* TDBlobStore.h in Headers */,
-				279906E3149A65B8003D4338 /* TDRemoteRequest.h in Headers */,
-				279906EE149ABFC2003D4338 /* TDBatcher.h in Headers */,
-				27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
-				2753156E14ACEFC90065964D /* DDData.h in Headers */,
-				2753157214ACEFC90065964D /* DDNumber.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
 				2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
 				2753157E14ACEFC90065964D /* HTTPConnection.h in Headers */,
@@ -1480,11 +1555,10 @@
 				27DA435015918C0200F9E7B5 /* MYDynamicObject.h in Headers */,
 				27DA435715918C8E00F9E7B5 /* TouchModel.h in Headers */,
 				27DA435A15918C8E00F9E7B5 /* TouchModelFactory.h in Headers */,
-				27E2E5A3159383E9005B9234 /* TouchAttachment.h in Headers */,
-				27E2E5CD159533A5005B9234 /* TouchReplication.h in Headers */,
 				27846FB915D475DF0030122F /* MYRegexUtils.h in Headers */,
 				27846FBC15D475DF0030122F /* MYStreamUtils.h in Headers */,
 				270D6FC1164484190081812D /* TDSocketChangeTracker.h in Headers */,
+				275A29021649A11900B0D8EE /* TouchDBPrivate.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1528,6 +1602,9 @@
 				27DA43671592387400F9E7B5 /* TouchQuery.h in Headers */,
 				27DA43681592387400F9E7B5 /* TouchModel.h in Headers */,
 				27DA43691592387400F9E7B5 /* TouchModelFactory.h in Headers */,
+				275A29031649A11A00B0D8EE /* TouchDBPrivate.h in Headers */,
+				275A29041649A12B00B0D8EE /* TouchAttachment.h in Headers */,
+				275A29051649A13900B0D8EE /* TouchReplication.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1754,6 +1831,7 @@
 				DA147C1F14BCAC3B0052DA4D /* TouchDBListener-iOS */,
 				DA023B2614BCA94C008184BB /* Listener iOS Library */,
 				270FE0C714C5008C005FF647 /* TouchServ */,
+				275A29061649A54000B0D8EE /* All */,
 			);
 		};
 /* End PBXProject section */
@@ -2171,6 +2249,41 @@
 			target = 270B3DE91489359000E0A926 /* TouchDB-Mac */;
 			targetProxy = 275315FD14ACF87F0065964D /* PBXContainerItemProxy */;
 		};
+		275A290B1649A54500B0D8EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270B3DE91489359000E0A926 /* TouchDB-Mac */;
+			targetProxy = 275A290A1649A54500B0D8EE /* PBXContainerItemProxy */;
+		};
+		275A290D1649A54700B0D8EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27B0B7E61492BB6B00A817AD /* TouchDB-iOS */;
+			targetProxy = 275A290C1649A54700B0D8EE /* PBXContainerItemProxy */;
+		};
+		275A290F1649A54A00B0D8EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27C70693148864BA00F0F099 /* TouchDB Mac Demo */;
+			targetProxy = 275A290E1649A54A00B0D8EE /* PBXContainerItemProxy */;
+		};
+		275A29111649A54C00B0D8EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27B0B80A1492C16300A817AD /* TouchDB iOS Demo */;
+			targetProxy = 275A29101649A54C00B0D8EE /* PBXContainerItemProxy */;
+		};
+		275A29131649A54F00B0D8EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 275315D414ACF0A10065964D /* TouchDBListener-Mac */;
+			targetProxy = 275A29121649A54F00B0D8EE /* PBXContainerItemProxy */;
+		};
+		275A29151649A55200B0D8EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA147C1F14BCAC3B0052DA4D /* TouchDBListener-iOS */;
+			targetProxy = 275A29141649A55200B0D8EE /* PBXContainerItemProxy */;
+		};
+		275A29171649A55500B0D8EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270FE0C714C5008C005FF647 /* TouchServ */;
+			targetProxy = 275A29161649A55500B0D8EE /* PBXContainerItemProxy */;
+		};
 		27B0B7F51492BC5B00A817AD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 27B0B7A81492B83B00A817AD /* TouchDB-iOS-library */;
@@ -2408,6 +2521,20 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		275A29081649A54000B0D8EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		275A29091649A54000B0D8EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -2811,6 +2938,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		275A29071649A54000B0D8EE /* Build configuration list for PBXAggregateTarget "All" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				275A29081649A54000B0D8EE /* Debug */,
+				275A29091649A54000B0D8EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		27731F271495CFEF00815D67 /* Build configuration list for PBXNativeTarget "TouchDB iOS Empty App" */ = {
 			isa = XCConfigurationList;
