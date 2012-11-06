@@ -36,16 +36,9 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
-- (void) forgetDB {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-    _tddb.touchDatabase = nil;
-    _tddb = nil;
-}
-
-
 - (void)dealloc
 {
-    [self forgetDB];
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 
@@ -98,7 +91,9 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 - (BOOL) deleteDatabase: (NSError**)outError {
     if (![_manager.tdManager deleteDatabase: _tddb error: outError])
         return NO;
-    [self forgetDB];
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    _tddb.touchDatabase = nil;
+    _tddb = nil;
     return YES;
 }
 

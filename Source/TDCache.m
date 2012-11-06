@@ -30,20 +30,22 @@ static const NSUInteger kDefaultRetainLimit = 50;
 - (id)initWithRetainLimit: (NSUInteger)retainLimit {
     self = [super init];
     if (self) {
-#ifdef TARGET_OS_IPHONE
-        // Construct a CFDictionary that doesn't retain its values:
-        CFDictionaryValueCallBacks valueCB = kCFTypeDictionaryValueCallBacks;
-        valueCB.retain = NULL;
-        valueCB.release = NULL;
-        _map = (NSMutableDictionary*)CFBridgingRelease(CFDictionaryCreateMutable(
-                       NULL, 100, &kCFCopyStringDictionaryKeyCallBacks, &valueCB));
-#else
-        // Construct an NSMapTable that doesn't retain its values:
+#if TDCACHE_IS_SMART
+        // Construct an NSMapTable with weak references to values, which automatically removes
+        // key/value pairs when a value is dealloced.
         _map = [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsStrongMemory |
                                                        NSPointerFunctionsObjectPersonality
                                          valueOptions: NSPointerFunctionsZeroingWeakMemory |
                                                        NSPointerFunctionsObjectPersonality
                                              capacity: 100];
+#else
+        // Construct a CFDictionary that doesn't retain its values. It does _not_ automatically
+        // remove dealloced values, so we'll have to do it manually in -resourceBeingDeallocated.
+        CFDictionaryValueCallBacks valueCB = kCFTypeDictionaryValueCallBacks;
+        valueCB.retain = NULL;
+        valueCB.release = NULL;
+        _map = (NSMutableDictionary*)CFBridgingRelease(CFDictionaryCreateMutable(
+                       NULL, 100, &kCFCopyStringDictionaryKeyCallBacks, &valueCB));
 #endif
         if (retainLimit > 0) {
             _cache = [[NSCache alloc] init];
@@ -54,25 +56,29 @@ static const NSUInteger kDefaultRetainLimit = 50;
 }
 
 
+#if ! TDCACHE_IS_SMART
 - (void)dealloc {
     for (id<TDCacheable> doc in _map.objectEnumerator)
         doc.owningCache = nil;
 }
+#endif
 
 
 - (void) addResource: (id<TDCacheable>)resource {
+#if ! TDCACHE_IS_SMART
     resource.owningCache = self;
+#endif
     NSString* key = resource.cacheKey;
-    NSAssert(!_map[key], @"Caching duplicate items for '%@': %p, now %p",
-             key, _map[key], resource);
-    _map[key] = resource;
+    NSAssert(![_map objectForKey: key], @"Caching duplicate items for '%@': %p, now %p",
+             key, [_map objectForKey: key], resource);
+    [_map setObject: resource forKey: key];
     if (_cache)
         [_cache setObject: resource forKey: key];
 }
 
 
 - (id<TDCacheable>) resourceWithCacheKey: (NSString*)docID {
-    id<TDCacheable> doc = _map[docID];
+    id<TDCacheable> doc = [_map objectForKey: docID];
     if (doc && _cache && ![_cache objectForKey:docID])
         [_cache setObject: doc forKey: docID];  // re-add doc to NSCache since it's recently used
     return doc;
@@ -80,23 +86,24 @@ static const NSUInteger kDefaultRetainLimit = 50;
 
 
 - (void) forgetResource: (id<TDCacheable>)resource {
+#if ! TDCACHE_IS_SMART
     TDCache* cache = resource.owningCache;
     if (cache) {
         NSAssert(cache == self, @"Removing object from the wrong cache");
         resource.owningCache = nil;
         [_map removeObjectForKey: resource.cacheKey];
     }
+#else
+    [_map removeObjectForKey: resource.cacheKey];
+#endif
 }
 
 
+#if ! TDCACHE_IS_SMART
 - (void) resourceBeingDealloced:(id<TDCacheable>)resource {
     [_map removeObjectForKey: resource.cacheKey];
 }
-
-
-- (NSArray*) allCachedResources {
-    return _map.allValues;
-}
+#endif
 
 
 - (void) unretainResources {

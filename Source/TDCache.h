@@ -17,21 +17,33 @@
 @protocol TDCacheable;
 
 
-/** An in-memory cache of RESTResource objects.
-    It keeps track of all added resources as long as anything else has retained them,
-    and it keeps a certain number of recently-accessed resources with no external references.
+// TDCache doesn't need hand-holding from its TDCacheable objects if NSMapTable is available.
+#if ! __has_feature(objc_arc)
+#define TDCACHE_IS_SMART 0
+#elif defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
+#define TDCACHE_IS_SMART (__IPHONE_OS_VERSION_MIN_REQUIRED >= 60000)
+#elif defined(TARGET_OS_MAC)
+#define TDCACHE_IS_SMART 1
+#else
+#define TDCACHE_IS_SMART 0
+#endif
+
+
+/** An in-memory object cache.
+    It keeps track of all added objects as long as anything else has retained them,
+    and it keeps a certain number of recently-accessed objects with no external references.
     It's intended for use by a parent resource, to cache its children.
  
     Important:
-    * It should contain only direct sibling objects, as it assumes that their -cacheKey property values are all different.
-    * A RESTResource can belong to only one TDCache at a time. */
+    * Every object added must have a unique and fixed .cacheKey value.
+    * If ARC is not enabled, an object can belong to only one TDCache at a time. */
 @interface TDCache : NSObject
 {
     @private
-#ifdef TARGET_OS_IPHONE
-    NSMutableDictionary* _map;
-#else
+#if TDCACHE_IS_SMART
     NSMapTable* _map;
+#else
+    NSMutableDictionary* _map;
 #endif
     NSCache* _cache;
 }
@@ -59,17 +71,19 @@
     All objects that don't have anything else retaining them will be removed from the cache. */
 - (void) unretainResources;
 
-- (NSArray*) allCachedResources;
-
+#if ! TDCACHE_IS_SMART
 /** A TDCacheable implementation MUST call this at the start of its -dealloc method! */
 - (void) resourceBeingDealloced:(id<TDCacheable>)resource;
+#endif
 
 @end
 
 
 @protocol TDCacheable <NSObject>
 
+#if ! TDCACHE_IS_SMART
 @property (weak) TDCache* owningCache;
+#endif
 @property (readonly) NSString* cacheKey;
 
 @end

@@ -17,7 +17,9 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 @implementation TouchDocument
 
 
+#if ! TDCACHE_IS_SMART
 @synthesize owningCache=_owningCache;
+#endif
 
 
 - (id)initWithDatabase: (TouchDatabase*)database
@@ -32,12 +34,14 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
+#if ! TDCACHE_IS_SMART
 - (void)dealloc
 {
     if (_modelObject)
         Warn(@"Deallocing %@ while it still has a modelObject %@", self, _modelObject);
     [_owningCache resourceBeingDealloced: self];
 }
+#endif
 
 
 - (NSString*) description {

@@ -16,10 +16,12 @@
 {
     @private
     TouchDatabase* _database;
-    __weak TDCache* _owningCache;
     NSString* _docID;
     TouchRevision* _currentRevision;
     __weak id _modelObject;
+#if ! TDCACHE_IS_SMART
+    __weak TDCache* _owningCache;
+#endif
 }
 
 @property (readonly) TouchDatabase* database;
