@@ -12,6 +12,7 @@
 #import "TDDatabase.h"
 #import "TDDatabaseManager.h"
 #import "TDServer.h"
+#import "TDInternal.h"
 
 
 @implementation TouchDatabaseManager
@@ -42,13 +43,20 @@
                    error: (NSError**)outError {
     self = [super init];
     if (self) {
-        // NOTE: TouchDatabaseManagerOptions and TDDatabaseManagerOptions must have the same layout
+        if (options)
+            _options = *options;
+
+        TDDatabaseManagerOptions tdOptions = {
+            .readOnly = _options.readOnly,
+            .noReplicator = _options.noReplicator
+        };
         _mgr = [[TDDatabaseManager alloc] initWithDirectory: directory
-                                                    options: (const TDDatabaseManagerOptions*)options
+                                                    options: &tdOptions
                                                       error: outError];
         if (!_mgr) {
             return nil;
         }
+        [_mgr replicatorManager];
         _replications = [[NSMutableArray alloc] init];
         LogTo(TouchDatabase, @"Created %@", self);
     }
@@ -75,13 +83,21 @@
 }
 
 
+#if 0
 - (TDServer*) tdServer {
     if (!_server) {
-        _server = [[TDServer alloc] initWithDirectory: _mgr.directory error: nil];
+        TDDatabaseManagerOptions tdOptions = {
+            .readOnly = _options.readOnly,
+            .noReplicator = _options.noReplicator
+        };
+        _server = [[TDServer alloc] initWithDirectory: _mgr.directory
+                                              options: &tdOptions
+                                                error: nil];
         LogTo(TouchDatabase, @"%@ created %@", self, _server);
     }
     return _server;
 }
+#endif
 
 
 - (NSArray*) allDatabaseNames {

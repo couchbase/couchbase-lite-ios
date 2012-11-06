@@ -31,11 +31,6 @@
 @interface RootViewController ()
 @property(nonatomic, strong)TouchDatabase *database;
 @property(nonatomic, strong)NSURL* remoteSyncURL;
-- (void)updateSyncURL;
-- (void)showSyncButton;
-- (void)showSyncStatus;
-- (IBAction)configureSync:(id)sender;
-- (void)forgetSync;
 @end
 
 
@@ -273,23 +268,27 @@
     
     [self forgetSync];
     
-#if 0
     NSArray* repls = [self.database replicateWithURL: newRemoteURL exclusively: YES];
     _pull = [repls objectAtIndex: 0];
     _push = [repls objectAtIndex: 1];
-    [_pull addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-    [_push addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-#endif
+    NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
+    [nctr addObserver: self selector: @selector(replicationProgress:)
+                 name: kTouchReplicationChangeNotification object: _pull];
+    [nctr addObserver: self selector: @selector(replicationProgress:)
+                 name: kTouchReplicationChangeNotification object: _push];
 }
 
 
 - (void) forgetSync {
-#if 0
-    [_pull removeObserver: self forKeyPath: @"completed"];
-    _pull = nil;
-    [_push removeObserver: self forKeyPath: @"completed"];
-    _push = nil;
-#endif
+    NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
+    if (_pull) {
+        [nctr removeObserver: self name: nil object: _pull];
+        _pull = nil;
+    }
+    if (_push) {
+        [nctr removeObserver: self name: nil object: _push];
+        _push = nil;
+    }
 }
 
 
@@ -322,22 +321,16 @@
 }
 
 
-- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
-                         change:(NSDictionary *)change context:(void *)context
-{
-#if 0
-    if (object == _pull || object == _push) {
+- (void) replicationProgress: (NSNotificationCenter*)n {
+    if (_pull.mode == kTouchReplicationActive || _push.mode == kTouchReplicationActive) {
         unsigned completed = _pull.completed + _push.completed;
         unsigned total = _pull.total + _push.total;
         NSLog(@"SYNC progress: %u / %u", completed, total);
-        if (total > 0 && completed < total) {
-            [self showSyncStatus];
-            [progress setProgress:(completed / (float)total)];
-        } else {
-            [self showSyncButton];
-        }
+        [self showSyncStatus];
+        progress.progress = (completed / (float)MAX(total, 1u));
+    } else {
+        [self showSyncButton];
     }
-#endif
 }
 
 

@@ -20,15 +20,15 @@
 
 #import <UIKit/UIKit.h>
 #import "TouchUITableSource.h"
-@class TouchDatabase, TDPersistentReplication;
+@class TouchDatabase, TouchReplication;
 
 
 @interface RootViewController : UIViewController <TouchUITableDelegate, UITextFieldDelegate>
 {
     TouchDatabase *database;
     NSURL* remoteSyncURL;
-    TDPersistentReplication* _pull;
-    TDPersistentReplication* _push;
+    TouchReplication* _pull;
+    TouchReplication* _push;
     
     UITableView *tableView;
     IBOutlet UIProgressView *progress;

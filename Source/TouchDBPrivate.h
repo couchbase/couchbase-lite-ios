@@ -16,7 +16,9 @@
 
 
 @interface TouchDatabaseManager ()
+#if 0
 @property (readonly) TDServer* tdServer;
+#endif
 @property (readonly) TDDatabaseManager* tdManager;
 - (TouchReplication*) replicationWithDatabase: (TouchDatabase*)db
                                        remote: (NSURL*)remote

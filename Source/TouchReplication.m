@@ -16,6 +16,9 @@
 #import "MYBlockUtils.h"
 
 
+#undef RUN_IN_BACKGROUND
+
+
 NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 
 
@@ -66,16 +69,21 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
         else
             _pull = YES;
         _remoteURL = [[NSURL alloc] initWithString: urlStr];
+        _mainThread = [NSThread currentThread];
 
+#if RUN_IN_BACKGROUND
         [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
                                                        to: ^(TDDatabase* tddb) {
             _bg_serverDatabase = tddb;
-            // Observe *all* replication changes:
-            [[NSNotificationCenter defaultCenter] addObserver: self
+        }];
+#else
+        _bg_serverDatabase = self.localDatabase.tddb;
+#endif
+        // Observe *all* replication changes:
+        [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(bg_replicationProgressChanged:)
                                                      name: TDReplicatorProgressChangedNotification
                                                    object: nil];
-        }];
     }
     return self;
 }
@@ -199,6 +207,15 @@ static inline BOOL isLocalDBName(NSString* url) {
 #pragma mark - START/STOP:
 
 
+- (void) tellDatabaseManager: (void (^)(TDDatabaseManager*))block {
+#if RUN_IN_BACKGROUND
+    [self.database.manager.tdServer tellDatabaseManager: block];
+#else
+    block(self.database.manager.tdManager);
+#endif
+}
+
+
 // This is only for non-persistent replications. Persistent ones are started by
 // the TDReplicatorManager.
 - (void) start {
@@ -207,7 +224,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     _started = YES;
     _mainThread = [NSThread currentThread];
 
-    [self.database.manager.tdServer tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
+    [self tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
         // This runs on the server thread:
         [self bg_startReplicator: dbmgr
                           dbName: self.localDatabase.name
@@ -223,7 +240,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (void) stop {
     if (self.persistent)
         return;
-    [self.database.manager.tdServer tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
+    [self tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
         // This runs on the server thread:
         [_bg_replicator stop];
     }];

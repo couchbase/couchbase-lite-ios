@@ -21,6 +21,7 @@ typedef struct TouchDatabaseManagerOptions {
 @interface TouchDatabaseManager : NSObject
 {
     @private
+    TouchDatabaseManagerOptions _options;
     TDDatabaseManager* _mgr;
     TDServer* _server;
     NSMutableArray* _replications;
