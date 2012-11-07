@@ -23,8 +23,8 @@
 #import "DemoAppDelegate.h"
 
 #import "TouchDB.h"
-#import "TDView.h"
-#import "TDDatabase+Insertion.h"
+#import "TD_View.h"
+#import "TD_Database+Insertion.h"
 #import "TDJSON.h"
 
 

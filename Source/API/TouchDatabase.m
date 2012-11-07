@@ -8,7 +8,7 @@
 
 #import "TouchDBPrivate.h"
 #import "TDCache.h"
-#import "TDDatabaseManager.h"
+#import "TD_DatabaseManager.h"
 
 
 #define kDocRetainLimit 50
@@ -23,7 +23,7 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 
 - (id) initWithManager: (TouchDatabaseManager*)manager
-            TDDatabase: (TDDatabase*)tddb
+            TD_Database: (TD_Database*)tddb
 {
     self = [super init];
     if (self) {
@@ -42,11 +42,11 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
-// Notified of a change in the TDDatabase:
+// Notified of a change in the TD_Database:
 - (void) tddbNotification: (NSNotification*)n {
-    if ([n.name isEqualToString: TDDatabaseChangesNotification]) {
+    if ([n.name isEqualToString: TD_DatabaseChangesNotification]) {
         for (NSDictionary* change in (n.userInfo)[@"changes"]) {
-            TDRevision* rev = change[@"winner"];
+            TD_Revision* rev = change[@"winner"];
             NSURL* source = change[@"source"];
             
             [[self cachedDocumentWithID: rev.docID] revisionAdded: rev source: source];
@@ -122,7 +122,7 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 
 - (TouchDocument*) untitledDocument {
-    return [self documentWithID: [TDDatabase generateDocumentID]];
+    return [self documentWithID: [TD_Database generateDocumentID]];
 }
 
 
@@ -154,13 +154,13 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 
 
 - (TouchView*) viewNamed: (NSString*)name {
-    TDView* view = [_tddb viewNamed: name];
+    TD_View* view = [_tddb viewNamed: name];
     return view ? [[TouchView alloc] initWithDatabase: self view: view] : nil;
 }
 
 
 - (NSArray*) allViews {
-    return [_tddb.allViews my_map:^id(TDView* view) {
+    return [_tddb.allViews my_map:^id(TD_View* view) {
         return [[TouchView alloc] initWithDatabase: self view: view];
     }];
 }

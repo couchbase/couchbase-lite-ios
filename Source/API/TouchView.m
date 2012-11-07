@@ -7,13 +7,13 @@
 //
 
 #import "TouchDBPrivate.h"
-#import "TDView.h"
+#import "TD_View.h"
 
 
 @implementation TouchView
 
 
-- (id)initWithDatabase: (TouchDatabase*)database view: (TDView*)view {
+- (id)initWithDatabase: (TouchDatabase*)database view: (TD_View*)view {
     self = [super init];
     if (self) {
         _database = database;

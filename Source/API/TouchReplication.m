@@ -10,9 +10,9 @@
 #import "TouchDBPrivate.h"
 
 #import "TDPusher.h"
-#import "TDDatabase+Replication.h"
-#import "TDDatabaseManager.h"
-#import "TDServer.h"
+#import "TD_Database+Replication.h"
+#import "TD_DatabaseManager.h"
+#import "TD_Server.h"
 #import "MYBlockUtils.h"
 
 
@@ -73,7 +73,7 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 
 #if RUN_IN_BACKGROUND
         [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
-                                                       to: ^(TDDatabase* tddb) {
+                                                       to: ^(TD_Database* tddb) {
             _bg_serverDatabase = tddb;
         }];
 #else
@@ -207,7 +207,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 #pragma mark - START/STOP:
 
 
-- (void) tellDatabaseManager: (void (^)(TDDatabaseManager*))block {
+- (void) tellDatabaseManager: (void (^)(TD_DatabaseManager*))block {
 #if RUN_IN_BACKGROUND
     [self.database.manager.tdServer tellDatabaseManager: block];
 #else
@@ -224,7 +224,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     _started = YES;
     _mainThread = [NSThread currentThread];
 
-    [self tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
+    [self tellDatabaseManager:^(TD_DatabaseManager* dbmgr) {
         // This runs on the server thread:
         [self bg_startReplicator: dbmgr
                           dbName: self.localDatabase.name
@@ -240,7 +240,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (void) stop {
     if (self.persistent)
         return;
-    [self tellDatabaseManager:^(TDDatabaseManager* dbmgr) {
+    [self tellDatabaseManager:^(TD_DatabaseManager* dbmgr) {
         // This runs on the server thread:
         [_bg_replicator stop];
     }];
@@ -288,7 +288,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 // CAREFUL: This is called on the server's background thread!
-- (void) bg_startReplicator: (TDDatabaseManager*)server_dbmgr
+- (void) bg_startReplicator: (TD_DatabaseManager*)server_dbmgr
                      dbName: (NSString*)dbName
                      remote: (NSURL*)remote
                        pull: (bool)pull

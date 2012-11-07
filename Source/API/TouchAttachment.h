@@ -11,7 +11,7 @@
 
 
 /** A binary attachment to a document revision.
-    Existing attachments can be gotten from -[TDRevision attachmentNamed:].
+    Existing attachments can be gotten from -[TD_Revision attachmentNamed:].
     To add a new attachment, call -initWithContentType:body: and then put the attachment object as a value in the "_attachments" dictionary of the properties when you create a new revision. */
 @interface TouchAttachment : NSObject
 {

@@ -1,17 +1,17 @@
 //
-//  TDAttachment.h
+//  TD_Attachment.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 4/3/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TDDatabase+Attachments.h"
+#import "TD_Database+Attachments.h"
 #import "TDBlobStore.h"
 
 
 /** A simple container for attachment metadata. */
-@interface TDAttachment : NSObject
+@interface TD_Attachment : NSObject
 {
     @private
     NSString* _name;

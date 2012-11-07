@@ -9,9 +9,9 @@
 #import "TouchDatabaseManager.h"
 #import "TouchDBPrivate.h"
 
-#import "TDDatabase.h"
-#import "TDDatabaseManager.h"
-#import "TDServer.h"
+#import "TD_Database.h"
+#import "TD_DatabaseManager.h"
+#import "TD_Server.h"
 #import "TDInternal.h"
 
 
@@ -32,7 +32,7 @@
 
 
 - (id)init {
-    return [self initWithDirectory: [TDDatabaseManager defaultDirectory]
+    return [self initWithDirectory: [TD_DatabaseManager defaultDirectory]
                            options: NULL
                              error: nil];
 }
@@ -46,11 +46,11 @@
         if (options)
             _options = *options;
 
-        TDDatabaseManagerOptions tdOptions = {
+        TD_DatabaseManagerOptions tdOptions = {
             .readOnly = _options.readOnly,
             .noReplicator = _options.noReplicator
         };
-        _mgr = [[TDDatabaseManager alloc] initWithDirectory: directory
+        _mgr = [[TD_DatabaseManager alloc] initWithDirectory: directory
                                                     options: &tdOptions
                                                       error: outError];
         if (!_mgr) {
@@ -84,13 +84,13 @@
 
 
 #if 0
-- (TDServer*) tdServer {
+- (TD_Server*) tdServer {
     if (!_server) {
         TDDatabaseManagerOptions tdOptions = {
             .readOnly = _options.readOnly,
             .noReplicator = _options.noReplicator
         };
-        _server = [[TDServer alloc] initWithDirectory: _mgr.directory
+        _server = [[TD_Server alloc] initWithDirectory: _mgr.directory
                                               options: &tdOptions
                                                 error: nil];
         LogTo(TouchDatabase, @"%@ created %@", self, _server);
@@ -105,11 +105,11 @@
 }
 
 
-- (TouchDatabase*) databaseForDatabase: (TDDatabase*)tddb {
+- (TouchDatabase*) databaseForDatabase: (TD_Database*)tddb {
     TouchDatabase* touchDatabase = tddb.touchDatabase;
     if (!touchDatabase) {
         touchDatabase = [[TouchDatabase alloc] initWithManager: self
-                                                    TDDatabase: tddb];
+                                                    TD_Database: tddb];
         tddb.touchDatabase = touchDatabase;
     }
     return touchDatabase;
@@ -117,7 +117,7 @@
 
 
 - (TouchDatabase*) databaseNamed: (NSString*)name {
-    TDDatabase* db = [_mgr existingDatabaseNamed: name];
+    TD_Database* db = [_mgr existingDatabaseNamed: name];
     if (![db open])
         return nil;
     return [self databaseForDatabase: db];
@@ -128,7 +128,7 @@
 }
 
 - (TouchDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
-    TDDatabase* db = [_mgr databaseNamed: name];
+    TD_Database* db = [_mgr databaseNamed: name];
     if (![db open: outError])
         return nil;
     return [self databaseForDatabase: db];

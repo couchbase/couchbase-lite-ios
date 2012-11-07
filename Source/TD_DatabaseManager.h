@@ -1,5 +1,5 @@
 //
-//  TDDatabaseManager.h
+//  TD_DatabaseManager.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 3/22/12.
@@ -7,23 +7,23 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDDatabase, TDReplicatorManager;
+@class TD_Database, TDReplicatorManager;
 
 
-typedef struct TDDatabaseManagerOptions {
+typedef struct TD_DatabaseManagerOptions {
     bool readOnly;
     bool noReplicator;
-} TDDatabaseManagerOptions;
+} TD_DatabaseManagerOptions;
 
-extern const TDDatabaseManagerOptions kTDDatabaseManagerDefaultOptions;
+extern const TD_DatabaseManagerOptions kTD_DatabaseManagerDefaultOptions;
 
 
-/** Manages a directory containing TDDatabases. */
-@interface TDDatabaseManager : NSObject 
+/** Manages a directory containing TD_Databases. */
+@interface TD_DatabaseManager : NSObject 
 {
     @private
     NSString* _dir;
-    TDDatabaseManagerOptions _options;
+    TD_DatabaseManagerOptions _options;
     NSMutableDictionary* _databases;
     TDReplicatorManager* _replicatorManager;
 }
@@ -33,15 +33,15 @@ extern const TDDatabaseManagerOptions kTDDatabaseManagerDefaultOptions;
 + (NSString*) defaultDirectory;
 
 - (id) initWithDirectory: (NSString*)dirPath
-                 options: (const TDDatabaseManagerOptions*)options
+                 options: (const TD_DatabaseManagerOptions*)options
                    error: (NSError**)outError;
 
 @property (readonly) NSString* directory;
 
-- (TDDatabase*) databaseNamed: (NSString*)name;
-- (TDDatabase*) existingDatabaseNamed: (NSString*)name;
+- (TD_Database*) databaseNamed: (NSString*)name;
+- (TD_Database*) existingDatabaseNamed: (NSString*)name;
 
-- (BOOL) deleteDatabase: (TDDatabase*)db error: (NSError**)outError;
+- (BOOL) deleteDatabase: (TD_Database*)db error: (NSError**)outError;
 
 @property (readonly) NSArray* allDatabaseNames;
 @property (readonly) NSArray* allOpenDatabases;

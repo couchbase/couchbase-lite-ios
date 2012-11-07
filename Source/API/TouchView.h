@@ -6,8 +6,8 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TDView.h"
-@class TouchDatabase, TouchQuery, TDView;
+#import "TD_View.h"
+@class TouchDatabase, TouchQuery, TD_View;
 
 
 /** A "view" in a TouchDB database -- this is a type of map/reduce index.
@@ -16,7 +16,7 @@
 {
     @private
     TouchDatabase* _database;
-    TDView* _view;
+    TD_View* _view;
 }
 
 @property (readonly) TouchDatabase* database;

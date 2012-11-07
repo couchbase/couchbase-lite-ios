@@ -16,7 +16,7 @@
 #import "TDReplicator.h"
 #import "TDPusher.h"
 #import "TDPuller.h"
-#import <TouchDB/TDDatabase.h>
+#import <TouchDB/TD_Database.h>
 #import "TDRemoteRequest.h"
 #import "TDAuthorizer.h"
 #import "TDBatcher.h"
@@ -65,7 +65,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
-- (id) initWithDB: (TDDatabase*)db
+- (id) initWithDB: (TD_Database*)db
            remote: (NSURL*)remote
              push: (BOOL)push
        continuous: (BOOL)continuous
@@ -202,7 +202,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                  processor:^(NSArray *inbox) {
                      LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%u sequences)",
                            self, (unsigned)inbox.count);
-                     TDRevisionList* revs = [[TDRevisionList alloc] initWithArray: inbox];
+                     TD_RevisionList* revs = [[TD_RevisionList alloc] initWithArray: inbox];
                      [self processInbox: revs];
                      LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
                      [self updateActive];
@@ -384,7 +384,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
-- (void) addToInbox: (TDRevision*)rev {
+- (void) addToInbox: (TD_Revision*)rev {
     Assert(_running);
     LogTo(SyncVerbose, @"%@: Received #%lld %@", self, rev.sequence, rev);
     [_batcher queueObject: rev];
@@ -392,7 +392,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
-- (void) addRevsToInbox: (TDRevisionList*)revs {
+- (void) addRevsToInbox: (TD_RevisionList*)revs {
     Assert(_running);
     LogTo(SyncVerbose, @"%@: Received %llu revs", self, (UInt64)revs.count);
     [_batcher queueObjects: revs.allRevisions];

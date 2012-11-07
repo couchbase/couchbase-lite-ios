@@ -7,10 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "TDDatabase+Insertion.h"
-#import "TDView.h"
+#import "TD_Database+Insertion.h"
+#import "TD_View.h"
 @class TouchDatabaseManager, TouchDocument, TouchView, TouchQuery, TouchReplication, TouchModelFactory;
-@class TDDatabase, TDCache;
+@class TD_Database, TDCache;
 
 
 /** A TouchDB database. */
@@ -18,7 +18,7 @@
 {
     @private
     TouchDatabaseManager* _manager;
-    TDDatabase* _tddb;    
+    TD_Database* _tddb;    
     TDCache* _docCache;
     TouchModelFactory* _modelFactory;   // used in category method in TouchModelFactory.m
 }

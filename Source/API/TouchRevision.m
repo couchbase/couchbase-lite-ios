@@ -7,15 +7,15 @@
 //
 
 #import "TouchDBPrivate.h"
-#import "TDDatabase+Insertion.h"
-#import "TDRevision.h"
+#import "TD_Database+Insertion.h"
+#import "TD_Revision.h"
 #import "TDStatus.h"
 
 
 @implementation TouchRevision
 
 
-- (id)initWithDocument: (TouchDocument*)doc revision: (TDRevision*)rev {
+- (id)initWithDocument: (TouchDocument*)doc revision: (TD_Revision*)rev {
     self = [super init];
     if (self) {
         _document = doc;
@@ -88,7 +88,7 @@
 
 - (NSArray*) getRevisionHistory: (NSError**)outError {
     NSMutableArray* history = $marray();
-    for (TDRevision* rev in [self.database.tddb getRevisionHistory: _rev]) {
+    for (TD_Revision* rev in [self.database.tddb getRevisionHistory: _rev]) {
         TouchRevision* revision;
         if ($equal(rev.revID, _rev.revID))
             revision = self;

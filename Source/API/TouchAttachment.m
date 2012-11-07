@@ -9,7 +9,7 @@
 #import "TouchAttachment.h"
 #import "TouchDBPrivate.h"
 
-#import "TDDatabase+Attachments.h"
+#import "TD_Database+Attachments.h"
 #import "TDBlobStore.h"
 #import "TDInternal.h"
 
@@ -105,7 +105,7 @@
 {
     Assert(_rev);
     TDStatus status;
-    TDRevision* newRev = [_rev.database.tddb updateAttachment: _name
+    TD_Revision* newRev = [_rev.database.tddb updateAttachment: _name
                                                          body: body
                                                          type: contentType ?: self.contentType
                                                      encoding: kTDAttachmentEncodingNone
@@ -126,7 +126,7 @@
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (TouchDatabase*)database
 {
-    TDDatabase* tddb = database.tddb;
+    TD_Database* tddb = database.tddb;
     return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
         TouchAttachment* attachment = $castIf(TouchAttachment, value);
         if (attachment) {

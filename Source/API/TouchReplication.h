@@ -7,7 +7,7 @@
 //
 
 #import "TouchModel.h"
-@class TouchDatabase, TDDatabase, TDServer, TDReplicator;
+@class TouchDatabase, TD_Database, TD_Server, TDReplicator;
 
 
 typedef enum {
@@ -34,7 +34,7 @@ typedef enum {
     NSError* _error;
     
     TDReplicator* _bg_replicator;       // ONLY used on the server thread
-    TDDatabase* _bg_serverDatabase;     // ONLY used on the server thread
+    TD_Database* _bg_serverDatabase;     // ONLY used on the server thread
 }
 
 /** The local database being replicated to/from. */

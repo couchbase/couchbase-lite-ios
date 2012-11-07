@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class TDView, TouchDatabase, TouchDocument;
+@class TD_View, TouchDatabase, TouchDocument;
 @class TouchLiveQuery, TouchQueryEnumerator, TouchQueryRow;
 
 
@@ -25,7 +25,7 @@ typedef enum {
 {
     @private
     TouchDatabase* _database;
-    TDView* _view;              // nil for _all_docs query
+    TD_View* _view;              // nil for _all_docs query
     BOOL _temporaryView;
     NSUInteger _limit, _skip;
     id _startKey, _endKey;

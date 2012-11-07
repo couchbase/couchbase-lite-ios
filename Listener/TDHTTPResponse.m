@@ -17,7 +17,7 @@
 #import "TDHTTPConnection.h"
 #import "TDListener.h"
 #import "TDRouter.h"
-#import "TDBody.h"
+#import "TD_Body.h"
 
 #import "Logging.h"
 
@@ -51,7 +51,7 @@
         };
 
         if (connection.listener.readOnly) {
-            router.onAccessCheck = ^TDStatus(TDDatabase* db, NSString* docID, SEL action) {
+            router.onAccessCheck = ^TDStatus(TD_Database* db, NSString* docID, SEL action) {
                 NSString* method = router.request.HTTPMethod;
                 if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"])
                     return kTDStatusOK;

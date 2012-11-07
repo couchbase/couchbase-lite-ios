@@ -1,5 +1,5 @@
 /*
- *  TDDatabase.h
+ *  TD_Database.h
  *  TouchDB
  *
  *  Created by Jens Alfke on 6/19/10.
@@ -7,28 +7,28 @@
  *
  */
 
-#import <TouchDB/TDRevision.h>
+#import <TouchDB/TD_Revision.h>
 #import <TouchDB/TDStatus.h>
-@class FMDatabase, TDView, TDBlobStore, TouchDocument, TDCache, TouchDatabase;
-struct TDQueryOptions;      // declared in TDView.h
+@class FMDatabase, TD_View, TDBlobStore, TouchDocument, TDCache, TouchDatabase;
+struct TDQueryOptions;      // declared in TD_View.h
 
 
 /** NSNotification posted when one or more documents have been updated.
-    The userInfo key "changes" contains an array of {rev: TDRevision, source: NSURL,
-    winner: new winning TDRevision, _if_ it changed (often same as rev).}*/
-extern NSString* const TDDatabaseChangesNotification;
+    The userInfo key "changes" contains an array of {rev: TD_Revision, source: NSURL,
+    winner: new winning TD_Revision, _if_ it changed (often same as rev).}*/
+extern NSString* const TD_DatabaseChangesNotification;
 
 /** NSNotification posted when a database is closing. */
-extern NSString* const TDDatabaseWillCloseNotification;
+extern NSString* const TD_DatabaseWillCloseNotification;
 
 /** NSNotification posted when a database is about to be deleted (but before it closes). */
-extern NSString* const TDDatabaseWillBeDeletedNotification;
+extern NSString* const TD_DatabaseWillBeDeletedNotification;
 
 
 /** Filter block, used in changes feeds and replication. */
-typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
+typedef BOOL (^TDFilterBlock) (TD_Revision* revision, NSDictionary* params);
 
-#define FILTERBLOCK(BLOCK) ^BOOL(TDRevision* revision, NSDictionary* params) {BLOCK}
+#define FILTERBLOCK(BLOCK) ^BOOL(TD_Revision* revision, NSDictionary* params) {BLOCK}
 
 
 /** Options for what metadata to include in document bodies */
@@ -59,7 +59,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 
 /** A TouchDB database. */
-@interface TDDatabase : NSObject
+@interface TD_Database : NSObject
 {
     @private
     NSString* _path;
@@ -85,7 +85,7 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (BOOL) close;
 - (BOOL) deleteDatabase: (NSError**)outError;
 
-+ (TDDatabase*) createEmptyDBAtPath: (NSString*)path;
++ (TD_Database*) createEmptyDBAtPath: (NSString*)path;
 
 /** Should the database file be opened in read-only mode? */
 @property BOOL readOnly;
@@ -125,57 +125,57 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 // DOCUMENTS:
 
-- (TDRevision*) getDocumentWithID: (NSString*)docID 
+- (TD_Revision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID
                           options: (TDContentOptions)options
                            status: (TDStatus*)outStatus;
-- (TDRevision*) getDocumentWithID: (NSString*)docID
+- (TD_Revision*) getDocumentWithID: (NSString*)docID
                        revisionID: (NSString*)revID;
 
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;
 
-- (TDStatus) loadRevisionBody: (TDRevision*)rev
+- (TDStatus) loadRevisionBody: (TD_Revision*)rev
                       options: (TDContentOptions)options;
 
 /** Returns an array of TDRevs in reverse chronological order,
     starting with the given revision. */
-- (NSArray*) getRevisionHistory: (TDRevision*)rev;
+- (NSArray*) getRevisionHistory: (TD_Revision*)rev;
 
 /** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. */
-- (NSDictionary*) getRevisionHistoryDict: (TDRevision*)rev;
+- (NSDictionary*) getRevisionHistoryDict: (TD_Revision*)rev;
 
 /** Returns all the known revisions (or all current/conflicting revisions) of a document. */
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+- (TD_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                     onlyCurrent: (BOOL)onlyCurrent;
 
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
     Does not return revisions whose bodies have been compacted away, or deletion markers. */
-- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev
+- (NSArray*) getPossibleAncestorRevisionIDs: (TD_Revision*)rev
                                       limit: (unsigned)limit;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
-- (NSString*) findCommonAncestorOf: (TDRevision*)rev withRevIDs: (NSArray*)revIDs;
+- (NSString*) findCommonAncestorOf: (TD_Revision*)rev withRevIDs: (NSArray*)revIDs;
 
 // VIEWS & QUERIES:
 
 /** Return value has keys 'rows', 'total_rows', 'offset', 'update_seq' */
 - (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
 
-- (TDView*) viewNamed: (NSString*)name;
+- (TD_View*) viewNamed: (NSString*)name;
 
-- (TDView*) existingViewNamed: (NSString*)name;
+- (TD_View*) existingViewNamed: (NSString*)name;
 
-- (TDView*) makeAnonymousView;
+- (TD_View*) makeAnonymousView;
 
 @property (readonly) NSArray* allViews;
 
-- (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
+- (TD_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDChangesOptions*)options
                                   filter: (TDFilterBlock)filter
                                   params: (NSDictionary*)filterParams;
 
-/** Define or clear a named filter function. These aren't used directly by TDDatabase, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
+/** Define or clear a named filter function. These aren't used directly by TD_Database, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
 
 - (TDFilterBlock) filterNamed: (NSString*)filterName;

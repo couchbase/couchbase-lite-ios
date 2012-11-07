@@ -14,10 +14,10 @@
 //  and limitations under the License.
 
 #import "TDRouter.h"
-#import "TDDatabase+Insertion.h"
-#import "TDServer.h"
-#import "TDView.h"
-#import "TDBody.h"
+#import "TD_Database+Insertion.h"
+#import "TD_Server.h"
+#import "TD_View.h"
+#import "TD_Body.h"
 #import "TDMultipartWriter.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
@@ -44,7 +44,7 @@
 @implementation TDRouter
 
 
-- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager request: (NSURLRequest*)request {
+- (id) initWithDatabaseManager: (TD_DatabaseManager*)dbManager request: (NSURLRequest*)request {
     NSParameterAssert(request);
     self = [super init];
     if (self) {
@@ -62,7 +62,7 @@
     return self;
 }
 
-- (id) initWithServer: (TDServer*)server
+- (id) initWithServer: (TD_Server*)server
               request: (NSURLRequest*)request
               isLocal: (BOOL)isLocal
 {
@@ -285,7 +285,7 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = _path[0];
-        BOOL validName = [TDDatabaseManager isValidDatabaseName: dbName];
+        BOOL validName = [TD_DatabaseManager isValidDatabaseName: dbName];
         if ([dbName hasPrefix: @"_"] && !validName) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else if (!validName) {
@@ -309,7 +309,7 @@ static NSArray* splitPath( NSURL* url ) {
         NSString* name = _path[1];
         if (![name hasPrefix: @"_"]) {
             // Regular document
-            if (![TDDatabase isValidDocumentID: name])
+            if (![TD_Database isValidDocumentID: name])
                 return kTDStatusBadID;
             docID = name;
         } else if ([name isEqualToString: @"_design"] || [name isEqualToString: @"_local"]) {
@@ -421,7 +421,7 @@ static NSArray* splitPath( NSURL* url ) {
     // database closing so I can stop then:
     if (_waiting)
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
-                                                     name: TDDatabaseWillCloseNotification
+                                                     name: TD_DatabaseWillCloseNotification
                                                    object: _db];
 }
 
@@ -488,7 +488,7 @@ static NSArray* splitPath( NSURL* url ) {
     }
 
     body = [body subdataWithRange: NSMakeRange(from, to - from + 1)];
-    _response.body = [TDBody bodyWithJSON: body];  // not actually JSON
+    _response.body = [TD_Body bodyWithJSON: body];  // not actually JSON
 
     // Content-Range: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16
     NSString* contentRangeStr = $sprintf(@"bytes %llu-%llu/%llu",
@@ -578,7 +578,7 @@ static NSArray* splitPath( NSURL* url ) {
     if (_dbManager) {
         [self run];
     } else {
-        [_server tellDatabaseManager: ^(TDDatabaseManager* dbm) {
+        [_server tellDatabaseManager: ^(TD_DatabaseManager* dbm) {
             _dbManager = dbm;
             [self run];
         }];
@@ -634,7 +634,7 @@ static NSArray* splitPath( NSURL* url ) {
     _statusMsg = statusMsg;
     if (_status < 300) {
         if (!_body && !_headers[@"Content-Type"]) {
-            self.body = [TDBody bodyWithJSON:
+            self.body = [TD_Body bodyWithJSON:
                                     [@"{\"ok\":true}" dataUsingEncoding: NSUTF8StringEncoding]];
         }
     } else {
@@ -668,12 +668,12 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 - (void) setBodyObject:(id)bodyObject {
-    self.body = bodyObject ? [TDBody bodyWithProperties: bodyObject] : nil;
+    self.body = bodyObject ? [TD_Body bodyWithProperties: bodyObject] : nil;
 }
 
 - (void) setMultipartBody: (TDMultipartWriter*)mp {
     // OPT: Would be better to stream this than shoving all the data into _body.
-    self.body = [TDBody bodyWithJSON: mp.allOutput];
+    self.body = [TD_Body bodyWithJSON: mp.allOutput];
     self[@"Content-Type"] = mp.contentType;
 }
 

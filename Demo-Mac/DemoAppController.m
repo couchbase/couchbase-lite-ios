@@ -96,9 +96,9 @@ int main (int argc, const char * argv[]) {
     
 #ifdef FOR_TESTING_PURPOSES
     // Start a listener socket:
-    [server tellTDServer: ^(TDServer* tdServer) {
+    [server tellTDServer: ^(TD_Server* tdServer) {
         // Register support for handling certain JS functions used in the TouchDB unit tests:
-        [TDView setCompiler: self];
+        [TD_View setCompiler: self];
         
         sListener = [[TDListener alloc] initWithTDServer: tdServer port: 8888];
         [sListener start];
@@ -344,7 +344,7 @@ int main (int argc, const char * argv[]) {
     TDReduceBlock reduceBlock = NULL;
     if ([reduceSource isEqualToString: @"(function (keys, values) {return sum(values);})"]) {
         reduceBlock = ^(NSArray* keys, NSArray* values, BOOL rereduce) {
-            return [TDView totalValues: values];
+            return [TD_View totalValues: values];
         };
     }
     return [reduceBlock copy];

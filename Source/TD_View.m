@@ -1,5 +1,5 @@
 //
-//  TDView.m
+//  TD_View.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/8/11.
@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDView.h"
+#import "TD_View.h"
 #import "TDInternal.h"
 #import "TDCollateJSON.h"
 
@@ -35,10 +35,10 @@ const TDQueryOptions kDefaultTDQueryOptions = {
 static id<TDViewCompiler> sCompiler;
 
 
-@implementation TDView
+@implementation TD_View
 
 
-- (id) initWithDatabase: (TDDatabase*)db name: (NSString*)name {
+- (id) initWithDatabase: (TD_Database*)db name: (NSString*)name {
     Assert(db);
     Assert(name.length);
     self = [super init];
@@ -443,7 +443,7 @@ static id fromJSON( NSData* json ) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = value[@"_rev"]; // usually nil
                         TDStatus linkedStatus;
-                        TDRevision* linked = [_db getDocumentWithID: linkedID
+                        TD_Revision* linked = [_db getDocumentWithID: linkedID
                                                          revisionID: linkedRev
                                                             options: options->content
                                                              status: &linkedStatus];

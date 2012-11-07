@@ -7,14 +7,14 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDHTTPServer, TDServer;
+@class TDHTTPServer, TD_Server;
 
 
 /** A simple HTTP server that provides remote access to the TouchDB REST API. */
 @interface TDListener : NSObject
 {
     TDHTTPServer* _httpServer;
-    TDServer* _tdServer;
+    TD_Server* _tdServer;
     NSString* _realm;
     BOOL _readOnly;
     BOOL _requiresAuth;
@@ -22,9 +22,9 @@
 }
 
 /** Initializes a TDListener.
-    @param server  The TDServer whose databases to serve.
+    @param server  The TD_Server whose databases to serve.
     @param port  The TCP port number to listen on. Use 0 to automatically pick an available port (you can get the port number after the server starts by getting the .port property.) */
-- (id) initWithTDServer: (TDServer*)server port: (UInt16)port;
+- (id) initWithTDServer: (TD_Server*)server port: (UInt16)port;
 
 /** The TCP port number that the listener is listening on.
     If the listener has not yet started, this will return 0. */

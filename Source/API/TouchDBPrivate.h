@@ -7,19 +7,19 @@
 //
 
 #import "TouchDB.h"
-@class TDServer;
+@class TD_Server;
 
 
-@interface TDDatabase ()
+@interface TD_Database ()
 @property (weak, nonatomic) TouchDatabase* touchDatabase;
 @end
 
 
 @interface TouchDatabaseManager ()
 #if 0
-@property (readonly) TDServer* tdServer;
+@property (readonly) TD_Server* tdServer;
 #endif
-@property (readonly) TDDatabaseManager* tdManager;
+@property (readonly) TD_DatabaseManager* tdManager;
 - (TouchReplication*) replicationWithDatabase: (TouchDatabase*)db
                                        remote: (NSURL*)remote
                                          pull: (BOOL)pull
@@ -32,16 +32,16 @@ exclusively: (bool)exclusively;
 
 @interface TouchDatabase ()
 - (id) initWithManager: (TouchDatabaseManager*)manager
-            TDDatabase: (TDDatabase*)tddb;
-@property (readonly, nonatomic) TDDatabase* tddb;
+            TD_Database: (TD_Database*)tddb;
+@property (readonly, nonatomic) TD_Database* tddb;
 @end
 
 
 @interface TouchDocument ()
 - (id)initWithDatabase: (TouchDatabase*)database
             documentID: (NSString*)docID;
-- (TouchRevision*) revisionFromRev: (TDRevision*)rev;
-- (void) revisionAdded: (TDRevision*)rev source: (NSURL*)source;
+- (TouchRevision*) revisionFromRev: (TD_Revision*)rev;
+- (void) revisionAdded: (TD_Revision*)rev source: (NSURL*)source;
 - (void) loadCurrentRevisionFrom: (TouchQueryRow*)row;
 - (TouchRevision*) putProperties: (NSDictionary*)properties
                        prevRevID: (NSString*)prevID
@@ -50,8 +50,8 @@ exclusively: (bool)exclusively;
 
 
 @interface TouchRevision ()
-- (id)initWithDocument: (TouchDocument*)doc revision: (TDRevision*)rev;
-@property (readonly) TDRevision* rev;
+- (id)initWithDocument: (TouchDocument*)doc revision: (TD_Revision*)rev;
+@property (readonly) TD_Revision* rev;
 @property (readonly) SequenceNumber sequence;
 @end
 
@@ -67,12 +67,12 @@ exclusively: (bool)exclusively;
 
 
 @interface TouchView ()
-- (id)initWithDatabase: (TouchDatabase*)database view: (TDView*)view;
+- (id)initWithDatabase: (TouchDatabase*)database view: (TD_View*)view;
 @end
 
 
 @interface TouchQuery ()
-- (id) initWithDatabase: (TouchDatabase*)database view: (TDView*)view;
+- (id) initWithDatabase: (TouchDatabase*)database view: (TD_View*)view;
 - (id)initWithDatabase: (TouchDatabase*)database mapBlock: (TDMapBlock)mapBlock;
 @end
 

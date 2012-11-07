@@ -62,7 +62,7 @@ typedef enum TDChangeTrackerMode {
 @property (readonly, nonatomic) NSString* databaseName;
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly, copy, nonatomic) id lastSequenceID;
-@property (nonatomic) NSError* error;
+@property (strong, nonatomic) NSError* error;
 @property (weak, nonatomic) id<TDChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;
 @property (strong, nonatomic) id<TDAuthorizer> authorizer;

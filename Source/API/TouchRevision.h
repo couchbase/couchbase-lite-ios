@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TouchDocument, TDRevision, TouchDatabase, TouchAttachment;
+@class TouchDocument, TD_Revision, TouchDatabase, TouchAttachment;
 
 
 /** A revision of a document. */
@@ -15,7 +15,7 @@
 {
     @private
     TouchDocument* _document;
-    TDRevision* _rev;
+    TD_Revision* _rev;
     BOOL _checkedProperties;
 }
 

@@ -16,7 +16,7 @@
 #import "TDListener.h"
 #import "TDHTTPServer.h"
 #import "TDHTTPConnection.h"
-#import "TDServer.h"
+#import "TD_Server.h"
 
 #import "HTTPServer.h"
 
@@ -27,7 +27,7 @@
 @synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm;
 
 
-- (id) initWithTDServer: (TDServer*)server port: (UInt16)port {
+- (id) initWithTDServer: (TD_Server*)server port: (UInt16)port {
     self = [super init];
     if (self) {
         _tdServer = server;

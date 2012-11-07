@@ -7,7 +7,7 @@
 //
 
 #import "TouchDBPrivate.h"
-#import "TDView.h"
+#import "TD_View.h"
 
 
 @interface TouchQueryEnumerator ()
@@ -25,7 +25,7 @@
 
 
 // A nil view refers to 'all documents'
-- (id) initWithDatabase: (TouchDatabase*)database view: (TDView*)view {
+- (id) initWithDatabase: (TouchDatabase*)database view: (TD_View*)view {
     self = [super init];
     if (self) {
         _database = database;
@@ -37,7 +37,7 @@
 
 
 - (id)initWithDatabase: (TouchDatabase*)database mapBlock: (TDMapBlock)mapBlock {
-    TDView* view = [database.tddb makeAnonymousView];
+    TD_View* view = [database.tddb makeAnonymousView];
     if (self = [self initWithDatabase: database view: view]) {
         _temporaryView = YES;
         [view setMapBlock: mapBlock reduceBlock: nil version: @""];

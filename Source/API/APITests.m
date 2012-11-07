@@ -427,7 +427,7 @@ TestCase(API_Validation) {
     TouchDatabase* db = createEmptyDB();
 
     [db defineValidation: @"uncool"
-                 asBlock: ^BOOL(TDRevision *newRevision, id<TDValidationContext> context) {
+                 asBlock: ^BOOL(TD_Revision *newRevision, id<TDValidationContext> context) {
                      if (!newRevision.properties[@"groovy"]) {
                          context.errorMessage = @"uncool";
                          return NO;

@@ -10,12 +10,12 @@ By "_CouchDB-compatible_" I mean that it can replicate with CouchDB, and that it
 
 By "_suitable for embedding into mobile apps_", I mean that it meets the following requirements:
 
- * Small code size; currently about 250kbytes. (Code size is important to mobile apps, which are often downloaded over cell networks.)
+ * Small code size; currently about 350kbytes of ARM7 code. (Code size is important to mobile apps, which are often downloaded over cell networks.)
  * Quick startup time on relatively-slow CPUs; ideally 100ms or less.
  * Low memory usage with typical mobile data-sets. The expectation is the number of documents will not be huge, although there may be sizable multimedia attachments.
  * "Good enough" performance with these CPUs and data-sets.
 
-And by "_mobile apps_" I'm focusing on iOS and [Android][11], although there's no reason we couldn't extend this to other platforms like Windows Phone. And it's not limited to mobile OSs -- the Objective-C implementation runs on Mac OS as well, and on Linux and other Unix-like OSs via [GNUstep][12].
+And by "_mobile apps_" we're focusing on iOS and [Android][11], although there's no reason we couldn't extend this to other platforms like Windows Phone. And it's not limited to mobile OSs -- the Objective-C implementation runs on Mac OS as well, and on Linux and other Unix-like OSs via [GNUstep][12].
 
 ## More Information
 
@@ -34,7 +34,7 @@ And by "_mobile apps_" I'm focusing on iOS and [Android][11], although there's n
 ## Requirements ##
 
  * It's written in Objective-C.
- * Xcode 4.4+ is required to build it (Clang 3.1+, with GNUstep).
+ * Xcode 4.5+ is required to build it (Clang 3.1+, with GNUstep).
  * Runtime system requirements for Apple platforms are iOS 5+, or Mac OS X 10.7.2+.
 
 ## License ##
@@ -47,9 +47,9 @@ And by "_mobile apps_" I'm focusing on iOS and [Android][11], although there's n
 
 ## Development Status ##
 
-TouchDB went beta in June 2012. The current stable release is beta 3, [version 0.92][16].
+TouchDB 1.0 was released on November 5, 2012.
 
-We don't have a formal schedule for 1.0, but expect the blessed event by the end of summer.
+In general, the "stable" branch represents the latest stable release, while the "master" branch has the latest commits and may not be stable.
 
 ## Downloading TouchDB ##
 
@@ -75,7 +75,6 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [1]: http://couchdb.apache.org
 [2]: https://github.com/couchbaselabs/TouchDB-iOS/wiki
 [3]: http://couchbase.com
-[4]: https://github.com/couchbaselabs/CouchCocoa
 [5]: https://github.com/couchbaselabs/fmdb
 [6]: https://bitbucket.org/snej/myutilities/overview
 [7]: https://github.com/couchbaselabs/TouchDB-iOS/wiki/Building-TouchDB

@@ -1,5 +1,5 @@
 //
-// TDDatabase.m
+// TD_Database.m
 // TouchDB
 //
 // Created by Jens Alfke on 6/19/10.
@@ -13,10 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import <TouchDB/TDDatabase.h>
-#import "TDDatabase+Attachments.h"
+#import <TouchDB/TD_Database.h>
+#import "TD_Database+Attachments.h"
 #import "TDInternal.h"
-#import <TouchDB/TDRevision.h>
+#import <TouchDB/TD_Revision.h>
 #import "TDCollateJSON.h"
 #import "TDBlobStore.h"
 #import "TDPuller.h"
@@ -29,12 +29,12 @@
 #import "MYBlockUtils.h"
 
 
-NSString* const TDDatabaseChangesNotification = @"TDDatabaseChanges";
-NSString* const TDDatabaseWillCloseNotification = @"TDDatabaseWillClose";
-NSString* const TDDatabaseWillBeDeletedNotification = @"TDDatabaseWillBeDeleted";
+NSString* const TD_DatabaseChangesNotification = @"TD_DatabaseChanges";
+NSString* const TD_DatabaseWillCloseNotification = @"TD_DatabaseWillClose";
+NSString* const TD_DatabaseWillBeDeletedNotification = @"TD_DatabaseWillBeDeleted";
 
 
-@implementation TDDatabase
+@implementation TD_Database
 
 
 static BOOL removeItemIfExists(NSString* path, NSError** outError) {
@@ -48,10 +48,10 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-+ (TDDatabase*) createEmptyDBAtPath: (NSString*)path {
++ (TD_Database*) createEmptyDBAtPath: (NSString*)path {
     if (!removeItemIfExists(path, NULL))
         return nil;
-    TDDatabase *db = [[self alloc] initWithPath: path];
+    TD_Database *db = [[self alloc] initWithPath: path];
     if (!removeItemIfExists(db.attachmentStorePath, NULL))
         return nil;
     if (![db open: nil])
@@ -70,9 +70,9 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
-        _fmdb.logsErrors = WillLogTo(TDDatabase);
+        _fmdb.logsErrors = WillLogTo(TD_Database);
 #endif
-        _fmdb.traceExecution = WillLogTo(TDDatabaseVerbose);
+        _fmdb.traceExecution = WillLogTo(TD_DatabaseVerbose);
         _thread = [NSThread currentThread];
         if (0) {
             // Appease the static analyzer by using these category ivars in this source file:
@@ -116,7 +116,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     for (NSString* statement in [statements componentsSeparatedByString: @";"]) {
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             if (outError) *outError = self.fmdbError;
-            Warn(@"TDDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
+            Warn(@"TD_Database: Could not initialize schema of %@ -- May be an old/incompatible format. "
                   "SQLite error: %@", _path, _fmdb.lastErrorMessage);
             [_fmdb close];
             return NO;
@@ -133,7 +133,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         flags |= SQLITE_OPEN_READONLY;
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    LogTo(TDDatabase, @"Open %@ (flags=%X)", _path, flags);
+    LogTo(TD_Database, @"Open %@ (flags=%X)", _path, flags);
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
         return NO;
@@ -158,7 +158,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     
     // Incompatible version changes increment the hundreds' place:
     if (dbVersion >= 100) {
-        Warn(@"TDDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
+        Warn(@"TD_Database: Database version (%d) is newer than I know how to work with", dbVersion);
         [_fmdb close];
         if (outError) *outError = [NSError errorWithDomain: @"TouchDB" code: 1 userInfo: nil]; //FIX: Real code
         return NO;
@@ -300,10 +300,10 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     if (!_open)
         return NO;
     
-    LogTo(TDDatabase, @"Close %@", _path);
-    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseWillCloseNotification
+    LogTo(TD_Database, @"Close %@", _path);
+    [[NSNotificationCenter defaultCenter] postNotificationName: TD_DatabaseWillCloseNotification
                                                         object: self];
-    for (TDView* view in _views.allValues)
+    for (TD_View* view in _views.allValues)
         [view databaseClosing];
     
     _views = nil;
@@ -320,8 +320,8 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 - (BOOL) deleteDatabase: (NSError**)outError {
-    LogTo(TDDatabase, @"Deleting %@", _path);
-    [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseWillBeDeletedNotification
+    LogTo(TD_Database, @"Deleting %@", _path);
+    [[NSNotificationCenter defaultCenter] postNotificationName: TD_DatabaseWillBeDeletedNotification
                                                         object: self];
     if (_open) {
         if (![self close])
@@ -369,16 +369,16 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)])
         return NO;
     ++_transactionLevel;
-    LogTo(TDDatabase, @"Begin transaction (level %d)...", _transactionLevel);
+    LogTo(TD_Database, @"Begin transaction (level %d)...", _transactionLevel);
     return YES;
 }
 
 - (BOOL) endTransaction: (BOOL)commit {
     Assert(_transactionLevel > 0);
     if (commit) {
-        LogTo(TDDatabase, @"Commit transaction (level %d)", _transactionLevel);
+        LogTo(TD_Database, @"Commit transaction (level %d)", _transactionLevel);
     } else {
-        LogTo(TDDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
+        LogTo(TD_Database, @"CANCEL transaction (level %d)", _transactionLevel);
         if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)])
             return NO;
         [_changesToNotify removeAllObjects];
@@ -406,9 +406,9 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
 
 /** Posts a local NSNotification of a new revision of a document. */
-- (void) notifyChange: (TDRevision*)rev
+- (void) notifyChange: (TD_Revision*)rev
                source: (NSURL*)source
-           winningRev: (TDRevision*)winningRev
+           winningRev: (TD_Revision*)winningRev
 {
     NSDictionary* userInfo = $dict({@"rev", rev},
                                    {@"source", source},
@@ -422,10 +422,10 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
 - (void) postChangeNotifications {
     if (_transactionLevel == 0 && _changesToNotify.count > 0) {
-        LogTo(TDDatabase, @"Posting %u change notifications", (unsigned)_changesToNotify.count);
+        LogTo(TD_Database, @"Posting %u change notifications", (unsigned)_changesToNotify.count);
         NSArray* changes = _changesToNotify;
         _changesToNotify = nil;
-        [[NSNotificationCenter defaultCenter] postNotificationName: TDDatabaseChangesNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName: TD_DatabaseChangesNotification
                                                             object: self
                                                           userInfo: $dict({@"changes", changes})];
     }
@@ -433,12 +433,12 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
 
 - (void) dbChanged: (NSNotification*)n {
-    TDDatabase* senderDB = n.object;
+    TD_Database* senderDB = n.object;
     if (senderDB != self && [senderDB.path isEqualToString: _path]) {
         for (NSDictionary* changes in (n.userInfo)[@"changes"]) {
-            // TDRevision objects have mutable state inside, so copy this one first:
-            TDRevision* rev = [changes[@"rev"] copy];
-            TDRevision* winner = [changes[@"winner"] copy];
+            // TD_Revision objects have mutable state inside, so copy this one first:
+            TD_Revision* rev = [changes[@"rev"] copy];
+            TD_Revision* winner = [changes[@"winner"] copy];
             NSURL* source = changes[@"source"];
             MYOnThread(_thread, ^{
                 [self notifyChange: rev source: source winningRev: winner];
@@ -470,7 +470,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
     Rev must already have its revID and sequence properties set. */
-- (NSDictionary*) extraPropertiesForRevision: (TDRevision*)rev options: (TDContentOptions)options
+- (NSDictionary*) extraPropertiesForRevision: (TD_Revision*)rev options: (TDContentOptions)options
 {
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
@@ -493,7 +493,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     }
     
     if (options & kTDIncludeRevsInfo) {
-        revsInfo = [[self getRevisionHistory: rev] my_map: ^id(TDRevision* rev) {
+        revsInfo = [[self getRevisionHistory: rev] my_map: ^id(TD_Revision* rev) {
             NSString* status = @"available";
             if (rev.deleted)
                 status = @"deleted";
@@ -504,10 +504,10 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     }
     
     if (options & kTDIncludeConflicts) {
-        TDRevisionList* revs = [self getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
+        TD_RevisionList* revs = [self getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
         if (revs.count > 1) {
             conflicts = [revs.allRevisions my_map: ^(id aRev) {
-                return ($equal(aRev, rev) || [(TDRevision*)aRev deleted]) ? nil : [aRev revID];
+                return ($equal(aRev, rev) || [(TD_Revision*)aRev deleted]) ? nil : [aRev revID];
             }];
         }
     }
@@ -526,7 +526,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
  Rev must already have its revID and sequence properties set. */
 - (void) expandStoredJSON: (NSData*)json
-             intoRevision: (TDRevision*)rev
+             intoRevision: (TD_Revision*)rev
                   options: (TDContentOptions)options
 {
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
@@ -547,7 +547,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                                     sequence: (SequenceNumber)sequence
                                      options: (TDContentOptions)options
 {
-    TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
+    TD_Revision* rev = [[TD_Revision alloc] initWithDocID: docID revID: revID deleted: deleted];
     rev.sequence = sequence;
     rev.missing = (json == nil);
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
@@ -565,12 +565,12 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-- (TDRevision*) getDocumentWithID: (NSString*)docID
+- (TD_Revision*) getDocumentWithID: (NSString*)docID
                        revisionID: (NSString*)revID
                           options: (TDContentOptions)options
                            status: (TDStatus*)outStatus
 {
-    TDRevision* result = nil;
+    TD_Revision* result = nil;
     TDStatus status;
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence"];
     if (!(options & kTDNoBody))
@@ -594,7 +594,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
         if (!revID)
             revID = [r stringForColumnIndex: 0];
         BOOL deleted = [r boolForColumnIndex: 1];
-        result = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
+        result = [[TD_Revision alloc] initWithDocID: docID revID: revID deleted: deleted];
         result.sequence = [r longLongIntForColumnIndex: 2];
         
         if (options != kTDNoBody) {
@@ -612,7 +612,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-- (TDRevision*) getDocumentWithID: (NSString*)docID
+- (TD_Revision*) getDocumentWithID: (NSString*)docID
                        revisionID: (NSString*)revID
 {
     TDStatus status;
@@ -626,7 +626,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
-- (TDStatus) loadRevisionBody: (TDRevision*)rev
+- (TDStatus) loadRevisionBody: (TD_Revision*)rev
                       options: (TDContentOptions)options
 {
     if (rev.body && options==0 && rev.sequence)
@@ -658,7 +658,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 #pragma mark - HISTORY:
 
 
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+- (TD_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       numericID: (SInt64)docNumericID
                                     onlyCurrent: (BOOL)onlyCurrent
 {
@@ -672,9 +672,9 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     FMResultSet* r = [_fmdb executeQuery: sql, @(docNumericID)];
     if (!r)
         return nil;
-    TDRevisionList* revs = [[TDRevisionList alloc] init];
+    TD_RevisionList* revs = [[TD_RevisionList alloc] init];
     while ([r next]) {
-        TDRevision* rev = [[TDRevision alloc] initWithDocID: docID
+        TD_Revision* rev = [[TD_Revision alloc] initWithDocID: docID
                                               revID: [r stringForColumnIndex: 1]
                                             deleted: [r boolForColumnIndex: 2]];
         rev.sequence = [r longLongIntForColumnIndex: 0];
@@ -684,14 +684,14 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     return revs;
 }
 
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+- (TD_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                     onlyCurrent: (BOOL)onlyCurrent
 {
     SInt64 docNumericID = [self getDocNumericID: docID];
     if (docNumericID < 0)
         return nil;
     else if (docNumericID == 0)
-        return [[TDRevisionList alloc] init];  // no such document
+        return [[TD_RevisionList alloc] init];  // no such document
     else
         return [self getAllRevisionsOfDocumentID: docID
                                        numericID: docNumericID
@@ -710,7 +710,7 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
 }
 
 
-- (NSArray*) getPossibleAncestorRevisionIDs: (TDRevision*)rev limit: (unsigned)limit {
+- (NSArray*) getPossibleAncestorRevisionIDs: (TD_Revision*)rev limit: (unsigned)limit {
     int generation = rev.generation;
     if (generation <= 1)
         return nil;
@@ -727,7 +727,7 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
 }
 
 
-- (NSString*) findCommonAncestorOf: (TDRevision*)rev withRevIDs: (NSArray*)revIDs {
+- (NSString*) findCommonAncestorOf: (TD_Revision*)rev withRevIDs: (NSArray*)revIDs {
     if (revIDs.count == 0)
         return nil;
     SInt64 docNumericID = [self getDocNumericID: rev.docID];
@@ -736,12 +736,12 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
     NSString* sql = $sprintf(@"SELECT revid FROM revs "
                               "WHERE doc_id=? and revid in (%@) and revid <= ? "
                               "ORDER BY revid DESC LIMIT 1", 
-                              [TDDatabase joinQuotedStrings: revIDs]);
+                              [TD_Database joinQuotedStrings: revIDs]);
     return [_fmdb stringForQuery: sql, @(docNumericID), rev.revID];
 }
     
 
-- (NSArray*) getRevisionHistory: (TDRevision*)rev {
+- (NSArray*) getRevisionHistory: (TD_Revision*)rev {
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     Assert(revID && docID);
@@ -769,7 +769,7 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
         if (matches) {
             NSString* revID = [r stringForColumnIndex: 2];
             BOOL deleted = [r boolForColumnIndex: 3];
-            TDRevision* rev = [[TDRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
+            TD_Revision* rev = [[TD_Revision alloc] initWithDocID: docID revID: revID deleted: deleted];
             rev.sequence = sequence;
             rev.missing = [r boolForColumnIndex: 4];
             [history addObject: rev];
@@ -791,10 +791,10 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
     NSMutableArray* suffixes = $marray();
     id start = nil;
     int lastRevNo = -1;
-    for (TDRevision* rev in history) {
+    for (TD_Revision* rev in history) {
         int revNo;
         NSString* suffix;
-        if ([TDRevision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
+        if ([TD_Revision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
             if (!start)
                 start = @(revNo);
             else if (revNo != lastRevNo - 1) {
@@ -813,12 +813,12 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
     return $dict({@"ids", revIDs}, {@"start", start});
 }
 
-- (NSDictionary*) getRevisionHistoryDict: (TDRevision*)rev {
+- (NSDictionary*) getRevisionHistoryDict: (TD_Revision*)rev {
     return makeRevisionHistoryDict([self getRevisionHistory: rev]);
 }
 
 
-- (NSString*) getParentRevID: (TDRevision*)rev {
+- (NSString*) getParentRevID: (TD_Revision*)rev {
     Assert(rev.sequence > 0);
     return [_fmdb stringForQuery: @"SELECT parent.revid FROM revs, revs as parent"
                                    " WHERE revs.sequence=? and parent.sequence=revs.parent",
@@ -850,7 +850,7 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
-- (TDRevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
+- (TD_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDChangesOptions*)options
                                   filter: (TDFilterBlock)filter
                                   params: (NSDictionary*)filterParams
@@ -867,7 +867,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     FMResultSet* r = [_fmdb executeQuery: sql, @(lastSequence)];
     if (!r)
         return nil;
-    TDRevisionList* changes = [[TDRevisionList alloc] init];
+    TD_RevisionList* changes = [[TD_RevisionList alloc] init];
     int64_t lastDocID = 0;
     while ([r next]) {
         @autoreleasepool {
@@ -879,7 +879,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 lastDocID = docNumericID;
             }
             
-            TDRevision* rev = [[TDRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
+            TD_Revision* rev = [[TD_Revision alloc] initWithDocID: [r stringForColumnIndex: 2]
                                                           revID: [r stringForColumnIndex: 3]
                                                         deleted: [r boolForColumnIndex: 4]];
             rev.sequence = [r longLongIntForColumnIndex: 0];
@@ -916,7 +916,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 #pragma mark - VIEWS:
 
 
-- (TDView*) registerView: (TDView*)view {
+- (TD_View*) registerView: (TD_View*)view {
     if (!view)
         return nil;
     if (!_views)
@@ -926,19 +926,19 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (TDView*) viewNamed: (NSString*)name {
-    TDView* view = _views[name];
+- (TD_View*) viewNamed: (NSString*)name {
+    TD_View* view = _views[name];
     if (view)
         return view;
-    return [self registerView: [[TDView alloc] initWithDatabase: self name: name]];
+    return [self registerView: [[TD_View alloc] initWithDatabase: self name: name]];
 }
 
 
-- (TDView*) existingViewNamed: (NSString*)name {
-    TDView* view = _views[name];
+- (TD_View*) existingViewNamed: (NSString*)name {
+    TD_View* view = _views[name];
     if (view)
         return view;
-    view = [[TDView alloc] initWithDatabase: self name: name];
+    view = [[TD_View alloc] initWithDatabase: self name: name];
     if (!view.viewID)
         return nil;
     return [self registerView: view];
@@ -965,7 +965,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (TDView*) makeAnonymousView {
+- (TD_View*) makeAnonymousView {
     for (int n = 1; true; ++n) {
         NSString* name = $sprintf(@"$anon$%d", n);
         if ([_fmdb intForQuery: @"SELECT count(*) FROM views WHERE name=?", name] <= 0)
@@ -974,7 +974,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-//FIX: This has a lot of code in common with -[TDView queryWithOptions:status:]. Unify the two!
+//FIX: This has a lot of code in common with -[TD_View queryWithOptions:status:]. Unify the two!
 - (NSDictionary*) getAllDocs: (const TDQueryOptions*)options {
     if (!options)
         options = &kDefaultTDQueryOptions;
@@ -991,7 +991,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
     if (options->keys)
-        [sql appendFormat: @" docid IN (%@) AND", [TDDatabase joinQuotedStrings: options->keys]];
+        [sql appendFormat: @" docid IN (%@) AND", [TD_Database joinQuotedStrings: options->keys]];
     [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
     if (!options->includeDeletedDocs)
         [sql appendString: @" AND deleted=0"];
@@ -1107,12 +1107,12 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 #pragma mark - TESTS:
 #if DEBUG
 
-static TDRevision* mkrev(NSString* revID) {
-    return [[TDRevision alloc] initWithDocID: @"docid" revID: revID deleted: NO];
+static TD_Revision* mkrev(NSString* revID) {
+    return [[TD_Revision alloc] initWithDocID: @"docid" revID: revID deleted: NO];
 }
 
 
-TestCase(TDDatabase_MakeRevisionHistoryDict) {
+TestCase(TD_Database_MakeRevisionHistoryDict) {
     NSArray* revs = @[mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def")];
     CAssertEqual(makeRevisionHistoryDict(revs), $dict({@"ids", @[@"jkl", @"ghi", @"def"]},
                                                       {@"start", @4}));

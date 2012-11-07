@@ -14,9 +14,9 @@
 //  and limitations under the License.
 
 #import "TDPusher.h"
-#import <TouchDB/TDDatabase.h>
-#import "TDDatabase+Insertion.h"
-#import <TouchDB/TDRevision.h>
+#import <TouchDB/TD_Database.h>
+#import "TD_Database+Insertion.h"
+#import <TouchDB/TD_Revision.h>
 #import "TDBatcher.h"
 #import "TDMultipartUploader.h"
 #import "TDInternal.h"
@@ -24,11 +24,11 @@
 #import "TDCanonicalJSON.h"
 
 
-static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
+static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
 
 
 @interface TDPusher ()
-- (BOOL) uploadMultipartRevision: (TDRevision*)rev;
+- (BOOL) uploadMultipartRevision: (TD_Revision*)rev;
 @end
 
 
@@ -95,7 +95,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
-                                                     name: TDDatabaseChangesNotification object: _db];
+                                                     name: TD_DatabaseChangesNotification object: _db];
     }
 
 #ifdef GNUSTEP    // TODO: Multipart upload on GNUstep
@@ -108,7 +108,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_observing) {
         _observing = NO;
         [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                        name: TDDatabaseChangesNotification
+                                                        name: TD_DatabaseChangesNotification
                                                       object: _db];
     }
 }
@@ -144,7 +144,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     for (NSDictionary* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change[@"source"] isEqual: _remote]) {
-            TDRevision* rev = change[@"rev"];
+            TD_Revision* rev = change[@"rev"];
             TDFilterBlock filter = self.filter;
             if (!filter || filter(rev, _filterParameters))
                 [self addToInbox: rev];
@@ -153,11 +153,11 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 }
 
 
-- (void) processInbox: (TDRevisionList*)changes {
+- (void) processInbox: (TD_RevisionList*)changes {
     // Generate a set of doc/rev IDs in the JSON format that _revs_diff wants:
     // <http://wiki.apache.org/couchdb/HttpPostRevsDiff>
     NSMutableDictionary* diffs = $mdict();
-    for (TDRevision* rev in changes) {
+    for (TD_Revision* rev in changes) {
         NSString* docID = rev.docID;
         NSMutableArray* revs = diffs[docID];
         if (!revs) {
@@ -179,7 +179,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
             __block SequenceNumber lastInboxSequence = 0;
-            NSArray* docsToSend = [changes.allRevisions my_map: ^id(TDRevision* rev) {
+            NSArray* docsToSend = [changes.allRevisions my_map: ^id(TD_Revision* rev) {
                 NSDictionary* properties;
                 @autoreleasepool {
                     // Is this revision in the server's 'missing' list?
@@ -205,7 +205,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                         // Look for the latest common ancestor and stub out older attachments:
                         NSArray* possible = revResults[@"possible_ancestors"];
                         int minRevPos = findCommonAncestor(rev, possible);
-                        [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
+                        [TD_Database stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
                                        attachmentsFollow: NO];
                         properties = rev.properties;
                         // If the rev has huge attachments, send it under separate cover:
@@ -234,7 +234,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 // Post the revisions to the destination. "new_edits":false means that the server should
 // use the given _rev IDs instead of making up new ones.
 - (void) uploadBulkDocs: (NSArray*)docsToSend
-                changes: (TDRevisionList*)changes
+                changes: (TD_RevisionList*)changes
            lastSequence: (SequenceNumber)lastInboxSequence
 {
     NSUInteger numDocsToSend = docsToSend.count;
@@ -273,7 +273,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 }
 
 
-- (BOOL) uploadMultipartRevision: (TDRevision*)rev {
+- (BOOL) uploadMultipartRevision: (TD_Revision*)rev {
     // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream.
     // It's important to scan the _attachments entries in the same order in which they will appear
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
@@ -350,7 +350,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 // Fallback to upload a revision if uploadMultipartRevision failed due to the server's rejecting
 // multipart format.
-- (void) uploadJSONRevision: (TDRevision*)rev {
+- (void) uploadJSONRevision: (TD_Revision*)rev {
     // Get the revision's properties:
     NSError* error;
     if (![_db inlineFollowingAttachmentsIn: rev error: &error]) {
@@ -390,15 +390,15 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 // Given a revision and an array of revIDs, finds the latest common ancestor revID
 // and returns its generation #. If there is none, returns 0.
-static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
+static int findCommonAncestor(TD_Revision* rev, NSArray* possibleRevIDs) {
     if (possibleRevIDs.count == 0)
         return 0;
-    NSArray* history = [TDDatabase parseCouchDBRevisionHistory: rev.properties];
+    NSArray* history = [TD_Database parseCouchDBRevisionHistory: rev.properties];
     NSString* ancestorID = [history firstObjectCommonWithArray: possibleRevIDs];
     if (!ancestorID)
         return 0;
     int generation;
-    if (![TDRevision parseRevID: ancestorID intoGeneration: &generation andSuffix: NULL])
+    if (![TD_Revision parseRevID: ancestorID intoGeneration: &generation andSuffix: NULL])
         generation = 0;
     return generation;
 }
@@ -411,7 +411,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
 
 TestCase(TDPusher_findCommonAncestor) {
     NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
-    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_revisions", revDict})];
+    TD_Revision* rev = [TD_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
     CAssertEq(findCommonAncestor(rev, @[]), 0);
     CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-nope"]), 0);
     CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-first"]), 1);

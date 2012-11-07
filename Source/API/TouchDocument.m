@@ -7,8 +7,8 @@
 //
 
 #import "TouchDBPrivate.h"
-#import "TDDatabase+Insertion.h"
-#import "TDRevision.h"
+#import "TD_Database+Insertion.h"
+#import "TD_Revision.h"
 
 
 NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
@@ -108,7 +108,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
-- (TouchRevision*) revisionFromRev: (TDRevision*)rev {
+- (TouchRevision*) revisionFromRev: (TD_Revision*)rev {
     if (!rev)
         return nil;
     else if ($equal(rev.revID, _currentRevision.revisionID))
@@ -126,7 +126,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 
 
 // Notification from the TouchDatabase that a (current, winning) revision has been added
-- (void) revisionAdded: (TDRevision*)rev source: (NSURL*)source {
+- (void) revisionAdded: (TD_Revision*)rev source: (NSURL*)source {
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
         _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
     }
@@ -149,7 +149,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
         [self forgetCurrentRevision];
         NSDictionary* properties = row.documentProperties;
         if (properties) {
-            TDRevision* rev = [TDRevision revisionWithProperties: properties];
+            TD_Revision* rev = [TD_Revision revisionWithProperties: properties];
             _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
         }
     }
@@ -162,8 +162,8 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 
 
 - (NSArray*) getLeafRevisions: (NSError**)outError includeDeleted: (BOOL)includeDeleted {
-    TDRevisionList* revs = [_database.tddb getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
-    return [revs.allRevisions my_map: ^TouchRevision*(TDRevision* rev) {
+    TD_RevisionList* revs = [_database.tddb getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
+    return [revs.allRevisions my_map: ^TouchRevision*(TD_Revision* rev) {
         if (!includeDeleted && rev.deleted)
             return nil;
         return [self revisionFromRev: rev];
@@ -220,7 +220,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
     }
     
     BOOL deleted = !properties || [properties[@"_deleted"] boolValue];
-    TDRevision* rev = [[TDRevision alloc] initWithDocID: _docID
+    TD_Revision* rev = [[TD_Revision alloc] initWithDocID: _docID
                                                   revID: nil
                                                 deleted: deleted];
     if (properties)

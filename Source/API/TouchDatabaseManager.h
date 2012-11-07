@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class TouchDatabase, TouchReplication, TouchLiveQuery;
-@class TDDatabaseManager, TDServer;
+@class TD_DatabaseManager, TD_Server;
 
 
 typedef struct TouchDatabaseManagerOptions {
@@ -22,8 +22,8 @@ typedef struct TouchDatabaseManagerOptions {
 {
     @private
     TouchDatabaseManagerOptions _options;
-    TDDatabaseManager* _mgr;
-    TDServer* _server;
+    TD_DatabaseManager* _mgr;
+    TD_Server* _server;
     NSMutableArray* _replications;
 }
 
