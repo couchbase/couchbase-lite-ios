@@ -1,5 +1,5 @@
 //
-//  TDBody.m
+//  TD_Body.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/19/10.
@@ -13,10 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDBody.h"
+#import "TD_Body.h"
 
 
-@implementation TDBody
+@implementation TD_Body
 
 - (id) initWithProperties: (NSDictionary*)properties {
     NSParameterAssert(properties);
@@ -39,10 +39,10 @@
     return self;
 }
 
-+ (TDBody*) bodyWithProperties: (NSDictionary*)properties {
++ (TD_Body*) bodyWithProperties: (NSDictionary*)properties {
     return [[self alloc] initWithProperties: properties];
 }
-+ (TDBody*) bodyWithJSON: (NSData*)json {
++ (TD_Body*) bodyWithJSON: (NSData*)json {
     return [[self alloc] initWithJSON: json];
 }
 
@@ -63,7 +63,7 @@
     if (!_json && !_error) {
         _json = [[TDJSON dataWithJSONObject: _object options: 0 error: NULL] copy];
         if (!_json) {
-            Warn(@"TDBody: couldn't convert to JSON");
+            Warn(@"TD_Body: couldn't convert to JSON");
             _error = YES;
         }
     }
@@ -94,7 +94,7 @@
         NSError* error = nil;
         _object = [[TDJSON JSONObjectWithData: _json options: 0 error: &error] copy];
         if (!_object) {
-            Warn(@"TDBody: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
+            Warn(@"TD_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
             _error = YES;
         }
     }

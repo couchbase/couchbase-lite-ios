@@ -17,13 +17,13 @@
 //  http://www.couchbase.com/docs/couchdb-release-1.1/index.html
 
 #import "TDReplicatorManager.h"
-#import "TDServer.h"
-#import <TouchDB/TDDatabase.h>
-#import "TDDatabase+Insertion.h"
-#import "TDDatabase+Replication.h"
+#import "TD_Server.h"
+#import <TouchDB/TD_Database.h>
+#import "TD_Database+Insertion.h"
+#import "TD_Database+Replication.h"
 #import "TDPusher.h"
 #import "TDPuller.h"
-#import "TDView.h"
+#import "TD_View.h"
 #import "TDOAuth1Authorizer.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
@@ -38,7 +38,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 @interface TDReplicatorManager ()
-- (BOOL) validateRevision: (TDRevision*)newRev context: (id<TDValidationContext>)context;
+- (BOOL) validateRevision: (TD_Revision*)newRev context: (id<TDValidationContext>)context;
 - (void) processAllDocs;
 @end
 
@@ -46,7 +46,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 @implementation TDReplicatorManager
 
 
-- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager {
+- (id) initWithDatabaseManager: (TD_DatabaseManager*)dbManager {
     self = [super init];
     if (self) {
         _dbManager = dbManager;
@@ -68,15 +68,15 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 - (void) start {
     [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock:
-         ^BOOL(TDRevision *newRevision, id<TDValidationContext> context) {
+         ^BOOL(TD_Revision *newRevision, id<TDValidationContext> context) {
              return [self validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
-                                                 name: TDDatabaseChangeNotification
+                                                 name: TD_DatabaseChangeNotification
                                                object: _replicatorDB];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(someDbDeleted:)
-                                                 name: TDDatabaseWillBeDeletedNotification
+                                                 name: TD_DatabaseWillBeDeletedNotification
                                                object: nil];
 #if TARGET_OS_IPHONE
     // Register for foreground/background transition notifications, on iOS:
@@ -89,7 +89,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 - (void) stop {
-    LogTo(TDServer, @"STOP %@", self);
+    LogTo(TD_Server, @"STOP %@", self);
     [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     _replicatorsByDocID = nil;
@@ -114,7 +114,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 - (TDStatus) parseReplicatorProperties: (NSDictionary*)properties
-                            toDatabase: (TDDatabase**)outDatabase   // may be NULL
+                            toDatabase: (TD_Database**)outDatabase   // may be NULL
                                 remote: (NSURL**)outRemote          // may be NULL
                                 isPush: (BOOL*)outIsPush
                           createTarget: (BOOL*)outCreateTarget
@@ -131,15 +131,15 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
     *outCreateTarget = [$castIf(NSNumber, properties[@"create_target"]) boolValue];
     *outIsPush = NO;
-    TDDatabase* db = nil;
+    TD_Database* db = nil;
     NSDictionary* remoteDict = nil;
-    if ([TDDatabaseManager isValidDatabaseName: source]) {
+    if ([TD_DatabaseManager isValidDatabaseName: source]) {
         if (outDatabase)
             db = [_dbManager existingDatabaseNamed: source];
         remoteDict = targetDict;
         *outIsPush = YES;
     } else {
-        if (![TDDatabaseManager isValidDatabaseName: target])
+        if (![TD_DatabaseManager isValidDatabaseName: target])
             return kTDStatusBadID;
         remoteDict = sourceDict;
         if (outDatabase) {
@@ -193,7 +193,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 // Validation function for the _replicator database:
-- (BOOL) validateRevision: (TDRevision*)newRev context: (id<TDValidationContext>)context {
+- (BOOL) validateRevision: (TD_Revision*)newRev context: (id<TDValidationContext>)context {
     // Ignore the change if it's one I'm making myself, or if it's a deletion:
     if (_updateInProgress || newRev.deleted)
         return YES;
@@ -252,7 +252,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 // PUT a change to a replication document, retrying if there are conflicts:
-- (TDStatus) updateDoc: (TDRevision*)currentRev
+- (TDStatus) updateDoc: (TD_Revision*)currentRev
         withProperties: (NSDictionary*)updates 
 {
     LogTo(Sync, @"ReplicatorManager: Updating %@ with %@", currentRev, updates);
@@ -267,7 +267,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             status = kTDStatusOK;     // this is a no-op change
             break;
         }
-        TDRevision* updatedRev = [TDRevision revisionWithProperties: updatedProperties];
+        TD_Revision* updatedRev = [TD_Revision revisionWithProperties: updatedProperties];
         
         // Attempt to PUT the updated revision:
         _updateInProgress = YES;
@@ -295,7 +295,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 }
 
 
-- (void) updateDoc: (TDRevision*)rev forReplicator: (TDReplicator*)repl {
+- (void) updateDoc: (TD_Revision*)rev forReplicator: (TDReplicator*)repl {
     NSString* state;
     if (repl.running)
         state = @"triggered";
@@ -314,12 +314,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 // A replication document has been created, so create the matching TDReplicator:
-- (void) processInsertion: (TDRevision*)rev {
+- (void) processInsertion: (TD_Revision*)rev {
     if (_replicatorsByDocID[rev.docID])
         return;
     LogTo(Sync, @"ReplicatorManager: %@ was created", rev);
     NSDictionary* properties = rev.properties;
-    TDDatabase* localDb;
+    TD_Database* localDb;
     NSURL* remote;
     BOOL push, createTarget;
     NSDictionary* headers;
@@ -367,7 +367,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 // A replication document has been changed:
-- (void) processUpdate: (TDRevision*)rev {
+- (void) processUpdate: (TD_Revision*)rev {
     if (!rev[@"_replication_state"]) {
         // Client deleted the _replication_state property; restart the replicator:
         LogTo(Sync, @"ReplicatorManager: Restarting replicator for %@", rev);
@@ -382,7 +382,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 // A replication document has been deleted:
-- (void) processDeletion: (TDRevision*)rev ofReplicator: (TDReplicator*)repl {
+- (void) processDeletion: (TD_Revision*)rev ofReplicator: (TDReplicator*)repl {
     LogTo(Sync, @"ReplicatorManager: %@ was deleted", rev);
     [_replicatorsByDocID removeObjectForKey: rev.docID];
     [repl stop];
@@ -392,7 +392,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 #pragma mark - NOTIFICATIONS:
 
 
-- (void) processRevision: (TDRevision*)rev {
+- (void) processRevision: (TD_Revision*)rev {
     if (rev.generation == 1)
         [self processInsertion: rev];
     else
@@ -414,7 +414,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         NSString* state = docProps[@"_replication_state"];
         if (state==nil || $equal(state, @"triggered") ||
                     [docProps[@"continuous"] boolValue]) {
-            [self processInsertion: [TDRevision revisionWithProperties: docProps]];
+            [self processInsertion: [TD_Revision revisionWithProperties: docProps]];
         }
     }
     LogTo(Sync, @"ReplicatorManager done scanning.");
@@ -434,7 +434,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 - (void) dbChanged: (NSNotification*)n {
     if (_updateInProgress)
         return;
-    TDRevision* rev = (n.userInfo)[@"rev"];
+    TD_Revision* rev = (n.userInfo)[@"rev"];
     LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
     NSString* docID = rev.docID;
     if ([docID hasPrefix: @"_"])
@@ -459,7 +459,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     NSString* docID = [self docIDForReplicator: repl];
     if (!docID)
         return;  // If it's not a persistent replicator
-    TDRevision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
+    TD_Revision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
     
     [self updateDoc: rev forReplicator: repl];
     
@@ -475,7 +475,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 - (void) someDbDeleted: (NSNotification*)n {
     if (!_replicatorDB.exists)
         return;
-    TDDatabase* db = n.object;
+    TD_Database* db = n.object;
     if ([_dbManager.allOpenDatabases indexOfObjectIdenticalTo: db] == NSNotFound)
         return;
     NSString* dbName = db.name;
@@ -490,7 +490,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
             // Replication doc involves this database -- delete it:
             LogTo(Sync, @"ReplicatorManager deleting replication %@", docProps);
-            TDRevision* delRev = [[TDRevision alloc] initWithDocID: docProps[@"_id"]
+            TD_Revision* delRev = [[TD_Revision alloc] initWithDocID: docProps[@"_id"]
                                                              revID: nil deleted: YES];
             TDStatus status;
             if (![_replicatorDB putRevision: delRev

@@ -6,11 +6,11 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TDDatabase.h>
-@class TDServer, TDDatabaseManager, TDResponse, TDBody, TDMultipartWriter;
+#import <TouchDB/TD_Database.h>
+@class TD_Server, TD_DatabaseManager, TDResponse, TD_Body, TDMultipartWriter;
 
 
-typedef TDStatus (^OnAccessCheckBlock)(TDDatabase*, NSString *docID, SEL action);
+typedef TDStatus (^OnAccessCheckBlock)(TD_Database*, NSString *docID, SEL action);
 typedef void (^OnResponseReadyBlock)(TDResponse*);
 typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
 typedef void (^OnFinishedBlock)();
@@ -19,13 +19,13 @@ typedef void (^OnFinishedBlock)();
 @interface TDRouter : NSObject
 {
     @private
-    TDServer* _server;
-    TDDatabaseManager* _dbManager;
+    TD_Server* _server;
+    TD_DatabaseManager* _dbManager;
     NSURLRequest* _request;
     NSMutableArray* _path;
     NSDictionary* _queries;
     TDResponse* _response;
-    TDDatabase* _db;
+    TD_Database* _db;
     BOOL _local;
     BOOL _waiting;
     BOOL _responseSent;
@@ -42,7 +42,7 @@ typedef void (^OnFinishedBlock)();
     BOOL _changesIncludeConflicts;
 }
 
-- (id) initWithServer: (TDServer*)server request: (NSURLRequest*)request isLocal: (BOOL)isLocal;
+- (id) initWithServer: (TD_Server*)server request: (NSURLRequest*)request isLocal: (BOOL)isLocal;
 
 @property BOOL processRanges;
 
@@ -90,7 +90,7 @@ typedef void (^OnFinishedBlock)();
     NSString* _statusMsg;
     NSString* _statusReason;
     NSMutableDictionary* _headers;
-    TDBody* _body;
+    TD_Body* _body;
 }
 
 @property (nonatomic) TDStatus internalStatus;
@@ -98,7 +98,7 @@ typedef void (^OnFinishedBlock)();
 @property (nonatomic, readonly) NSString* statusMsg;
 @property (nonatomic, copy) NSString* statusReason;
 @property (nonatomic, strong) NSMutableDictionary* headers;
-@property (nonatomic, strong) TDBody* body;
+@property (nonatomic, strong) TD_Body* body;
 @property (nonatomic, copy) id bodyObject;
 @property (nonatomic, readonly) NSString* baseContentType;
 

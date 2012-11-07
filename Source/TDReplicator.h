@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class TDDatabase, TDRevisionList, TDBatcher, TDReachability;
+@class TD_Database, TD_RevisionList, TDBatcher, TDReachability;
 @protocol TDAuthorizer;
 
 
@@ -24,7 +24,7 @@ extern NSString* TDReplicatorStoppedNotification;
 {
     @protected
     NSThread* _thread;
-    TDDatabase* __weak _db;
+    TD_Database* __weak _db;
     NSURL* _remote;
     TDReachability* _host;
     BOOL _continuous;
@@ -51,12 +51,12 @@ extern NSString* TDReplicatorStoppedNotification;
 + (NSString *)progressChangedNotification;
 + (NSString *)stoppedNotification;
 
-- (id) initWithDB: (TDDatabase*)db
+- (id) initWithDB: (TD_Database*)db
            remote: (NSURL*)remote
              push: (BOOL)push
        continuous: (BOOL)continuous;
 
-@property (weak, readonly) TDDatabase* db;
+@property (weak, readonly) TD_Database* db;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
 @property (readonly) BOOL continuous;

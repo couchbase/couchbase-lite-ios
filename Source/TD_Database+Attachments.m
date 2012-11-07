@@ -1,5 +1,5 @@
 //
-//  TDDatabase+Attachments.m
+//  TD_Database+Attachments.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/19/11.
@@ -24,12 +24,12 @@
                      "digest":"md5-muNoTiLXyJYP9QkvPukNng==", "length":9, "stub":true}}
 */
 
-#import "TDDatabase+Attachments.h"
-#import "TDDatabase+Insertion.h"
+#import "TD_Database+Attachments.h"
+#import "TD_Database+Insertion.h"
 #import "TDBase64.h"
 #import "TDBlobStore.h"
-#import "TDAttachment.h"
-#import "TDBody.h"
+#import "TD_Attachment.h"
+#import "TD_Body.h"
 #import "TDMultipartWriter.h"
 #import "TDMisc.h"
 #import "TDInternal.h"
@@ -46,7 +46,7 @@
 
 
 
-@implementation TDDatabase (Attachments)
+@implementation TD_Database (Attachments)
 
 
 - (TDBlobStoreWriter*) attachmentWriter {
@@ -80,7 +80,7 @@
 #endif
 
 
-- (TDStatus) installAttachment: (TDAttachment*)attachment
+- (TDStatus) installAttachment: (TD_Attachment*)attachment
                        forInfo: (NSDictionary*)attachInfo {
     NSString* digest = $castIf(NSString, attachInfo[@"digest"]);
     if (!digest)
@@ -117,7 +117,7 @@
 }
 
 
-- (TDStatus) insertAttachment: (TDAttachment*)attachment
+- (TDStatus) insertAttachment: (TD_Attachment*)attachment
                   forSequence: (SequenceNumber)sequence
 {
     Assert(sequence > 0);
@@ -285,7 +285,7 @@
             } else {
                 data = [_attachments blobForKey: *(TDBlobKey*)keyData.bytes];
                 if (!data)
-                    Warn(@"TDDatabase: Failed to get attachment for key %@", keyData);
+                    Warn(@"TD_Database: Failed to get attachment for key %@", keyData);
             }
         }
         
@@ -331,7 +331,7 @@
 // Calls the block on every attachment dictionary. The block can return a different dictionary,
 // which will be replaced in the rev's properties. If it returns nil, the operation aborts.
 // Returns YES if any changes were made.
-+ (BOOL) mutateAttachmentsIn: (TDRevision*)rev
++ (BOOL) mutateAttachmentsIn: (TD_Revision*)rev
                    withBlock: (NSDictionary*(^)(NSString*, NSDictionary*))block
 {
     NSDictionary* properties = rev.properties;
@@ -366,7 +366,7 @@
 
 // Replaces attachment data whose revpos is < minRevPos with stubs.
 // If attachmentsFollow==YES, replaces data with "follows" key.
-+ (void) stubOutAttachmentsIn: (TDRevision*)rev
++ (void) stubOutAttachmentsIn: (TD_Revision*)rev
                  beforeRevPos: (int)minRevPos
             attachmentsFollow: (BOOL)attachmentsFollow
 {
@@ -402,7 +402,7 @@
 
 
 // Replaces the "follows" key with the real attachment data in all attachments to 'doc'.
-- (BOOL) inlineFollowingAttachmentsIn: (TDRevision*)rev error: (NSError**)outError {
+- (BOOL) inlineFollowingAttachmentsIn: (TD_Revision*)rev error: (NSError**)outError {
     __block NSError *error = nil;
     [[self class] mutateAttachmentsIn: rev
                             withBlock:
@@ -427,7 +427,7 @@
 }
 
 
-- (NSDictionary*) attachmentsFromRevision: (TDRevision*)rev
+- (NSDictionary*) attachmentsFromRevision: (TD_Revision*)rev
                                    status: (TDStatus*)outStatus
 {
     // If there are no attachments in the new rev, there's nothing to do:
@@ -440,10 +440,10 @@
     TDStatus status = kTDStatusOK;
     NSMutableDictionary* attachments = $mdict();
     for (NSString* name in revAttachments) {
-        // Create a TDAttachment object:
+        // Create a TD_Attachment object:
         NSDictionary* attachInfo = revAttachments[name];
         NSString* contentType = $castIf(NSString, attachInfo[@"content_type"]);
-        TDAttachment* attachment = [[TDAttachment alloc] initWithName: name
+        TD_Attachment* attachment = [[TD_Attachment alloc] initWithName: name
                                                            contentType: contentType];
 
         NSString* newContentsBase64 = $castIf(NSString, attachInfo[@"data"]);
@@ -497,7 +497,7 @@
 
 
 - (TDStatus) processAttachments: (NSDictionary*)attachments
-                    forRevision: (TDRevision*)rev
+                    forRevision: (TD_Revision*)rev
              withParentSequence: (SequenceNumber)parentSequence
 {
     Assert(rev);
@@ -515,7 +515,7 @@
 
     for (NSString* name in revAttachments) {
         TDStatus status;
-        TDAttachment* attachment = attachments[name];
+        TD_Attachment* attachment = attachments[name];
         if (attachment) {
             // Determine the revpos, i.e. generation # this was added in. Usually this is
             // implicit, but a rev being pulled in replication will have it set already.
@@ -540,7 +540,7 @@
 }
 
 
-- (TDMultipartWriter*) multipartWriterForRevision: (TDRevision*)rev
+- (TDMultipartWriter*) multipartWriterForRevision: (TD_Revision*)rev
                                       contentType: (NSString*)contentType
 {
     TDMultipartWriter* writer = [[TDMultipartWriter alloc] initWithContentType: contentType 
@@ -560,7 +560,7 @@
 }
 
 
-- (TDRevision*) updateAttachment: (NSString*)filename
+- (TD_Revision*) updateAttachment: (NSString*)filename
                             body: (NSData*)body
                             type: (NSString*)contentType
                         encoding: (TDAttachmentEncoding)encoding
@@ -572,7 +572,7 @@
     if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID))
         return nil;
 
-    TDRevision* oldRev = [[TDRevision alloc] initWithDocID: docID
+    TD_Revision* oldRev = [[TD_Revision alloc] initWithDocID: docID
                                                       revID: oldRevID
                                                     deleted: NO];
     if (oldRevID) {
@@ -585,7 +585,7 @@
         }
     } else {
         // If this creates a new doc, it needs a body:
-        oldRev.body = [TDBody bodyWithProperties: @{}];
+        oldRev.body = [TD_Body bodyWithProperties: @{}];
     }
 
     // Update the _attachments dictionary:
@@ -619,7 +619,7 @@
     oldRev.properties = properties;
 
     // Store a new revision with the updated _attachments:
-    TDRevision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID
+    TD_Revision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID
                              allowConflict: NO status: outStatus];
     if (!body && *outStatus == kTDStatusCreated)
         *outStatus = kTDStatusOK;

@@ -1,21 +1,21 @@
 //
-//  TDDatabase+Insertion.h
+//  TD_Database+Insertion.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 1/18/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TDDatabase.h>
+#import <TouchDB/TD_Database.h>
 @protocol TDValidationContext;
 
 
 /** Validation block, used to approve revisions being added to the database. */
-typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
+typedef BOOL (^TDValidationBlock) (TD_Revision* newRevision,
                                    id<TDValidationContext> context);
 
 
-@interface TDDatabase (Insertion)
+@interface TD_Database (Insertion)
 
 + (BOOL) isValidDocumentID: (NSString*)str;
 
@@ -26,14 +26,14 @@ typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
     @param prevRevID  The ID of the revision to replace (same as the "?rev=" parameter to a PUT), or nil if this is a new document.
     @param allowConflict  If NO, an error status kTDStatusConflict will be returned if the insertion would create a conflict, i.e. if the previous revision already has a child.
     @param status  On return, an HTTP status code indicating success or failure.
-    @return  A new TDRevision with the docID, revID and sequence filled in (but no body). */
-- (TDRevision*) putRevision: (TDRevision*)revision
+    @return  A new TD_Revision with the docID, revID and sequence filled in (but no body). */
+- (TD_Revision*) putRevision: (TD_Revision*)revision
              prevRevisionID: (NSString*)prevRevID
               allowConflict: (BOOL)allowConflict
                      status: (TDStatus*)outStatus;
 
 /** Inserts an already-existing revision replicated from a remote database. It must already have a revision ID. This may create a conflict! The revision's history must be given; ancestor revision IDs that don't already exist locally will create phantom revisions with no content. */
-- (TDStatus) forceInsert: (TDRevision*)rev
+- (TDStatus) forceInsert: (TD_Revision*)rev
          revisionHistory: (NSArray*)history
                   source: (NSURL*)source;
 
@@ -63,7 +63,7 @@ typedef BOOL (^TDChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue
 /** Context passed into a TDValidationBlock. */
 @protocol TDValidationContext <NSObject>
 /** The contents of the current revision of the document, or nil if this is a new document. */
-@property (readonly) TDRevision* currentRevision;
+@property (readonly) TD_Revision* currentRevision;
 
 /** The type of HTTP status to report, if the validate block returns NO.
     The default value is 403 ("Forbidden"). */

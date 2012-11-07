@@ -1,5 +1,5 @@
 //
-//  TDDatabaseManager.m
+//  TD_DatabaseManager.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 3/22/12.
@@ -13,17 +13,17 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDDatabaseManager.h"
-#import <TouchDB/TDDatabase.h>
+#import "TD_DatabaseManager.h"
+#import <TouchDB/TD_Database.h>
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 
 
-const TDDatabaseManagerOptions kTDDatabaseManagerDefaultOptions;
+const TD_DatabaseManagerOptions kTD_DatabaseManagerDefaultOptions;
 
 
-@implementation TDDatabaseManager
+@implementation TD_DatabaseManager
 
 
 #define kDBExtension @"touchdb"
@@ -33,7 +33,7 @@ const TDDatabaseManagerOptions kTDDatabaseManagerDefaultOptions;
 static NSCharacterSet* kIllegalNameChars;
 
 + (void) initialize {
-    if (self == [TDDatabaseManager class]) {
+    if (self == [TD_DatabaseManager class]) {
         kIllegalNameChars = [[NSCharacterSet characterSetWithCharactersInString: kLegalChars]
                                         invertedSet];
     }
@@ -41,10 +41,10 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 #if DEBUG
-+ (TDDatabaseManager*) createEmptyAtPath: (NSString*)path {
++ (TD_DatabaseManager*) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
-    TDDatabaseManager* dbm = [[self alloc] initWithDirectory: path
+    TD_DatabaseManager* dbm = [[self alloc] initWithDirectory: path
                                                      options: NULL
                                                        error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
@@ -52,14 +52,14 @@ static NSCharacterSet* kIllegalNameChars;
     return dbm;
 }
 
-+ (TDDatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name {
++ (TD_DatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name {
     return [self createEmptyAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: name]];
 }
 #endif
 
 
 - (id) initWithDirectory: (NSString*)dirPath
-                 options: (const TDDatabaseManagerOptions*)options
+                 options: (const TD_DatabaseManagerOptions*)options
                    error: (NSError**)outError
 {
     if (outError) *outError = nil;
@@ -67,7 +67,7 @@ static NSCharacterSet* kIllegalNameChars;
     if (self) {
         _dir = [dirPath copy];
         _databases = [[NSMutableDictionary alloc] init];
-        _options = options ? *options : kTDDatabaseManagerDefaultOptions;
+        _options = options ? *options : kTD_DatabaseManagerDefaultOptions;
         
         // Create the directory but don't fail if it already exists:
         NSError* error;
@@ -86,7 +86,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void)dealloc {
-    LogTo(TDServer, @"DEALLOC %@", self);
+    LogTo(TD_Server, @"DEALLOC %@", self);
     [self close];
 }
 
@@ -113,15 +113,15 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (TDDatabase*) databaseNamed: (NSString*)name create: (BOOL)create {
+- (TD_Database*) databaseNamed: (NSString*)name create: (BOOL)create {
     if (_options.readOnly)
         create = NO;
-    TDDatabase* db = _databases[name];
+    TD_Database* db = _databases[name];
     if (!db) {
         NSString* path = [self pathForName: name];
         if (!path)
             return nil;
-        db = [[TDDatabase alloc] initWithPath: path];
+        db = [[TD_Database alloc] initWithPath: path];
         db.readOnly = _options.readOnly;
         if (!create && !db.exists) {
             return nil;
@@ -133,13 +133,13 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (TDDatabase*) databaseNamed: (NSString*)name {
+- (TD_Database*) databaseNamed: (NSString*)name {
     return [self databaseNamed: name create: YES];
 }
 
 
-- (TDDatabase*) existingDatabaseNamed: (NSString*)name {
-    TDDatabase* db = [self databaseNamed: name create: NO];
+- (TD_Database*) existingDatabaseNamed: (NSString*)name {
+    TD_Database* db = [self databaseNamed: name create: NO];
     if (db && ![db open])
         db = nil;
     return db;
@@ -147,7 +147,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (BOOL) deleteDatabaseNamed: (NSString*)name {
-    TDDatabase* db = [self databaseNamed: name];
+    TD_Database* db = [self databaseNamed: name];
     if (!db)
         return NO;
     [db deleteDatabase: NULL];
@@ -172,10 +172,10 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) close {
-    LogTo(TDServer, @"CLOSE %@", self);
+    LogTo(TD_Server, @"CLOSE %@", self);
     [_replicatorManager stop];
     _replicatorManager = nil;
-    for (TDDatabase* db in _databases.allValues) {
+    for (TD_Database* db in _databases.allValues) {
         [db close];
     }
     [_databases removeAllObjects];
@@ -199,10 +199,10 @@ static NSCharacterSet* kIllegalNameChars;
 #pragma mark - TESTS
 #if DEBUG
 
-TestCase(TDDatabaseManager) {
-    RequireTestCase(TDDatabase);
-    TDDatabaseManager* dbm = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDDatabaseManagerTest"];
-    TDDatabase* db = [dbm databaseNamed: @"foo"];
+TestCase(TD_DatabaseManager) {
+    RequireTestCase(TD_Database);
+    TD_DatabaseManager* dbm = [TD_DatabaseManager createEmptyAtTemporaryPath: @"TD_DatabaseManagerTest"];
+    TD_Database* db = [dbm databaseNamed: @"foo"];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");
     CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);

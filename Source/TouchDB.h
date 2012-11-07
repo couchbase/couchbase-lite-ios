@@ -13,10 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import <TouchDB/TDDatabase.h>
-#import <TouchDB/TDServer.h>
-#import <TouchDB/TDView.h>
-#import <TouchDB/TDRevision.h>
+#import <TouchDB/TD_Database.h>
+#import <TouchDB/TD_Server.h>
+#import <TouchDB/TD_View.h>
+#import <TouchDB/TD_Revision.h>
 
 #import <TouchDB/TDReplicator.h>
 
