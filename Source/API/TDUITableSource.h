@@ -7,14 +7,14 @@
 //
 
 #import <UIKit/UIKit.h>
-@class TouchDocument, TouchLiveQuery, TouchQueryRow, RESTOperation;
+@class TDDocument, TDLiveQuery, TDQueryRow, RESTOperation;
 
 /** A UITableView data source driven by a TDLiveQuery. */
-@interface TouchUITableSource : NSObject <UITableViewDataSource>
+@interface TDUITableSource : NSObject <UITableViewDataSource>
 
 @property (nonatomic, retain) IBOutlet UITableView* tableView;
 
-@property (retain) TouchLiveQuery* query;
+@property (retain) TDLiveQuery* query;
 
 /** Rebuilds the table from the query's current .rows property. */
 -(void) reloadFromQuery;
@@ -26,13 +26,13 @@
 @property (nonatomic, readonly) NSArray* rows;
 
 /** Convenience accessor to get the row object for a given table row index. */
-- (TouchQueryRow*) rowAtIndex: (NSUInteger)index;
+- (TDQueryRow*) rowAtIndex: (NSUInteger)index;
 
 /** Convenience accessor to find the index path of the row with a given document. */
-- (NSIndexPath*) indexPathForDocument: (TouchDocument*)document;
+- (NSIndexPath*) indexPathForDocument: (TDDocument*)document;
 
 /** Convenience accessor to return the document at a given index path. */
-- (TouchDocument*) documentAtIndexPath: (NSIndexPath*)path;
+- (TDDocument*) documentAtIndexPath: (NSIndexPath*)path;
 
 
 #pragma mark Displaying The Table:
@@ -63,25 +63,25 @@
 
 /** Allows delegate to return its own custom cell, just like -tableView:cellForRowAtIndexPath:.
     If this returns nil the table source will create its own cell, as if this method were not implemented. */
-- (UITableViewCell *)couchTableSource:(TouchUITableSource*)source
+- (UITableViewCell *)couchTableSource:(TDUITableSource*)source
                 cellForRowAtIndexPath:(NSIndexPath *)indexPath;
 
 /** Called after the query's results change, before the table view is reloaded. */
-- (void)couchTableSource:(TouchUITableSource*)source
-     willUpdateFromQuery:(TouchLiveQuery*)query;
+- (void)couchTableSource:(TDUITableSource*)source
+     willUpdateFromQuery:(TDLiveQuery*)query;
 
 /** Called after the query's results change to update the table view. If this method is not implemented by the delegate, reloadData is called on the table view.*/
-- (void)couchTableSource:(TouchUITableSource*)source
-         updateFromQuery:(TouchLiveQuery*)query
+- (void)couchTableSource:(TDUITableSource*)source
+         updateFromQuery:(TDLiveQuery*)query
             previousRows:(NSArray *)previousRows;
 
 /** Called from -tableView:cellForRowAtIndexPath: just before it returns, giving the delegate a chance to customize the new cell. */
-- (void)couchTableSource:(TouchUITableSource*)source
+- (void)couchTableSource:(TDUITableSource*)source
              willUseCell:(UITableViewCell*)cell
-                  forRow:(TouchQueryRow*)row;
+                  forRow:(TDQueryRow*)row;
 
 /** Called if a TDDB operation invoked by the source (e.g. deleting a document) fails. */
-- (void)couchTableSource:(TouchUITableSource*)source
+- (void)couchTableSource:(TDUITableSource*)source
          operationFailed:(RESTOperation*)op;
 
 @end

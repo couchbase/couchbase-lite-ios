@@ -55,7 +55,7 @@ int main (int argc, const char * argv[]) {
     }
     
     NSError* error;
-    _database = [[TouchDatabaseManager sharedInstance] createDatabaseNamed: dbName
+    _database = [[TDDatabaseManager sharedInstance] createDatabaseNamed: dbName
                                                                      error: &error];
     if (!_database) {
         NSAssert(NO, @"Error creating db: %@", error);
@@ -86,7 +86,7 @@ int main (int argc, const char * argv[]) {
     })];
 
     
-    TouchQuery* q = [[_database viewNamed: @"byDate"] query];
+    TDQuery* q = [[_database viewNamed: @"byDate"] query];
     q.descending = YES;
     self.query = [[DemoQuery alloc] initWithQuery: q
                                        modelClass: _tableController.objectClass];
@@ -167,8 +167,7 @@ int main (int argc, const char * argv[]) {
     if (_syncConfiguringDefault) {
         self.syncURL = url;
     } else {
-        /* FIX: Re-enable this functionality once TouchReplication/TouchPersistentReplication
-                 are merged
+        /* FIX: Re-enable this functionality
         if (_syncPushCheckbox.state) {
             NSLog(@"**** Pushing to <%@> ...", url);
             [self observeReplication: [_database pushToDatabaseAtURL: url]];
@@ -200,14 +199,14 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (void) observeReplication: (TouchReplication*)repl {
+- (void) observeReplication: (TDReplication*)repl {
     [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"total" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
 }
 
-- (void) stopObservingReplication: (TouchReplication*)repl {
+- (void) stopObservingReplication: (TDReplication*)repl {
     [repl removeObserver: self forKeyPath: @"completed"];
     [repl removeObserver: self forKeyPath: @"total"];
     [repl removeObserver: self forKeyPath: @"error"];
@@ -243,19 +242,19 @@ int main (int argc, const char * argv[]) {
         value = 3;  // red
         tooltip = _push.error.localizedDescription;
     } else switch(MAX(_pull.mode, _push.mode)) {
-        case kTouchReplicationStopped:
+        case kTDReplicationStopped:
             value = 3; 
             tooltip = @"Sync stopped";
             break;  // red
-        case kTouchReplicationOffline:
+        case kTDReplicationOffline:
             value = 2;  // yellow
             tooltip = @"Offline";
             break;
-        case kTouchReplicationIdle:
+        case kTDReplicationIdle:
             value = 0;
             tooltip = @"Everything's in sync!";
             break;
-        case kTouchReplicationActive:
+        case kTDReplicationActive:
             value = 1;
             tooltip = @"Syncing data...";
             break;
@@ -274,7 +273,7 @@ int main (int argc, const char * argv[]) {
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
-    TouchReplication* repl = object;
+    TDReplication* repl = object;
     NSLog(@"SYNC mode=%d", repl.mode);
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
@@ -366,7 +365,7 @@ int main (int argc, const char * argv[]) {
     NSArray* items = _tableController.arrangedObjects;
     if (row >= (NSInteger)items.count)
         return;                 // Don't know why I get called on illegal rows, but it happens...
-    TouchModel* item = items[row];
+    TDModel* item = items[row];
     NSTimeInterval changedFor = item.timeSinceExternallyChanged;
     if (changedFor > 0 && changedFor < kChangeGlowDuration) {
         float fraction = (float)(1.0 - changedFor / kChangeGlowDuration);

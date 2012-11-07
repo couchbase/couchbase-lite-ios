@@ -11,79 +11,79 @@
 
 
 @interface TD_Database ()
-@property (weak, nonatomic) TouchDatabase* touchDatabase;
+@property (weak, nonatomic) TDDatabase* touchDatabase;
 @end
 
 
-@interface TouchDatabaseManager ()
+@interface TDDatabaseManager ()
 #if 0
 @property (readonly) TD_Server* tdServer;
 #endif
 @property (readonly) TD_DatabaseManager* tdManager;
-- (TouchReplication*) replicationWithDatabase: (TouchDatabase*)db
+- (TDReplication*) replicationWithDatabase: (TDDatabase*)db
                                        remote: (NSURL*)remote
                                          pull: (BOOL)pull
                                        create: (BOOL)create;
-- (NSArray*) createReplicationsBetween: (TouchDatabase*)database
+- (NSArray*) createReplicationsBetween: (TDDatabase*)database
 and: (NSURL*)otherDbURL
 exclusively: (bool)exclusively;
 @end
 
 
-@interface TouchDatabase ()
-- (id) initWithManager: (TouchDatabaseManager*)manager
+@interface TDDatabase ()
+- (id) initWithManager: (TDDatabaseManager*)manager
             TD_Database: (TD_Database*)tddb;
 @property (readonly, nonatomic) TD_Database* tddb;
 @end
 
 
-@interface TouchDocument ()
-- (id)initWithDatabase: (TouchDatabase*)database
+@interface TDDocument ()
+- (id)initWithDatabase: (TDDatabase*)database
             documentID: (NSString*)docID;
-- (TouchRevision*) revisionFromRev: (TD_Revision*)rev;
+- (TDRevision*) revisionFromRev: (TD_Revision*)rev;
 - (void) revisionAdded: (TD_Revision*)rev source: (NSURL*)source;
-- (void) loadCurrentRevisionFrom: (TouchQueryRow*)row;
-- (TouchRevision*) putProperties: (NSDictionary*)properties
+- (void) loadCurrentRevisionFrom: (TDQueryRow*)row;
+- (TDRevision*) putProperties: (NSDictionary*)properties
                        prevRevID: (NSString*)prevID
                            error: (NSError**)outError;
 @end
 
 
-@interface TouchRevision ()
-- (id)initWithDocument: (TouchDocument*)doc revision: (TD_Revision*)rev;
+@interface TDRevision ()
+- (id)initWithDocument: (TDDocument*)doc revision: (TD_Revision*)rev;
 @property (readonly) TD_Revision* rev;
 @property (readonly) SequenceNumber sequence;
 @end
 
 
-@interface TouchAttachment ()
-- (id) initWithRevision: (TouchRevision*)rev
+@interface TDAttachment ()
+- (id) initWithRevision: (TDRevision*)rev
                    name: (NSString*)name
                metadata: (NSDictionary*)metadata;
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
-                             intoDatabase: (TouchDatabase*)database;
+                             intoDatabase: (TDDatabase*)database;
 @property (readwrite, copy) NSString* name;
 @end
 
 
-@interface TouchView ()
-- (id)initWithDatabase: (TouchDatabase*)database view: (TD_View*)view;
+@interface TDView ()
+- (id)initWithDatabase: (TDDatabase*)database view: (TD_View*)view;
 @end
 
 
-@interface TouchQuery ()
-- (id) initWithDatabase: (TouchDatabase*)database view: (TD_View*)view;
-- (id)initWithDatabase: (TouchDatabase*)database mapBlock: (TDMapBlock)mapBlock;
+@interface TDQuery ()
+- (id) initWithDatabase: (TDDatabase*)database view: (TD_View*)view;
+- (id)initWithDatabase: (TDDatabase*)database mapBlock: (TDMapBlock)mapBlock;
 @end
 
 
-@interface TouchReplication ()
-- (id) initWithDatabase: (TouchDatabase*)database
+@interface TDReplication ()
+- (id) initWithDatabase: (TDDatabase*)database
                  remote: (NSURL*)remote
                    pull: (BOOL)pull;
 @end
 
 
-@interface TouchModel ()
+@interface TDModel ()
 @property (readonly) NSDictionary* currentProperties;
 @end

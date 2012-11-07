@@ -14,22 +14,22 @@
 //  and limitations under the License.
 
 #import <Cocoa/Cocoa.h>
-@class TouchQuery, TouchLiveQuery, RESTOperation;
+@class TDQuery, TDLiveQuery, RESTOperation;
 
 
 /** Simple controller for TouchDB demo apps.
-    This class acts as glue between a TouchQuery (a TouchDB view) and an NSArrayController.
+    This class acts as glue between a TDQuery (a TouchDB view) and an NSArrayController.
     The app can then bind its UI controls to the NSArrayController and get basic CRUD operations
     without needing any code. */
 @interface DemoQuery : NSObject
 {
-    TouchLiveQuery* _query;
+    TDLiveQuery* _query;
     RESTOperation* _op;
     NSMutableArray* _entries;
     Class _modelClass;
 }
 
-- (id) initWithQuery: (TouchQuery*)query modelClass: (Class)modelClass;
+- (id) initWithQuery: (TDQuery*)query modelClass: (Class)modelClass;
 
 /** The documents returned by the query, wrapped in DemoItem objects.
     An NSArrayController can be bound to this property. */

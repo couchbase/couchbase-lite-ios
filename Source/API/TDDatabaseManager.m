@@ -1,12 +1,12 @@
 //
-//  TouchDatabaseManager.m
+//  TDDatabaseManager.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/19/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchDatabaseManager.h"
+#import "TDDatabaseManager.h"
 #import "TouchDBPrivate.h"
 
 #import "TD_Database.h"
@@ -15,14 +15,14 @@
 #import "TDInternal.h"
 
 
-@implementation TouchDatabaseManager
+@implementation TDDatabaseManager
 
 
 @synthesize tdManager=_mgr;
 
 
-+ (TouchDatabaseManager*) sharedInstance {
-    static TouchDatabaseManager* sInstance;
++ (TDDatabaseManager*) sharedInstance {
+    static TDDatabaseManager* sInstance;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sInstance = [[self alloc] init];
@@ -39,7 +39,7 @@
 
 
 - (id) initWithDirectory: (NSString*)directory
-                 options: (const TouchDatabaseManagerOptions*)options
+                 options: (const TDDatabaseManagerOptions*)options
                    error: (NSError**)outError {
     self = [super init];
     if (self) {
@@ -58,7 +58,7 @@
         }
         [_mgr replicatorManager];
         _replications = [[NSMutableArray alloc] init];
-        LogTo(TouchDatabase, @"Created %@", self);
+        LogTo(TDDatabase, @"Created %@", self);
     }
     return self;
 }
@@ -93,7 +93,7 @@
         _server = [[TD_Server alloc] initWithDirectory: _mgr.directory
                                               options: &tdOptions
                                                 error: nil];
-        LogTo(TouchDatabase, @"%@ created %@", self, _server);
+        LogTo(TDDatabase, @"%@ created %@", self, _server);
     }
     return _server;
 }
@@ -105,10 +105,10 @@
 }
 
 
-- (TouchDatabase*) databaseForDatabase: (TD_Database*)tddb {
-    TouchDatabase* touchDatabase = tddb.touchDatabase;
+- (TDDatabase*) databaseForDatabase: (TD_Database*)tddb {
+    TDDatabase* touchDatabase = tddb.touchDatabase;
     if (!touchDatabase) {
-        touchDatabase = [[TouchDatabase alloc] initWithManager: self
+        touchDatabase = [[TDDatabase alloc] initWithManager: self
                                                     TD_Database: tddb];
         tddb.touchDatabase = touchDatabase;
     }
@@ -116,18 +116,18 @@
 }
 
 
-- (TouchDatabase*) databaseNamed: (NSString*)name {
+- (TDDatabase*) databaseNamed: (NSString*)name {
     TD_Database* db = [_mgr existingDatabaseNamed: name];
     if (![db open])
         return nil;
     return [self databaseForDatabase: db];
 }
 
-- (TouchDatabase*) objectForKeyedSubscript:(NSString*)key {
+- (TDDatabase*) objectForKeyedSubscript:(NSString*)key {
     return [self databaseNamed: key];
 }
 
-- (TouchDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
+- (TDDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
     TD_Database* db = [_mgr databaseNamed: name];
     if (![db open: outError])
         return nil;
@@ -140,9 +140,9 @@
 
 - (NSArray*) allReplications {
     NSMutableArray* replications = [_replications mutableCopy];
-    TouchQuery* q = [[self databaseNamed: @"_replicator"] queryAllDocuments];
-    for (TouchQueryRow* row in q.rows) {
-        TouchReplication* repl = [TouchReplication modelForDocument: row.document];
+    TDQuery* q = [[self databaseNamed: @"_replicator"] queryAllDocuments];
+    for (TDQueryRow* row in q.rows) {
+        TDReplication* repl = [TDReplication modelForDocument: row.document];
         if (![replications containsObject: repl])
             [replications addObject: repl];
     }
@@ -150,18 +150,18 @@
 }
 
 
-- (TouchReplication*) replicationWithDatabase: (TouchDatabase*)db
+- (TDReplication*) replicationWithDatabase: (TDDatabase*)db
                                        remote: (NSURL*)remote
                                          pull: (BOOL)pull
                                        create: (BOOL)create
 {
-    for (TouchReplication* repl in self.allReplications) {
+    for (TDReplication* repl in self.allReplications) {
         if (repl.localDatabase == db && $equal(repl.remoteURL, remote) && repl.pull == pull)
             return repl;
     }
     if (!create)
         return nil;
-    TouchReplication* repl = [[TouchReplication alloc] initWithDatabase: db
+    TDReplication* repl = [[TDReplication alloc] initWithDatabase: db
                                                                  remote: remote
                                                                    pull: pull];
     [_replications addObject: repl];
@@ -169,16 +169,16 @@
 }
 
 
-- (NSArray*) createReplicationsBetween: (TouchDatabase*)database
+- (NSArray*) createReplicationsBetween: (TDDatabase*)database
                                    and: (NSURL*)otherDbURL
                            exclusively: (bool)exclusively
 {
-    TouchReplication* pull = [self replicationWithDatabase: database remote: otherDbURL
+    TDReplication* pull = [self replicationWithDatabase: database remote: otherDbURL
                                                       pull: YES create: YES];
-    TouchReplication* push = [self replicationWithDatabase: database remote: otherDbURL
+    TDReplication* push = [self replicationWithDatabase: database remote: otherDbURL
                                                       pull: NO create: YES];
     if (exclusively) {
-        for (TouchReplication* repl in self.allReplications) {
+        for (TDReplication* repl in self.allReplications) {
             if (repl.localDatabase == database && repl != pull && repl != push) {
                 [repl deleteDocument: nil];
             }

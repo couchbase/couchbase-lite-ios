@@ -1,5 +1,5 @@
 //
-//  TouchDatabaseManager.h
+//  TDDatabaseManager.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/19/12.
@@ -7,28 +7,28 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TouchDatabase, TouchReplication, TouchLiveQuery;
+@class TDDatabase, TDReplication, TDLiveQuery;
 @class TD_DatabaseManager, TD_Server;
 
 
-typedef struct TouchDatabaseManagerOptions {
+typedef struct TDDatabaseManagerOptions {
     bool readOnly;
     bool noReplicator;
-} TouchDatabaseManagerOptions;
+} TDDatabaseManagerOptions;
 
 
 /** Top-level TouchDB object; manages a collection of databases as a CouchDB server does. */
-@interface TouchDatabaseManager : NSObject
+@interface TDDatabaseManager : NSObject
 {
     @private
-    TouchDatabaseManagerOptions _options;
+    TDDatabaseManagerOptions _options;
     TD_DatabaseManager* _mgr;
     TD_Server* _server;
     NSMutableArray* _replications;
 }
 
 /** A shared per-process instance. This should only be used on the main thread. */
-+ (TouchDatabaseManager*) sharedInstance;
++ (TDDatabaseManager*) sharedInstance;
 
 /** Preferred initializer. Starts up an in-process server, on the current thread, that stores databases in the default Application Support directory. */
 - (id)init;
@@ -38,24 +38,24 @@ typedef struct TouchDatabaseManagerOptions {
     @param options  If non-NULL, a pointer to options (read-only and no-replicator).
     @param outError  On return, the error if any. */
 - (id) initWithDirectory: (NSString*)directory
-                 options: (const TouchDatabaseManagerOptions*)options
+                 options: (const TDDatabaseManagerOptions*)options
                    error: (NSError**)outError;
 
 
-/** Releases all resources used by the TouchDatabaseManager instance and closes all its databases. */
+/** Releases all resources used by the TDDatabaseManager instance and closes all its databases. */
 - (void) close;
 
 /** Returns the database with the given name, or nil if it doesn't exist.
     Multiple calls with the same name will return the same CouchDatabase instance. */
-- (TouchDatabase*) databaseNamed: (NSString*)name;
+- (TDDatabase*) databaseNamed: (NSString*)name;
 
 /** Same as -databaseNamed:. Enables "[]" access in Xcode 4.4+ */
-- (TouchDatabase*) objectForKeyedSubscript: (NSString*)key;
+- (TDDatabase*) objectForKeyedSubscript: (NSString*)key;
 
 /** Returns the database with the given name, creating it if it didn't already exist.
     Multiple calls with the same name will return the same CouchDatabase instance.
      NOTE: Database names may not contain capital letters! */
-- (TouchDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError;
+- (TDDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError;
 
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;

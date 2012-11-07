@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchAttachment.h"
+#import "TDAttachment.h"
 #import "TouchDBPrivate.h"
 
 #import "TD_Database+Attachments.h"
@@ -14,10 +14,10 @@
 #import "TDInternal.h"
 
 
-@implementation TouchAttachment
+@implementation TDAttachment
 
 
-- (id) initWithRevision: (TouchRevision*)rev
+- (id) initWithRevision: (TDRevision*)rev
                    name: (NSString*)name
                metadata: (NSDictionary*)metadata
 {
@@ -55,7 +55,7 @@
 @synthesize revision=_rev, name=_name, metadata=_metadata;
 
 
-- (TouchDocument*) document {
+- (TDDocument*) document {
     return _rev.document;
 }
 
@@ -99,7 +99,7 @@
 }
 
 
-- (TouchRevision*) updateBody: (NSData*)body
+- (TDRevision*) updateBody: (NSData*)body
                   contentType: (NSString*)contentType
                         error: (NSError**)outError
 {
@@ -116,7 +116,7 @@
         if (outError) *outError = TDStatusToNSError(status, nil);
         return nil;
     }
-    return [[TouchRevision alloc] initWithDocument: self.document revision: newRev];
+    return [[TDRevision alloc] initWithDocument: self.document revision: newRev];
 }
 
 
@@ -124,11 +124,11 @@
 // with proper JSON metadata dicts. It registers the attachment bodies with the blob store and sets
 // the metadata 'digest' and 'follows' properties accordingly.
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
-                             intoDatabase: (TouchDatabase*)database
+                             intoDatabase: (TDDatabase*)database
 {
     TD_Database* tddb = database.tddb;
     return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
-        TouchAttachment* attachment = $castIf(TouchAttachment, value);
+        TDAttachment* attachment = $castIf(TDAttachment, value);
         if (attachment) {
             // Replace the attachment object with a metadata dictionary:
             NSMutableDictionary* metadata = [attachment.metadata mutableCopy];

@@ -13,12 +13,12 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TouchDatabaseManager.h"
-#import "TouchDatabase.h"
-#import "TouchDocument.h"
-#import "TouchRevision.h"
-#import "TouchAttachment.h"
-#import "TouchView.h"
-#import "TouchQuery.h"
-#import "TouchModel.h"
-#import "TouchReplication.h"
+#import "TDDatabaseManager.h"
+#import "TDDatabase.h"
+#import "TDDocument.h"
+#import "TDRevision.h"
+#import "TDAttachment.h"
+#import "TDView.h"
+#import "TDQuery.h"
+#import "TDModel.h"
+#import "TDReplication.h"

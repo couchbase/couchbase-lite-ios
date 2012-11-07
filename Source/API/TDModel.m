@@ -6,28 +6,28 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchModel.h"
-#import "TouchModelFactory.h"
+#import "TDModel.h"
+#import "TDModelFactory.h"
 #import "TouchDBPrivate.h"
 #import "TDMisc.h"
 #import "TDBase64.h"
 #import <objc/runtime.h>
 
 
-@interface TouchModel ()
-@property (readwrite, retain) TouchDocument* document;
+@interface TDModel ()
+@property (readwrite, retain) TDDocument* document;
 @property (readwrite) bool needsSave;
 @end
 
 
-@implementation TouchModel
+@implementation TDModel
 
 
 - (id)init {
     return [self initWithDocument: nil];
 }
 
-- (id) initWithDocument: (TouchDocument*)document
+- (id) initWithDocument: (TDDocument*)document
 {
     self = [super init];
     if (self) {
@@ -44,7 +44,7 @@
 }
 
 
-- (id) initWithNewDocumentInDatabase: (TouchDatabase*)database {
+- (id) initWithNewDocumentInDatabase: (TDDatabase*)database {
     NSParameterAssert(database);
     self = [self initWithDocument: nil];
     if (self) {
@@ -54,14 +54,14 @@
 }
 
 
-+ (id) modelForDocument: (TouchDocument*)document {
++ (id) modelForDocument: (TDDocument*)document {
     NSParameterAssert(document);
-    TouchModel* model = document.modelObject;
+    TDModel* model = document.modelObject;
     if (model) {
         // Document already has a model; make sure it's type-compatible with the desired class
         NSAssert([model isKindOfClass: self], @"%@: %@ already has incompatible model %@",
                  self, document, model);
-    } else if (self != [TouchModel class]) {
+    } else if (self != [TDModel class]) {
         // If invoked on a subclass of TouchModel, create an instance of that subclass:
         model = [[self alloc] initWithDocument: document];
     } else {
@@ -90,12 +90,12 @@
 #pragma mark - DOCUMENT / DATABASE:
 
 
-- (TouchDocument*) document {
+- (TDDocument*) document {
     return _document;
 }
 
 
-- (void) setDocument:(TouchDocument *)document {
+- (void) setDocument:(TDDocument *)document {
     NSAssert(!_document && document, @"Can't change or clear document");
     NSAssert(document.modelObject == nil, @"Document already has a model");
     _document = document;
@@ -109,17 +109,17 @@
 }
 
 
-- (NSString*) idForNewDocumentInDatabase: (TouchDatabase*)db {
+- (NSString*) idForNewDocumentInDatabase: (TDDatabase*)db {
     return nil;  // subclasses can override this to customize the doc ID
 }
 
 
-- (TouchDatabase*) database {
+- (TDDatabase*) database {
     return _document.database;
 }
 
 
-- (void) setDatabase: (TouchDatabase*)db {
+- (void) setDatabase: (TDDatabase*)db {
     if (db) {
         // On setting database, create a new untitled/unsaved TouchDocument:
         NSString* docID = [self idForNewDocumentInDatabase: db];
@@ -133,7 +133,7 @@
 
 
 - (BOOL) deleteDocument: (NSError**)outError {
-    TouchRevision* rev = _document.currentRevision;
+    TDRevision* rev = _document.currentRevision;
     if (!rev)
         return YES;
     LogTo(TouchModel, @"%@ Deleting document", self);
@@ -151,8 +151,8 @@
 }
 
 
-// Respond to an external change (likely from sync). This is called by my TouchDocument.
-- (void) couchDocumentChanged: (TouchDocument*)doc {
+// Respond to an external change (likely from sync). This is called by my TDDocument.
+- (void) tdDocumentChanged: (TDDocument*)doc {
     NSAssert(doc == _document, @"Notified for wrong document");
     LogTo(TouchModel, @"%@ External change (rev=%@)", self, _document.currentRevisionID);
     [self markExternallyChanged];
@@ -240,9 +240,9 @@
 + (BOOL) saveModels: (NSArray*)models error: (NSError**)outError {
     if (models.count == 0)
         return YES;
-    TouchDatabase* db = [models[0] database];
+    TDDatabase* db = [(TDModel*)models[0] database];
     BOOL saved = [db inTransaction: ^{
-        for (TouchModel* model in models) {
+        for (TDModel* model in models) {
             NSAssert(model.database == db, @"Models must share a common db");
             if (![model save: outError])
                 return NO;
@@ -250,7 +250,7 @@
         return YES;
     }];
     if (saved)
-        for (TouchModel* model in models)
+        for (TDModel* model in models)
             [model didSave];
     return saved;
 }
@@ -270,7 +270,7 @@
 
 
 + (NSSet*) propertyNames {
-    if (self == [TouchModel class])
+    if (self == [TDModel class])
         return [NSSet set]; // Ignore non-persisted properties declared on base TouchModel
     return [super propertyNames];
 }
@@ -362,13 +362,13 @@
     return value;
 }
 
-- (TouchDatabase*) databaseForModelProperty: (NSString*)property {
+- (TDDatabase*) databaseForModelProperty: (NSString*)property {
     // This is a hook for subclasses to override if they need to, i.e. if the property
     // refers to a document in a different database.
     return _document.database;
 }
 
-- (TouchModel*) getModelProperty: (NSString*)property {
+- (TDModel*) getModelProperty: (NSString*)property {
     // Model-valued properties are kept in raw form as document IDs, not mapped to TouchModel
     // references, to avoid reference loops.
     
@@ -382,7 +382,7 @@
         Warn(@"Model-valued property %@ of %@ is not a string", property, _document);
         return nil;
     }
-    TouchDocument* doc = [[self databaseForModelProperty: property] documentWithID: rawValue];
+    TDDocument* doc = [[self databaseForModelProperty: property] documentWithID: rawValue];
     if (!doc) {
         Warn(@"Unable to get document from property %@ of %@ (value='%@')",
              property, _document, rawValue);
@@ -390,7 +390,7 @@
     }
     
     // Ask factory to get/create model; if it doesn't know, use the declared class:
-    TouchModel* value = [doc.database.modelFactory modelForDocument: doc];
+    TDModel* value = [doc.database.modelFactory modelForDocument: doc];
     if (!value) {
         Class declaredClass = [[self class] classOfProperty: property];
         value = [declaredClass modelForDocument: doc];
@@ -401,7 +401,7 @@
     return value;
 }
 
-- (void) setModel: (TouchModel*)model forProperty: (NSString*)property {
+- (void) setModel: (TDModel*)model forProperty: (NSString*)property {
     // Don't store the target TouchModel in the _properties dictionary, because this could create
     // a reference loop. Instead, just store the raw document ID. getModelProperty will map to the
     // model object when called.
@@ -418,15 +418,15 @@
              || propertyClass == [NSDictionary class])
         return [super impForGetterOfProperty: property ofClass: propertyClass];  // Basic classes (including 'id')
     else if (propertyClass == [NSData class]) {
-        return imp_implementationWithBlock(^id(TouchModel* receiver) {
+        return imp_implementationWithBlock(^id(TDModel* receiver) {
             return [receiver getDataProperty: property];
         });
     } else if (propertyClass == [NSDate class]) {
-        return imp_implementationWithBlock(^id(TouchModel* receiver) {
+        return imp_implementationWithBlock(^id(TDModel* receiver) {
             return [receiver getDateProperty: property];
         });
-    } else if ([propertyClass isSubclassOfClass: [TouchModel class]]) {
-        return imp_implementationWithBlock(^id(TouchModel* receiver) {
+    } else if ([propertyClass isSubclassOfClass: [TDModel class]]) {
+        return imp_implementationWithBlock(^id(TDModel* receiver) {
             return [receiver getModelProperty: property];
         });
     } else {
@@ -435,8 +435,8 @@
 }
 
 + (IMP) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-    if ([propertyClass isSubclassOfClass: [TouchModel class]]) {
-        return imp_implementationWithBlock(^(TouchModel* receiver, TouchModel* value) {
+    if ([propertyClass isSubclassOfClass: [TDModel class]]) {
+        return imp_implementationWithBlock(^(TDModel* receiver, TDModel* value) {
             [receiver setModel: value forProperty: property];
         });
     } else {
@@ -455,8 +455,8 @@
     
     NSMutableArray* nuNames = names ? [names mutableCopy] : [NSMutableArray array];
     for (NSString* name in _changedAttachments.allKeys) {
-        TouchAttachment* attach = _changedAttachments[name];
-        if ([attach isKindOfClass: [TouchAttachment class]]) {
+        TDAttachment* attach = _changedAttachments[name];
+        if ([attach isKindOfClass: [TDAttachment class]]) {
             if (![nuNames containsObject: name])
                 [nuNames addObject: name];
         } else
@@ -465,10 +465,10 @@
     return nuNames;
 }
 
-- (TouchAttachment*) attachmentNamed: (NSString*)name {
+- (TDAttachment*) attachmentNamed: (NSString*)name {
     id attachment = _changedAttachments[name];
     if (attachment) {
-        if ([attachment isKindOfClass: [TouchAttachment class]])
+        if ([attachment isKindOfClass: [TDAttachment class]])
             return attachment;
         else
             return nil;
@@ -477,7 +477,7 @@
 }
 
 
-- (void) addAttachment: (TouchAttachment*)attachment named: (NSString*)name {
+- (void) addAttachment: (TDAttachment*)attachment named: (NSString*)name {
     Assert(name);
     Assert(!attachment.name, @"Attachment already attached to another revision");
     if (attachment == [self attachmentNamed: name])
@@ -505,8 +505,8 @@
     for (NSString* name in _changedAttachments.allKeys) {
         // Yes, we are putting TDAttachment objects into the JSON-compatible dictionary.
         // The TouchDocument will process & convert these before actually storing the JSON.
-        TouchAttachment* attach = _changedAttachments[name];
-        if ([attach isKindOfClass: [TouchAttachment class]])
+        TDAttachment* attach = _changedAttachments[name];
+        if ([attach isKindOfClass: [TDAttachment class]])
             nuAttach[name] = attach;
         else
             [nuAttach removeObjectForKey: name];

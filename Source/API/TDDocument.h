@@ -6,25 +6,25 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchDatabase.h"
+#import "TDDatabase.h"
 #import "TDCache.h"
-@class TouchRevision, TouchAttachment, TouchQueryRow;
+@class TDRevision, TDAttachment, TDQueryRow;
 
 
 /** A TouchDB document (as opposed to any specific revision of it.) */
-@interface TouchDocument : NSObject <TDCacheable>
+@interface TDDocument : NSObject <TDCacheable>
 {
     @private
-    TouchDatabase* _database;
+    TDDatabase* _database;
     NSString* _docID;
-    TouchRevision* _currentRevision;
+    TDRevision* _currentRevision;
     __weak id _modelObject;
 #if ! TDCACHE_IS_SMART
     __weak TDCache* _owningCache;
 #endif
 }
 
-@property (readonly) TouchDatabase* database;
+@property (readonly) TDDatabase* database;
 
 @property (readonly) NSString* documentID;
 @property (readonly) NSString* abbreviatedID;
@@ -46,10 +46,10 @@
 @property (readonly, copy) NSString* currentRevisionID;
 
 /** The current/latest revision. This object is cached. */
-@property (readonly) TouchRevision* currentRevision;
+@property (readonly) TDRevision* currentRevision;
 
 /** The revision with the specified ID. */
-- (TouchRevision*) revisionWithID: (NSString*)revisionID;
+- (TDRevision*) revisionWithID: (NSString*)revisionID;
 
 - (NSArray*) getRevisionHistory: (NSError**)outError;
 - (NSArray*) getConflictingRevisions: (NSError**)outError;
@@ -78,7 +78,7 @@
 - (id)objectForKeyedSubscript:(NSString*)key;
 
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties property.) */
-- (TouchRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
+- (TDRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
 
 
 #pragma mark MODEL:
@@ -93,13 +93,13 @@
 
 
 
-@protocol TouchDocumentModel <NSObject>
-/** If a TouchDocument's modelObject implements this method, it will be called whenever the document posts a kTouchDocumentChangeNotification. */
-- (void) touchDocumentChanged: (TouchDocument*)doc;
+@protocol TDDocumentModel <NSObject>
+/** If a TouchDocument's modelObject implements this method, it will be called whenever the document posts a kTDDocumentChangeNotification. */
+- (void) tdDocumentChanged: (TDDocument*)doc;
 @end
 
 
 
 /** This notification is posted by a TouchDocument in response to an external change.
-    It is not sent in response to 'local' changes made by this TouchDatabase's object tree. */
-extern NSString* const kTouchDocumentChangeNotification;
+    It is not sent in response to 'local' changes made by this TDDatabase's object tree. */
+extern NSString* const kTDDocumentChangeNotification;

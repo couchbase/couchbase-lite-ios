@@ -12,10 +12,10 @@
 #import "TDStatus.h"
 
 
-@implementation TouchRevision
+@implementation TDRevision
 
 
-- (id)initWithDocument: (TouchDocument*)doc revision: (TD_Revision*)rev {
+- (id)initWithDocument: (TDDocument*)doc revision: (TD_Revision*)rev {
     self = [super init];
     if (self) {
         _document = doc;
@@ -32,7 +32,7 @@
 
 @synthesize document=_document, rev=_rev;
 
-- (TouchDatabase*) database {return _document.database;}
+- (TDDatabase*) database {return _document.database;}
 - (NSString*) revisionID    {return _rev.revID;}
 - (BOOL) isDeleted          {return _rev.deleted;}
 
@@ -89,7 +89,7 @@
 - (NSArray*) getRevisionHistory: (NSError**)outError {
     NSMutableArray* history = $marray();
     for (TD_Revision* rev in [self.database.tddb getRevisionHistory: _rev]) {
-        TouchRevision* revision;
+        TDRevision* revision;
         if ($equal(rev.revID, _rev.revID))
             revision = self;
         else
@@ -103,7 +103,7 @@
 #pragma mark - SAVING:
 
 
-- (TouchRevision*) putProperties: (NSDictionary*)properties
+- (TDRevision*) putProperties: (NSDictionary*)properties
                            error: (NSError**)outError
 {
     return [_document putProperties: properties
@@ -112,7 +112,7 @@
 }
 
 
-- (TouchRevision*) deleteDocument: (NSError**)outError {
+- (TDRevision*) deleteDocument: (NSError**)outError {
     return [self putProperties: nil error: outError];
 }
 
@@ -135,11 +135,11 @@
 }
 
 
-- (TouchAttachment*) attachmentNamed: (NSString*)name {
+- (TDAttachment*) attachmentNamed: (NSString*)name {
     NSDictionary* metadata = [self attachmentMetadataFor: name];
     if (!metadata)
         return nil;
-    return [[TouchAttachment alloc] initWithRevision: self name: name metadata: metadata];
+    return [[TDAttachment alloc] initWithRevision: self name: name metadata: metadata];
 }
 
 

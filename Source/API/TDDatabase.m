@@ -1,5 +1,5 @@
 //
-//  TouchDatabase.m
+//  TDDatabase.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/17/12.
@@ -13,16 +13,16 @@
 
 #define kDocRetainLimit 50
 
-NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
+NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
-@implementation TouchDatabase
+@implementation TDDatabase
 
 
 @synthesize tddb=_tddb, manager=_manager;
 
 
-- (id) initWithManager: (TouchDatabaseManager*)manager
+- (id) initWithManager: (TDDatabaseManager*)manager
             TD_Database: (TD_Database*)tddb
 {
     self = [super init];
@@ -56,7 +56,7 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
             // it gets posted by clearing any pending instance of the notification that doesn't have
             // the flag.
             NSDictionary* userInfo = source ? $dict({@"external", $true}) : nil;
-            NSNotification* n = [NSNotification notificationWithName: kTouchDatabaseChangeNotification
+            NSNotification* n = [NSNotification notificationWithName: kTDDatabaseChangeNotification
                                                               object: self
                                                             userInfo: userInfo];
             NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
@@ -101,12 +101,12 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 #pragma mark - DOCUMENTS:
 
 
-- (TouchDocument*) documentWithID: (NSString*)docID {
-    TouchDocument* doc = (TouchDocument*) [_docCache resourceWithCacheKey: docID];
+- (TDDocument*) documentWithID: (NSString*)docID {
+    TDDocument* doc = (TDDocument*) [_docCache resourceWithCacheKey: docID];
     if (!doc) {
         if (docID.length == 0)
             return nil;
-        doc = [[TouchDocument alloc] initWithDatabase: self documentID: docID];
+        doc = [[TDDocument alloc] initWithDatabase: self documentID: docID];
         if (!doc)
             return nil;
         if (!_docCache)
@@ -116,18 +116,18 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
     return doc;
 }
 
-- (TouchDocument*) objectForKeyedSubscript: (NSString*)key {
+- (TDDocument*) objectForKeyedSubscript: (NSString*)key {
     return [self documentWithID: key];
 }
 
 
-- (TouchDocument*) untitledDocument {
+- (TDDocument*) untitledDocument {
     return [self documentWithID: [TD_Database generateDocumentID]];
 }
 
 
-- (TouchDocument*) cachedDocumentWithID: (NSString*)docID {
-    return (TouchDocument*) [_docCache resourceWithCacheKey: docID];
+- (TDDocument*) cachedDocumentWithID: (NSString*)docID {
+    return (TDDocument*) [_docCache resourceWithCacheKey: docID];
 }
 
 
@@ -136,8 +136,8 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 }
 
 
-- (TouchQuery*) queryAllDocuments {
-    return [[TouchQuery alloc] initWithDatabase: self view: nil];
+- (TDQuery*) queryAllDocuments {
+    return [[TDQuery alloc] initWithDatabase: self view: nil];
 }
 
 
@@ -153,21 +153,21 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 #pragma mark - VIEWS:
 
 
-- (TouchView*) viewNamed: (NSString*)name {
+- (TDView*) viewNamed: (NSString*)name {
     TD_View* view = [_tddb viewNamed: name];
-    return view ? [[TouchView alloc] initWithDatabase: self view: view] : nil;
+    return view ? [[TDView alloc] initWithDatabase: self view: view] : nil;
 }
 
 
 - (NSArray*) allViews {
     return [_tddb.allViews my_map:^id(TD_View* view) {
-        return [[TouchView alloc] initWithDatabase: self view: view];
+        return [[TDView alloc] initWithDatabase: self view: view];
     }];
 }
 
 
-- (TouchQuery*) slowQueryWithMap: (TDMapBlock)mapBlock {
-    return [[TouchQuery alloc] initWithDatabase: self mapBlock: mapBlock];
+- (TDQuery*) slowQueryWithMap: (TDMapBlock)mapBlock {
+    return [[TDQuery alloc] initWithDatabase: self mapBlock: mapBlock];
 }
 
 
@@ -197,11 +197,11 @@ NSString* const kTouchDatabaseChangeNotification = @"TouchDatabaseChange";
 #pragma mark - REPLICATION:
 
 
-- (TouchReplication*) pushToURL: (NSURL*)url {
+- (TDReplication*) pushToURL: (NSURL*)url {
     return [_manager replicationWithDatabase: self remote: url pull: NO create: YES];
 }
 
-- (TouchReplication*) pullFromURL: (NSURL*)url {
+- (TDReplication*) pullFromURL: (NSURL*)url {
     return [_manager replicationWithDatabase: self remote: url pull: YES create: YES];
 }
 

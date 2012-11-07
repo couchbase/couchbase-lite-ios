@@ -6,22 +6,22 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchModel.h"
-@class TouchDatabase, TD_Database, TD_Server, TDReplicator;
+#import "TDModel.h"
+@class TDDatabase, TD_Database, TD_Server, TDReplicator;
 
 
 typedef enum {
-    kTouchReplicationStopped,
-    kTouchReplicationOffline,
-    kTouchReplicationIdle,
-    kTouchReplicationActive
-} TouchReplicationMode;
+    kTDReplicationStopped,
+    kTDReplicationOffline,
+    kTDReplicationIdle,
+    kTDReplicationActive
+} TDReplicationMode;
 
 
 /** A 'push' or 'pull' replication between a local and a remote database.
     Replications can be one-shot, continuous or persistent.
     TouchReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
-@interface TouchReplication : TouchModel
+@interface TDReplication : TDModel
 {
     @private
     NSURL* _remoteURL;
@@ -30,7 +30,7 @@ typedef enum {
     bool _started;
     bool _running;
     unsigned _completed, _total;
-    TouchReplicationMode _mode;
+    TDReplicationMode _mode;
     NSError* _error;
     
     TDReplicator* _bg_replicator;       // ONLY used on the server thread
@@ -38,7 +38,7 @@ typedef enum {
 }
 
 /** The local database being replicated to/from. */
-@property (nonatomic, readonly) TouchDatabase* localDatabase;
+@property (nonatomic, readonly) TDDatabase* localDatabase;
 
 /** The URL of the remote database. */
 @property (nonatomic, readonly) NSURL* remoteURL;
@@ -99,11 +99,11 @@ typedef enum {
 
 @property (nonatomic, readonly, retain) NSError* error;
 
-@property (nonatomic, readonly) TouchReplicationMode mode;
+@property (nonatomic, readonly) TDReplicationMode mode;
 
 
 @end
 
 
 /** This notification is posted by a TouchReplication when its progress changes. */
-extern NSString* const kTouchReplicationChangeNotification;
+extern NSString* const kTDReplicationChangeNotification;

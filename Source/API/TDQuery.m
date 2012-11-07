@@ -10,22 +10,22 @@
 #import "TD_View.h"
 
 
-@interface TouchQueryEnumerator ()
-- (id) initWithDatabase: (TouchDatabase*)db rows: (NSArray*)rows;
+@interface TDQueryEnumerator ()
+- (id) initWithDatabase: (TDDatabase*)db rows: (NSArray*)rows;
 @end
 
 
-@interface TouchQueryRow ()
-- (id) initWithDatabase: (TouchDatabase*)db result: (id)result;
+@interface TDQueryRow ()
+- (id) initWithDatabase: (TDDatabase*)db result: (id)result;
 @end
 
 
 
-@implementation TouchQuery
+@implementation TDQuery
 
 
 // A nil view refers to 'all documents'
-- (id) initWithDatabase: (TouchDatabase*)database view: (TD_View*)view {
+- (id) initWithDatabase: (TDDatabase*)database view: (TD_View*)view {
     self = [super init];
     if (self) {
         _database = database;
@@ -36,7 +36,7 @@
 }
 
 
-- (id)initWithDatabase: (TouchDatabase*)database mapBlock: (TDMapBlock)mapBlock {
+- (id)initWithDatabase: (TDDatabase*)database mapBlock: (TDMapBlock)mapBlock {
     TD_View* view = [database.tddb makeAnonymousView];
     if (self = [self initWithDatabase: database view: view]) {
         _temporaryView = YES;
@@ -46,7 +46,7 @@
 }
 
 
-- (id) initWithQuery: (TouchQuery*)query {
+- (id) initWithQuery: (TDQuery*)query {
     self = [self initWithDatabase: query->_database view: query->_view];
     if (self) {
         _limit = query.limit;
@@ -79,8 +79,8 @@
             database=_database;
 
 
-- (TouchLiveQuery*) asLiveQuery {
-    return [[TouchLiveQuery alloc] initWithQuery: self];
+- (TDLiveQuery*) asLiveQuery {
+    return [[TDLiveQuery alloc] initWithQuery: self];
 }
 
 
@@ -132,15 +132,15 @@
 }
 
 
-- (TouchQueryEnumerator*) rows {
+- (TDQueryEnumerator*) rows {
     NSArray* rows = self.run;
     if (!rows)
         return nil;
-    return [[TouchQueryEnumerator alloc] initWithDatabase: _database rows: rows];
+    return [[TDQueryEnumerator alloc] initWithDatabase: _database rows: rows];
 }
 
 
-- (TouchQueryEnumerator*) rowsIfChanged {
+- (TDQueryEnumerator*) rowsIfChanged {
     if (_database.tddb.lastSequence == _lastSequence)
         return nil;
     return self.rows;
@@ -152,19 +152,19 @@
 
 
 
-@implementation TouchLiveQuery
+@implementation TDLiveQuery
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 
-- (TouchQueryEnumerator*) rows {
+- (TDQueryEnumerator*) rows {
     if (!_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(databaseChanged)
-                                                     name: kTouchDatabaseChangeNotification 
+                                                     name: kTDDatabaseChangeNotification 
                                                    object: self.database];
     }
     if (!_rows) {
@@ -176,7 +176,7 @@
 }
 
 
-- (void) setRows:(TouchQueryEnumerator *)rows {
+- (void) setRows:(TDQueryEnumerator *)rows {
     _rows = rows;
 }
 
@@ -191,7 +191,7 @@
 
 - (void) update {
     _updating = NO;
-    TouchQueryEnumerator* rows = super.rows;
+    TDQueryEnumerator* rows = super.rows;
     if (rows && ![rows isEqual: _rows]) {
         Log(@"TDLiveQuery: ...Rows changed! (now %lu)", (unsigned long)rows.count);
         self.rows = rows;   // Triggers KVO notification
@@ -204,13 +204,13 @@
 
 
 
-@implementation TouchQueryEnumerator
+@implementation TDQueryEnumerator
 
 
 @synthesize sequenceNumber=_sequenceNumber;
 
 
-- (id) initWithDatabase: (TouchDatabase*)database
+- (id) initWithDatabase: (TDDatabase*)database
                    rows: (NSArray*)rows
 {
     NSParameterAssert(database);
@@ -234,9 +234,9 @@
 - (BOOL) isEqual:(id)object {
     if (object == self)
         return YES;
-    if (![object isKindOfClass: [TouchQueryEnumerator class]])
+    if (![object isKindOfClass: [TDQueryEnumerator class]])
         return NO;
-    TouchQueryEnumerator* otherEnum = object;
+    TDQueryEnumerator* otherEnum = object;
     return [otherEnum->_rows isEqual: _rows];
 }
 
@@ -246,12 +246,12 @@
 }
 
 
-- (TouchQueryRow*) rowAtIndex: (NSUInteger)index {
-    return [[TouchQueryRow alloc] initWithDatabase: _database result: _rows[index]];
+- (TDQueryRow*) rowAtIndex: (NSUInteger)index {
+    return [[TDQueryRow alloc] initWithDatabase: _database result: _rows[index]];
 }
 
 
-- (TouchQueryRow*) nextRow {
+- (TDQueryRow*) nextRow {
     if (_nextRow >= _rows.count)
         return nil;
     return [self rowAtIndex:_nextRow++];
@@ -268,10 +268,10 @@
 
 
 
-@implementation TouchQueryRow
+@implementation TDQueryRow
 
 
-- (id) initWithDatabase: (TouchDatabase*)database result: (id)result {
+- (id) initWithDatabase: (TDDatabase*)database result: (id)result {
     self = [super init];
     if (self) {
         if (![result isKindOfClass: [NSDictionary class]]) {
@@ -330,11 +330,11 @@
 - (id) key3                         {return [self keyAtIndex: 3];}
 
 
-- (TouchDocument*) document {
+- (TDDocument*) document {
     NSString* docID = self.documentID;
     if (!docID)
         return nil;
-    TouchDocument* doc = [_database documentWithID: docID];
+    TDDocument* doc = [_database documentWithID: docID];
     [doc loadCurrentRevisionFrom: self];
     return doc;
 }

@@ -20,11 +20,11 @@
 #if DEBUG
 
 
-static TouchDatabase* createEmptyDB(void) {
-    TouchDatabaseManager* dbmgr = [TouchDatabaseManager sharedInstance];
+static TDDatabase* createEmptyDB(void) {
+    TDDatabaseManager* dbmgr = [TDDatabaseManager sharedInstance];
     CAssert(dbmgr);
     NSError* error;
-    TouchDatabase* db = [dbmgr databaseNamed: @"test_db"];
+    TDDatabase* db = [dbmgr databaseNamed: @"test_db"];
     if (db)
         CAssert([db deleteDatabase: &error], @"Couldn't delete old test_db: %@", error);
     db = [dbmgr createDatabaseNamed: @"test_db" error: &error];
@@ -33,9 +33,9 @@ static TouchDatabase* createEmptyDB(void) {
 }
 
 
-static TouchDocument* createDocumentWithProperties(TouchDatabase* db,
+static TDDocument* createDocumentWithProperties(TDDatabase* db,
                                                    NSDictionary* properties) {
-    TouchDocument* doc = [db untitledDocument];
+    TDDocument* doc = [db untitledDocument];
     CAssert(doc != nil);
     CAssertNil(doc.currentRevisionID);
     CAssertNil(doc.currentRevision);
@@ -53,7 +53,7 @@ static TouchDocument* createDocumentWithProperties(TouchDatabase* db,
 }
 
 
-static void createDocuments(TouchDatabase* db, unsigned n) {
+static void createDocuments(TDDatabase* db, unsigned n) {
     for (unsigned i=0; i<n; i++) {
         NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
         createDocumentWithProperties(db, properties);
@@ -65,20 +65,20 @@ static void createDocuments(TouchDatabase* db, unsigned n) {
 
 
 TestCase(API_Server) {
-    TouchDatabaseManager* dbmgr = [TouchDatabaseManager sharedInstance];
+    TDDatabaseManager* dbmgr = [TDDatabaseManager sharedInstance];
     CAssert(dbmgr);
     for (NSString* name in dbmgr.allDatabaseNames) {
-        TouchDatabase* db = [dbmgr databaseNamed: name];
+        TDDatabase* db = [dbmgr databaseNamed: name];
         Log(@"Database '%@': %u documents", db.name, (unsigned)db.documentCount);
     }
 }
 
 
 TestCase(API_CreateDocument) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     NSDictionary* properties = @{@"testName": @"testCreateDocument",
                                 @"tag": @1337};
-    TouchDocument* doc = createDocumentWithProperties(db, properties);
+    TDDocument* doc = createDocumentWithProperties(db, properties);
     
     NSString* docID = doc.documentID;
     CAssert(docID.length > 10, @"Invalid doc ID: '%@'", docID);
@@ -92,15 +92,15 @@ TestCase(API_CreateDocument) {
 TestCase(API_CreateRevisions) {
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
                                 @"tag": @1337};
-    TouchDatabase* db = createEmptyDB();
-    TouchDocument* doc = createDocumentWithProperties(db, properties);
-    TouchRevision* rev1 = doc.currentRevision;
+    TDDatabase* db = createEmptyDB();
+    TDDocument* doc = createDocumentWithProperties(db, properties);
+    TDRevision* rev1 = doc.currentRevision;
     CAssert([rev1.revisionID hasPrefix: @"1-"]);
     
     NSMutableDictionary* properties2 = [properties mutableCopy];
     properties2[@"tag"] = @4567;
     NSError* error;
-    TouchRevision* rev2 = [rev1 putProperties: properties2 error: &error];
+    TDRevision* rev2 = [rev1 putProperties: properties2 error: &error];
     CAssert(rev2, @"Put failed: %@", error);
     
     CAssert([doc.currentRevisionID hasPrefix: @"2-"],
@@ -114,22 +114,22 @@ TestCase(API_CreateRevisions) {
 
 #if 0
 TestCase(API_SaveMultipleDocuments) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     NSMutableArray* docs = [NSMutableArray array];
     for (int i=0; i<5; i++) {
         NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
                                     @"testSaveMultipleDocuments", @"testName",
                                     [NSNumber numberWithInt: i], @"sequence",
                                     nil];
-        TouchDocument* doc = createDocumentWithProperties(db, properties);
+        TDDocument* doc = createDocumentWithProperties(db, properties);
         [docs addObject: doc];
     }
     
     NSMutableArray* revisions = [NSMutableArray array];
     NSMutableArray* revisionProperties = [NSMutableArray array];
     
-    for (TouchDocument* doc in docs) {
-        TouchRevision* revision = doc.currentRevision;
+    for (TDDocument* doc in docs) {
+        TDRevision* revision = doc.currentRevision;
         CAssert([revision.revisionID hasPrefix: @"1-"],
                      @"Expected 1st revision: %@ in %@", doc.currentRevisionID, doc);
         NSMutableDictionary* properties = revision.properties.mutableCopy;
@@ -140,7 +140,7 @@ TestCase(API_SaveMultipleDocuments) {
     
     CAssertWait([db putChanges: revisionProperties toRevisions: revisions]);
     
-    for (TouchDocument* doc in docs) {
+    for (TDDocument* doc in docs) {
         CAssert([doc.currentRevisionID hasPrefix: @"2-"],
                      @"Expected 2nd revision: %@ in %@", doc.currentRevisionID, doc);
         CAssertEqual([doc.currentRevision.properties objectForKey: @"misc"],
@@ -150,12 +150,12 @@ TestCase(API_SaveMultipleDocuments) {
 
 
 TestCase(API_SaveMultipleUnsavedDocuments) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     NSMutableArray* docs = [NSMutableArray array];
     NSMutableArray* docProperties = [NSMutableArray array];
     
     for (int i=0; i<5; i++) {
-        TouchDocument* doc = [db untitledDocument];
+        TDDocument* doc = [db untitledDocument];
         [docs addObject: doc];
         [docProperties addObject: [NSDictionary dictionaryWithObject: [NSNumber numberWithInt: i]
                                                               forKey: @"order"]];
@@ -164,7 +164,7 @@ TestCase(API_SaveMultipleUnsavedDocuments) {
     CAssertWait([db putChanges: docProperties toRevisions: docs]);
     
     for (int i=0; i<5; i++) {
-        TouchDocument* doc = [docs objectAtIndex: i];
+        TDDocument* doc = [docs objectAtIndex: i];
         CAssert([doc.currentRevisionID hasPrefix: @"1-"],
                      @"Expected 2nd revision: %@ in %@", doc.currentRevisionID, doc);
         CAssertEqual([doc.currentRevision.properties objectForKey: @"order"],
@@ -174,20 +174,20 @@ TestCase(API_SaveMultipleUnsavedDocuments) {
 
 
 TestCase(API_DeleteMultipleDocuments) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     NSMutableArray* docs = [NSMutableArray array];
     for (int i=0; i<5; i++) {
         NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
                                     @"testDeleteMultipleDocuments", @"testName",
                                     [NSNumber numberWithInt: i], @"sequence",
                                     nil];
-        TouchDocument* doc = createDocumentWithProperties(properties);
+        TDDocument* doc = createDocumentWithProperties(properties);
         [docs addObject: doc];
     }
     
     CAssertWait([db deleteDocuments: docs]);
     
-    for (TouchDocument* doc in docs) {
+    for (TDDocument* doc in docs) {
         CAssert(doc.isDeleted);
     }
     
@@ -196,9 +196,9 @@ TestCase(API_DeleteMultipleDocuments) {
 #endif
 
 TestCase(API_DeleteDocument) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     NSDictionary* properties = @{@"testName": @"testDeleteDocument"};
-    TouchDocument* doc = createDocumentWithProperties(db, properties);
+    TDDocument* doc = createDocumentWithProperties(db, properties);
     CAssert(!doc.isDeleted);
     NSError* error;
     CAssert([doc deleteDocument: &error]);
@@ -207,7 +207,7 @@ TestCase(API_DeleteDocument) {
 
 
 TestCase(API_AllDocuments) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 5;
     createDocuments(db, kNDocs);
 
@@ -215,16 +215,16 @@ TestCase(API_AllDocuments) {
     [db clearDocumentCache];
     
     Log(@"----- all documents -----");
-    TouchQuery* query = [db queryAllDocuments];
+    TDQuery* query = [db queryAllDocuments];
     //query.prefetch = YES;
     Log(@"Getting all documents: %@", query);
     
-    TouchQueryEnumerator* rows = query.rows;
+    TDQueryEnumerator* rows = query.rows;
     CAssertEq(rows.count, kNDocs);
     NSUInteger n = 0;
-    for (TouchQueryRow* row in rows) {
+    for (TDQueryRow* row in rows) {
         Log(@"    --> %@", row);
-        TouchDocument* doc = row.document;
+        TDDocument* doc = row.document;
         CAssert(doc, @"Couldn't get doc from query");
         CAssert(doc.currentRevision.propertiesAreLoaded, @"QueryRow should have preloaded revision contents");
         Log(@"        Properties = %@", doc.properties);
@@ -237,15 +237,15 @@ TestCase(API_AllDocuments) {
 
 
 TestCase(API_RowsIfChanged) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 5;
     createDocuments(db, kNDocs);
     // clear the cache so all documents/revisions will be re-fetched:
     [db clearDocumentCache];
     
-    TouchQuery* query = [db queryAllDocuments];
+    TDQuery* query = [db queryAllDocuments];
     query.prefetch = NO;    // Prefetching prevents view caching, so turn it off
-    TouchQueryEnumerator* rows = query.rows;
+    TDQueryEnumerator* rows = query.rows;
     CAssertEq(rows.count, kNDocs);
     
     // Make sure the query is cached (view eTag hasn't changed):
@@ -259,12 +259,12 @@ TestCase(API_RowsIfChanged) {
 #pragma mark - HISTORY
 
 TestCase(API_History) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     NSMutableDictionary* properties = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                 @"test06_History", @"testName",
                                 @1, @"tag",
                                 nil];
-    TouchDocument* doc = createDocumentWithProperties(db, properties);
+    TDDocument* doc = createDocumentWithProperties(db, properties);
     NSString* rev1ID = [doc.currentRevisionID copy];
     Log(@"1st revision: %@", rev1ID);
     CAssert([rev1ID hasPrefix: @"1-"], @"1st revision looks wrong: '%@'", rev1ID);
@@ -282,12 +282,12 @@ TestCase(API_History) {
     Log(@"Revisions = %@", revisions);
     CAssertEq(revisions.count, 2u);
     
-    TouchRevision* rev1 = revisions[0];
+    TDRevision* rev1 = revisions[0];
     CAssertEqual(rev1.revisionID, rev1ID);
     NSDictionary* gotProperties = rev1.properties;
     CAssertEqual(gotProperties[@"tag"], @1);
     
-    TouchRevision* rev2 = revisions[1];
+    TDRevision* rev2 = revisions[1];
     CAssertEqual(rev2.revisionID, rev2ID);
     CAssertEq(rev2, doc.currentRevision);
     gotProperties = rev2.properties;
@@ -304,25 +304,25 @@ TestCase(API_History) {
 
 
 TestCase(API_Attachments) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
                                 @"testAttachments", @"testName",
                                 nil];
-    TouchDocument* doc = createDocumentWithProperties(db, properties);
-    TouchRevision* rev = doc.currentRevision;
+    TDDocument* doc = createDocumentWithProperties(db, properties);
+    TDRevision* rev = doc.currentRevision;
     
     CAssertEq(rev.attachmentNames.count, (NSUInteger)0);
     CAssertNil([rev attachmentNamed: @"index.html"]);
     
     NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
-    TouchAttachment* attach = [doc putAttachmentWithName: @"index.html"
+    TDAttachment* attach = [doc putAttachmentWithName: @"index.html"
                                                     type: @"text/plain; charset=utf-8"
                                                     body: body];
     CAssert(attach);
     CAssertEq(attach.document, doc);
     CAssertEqual(attach.name, @"index.html");
 
-    TouchRevision* rev2 = attach.revision;
+    TDRevision* rev2 = attach.revision;
     CAssertEq(rev2.document, doc);
     CAssert([rev2.revisionID hasPrefix: @"2-"]);
     Log(@"Now attachments = %@", rev2.attachmentNames);
@@ -342,9 +342,9 @@ TestCase(API_Attachments) {
 
 
 TestCase(API_ChangeTracking) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     __block int changeCount = 0;
-    [[NSNotificationCenter defaultCenter] addObserverForName: kTouchDatabaseChangeNotification
+    [[NSNotificationCenter defaultCenter] addObserverForName: kTDDatabaseChangeNotification
                                                       object: db
                                                        queue: nil
                                                   usingBlock: ^(NSNotification *n) {
@@ -366,9 +366,9 @@ TestCase(API_ChangeTracking) {
 
 
 TestCase(API_CreateView) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
 
-    TouchView* view = [db viewNamed: @"vu"];
+    TDView* view = [db viewNamed: @"vu"];
     CAssert(view);
     CAssertEq(view.database, db);
     CAssertEqual(view.name, @"vu");
@@ -384,16 +384,16 @@ TestCase(API_CreateView) {
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
 
-    TouchQuery* query = [view query];
+    TDQuery* query = [view query];
     CAssertEq(query.database, db);
     query.startKey = @23;
     query.endKey = @33;
-    TouchQueryEnumerator* rows = query.rows;
+    TDQueryEnumerator* rows = query.rows;
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
 
     int expectedKey = 23;
-    for (TouchQueryRow* row in rows) {
+    for (TDQueryRow* row in rows) {
         CAssertEq([row.key intValue], expectedKey);
         ++expectedKey;
     }
@@ -402,20 +402,20 @@ TestCase(API_CreateView) {
 
 #if 0
 TestCase(API_RunSlowView) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 50;
     [self createDocuments: kNDocs];
     
-    TouchQuery* query = [db slowQueryWithMap: @"function(doc){emit(doc.sequence,null);};"];
+    TDQuery* query = [db slowQueryWithMap: @"function(doc){emit(doc.sequence,null);};"];
     query.startKey = [NSNumber numberWithInt: 23];
     query.endKey = [NSNumber numberWithInt: 33];
-    TouchQueryEnumerator* rows = query.rows;
+    TDQueryEnumerator* rows = query.rows;
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
     CAssertEq(rows.totalCount, kNDocs);
     
     int expectedKey = 23;
-    for (TouchQueryRow* row in rows) {
+    for (TDQueryRow* row in rows) {
         CAssertEq([row.key intValue], expectedKey);
         ++expectedKey;
     }
@@ -424,7 +424,7 @@ TestCase(API_RunSlowView) {
 
 
 TestCase(API_Validation) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
 
     [db defineValidation: @"uncool"
                  asBlock: ^BOOL(TD_Revision *newRevision, id<TDValidationContext> context) {
@@ -436,7 +436,7 @@ TestCase(API_Validation) {
                  }];
     
     NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
-    TouchDocument* doc = [db untitledDocument];
+    TDDocument* doc = [db untitledDocument];
     NSError *error;
     CAssert([doc putProperties: properties error: &error]);
     
@@ -449,34 +449,34 @@ TestCase(API_Validation) {
 
 
 TestCase(API_ViewWithLinkedDocs) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 50;
     NSMutableArray* docs = [NSMutableArray array];
     NSString* lastDocID = @"";
     for (NSUInteger i=0; i<kNDocs; i++) {
         NSDictionary* properties = @{ @"sequence" : @(i),
                                       @"prev": lastDocID };
-        TouchDocument* doc = createDocumentWithProperties(db, properties);
+        TDDocument* doc = createDocumentWithProperties(db, properties);
         [docs addObject: doc];
         lastDocID = doc.documentID;
     }
     
     // The map function will emit the ID of the previous document, causing that document to be
     // included when include_docs (aka prefetch) is enabled.
-    TouchQuery* query = [db slowQueryWithMap: ^(NSDictionary *doc, TDMapEmitBlock emit) {
+    TDQuery* query = [db slowQueryWithMap: ^(NSDictionary *doc, TDMapEmitBlock emit) {
         emit(doc[@"sequence"], @{ @"_id": doc[@"prev"] });
     }];
     query.startKey = @23;
     query.endKey = @33;
     query.prefetch = YES;
-    TouchQueryEnumerator* rows = query.rows;
+    TDQueryEnumerator* rows = query.rows;
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
     
     int rowNumber = 23;
-    for (TouchQueryRow* row in rows) {
+    for (TDQueryRow* row in rows) {
         CAssertEq([row.key intValue], rowNumber);
-        TouchDocument* prevDoc = docs[rowNumber-1];
+        TDDocument* prevDoc = docs[rowNumber-1];
         CAssertEqual(row.documentID, prevDoc.documentID);
         CAssertEq(row.document, prevDoc);
         ++rowNumber;
@@ -492,7 +492,7 @@ TestCase(API_ViewWithLinkedDocs) {
                                 @"testCreateDocument", @"testName",
                                 [NSNumber numberWithInt:1337], @"tag",
                                 nil];
-    TouchDocument* doc = createDocumentWithProperties(properties);
+    TDDocument* doc = createDocumentWithProperties(properties);
     
     NSString* docID = doc.documentID;
     CAssert(docID.length > 10, @"Invalid doc ID: '%@'", docID);
@@ -507,7 +507,7 @@ TestCase(API_ViewWithLinkedDocs) {
     NSDictionary *showsJson = [NSDictionary dictionaryWithObject:showFunction forKey:showFunctionName];
     NSString *designDocumentId = @"_design/testPathMap";
     NSDictionary *designDocumentProperties = [NSDictionary dictionaryWithObject:showsJson forKey:@"shows"];
-    TouchDocument *designDocument = [self.db documentWithID:designDocumentId];
+    TDDocument *designDocument = [self.db documentWithID:designDocumentId];
     [[designDocument putProperties:designDocumentProperties] wait];
     
     self.db.documentPathMap = ^(NSString *docId) {
@@ -535,24 +535,24 @@ TestCase(API_ViewWithLinkedDocs) {
 
 
 TestCase(API_ViewOptions) {
-    TouchDatabase* db = createEmptyDB();
+    TDDatabase* db = createEmptyDB();
     createDocuments(db, 5);
 
-    TouchView* view = [db viewNamed: @"vu"];
+    TDView* view = [db viewNamed: @"vu"];
     [view setMapBlock: ^(NSDictionary *doc, TDMapEmitBlock emit) {
         emit(doc[@"_id"], doc[@"_local_seq"]);
     } version: @"1"];
         
-    TouchQuery* query = [view query];
-    TouchQueryEnumerator* rows = query.rows;
-    for (TouchQueryRow* row in rows) {
+    TDQuery* query = [view query];
+    TDQueryEnumerator* rows = query.rows;
+    for (TDQueryRow* row in rows) {
         CAssertEqual(row.value, nil);
         Log(@"row _id = %@, local_seq = %@", row.key, row.value);
     }
     
     query.sequences = YES;
     rows = query.rows;
-    for (TouchQueryRow* row in rows) {
+    for (TDQueryRow* row in rows) {
         CAssert([row.value isKindOfClass: [NSNumber class]], @"Unexpected value: %@", row.value);
         Log(@"row _id = %@, local_seq = %@", row.key, row.value);
     }

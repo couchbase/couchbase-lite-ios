@@ -10,7 +10,7 @@
 @class NSImage;
 
 
-@interface ShoppingItem : TouchModel
+@interface ShoppingItem : TDModel
 {
     NSImage* _picture;
 }

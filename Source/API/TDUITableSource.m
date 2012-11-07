@@ -6,15 +6,15 @@
 //  Copyright 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchUITableSource.h"
+#import "TDUITableSource.h"
 #import "TouchDB.h"
 
 
-@interface TouchUITableSource ()
+@interface TDUITableSource ()
 {
     @private
     UITableView* _tableView;
-    TouchLiveQuery* _query;
+    TDLiveQuery* _query;
 	NSMutableArray* _rows;
     NSString* _labelProperty;
     BOOL _deletionAllowed;
@@ -22,7 +22,7 @@
 @end
 
 
-@implementation TouchUITableSource
+@implementation TDUITableSource
 
 
 - (id)init {
@@ -47,15 +47,15 @@
 @synthesize rows=_rows;
 
 
-- (TouchQueryRow*) rowAtIndex: (NSUInteger)index {
+- (TDQueryRow*) rowAtIndex: (NSUInteger)index {
     return [_rows objectAtIndex: index];
 }
 
 
-- (NSIndexPath*) indexPathForDocument: (TouchDocument*)document {
+- (NSIndexPath*) indexPathForDocument: (TDDocument*)document {
     NSString* documentID = document.documentID;
     NSUInteger index = 0;
-    for (TouchQueryRow* row in _rows) {
+    for (TDQueryRow* row in _rows) {
         if ([row.documentID isEqualToString: documentID])
             return [NSIndexPath indexPathForRow: index inSection: 0];
         ++index;
@@ -64,7 +64,7 @@
 }
 
 
-- (TouchDocument*) documentAtIndexPath: (NSIndexPath*)path {
+- (TDDocument*) documentAtIndexPath: (NSIndexPath*)path {
     if (path.section == 0)
         return [[_rows objectAtIndex: path.row] document];
     return nil;
@@ -81,11 +81,11 @@
 #pragma mark QUERY HANDLING:
 
 
-- (TouchLiveQuery*) query {
+- (TDLiveQuery*) query {
     return _query;
 }
 
-- (void) setQuery:(TouchLiveQuery *)query {
+- (void) setQuery:(TDLiveQuery *)query {
     if (query != _query) {
         [_query removeObserver: self forKeyPath: @"rows"];
         _query = query;
@@ -96,7 +96,7 @@
 
 
 -(void) reloadFromQuery {
-    TouchQueryEnumerator* rowEnum = _query.rows;
+    TDQueryEnumerator* rowEnum = _query.rows;
     if (rowEnum) {
         NSArray *oldRows = _rows;
         _rows = [rowEnum.allObjects mutableCopy];
@@ -130,7 +130,7 @@
 @synthesize labelProperty=_labelProperty;
 
 
-- (NSString*) labelForRow: (TouchQueryRow*)row {
+- (NSString*) labelForRow: (TDQueryRow*)row {
     id value = row.value;
     if (_labelProperty) {
         if ([value isKindOfClass: [NSDictionary class]])
@@ -162,7 +162,7 @@
             cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleDefault
                                           reuseIdentifier: @"TDUITableDelegate"];
         
-        TouchQueryRow* row = [self rowAtIndex: indexPath.row];
+        TDQueryRow* row = [self rowAtIndex: indexPath.row];
         cell.textLabel.text = [self labelForRow: row];
         
         // Allow the delegate to customize the cell:
@@ -217,7 +217,7 @@
 - (void) deleteDocuments: (NSArray*)documents atIndexes: (NSArray*)indexPaths {
     __block NSError* error = nil;
     BOOL ok = [_query.database inTransaction: ^{
-        for (TouchDocument* doc in documents) {
+        for (TDDocument* doc in documents) {
             if (![doc.currentRevision deleteDocument: &error])
                 return NO;
         }

@@ -6,18 +6,18 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchModelFactory.h"
-#import "TouchModel.h"
+#import "TDModelFactory.h"
+#import "TDModel.h"
 #import "TouchDBPrivate.h"
 
 
-@implementation TouchModelFactory
+@implementation TDModelFactory
 
 
-static TouchModelFactory* sSharedInstance;
+static TDModelFactory* sSharedInstance;
 
 
-+ (TouchModelFactory*) sharedInstance {
++ (TDModelFactory*) sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sSharedInstance = [[self alloc] init];
@@ -53,14 +53,14 @@ static TouchModelFactory* sSharedInstance;
 }
 
 
-- (Class) classForDocument: (TouchDocument*)document {
+- (Class) classForDocument: (TDDocument*)document {
     NSString* type = [document propertyForKey: @"type"];
     return type ? [self classForDocumentType: type] : nil;
 }
 
 
-- (id) modelForDocument: (TouchDocument*)document {
-    TouchModel* model = document.modelObject;
+- (id) modelForDocument: (TDDocument*)document {
+    TDModel* model = document.modelObject;
     if (model)
         return model;
     return [[self classForDocument: document] modelForDocument: document];
@@ -72,15 +72,15 @@ static TouchModelFactory* sSharedInstance;
 
 
 
-@implementation TouchDatabase (TouchModelFactory)
+@implementation TDDatabase (TouchModelFactory)
 
-- (TouchModelFactory*) modelFactory {
+- (TDModelFactory*) modelFactory {
     if (!_modelFactory)
-        _modelFactory = [[TouchModelFactory alloc] init];
+        _modelFactory = [[TDModelFactory alloc] init];
     return _modelFactory;
 }
 
-- (void) setModelFactory:(TouchModelFactory *)modelFactory {
+- (void) setModelFactory:(TDModelFactory *)modelFactory {
     _modelFactory = modelFactory;
 }
 

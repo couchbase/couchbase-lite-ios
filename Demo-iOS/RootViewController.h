@@ -19,16 +19,16 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "TouchUITableSource.h"
-@class TouchDatabase, TouchReplication;
+#import "TDUITableSource.h"
+@class TDDatabase, TDReplication;
 
 
 @interface RootViewController : UIViewController <TouchUITableDelegate, UITextFieldDelegate>
 {
-    TouchDatabase *database;
+    TDDatabase *database;
     NSURL* remoteSyncURL;
-    TouchReplication* _pull;
-    TouchReplication* _push;
+    TDReplication* _pull;
+    TDReplication* _push;
     
     UITableView *tableView;
     IBOutlet UIProgressView *progress;
@@ -38,9 +38,9 @@
 }
 
 @property(nonatomic, strong) IBOutlet UITableView *tableView;
-@property(nonatomic, strong) IBOutlet TouchUITableSource* dataSource;
+@property(nonatomic, strong) IBOutlet TDUITableSource* dataSource;
 
--(void)useDatabase:(TouchDatabase*)theDatabase;
+-(void)useDatabase:(TDDatabase*)theDatabase;
 
 - (IBAction)configureSync:(id)sender;
 - (IBAction) deleteCheckedItems:(id)sender;

@@ -18,14 +18,14 @@
 
 
 @interface DemoQuery ()
-- (void) loadEntriesFrom: (TouchQueryEnumerator*)rows;
+- (void) loadEntriesFrom: (TDQueryEnumerator*)rows;
 @end
 
 
 @implementation DemoQuery
 
 
-- (id) initWithQuery: (TouchQuery*)query modelClass: (Class)modelClass {
+- (id) initWithQuery: (TDQuery*)query modelClass: (Class)modelClass {
     NSParameterAssert(query);
     self = [super init];
     if (self != nil) {
@@ -45,13 +45,13 @@
 }
 
 
-- (void) loadEntriesFrom: (TouchQueryEnumerator*)rows {
+- (void) loadEntriesFrom: (TDQueryEnumerator*)rows {
     NSLog(@"Reloading %lu rows from sequence #%lu...",
           (unsigned long)rows.count, (unsigned long)rows.sequenceNumber);
     NSMutableArray* entries = [NSMutableArray array];
 
-    for (TouchQueryRow* row in rows) {
-        TouchModel* item = [_modelClass modelForDocument: row.document];
+    for (TDQueryRow* row in rows) {
+        TDModel* item = [_modelClass modelForDocument: row.document];
         item.autosaves = YES;
         [entries addObject: item];
         // If this item isn't in the prior _entries, it's an external insertion:
@@ -59,7 +59,7 @@
             [item markExternallyChanged];
     }
 
-    for (TouchModel* item in _entries) {
+    for (TDModel* item in _entries) {
         if ([item isNew])
             [entries addObject: item];
     }
@@ -99,12 +99,12 @@
 }
 
 
-- (TouchModel*)objectInEntriesAtIndex: (NSUInteger)index {
+- (TDModel*)objectInEntriesAtIndex: (NSUInteger)index {
     return self._entries[index];
 }
 
 
-- (void) insertObject: (TouchModel*)object inEntriesAtIndex: (NSUInteger)index {
+- (void) insertObject: (TDModel*)object inEntriesAtIndex: (NSUInteger)index {
     [self._entries insertObject: object atIndex: index];
     object.autosaves = YES;
     object.database = _query.database;
@@ -112,7 +112,7 @@
 
 
 - (void) removeObjectFromEntriesAtIndex: (NSUInteger)index {
-    TouchModel* item = self._entries[index];
+    TDModel* item = self._entries[index];
     item.database = nil;
     [_entries removeObjectAtIndex: index];
 }

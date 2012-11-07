@@ -49,9 +49,9 @@ static NSData* ImageJPEGData(NSImage* image);
     if (_picture && picture == _picture)
         return;
     
-    TouchAttachment* attachment = nil;
+    TDAttachment* attachment = nil;
     if (picture)
-        attachment = [[TouchAttachment alloc] initWithContentType: @"image/jpeg"
+        attachment = [[TDAttachment alloc] initWithContentType: @"image/jpeg"
                                                              body: ImageJPEGData(picture)];
     [self addAttachment: attachment named: @"picture"];
     _picture = picture;

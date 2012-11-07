@@ -11,10 +11,10 @@
 #import "TD_Revision.h"
 
 
-NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
+NSString* const kTDDocumentChangeNotification = @"TouchDocumentChange";
 
 
-@implementation TouchDocument
+@implementation TDDocument
 
 
 #if ! TDCACHE_IS_SMART
@@ -22,7 +22,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 #endif
 
 
-- (id)initWithDatabase: (TouchDatabase*)database
+- (id)initWithDatabase: (TDDatabase*)database
             documentID: (NSString*)docID
 {
     self = [super init];
@@ -90,7 +90,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 #pragma mark - REVISIONS:
 
 
-- (TouchRevision*) currentRevision {
+- (TDRevision*) currentRevision {
     if (!_currentRevision) {
         _currentRevision = [self revisionWithID: nil];
     }
@@ -108,40 +108,40 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 }
 
 
-- (TouchRevision*) revisionFromRev: (TD_Revision*)rev {
+- (TDRevision*) revisionFromRev: (TD_Revision*)rev {
     if (!rev)
         return nil;
     else if ($equal(rev.revID, _currentRevision.revisionID))
         return _currentRevision;
     else
-        return [[TouchRevision alloc] initWithDocument: self revision: rev];
+        return [[TDRevision alloc] initWithDocument: self revision: rev];
 }
 
 
-- (TouchRevision*) revisionWithID: (NSString*)revID  {
+- (TDRevision*) revisionWithID: (NSString*)revID  {
     return [self revisionFromRev: [_database.tddb getDocumentWithID: _docID revisionID: revID
                                                             options: 0
                                                              status: NULL]];
 }
 
 
-// Notification from the TouchDatabase that a (current, winning) revision has been added
+// Notification from the TDDatabase that a (current, winning) revision has been added
 - (void) revisionAdded: (TD_Revision*)rev source: (NSURL*)source {
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
-        _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
+        _currentRevision = [[TDRevision alloc] initWithDocument: self revision: rev];
     }
 
-    if ([_modelObject respondsToSelector: @selector(touchDocumentChanged:)])
-        [_modelObject touchDocumentChanged: self];
+    if ([_modelObject respondsToSelector: @selector(tdDocumentChanged:)])
+        [_modelObject tdDocumentChanged: self];
     
-    NSNotification* n = [NSNotification notificationWithName: kTouchDocumentChangeNotification
+    NSNotification* n = [NSNotification notificationWithName: kTDDocumentChangeNotification
                                                       object: self
                                                     userInfo: nil];
     [[NSNotificationCenter defaultCenter] postNotification: n];
 }
 
 
-- (void) loadCurrentRevisionFrom: (TouchQueryRow*)row {
+- (void) loadCurrentRevisionFrom: (TDQueryRow*)row {
     NSString* revID = row.documentRevision;
     if (!revID)
         return;
@@ -150,7 +150,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
         NSDictionary* properties = row.documentProperties;
         if (properties) {
             TD_Revision* rev = [TD_Revision revisionWithProperties: properties];
-            _currentRevision = [[TouchRevision alloc] initWithDocument: self revision: rev];
+            _currentRevision = [[TDRevision alloc] initWithDocument: self revision: rev];
         }
     }
 }
@@ -163,7 +163,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
 
 - (NSArray*) getLeafRevisions: (NSError**)outError includeDeleted: (BOOL)includeDeleted {
     TD_RevisionList* revs = [_database.tddb getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
-    return [revs.allRevisions my_map: ^TouchRevision*(TD_Revision* rev) {
+    return [revs.allRevisions my_map: ^TDRevision*(TD_Revision* rev) {
         if (!includeDeleted && rev.deleted)
             return nil;
         return [self revisionFromRev: rev];
@@ -199,7 +199,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
     return self.currentRevision.userProperties;
 }
 
-- (TouchRevision*) putProperties: (NSDictionary*)properties
+- (TDRevision*) putProperties: (NSDictionary*)properties
                        prevRevID: (NSString*)prevID
                            error: (NSError**)outError
 {
@@ -210,7 +210,7 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
     // Process _attachments dict, converting TouchAttachments to dicts:
     NSDictionary* attachments = properties[@"_attachments"];
     if (attachments.count) {
-        NSDictionary* expanded = [TouchAttachment installAttachmentBodies: attachments
+        NSDictionary* expanded = [TDAttachment installAttachmentBodies: attachments
                                                              intoDatabase: _database];
         if (expanded != attachments) {
             NSMutableDictionary* nuProperties = [properties mutableCopy];
@@ -231,10 +231,10 @@ NSString* const kTouchDocumentChangeNotification = @"TouchDocumentChange";
         if (outError) *outError = TDStatusToNSError(status, nil);
         return nil;
     }
-    return [[TouchRevision alloc] initWithDocument: self revision: rev];
+    return [[TDRevision alloc] initWithDocument: self revision: rev];
 }
 
-- (TouchRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
+- (TDRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
     NSString* prevID = properties[@"_rev"];
     return [self putProperties: properties prevRevID: prevID error: outError];
 }

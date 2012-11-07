@@ -8,8 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
-@class TD_View, TouchDatabase, TouchDocument;
-@class TouchLiveQuery, TouchQueryEnumerator, TouchQueryRow;
+@class TD_View, TDDatabase, TDDocument;
+@class TDLiveQuery, TDQueryEnumerator, TDQueryRow;
 
 
 /** Options for TDQuery.stale property, to allow out-of-date results to be returned. */
@@ -21,10 +21,10 @@ typedef enum {
 
 
 /** Represents a TouchDB 'view', or a view-like resource like _all_documents. */
-@interface TouchQuery : NSObject
+@interface TDQuery : NSObject
 {
     @private
-    TouchDatabase* _database;
+    TDDatabase* _database;
     TD_View* _view;              // nil for _all_docs query
     BOOL _temporaryView;
     NSUInteger _limit, _skip;
@@ -40,7 +40,7 @@ typedef enum {
 }
 
 /** The database that contains this view. */
-@property (readonly) TouchDatabase* database;
+@property (readonly) TDDatabase* database;
 
 /** The maximum number of rows to return. Default value is 0, meaning 'unlimited'. */
 @property NSUInteger limit;
@@ -88,39 +88,39 @@ typedef enum {
 @property (readonly) NSError* error;
 
 /** Sends the query to the server and returns an enumerator over the result rows (Synchronous). */
-- (TouchQueryEnumerator*) rows;
+- (TDQueryEnumerator*) rows;
 
 /** Same as -rows, except returns nil if the query results have not changed since the last time it was evaluated (Synchronous). */
-- (TouchQueryEnumerator*) rowsIfChanged;
+- (TDQueryEnumerator*) rowsIfChanged;
 
 
 /** Returns a live query with the same parameters. */
-- (TouchLiveQuery*) asLiveQuery;
+- (TDLiveQuery*) asLiveQuery;
 
 @end
 
 
 /** A TDQuery subclass that automatically refreshes the result rows every time the database changes.
     All you need to do is watch for changes to the .rows property. */
-@interface TouchLiveQuery : TouchQuery
+@interface TDLiveQuery : TDQuery
 {
     @private
     BOOL _observing, _updating;
-    TouchQueryEnumerator* _rows;
+    TDQueryEnumerator* _rows;
 }
 
 /** In TDLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
-@property (readonly, retain) TouchQueryEnumerator* rows;
+@property (readonly, retain) TDQueryEnumerator* rows;
 
 @end
 
 
 /** Enumerator on a TDQuery's result rows.
     The objects returned are instances of TDQueryRow. */
-@interface TouchQueryEnumerator : NSEnumerator <NSCopying>
+@interface TDQueryEnumerator : NSEnumerator <NSCopying>
 {
     @private
-    TouchDatabase* _database;
+    TDDatabase* _database;
     NSArray* _rows;
     NSUInteger _nextRow;
     NSUInteger _sequenceNumber;
@@ -133,19 +133,19 @@ typedef enum {
 @property (readonly) NSUInteger sequenceNumber;
 
 /** The next result row. This is the same as -nextObject but with a checked return type. */
-- (TouchQueryRow*) nextRow;
+- (TDQueryRow*) nextRow;
 
 /** Random access to a row in the result */
-- (TouchQueryRow*) rowAtIndex: (NSUInteger)index;
+- (TDQueryRow*) rowAtIndex: (NSUInteger)index;
 
 @end
 
 
 /** A result row from a TouchDB view query. */
-@interface TouchQueryRow : NSObject
+@interface TDQueryRow : NSObject
 {
     @private
-    TouchDatabase* _database;
+    TDDatabase* _database;
     id _result;
 }
 
@@ -166,7 +166,7 @@ typedef enum {
 
 /** The document this row was mapped from.
     This will be nil if a grouping was enabled in the query, because then the result rows don't correspond to individual documents. */
-@property (readonly) TouchDocument* document;
+@property (readonly) TDDocument* document;
 
 /** The properties of the document this row was mapped from.
     To get this, you must have set the -prefetch property on the query; else this will be nil. */

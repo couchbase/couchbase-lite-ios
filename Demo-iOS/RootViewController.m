@@ -29,7 +29,7 @@
 
 
 @interface RootViewController ()
-@property(nonatomic, strong)TouchDatabase *database;
+@property(nonatomic, strong)TDDatabase *database;
 @property(nonatomic, strong)NSURL* remoteSyncURL;
 @end
 
@@ -67,7 +67,7 @@
 
     // Create a query sorted by descending date, i.e. newest items first:
     NSAssert(database!=nil, @"Not hooked up to database yet");
-    TouchLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
+    TDLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
     query.descending = YES;
     
     self.dataSource.query = query;
@@ -89,7 +89,7 @@
 }
 
 
-- (void)useDatabase:(TouchDatabase*)theDatabase {
+- (void)useDatabase:(TDDatabase*)theDatabase {
     self.database = theDatabase;
     
     // Create a 'view' containing list items sorted by date:
@@ -124,9 +124,9 @@
 
 
 // Customize the appearance of table view cells.
-- (void)couchTableSource:(TouchUITableSource*)source
+- (void)couchTableSource:(TDUITableSource*)source
              willUseCell:(UITableViewCell*)cell
-                  forRow:(TouchQueryRow*)row
+                  forRow:(TDQueryRow*)row
 {
     // Set the cell background and font:
     cell.backgroundColor = [UIColor whiteColor];
@@ -155,8 +155,8 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    TouchQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
-    TouchDocument *doc = [row document];
+    TDQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
+    TDDocument *doc = [row document];
 
     // Toggle the document's 'checked' property:
     NSMutableDictionary *docContent = [doc.properties mutableCopy];
@@ -177,8 +177,8 @@
 - (NSArray*)checkedDocuments {
     // If there were a whole lot of documents, this would be more efficient with a custom query.
     NSMutableArray* checked = [NSMutableArray array];
-    for (TouchQueryRow* row in self.dataSource.rows) {
-        TouchDocument* doc = row.document;
+    for (TDQueryRow* row in self.dataSource.rows) {
+        TDDocument* doc = row.document;
         if ([[doc.properties valueForKey:@"check"] boolValue])
             [checked addObject: doc];
     }
@@ -240,7 +240,7 @@
                                 nil];
 
     // Save the document:
-    TouchDocument* doc = [database untitledDocument];
+    TDDocument* doc = [database untitledDocument];
     NSError* error;
     if (![doc putProperties: inDocument error: &error]) {
         [self showErrorAlert: @"Couldn't save new item" forError: error];
@@ -273,9 +273,9 @@
     _push = [repls objectAtIndex: 1];
     NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
     [nctr addObserver: self selector: @selector(replicationProgress:)
-                 name: kTouchReplicationChangeNotification object: _pull];
+                 name: kTDReplicationChangeNotification object: _pull];
     [nctr addObserver: self selector: @selector(replicationProgress:)
-                 name: kTouchReplicationChangeNotification object: _push];
+                 name: kTDReplicationChangeNotification object: _push];
 }
 
 
@@ -322,7 +322,7 @@
 
 
 - (void) replicationProgress: (NSNotificationCenter*)n {
-    if (_pull.mode == kTouchReplicationActive || _push.mode == kTouchReplicationActive) {
+    if (_pull.mode == kTDReplicationActive || _push.mode == kTDReplicationActive) {
         unsigned completed = _pull.completed + _push.completed;
         unsigned total = _pull.total + _push.total;
         NSLog(@"SYNC progress: %u / %u", completed, total);

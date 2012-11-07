@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import <Cocoa/Cocoa.h>
-@class TouchDatabase, TouchReplication, DemoQuery;
+@class TDDatabase, TDReplication, DemoQuery;
 
 
 /** Generic application delegate for simple Mac OS TouchDB demo apps.
@@ -33,10 +33,10 @@
     IBOutlet NSTextField* _syncURLField;
     IBOutlet NSButtonCell* _syncPushCheckbox, *_syncPullCheckbox;
     
-    TouchDatabase* _database;
+    TDDatabase* _database;
     DemoQuery* _query;
     BOOL _syncConfiguringDefault;
-    TouchReplication *_pull, *_push;
+    TDReplication *_pull, *_push;
     BOOL _glowing;
 }
 

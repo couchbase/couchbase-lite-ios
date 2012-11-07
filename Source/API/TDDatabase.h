@@ -1,5 +1,5 @@
 //
-//  TouchDatabase.h
+//  TDDatabase.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/17/12.
@@ -9,25 +9,25 @@
 #import <Foundation/Foundation.h>
 #import "TD_Database+Insertion.h"
 #import "TD_View.h"
-@class TouchDatabaseManager, TouchDocument, TouchView, TouchQuery, TouchReplication, TouchModelFactory;
+@class TDDatabaseManager, TDDocument, TDView, TDQuery, TDReplication, TDModelFactory;
 @class TD_Database, TDCache;
 
 
 /** A TouchDB database. */
-@interface TouchDatabase : NSObject
+@interface TDDatabase : NSObject
 {
     @private
-    TouchDatabaseManager* _manager;
+    TDDatabaseManager* _manager;
     TD_Database* _tddb;    
     TDCache* _docCache;
-    TouchModelFactory* _modelFactory;   // used in category method in TouchModelFactory.m
+    TDModelFactory* _modelFactory;   // used in category method in TDModelFactory.m
 }
 
 /** The database's name. */
 @property (readonly) NSString* name;
 
 /** The database manager that owns this database. */
-@property (readonly) TouchDatabaseManager* manager;
+@property (readonly) TDDatabaseManager* manager;
 
 - (BOOL) deleteDatabase: (NSError**)outError;
 
@@ -38,17 +38,17 @@
     Doesn't touch the on-disk database; a document with that ID doesn't even need to exist yet.
     TDDocuments are cached, so there will never be more than one instance (in this database)
     at a time with the same documentID. */
-- (TouchDocument*) documentWithID: (NSString*)docID;
+- (TDDocument*) documentWithID: (NSString*)docID;
 
 /** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
-- (TouchDocument*)objectForKeyedSubscript: (NSString*)key;
+- (TDDocument*)objectForKeyedSubscript: (NSString*)key;
 
 /** Creates a TDDocument object with no current ID.
     The first time you PUT to that document, it will be created on the server (via a POST). */
-- (TouchDocument*) untitledDocument;
+- (TDDocument*) untitledDocument;
 
 /** Returns the already-instantiated cached TouchDocument with the given ID, or nil if none is yet cached. */
-- (TouchDocument*) cachedDocumentWithID: (NSString*)docID;
+- (TDDocument*) cachedDocumentWithID: (NSString*)docID;
 
 /** Empties the cache of recently used TDDocument objects.
     API calls will now instantiate and return new instances. */
@@ -56,13 +56,13 @@
 
 
 /** Returns a query that matches all documents in the database. */
-- (TouchQuery*) queryAllDocuments;
+- (TDQuery*) queryAllDocuments;
 
-- (TouchQuery*) slowQueryWithMap: (TDMapBlock)mapBlock;
+- (TDQuery*) slowQueryWithMap: (TDMapBlock)mapBlock;
 
 /** Returns a TouchView object for the view with the given name.
     (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the TouchView is assigned a map function.) */
-- (TouchView*) viewNamed: (NSString*)name;
+- (TDView*) viewNamed: (NSString*)name;
 
 /** An array of all existing views. */
 @property (readonly) NSArray* allViews;
@@ -83,17 +83,17 @@
 - (BOOL) inTransaction: (BOOL(^)(void))block;
 
 
-- (TouchReplication*) pushToURL: (NSURL*)url;
-- (TouchReplication*) pullFromURL: (NSURL*)url;
+- (TDReplication*) pushToURL: (NSURL*)url;
+- (TDReplication*) pullFromURL: (NSURL*)url;
 - (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
 
 
 @end
 
 
-/** This notification is posted by a TouchDatabase in response to document changes.
+/** This notification is posted by a TDDatabase in response to document changes.
     Only one notification is posted per runloop cycle, no matter how many documents changed.
-    If a change was not made by a TouchDocument belonging to this TouchDatabase (i.e. it came
+    If a change was not made by a TouchDocument belonging to this TDDatabase (i.e. it came
     from another process or from a "pull" replication), the notification's userInfo dictionary will
     contain an "external" key with a value of YES. */
-extern NSString* const kTouchDatabaseChangeNotification;
+extern NSString* const kTDDatabaseChangeNotification;

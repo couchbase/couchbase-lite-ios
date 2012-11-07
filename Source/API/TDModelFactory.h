@@ -6,26 +6,26 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchDatabase.h"
-@class TouchDocument;
+#import "TDDatabase.h"
+@class TDDocument;
 
 
 /** A configurable mapping from TouchDocument to TouchModel.
     It associates a model class with a value of the document's "type" property. */
-@interface TouchModelFactory : NSObject
+@interface TDModelFactory : NSObject
 {
     NSMutableDictionary* _typeDict;
 }
 
 /** Returns a global shared TouchModelFactory that's consulted by all databases.
     Mappings registered in this instance will be used as a fallback by all other instances if they don't have their own. */
-+ (TouchModelFactory*) sharedInstance;
++ (TDModelFactory*) sharedInstance;
 
 /** Given a document, attempts to return a TouchModel for it.
     If the document's modelObject property is set, it returns that value.
     If the document's "type" property has been registered, instantiates the associated class.
     Otherwise returns nil. */
-- (id) modelForDocument: (TouchDocument*)document;
+- (id) modelForDocument: (TDDocument*)document;
 
 /** Associates a value of the "type" property with a TouchModel subclass.
     @param classOrName  Either a TouchModel subclass, or its class name as an NSString.
@@ -34,7 +34,7 @@
 
 /** Returns the appropriate TouchModel subclass for this document.
     The default implementation just passes the document's "type" property value to -classForDocumentType:, but subclasses could override this to use different properties (or even the document ID) to decide. */
-- (Class) classForDocument: (TouchDocument*)document;
+- (Class) classForDocument: (TDDocument*)document;
 
 /** Looks up the TouchModel subclass that's been registered for a document type. */
 - (Class) classForDocumentType: (NSString*)type;
@@ -42,9 +42,9 @@
 @end
 
 
-@interface TouchDatabase (TouchModelFactory)
+@interface TDDatabase (TouchModelFactory)
 
 /** The TouchModel factory object to be used by this database.
     Every database has its own instance by default, but you can set this property to use a different one -- either to use a custom subclass, or to share a factory among multiple databases, or both. */
-@property (retain) TouchModelFactory* modelFactory;
+@property (retain) TDModelFactory* modelFactory;
 @end

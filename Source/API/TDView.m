@@ -10,10 +10,10 @@
 #import "TD_View.h"
 
 
-@implementation TouchView
+@implementation TDView
 
 
-- (id)initWithDatabase: (TouchDatabase*)database view: (TD_View*)view {
+- (id)initWithDatabase: (TDDatabase*)database view: (TD_View*)view {
     self = [super init];
     if (self) {
         _database = database;
@@ -54,8 +54,8 @@
     return [self setMapBlock: mapBlock reduceBlock: nil version: version];
 }
 
-- (TouchQuery*) query {
-    return [[TouchQuery alloc] initWithDatabase: _database view: _view];
+- (TDQuery*) query {
+    return [[TDQuery alloc] initWithDatabase: _database view: _view];
 }
 
 

@@ -7,19 +7,19 @@
 //
 
 #import "TD_View.h"
-@class TouchDatabase, TouchQuery, TD_View;
+@class TDDatabase, TDQuery, TD_View;
 
 
 /** A "view" in a TouchDB database -- this is a type of map/reduce index.
     The view can be queried using a TouchQuery. */
-@interface TouchView : NSObject
+@interface TDView : NSObject
 {
     @private
-    TouchDatabase* _database;
+    TDDatabase* _database;
     TD_View* _view;
 }
 
-@property (readonly) TouchDatabase* database;
+@property (readonly) TDDatabase* database;
 
 @property (readonly) NSString* name;
 
@@ -40,6 +40,6 @@
 - (BOOL) setMapBlock: (TDMapBlock)mapBlock
              version: (NSString*)version;
 
-- (TouchQuery*) query;
+- (TDQuery*) query;
 
 @end

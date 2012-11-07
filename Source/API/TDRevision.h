@@ -7,22 +7,22 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TouchDocument, TD_Revision, TouchDatabase, TouchAttachment;
+@class TDDocument, TD_Revision, TDDatabase, TDAttachment;
 
 
-/** A revision of a document. */
-@interface TouchRevision : NSObject
+/** A revision of a TDDocument. */
+@interface TDRevision : NSObject
 {
     @private
-    TouchDocument* _document;
+    TDDocument* _document;
     TD_Revision* _rev;
     BOOL _checkedProperties;
 }
 
 /** The document this is a revision of. */
-@property (readonly) TouchDocument* document;
+@property (readonly) TDDocument* document;
 
-@property (readonly) TouchDatabase* database;
+@property (readonly) TDDatabase* database;
 
 /** The ID of this revision. */
 @property (readonly) NSString* revisionID;
@@ -53,11 +53,11 @@
 
 /** Saves a new revision with the given properties.
     This will fail with a 412 error if the receiver is not the current revision of the document. */
-- (TouchRevision*) putProperties: (NSDictionary*)properties
+- (TDRevision*) putProperties: (NSDictionary*)properties
                            error: (NSError**)outError;
 
 /** Deletes the document by creating a new deletion-marker revision. */
-- (TouchRevision*) deleteDocument: (NSError**)outError;
+- (TDRevision*) deleteDocument: (NSError**)outError;
 
 #pragma mark - HISTORY:
 
@@ -69,7 +69,7 @@
 @property (readonly) NSArray* attachmentNames;
 
 /** Looks up the attachment with the given name (without fetching its contents yet). */
-- (TouchAttachment*) attachmentNamed: (NSString*)name;
+- (TDAttachment*) attachmentNamed: (NSString*)name;
 
 /** All attachments, as TouchAttachment objects. */
 @property (readonly) NSArray* attachments;

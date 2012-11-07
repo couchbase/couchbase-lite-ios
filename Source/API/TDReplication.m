@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TouchReplication.h"
+#import "TDReplication.h"
 #import "TouchDBPrivate.h"
 
 #import "TDPusher.h"
@@ -19,24 +19,24 @@
 #undef RUN_IN_BACKGROUND
 
 
-NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
+NSString* const kTDReplicationChangeNotification = @"TouchReplicationChange";
 
 
-@interface TouchReplication ()
+@interface TDReplication ()
 @property (copy) id source, target;  // document properties
 
 @property (nonatomic, readwrite) bool running;
-@property (nonatomic, readwrite) TouchReplicationMode mode;
+@property (nonatomic, readwrite) TDReplicationMode mode;
 @property (nonatomic, readwrite) unsigned completed, total;
 @property (nonatomic, readwrite, retain) NSError* error;
 @end
 
 
-@implementation TouchReplication
+@implementation TDReplication
 
 
 // Instantiate a new non-persistent replication
-- (id) initWithDatabase: (TouchDatabase*)database
+- (id) initWithDatabase: (TDDatabase*)database
                  remote: (NSURL*)remote
                    pull: (BOOL)pull
 {
@@ -58,7 +58,7 @@ NSString* const kTouchReplicationChangeNotification = @"TouchReplicationChange";
 
 
 // Instantiate a persistent replication from an existing document in the _replicator db
-- (id) initWithDocument:(TouchDocument *)document {
+- (id) initWithDocument:(TDDocument *)document {
     self = [super initWithDocument: document];
     if (self) {
         self.autosaves = YES;  // turn on autosave for all persistent replications
@@ -148,7 +148,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
-- (TouchDatabase*) localDatabase {
+- (TDDatabase*) localDatabase {
     NSString* name = self.sourceURLStr;
     if (!isLocalDBName(name))
         name = self.targetURLStr;
@@ -250,7 +250,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 @synthesize running = _running, completed=_completed, total=_total, error = _error, mode=_mode;
 
 
-- (void) updateMode: (TouchReplicationMode)mode
+- (void) updateMode: (TDReplicationMode)mode
               error: (NSError*)error
           processed: (NSUInteger)changesProcessed
             ofTotal: (NSUInteger)changesTotal
@@ -260,7 +260,7 @@ static inline BOOL isLocalDBName(NSString* url) {
         self.mode = mode;
         changed = YES;
     }
-    BOOL running = (mode > kTouchReplicationStopped);
+    BOOL running = (mode > kTDReplicationStopped);
     if (running != _running) {
         self.running = running;
         changed = YES;
@@ -279,7 +279,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     }
     if (changed) {
         [[NSNotificationCenter defaultCenter]
-                        postNotificationName: kTouchReplicationChangeNotification object: self];
+                        postNotificationName: kTDReplicationChangeNotification object: self];
     }
 }
 
@@ -337,13 +337,13 @@ static inline BOOL isLocalDBName(NSString* url) {
     }
     
     // OK, this is my replication, so get its state:
-    TouchReplicationMode mode;
+    TDReplicationMode mode;
     if (!tdReplicator.running)
-        mode = kTouchReplicationStopped;
+        mode = kTDReplicationStopped;
     else if (!tdReplicator.online)
-        mode = kTouchReplicationOffline;
+        mode = kTDReplicationOffline;
     else
-        mode = tdReplicator.active ? kTouchReplicationActive : kTouchReplicationIdle;
+        mode = tdReplicator.active ? kTDReplicationActive : kTDReplicationIdle;
     
     // Communicate its state back to the main thread:
     MYOnThread(_mainThread, ^{
@@ -353,7 +353,7 @@ static inline BOOL isLocalDBName(NSString* url) {
                  ofTotal: tdReplicator.changesTotal];
     });
     
-    if (_bg_replicator && mode == kTouchReplicationStopped) {
+    if (_bg_replicator && mode == kTDReplicationStopped) {
         [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: _bg_replicator];
         _bg_replicator = nil;
     }
