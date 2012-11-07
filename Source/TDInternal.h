@@ -6,24 +6,24 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TDDatabase.h>
-#import "TDDatabase+Attachments.h"
-#import "TDDatabaseManager.h"
-#import "TDView.h"
-#import "TDServer.h"
+#import <TouchDB/TD_Database.h>
+#import "TD_Database+Attachments.h"
+#import "TD_DatabaseManager.h"
+#import "TD_View.h"
+#import "TD_Server.h"
 #import "TDRouter.h"
 #import "TDReplicator.h"
 #import "TDRemoteRequest.h"
 #import "TDBlobStore.h"
-@class TDAttachment;
+@class TD_Attachment;
 
 
-@interface TDDatabase ()
+@interface TD_Database ()
 @property (readwrite, copy) NSString* name;  // make it settable
 @property (readonly) FMDatabase* fmdb;
 @property (readonly) TDBlobStore* attachmentStore;
 - (SInt64) getDocNumericID: (NSString*)docID;
-- (TDRevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+- (TD_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       numericID: (SInt64)docNumericID
                                     onlyCurrent: (BOOL)onlyCurrent;
 - (TDStatus) deleteViewNamed: (NSString*)name;
@@ -37,26 +37,26 @@
                                isDeleted: (BOOL*)outIsDeleted;
 @end
 
-@interface TDDatabase (Insertion_Internal)
-- (NSData*) encodeDocumentJSON: (TDRevision*)rev;
-- (TDStatus) validateRevision: (TDRevision*)newRev previousRevision: (TDRevision*)oldRev;
+@interface TD_Database (Insertion_Internal)
+- (NSData*) encodeDocumentJSON: (TD_Revision*)rev;
+- (TDStatus) validateRevision: (TD_Revision*)newRev previousRevision: (TD_Revision*)oldRev;
 @end
 
-@interface TDDatabase (Attachments_Internal)
+@interface TD_Database (Attachments_Internal)
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
 #if DEBUG
 - (id) attachmentWriterForAttachment: (NSDictionary*)attachment;
 #endif
 - (BOOL) storeBlob: (NSData*)blob creatingKey: (TDBlobKey*)outKey;
-- (TDStatus) insertAttachment: (TDAttachment*)attachment
+- (TDStatus) insertAttachment: (TD_Attachment*)attachment
                   forSequence: (SequenceNumber)sequence;
 - (TDStatus) copyAttachmentNamed: (NSString*)name
                     fromSequence: (SequenceNumber)fromSequence
                       toSequence: (SequenceNumber)toSequence;
-- (BOOL) inlineFollowingAttachmentsIn: (TDRevision*)rev error: (NSError**)outError;
+- (BOOL) inlineFollowingAttachmentsIn: (TD_Revision*)rev error: (NSError**)outError;
 @end
 
-@interface TDDatabase (Replication_Internal)
+@interface TD_Database (Replication_Internal)
 - (void) stopAndForgetReplicator: (TDReplicator*)repl;
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;
@@ -64,33 +64,33 @@
 @end
 
 
-@interface TDView ()
-- (id) initWithDatabase: (TDDatabase*)db name: (NSString*)name;
+@interface TD_View ()
+- (id) initWithDatabase: (TD_Database*)db name: (NSString*)name;
 @property (readonly) int viewID;
 - (NSArray*) dump;
 - (void) databaseClosing;
 @end
 
 
-@interface TDServer ()
+@interface TD_Server ()
 #if DEBUG
-+ (TDServer*) createEmptyAtPath: (NSString*)path;  // for testing
-+ (TDServer*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
++ (TD_Server*) createEmptyAtPath: (NSString*)path;  // for testing
++ (TD_Server*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
 @end
 
 
-@interface TDDatabaseManager ()
+@interface TD_DatabaseManager ()
 @property (readonly, nonatomic) TDReplicatorManager* replicatorManager;
 #if DEBUG
-+ (TDDatabaseManager*) createEmptyAtPath: (NSString*)path;  // for testing
-+ (TDDatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
++ (TD_DatabaseManager*) createEmptyAtPath: (NSString*)path;  // for testing
++ (TD_DatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
 @end
 
 
 @interface TDRouter ()
-- (id) initWithDatabaseManager: (TDDatabaseManager*)dbManager request: (NSURLRequest*)request;
+- (id) initWithDatabaseManager: (TD_DatabaseManager*)dbManager request: (NSURLRequest*)request;
 @end
 
 
@@ -100,9 +100,9 @@
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
 - (void) maybeCreateRemoteDB;
 - (void) beginReplicating;
-- (void) addToInbox: (TDRevision*)rev;
-- (void) addRevsToInbox: (TDRevisionList*)revs;
-- (void) processInbox: (TDRevisionList*)inbox;  // override this
+- (void) addToInbox: (TD_Revision*)rev;
+- (void) addRevsToInbox: (TD_RevisionList*)revs;
+- (void) processInbox: (TD_RevisionList*)inbox;  // override this
 - (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)relativePath
                                      body: (id)body

@@ -1,5 +1,5 @@
 //
-//  TDBody.h
+//  TD_Body.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/19/10.
@@ -10,7 +10,7 @@
 
 
 /** A request/response/document body, stored as either JSON or an NSDictionary. */
-@interface TDBody : NSObject 
+@interface TD_Body : NSObject 
 {
     @private
     NSData* _json;
@@ -22,8 +22,8 @@
 - (id) initWithArray: (NSArray*)array;
 - (id) initWithJSON: (NSData*)json;
 
-+ (TDBody*) bodyWithProperties: (id)properties;
-+ (TDBody*) bodyWithJSON: (NSData*)json;
++ (TD_Body*) bodyWithProperties: (id)properties;
++ (TD_Body*) bodyWithJSON: (NSData*)json;
 
 @property (readonly) BOOL isValidJSON;
 @property (readonly) NSData* asJSON;

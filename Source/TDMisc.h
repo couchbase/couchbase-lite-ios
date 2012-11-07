@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <TouchDB/TDRevision.h>
+#import <TouchDB/TD_Revision.h>
 
 extern NSString* const TDHTTPErrorDomain;
 

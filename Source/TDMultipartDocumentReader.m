@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "TDMultipartDocumentReader.h"
-#import "TDDatabase+Attachments.h"
+#import "TD_Database+Attachments.h"
 #import "TDBlobStore.h"
 #import "TDInternal.h"
 #import "TDBase64.h"
@@ -28,7 +28,7 @@
 
 + (NSDictionary*) readData: (NSData*)data
                     ofType: (NSString*)contentType
-                toDatabase: (TDDatabase*)database
+                toDatabase: (TD_Database*)database
                     status: (TDStatus*)outStatus
 {
     if (data.length == 0) {
@@ -48,7 +48,7 @@
 }
 
 
-- (id) initWithDatabase: (TDDatabase*)database
+- (id) initWithDatabase: (TD_Database*)database
 {
     Assert(database);
     self = [super init];
@@ -137,7 +137,7 @@
 
 + (TDStatus) readStream: (NSInputStream*)stream
                  ofType: (NSString*)contentType
-             toDatabase: (TDDatabase*)database
+             toDatabase: (TD_Database*)database
                    then: (TDMultipartDocumentReaderCompletionBlock)onCompletion
 {
     TDMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];

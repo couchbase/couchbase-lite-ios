@@ -1,11 +1,11 @@
 # Symbols exported by the framework
-.objc_class_name_TDDatabase
-.objc_class_name_TDView
+.objc_class_name_TD_Database
+.objc_class_name_TD_View
 .objc_class_name_TDBlobStore
 .objc_class_name_TDBlobStoreWriter
-.objc_class_name_TDBody
-.objc_class_name_TDRevision
-.objc_class_name_TDRevisionList
+.objc_class_name_TD_Body
+.objc_class_name_TD_Revision
+.objc_class_name_TD_RevisionList
 
 .objc_class_name_TDReplicator
 .objc_class_name_TDPusher
@@ -13,15 +13,15 @@
 
 .objc_class_name_TDURLProtocol
 .objc_class_name_TDRouter
-.objc_class_name_TDServer
-.objc_class_name_TDDatabaseManager
+.objc_class_name_TD_Server
+.objc_class_name_TD_DatabaseManager
 
 _TDStatusToHTTPStatus
 _TDStatusToNSError
 
-_TDDatabaseChangeNotification
-_TDDatabaseWillCloseNotification
+_TD_DatabaseChangeNotification
+_TD_DatabaseWillCloseNotification
 _TDReplicatorProgressChangedNotification
 _TDReplicatorStoppedNotification
 
-_kTDDatabaseManagerDefaultOptions
+_kTD_DatabaseManagerDefaultOptions

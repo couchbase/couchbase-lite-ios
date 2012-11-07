@@ -7,16 +7,16 @@
 //
 
 #import "TDC.h"
-#import "TDBody.h"
+#import "TD_Body.h"
 #import "TDRouter.h"
-#import "TDServer.h"
+#import "TD_Server.h"
 #import "Test.h"
 #import <string.h>
 
 
 static NSLock* sLock;
 static NSString* sServerDir;
-static TDServer* sServer;
+static TD_Server* sServer;
 
 
 static NSString* CToNSString(const char* str) {
@@ -159,11 +159,11 @@ static TDResponse* RunRequest(NSURLRequest* request) {
     assert(sLock);
     [sLock lock];
     @try {
-        // Create TDServer on first call:
+        // Create TD_Server on first call:
         if (!sServer) {
             assert(sServerDir);
             NSError* error;
-            sServer = [[TDServer alloc] initWithDirectory: sServerDir error: &error];
+            sServer = [[TD_Server alloc] initWithDirectory: sServerDir error: &error];
             if (!sServer) {
                 Warn(@"Unable to create TouchDB server: %@", error);
                 return nil;

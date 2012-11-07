@@ -14,9 +14,9 @@
 //  and limitations under the License.
 
 #import "TDPuller.h"
-#import "TDDatabase+Insertion.h"
-#import "TDDatabase+Replication.h"
-#import <TouchDB/TDRevision.h>
+#import "TD_Database+Insertion.h"
+#import "TD_Database+Replication.h"
+#import <TouchDB/TD_Revision.h>
 #import "TDChangeTracker.h"
 #import "TDAuthorizer.h"
 #import "TDBatcher.h"
@@ -171,7 +171,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             // Process each change from the feed:
             NSString* remoteSequenceID = [change[@"seq"] description];
             NSString* docID = change[@"id"];
-            if (!docID || ![TDDatabase isValidDocumentID: docID])
+            if (!docID || ![TD_Database isValidDocumentID: docID])
                 continue;
             
             BOOL deleted = [change[@"deleted"] isEqual: (id)kCFBooleanTrue];
@@ -238,7 +238,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 // Process a bunch of remote revisions from the _changes feed at once
-- (void) processInbox: (TDRevisionList*)inbox {
+- (void) processInbox: (TD_RevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     NSString* lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
@@ -286,7 +286,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 // Add a revision to the appropriate queue of revs to individually GET
-- (void) queueRemoteRevision: (TDRevision*)rev {
+- (void) queueRemoteRevision: (TD_Revision*)rev {
     if (rev.deleted)
     {
         if (!_deletedRevsToPull)
@@ -336,7 +336,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Fetches the contents of a revision from the remote db, including its parent revision ID.
 // The contents are stored into rev.properties.
-- (void) pullRemoteRevision: (TDRevision*)rev
+- (void) pullRemoteRevision: (TD_Revision*)rev
 {
     [self asyncTaskStarted];
     ++_httpConnectionCount;
@@ -370,7 +370,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 [strongSelf revisionFailed];
                 strongSelf.changesProcessed++;
             } else {
-                TDRevision* gotRev = [TDRevision revisionWithProperties: download.document];
+                TD_Revision* gotRev = [TD_Revision revisionWithProperties: download.document];
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [_downloadsToInsert queueObject: gotRev];
@@ -403,7 +403,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
-    NSArray* keys = [bulkRevs my_map: ^(TDRevision* rev) { return rev.docID; }];
+    NSArray* keys = [bulkRevs my_map: ^(TD_Revision* rev) { return rev.docID; }];
     [self sendAsyncRequest: @"POST"
                       path: @"/_all_docs?include_docs=true"
                       body: $dict({@"keys", keys})
@@ -422,7 +422,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       for (NSDictionary* row in rows) {
                           NSDictionary* doc = $castIf(NSDictionary, row[@"doc"]);
                           if (doc && !doc[@"_attachments"]) {
-                              TDRevision* rev = [TDRevision revisionWithProperties: doc];
+                              TD_Revision* rev = [TD_Revision revisionWithProperties: doc];
                               NSUInteger pos = [remainingRevs indexOfObject: rev];
                               if (pos != NSNotFound) {
                                   rev.sequence = [remainingRevs[pos] sequence];
@@ -438,7 +438,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   if (remainingRevs.count) {
                       LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
                             self, (unsigned)remainingRevs.count, (unsigned)nRevs);
-                      for (TDRevision* rev in remainingRevs)
+                      for (TD_Revision* rev in remainingRevs)
                           [self queueRemoteRevision: rev];
                       [self pullRemoteRevisions];
                   }
@@ -462,10 +462,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     BOOL success = NO;
     @try{
         downloads = [downloads sortedArrayUsingSelector: @selector(compareSequences:)];
-        for (TDRevision* rev in downloads) {
+        for (TD_Revision* rev in downloads) {
             @autoreleasepool {
                 SequenceNumber fakeSequence = rev.sequence;
-                NSArray* history = [TDDatabase parseCouchDBRevisionHistory: rev.properties];
+                NSArray* history = [TD_Database parseCouchDBRevisionHistory: rev.properties];
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
                     self.error = TDStatusToNSError(kTDStatusUpstreamError, nil);

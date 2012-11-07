@@ -8,7 +8,7 @@
 
 #import "TDMultipartReader.h"
 #import <TouchDB/TDStatus.h>
-@class TDDatabase, TDRevision, TDBlobStoreWriter, TDMultipartDocumentReader;
+@class TD_Database, TD_Revision, TDBlobStoreWriter, TDMultipartDocumentReader;
 
 
 typedef void(^TDMultipartDocumentReaderCompletionBlock)(TDMultipartDocumentReader*);
@@ -17,7 +17,7 @@ typedef void(^TDMultipartDocumentReaderCompletionBlock)(TDMultipartDocumentReade
 @interface TDMultipartDocumentReader : NSObject <TDMultipartReaderDelegate, NSStreamDelegate>
 {
     @private
-    TDDatabase* _database;
+    TD_Database* _database;
     TDStatus _status;
     TDMultipartReader* _multipartReader;
     NSMutableData* _jsonBuffer;
@@ -31,16 +31,16 @@ typedef void(^TDMultipartDocumentReaderCompletionBlock)(TDMultipartDocumentReade
 // synchronous:
 + (NSDictionary*) readData: (NSData*)data
                     ofType: (NSString*)contentType
-                toDatabase: (TDDatabase*)database
+                toDatabase: (TD_Database*)database
                     status: (TDStatus*)outStatus;
 
 // asynchronous:
 + (TDStatus) readStream: (NSInputStream*)stream
                  ofType: (NSString*)contentType
-             toDatabase: (TDDatabase*)database
+             toDatabase: (TD_Database*)database
                    then: (TDMultipartDocumentReaderCompletionBlock)completionBlock;
 
-- (id) initWithDatabase: (TDDatabase*)database;
+- (id) initWithDatabase: (TD_Database*)database;
 
 @property (readonly, nonatomic) TDStatus status;
 @property (readonly, nonatomic) NSDictionary* document;

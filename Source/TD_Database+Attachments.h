@@ -1,12 +1,12 @@
 //
-//  TDDatabase+Attachments.h
+//  TD_Database+Attachments.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 1/18/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TDDatabase.h>
+#import <TouchDB/TD_Database.h>
 @class TDBlobStoreWriter, TDMultipartWriter;
 
 
@@ -17,31 +17,31 @@ typedef enum {
 } TDAttachmentEncoding;
 
 
-@interface TDDatabase (Attachments)
+@interface TD_Database (Attachments)
 
 /** Creates a TDBlobStoreWriter object that can be used to stream an attachment to the store. */
 - (TDBlobStoreWriter*) attachmentWriter;
 
-/** Creates TDAttachment objects from the revision's '_attachments' property. */
-- (NSDictionary*) attachmentsFromRevision: (TDRevision*)rev
+/** Creates TD_Attachment objects from the revision's '_attachments' property. */
+- (NSDictionary*) attachmentsFromRevision: (TD_Revision*)rev
                                    status: (TDStatus*)outStatus;
 
 /** Given a newly-added revision, adds the necessary attachment rows to the database and stores inline attachments into the blob store. */
 - (TDStatus) processAttachments: (NSDictionary*)attachments
-                    forRevision: (TDRevision*)rev
+                    forRevision: (TD_Revision*)rev
              withParentSequence: (SequenceNumber)parentSequence;
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
                                        options: (TDContentOptions)options;
 
-/** Modifies a TDRevision's _attachments dictionary by changing all attachments with revpos < minRevPos into stubs; and if 'attachmentsFollow' is true, the remaining attachments will be modified to _not_ be stubs but include a "follows" key instead of a body. */
-+ (void) stubOutAttachmentsIn: (TDRevision*)rev
+/** Modifies a TD_Revision's _attachments dictionary by changing all attachments with revpos < minRevPos into stubs; and if 'attachmentsFollow' is true, the remaining attachments will be modified to _not_ be stubs but include a "follows" key instead of a body. */
++ (void) stubOutAttachmentsIn: (TD_Revision*)rev
                  beforeRevPos: (int)minRevPos
             attachmentsFollow: (BOOL)attachmentsFollow;
 
 /** Generates a MIME multipart writer for a revision, with separate body parts for each attachment whose "follows" property is set. */
-- (TDMultipartWriter*) multipartWriterForRevision: (TDRevision*)rev
+- (TDMultipartWriter*) multipartWriterForRevision: (TD_Revision*)rev
                                       contentType: (NSString*)contentType;
 
 /** Returns the content and metadata of an attachment.
@@ -67,7 +67,7 @@ typedef enum {
 
 /** Updates or deletes an attachment, creating a new document revision in the process.
     Used by the PUT / DELETE methods called on attachment URLs. */
-- (TDRevision*) updateAttachment: (NSString*)filename
+- (TD_Revision*) updateAttachment: (NSString*)filename
                             body: (NSData*)body
                             type: (NSString*)contentType
                         encoding: (TDAttachmentEncoding)encoding

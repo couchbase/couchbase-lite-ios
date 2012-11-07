@@ -15,7 +15,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     NSError* error;
-    TDServer* tdServer = [[TDServer alloc] initWithDirectory: @"/tmp/touchdb_empty_app"
+    TD_Server* tdServer = [[TD_Server alloc] initWithDirectory: @"/tmp/touchdb_empty_app"
                                                        error: &error];
     NSAssert(tdServer, @"Couldn't create server: %@", error);
     [TDURLProtocol setServer: tdServer];
