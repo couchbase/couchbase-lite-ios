@@ -31,6 +31,8 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
         _tddb = tddb;
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(tddbNotification:) name: nil object: tddb];
+        if (0)
+            _modelFactory = nil;  // appeases static analyzer
     }
     return self;
 }
