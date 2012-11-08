@@ -174,22 +174,22 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 #pragma mark - VALIDATION & FILTERS:
 
 
-- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock {
+- (void) defineValidation: (NSString*)validationName asBlock: (TD_ValidationBlock)validationBlock {
     [_tddb defineValidation: validationName asBlock: validationBlock];
 }
 
 
-- (TDValidationBlock) validationNamed: (NSString*)validationName {
+- (TD_ValidationBlock) validationNamed: (NSString*)validationName {
     return [_tddb validationNamed: validationName];
 }
 
 
-- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock {
+- (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock {
     [_tddb defineFilter: filterName asBlock: filterBlock];
 }
 
 
-- (TDFilterBlock) filterNamed: (NSString*)filterName {
+- (TD_FilterBlock) filterNamed: (NSString*)filterName {
     return [_tddb filterNamed: filterName];
 }
 

@@ -852,7 +852,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 - (TD_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDChangesOptions*)options
-                                  filter: (TDFilterBlock)filter
+                                  filter: (TD_FilterBlock)filter
                                   params: (NSDictionary*)filterParams
 {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
@@ -902,13 +902,13 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock {
+- (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock {
     if (!_filters)
         _filters = [[NSMutableDictionary alloc] init];
     [_filters setValue: [filterBlock copy] forKey: filterName];
 }
 
-- (TDFilterBlock) filterNamed: (NSString*)filterName {
+- (TD_FilterBlock) filterNamed: (NSString*)filterName {
     return _filters[filterName];
 }
 

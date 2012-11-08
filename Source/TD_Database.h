@@ -26,7 +26,7 @@ extern NSString* const TD_DatabaseWillBeDeletedNotification;
 
 
 /** Filter block, used in changes feeds and replication. */
-typedef BOOL (^TDFilterBlock) (TD_Revision* revision, NSDictionary* params);
+typedef BOOL (^TD_FilterBlock) (TD_Revision* revision, NSDictionary* params);
 
 #define FILTERBLOCK(BLOCK) ^BOOL(TD_Revision* revision, NSDictionary* params) {BLOCK}
 
@@ -172,12 +172,12 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 - (TD_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const TDChangesOptions*)options
-                                  filter: (TDFilterBlock)filter
+                                  filter: (TD_FilterBlock)filter
                                   params: (NSDictionary*)filterParams;
 
 /** Define or clear a named filter function. These aren't used directly by TD_Database, but they're looked up by TDRouter when a _changes request has a ?filter parameter. */
-- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
+- (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock;
 
-- (TDFilterBlock) filterNamed: (NSString*)filterName;
+- (TD_FilterBlock) filterNamed: (NSString*)filterName;
 
 @end

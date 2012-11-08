@@ -427,7 +427,7 @@ TestCase(API_Validation) {
     TDDatabase* db = createEmptyDB();
 
     [db defineValidation: @"uncool"
-                 asBlock: ^BOOL(TD_Revision *newRevision, id<TDValidationContext> context) {
+                 asBlock: ^BOOL(TD_Revision *newRevision, id<TD_ValidationContext> context) {
                      if (!newRevision.properties[@"groovy"]) {
                          context.errorMessage = @"uncool";
                          return NO;

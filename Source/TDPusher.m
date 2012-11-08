@@ -43,7 +43,7 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
 }
 
 
-- (TDFilterBlock) filter {
+- (TD_FilterBlock) filter {
     return _filterName ? [_db filterNamed: _filterName] : NULL;
 }
 
@@ -77,7 +77,7 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
     if (_creatingTarget)
         return;
     
-    TDFilterBlock filter = self.filter;
+    TD_FilterBlock filter = self.filter;
     if (!filter && _filterName)
         Warn(@"%@: No TDFilterBlock registered for filter '%@'; ignoring", self, _filterName);
     
@@ -145,7 +145,7 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change[@"source"] isEqual: _remote]) {
             TD_Revision* rev = change[@"rev"];
-            TDFilterBlock filter = self.filter;
+            TD_FilterBlock filter = self.filter;
             if (!filter || filter(rev, _filterParameters))
                 [self addToInbox: rev];
         }

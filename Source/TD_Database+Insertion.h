@@ -7,14 +7,14 @@
 //
 
 #import <TouchDB/TD_Database.h>
-@protocol TDValidationContext;
+@protocol TD_ValidationContext;
 
 
 /** Validation block, used to approve revisions being added to the database. */
-typedef BOOL (^TDValidationBlock) (TD_Revision* newRevision,
-                                   id<TDValidationContext> context);
+typedef BOOL (^TD_ValidationBlock) (TD_Revision* newRevision,
+                                   id<TD_ValidationContext> context);
 
-#define VALIDATIONBLOCK(BLOCK) ^BOOL(TD_Revision* newRevision, id<TDValidationContext> context)\
+#define VALIDATIONBLOCK(BLOCK) ^BOOL(TD_Revision* newRevision, id<TD_ValidationContext> context)\
                                     {BLOCK}
 
 
@@ -44,8 +44,8 @@ typedef BOOL (^TDValidationBlock) (TD_Revision* newRevision,
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;
 
 /** Define or clear a named document validation function.  */
-- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock;
-- (TDValidationBlock) validationNamed: (NSString*)validationName;
+- (void) defineValidation: (NSString*)validationName asBlock: (TD_ValidationBlock)validationBlock;
+- (TD_ValidationBlock) validationNamed: (NSString*)validationName;
 
 /** Compacts the database storage by removing the bodies and attachments of obsolete revisions. */
 - (TDStatus) compact;
@@ -64,7 +64,7 @@ typedef BOOL (^TDChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue
 
 
 /** Context passed into a TDValidationBlock. */
-@protocol TDValidationContext <NSObject>
+@protocol TD_ValidationContext <NSObject>
 /** The contents of the current revision of the document, or nil if this is a new document. */
 @property (readonly) TD_Revision* currentRevision;
 

@@ -69,13 +69,13 @@
 
 
 /** Define or clear a named document validation function.  */
-- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock;
-- (TDValidationBlock) validationNamed: (NSString*)validationName;
+- (void) defineValidation: (NSString*)validationName asBlock: (TD_ValidationBlock)validationBlock;
+- (TD_ValidationBlock) validationNamed: (NSString*)validationName;
 
 
 /** Define or clear a named filter function.  */
-- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
-- (TDFilterBlock) filterNamed: (NSString*)filterName;
+- (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock;
+- (TD_FilterBlock) filterNamed: (NSString*)filterName;
 
 
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.

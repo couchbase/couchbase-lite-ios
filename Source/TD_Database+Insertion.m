@@ -35,7 +35,7 @@
 #endif
 
 
-@interface TDValidationContext : NSObject <TDValidationContext>
+@interface TD_ValidationContext : NSObject <TD_ValidationContext>
 {
     @private
     TD_Database* _db;
@@ -705,7 +705,7 @@
 #pragma mark - VALIDATION:
 
 
-- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock {
+- (void) defineValidation: (NSString*)validationName asBlock: (TD_ValidationBlock)validationBlock {
     if (validationBlock) {
         if (!_validations)
             _validations = [[NSMutableDictionary alloc] init];
@@ -715,7 +715,7 @@
     }
 }
 
-- (TDValidationBlock) validationNamed: (NSString*)validationName {
+- (TD_ValidationBlock) validationNamed: (NSString*)validationName {
     return _validations[validationName];
 }
 
@@ -723,12 +723,12 @@
 - (TDStatus) validateRevision: (TD_Revision*)newRev previousRevision: (TD_Revision*)oldRev {
     if (_validations.count == 0)
         return kTDStatusOK;
-    TDValidationContext* context = [[TDValidationContext alloc] initWithDatabase: self
+    TD_ValidationContext* context = [[TD_ValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];
     TDStatus status = kTDStatusOK;
     for (NSString* validationName in _validations) {
-        TDValidationBlock validation = [self validationNamed: validationName];
+        TD_ValidationBlock validation = [self validationNamed: validationName];
         if (!validation(newRev, context)) {
             status = context.errorType;
             break;
@@ -745,7 +745,7 @@
 
 
 
-@implementation TDValidationContext
+@implementation TD_ValidationContext
 
 - (id) initWithDatabase: (TD_Database*)db
                revision: (TD_Revision*)currentRevision

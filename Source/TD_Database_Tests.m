@@ -131,7 +131,7 @@ TestCase(TD_Database_CRUD) {
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
 
-    TDFilterBlock filter = ^BOOL(TD_Revision *revision, NSDictionary* params) {
+    TD_FilterBlock filter = ^BOOL(TD_Revision *revision, NSDictionary* params) {
         NSString* status = params[@"status"];
         return [revision[@"status"] isEqual: status];
     };
@@ -219,7 +219,7 @@ TestCase(TD_Database_Validation) {
     TD_Database* db = createDB();
     __block BOOL validationCalled = NO;
     [db defineValidation: @"hoopy" 
-                 asBlock: ^BOOL(TD_Revision *newRevision, id<TDValidationContext> context)
+                 asBlock: ^BOOL(TD_Revision *newRevision, id<TD_ValidationContext> context)
     {
         CAssert(newRevision);
         CAssert(context);

@@ -38,7 +38,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 
 @interface TDReplicatorManager ()
-- (BOOL) validateRevision: (TD_Revision*)newRev context: (id<TDValidationContext>)context;
+- (BOOL) validateRevision: (TD_Revision*)newRev context: (id<TD_ValidationContext>)context;
 - (void) processAllDocs;
 @end
 
@@ -67,7 +67,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 
 - (void) start {
     [_replicatorDB defineValidation: @"TDReplicatorManager" asBlock:
-         ^BOOL(TD_Revision *newRevision, id<TDValidationContext> context) {
+         ^BOOL(TD_Revision *newRevision, id<TD_ValidationContext> context) {
              return [self validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
@@ -192,7 +192,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 // Validation function for the _replicator database:
-- (BOOL) validateRevision: (TD_Revision*)newRev context: (id<TDValidationContext>)context {
+- (BOOL) validateRevision: (TD_Revision*)newRev context: (id<TD_ValidationContext>)context {
     // Ignore the change if it's one I'm making myself, or if it's a deletion:
     if (_updateInProgress || newRev.deleted)
         return YES;
