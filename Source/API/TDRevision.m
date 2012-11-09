@@ -13,15 +13,28 @@
 
 
 @implementation TDRevision
+{
+    TDDocument* _document;
+    TD_Revision* _rev;
+    BOOL _checkedProperties;
+}
 
 
 - (id)initWithDocument: (TDDocument*)doc revision: (TD_Revision*)rev {
+    Assert(doc != nil);
+    Assert(rev != nil);
     self = [super init];
     if (self) {
         _document = doc;
         _rev = rev;
     }
     return self;
+}
+
+
+- (id)initWithTDDB: (TD_Database*)tddb revision: (TD_Revision*)rev {
+    TDDocument* doc = [tddb.touchDatabase documentWithID: rev.docID];
+    return [self initWithDocument: doc revision: rev];
 }
 
 

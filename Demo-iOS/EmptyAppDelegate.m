@@ -15,7 +15,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     TDDatabaseManager* mgr = [TDDatabaseManager sharedInstance];
-    NSAssert(mgr, @"Couldn't initialize TouchDB");
+    if (!mgr)
+        [NSException raise: NSInternalInconsistencyException format: @"Couldn't initialize TouchDB"];
     return YES;
 }
 

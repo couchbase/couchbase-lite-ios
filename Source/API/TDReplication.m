@@ -33,6 +33,19 @@ NSString* const kTDReplicationChangeNotification = @"TouchReplicationChange";
 
 
 @implementation TDReplication
+{
+    NSURL* _remoteURL;
+    bool _pull;
+    NSThread* _mainThread;
+    bool _started;
+    bool _running;
+    unsigned _completed, _total;
+    TDReplicationMode _mode;
+    NSError* _error;
+
+    TDReplicator* _bg_replicator;       // ONLY used on the server thread
+    TD_Database* _bg_serverDatabase;     // ONLY used on the server thread
+}
 
 
 // Instantiate a new non-persistent replication

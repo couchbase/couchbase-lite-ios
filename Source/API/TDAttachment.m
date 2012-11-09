@@ -15,6 +15,12 @@
 
 
 @implementation TDAttachment
+{
+    TDRevision* _rev;
+    NSString* _name;
+    NSDictionary* _metadata;
+    id _body;
+}
 
 
 - (id) initWithRevision: (TDRevision*)rev

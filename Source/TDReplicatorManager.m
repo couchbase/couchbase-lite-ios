@@ -215,7 +215,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                                                       @"heartbeat", @"feed", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
     return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
-        if (![context currentRevision])
+        if (![context current_Revision])
             return ![key hasPrefix: @"_"];
         
         // allow change of 'headers' and 'auth' in target and source

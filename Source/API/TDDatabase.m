@@ -7,6 +7,8 @@
 //
 
 #import "TouchDBPrivate.h"
+#import "TD_Database+Insertion.h"
+#import "TDModelFactory.h"
 #import "TDCache.h"
 #import "TD_DatabaseManager.h"
 
@@ -17,6 +19,12 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
 @implementation TDDatabase
+{
+    TDDatabaseManager* _manager;
+    TD_Database* _tddb;
+    TDCache* _docCache;
+    TDModelFactory* _modelFactory;   // used in category method in TDModelFactory.m
+}
 
 
 @synthesize tddb=_tddb, manager=_manager;
@@ -176,23 +184,27 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 #pragma mark - VALIDATION & FILTERS:
 
 
-- (void) defineValidation: (NSString*)validationName asBlock: (TD_ValidationBlock)validationBlock {
-    [_tddb defineValidation: validationName asBlock: validationBlock];
+- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock {
+    TD_ValidationBlock wrapperBlock = nil;
+    if (validationBlock) {
+        wrapperBlock = ^(TD_Revision* newRevision, id<TD_ValidationContext> context) {
+            TDRevision* publicRevision = [[TDRevision alloc] initWithTDDB: _tddb revision: newRevision];
+            return validationBlock(publicRevision, context);
+        };
+    }
+    [_tddb defineValidation: validationName asBlock: wrapperBlock];
 }
 
 
-- (TD_ValidationBlock) validationNamed: (NSString*)validationName {
-    return [_tddb validationNamed: validationName];
-}
-
-
-- (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock {
-    [_tddb defineFilter: filterName asBlock: filterBlock];
-}
-
-
-- (TD_FilterBlock) filterNamed: (NSString*)filterName {
-    return [_tddb filterNamed: filterName];
+- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock {
+    TD_FilterBlock wrapperBlock = nil;
+    if (filterBlock) {
+        wrapperBlock = ^(TD_Revision* revision, NSDictionary* params) {
+            TDRevision* publicRevision = [[TDRevision alloc] initWithTDDB: _tddb revision: revision];
+            return filterBlock(publicRevision, params);
+        };
+    }
+    [_tddb defineFilter: filterName asBlock: wrapperBlock];
 }
 
 
@@ -211,5 +223,22 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
     return [_manager createReplicationsBetween: self and: otherDbURL exclusively: exclusively];
 }
 
+
+@end
+
+
+
+
+@implementation TDDatabase (TouchModelFactory)
+
+- (TDModelFactory*) modelFactory {
+    if (!_modelFactory)
+        _modelFactory = [[TDModelFactory alloc] init];
+    return _modelFactory;
+}
+
+- (void) setModelFactory:(TDModelFactory *)modelFactory {
+    _modelFactory = modelFactory;
+}
 
 @end

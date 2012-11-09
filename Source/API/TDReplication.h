@@ -7,7 +7,7 @@
 //
 
 #import "TDModel.h"
-@class TDDatabase, TD_Database, TD_Server, TDReplicator;
+@class TDDatabase;
 
 
 typedef enum {
@@ -22,20 +22,6 @@ typedef enum {
     Replications can be one-shot, continuous or persistent.
     TouchReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
 @interface TDReplication : TDModel
-{
-    @private
-    NSURL* _remoteURL;
-    bool _pull;
-    NSThread* _mainThread;
-    bool _started;
-    bool _running;
-    unsigned _completed, _total;
-    TDReplicationMode _mode;
-    NSError* _error;
-    
-    TDReplicator* _bg_replicator;       // ONLY used on the server thread
-    TD_Database* _bg_serverDatabase;     // ONLY used on the server thread
-}
 
 /** The local database being replicated to/from. */
 @property (nonatomic, readonly) TDDatabase* localDatabase;

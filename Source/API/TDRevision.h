@@ -7,17 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDDocument, TD_Revision, TDDatabase, TDAttachment;
+@class TDDocument, TDDatabase, TDAttachment;
 
 
 /** A revision of a TDDocument. */
 @interface TDRevision : NSObject
-{
-    @private
-    TDDocument* _document;
-    TD_Revision* _rev;
-    BOOL _checkedProperties;
-}
 
 /** The document this is a revision of. */
 @property (readonly) TDDocument* document;

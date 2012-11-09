@@ -8,6 +8,7 @@
 
 #import "TouchDBPrivate.h"
 #import "TD_View.h"
+#import "TD_Database.h"
 
 
 @interface TDQueryEnumerator ()
@@ -22,6 +23,21 @@
 
 
 @implementation TDQuery
+{
+    TDDatabase* _database;
+    TD_View* _view;              // nil for _all_docs query
+    BOOL _temporaryView;
+    NSUInteger _limit, _skip;
+    id _startKey, _endKey;
+    NSString* _startKeyDocID;
+    NSString* _endKeyDocID;
+    TDStaleness _stale;
+    BOOL _descending, _prefetch, _sequences;
+    NSArray *_keys;
+    NSUInteger _groupLevel;
+    SInt64 _lastSequence;
+    TDStatus _status;
+}
 
 
 // A nil view refers to 'all documents'
@@ -153,6 +169,10 @@
 
 
 @implementation TDLiveQuery
+{
+    BOOL _observing, _updating;
+    TDQueryEnumerator* _rows;
+}
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
@@ -205,6 +225,12 @@
 
 
 @implementation TDQueryEnumerator
+{
+    TDDatabase* _database;
+    NSArray* _rows;
+    NSUInteger _nextRow;
+    NSUInteger _sequenceNumber;
+}
 
 
 @synthesize sequenceNumber=_sequenceNumber;
@@ -269,6 +295,10 @@
 
 
 @implementation TDQueryRow
+{
+    TDDatabase* _database;
+    id _result;
+}
 
 
 - (id) initWithDatabase: (TDDatabase*)database result: (id)result {

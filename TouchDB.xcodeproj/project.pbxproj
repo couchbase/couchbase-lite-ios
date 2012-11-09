@@ -154,8 +154,6 @@
 		27731F3C14967A8400815D67 /* RootViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3914967A8400815D67 /* RootViewController.xib */; };
 		27731F3D14967A8400815D67 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3A14967A8400815D67 /* MainWindow.xib */; };
 		27731F3E14967A8400815D67 /* ConfigViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3B14967A8400815D67 /* ConfigViewController.xib */; };
-		27731F41149685A100815D67 /* list_area___checkbox___checked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3F149685A000815D67 /* list_area___checkbox___checked.png */; };
-		27731F42149685A100815D67 /* list_area___checkbox___unchecked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27731F40149685A100815D67 /* list_area___checkbox___unchecked.png */; };
 		2773ADC714BD1EB80027A292 /* TD_Database+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* TD_Database+LocalDocs.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2773ADC814BD1EB80027A292 /* TD_Database+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* TD_Database+LocalDocs.m */; };
 		2773ADC914BD1EB80027A292 /* TD_Database+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* TD_Database+LocalDocs.m */; };
@@ -377,6 +375,24 @@
 		27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F3A5DD15ED496900263663 /* APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FF015D5C8250030122F /* APITests.m */; };
+		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
+		27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
+		27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
+		27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */; };
+		27FAEEF5164C8A4D00A3C0C2 /* item_background.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDD164C8A3E00A3C0C2 /* item_background.png */; };
+		27FAEEF6164C8A4D00A3C0C2 /* item_background~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDE164C8A3E00A3C0C2 /* item_background~ipad.png */; };
+		27FAEEF7164C8A4D00A3C0C2 /* list_area___background_middle~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDF164C8A3E00A3C0C2 /* list_area___background_middle~ipad.png */; };
+		27FAEEF8164C8A4D00A3C0C2 /* list_area___checkbox___checked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE0164C8A3E00A3C0C2 /* list_area___checkbox___checked.png */; };
+		27FAEEF9164C8A4D00A3C0C2 /* list_area___checkbox___unchecked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE1164C8A3E00A3C0C2 /* list_area___checkbox___unchecked.png */; };
+		27FAEEFA164C8A4D00A3C0C2 /* textfield___active.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE2164C8A3E00A3C0C2 /* textfield___active.png */; };
+		27FAEEFB164C8A4D00A3C0C2 /* textfield___active~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE3164C8A3E00A3C0C2 /* textfield___active~ipad.png */; };
+		27FAEEFC164C8A4D00A3C0C2 /* textfield___inactive.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE4164C8A3E00A3C0C2 /* textfield___inactive.png */; };
+		27FAEEFD164C8A4D00A3C0C2 /* textfield___inactive~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE5164C8A3E00A3C0C2 /* textfield___inactive~ipad.png */; };
+		27FAEF00164C8A8400A3C0C2 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEFE164C8A8400A3C0C2 /* Default.png */; };
+		27FAEF01164C8A8400A3C0C2 /* Default~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEFF164C8A8400A3C0C2 /* Default~ipad.png */; };
+		27FAEF0F164C8ADB00A3C0C2 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0C164C8ADB00A3C0C2 /* icon.png */; };
+		27FAEF10164C8ADB00A3C0C2 /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */; };
+		27FAEF11164C8ADB00A3C0C2 /* icon~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; };
 		DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
@@ -635,8 +651,6 @@
 		27731F3914967A8400815D67 /* RootViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = RootViewController.xib; sourceTree = "<group>"; };
 		27731F3A14967A8400815D67 /* MainWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
 		27731F3B14967A8400815D67 /* ConfigViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ConfigViewController.xib; sourceTree = "<group>"; };
-		27731F3F149685A000815D67 /* list_area___checkbox___checked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "list_area___checkbox___checked.png"; sourceTree = "<group>"; };
-		27731F40149685A100815D67 /* list_area___checkbox___unchecked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "list_area___checkbox___unchecked.png"; sourceTree = "<group>"; };
 		2773ADC514BD1EB80027A292 /* TD_Database+LocalDocs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TD_Database+LocalDocs.h"; sourceTree = "<group>"; };
 		2773ADC614BD1EB80027A292 /* TD_Database+LocalDocs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TD_Database+LocalDocs.m"; sourceTree = "<group>"; };
 		27821BB5148E7D6F0099B373 /* TDReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDReplicator.h; sourceTree = "<group>"; };
@@ -692,7 +706,7 @@
 		27B0B7E81492BB6B00A817AD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		27B0B7F61492BC7A00A817AD /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		27B0B7F81492BC8000A817AD /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
-		27B0B80B1492C16300A817AD /* TouchDB Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TouchDB Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		27B0B80B1492C16300A817AD /* Grocery Sync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Grocery Sync.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B80F1492C16300A817AD /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
 		27B0B8131492C16300A817AD /* iOS Demo-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS Demo-Info.plist"; sourceTree = "<group>"; };
 		27B0B8151492C16300A817AD /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -807,8 +821,26 @@
 		27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableURLRequest+Parameters.h"; sourceTree = "<group>"; };
 		27F128AF156AC1C8008465C2 /* TDOAuth1Authorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDOAuth1Authorizer.h; sourceTree = "<group>"; };
 		27F128B0156AC1C9008465C2 /* TDOAuth1Authorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDOAuth1Authorizer.m; sourceTree = "<group>"; };
+		27F5B175164D74EA00126D0D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		27F87BE61558890600F0A416 /* TDGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* TDGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDGNUstep.m; sourceTree = "<group>"; };
+		27FAEEDA164C8A3E00A3C0C2 /* background.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = background.jpg; sourceTree = "<group>"; };
+		27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "background~ipad.jpg"; sourceTree = "<group>"; };
+		27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "couchbase-mobile-icon-nameless.png"; sourceTree = "<group>"; };
+		27FAEEDD164C8A3E00A3C0C2 /* item_background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = item_background.png; sourceTree = "<group>"; };
+		27FAEEDE164C8A3E00A3C0C2 /* item_background~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "item_background~ipad.png"; sourceTree = "<group>"; };
+		27FAEEDF164C8A3E00A3C0C2 /* list_area___background_middle~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "list_area___background_middle~ipad.png"; sourceTree = "<group>"; };
+		27FAEEE0164C8A3E00A3C0C2 /* list_area___checkbox___checked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "list_area___checkbox___checked.png"; sourceTree = "<group>"; };
+		27FAEEE1164C8A3E00A3C0C2 /* list_area___checkbox___unchecked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "list_area___checkbox___unchecked.png"; sourceTree = "<group>"; };
+		27FAEEE2164C8A3E00A3C0C2 /* textfield___active.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "textfield___active.png"; sourceTree = "<group>"; };
+		27FAEEE3164C8A3E00A3C0C2 /* textfield___active~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "textfield___active~ipad.png"; sourceTree = "<group>"; };
+		27FAEEE4164C8A3E00A3C0C2 /* textfield___inactive.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "textfield___inactive.png"; sourceTree = "<group>"; };
+		27FAEEE5164C8A3E00A3C0C2 /* textfield___inactive~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "textfield___inactive~ipad.png"; sourceTree = "<group>"; };
+		27FAEEFE164C8A8400A3C0C2 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		27FAEEFF164C8A8400A3C0C2 /* Default~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default~ipad.png"; sourceTree = "<group>"; };
+		27FAEF0C164C8ADB00A3C0C2 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
+		27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
+		27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon~ipad.png"; sourceTree = "<group>"; };
 		DA023B6414BCA94C008184BB /* libTouchDBListener.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTouchDBListener.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3614BCAC3B0052DA4D /* TouchDBListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TouchDBListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
@@ -966,7 +998,7 @@
 				270B3DEA1489359000E0A926 /* TouchDB.framework */,
 				27B0B7A91492B83B00A817AD /* libTouchDB.a */,
 				27B0B7E71492BB6B00A817AD /* TouchDB.framework */,
-				27B0B80B1492C16300A817AD /* TouchDB Demo.app */,
+				27B0B80B1492C16300A817AD /* Grocery Sync.app */,
 				27731F2A1495CFEF00815D67 /* TouchDB Empty App.app */,
 				275315D514ACF0A10065964D /* TouchDBListener-Mac.framework */,
 				DA023B6414BCA94C008184BB /* libTouchDBListener.a */,
@@ -1259,8 +1291,13 @@
 		27B0B8121492C16300A817AD /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				27731F3F149685A000815D67 /* list_area___checkbox___checked.png */,
-				27731F40149685A100815D67 /* list_area___checkbox___unchecked.png */,
+				27FAEED9164C8A3E00A3C0C2 /* Elements */,
+				27FAEF0C164C8ADB00A3C0C2 /* icon.png */,
+				27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */,
+				27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */,
+				27FAEEFE164C8A8400A3C0C2 /* Default.png */,
+				27F5B175164D74EA00126D0D /* Default-568h@2x.png */,
+				27FAEEFF164C8A8400A3C0C2 /* Default~ipad.png */,
 				27B0B8131492C16300A817AD /* iOS Demo-Info.plist */,
 				27731F2C1495CFF000815D67 /* iOS Empty App-Info.plist */,
 				27B0B8141492C16300A817AD /* InfoPlist.strings */,
@@ -1474,6 +1511,25 @@
 				27F12847156ABE24008465C2 /* NSString+URLEncoding.m */,
 			);
 			path = Categories;
+			sourceTree = "<group>";
+		};
+		27FAEED9164C8A3E00A3C0C2 /* Elements */ = {
+			isa = PBXGroup;
+			children = (
+				27FAEEDA164C8A3E00A3C0C2 /* background.jpg */,
+				27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */,
+				27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */,
+				27FAEEDD164C8A3E00A3C0C2 /* item_background.png */,
+				27FAEEDE164C8A3E00A3C0C2 /* item_background~ipad.png */,
+				27FAEEDF164C8A3E00A3C0C2 /* list_area___background_middle~ipad.png */,
+				27FAEEE0164C8A3E00A3C0C2 /* list_area___checkbox___checked.png */,
+				27FAEEE1164C8A3E00A3C0C2 /* list_area___checkbox___unchecked.png */,
+				27FAEEE2164C8A3E00A3C0C2 /* textfield___active.png */,
+				27FAEEE3164C8A3E00A3C0C2 /* textfield___active~ipad.png */,
+				27FAEEE4164C8A3E00A3C0C2 /* textfield___inactive.png */,
+				27FAEEE5164C8A3E00A3C0C2 /* textfield___inactive~ipad.png */,
+			);
+			path = Elements;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1735,9 +1791,9 @@
 			productReference = 27B0B7E71492BB6B00A817AD /* TouchDB.framework */;
 			productType = "com.apple.product-type.bundle";
 		};
-		27B0B80A1492C16300A817AD /* TouchDB iOS Demo */ = {
+		27B0B80A1492C16300A817AD /* Grocery Sync iOS Demo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "TouchDB iOS Demo" */;
+			buildConfigurationList = 27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "Grocery Sync iOS Demo" */;
 			buildPhases = (
 				27B0B8071492C16300A817AD /* Sources */,
 				27B0B8081492C16300A817AD /* Frameworks */,
@@ -1748,9 +1804,9 @@
 			dependencies = (
 				270BDD7315645147007D52F6 /* PBXTargetDependency */,
 			);
-			name = "TouchDB iOS Demo";
+			name = "Grocery Sync iOS Demo";
 			productName = "iOS Demo";
-			productReference = 27B0B80B1492C16300A817AD /* TouchDB Demo.app */;
+			productReference = 27B0B80B1492C16300A817AD /* Grocery Sync.app */;
 			productType = "com.apple.product-type.application";
 		};
 		27C70693148864BA00F0F099 /* TouchDB Mac Demo */ = {
@@ -1832,7 +1888,7 @@
 				27B0B7E61492BB6B00A817AD /* TouchDB-iOS */,
 				27B0B7A81492B83B00A817AD /* TouchDB-iOS-library */,
 				27C70693148864BA00F0F099 /* TouchDB Mac Demo */,
-				27B0B80A1492C16300A817AD /* TouchDB iOS Demo */,
+				27B0B80A1492C16300A817AD /* Grocery Sync iOS Demo */,
 				27731F131495CFEF00815D67 /* TouchDB iOS Empty App */,
 				275315D414ACF0A10065964D /* TouchDBListener-Mac */,
 				DA147C1F14BCAC3B0052DA4D /* TouchDBListener-iOS */,
@@ -1875,9 +1931,25 @@
 				27731F3C14967A8400815D67 /* RootViewController.xib in Resources */,
 				27731F3D14967A8400815D67 /* MainWindow.xib in Resources */,
 				27731F3E14967A8400815D67 /* ConfigViewController.xib in Resources */,
-				27731F41149685A100815D67 /* list_area___checkbox___checked.png in Resources */,
-				27731F42149685A100815D67 /* list_area___checkbox___unchecked.png in Resources */,
 				27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */,
+				27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */,
+				27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */,
+				27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */,
+				27FAEEF5164C8A4D00A3C0C2 /* item_background.png in Resources */,
+				27FAEEF6164C8A4D00A3C0C2 /* item_background~ipad.png in Resources */,
+				27FAEEF7164C8A4D00A3C0C2 /* list_area___background_middle~ipad.png in Resources */,
+				27FAEEF8164C8A4D00A3C0C2 /* list_area___checkbox___checked.png in Resources */,
+				27FAEEF9164C8A4D00A3C0C2 /* list_area___checkbox___unchecked.png in Resources */,
+				27FAEEFA164C8A4D00A3C0C2 /* textfield___active.png in Resources */,
+				27FAEEFB164C8A4D00A3C0C2 /* textfield___active~ipad.png in Resources */,
+				27FAEEFC164C8A4D00A3C0C2 /* textfield___inactive.png in Resources */,
+				27FAEEFD164C8A4D00A3C0C2 /* textfield___inactive~ipad.png in Resources */,
+				27FAEF00164C8A8400A3C0C2 /* Default.png in Resources */,
+				27FAEF01164C8A8400A3C0C2 /* Default~ipad.png in Resources */,
+				27FAEF0F164C8ADB00A3C0C2 /* icon.png in Resources */,
+				27FAEF10164C8ADB00A3C0C2 /* icon@2x.png in Resources */,
+				27FAEF11164C8ADB00A3C0C2 /* icon~ipad.png in Resources */,
+				27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2272,7 +2344,7 @@
 		};
 		275A29111649A54C00B0D8EE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 27B0B80A1492C16300A817AD /* TouchDB iOS Demo */;
+			target = 27B0B80A1492C16300A817AD /* Grocery Sync iOS Demo */;
 			targetProxy = 275A29101649A54C00B0D8EE /* PBXContainerItemProxy */;
 		};
 		275A29131649A54F00B0D8EE /* PBXTargetDependency */ = {
@@ -2724,9 +2796,9 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "TouchDB Demo";
+				PRODUCT_NAME = "Grocery Sync";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -2740,8 +2812,8 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2752,10 +2824,11 @@
 				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "TouchDB Demo";
+				PRODUCT_NAME = "Grocery Sync";
+				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -2982,7 +3055,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "TouchDB iOS Demo" */ = {
+		27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "Grocery Sync iOS Demo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27B0B82A1492C16300A817AD /* Debug */,

@@ -15,6 +15,15 @@ NSString* const kTDDocumentChangeNotification = @"TouchDocumentChange";
 
 
 @implementation TDDocument
+{
+    TDDatabase* _database;
+    NSString* _docID;
+    TDRevision* _currentRevision;
+    __weak id _modelObject;
+#if ! TDCACHE_IS_SMART
+    __weak TDCache* _owningCache;
+#endif
+}
 
 
 #if ! TDCACHE_IS_SMART

@@ -28,8 +28,6 @@ extern NSString* const TD_DatabaseWillBeDeletedNotification;
 /** Filter block, used in changes feeds and replication. */
 typedef BOOL (^TD_FilterBlock) (TD_Revision* revision, NSDictionary* params);
 
-#define FILTERBLOCK(BLOCK) ^BOOL(TD_Revision* revision, NSDictionary* params) {BLOCK}
-
 
 /** Options for what metadata to include in document bodies */
 typedef unsigned TDContentOptions;

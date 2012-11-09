@@ -101,7 +101,7 @@
     
     // and a validation function requiring parseable dates:
     [theDatabase defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
-        if (newRevision.deleted)
+        if (newRevision.isDeleted)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
         if (date && ! [TDJSON dateWithJSONObject: date]) {

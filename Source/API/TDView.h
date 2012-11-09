@@ -6,18 +6,32 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "TD_View.h"
-@class TDDatabase, TDQuery, TD_View;
+#import <Foundation/Foundation.h>
+@class TDDatabase, TDQuery;
+
+
+typedef void (^TDMapEmitBlock)(id key, id value);
+
+/** A "map" function called when a document is to be added to a view.
+    @param doc  The contents of the document being analyzed.
+    @param emit  A block to be called to add a key/value pair to the view. Your block can call it zero, one or multiple times. */
+typedef void (^TDMapBlock)(NSDictionary* doc, TDMapEmitBlock emit);
+
+/** A "reduce" function called to summarize the results of a view.
+	@param keys  An array of keys to be reduced (or nil if this is a rereduce).
+	@param values  A parallel array of values to be reduced, corresponding 1::1 with the keys.
+	@param rereduce  YES if the input values are the results of previous reductions.
+	@return  The reduced value; almost always a scalar or small fixed-size object. */
+typedef id (^TDReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
+
+
+#define MAPBLOCK(BLOCK) ^(NSDictionary* doc, void (^emit)(id key, id value)){BLOCK}
+#define REDUCEBLOCK(BLOCK) ^id(NSArray* keys, NSArray* values, BOOL rereduce){BLOCK}
 
 
 /** A "view" in a TouchDB database -- this is a type of map/reduce index.
     The view can be queried using a TouchQuery. */
 @interface TDView : NSObject
-{
-    @private
-    TDDatabase* _database;
-    TD_View* _view;
-}
 
 @property (readonly) TDDatabase* database;
 

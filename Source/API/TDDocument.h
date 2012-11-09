@@ -8,21 +8,11 @@
 
 #import "TDDatabase.h"
 #import "TDCache.h"
-@class TDRevision, TDAttachment, TDQueryRow;
+@class TDRevision;
 
 
 /** A TouchDB document (as opposed to any specific revision of it.) */
 @interface TDDocument : NSObject <TDCacheable>
-{
-    @private
-    TDDatabase* _database;
-    NSString* _docID;
-    TDRevision* _currentRevision;
-    __weak id _modelObject;
-#if ! TDCACHE_IS_SMART
-    __weak TDCache* _owningCache;
-#endif
-}
 
 @property (readonly) TDDatabase* database;
 

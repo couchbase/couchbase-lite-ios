@@ -7,8 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDDatabase, TDReplication, TDLiveQuery;
-@class TD_DatabaseManager, TD_Server;
+@class TDDatabase;
 
 
 typedef struct TDDatabaseManagerOptions {
@@ -19,18 +18,11 @@ typedef struct TDDatabaseManagerOptions {
 
 /** Top-level TouchDB object; manages a collection of databases as a CouchDB server does. */
 @interface TDDatabaseManager : NSObject
-{
-    @private
-    TDDatabaseManagerOptions _options;
-    TD_DatabaseManager* _mgr;
-    TD_Server* _server;
-    NSMutableArray* _replications;
-}
 
 /** A shared per-process instance. This should only be used on the main thread. */
 + (TDDatabaseManager*) sharedInstance;
 
-/** Preferred initializer. Starts up an in-process server, on the current thread, that stores databases in the default Application Support directory. */
+/** Default initializer. Starts up an in-process server, on the current thread, that stores databases in the default Application Support directory. */
 - (id)init;
 
 /** Starts up a database manager, on the current thread, that stores its data at the given path.

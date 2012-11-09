@@ -7,21 +7,30 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "TD_Database+Insertion.h"
-#import "TD_View.h"
-@class TDDatabaseManager, TDDocument, TDView, TDQuery, TDReplication, TDModelFactory;
-@class TD_Database, TDCache;
+#import "TDView.h"
+@class TDDatabaseManager, TDDocument, TDRevision, TDView, TDQuery, TDReplication;
+@protocol TDValidationContext;
+
+
+/** Database sequence ID */
+typedef SInt64 SequenceNumber;
+
+
+/** Validation block, used to approve revisions being added to the database. */
+typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
+                                   id<TDValidationContext> context);
+
+#define VALIDATIONBLOCK(BLOCK) ^BOOL(TDRevision* newRevision, id<TDValidationContext> context)\
+                                    {BLOCK}
+
+/** Filter block, used in changes feeds and replication. */
+typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
+
+#define FILTERBLOCK(BLOCK) ^BOOL(TDRevision* revision, NSDictionary* params) {BLOCK}
 
 
 /** A TouchDB database. */
 @interface TDDatabase : NSObject
-{
-    @private
-    TDDatabaseManager* _manager;
-    TD_Database* _tddb;    
-    TDCache* _docCache;
-    TDModelFactory* _modelFactory;   // used in category method in TDModelFactory.m
-}
 
 /** The database's name. */
 @property (readonly) NSString* name;
@@ -69,13 +78,11 @@
 
 
 /** Define or clear a named document validation function.  */
-- (void) defineValidation: (NSString*)validationName asBlock: (TD_ValidationBlock)validationBlock;
-- (TD_ValidationBlock) validationNamed: (NSString*)validationName;
+- (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock;
 
 
 /** Define or clear a named filter function.  */
-- (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock;
-- (TD_FilterBlock) filterNamed: (NSString*)filterName;
+- (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
 
 
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
@@ -97,3 +104,35 @@
     from another process or from a "pull" replication), the notification's userInfo dictionary will
     contain an "external" key with a value of YES. */
 extern NSString* const kTDDatabaseChangeNotification;
+
+
+typedef BOOL (^TDChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue);
+
+
+/** Context passed into a TDValidationBlock. */
+@protocol TDValidationContext <NSObject>
+/** The contents of the current revision of the document, or nil if this is a new document. */
+@property (readonly) TDRevision* currentRevision;
+
+/** The type of HTTP status to report, if the validate block returns NO.
+    The default value is 403 ("Forbidden"). */
+@property int errorType;
+
+/** The error message to return in the HTTP response, if the validate block returns NO.
+    The default value is "invalid document". */
+@property (copy) NSString* errorMessage;
+
+/** Returns an array of all the keys whose values are different between the current and new revisions. */
+@property (readonly) NSArray* changedKeys;
+
+/** Returns YES if only the keys given in the 'allowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
+- (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys;
+
+/** Returns YES if none of the keys given in the 'disallowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
+- (BOOL) disallowChangesTo: (NSArray*)disallowedKeys;
+
+/** Calls the 'enumerator' block for each key that's changed, passing both the old and new values.
+    If the block returns NO, the enumeration stops and sets a default error message, and the method returns NO; else the method returns YES. */
+- (BOOL) enumerateChanges: (TDChangeEnumeratorBlock)enumerator;
+
+@end

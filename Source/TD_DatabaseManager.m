@@ -83,7 +83,7 @@ static NSCharacterSet* kIllegalNameChars;
         // Create the directory but don't fail if it already exists:
         NSError* error;
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
-                                       withIntermediateDirectories: NO
+                                       withIntermediateDirectories: YES
                                                         attributes: nil
                                                              error: &error]) {
             if (!TDIsFileExistsError(error)) {

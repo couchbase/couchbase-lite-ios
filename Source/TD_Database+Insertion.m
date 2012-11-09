@@ -16,6 +16,7 @@
 #import "TD_Database+Insertion.h"
 #import "TD_Database+Attachments.h"
 #import "TDDatabase.h"
+#import "TouchDBPrivate.h"
 #import "TDDocument.h"
 #import <TouchDB/TD_Revision.h>
 #import "TDCanonicalJSON.h"
@@ -40,15 +41,15 @@
     @private
     TD_Database* _db;
     TD_Revision* _currentRevision, *_newRevision;
-    TDStatus _errorType;
+    int _errorType;
     NSString* _errorMessage;
     NSArray* _changedKeys;
 }
 - (id) initWithDatabase: (TD_Database*)db
                revision: (TD_Revision*)currentRevision 
                newRevision: (TD_Revision*)newRevision;
-@property (readonly) TD_Revision* currentRevision;
-@property TDStatus errorType;
+@property (readonly) TDRevision* currentRevision;
+@property int errorType;
 @property (copy) NSString* errorMessage;
 @end
 
@@ -763,10 +764,16 @@
 }
 
 
-- (TD_Revision*) currentRevision {
+- (TD_Revision*) current_Revision {
     if (_currentRevision)
         [_db loadRevisionBody: _currentRevision options: 0];
     return _currentRevision;
+}
+
+
+- (TDRevision*) currentRevision {
+    TD_Revision* cur = self.current_Revision;
+    return cur ? [[TDRevision alloc] initWithTDDB: _db revision: cur] : nil;
 }
 
 @synthesize errorType=_errorType, errorMessage=_errorMessage;
@@ -774,7 +781,7 @@
 - (NSArray*) changedKeys {
     if (!_changedKeys) {
         NSMutableArray* changedKeys = [[NSMutableArray alloc] init];
-        NSDictionary* cur = self.currentRevision.properties;
+        NSDictionary* cur = self.current_Revision.properties;
         NSDictionary* nuu = _newRevision.properties;
         for (NSString* key in cur.allKeys) {
             if (!$equal(cur[key], nuu[key])
@@ -812,7 +819,7 @@
 }
 
 - (BOOL) enumerateChanges: (TDChangeEnumeratorBlock)enumerator {
-    NSDictionary* cur = self.currentRevision.properties;
+    NSDictionary* cur = self.current_Revision.properties;
     NSDictionary* nuu = _newRevision.properties;
     for (NSString* key in self.changedKeys) {
         if (!enumerator(key, cur[key], nuu[key])) {

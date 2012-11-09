@@ -7,15 +7,13 @@
 //
 
 #import <TouchDB/TD_Database.h>
+#import "TDDatabase.h"
 @protocol TD_ValidationContext;
 
 
 /** Validation block, used to approve revisions being added to the database. */
 typedef BOOL (^TD_ValidationBlock) (TD_Revision* newRevision,
                                    id<TD_ValidationContext> context);
-
-#define VALIDATIONBLOCK(BLOCK) ^BOOL(TD_Revision* newRevision, id<TD_ValidationContext> context)\
-                                    {BLOCK}
 
 
 @interface TD_Database (Insertion)
@@ -60,33 +58,6 @@ typedef BOOL (^TD_ValidationBlock) (TD_Revision* newRevision,
 
 
 
-typedef BOOL (^TDChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue);
-
-
-/** Context passed into a TDValidationBlock. */
-@protocol TD_ValidationContext <NSObject>
-/** The contents of the current revision of the document, or nil if this is a new document. */
-@property (readonly) TD_Revision* currentRevision;
-
-/** The type of HTTP status to report, if the validate block returns NO.
-    The default value is 403 ("Forbidden"). */
-@property TDStatus errorType;
-
-/** The error message to return in the HTTP response, if the validate block returns NO.
-    The default value is "invalid document". */
-@property (copy) NSString* errorMessage;
-
-/** Returns an array of all the keys whose values are different between the current and new revisions. */
-@property (readonly) NSArray* changedKeys;
-
-/** Returns YES if only the keys given in the 'allowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
-- (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys;
-
-/** Returns YES if none of the keys given in the 'disallowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
-- (BOOL) disallowChangesTo: (NSArray*)disallowedKeys;
-
-/** Calls the 'enumerator' block for each key that's changed, passing both the old and new values.
-    If the block returns NO, the enumeration stops and sets a default error message, and the method returns NO; else the method returns YES. */
-- (BOOL) enumerateChanges: (TDChangeEnumeratorBlock)enumerator;
-
+@protocol TD_ValidationContext <TDValidationContext>
+@property (readonly) TD_Revision* current_Revision;
 @end

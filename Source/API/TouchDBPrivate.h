@@ -7,7 +7,8 @@
 //
 
 #import "TouchDB.h"
-@class TD_Server;
+#import "TD_Database.h"
+@class TD_DatabaseManager, TD_Server;
 
 
 @interface TD_Database ()
@@ -51,6 +52,7 @@ exclusively: (bool)exclusively;
 
 @interface TDRevision ()
 - (id)initWithDocument: (TDDocument*)doc revision: (TD_Revision*)rev;
+- (id)initWithTDDB: (TD_Database*)tddb revision: (TD_Revision*)rev;
 @property (readonly) TD_Revision* rev;
 @property (readonly) SequenceNumber sequence;
 @end

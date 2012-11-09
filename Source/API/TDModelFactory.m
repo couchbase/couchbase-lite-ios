@@ -68,20 +68,3 @@ static TDModelFactory* sSharedInstance;
 
 
 @end
-
-
-
-
-@implementation TDDatabase (TouchModelFactory)
-
-- (TDModelFactory*) modelFactory {
-    if (!_modelFactory)
-        _modelFactory = [[TDModelFactory alloc] init];
-    return _modelFactory;
-}
-
-- (void) setModelFactory:(TDModelFactory *)modelFactory {
-    _modelFactory = modelFactory;
-}
-
-@end

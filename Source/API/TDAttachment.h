@@ -14,13 +14,6 @@
     Existing attachments can be gotten from -[TDRevision attachmentNamed:].
     To add a new attachment, call -initWithContentType:body: and then put the attachment object as a value in the "_attachments" dictionary of the properties when you create a new revision. */
 @interface TDAttachment : NSObject
-{
-    @private
-    TDRevision* _rev;
-    NSString* _name;
-    NSDictionary* _metadata;
-    id _body;
-}
 
 /** Creates a new attachment that doesn't belong to any revision.
     This object can then be added as a value in a new revision's _attachments dictionary; it will be converted to JSON when saved.
@@ -53,7 +46,7 @@
 /** Updates the body, creating a new document revision in the process.
     If all you need to do to a document is update a single attachment this is an easy way to do it; but if you need to change multiple attachments, or change other body properties, do them in one step by calling -putProperties:error: on the revision or document. */
 - (TDAttachment*) updateBody: (NSData*)body
-                    contentType: (NSString*)contentType
-                          error: (NSError**)outError;
+                 contentType: (NSString*)contentType
+                       error: (NSError**)outError;
 
 @end

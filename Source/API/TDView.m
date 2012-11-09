@@ -11,6 +11,11 @@
 
 
 @implementation TDView
+{
+@private
+    TDDatabase* _database;
+    TD_View* _view;
+}
 
 
 - (id)initWithDatabase: (TDDatabase*)database view: (TD_View*)view {

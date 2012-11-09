@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class TD_View, TDDatabase, TDDocument;
+@class TDDatabase, TDDocument;
 @class TDLiveQuery, TDQueryEnumerator, TDQueryRow;
 
 
@@ -22,22 +22,6 @@ typedef enum {
 
 /** Represents a TouchDB 'view', or a view-like resource like _all_documents. */
 @interface TDQuery : NSObject
-{
-    @private
-    TDDatabase* _database;
-    TD_View* _view;              // nil for _all_docs query
-    BOOL _temporaryView;
-    NSUInteger _limit, _skip;
-    id _startKey, _endKey;
-    NSString* _startKeyDocID;
-    NSString* _endKeyDocID;
-    TDStaleness _stale;
-    BOOL _descending, _prefetch, _sequences;
-    NSArray *_keys;
-    NSUInteger _groupLevel;
-    SInt64 _lastSequence;
-    TDStatus _status;
-}
 
 /** The database that contains this view. */
 @property (readonly) TDDatabase* database;
@@ -103,11 +87,6 @@ typedef enum {
 /** A TDQuery subclass that automatically refreshes the result rows every time the database changes.
     All you need to do is watch for changes to the .rows property. */
 @interface TDLiveQuery : TDQuery
-{
-    @private
-    BOOL _observing, _updating;
-    TDQueryEnumerator* _rows;
-}
 
 /** In TDLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
 @property (readonly, retain) TDQueryEnumerator* rows;
@@ -118,13 +97,6 @@ typedef enum {
 /** Enumerator on a TDQuery's result rows.
     The objects returned are instances of TDQueryRow. */
 @interface TDQueryEnumerator : NSEnumerator <NSCopying>
-{
-    @private
-    TDDatabase* _database;
-    NSArray* _rows;
-    NSUInteger _nextRow;
-    NSUInteger _sequenceNumber;
-}
 
 /** The number of rows returned in this enumerator */
 @property (readonly) NSUInteger count;
@@ -143,11 +115,6 @@ typedef enum {
 
 /** A result row from a TouchDB view query. */
 @interface TDQueryRow : NSObject
-{
-    @private
-    TDDatabase* _database;
-    id _result;
-}
 
 @property (readonly) id key;
 @property (readonly) id value;

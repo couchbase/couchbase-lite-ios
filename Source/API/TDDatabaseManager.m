@@ -16,6 +16,12 @@
 
 
 @implementation TDDatabaseManager
+{
+    TDDatabaseManagerOptions _options;
+    TD_DatabaseManager* _mgr;
+    TD_Server* _server;
+    NSMutableArray* _replications;
+}
 
 
 @synthesize tdManager=_mgr;
@@ -32,9 +38,13 @@
 
 
 - (id)init {
-    return [self initWithDirectory: [TD_DatabaseManager defaultDirectory]
+    NSError* error;
+    self = [self initWithDirectory: [TD_DatabaseManager defaultDirectory]
                            options: NULL
-                             error: nil];
+                             error: &error];
+    if (!self)
+        Warn(@"Failed to create TDDatabaseManager: %@", error);
+    return self;
 }
 
 
@@ -173,10 +183,15 @@
                                    and: (NSURL*)otherDbURL
                            exclusively: (bool)exclusively
 {
-    TDReplication* pull = [self replicationWithDatabase: database remote: otherDbURL
-                                                      pull: YES create: YES];
-    TDReplication* push = [self replicationWithDatabase: database remote: otherDbURL
-                                                      pull: NO create: YES];
+    TDReplication* pull = nil, *push = nil;
+    if (otherDbURL) {
+        pull = [self replicationWithDatabase: database remote: otherDbURL
+                                                          pull: YES create: YES];
+        push = [self replicationWithDatabase: database remote: otherDbURL
+                                                          pull: NO create: YES];
+        if (!pull || !push)
+            return nil;
+    }
     if (exclusively) {
         for (TDReplication* repl in self.allReplications) {
             if (repl.localDatabase == database && repl != pull && repl != push) {
@@ -184,7 +199,7 @@
             }
         }
     }
-    return $array(pull, push);
+    return otherDbURL ? $array(pull, push) : nil;
 }
 
 
