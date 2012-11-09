@@ -49,6 +49,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    if (!database)
+        return;     // App controller failed to load database; probably displaying fatal alert now
+
     UIBarButtonItem* deleteButton = [[UIBarButtonItem alloc] initWithTitle: @"Clean"
                                                             style:UIBarButtonItemStylePlain
                                                            target: self 
@@ -129,7 +132,10 @@
                   forRow:(TDQueryRow*)row
 {
     // Set the cell background and font:
-    cell.backgroundColor = [UIColor whiteColor];
+    static UIColor* kBGColor;
+    if (!kBGColor)
+        kBGColor = [UIColor colorWithPatternImage: [UIImage imageNamed:@"item_background"]];
+    cell.backgroundColor = kBGColor;
     cell.selectionStyle = UITableViewCellSelectionStyleGray;
 
     cell.textLabel.font = [UIFont fontWithName: @"Helvetica" size:18.0];
@@ -269,13 +275,15 @@
     [self forgetSync];
     
     NSArray* repls = [self.database replicateWithURL: newRemoteURL exclusively: YES];
-    _pull = [repls objectAtIndex: 0];
-    _push = [repls objectAtIndex: 1];
-    NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
-    [nctr addObserver: self selector: @selector(replicationProgress:)
-                 name: kTDReplicationChangeNotification object: _pull];
-    [nctr addObserver: self selector: @selector(replicationProgress:)
-                 name: kTDReplicationChangeNotification object: _push];
+    if (repls) {
+        _pull = [repls objectAtIndex: 0];
+        _push = [repls objectAtIndex: 1];
+        NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
+        [nctr addObserver: self selector: @selector(replicationProgress:)
+                     name: kTDReplicationChangeNotification object: _pull];
+        [nctr addObserver: self selector: @selector(replicationProgress:)
+                     name: kTDReplicationChangeNotification object: _push];
+    }
 }
 
 

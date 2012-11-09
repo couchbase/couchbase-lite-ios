@@ -34,7 +34,7 @@
     // Open the database, creating it on the first run:
     NSError* error;
     self.database = [[TDDatabaseManager sharedInstance] createDatabaseNamed: @"grocery-sync"
-                                                                         error: &error];
+                                                                      error: &error];
     if (!self.database)
         [self showAlert: @"Couldn't open database" error: error fatal: YES];
     
