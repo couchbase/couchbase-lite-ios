@@ -302,7 +302,7 @@
 		27DA434A15912AFD00F9E7B5 /* TDView.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434815912AFD00F9E7B5 /* TDView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DA434B15912AFD00F9E7B5 /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA434915912AFD00F9E7B5 /* TDView.m */; };
 		27DA434C15912AFD00F9E7B5 /* TDView.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA434915912AFD00F9E7B5 /* TDView.m */; };
-		27DA435015918C0200F9E7B5 /* MYDynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */; };
+		27DA435015918C0200F9E7B5 /* MYDynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DA435115918C0200F9E7B5 /* MYDynamicObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA434F15918C0200F9E7B5 /* MYDynamicObject.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA434F15918C0200F9E7B5 /* MYDynamicObject.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27DA435715918C8E00F9E7B5 /* TDModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA435315918C8C00F9E7B5 /* TDModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -376,6 +376,8 @@
 		27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F3A5DD15ED496900263663 /* APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FF015D5C8250030122F /* APITests.m */; };
 		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
+		27F5B18716519F2400126D0D /* TDUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* TDUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27F5B18916519F8F00126D0D /* MYDynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
 		27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
 		27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */; };
@@ -1668,6 +1670,8 @@
 				275A29031649A11A00B0D8EE /* TouchDBPrivate.h in Headers */,
 				275A29041649A12B00B0D8EE /* TDAttachment.h in Headers */,
 				275A29051649A13900B0D8EE /* TDReplication.h in Headers */,
+				27F5B18716519F2400126D0D /* TDUITableSource.h in Headers */,
+				27F5B18916519F8F00126D0D /* MYDynamicObject.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

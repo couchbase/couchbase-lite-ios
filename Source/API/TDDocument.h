@@ -7,12 +7,11 @@
 //
 
 #import "TDDatabase.h"
-#import "TDCache.h"
 @class TDRevision;
 
 
 /** A TouchDB document (as opposed to any specific revision of it.) */
-@interface TDDocument : NSObject <TDCacheable>
+@interface TDDocument : NSObject
 
 @property (readonly) TDDatabase* database;
 

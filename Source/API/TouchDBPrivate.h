@@ -7,6 +7,7 @@
 //
 
 #import "TouchDB.h"
+#import "TDCache.h"
 #import "TD_Database.h"
 @class TD_DatabaseManager, TD_Server;
 
@@ -38,7 +39,7 @@ exclusively: (bool)exclusively;
 @end
 
 
-@interface TDDocument ()
+@interface TDDocument () <TDCacheable>
 - (id)initWithDatabase: (TDDatabase*)database
             documentID: (NSString*)docID;
 - (TDRevision*) revisionFromRev: (TD_Revision*)rev;
