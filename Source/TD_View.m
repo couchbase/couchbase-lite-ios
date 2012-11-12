@@ -432,12 +432,13 @@ static id fromJSON( NSData* json ) {
         rows = $marray();
         while ([r next]) {
             @autoreleasepool {
-                id key = fromJSON([r dataNoCopyForColumnIndex: 0]);
-                id value = fromJSON([r dataNoCopyForColumnIndex: 1]);
-                Assert(key);
+                id keyData = [r dataForColumnIndex: 0];
+                id valueData = [r dataForColumnIndex: 1];
+                Assert(keyData);
                 NSString* docID = [r stringForColumnIndex: 2];
                 id docContents = nil;
                 if (options->includeDocs) {
+                    id value = fromJSON(valueData);
                     NSString* linkedID = $castIf(NSDictionary, value)[@"_id"];
                     if (linkedID) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
@@ -458,11 +459,12 @@ static id fromJSON( NSData* json ) {
                     }
                 }
                 LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
-                      _name, toJSONString(key), toJSONString(value), toJSONString(docID));
-                [rows addObject: $dict({@"id",  docID},
-                                       {@"key", key},
-                                       {@"value", value},
-                                       {@"doc", docContents})];
+                      _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
+                      toJSONString(docID));
+                [rows addObject: [[TD_QueryRow alloc] initWithDocID: docID
+                                                                key: keyData
+                                                              value: valueData
+                                                         properties: docContents]];
             }
         }
     }
@@ -528,9 +530,12 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
             if (group && !groupTogether(keyData, lastKeyData, groupLevel)) {
                 if (lastKeyData) {
                     // This pair starts a new group, so reduce & record the last one:
+                    id key = groupKey(lastKeyData, groupLevel);
                     id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
-                    [rows addObject: $dict({@"key", groupKey(lastKeyData, groupLevel)},
-                                           {@"value", reduced})];
+                    [rows addObject: [[TD_QueryRow alloc] initWithDocID: nil
+                                                                    key: key
+                                                                  value: reduced
+                                                             properties: nil]];
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
                 }
@@ -549,7 +554,10 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
         id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
         LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
-        [rows addObject: $dict({@"key", key}, {@"value", reduced})];
+        [rows addObject: [[TD_QueryRow alloc] initWithDocID: nil
+                                                        key: key
+                                                      value: reduced
+                                                 properties: nil]];
     }
     return rows;
 }
@@ -594,5 +602,53 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
     return sCompiler;
 }
 
+
+@end
+
+
+
+
+@implementation TD_QueryRow
+{
+    id _key, _value;
+    NSString* _docID;
+    NSDictionary* _properties;
+}
+
+@synthesize key=_key, value=_value, docID=_docID, properties=_properties;
+
+- (id)initWithDocID: (NSString*)docID key: (id)key value: (id)value
+         properties: (NSDictionary*)properties
+{
+    self = [super init];
+    if (self) {
+        _docID = [docID copy];
+        _key = [key copy];
+        _value = [value copy];
+        _properties = [properties copy];
+    }
+    return self;
+}
+
+- (id) key {
+    if ([_key isKindOfClass: [NSData class]])
+        _key = fromJSON(_key);
+    return _key;
+}
+
+- (id) value {
+    if ([_value isKindOfClass: [NSData class]])
+        _value = fromJSON(_value);
+    return _value;
+}
+
+- (NSDictionary*) asJSONDictionary {
+    if (_value || _docID)
+        return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _docID},
+                     {@"doc", _properties});
+    else
+        return $dict({@"key", self.key}, {@"error", @"not_found"});
+
+}
 
 @end

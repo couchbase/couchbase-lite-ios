@@ -89,6 +89,11 @@ static TD_View* createView(TD_Database* db) {
 }
 
 
+static NSArray* rowsToDicts(NSArray* rows) {
+    return [rows my_map:^(TD_QueryRow* row) {return row.asJSONDictionary;}];
+}
+
+
 TestCase(TD_View_Index) {
     RequireTestCase(TD_View_Create);
     TD_Database *db = createDB();
@@ -137,7 +142,7 @@ TestCase(TD_View_Index) {
                               $dict({@"key", @"\"one\""}, {@"seq", @1}) ));
     
     // Now do a real query:
-    NSArray* rows = [view queryWithOptions: NULL status: &status];
+    NSArray* rows = rowsToDicts([view queryWithOptions: NULL status: &status]);
     CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array( $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
                                $dict({@"key", @"four"}, {@"id", rev4.docID}),
@@ -273,7 +278,7 @@ TestCase(TD_View_Query) {
     // Query all rows:
     TDQueryOptions options = kDefaultTDQueryOptions;
     TDStatus status;
-    NSArray* rows = [view queryWithOptions: &options status: &status];
+    NSArray* rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                                    $dict({@"id",  @"44444"}, {@"key", @"four"}),
                                    $dict({@"id",  @"11111"}, {@"key", @"one"}),
@@ -285,7 +290,7 @@ TestCase(TD_View_Query) {
     options = kDefaultTDQueryOptions;
     options.startKey = @"a";
     options.endKey = @"one";
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
@@ -293,7 +298,7 @@ TestCase(TD_View_Query) {
 
     // Start/end query without inclusive end:
     options.inclusiveEnd = NO;
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
@@ -303,14 +308,14 @@ TestCase(TD_View_Query) {
     options.startKey = @"o";
     options.endKey = @"five";
     options.inclusiveEnd = YES;
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"55555"}, {@"key", @"five"}));
     CAssertEqual(rows, expectedRows);
 
     // Reversed, no inclusive end:
     options.inclusiveEnd = NO;
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
     
@@ -318,7 +323,7 @@ TestCase(TD_View_Query) {
     options = kDefaultTDQueryOptions;
     NSArray* keys = @[@"two", @"four"];
     options.keys = keys;
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
     CAssertEqual(rows, expectedRows);
@@ -339,12 +344,10 @@ TestCase(TD_View_AllDocsQuery) {
     
     // Query all rows:
     TDQueryOptions options = kDefaultTDQueryOptions;
-    NSDictionary* query = [db getAllDocs: &options];
+    NSArray* query = [db getAllDocs: &options];
     NSArray* expectedRows = $array(expectedRow[2], expectedRow[0], expectedRow[3], expectedRow[1],
                                    expectedRow[4]);
-    CAssertEqual(query, $dict({@"rows", expectedRows},
-                              {@"total_rows", @5},
-                              {@"offset", @0}));
+    CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Start/end key query:
     options = kDefaultTDQueryOptions;
@@ -352,34 +355,26 @@ TestCase(TD_View_AllDocsQuery) {
     options.endKey = @"44444";
     query = [db getAllDocs: &options];
     expectedRows = @[expectedRow[0], expectedRow[3], expectedRow[1]];
-    CAssertEqual(query, $dict({@"rows", expectedRows},
-                              {@"total_rows", @3},
-                              {@"offset", @0}));
+    CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Start/end query without inclusive end:
     options.inclusiveEnd = NO;
     query = [db getAllDocs: &options];
     expectedRows = @[expectedRow[0], expectedRow[3]];
-    CAssertEqual(query, $dict({@"rows", expectedRows},
-                              {@"total_rows", @2},
-                              {@"offset", @0}));
+    CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Get zero specific documents:
     options = kDefaultTDQueryOptions;
     options.keys = @[];
     query = [db getAllDocs: &options];
-    CAssertEqual(query, $dict({@"rows", $array()},
-                              {@"total_rows", $object(0)},
-                              {@"offset", $object(0)}));
+    CAssertEq(query.count, 0u);
     
     // Get specific documents:
     options = kDefaultTDQueryOptions;
     NSArray* keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
     options.keys = keys;
     query = [db getAllDocs: &options];
-    CAssertEqual(query, $dict({@"rows", @[expectedRow[2], expectedRow[3]]},
-                              {@"total_rows", @2},
-                              {@"offset", @0}));
+    CAssertEqual(rowsToDicts(query), (@[expectedRow[2], expectedRow[3]]));
 
     // Delete a document:
     TD_Revision* del = docs[0];
@@ -392,14 +387,12 @@ TestCase(TD_View_AllDocsQuery) {
     options = kDefaultTDQueryOptions;
     keys = options.keys = @[@"BOGUS", expectedRow[0][@"id"]];
     query = [db getAllDocs: &options];
-    CAssertEqual(query, $dict({@"rows", @[$dict({@"key",  @"BOGUS"},
-                                                {@"error", @"not_found"}),
-                                          $dict({@"id",  del.docID},
-                                                {@"key", del.docID},
-                                                {@"value", $dict({@"rev", del.revID},
-                                                                 {@"deleted", $true})}) ]},
-                              {@"total_rows", @2},
-                              {@"offset", @0}));
+    CAssertEqual(rowsToDicts(query), (@[$dict({@"key",  @"BOGUS"},
+                                              {@"error", @"not_found"}),
+                                      $dict({@"id",  del.docID},
+                                            {@"key", del.docID},
+                                            {@"value", $dict({@"rev", del.revID},
+                                                             {@"deleted", $true})}) ]));
 }
 
 
@@ -431,7 +424,7 @@ TestCase(TD_View_Reduce) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.reduce = YES;
     TDStatus status;
-    NSArray* reduced = [view queryWithOptions: &options status: &status];
+    NSArray* reduced = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     CAssertEq(reduced.count, 1u);
     double result = [reduced[0][@"value"] doubleValue];
@@ -468,12 +461,12 @@ TestCase(TD_View_Grouped) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.reduce = YES;
     TDStatus status;
-    NSArray* rows = [view queryWithOptions: &options status: &status];
+    NSArray* rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $null}, {@"value", @(1162)})));
 
     options.group = YES;
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Ether")},
@@ -492,13 +485,13 @@ TestCase(TD_View_Grouped) {
                                     {@"value", @(309)})));
 
     options.groupLevel = 1;
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four"]}, {@"value", @(853)}),
                               $dict({@"key", @[@"PiL"]}, {@"value", @(309)})));
     
     options.groupLevel = 2;
-    rows = [view queryWithOptions: &options status: &status];
+    rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four", @"Entertainment!"]},
                                     {@"value", @(605)}),
@@ -532,7 +525,7 @@ TestCase(TD_View_GroupedStrings) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.groupLevel = 1;
     TDStatus status;
-    NSArray* rows = [view queryWithOptions: &options status: &status];
+    NSArray* rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
                               $dict({@"key", @"J"}, {@"value", @2}),
@@ -575,7 +568,7 @@ TestCase(TD_View_Collation) {
     
     TDQueryOptions options = kDefaultTDQueryOptions;
     TDStatus status;
-    NSArray* rows = [view queryWithOptions: &options status: &status];
+    NSArray* rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
@@ -620,7 +613,7 @@ TestCase(TD_View_CollationRaw) {
     
     TDQueryOptions options = kDefaultTDQueryOptions;
     TDStatus status;
-    NSArray* rows = [view queryWithOptions: &options status: &status];
+    NSArray* rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     CAssertEq(status, kTDStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
@@ -655,7 +648,7 @@ TestCase(TD_View_LinkedDocs) {
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.includeDocs = YES;
     TDStatus status;
-    NSArray* rows = [view queryWithOptions: &options status: &status];
+    NSArray* rows = rowsToDicts([view queryWithOptions: &options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"},
                                          {@"value", $dict({@"_id", @"44444"})},
                                          {@"doc", docs[1]}),

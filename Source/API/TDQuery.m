@@ -131,10 +131,9 @@
         // TODO: Implement kTDStaleUpdateAfter
         
     } else {
-        NSDictionary* result = [_database.tddb getAllDocs: &options];
-        _status = result ? kTDStatusOK :kTDStatusDBError; //FIX: getALlDocs should return status
-        lastSequence = [result[@"update_seq"] longLongValue];
-        rows = result[@"rows"];
+        rows = [_database.tddb getAllDocs: &options];
+        _status = rows ? kTDStatusOK :kTDStatusDBError; //FIX: getALlDocs should return status
+        lastSequence = _database.tddb.lastSequence;
     }
     
     if (rows)
@@ -297,17 +296,13 @@
 @implementation TDQueryRow
 {
     TDDatabase* _database;
-    id _result;
+    TD_QueryRow* _result;
 }
 
 
-- (id) initWithDatabase: (TDDatabase*)database result: (id)result {
+- (id) initWithDatabase: (TDDatabase*)database result: (TD_QueryRow*)result {
     self = [super init];
     if (self) {
-        if (![result isKindOfClass: [NSDictionary class]]) {
-            Warn(@"Unexpected row value in view results: %@", result);
-            return nil;
-        }
         _database = database;
         _result = result;
     }
@@ -315,22 +310,22 @@
 }
 
 
-- (id) key                              {return _result[@"key"];}
-- (id) value                            {return _result[@"value"];}
-- (NSString*) sourceDocumentID          {return _result[@"id"];}
-- (NSDictionary*) documentProperties    {return _result[@"doc"];}
+- (id) key                              {return _result.key;}
+- (id) value                            {return _result.value;}
+- (NSString*) sourceDocumentID          {return _result.docID;}
+- (NSDictionary*) documentProperties    {return _result.properties;}
 
 - (NSString*) documentID {
-    NSString* docID = _result[@"doc"][@"_id"];
+    NSString* docID = _result.properties[@"_id"];
     if (!docID)
-        docID = _result[@"id"];
+        docID = _result.docID;
     return docID;
 }
 
 - (NSString*) documentRevision {
     // Get the revision id from either the embedded document contents,
     // or the '_rev' or 'rev' value key:
-    NSString* rev = _result[@"doc"][@"_rev"];
+    NSString* rev = _result.properties[@"_rev"];
     if (!rev) {
         id value = self.value;
         if ([value isKindOfClass: [NSDictionary class]]) {      // $castIf would log a warning
@@ -347,7 +342,7 @@
 
 
 - (id) keyAtIndex: (NSUInteger)index {
-    id key = _result[@"key"];
+    id key = _result.key;
     if ([key isKindOfClass:[NSArray class]])
         return (index < [key count]) ? key[index] : nil;
     else

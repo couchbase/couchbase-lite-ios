@@ -975,7 +975,7 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 //FIX: This has a lot of code in common with -[TD_View queryWithOptions:status:]. Unify the two!
-- (NSDictionary*) getAllDocs: (const TDQueryOptions*)options {
+- (NSArray*) getAllDocs: (const TDQueryOptions*)options {
     if (!options)
         options = &kDefaultTDQueryOptions;
     
@@ -1054,11 +1054,12 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                        options: options->content];
                 Assert(docContents);
             }
-            NSDictionary* change = $dict({@"id",  docID},
-                                         {@"key", docID},
-                                         {@"value", $dict({@"rev", revID},
-                                                          {@"deleted", (deleted ?$true : nil)})},
-                                         {@"doc", docContents});
+            NSDictionary* value = $dict({@"rev", revID},
+                                        {@"deleted", (deleted ?$true : nil)});
+            TD_QueryRow* change = [[TD_QueryRow alloc] initWithDocID: docID
+                                                                 key: docID
+                                                               value: value
+                                                          properties: docContents];
             if (options->keys)
                 docs[docID] = change;
             else
@@ -1070,33 +1071,33 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     // If given doc IDs, sort the output into that order, and add entries for missing docs:
     if (options->keys) {
         for (NSString* docID in options->keys) {
-            NSDictionary* change = docs[docID];
+            TD_QueryRow* change = docs[docID];
             if (!change) {
-                NSString* revID = nil;
+                NSDictionary* value = nil;
                 SInt64 docNumericID = [self getDocNumericID: docID];
                 if (docNumericID > 0) {
                     BOOL deleted;
-                    revID = [self winningRevIDOfDocNumericID: docNumericID
-                                                   isDeleted: &deleted];
+                    NSString* revID = [self winningRevIDOfDocNumericID: docNumericID
+                                                             isDeleted: &deleted];
+                    if (revID)
+                        value = $dict({@"rev", revID}, {@"deleted", $true});
                 }
-                if (revID) {
-                    change = $dict({@"id",  docID},
-                                   {@"key", docID},
-                                   {@"value", $dict({@"rev", revID}, {@"deleted", $true})});
-                } else {
-                    change = $dict({@"key", docID},
-                                   {@"error", @"not_found"});
-                }
+                change = [[TD_QueryRow alloc] initWithDocID: (value ?docID :nil)
+                                                        key: docID
+                                                      value: value
+                                                 properties: nil];
             }
             [rows addObject: change];
         }
     }
 
+    return rows;
+    /* TEMP
     NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
     return $dict({@"rows", rows},
                  {@"total_rows", @(totalRows)},
                  {@"offset", @(options->skip)},
-                 {@"update_seq", update_seq ? @(update_seq) : nil});
+                 {@"update_seq", update_seq ? @(update_seq) : nil}); */
 }
 
 

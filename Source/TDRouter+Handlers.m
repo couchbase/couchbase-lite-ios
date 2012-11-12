@@ -233,13 +233,8 @@
     TDQueryOptions options;
     if (![self getQueryOptions: &options])
         return kTDStatusBadParam;
-    NSDictionary* result = [db getAllDocs: &options];
-    if (!result)
-        return kTDStatusDBError;
-    _response.bodyObject = result;
-    return kTDStatusOK;
+    return [self doAllDocs: &options];
 }
-
 
 - (TDStatus) do_POST_all_docs: (TD_Database*)db {
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
@@ -254,11 +249,17 @@
     if (![docIDs isKindOfClass: [NSArray class]])
         return kTDStatusBadParam;
     options.keys = docIDs;
-    
-    NSDictionary* result = [db getAllDocs: &options];
+    return [self doAllDocs: &options];
+}
+
+- (TDStatus) doAllDocs: (const TDQueryOptions*)options {
+    NSArray* result = [_db getAllDocs: options];
     if (!result)
         return kTDStatusDBError;
-    _response.bodyObject = result;
+    _response.bodyObject = $dict({@"rows", result},
+                                 {@"total_rows", @(result.count)},
+                                 {@"offset", @(options->skip)},
+                                 {@"update_seq", (options->updateSeq ? @(_db.lastSequence) : nil)});
     return kTDStatusOK;
 }
 
@@ -962,22 +963,27 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     TDStatus status = [view updateIndex];
     if (status >= kTDStatusBadRequest)
         return status;
-    SequenceNumber lastSequenceIndexed = view.lastSequenceIndexed;
     
     // Check for conditional GET and set response Etag header:
     if (!keys) {
-        SequenceNumber eTag = options.includeDocs ? _db.lastSequence : lastSequenceIndexed;
+        SequenceNumber eTag = options.includeDocs ? _db.lastSequence : view.lastSequenceIndexed;
         if ([self cacheWithEtag: $sprintf(@"%lld", eTag)])
             return kTDStatusNotModified;
     }
+    return [self queryView: view withOptions: &options];
+}
 
-    NSArray* rows = [view queryWithOptions: &options status: &status];
+
+- (TDStatus) queryView: (TD_View*)view withOptions: (const TDQueryOptions*)options {
+    TDStatus status;
+    NSArray* rows = [view queryWithOptions: options status: &status];
     if (!rows)
         return status;
-    id updateSeq = options.updateSeq ? @(lastSequenceIndexed) : nil;
+    rows = [rows my_map:^(TD_QueryRow* row) {return row.asJSONDictionary;}];
+    id updateSeq = options->updateSeq ? @(view.lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
                                  {@"total_rows", @(rows.count)},
-                                 {@"offset", @(options.skip)},
+                                 {@"offset", @(options->skip)},
                                  {@"update_seq", updateSeq});
     return kTDStatusOK;
 }
@@ -1022,15 +1028,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             return status;
         if (view.reduceBlock)
             options.reduce = YES;
-        NSArray* rows = [view queryWithOptions: &options status: &status];
-        if (!rows)
-            return status;
-        id updateSeq = options.updateSeq ? @(view.lastSequenceIndexed) : nil;
-        _response.bodyObject = $dict({@"rows", rows},
-                                     {@"total_rows", @(rows.count)},
-                                     {@"offset", @(options.skip)},
-                                     {@"update_seq", updateSeq});
-        return kTDStatusOK;
+        return [self queryView: view withOptions: &options];
     } @finally {
         [view deleteView];
     }

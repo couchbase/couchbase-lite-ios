@@ -407,9 +407,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     LogTo(Sync, @"ReplicatorManager scanning existing _replicator docs...");
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.includeDocs = YES;
-    NSArray* allDocs = [_replicatorDB getAllDocs: &options][@"rows"];
-    for (NSDictionary* row in allDocs) {
-        NSDictionary* docProps = row[@"doc"];
+    for (TD_QueryRow* row in [_replicatorDB getAllDocs: &options]) {
+        NSDictionary* docProps = row.properties;
         NSString* state = docProps[@"_replication_state"];
         if (state==nil || $equal(state, @"triggered") ||
                     [docProps[@"continuous"] boolValue]) {
@@ -483,9 +482,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     
     TDQueryOptions options = kDefaultTDQueryOptions;
     options.includeDocs = YES;
-    NSArray* allDocs = [_replicatorDB getAllDocs: &options][@"rows"];
-    for (NSDictionary* row in allDocs) {
-        NSDictionary* docProps = row[@"doc"];
+    for (TD_QueryRow* row in [_replicatorDB getAllDocs: &options]) {
+        NSDictionary* docProps = row.properties;
         NSString* source = $castIf(NSString, docProps[@"source"]);
         NSString* target = $castIf(NSString, docProps[@"target"]);
         if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {

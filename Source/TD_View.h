@@ -88,7 +88,7 @@ typedef enum {
 
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
-    @return  An array of result rows -- each is a dictionary with "key" and "value" keys, and possibly "id" and "doc". */
+    @return  An array of TD_QueryRows. */
 - (NSArray*) queryWithOptions: (const TDQueryOptions*)options
                        status: (TDStatus*)outStatus;
 
@@ -98,4 +98,16 @@ typedef enum {
 + (void) setCompiler: (id<TDViewCompiler>)compiler;
 + (id<TDViewCompiler>) compiler;
 
+@end
+
+
+/** One result of a view query. */
+@interface TD_QueryRow : NSObject
+- (id)initWithDocID: (NSString*)docID key: (id)key value: (id)value
+         properties: (NSDictionary*)properties;
+@property (readonly, nonatomic) id key;
+@property (readonly, nonatomic) id value;
+@property (readonly, nonatomic) NSString* docID;
+@property (readonly, nonatomic) NSDictionary* properties;
+@property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @end

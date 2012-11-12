@@ -157,8 +157,8 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 // VIEWS & QUERIES:
 
-/** Return value has keys 'rows', 'total_rows', 'offset', 'update_seq' */
-- (NSDictionary*) getAllDocs: (const struct TDQueryOptions*)options;
+/** Returns the value of an _all_docs query, as an array of TD_QueryRow. */
+- (NSArray*) getAllDocs: (const struct TDQueryOptions*)options;
 
 - (TD_View*) viewNamed: (NSString*)name;
 
