@@ -1,5 +1,5 @@
 //
-//  TouchModel.h
+//  TDModel.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 8/26/11.

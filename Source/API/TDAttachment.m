@@ -16,14 +16,14 @@
 
 @implementation TDAttachment
 {
-    TDRevision* _rev;
+    TDRevisionBase* _rev;
     NSString* _name;
     NSDictionary* _metadata;
     id _body;
 }
 
 
-- (id) initWithRevision: (TDRevision*)rev
+- (id) initWithRevision: (TDRevisionBase*)rev
                    name: (NSString*)name
                metadata: (NSDictionary*)metadata
 {
@@ -93,15 +93,15 @@
             return [NSData dataWithContentsOfURL: _body
                                          options: NSDataReadingMappedIfSafe | NSDataReadingUncached
                                            error: nil];
-        } else
-            return nil;
-    } else {
+        }
+    } else if (_rev.sequence > 0) {
         TDStatus status;
         return [_rev.database.tddb getAttachmentForSequence: _rev.sequence
                                                       named: _name
                                                        type: NULL encoding: NULL
                                                      status: &status];
     }
+    return nil;
 }
 
 
@@ -109,7 +109,7 @@
     if (_body) {
         if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
             return _body;
-    } else {
+    } else if (_rev.sequence > 0) {
         TDStatus status;
         NSString* path = [_rev.database.tddb getAttachmentPathForSequence: _rev.sequence
                                                                     named: _name

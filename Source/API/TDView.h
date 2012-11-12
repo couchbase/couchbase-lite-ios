@@ -1,5 +1,5 @@
 //
-//  TouchView.h
+//  TDView.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/19/12.

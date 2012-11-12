@@ -51,21 +51,31 @@ exclusively: (bool)exclusively;
 @end
 
 
-@interface TDRevision ()
-- (id)initWithDocument: (TDDocument*)doc revision: (TD_Revision*)rev;
-- (id)initWithTDDB: (TD_Database*)tddb revision: (TD_Revision*)rev;
-@property (readonly) TD_Revision* rev;
+@interface TDRevisionBase ()
 @property (readonly) SequenceNumber sequence;
 @end
 
 
+@interface TDRevision ()
+- (id)initWithDocument: (TDDocument*)doc revision: (TD_Revision*)rev;
+- (id)initWithTDDB: (TD_Database*)tddb revision: (TD_Revision*)rev;
+@property (readonly) TD_Revision* rev;
+@end
+
+
+@interface TDNewRevision ()
+- (id)initWithDocument: (TDDocument*)doc parent: (TDRevision*)parent;
+@end
+
+
 @interface TDAttachment ()
-- (id) initWithRevision: (TDRevision*)rev
+- (id) initWithRevision: (TDRevisionBase*)rev
                    name: (NSString*)name
                metadata: (NSDictionary*)metadata;
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (TDDatabase*)database;
 @property (readwrite, copy) NSString* name;
+@property (readwrite, retain) TDRevisionBase* revision;
 @end
 
 

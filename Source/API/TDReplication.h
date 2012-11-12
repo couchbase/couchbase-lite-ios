@@ -1,5 +1,5 @@
 //
-//  TouchReplication.h
+//  TDReplication.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/22/12.

@@ -128,9 +128,16 @@ NSString* const kTDDocumentChangeNotification = @"TouchDocumentChange";
 
 
 - (TDRevision*) revisionWithID: (NSString*)revID  {
+    if (revID && $equal(revID, _currentRevision.revisionID))
+        return _currentRevision;
     return [self revisionFromRev: [_database.tddb getDocumentWithID: _docID revisionID: revID
                                                             options: 0
                                                              status: NULL]];
+}
+
+
+- (TDNewRevision*) newRevision {
+    return [[TDNewRevision alloc] initWithDocument: self parent: self.currentRevision];
 }
 
 

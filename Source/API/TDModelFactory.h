@@ -1,5 +1,5 @@
 //
-//  TouchModelFactory.h
+//  TDModelFactory.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 11/22/11.

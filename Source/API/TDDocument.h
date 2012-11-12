@@ -7,7 +7,7 @@
 //
 
 #import "TDDatabase.h"
-@class TDRevision;
+@class TDRevision, TDNewRevision;
 
 
 /** A TouchDB document (as opposed to any specific revision of it.) */
@@ -47,6 +47,10 @@
     including deleted revisions (i.e. previously-resolved conflicts.) */
 - (NSArray*) getLeafRevisions: (NSError**)outError;
 
+/** Lets you create a new mutable revision whose parent is the currentRevision,
+    or which will be the first revision if the document doesn't exist yet.
+    You can modify this revision's properties and attachments, then save it. */
+- (TDNewRevision*) newRevision;
 
 
 #pragma mark PROPERTIES:

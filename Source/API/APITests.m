@@ -90,26 +90,69 @@ TestCase(API_CreateDocument) {
 
 
 TestCase(API_CreateRevisions) {
+    RequireTestCase(API_CreateDocument);
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
-                                @"tag": @1337};
+    @"tag": @1337};
     TDDatabase* db = createEmptyDB();
     TDDocument* doc = createDocumentWithProperties(db, properties);
     TDRevision* rev1 = doc.currentRevision;
     CAssert([rev1.revisionID hasPrefix: @"1-"]);
-    
+
     NSMutableDictionary* properties2 = [properties mutableCopy];
     properties2[@"tag"] = @4567;
     NSError* error;
     TDRevision* rev2 = [rev1 putProperties: properties2 error: &error];
     CAssert(rev2, @"Put failed: %@", error);
-    
+
     CAssert([doc.currentRevisionID hasPrefix: @"2-"],
-                 @"Document revision ID is still %@", doc.currentRevisionID);
-    
+            @"Document revision ID is still %@", doc.currentRevisionID);
+
     CAssertEqual(rev2.revisionID, doc.currentRevisionID);
     CAssert(rev2.propertiesAreLoaded);
     CAssertEqual(rev2.userProperties, properties2);
     CAssertEq(rev2.document, doc);
+}
+
+TestCase(API_CreateNewRevisions) {
+    RequireTestCase(API_CreateRevisions);
+    NSDictionary* properties = @{@"testName": @"testCreateRevisions",
+    @"tag": @1337};
+    TDDatabase* db = createEmptyDB();
+    TDDocument* doc = [db untitledDocument];
+    TDNewRevision* newRev = [doc newRevision];
+
+    CAssertEq(newRev.document, doc);
+    CAssertEq(newRev.database, db);
+    CAssertNil(newRev.parentRevisionID);
+    CAssertNil(newRev.parentRevision);
+    CAssertEqual(newRev.properties, $mdict({@"_id", doc.documentID}));
+
+    newRev[@"testName"] = @"testCreateRevisions";
+    newRev[@"tag"] = @1337;
+    CAssertEqual(newRev.userProperties, properties);
+
+    NSError* error;
+    TDRevision* rev1 = [newRev save: &error];
+    CAssert(rev1, @"Save 1 failed: %@", error);
+    CAssertEqual(rev1, doc.currentRevision);
+    CAssert([rev1.revisionID hasPrefix: @"1-"]);
+
+    newRev = [rev1 newRevision];
+    CAssertEq(newRev.document, doc);
+    CAssertEq(newRev.database, db);
+    CAssertEq(newRev.parentRevisionID, rev1.revisionID);
+    CAssertEqual(newRev.parentRevision, rev1);
+    CAssertEqual(newRev.properties, rev1.properties);
+    CAssertEqual(newRev.userProperties, rev1.userProperties);
+
+    newRev[@"tag"] = @4567;
+    TDRevision* rev2 = [newRev save: &error];
+    CAssert(rev2, @"Save 2 failed: %@", error);
+    CAssertEqual(rev2, doc.currentRevision);
+    CAssert([rev2.revisionID hasPrefix: @"2-"]);
+
+    CAssert([doc.currentRevisionID hasPrefix: @"2-"],
+            @"Document revision ID is still %@", doc.currentRevisionID);
 }
 
 #if 0
@@ -297,12 +340,9 @@ TestCase(API_History) {
 }
 
 
-#if 0
-
-
 #pragma mark - ATTACHMENTS
 
-
+#if 0
 TestCase(API_Attachments) {
     TDDatabase* db = createEmptyDB();
     NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -316,8 +356,8 @@ TestCase(API_Attachments) {
     
     NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
     TDAttachment* attach = [doc putAttachmentWithName: @"index.html"
-                                                    type: @"text/plain; charset=utf-8"
-                                                    body: body];
+                                                 type: @"text/plain; charset=utf-8"
+                                                 body: body];
     CAssert(attach);
     CAssertEq(attach.document, doc);
     CAssertEqual(attach.name, @"index.html");
@@ -333,10 +373,7 @@ TestCase(API_Attachments) {
     CAssertEqual(attach.body, body);
     CAssertEq(attach.length, (UInt64)body.length);
 }
-
-
 #endif
-
 
 #pragma mark - CHANGE TRACKING
 

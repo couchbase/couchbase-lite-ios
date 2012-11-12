@@ -1,5 +1,5 @@
 //
-//  TouchAttachment.h
+//  TDAttachment.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/21/12.
@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDDocument, TDRevision;
+@class TDDocument, TDRevisionBase;
 
 
 /** A binary attachment to a document revision.
@@ -23,7 +23,7 @@
                       body: (id)body;
 
 /** The owning document revision. */
-@property (readonly) TDRevision* revision;
+@property (readonly, retain) TDRevisionBase* revision;
 
 /** The owning document. */
 @property (readonly) TDDocument* document;
