@@ -105,6 +105,23 @@
 }
 
 
+- (NSURL*) bodyURL {
+    if (_body) {
+        if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
+            return _body;
+    } else {
+        TDStatus status;
+        NSString* path = [_rev.database.tddb getAttachmentPathForSequence: _rev.sequence
+                                                                    named: _name
+                                                                     type: NULL encoding: NULL
+                                                                   status: &status];
+        if (path)
+            return [NSURL fileURLWithPath: path];
+    }
+    return nil;
+}
+
+
 - (TDRevision*) updateBody: (NSData*)body
                   contentType: (NSString*)contentType
                         error: (NSError**)outError
