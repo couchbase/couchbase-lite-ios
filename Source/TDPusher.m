@@ -254,7 +254,12 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
                           if (item[@"error"]) {
                               // One of the docs failed to save:
                               Warn(@"%@: _bulk_docs got an error: %@", self, item);
-                              error = TDStatusToNSError(kTDStatusUpstreamError, nil);
+                              TDStatus status = kTDStatusUpstreamError;
+                              if ($equal(item[@"error"], @"unauthorized"))
+                                  status = kTDStatusUnauthorized;
+                              NSString* docID = item[@"id"];
+                              NSURL* url = docID ? [_remote URLByAppendingPathComponent: docID] : nil;
+                              error = TDStatusToNSError(status, url);
                           }
                       }
                   }

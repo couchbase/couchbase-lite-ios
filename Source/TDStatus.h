@@ -16,6 +16,7 @@ typedef enum {
     kTDStatusNotModified    = 304,
     
     kTDStatusBadRequest     = 400,
+    kTDStatusUnauthorized   = 401,
     kTDStatusForbidden      = 403,
     kTDStatusNotFound       = 404,
     kTDStatusNotAcceptable  = 406,
