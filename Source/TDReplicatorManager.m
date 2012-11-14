@@ -213,7 +213,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     // Only certain keys can be changed or removed:
     NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", nil];
     NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params",
-                                                      @"heartbeat", @"feed", nil];
+                                                      @"heartbeat", @"feed", @"reset", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
     return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context currentRevision])
@@ -244,9 +244,9 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             [changedKeys minusSet:mutableSubProperties];
             return [changedKeys count] == 0;
         }
-        
-        NSSet* allowed = newValue ? mutableProperties : deletableProperties;
-        return [allowed containsObject: key];
+
+        return [mutableProperties containsObject: key] ||
+                (newValue == nil && [deletableProperties containsObject: key]);
     }];
 }
 
@@ -263,6 +263,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         NSDictionary* currentProperties = currentRev.properties;
         NSMutableDictionary* updatedProperties = [currentProperties mutableCopy];
         [updatedProperties addEntriesFromDictionary: updates];
+        [updatedProperties removeObjectForKey: @"reset"];   // reset is one-shot, so take it out now
+        
         if ($equal(updatedProperties, currentProperties)) {
             status = kTDStatusOK;     // this is a no-op change
             break;

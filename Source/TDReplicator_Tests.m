@@ -254,8 +254,9 @@ TestCase(TDReplicatorManager) {
     CAssertEqual(repl.sessionID, sessionID);
     CAssert(repl.running);
     
-    // Delete the _replication_state property:
+    // Delete the _replication_state property, and add "reset" while we're at it:
     NSMutableDictionary* updatedProps = [newRev.properties mutableCopy];
+    updatedProps[@"reset"] = $true;
     [updatedProps removeObjectForKey: @"_replication_state"];
     rev = [TD_Revision revisionWithProperties: updatedProps];
     rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];

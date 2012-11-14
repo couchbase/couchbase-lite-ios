@@ -44,6 +44,7 @@
 
 - (IBAction) configureSync: (id)sender;
 - (IBAction) dismissSyncConfigSheet:(id)sender;
+- (IBAction) resetSync: (id)sender;
 
 @property (retain) NSURL* syncURL;
 

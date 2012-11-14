@@ -188,6 +188,22 @@ int main (int argc, const char * argv[]) {
 }
 
 
+- (void) resetReplication: (CouchPersistentReplication*)repl {
+    [repl setValue: @YES ofProperty: @"reset"];
+    [repl restart];
+}
+
+- (IBAction) resetSync: (id)sender {
+    NSURL* syncURL = self.syncURL;
+    if (!syncURL) {
+        NSBeep();
+        return;
+    }
+    [self resetReplication: [_database replicationFromDatabaseAtURL: syncURL]];
+    [self resetReplication: [_database replicationToDatabaseAtURL: syncURL]];
+}
+
+
 #pragma mark - SYNC:
 
 
