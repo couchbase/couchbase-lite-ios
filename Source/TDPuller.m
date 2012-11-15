@@ -74,9 +74,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                       [self insertDownloads: downloads];
                                                   }];
     }
-
-    [_pendingSequences release];
-    _pendingSequences = [[TDSequenceMap alloc] init];
+    
+    if (!_pendingSequences) {
+        _pendingSequences = [[TDSequenceMap alloc] init];
+    }
 
     _caughtUp = NO;
     [self asyncTaskStarted];   // task: waiting to catch up
