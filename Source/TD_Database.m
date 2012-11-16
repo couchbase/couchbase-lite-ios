@@ -115,9 +115,8 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     return YES;
 }
 
-- (BOOL) open {
-    if (_open)
-        return YES;
+
+- (BOOL) openFMDB {
     int flags = SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
     if (_readOnly)
         flags |= SQLITE_OPEN_READONLY;
@@ -126,7 +125,7 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     LogTo(TD_Database, @"Open %@ (flags=%X)", _path, flags);
     if (![_fmdb openWithFlags: flags])
         return NO;
-    
+
     // Register CouchDB-compatible JSON collation functions:
     sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8,
                              kTDCollateJSON_Unicode, TDCollateJSON);
@@ -136,9 +135,18 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
                              kTDCollateJSON_ASCII, TDCollateJSON);
     sqlite3_create_collation(_fmdb.sqliteHandle, "REVID", SQLITE_UTF8,
                              NULL, TDCollateRevIDs);
-    
+
     // Stuff we need to initialize every time the database opens:
     if (![self initialize: @"PRAGMA foreign_keys = ON;"])
+        return NO;
+    return YES;
+}
+
+
+- (BOOL) open {
+    if (_open)
+        return YES;
+    if (![self openFMDB])
         return NO;
     
     // Check the user_version number we last stored in the database:

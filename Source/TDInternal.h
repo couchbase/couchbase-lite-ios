@@ -22,6 +22,7 @@
 @property (readwrite, copy) NSString* name;  // make it settable
 @property (readonly) FMDatabase* fmdb;
 @property (readonly) TDBlobStore* attachmentStore;
+- (BOOL) openFMDB;
 - (SInt64) getDocNumericID: (NSString*)docID;
 - (TD_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       numericID: (SInt64)docNumericID

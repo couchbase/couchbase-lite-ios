@@ -114,6 +114,10 @@ int main (int argc, const char * argv[]) {
 }
 
 
+- (IBAction) compact: (id)sender {
+    [_database compact];
+}
+
 
 #pragma mark - SYNC UI:
 

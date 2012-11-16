@@ -623,8 +623,17 @@ NSString* const TD_DatabaseChangeNotification = @"TD_DatabaseChange";
     Log(@"Deleting old attachments...");
     TDStatus status = [self garbageCollectAttachments];
 
+    Log(@"Flushing SQLite WAL...");
+    if (![_fmdb executeUpdate: @"PRAGMA wal_checkpoint(RESTART)"])
+        return kTDStatusDBError;
+
     Log(@"Vacuuming SQLite database...");
     if (![_fmdb executeUpdate: @"VACUUM"])
+        return kTDStatusDBError;
+
+    Log(@"Closing and re-opening database...");
+    [_fmdb close];
+    if (![self openFMDB])
         return kTDStatusDBError;
 
     Log(@"...Finished database compaction.");
