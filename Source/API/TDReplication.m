@@ -74,29 +74,20 @@ NSString* const kTDReplicationChangeNotification = @"TouchReplicationChange";
 - (id) initWithDocument:(TDDocument *)document {
     self = [super initWithDocument: document];
     if (self) {
-        self.autosaves = YES;  // turn on autosave for all persistent replications
-        
-        NSString* urlStr = self.sourceURLStr;
-        if (isLocalDBName(urlStr))
-            urlStr = self.targetURLStr;
-        else
-            _pull = YES;
-        _remoteURL = [[NSURL alloc] initWithString: urlStr];
-        _mainThread = [NSThread currentThread];
-
-#if RUN_IN_BACKGROUND
-        [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
-                                                       to: ^(TD_Database* tddb) {
-            _bg_serverDatabase = tddb;
-        }];
-#else
-        _bg_serverDatabase = self.localDatabase.tddb;
-#endif
-        // Observe *all* replication changes:
-        [[NSNotificationCenter defaultCenter] addObserver: self
-                                                 selector: @selector(bg_replicationProgressChanged:)
-                                                     name: TDReplicatorProgressChangedNotification
-                                                   object: nil];
+        if (!self.isNew) {
+            // This is a persistent replication being loaded from the database:
+            self.autosaves = YES;  // turn on autosave for all persistent replications
+            NSString* urlStr = self.sourceURLStr;
+            if (isLocalDBName(urlStr))
+                urlStr = self.targetURLStr;
+            else
+                _pull = YES;
+            Assert(urlStr);
+            _remoteURL = [[NSURL alloc] initWithString: urlStr];
+            Assert(_remoteURL);
+            
+            [self observeReplicatorManager];
+        }
     }
     return self;
 }
@@ -126,7 +117,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (bool) persistent {
-    return self.document != nil;
+    return !self.isNew;  // i.e. if it's been saved to the database, it's persistent
 }
 
 - (void) setPersistent:(bool)persistent {
@@ -138,10 +129,13 @@ static inline BOOL isLocalDBName(NSString* url) {
         ok = [self save: &error];
     else
         ok = [self deleteDocument: &error];
-    if (ok)
-        self.autosaves = persistent;
-    else 
+    if (!ok) {
         Warn(@"Error changing persistence of %@: %@", self, error);
+        return;
+    }
+    self.autosaves = persistent;
+    if (persistent)
+        [self observeReplicatorManager];
 }
 
 
@@ -229,9 +223,26 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
-// This is only for non-persistent replications. Persistent ones are started by
-// the TDReplicatorManager.
+- (void) observeReplicatorManager {
+    _mainThread = [NSThread currentThread];
+#if RUN_IN_BACKGROUND
+    [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
+                                                   to: ^(TD_Database* tddb) {
+                                                       _bg_serverDatabase = tddb;
+                                                   }];
+#else
+    _bg_serverDatabase = self.localDatabase.tddb;
+#endif
+    // Observe *all* replication changes:
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(bg_replicationProgressChanged:)
+                                                 name: TDReplicatorProgressChangedNotification
+                                               object: nil];
+}
+
+
 - (void) start {
+    // This is a no-op for persistent replications -- they're started by the TDReplicatorManager.
     if (_started || self.persistent)
         return;
     _started = YES;
@@ -251,6 +262,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (void) stop {
+    // This is a no-op for persistent replications
     if (self.persistent)
         return;
     [self tellDatabaseManager:^(TD_DatabaseManager* dbmgr) {

@@ -90,8 +90,19 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 - (BOOL) inTransaction: (BOOL(^)(void))block;
 
 
+/** Creates a replication that will 'push' to a database at the given URL.
+    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
 - (TDReplication*) pushToURL: (NSURL*)url;
+
+/** Creates a replication that will 'pull' from a database at the given URL.
+    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
 - (TDReplication*) pullFromURL: (NSURL*)url;
+
+/** Creates a pair of replications to both pull and push to database at the given URL.
+    @param otherDbURL  The URL of the remote database.
+    @param exclusively  If YES, any previously existing replications to or from otherDbURL will be deleted.
+    @return  An array whose first element is the "pull" replication and second is the "push".
+    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
 - (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
 
 
