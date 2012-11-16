@@ -114,6 +114,11 @@ int main (int argc, const char * argv[]) {
 }
 
 
+- (IBAction) applicationWillTerminate:(id)sender {
+    [(CouchTouchDBServer*)_database.server close];
+}
+
+
 - (IBAction) compact: (id)sender {
     [_database compact];
 }

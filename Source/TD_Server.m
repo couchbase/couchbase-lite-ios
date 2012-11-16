@@ -79,10 +79,13 @@
 
 - (void) close {
     if (_serverThread) {
-        [self queue: ^{
+        [self waitForDatabaseManager:^id(TD_DatabaseManager* mgr) {
             LogTo(TD_Server, @"Stopping server thread...");
             [TDURLProtocol unregisterServer: self];
+            [_manager close];
+            _manager = nil;
             _stopRunLoop = YES;
+            return nil;
         }];
         _serverThread = nil;
     }
@@ -137,6 +140,23 @@
 
 - (void) tellDatabaseManager: (void (^)(TD_DatabaseManager*))block {
     [self queue: ^{ block(_manager); }];
+}
+
+
+- (id) waitForDatabaseManager: (id (^)(TD_DatabaseManager*))block {
+    __block id result = nil;
+    NSConditionLock* lock = [[NSConditionLock alloc] initWithCondition: 0];
+    [self queue: ^{
+        [lock lockWhenCondition: 0];
+        @try {
+            result = block(_manager);
+        } @finally {
+            [lock unlockWithCondition: 1];
+        }
+    }];
+    [lock lockWhenCondition: 1];  // wait till block finishes
+    [lock unlock];
+    return result;
 }
 
 
