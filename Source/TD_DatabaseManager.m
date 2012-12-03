@@ -185,6 +185,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 - (TDReplicatorManager*) replicatorManager {
     if (!_replicatorManager && !_options.noReplicator) {
+        LogTo(TD_Server, @"Starting replicator manager for %@", self);
         _replicatorManager = [[TDReplicatorManager alloc] initWithDatabaseManager: self];
         [_replicatorManager start];
     }

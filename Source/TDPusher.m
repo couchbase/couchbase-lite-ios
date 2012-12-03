@@ -44,7 +44,20 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
 
 
 - (TD_FilterBlock) filter {
-    return _filterName ? [_db filterNamed: _filterName] : NULL;
+    if (!_filterName)
+        return NULL;
+    TD_FilterBlock filter = [_db filterNamed: _filterName];
+    if (!filter) {
+        Warn(@"%@: No TDFilterBlock registered for filter '%@'", self, _filterName);
+        if (!_error) {
+            NSDictionary* info = $dict({NSLocalizedFailureReasonErrorKey, @"Unknown filter"});
+            self.error = [NSError errorWithDomain: TDHTTPErrorDomain
+                                             code: kTDStatusNotFound
+                                         userInfo: info];
+        }
+        [self stop];
+    }
+    return filter;
 }
 
 
@@ -77,9 +90,12 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
     if (_creatingTarget)
         return;
     
-    TD_FilterBlock filter = self.filter;
-    if (!filter && _filterName)
-        Warn(@"%@: No TDFilterBlock registered for filter '%@'; ignoring", self, _filterName);
+    TD_FilterBlock filter = NULL;
+    if (_filterName) {
+        filter = self.filter;
+        if (!filter)
+            return; // missing filter block
+    }
     
     // Include conflicts so all conflicting revisions are replicated too
     TDChangesOptions options = kDefaultTDChangesOptions;
@@ -145,9 +161,13 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
     if ([userInfo[@"source"] isEqual: _remote])
         return;
     TD_Revision* rev = userInfo[@"rev"];
-    TD_FilterBlock filter = self.filter;
-    if (filter && !filter(rev, _filterParameters))
-        return;
+
+    if (_filterName) {
+        TD_FilterBlock filter = self.filter;
+        if (!filter || !filter(rev, _filterParameters))
+            return;
+    }
+    
     [self addToInbox: rev];
 }
 
