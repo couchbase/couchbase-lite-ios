@@ -1,5 +1,5 @@
 //
-//  TDView.m
+//  TD_View.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/8/11.
@@ -13,8 +13,9 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDView.h"
+#import "TD_View.h"
 #import "TDInternal.h"
+#import "TDCollateJSON.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -34,10 +35,10 @@ const TDQueryOptions kDefaultTDQueryOptions = {
 static id<TDViewCompiler> sCompiler;
 
 
-@implementation TDView
+@implementation TD_View
 
 
-- (id) initWithDatabase: (TDDatabase*)db name: (NSString*)name {
+- (id) initWithDatabase: (TD_Database*)db name: (NSString*)name {
     Assert(db);
     Assert(name.length);
     self = [super init];
@@ -50,12 +51,6 @@ static id<TDViewCompiler> sCompiler;
 }
 
 
-- (void)dealloc {
-    [_name release];
-    [_mapBlock release];
-    [_reduceBlock release];
-    [super dealloc];
-}
 
 
 @synthesize database=_db, name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock,
@@ -80,10 +75,8 @@ static id<TDViewCompiler> sCompiler;
 {
     Assert(mapBlock);
     Assert(version);
-    [_mapBlock autorelease];
-    _mapBlock = [mapBlock copy];
-    [_reduceBlock autorelease];
-    _reduceBlock = [reduceBlock copy];
+    _mapBlock = mapBlock; // copied implicitly in ARC
+    _reduceBlock = reduceBlock; // copied implicitly in ARC
     
     if (![_db open])
         return NO;
@@ -302,7 +295,7 @@ static id fromJSON( NSData* json ) {
                 
                 if (conflicts) {
                     // Add a "_conflicts" property if there were conflicting revisions:
-                    NSMutableDictionary* mutableProps = [[properties mutableCopy] autorelease];
+                    NSMutableDictionary* mutableProps = [properties mutableCopy];
                     mutableProps[@"_conflicts"] = conflicts;
                     properties = mutableProps;
                 }
@@ -410,28 +403,6 @@ static id fromJSON( NSData* json ) {
 }
 
 
-// Are key1 and key2 grouped together at this groupLevel?
-static bool groupTogether(id key1, id key2, unsigned groupLevel) {
-    if (groupLevel == 0 || ![key1 isKindOfClass: [NSArray class]]
-                        || ![key2 isKindOfClass: [NSArray class]])
-        return [key1 isEqual: key2];
-    unsigned end = MIN(groupLevel, MIN([key1 count], [key2 count]));
-    for (unsigned i = 0; i< end; ++i) {
-        if (![key1[i] isEqual: key2[i]])
-            return false;
-    }
-    return true;
-}
-
-// Returns the prefix of the key to use in the result row, at this groupLevel
-static id groupKey(id key, unsigned groupLevel) {
-    if (groupLevel > 0 && [key isKindOfClass: [NSArray class]] && [key count] > groupLevel)
-        return [key subarrayWithRange: NSMakeRange(0, groupLevel)];
-    else
-        return key;
-}
-
-
 - (NSArray*) queryWithOptions: (const TDQueryOptions*)options
                        status: (TDStatus*)outStatus
 {
@@ -442,47 +413,28 @@ static id groupKey(id key, unsigned groupLevel) {
     if (!r)
         return nil;
     
+    NSMutableArray* rows;
+    
     unsigned groupLevel = options->groupLevel;
     bool group = options->group || groupLevel > 0;
-    bool reduce = options->reduce || group;
+    if (options->reduce || group) {
+        // Reduced or grouped query:
+        // Reduced or grouped query:
+        if (!_reduceBlock && !group) {
+            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
+            *outStatus = kTDStatusBadParam;
+            return nil;
+        }
+        rows = [self reducedQuery: r group: group groupLevel: groupLevel];
 
-    if (reduce && !_reduceBlock && !group) {
-        Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
-        *outStatus = kTDStatusBadParam;
-        return nil;
-    }
-    
-    NSMutableArray* rows = $marray();
-    NSMutableArray* keysToReduce=nil, *valuesToReduce=nil;
-    id lastKey = nil;
-    if (reduce) {
-        keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-        valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-    }
-    
-    while ([r next]) {
-        @autoreleasepool {
-            id key = fromJSON([r dataNoCopyForColumnIndex: 0]);
-            id value = fromJSON([r dataNoCopyForColumnIndex: 1]);
-            Assert(key);
-            if (reduce) {
-                // Reduced or grouped query:
-                if (group && !groupTogether(key, lastKey, groupLevel) && lastKey) {
-                    // This pair starts a new group, so reduce & record the last one:
-                    id reduced = _reduceBlock ? _reduceBlock(keysToReduce, valuesToReduce,NO) : nil;
-                    [rows addObject: $dict({@"key", groupKey(lastKey, groupLevel)},
-                                           {@"value", (reduced ?: $null)})];
-                    [keysToReduce removeAllObjects];
-                    [valuesToReduce removeAllObjects];
-                }
-                LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
-                      _name, toJSONString(key), toJSONString(value));
-                [keysToReduce addObject: key];
-                [valuesToReduce addObject: value ?: $null];
-                lastKey = key;
-
-            } else {
-                // Regular query:
+    } else {
+        // Regular query:
+        rows = $marray();
+        while ([r next]) {
+            @autoreleasepool {
+                id key = fromJSON([r dataNoCopyForColumnIndex: 0]);
+                id value = fromJSON([r dataNoCopyForColumnIndex: 1]);
+                Assert(key);
                 NSString* docID = [r stringForColumnIndex: 2];
                 id docContents = nil;
                 if (options->includeDocs) {
@@ -491,7 +443,7 @@ static id groupKey(id key, unsigned groupLevel) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = value[@"_rev"]; // usually nil
                         TDStatus linkedStatus;
-                        TDRevision* linked = [_db getDocumentWithID: linkedID
+                        TD_Revision* linked = [_db getDocumentWithID: linkedID
                                                          revisionID: linkedRev
                                                             options: options->content
                                                              status: &linkedStatus];
@@ -514,27 +466,96 @@ static id groupKey(id key, unsigned groupLevel) {
             }
         }
     }
-    
-    if (reduce) {
-        if (keysToReduce.count > 0) {
-            // Finish the last group (or the entire list, if no grouping):
-            id key = group ? groupKey(lastKey, groupLevel) : $null;
-            id reduced = _reduceBlock ? _reduceBlock(keysToReduce, valuesToReduce,NO) : nil;
-            LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
-                  _name, toJSONString(key), toJSONString(reduced));
-            [rows addObject: $dict({@"key", key},
-                                   {@"value", (reduced ?: $null)})];
-        }
-        [keysToReduce release];
-        [valuesToReduce release];
-    }
-    
+
     [r close];
     *outStatus = kTDStatusOK;
     LogTo(View, @"Query %@: Returning %u rows", _name, (unsigned)rows.count);
     return rows;
 }
 
+
+#pragma mark - REDUCING/GROUPING:
+
+
+// Are key1 and key2 grouped together at this groupLevel?
+static bool groupTogether(NSData* key1, NSData* key2, unsigned groupLevel) {
+    if (!key1 || !key2)
+        return NO;
+    if (groupLevel == 0)
+        groupLevel = UINT_MAX;
+    return TDCollateJSONLimited(kTDCollateJSON_Unicode,
+                                (int)key1.length, key1.bytes,
+                                (int)key2.length, key2.bytes,
+                                groupLevel) == 0;
+}
+
+// Returns the prefix of the key to use in the result row, at this groupLevel
+static id groupKey(NSData* keyJSON, unsigned groupLevel) {
+    id key = fromJSON(keyJSON);
+    if (groupLevel > 0 && [key isKindOfClass: [NSArray class]] && [key count] > groupLevel)
+        return [key subarrayWithRange: NSMakeRange(0, groupLevel)];
+    else
+        return key;
+}
+
+
+// Invokes the reduce function on the parallel arrays of keys and values
+- (id) reduceKeys: (NSMutableArray*)keys values: (NSMutableArray*)values {
+    if (!_reduceBlock)
+        return nil;
+    TDLazyArrayOfJSON* lazyKeys = [[TDLazyArrayOfJSON alloc] initWithArray: keys];
+    TDLazyArrayOfJSON* lazyVals = [[TDLazyArrayOfJSON alloc] initWithArray: values];
+    id result = _reduceBlock(lazyKeys, lazyVals, NO);
+    return result ?: $null;
+}
+
+
+- (NSMutableArray*) reducedQuery: (FMResultSet*)r group: (BOOL)group groupLevel: (unsigned)groupLevel
+{
+    NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
+    if (_reduceBlock) {
+        keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
+        valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
+    }
+    NSData* lastKeyData = nil;
+
+    NSMutableArray* rows = $marray();
+    while ([r next]) {
+        @autoreleasepool {
+            NSData* keyData = [r dataForColumnIndex: 0];
+            NSData* valueData = [r dataForColumnIndex: 1];
+            Assert(keyData);
+            if (group && !groupTogether(keyData, lastKeyData, groupLevel)) {
+                if (lastKeyData) {
+                    // This pair starts a new group, so reduce & record the last one:
+                    id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
+                    [rows addObject: $dict({@"key", groupKey(lastKeyData, groupLevel)},
+                                           {@"value", reduced})];
+                    [keysToReduce removeAllObjects];
+                    [valuesToReduce removeAllObjects];
+                }
+                lastKeyData = [keyData copy];
+            }
+            LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
+                  _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString]);
+            [keysToReduce addObject: keyData];
+            [valuesToReduce addObject: valueData ?: $null];
+        }
+    }
+
+    if (keysToReduce.count > 0) {
+        // Finish the last group (or the entire list, if no grouping):
+        id key = group ? groupKey(lastKeyData, groupLevel) : $null;
+        id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
+        LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
+              _name, toJSONString(key), toJSONString(reduced));
+        [rows addObject: $dict({@"key", key}, {@"value", reduced})];
+    }
+    return rows;
+}
+
+
+#pragma mark - OTHER:
 
 // This is really just for unit tests & debugging
 - (NSArray*) dump {
@@ -566,8 +587,7 @@ static id groupKey(id key, unsigned groupLevel) {
 
 
 + (void) setCompiler: (id<TDViewCompiler>)compiler {
-    [sCompiler autorelease];
-    sCompiler = [compiler retain];
+    sCompiler = compiler;
 }
 
 + (id<TDViewCompiler>) compiler {

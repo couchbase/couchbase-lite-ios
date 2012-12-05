@@ -16,7 +16,7 @@
 // <http://wiki.apache.org/couchdb/HTTP_database_API#Changes>
 
 #import "TDChangeTracker.h"
-#import "TDConnectionChangeTracker.h"
+#import "TDSocketChangeTracker.h"
 #import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDStatus.h"
@@ -26,9 +26,6 @@
 
 #define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
 #define kMaxRetryDelay 300.0        // ...but will never get longer than this
-
-
-static NSURL* AddDotToURLHost( NSURL* url );
 
 
 @interface TDChangeTracker ()
@@ -50,10 +47,17 @@ static NSURL* AddDotToURLHost( NSURL* url );
                    client: (id<TDChangeTrackerClient>)client {
     NSParameterAssert(databaseURL);
     NSParameterAssert(client);
-    Assert([self class] != [TDChangeTracker class]); // abstract!
     self = [super init];
     if (self) {
-        _databaseURL = [databaseURL retain];
+        if([self class] == [TDChangeTracker class]) {
+            // TDChangeTracker is abstract; instantiate a concrete subclass instead.
+            return [[TDSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
+                                                                 mode: mode
+                                                            conflicts: includeConflicts
+                                                         lastSequence: lastSequenceID
+                                                               client: client];
+        }
+        _databaseURL = databaseURL;
         _client = client;
         _mode = mode;
         _heartbeat = kDefaultHeartbeat;
@@ -91,13 +95,7 @@ static NSURL* AddDotToURLHost( NSURL* url );
 }
 
 - (NSURL*) changesFeedURL {
-    // Really ugly workaround for CFNetwork, to make sure that long-running connections like these
-    // don't end up using the same socket pool as regular connections to the same host; otherwise
-    // the regular connections can get stuck indefinitely behind a long-running one.
-    // (This substitution appends a "." to the host name, if it didn't already end with one.)
-    NSURL* url = AddDotToURLHost(_databaseURL);
-
-    NSMutableString* urlStr = [[url.absoluteString mutableCopy] autorelease];
+    NSMutableString* urlStr = [_databaseURL.absoluteString mutableCopy];
     if (![urlStr hasSuffix: @"/"])
         [urlStr appendString: @"/"];
     [urlStr appendString: self.changesFeedPath];
@@ -110,14 +108,6 @@ static NSURL* AddDotToURLHost( NSURL* url );
 
 - (void) dealloc {
     [self stop];
-    [_filterName release];
-    [_filterParameters release];
-    [_databaseURL release];
-    [_lastSequenceID release];
-    [_error release];
-    [_requestHeaders release];
-    [_authorizer release];
-    [super dealloc];
 }
 
 - (void) setUpstreamError: (NSString*)message {
@@ -185,6 +175,27 @@ static NSURL* AddDotToURLHost( NSURL* url );
     return YES;
 }
 
+- (BOOL) receivedChanges: (NSArray*)changes errorMessage: (NSString**)errorMessage {
+    if ([_client respondsToSelector: @selector(changeTrackerReceivedChanges:)]) {
+        [_client changeTrackerReceivedChanges: changes];
+        if (changes.count > 0)
+            self.lastSequenceID = [[changes lastObject] objectForKey: @"seq"];
+    } else {
+        for (NSDictionary* change in changes) {
+            if (![self receivedChange: change]) {
+                if (errorMessage) {
+                    *errorMessage = $sprintf(@"Invalid change object: %@",
+                                             [TDJSON stringWithJSONObject: change
+                                                                  options:TDJSONWritingAllowFragments
+                                                                    error: nil]);
+                }
+                return NO;
+            }
+        }
+    }
+    return YES;
+}
+
 - (NSInteger) receivedPollResponse: (NSData*)body errorMessage: (NSString**)errorMessage {
     if (!body) {
         *errorMessage = @"No body in response";
@@ -202,71 +213,9 @@ static NSURL* AddDotToURLHost( NSURL* url );
         *errorMessage = @"No 'changes' array in response";
         return -1;
     }
-
-    if ([_client respondsToSelector: @selector(changeTrackerReceivedChanges:)]) {
-        [_client changeTrackerReceivedChanges: changes];
-        if (changes.count > 0)
-            self.lastSequenceID = [[changes lastObject] objectForKey: @"seq"];
-    } else {
-        for (NSDictionary* change in changes) {
-            if (![self receivedChange: change]) {
-                *errorMessage = $sprintf(@"Invalid change object: %@",
-                                         [TDJSON stringWithJSONObject: change
-                                                              options:TDJSONWritingAllowFragments
-                                                                error: nil]);
-                return -1;
-            }
-        }
-    }
+    if (![self receivedChanges: changes errorMessage: errorMessage])
+        return -1;
     return changes.count;
 }
 
 @end
-
-
-static NSURL* AddDotToURLHost( NSURL* url ) {
-    CAssert(url);
-    UInt8 urlBytes[1024];
-    CFIndex nBytes = CFURLGetBytes((CFURLRef)url, urlBytes, sizeof(urlBytes) - 1);
-    if (nBytes > 0) {
-        CFRange range;
-        CFURLGetByteRangeForComponent((CFURLRef)url, kCFURLComponentHost, &range);
-        if (range.length >= 2) {
-            CFIndex end = range.location + range.length - 1;
-            if (urlBytes[end] == '/' || urlBytes[end] == ':')
-                --end;
-            if (isalpha(urlBytes[end])) {
-                // Alright, insert the '.' after end:
-                memmove(&urlBytes[end+2], &urlBytes[end+1], nBytes - end);
-                urlBytes[end+1] = '.';
-                NSURL* newURL = (id)(CFURLCreateWithBytes(NULL, urlBytes, nBytes + 1,
-                                                          kCFStringEncodingUTF8, NULL));
-                if (newURL)
-                    url = [newURL autorelease];
-                else
-                    Warn(@"AddDotToURLHost: Failed to add dot to <%@> -- result is <%.*s>",
-                         url, (int)nBytes+1, urlBytes);
-            }
-        }
-    }
-    return url;
-}
-
-
-#if DEBUG
-static NSString* addDot( NSString* urlStr ) {
-    return AddDotToURLHost([NSURL URLWithString: urlStr]).absoluteString;
-}
-
-TestCase(AddDotToURLHost) {
-    CAssertEqual(addDot(@"http://x/y"),                 @"http://x./y");
-    CAssertEqual(addDot(@"http://foo.com"),             @"http://foo.com.");
-    CAssertEqual(addDot(@"http://foo.com/"),            @"http://foo.com./");
-    CAssertEqual(addDot(@"http://foo.com/bar"),         @"http://foo.com./bar");
-    CAssertEqual(addDot(@"http://foo.com:123/"),        @"http://foo.com.:123/");
-    CAssertEqual(addDot(@"http://user:pass@foo.com/"),  @"http://user:pass@foo.com./");
-    CAssertEqual(addDot(@"http://foo.com./"),           @"http://foo.com./");
-    CAssertEqual(addDot(@"http://localhost/"),          @"http://localhost./");
-    CAssertEqual(addDot(@"http://10.0.1.12/"),          @"http://10.0.1.12/");
-}
-#endif

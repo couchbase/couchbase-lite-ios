@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "TDMultipartDocumentReader.h"
-#import "TDDatabase+Attachments.h"
+#import "TD_Database+Attachments.h"
 #import "TDBlobStore.h"
 #import "TDInternal.h"
 #import "TDBase64.h"
@@ -28,7 +28,7 @@
 
 + (NSDictionary*) readData: (NSData*)data
                     ofType: (NSString*)contentType
-                toDatabase: (TDDatabase*)database
+                toDatabase: (TD_Database*)database
                     status: (TDStatus*)outStatus
 {
     if (data.length == 0) {
@@ -40,16 +40,15 @@
     if ([reader setContentType: contentType]
             && [reader appendData: data]
             && [reader finish]) {
-        result = [[reader.document retain] autorelease];
+        result = reader.document;
     }
     if (outStatus)
         *outStatus = reader.status;
-    [reader release];
     return result;
 }
 
 
-- (id) initWithDatabase: (TDDatabase*)database
+- (id) initWithDatabase: (TD_Database*)database
 {
     Assert(database);
     self = [super init];
@@ -62,14 +61,6 @@
 
 - (void) dealloc {
     [_curAttachment cancel];
-    [_curAttachment release];
-    [_multipartReader release];
-    [_jsonBuffer release];
-    [_document release];
-    [_attachmentsByName autorelease];
-    [_attachmentsByDigest autorelease];
-    [_completionBlock release];
-    [super dealloc];
 }
 
 
@@ -146,10 +137,10 @@
 
 + (TDStatus) readStream: (NSInputStream*)stream
                  ofType: (NSString*)contentType
-             toDatabase: (TDDatabase*)database
+             toDatabase: (TD_Database*)database
                    then: (TDMultipartDocumentReaderCompletionBlock)onCompletion
 {
-    TDMultipartDocumentReader* reader = [[[self alloc] initWithDatabase: database] autorelease];
+    TDMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];
     return [reader readStream: stream ofType: contentType then: onCompletion];
 }
 
@@ -160,7 +151,7 @@
 {
     if ([self setContentType: contentType]) {
         LogTo(SyncVerbose, @"%@: Reading from input stream...", self);
-        [self retain];  // balanced by release in -finishAsync:
+          // balanced by release in -finishAsync:
         _completionBlock = [completionBlock copy];
         [stream open];
         stream.delegate = self;
@@ -210,9 +201,8 @@
     if (!TDStatusIsError(_status))
         [self finish];
     _completionBlock(self);
-    [_completionBlock release];
     _completionBlock = nil;
-    [self release];  // balances -retain in -readStream:
+      // balances -retain in -readStream:
 }
 
 
@@ -227,7 +217,7 @@
     else {
         LogTo(SyncVerbose, @"%@: Starting attachment #%u...",
               self, (unsigned)_attachmentsByDigest.count + 1);
-        _curAttachment = [[_database attachmentWriter] retain];
+        _curAttachment = [_database attachmentWriter];
         
         // See whether the attachment name is in the headers.
         NSString* disposition = headers[@"Content-Disposition"];
@@ -271,7 +261,7 @@
         }
 #endif
         _attachmentsByDigest[md5Str] = _curAttachment;
-        setObj(&_curAttachment, nil);
+        _curAttachment = nil;
     }
 }
 
@@ -286,12 +276,12 @@
     if (![document isKindOfClass: [NSDictionary class]]) {
         Warn(@"%@: received unparseable JSON data '%@'",
              self, [_jsonBuffer my_UTF8ToString]);
-        setObj(&_jsonBuffer, nil);
+        _jsonBuffer = nil;
         _status = kTDStatusUpstreamError;
         return NO;
     }
-    setObj(&_jsonBuffer, nil);
-    _document = [document retain];
+    _jsonBuffer = nil;
+    _document = document;
     return YES;
 }
 

@@ -1,5 +1,5 @@
 //
-//  TDDatabase+Replication.m
+//  TD_Database+Replication.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/27/11.
@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDDatabase+Replication.h"
+#import "TD_Database+Replication.h"
 #import "TDInternal.h"
 #import "TDPuller.h"
 #import "MYBlockUtils.h"
@@ -25,7 +25,7 @@
 #define kActiveReplicatorCleanupDelay 10.0
 
 
-@implementation TDDatabase (Replication)
+@implementation TD_Database (Replication)
 
 
 - (NSArray*) activeReplicators {
@@ -62,7 +62,6 @@
                                                    object: nil];
     }
     [_activeReplicators addObject: repl];
-    [repl release];
     return repl;
 }
 
@@ -117,14 +116,14 @@
 }
 
 
-- (BOOL) findMissingRevisions: (TDRevisionList*)revs {
+- (BOOL) findMissingRevisions: (TD_RevisionList*)revs {
     if (revs.count == 0)
         return YES;
     NSString* sql = $sprintf(@"SELECT docid, revid FROM revs, docs "
                               "WHERE revid in (%@) AND docid IN (%@) "
                               "AND revs.doc_id == docs.doc_id",
-                             [TDDatabase joinQuotedStrings: revs.allRevIDs],
-                             [TDDatabase joinQuotedStrings: revs.allDocIDs]);
+                             [TD_Database joinQuotedStrings: revs.allRevIDs],
+                             [TD_Database joinQuotedStrings: revs.allDocIDs]);
     // ?? Not sure sqlite will optimize this fully. May need a first query that looks up all
     // the numeric doc_ids from the docids.
     FMResultSet* r = [_fmdb executeQuery: sql];
@@ -132,7 +131,7 @@
         return NO;
     while ([r next]) {
         @autoreleasepool {
-            TDRevision* rev = [revs revWithDocID: [r stringForColumnIndex: 0]
+            TD_Revision* rev = [revs revWithDocID: [r stringForColumnIndex: 0]
                                            revID: [r stringForColumnIndex: 1]];
             if (rev)
                 [revs removeRev: rev];

@@ -28,19 +28,12 @@
 - (id) initWithObject: (id)object {
     self = [super init];
     if (self) {
-        _input = [object retain];
+        _input = object;
     }
     return self;
 }
 
 
-- (void)dealloc {
-    [_ignoreKeyPrefix release];
-    [_whitelistedKeys release];
-    [_output release];
-    [_input release];
-    [super dealloc];
-}
 
 
 @synthesize ignoreKeyPrefix=_ignoreKeyPrefix, whitelistedKeys=_whitelistedKeys;
@@ -189,7 +182,7 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 
 - (NSString*) canonicalString {
     [self encode];
-    return [[_output copy] autorelease];
+    return [_output copy];
 }
 
 
@@ -202,7 +195,6 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 + (NSString*) canonicalString: (id)rootObject {
     TDCanonicalJSON* encoder = [[self alloc] initWithObject: rootObject];
     NSString* result = encoder.canonicalString;
-    [encoder release];
     return result;
 }
 
@@ -210,7 +202,6 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 + (NSData*) canonicalData: (id)rootObject {
     TDCanonicalJSON* encoder = [[self alloc] initWithObject: rootObject];
     NSData* result = encoder.canonicalData;
-    [encoder release];
     return result;
 }
 

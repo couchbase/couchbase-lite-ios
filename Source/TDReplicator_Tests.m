@@ -16,9 +16,9 @@
 #import "TDPuller.h"
 #import "TDPusher.h"
 #import "TDReplicatorManager.h"
-#import "TDServer.h"
-#import "TDDatabase+Replication.h"
-#import "TDDatabase+Insertion.h"
+#import "TD_Server.h"
+#import "TD_Database+Replication.h"
+#import "TD_Database+Insertion.h"
 #import "TDOAuth1Authorizer.h"
 #import "TDBase64.h"
 #import "TDInternal.h"
@@ -59,7 +59,7 @@ static void deleteRemoteDB(void) {
                                                           onCompletion:
         ^(id result, NSError *err) {
             finished = YES;
-            error = [err retain];
+            error = err;
         }
                                 ];
     request.authorizer = authorizer();
@@ -68,16 +68,14 @@ static void deleteRemoteDB(void) {
     while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                                  beforeDate: timeout])
         ;
-    [request release];
     CAssert(error == nil || error.code == kTDStatusNotFound, @"Couldn't delete remote: %@", error);
-    [error release];
 }
 
 
-static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* filter) {
+static NSString* replic8(TD_Database* db, NSString* urlStr, BOOL push, NSString* filter) {
     NSURL* remote = [NSURL URLWithString: urlStr];
-    TDReplicator* repl = [[[TDReplicator alloc] initWithDB: db remote: remote
-                                                        push: push continuous: NO] autorelease];
+    TDReplicator* repl = [[TDReplicator alloc] initWithDB: db remote: remote
+                                                        push: push continuous: NO];
     if (push)
         ((TDPusher*)repl).createTarget = YES;
     repl.filterName = filter;
@@ -100,13 +98,13 @@ static NSString* replic8(TDDatabase* db, NSString* urlStr, BOOL push, NSString* 
 
 
 TestCase(TDPusher) {
-    RequireTestCase(TDDatabase);
-    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDPusherTest"];
-    TDDatabase* db = [server databaseNamed: @"db"];
+    RequireTestCase(TD_Database);
+    TD_DatabaseManager* server = [TD_DatabaseManager createEmptyAtTemporaryPath: @"TDPusherTest"];
+    TD_Database* db = [server databaseNamed: @"db"];
     [db open];
     
     __block int filterCalls = 0;
-    [db defineFilter: @"filter" asBlock: ^BOOL(TDRevision *revision, NSDictionary* params) {
+    [db defineFilter: @"filter" asBlock: ^BOOL(TD_Revision *revision, NSDictionary* params) {
         Log(@"Test filter called with params = %@", params);
         Log(@"Rev = %@, properties = %@", revision, revision.properties);
         CAssert(revision.properties);
@@ -120,19 +118,19 @@ TestCase(TDPusher) {
     NSMutableDictionary* props = $mdict({@"_id", @"doc1"},
                                         {@"foo", @1}, {@"bar", $false});
     TDStatus status;
-    TDRevision* rev1 = [db putRevision: [TDRevision revisionWithProperties: props]
+    TD_Revision* rev1 = [db putRevision: [TD_Revision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusCreated);
     
     props[@"_rev"] = rev1.revID;
     props[@"UPDATED"] = $true;
-    TDRevision* rev2 = [db putRevision: [TDRevision revisionWithProperties: props]
+    TD_Revision* rev2 = [db putRevision: [TD_Revision revisionWithProperties: props]
                         prevRevisionID: rev1.revID allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusCreated);
     
     props = $mdict({@"_id", @"doc2"},
                    {@"baz", @(666)}, {@"fnord", $true});
-    [db putRevision: [TDRevision revisionWithProperties: props]
+    [db putRevision: [TD_Revision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusCreated);
 #pragma unused(rev2)
@@ -149,8 +147,8 @@ TestCase(TDPusher) {
 
 TestCase(TDPuller) {
     RequireTestCase(TDPusher);
-    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDPullerTest"];
-    TDDatabase* db = [server databaseNamed: @"db"];
+    TD_DatabaseManager* server = [TD_DatabaseManager createEmptyAtTemporaryPath: @"TDPullerTest"];
+    TD_Database* db = [server databaseNamed: @"db"];
     [db open];
     
     id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
@@ -164,7 +162,7 @@ TestCase(TDPuller) {
     replic8(db, kRemoteDBURLStr, NO, nil);
     CAssertEq(db.lastSequence, 3);
     
-    TDRevision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
+    TD_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"2-"]);
     CAssertEqual(doc[@"foo"], @1);
@@ -187,14 +185,14 @@ TestCase(TDPuller_FromCouchApp) {
     }
     
     RequireTestCase(TDPuller);
-    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDPuller_FromCouchApp"];
-    TDDatabase* db = [server databaseNamed: @"couchapp_helloworld"];
+    TD_DatabaseManager* server = [TD_DatabaseManager createEmptyAtTemporaryPath: @"TDPuller_FromCouchApp"];
+    TD_Database* db = [server databaseNamed: @"couchapp_helloworld"];
     [db open];
     
     replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
 
     TDStatus status;
-    TDRevision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kTDIncludeAttachments status: &status];
+    TD_Revision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kTDIncludeAttachments status: &status];
     NSDictionary* attachments = rev[@"_attachments"];
     CAssertEq(attachments.count, 10u);
     for (NSString* name in attachments) { 
@@ -211,38 +209,38 @@ TestCase(TDPuller_FromCouchApp) {
 
 TestCase(TDReplicatorManager) {
     RequireTestCase(ParseReplicatorProperties);
-    TDDatabaseManager* server = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
+    TD_DatabaseManager* server = [TD_DatabaseManager createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
     CAssert([server replicatorManager]);    // start the replicator
-    TDDatabase* replicatorDb = [server databaseNamed: kTDReplicatorDatabaseName];
+    TD_Database* replicatorDb = [server databaseNamed: kTDReplicatorDatabaseName];
     CAssert(replicatorDb);
     CAssert([replicatorDb open]);
     
     // Try some bogus validation docs that will fail the validator function:
-    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
+    TD_Revision* rev = [TD_Revision revisionWithProperties: $dict({@"source", @"foo"},
                                                                 {@"target", @7})];
 #pragma unused (rev) // some of the 'rev=' assignments below are unnecessary
     TDStatus status;
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusForbidden);
 
-    rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
+    rev = [TD_Revision revisionWithProperties: $dict({@"source", @"foo"},
                                                     {@"target", @"http://foo.com"},
                                                     {@"_internal", $true})];  // <--illegal prop
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusForbidden);
     
-    TDDatabase* sourceDB = [server databaseNamed: @"foo"];
+    TD_Database* sourceDB = [server databaseNamed: @"foo"];
     CAssert([sourceDB open]);
 
     // Now try a valid replication document:
     NSURL* remote = [NSURL URLWithString: @"http://localhost:5984/tdreplicator_test"];
-    rev = [TDRevision revisionWithProperties: $dict({@"source", @"foo"},
+    rev = [TD_Revision revisionWithProperties: $dict({@"source", @"foo"},
                                                     {@"target", remote.absoluteString})];
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusCreated);
     
     // Get back the document and verify it's been updated with replicator properties:
-    TDRevision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil];
+    TD_Revision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil];
     Log(@"Updated doc = %@", newRev.properties);
     CAssert(!$equal(newRev.revID, rev.revID), @"Replicator doc wasn't updated");
     NSString* sessionID = newRev[@"_replication_id"];
@@ -256,10 +254,11 @@ TestCase(TDReplicatorManager) {
     CAssertEqual(repl.sessionID, sessionID);
     CAssert(repl.running);
     
-    // Delete the _replication_state property:
-    NSMutableDictionary* updatedProps = [[newRev.properties mutableCopy] autorelease];
+    // Delete the _replication_state property, and add "reset" while we're at it:
+    NSMutableDictionary* updatedProps = [newRev.properties mutableCopy];
+    updatedProps[@"reset"] = $true;
     [updatedProps removeObjectForKey: @"_replication_state"];
-    rev = [TDRevision revisionWithProperties: updatedProps];
+    rev = [TD_Revision revisionWithProperties: updatedProps];
     rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusCreated);
 
@@ -287,11 +286,11 @@ TestCase(TDReplicatorManager) {
 
 
 TestCase(ParseReplicatorProperties) {
-    TDDatabaseManager* dbManager = [TDDatabaseManager createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
+    TD_DatabaseManager* dbManager = [TD_DatabaseManager createEmptyAtTemporaryPath: @"TDReplicatorManagerTest"];
     TDReplicatorManager* replManager = [dbManager replicatorManager];
-    TDDatabase* localDB = [dbManager databaseNamed: @"foo"];
+    TD_Database* localDB = [dbManager databaseNamed: @"foo"];
 
-    TDDatabase* db = nil;
+    TD_Database* db = nil;
     NSURL* remote = nil;
     BOOL isPush = NO, createTarget = NO;
     NSDictionary* headers = nil;
@@ -311,7 +310,7 @@ TestCase(ParseReplicatorProperties) {
     CAssertEqual(remote, $url(@"http://example.com"));
     CAssertEq(isPush, YES);
     CAssertEq(createTarget, YES);
-    CAssertEq(headers, nil);
+    CAssertEqual(headers, nil);
     
     props = $dict({@"source", @"touchdb:///foo"},
                   {@"target", @"foo"});
@@ -326,7 +325,7 @@ TestCase(ParseReplicatorProperties) {
     CAssertEqual(remote, $url(@"touchdb:///foo"));
     CAssertEq(isPush, NO);
     CAssertEq(createTarget, NO);
-    CAssertEq(headers, nil);
+    CAssertEqual(headers, nil);
     
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
                                     {@"consumer_key", @"consumer_key"},

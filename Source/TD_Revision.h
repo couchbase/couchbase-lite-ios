@@ -1,5 +1,5 @@
 //
-//  TDRevision.h
+//  TD_Revision.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/2/11.
@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDBody;
+@class TD_Body;
 
 
 /** Database sequence ID */
@@ -15,11 +15,11 @@ typedef SInt64 SequenceNumber;
 
 
 /** Stores information about a revision -- its docID, revID, and whether it's deleted. It can also store the sequence number and document contents (they can be added after creation). */
-@interface TDRevision : NSObject
+@interface TD_Revision : NSObject
 {
     @private
     NSString* _docID, *_revID;
-    TDBody* _body;
+    TD_Body* _body;
     SequenceNumber _sequence;
     bool _deleted;
     bool _missing;
@@ -28,17 +28,17 @@ typedef SInt64 SequenceNumber;
 - (id) initWithDocID: (NSString*)docID 
                revID: (NSString*)revID 
              deleted: (BOOL)deleted;
-- (id) initWithBody: (TDBody*)body;
+- (id) initWithBody: (TD_Body*)body;
 - (id) initWithProperties: (NSDictionary*)properties;
 
-+ (TDRevision*) revisionWithProperties: (NSDictionary*)properties;
++ (TD_Revision*) revisionWithProperties: (NSDictionary*)properties;
 
 @property (readonly) NSString* docID;
 @property (readonly) NSString* revID;
 @property (readonly) bool deleted;
 @property bool missing;
 
-@property (retain) TDBody* body;
+@property (strong) TD_Body* body;
 @property (copy) NSDictionary* properties;
 @property (copy) NSData* asJSON;
 
@@ -46,7 +46,7 @@ typedef SInt64 SequenceNumber;
 
 @property SequenceNumber sequence;
 
-- (NSComparisonResult) compareSequences: (TDRevision*)rev;
+- (NSComparisonResult) compareSequences: (TD_Revision*)rev;
 
 /** Generation number: 1 for a new document, 2 for the 2nd revision, ...
     Extracted from the numeric prefix of the revID. */
@@ -58,14 +58,14 @@ typedef SInt64 SequenceNumber;
      intoGeneration: (int*)outNum
           andSuffix: (NSString**)outSuffix;
 
-- (TDRevision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID;
+- (TD_Revision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID;
 
 @end
 
 
 
 /** An ordered list of TDRevs. */
-@interface TDRevisionList : NSObject <NSFastEnumeration>
+@interface TD_RevisionList : NSObject <NSFastEnumeration>
 {
     @private
     NSMutableArray* _revs;
@@ -76,7 +76,7 @@ typedef SInt64 SequenceNumber;
 
 @property (readonly) NSUInteger count;
 
-- (TDRevision*) revWithDocID: (NSString*)docID revID: (NSString*)revID;
+- (TD_Revision*) revWithDocID: (NSString*)docID revID: (NSString*)revID;
 
 - (NSEnumerator*) objectEnumerator;
 
@@ -84,10 +84,10 @@ typedef SInt64 SequenceNumber;
 @property (readonly) NSArray* allDocIDs;
 @property (readonly) NSArray* allRevIDs;
 
-- (TDRevision*) objectAtIndexedSubscript: (NSUInteger)index;  // enables subscript access in XC4.4+
+- (TD_Revision*) objectAtIndexedSubscript: (NSUInteger)index;  // enables subscript access in XC4.4+
 
-- (void) addRev: (TDRevision*)rev;
-- (void) removeRev: (TDRevision*)rev;
+- (void) addRev: (TD_Revision*)rev;
+- (void) removeRev: (TD_Revision*)rev;
 
 - (void) limit: (NSUInteger)limit;
 - (void) sortBySequence;

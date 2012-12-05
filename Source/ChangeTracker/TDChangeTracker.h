@@ -28,17 +28,17 @@
 
 typedef enum TDChangeTrackerMode {
     kOneShot,
-    kLongPoll
+    kLongPoll,
+    kContinuous
 } TDChangeTrackerMode;
 
 
-/** Reads the continuous-mode _changes feed of a database, and sends the individual change entries to its client's -changeTrackerReceivedChange:. 
-    This class is abstract. Instantiate TDConnectionChangeTracker instead. */
+/** Reads the continuous-mode _changes feed of a database, and sends the individual change entries to its client.  */
 @interface TDChangeTracker : NSObject <NSStreamDelegate>
 {
     @protected
     NSURL* _databaseURL;
-    id<TDChangeTrackerClient> _client;
+    id<TDChangeTrackerClient> __weak _client;
     TDChangeTrackerMode _mode;
     id _lastSequenceID;
     unsigned _limit;
@@ -62,10 +62,10 @@ typedef enum TDChangeTrackerMode {
 @property (readonly, nonatomic) NSString* databaseName;
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly, copy, nonatomic) id lastSequenceID;
-@property (retain, nonatomic) NSError* error;
-@property (assign, nonatomic) id<TDChangeTrackerClient> client;
-@property (retain, nonatomic) NSDictionary *requestHeaders;
-@property (retain, nonatomic) id<TDAuthorizer> authorizer;
+@property (strong, nonatomic) NSError* error;
+@property (weak, nonatomic) id<TDChangeTrackerClient> client;
+@property (strong, nonatomic) NSDictionary *requestHeaders;
+@property (strong, nonatomic) id<TDAuthorizer> authorizer;
 
 @property (nonatomic) TDChangeTrackerMode mode;
 @property (copy) NSString* filterName;
@@ -86,6 +86,8 @@ typedef enum TDChangeTrackerMode {
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
 - (NSInteger) receivedPollResponse: (NSData*)body errorMessage: (NSString**)errorMessage;
+- (BOOL) receivedChanges: (NSArray*)changes errorMessage: (NSString**)errorMessage;
+- (BOOL) receivedChange: (NSDictionary*)change;
 - (void) stopped; // override this
 
 @end

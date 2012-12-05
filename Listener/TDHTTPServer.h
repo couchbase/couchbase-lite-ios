@@ -7,17 +7,17 @@
 //
 
 #import "HTTPServer.h"
-@class TDListener, TDServer;
+@class TDListener, TD_Server;
 
 
 @interface TDHTTPServer : HTTPServer {
 @private
     TDListener* _listener;
-    TDServer* _tdServer;
+    TD_Server* _tdServer;
 }
 
 @property (retain) TDListener* listener;
-@property (retain) TDServer* tdServer;
+@property (retain) TD_Server* tdServer;
 
 @end
 

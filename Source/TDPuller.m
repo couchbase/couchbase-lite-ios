@@ -14,10 +14,10 @@
 //  and limitations under the License.
 
 #import "TDPuller.h"
-#import "TDDatabase+Insertion.h"
-#import "TDDatabase+Replication.h"
-#import <TouchDB/TDRevision.h>
-#import "TDConnectionChangeTracker.h"
+#import "TD_Database+Insertion.h"
+#import "TD_Database+Replication.h"
+#import <TouchDB/TD_Revision.h>
+#import "TDChangeTracker.h"
 #import "TDAuthorizer.h"
 #import "TDBatcher.h"
 #import "TDMultipartDownloader.h"
@@ -27,9 +27,10 @@
 #import "ExceptionUtils.h"
 
 
-// Maximum number of revisions to fetch simultaneously
-// (This used to be 8, but sometimes connections got stuck and timed out. See #163)
-#define kMaxOpenHTTPConnections 4
+// Maximum number of revisions to fetch simultaneously. (CFNetwork will only send about 5
+// simultaneous requests, but by keeping a larger number in its queue we ensure that it doesn't
+// run out, even if the TD thread doesn't always have time to run.)
+#define kMaxOpenHTTPConnections 12
 
 // ?limit= param for _changes feed: max # of revs to get in one batch. Smaller values reduce
 // latency since we can't parse till the entire result arrives in longpoll mode. But larger
@@ -55,13 +56,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 - (void)dealloc {
     [_changeTracker stop];
-    [_changeTracker release];
-    [_revsToPull release];
-    [_deletedRevsToPull release];
-    [_bulkRevsToPull release];
-    [_downloadsToInsert release];
-    [_pendingSequences release];
-    [super dealloc];
 }
 
 
@@ -74,10 +68,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                       [self insertDownloads: downloads];
                                                   }];
     }
-
-    [_pendingSequences release];
-    _pendingSequences = [[TDSequenceMap alloc] init];
-
+    if (!_pendingSequences) {
+        _pendingSequences = [[TDSequenceMap alloc] init];
+    }
+    
     _caughtUp = NO;
     [self asyncTaskStarted];   // task: waiting to catch up
     [self startChangeTracker];
@@ -89,11 +83,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     TDChangeTrackerMode mode = (_continuous && _caughtUp) ? kLongPoll : kOneShot;
     
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
-    _changeTracker = [[TDConnectionChangeTracker alloc] initWithDatabaseURL: _remote
-                                                                       mode: mode
-                                                                  conflicts: YES
-                                                               lastSequence: _lastSequence
-                                                                     client: self];
+    _changeTracker = [[TDChangeTracker alloc] initWithDatabaseURL: _remote
+                                                             mode: mode
+                                                        conflicts: YES
+                                                     lastSequence: _lastSequence
+                                                           client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
     _changeTracker.limit = kChangesFeedLimit;
     _changeTracker.filterName = _filterName;
@@ -124,10 +118,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         if (!_caughtUp)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
     }
-    setObj(&_changeTracker, nil);
-    setObj(&_revsToPull, nil);
-    setObj(&_deletedRevsToPull, nil);
-    setObj(&_bulkRevsToPull, nil);
+    _changeTracker = nil;
+    _revsToPull = nil;
+    _deletedRevsToPull = nil;
+    _bulkRevsToPull = nil;
     [super stop];
     
     [_downloadsToInsert flushAll];
@@ -145,7 +139,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (void) stopped {
-    setObj(&_downloadsToInsert, nil);
+    _downloadsToInsert = nil;
     [super stopped];
 }
 
@@ -179,7 +173,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             // Process each change from the feed:
             NSString* remoteSequenceID = [change[@"seq"] description];
             NSString* docID = change[@"id"];
-            if (!docID || ![TDDatabase isValidDocumentID: docID])
+            if (!docID || ![TD_Database isValidDocumentID: docID])
                 continue;
             
             BOOL deleted = [change[@"deleted"] isEqual: (id)kCFBooleanTrue];
@@ -199,7 +193,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                     if (changes.count > 1)
                         rev.conflicted = true;
                     [self addToInbox: rev];
-                    [rev release];
 
                     changeCount++;
                 }
@@ -226,7 +219,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSError* error = tracker.error;
     LogTo(Sync, @"%@: ChangeTracker stopped; error=%@", self, error.description);
     
-    [_changeTracker release];
     _changeTracker = nil;
     
     if (error) {
@@ -248,7 +240,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 // Process a bunch of remote revisions from the _changes feed at once
-- (void) processInbox: (TDRevisionList*)inbox {
+- (void) processInbox: (TD_RevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     NSString* lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
@@ -296,11 +288,21 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 // Add a revision to the appropriate queue of revs to individually GET
-- (void) queueRemoteRevision: (TDRevision*)rev {
-    NSMutableArray** pQueue = (rev.deleted) ? &_deletedRevsToPull : &_revsToPull;
-    if (!*pQueue)
-        *pQueue = [[NSMutableArray alloc] initWithCapacity: 100];
-    [*pQueue addObject: rev];
+- (void) queueRemoteRevision: (TD_Revision*)rev {
+    if (rev.deleted)
+    {
+        if (!_deletedRevsToPull)
+            _deletedRevsToPull = [[NSMutableArray alloc] initWithCapacity:100];
+        
+        [_deletedRevsToPull addObject:rev];
+    }
+    else
+    {
+        if (!_revsToPull)
+            _revsToPull = [[NSMutableArray alloc] initWithCapacity:100];
+        
+        [_revsToPull addObject:rev];
+    }
 }
 
 
@@ -336,7 +338,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Fetches the contents of a revision from the remote db, including its parent revision ID.
 // The contents are stored into rev.properties.
-- (void) pullRemoteRevision: (TDRevision*)rev
+- (void) pullRemoteRevision: (TD_Revision*)rev
 {
     [self asyncTaskStarted];
     ++_httpConnectionCount;
@@ -353,33 +355,38 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     LogTo(SyncVerbose, @"%@: GET .%@", self, path);
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    __block TDMultipartDownloader* dl = [[[TDMultipartDownloader alloc]
-                                    initWithURL: [NSURL URLWithString: urlStr]
-                                       database: _db
-                                 requestHeaders: self.requestHeaders
-                                   onCompletion:
+    
+    // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...
+    // results in compiler error (could be undefined variable)
+    __weak TDPuller *weakSelf = self;
+    __block TDMultipartDownloader *dl = nil;
+    dl = [[TDMultipartDownloader alloc] initWithURL: [NSURL URLWithString: urlStr]
+                                           database: _db
+                                     requestHeaders: self.requestHeaders
+                                       onCompletion:
         ^(TDMultipartDownloader* download, NSError *error) {
+            __strong TDPuller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
             if (error) {
-                self.error = error;
-                [self revisionFailed];
-                self.changesProcessed++;
+                strongSelf.error = error;
+                [strongSelf revisionFailed];
+                strongSelf.changesProcessed++;
             } else {
-                TDRevision* gotRev = [TDRevision revisionWithProperties: download.document];
+                TD_Revision* gotRev = [TD_Revision revisionWithProperties: download.document];
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [_downloadsToInsert queueObject: gotRev];
-                [self asyncTaskStarted];
+                [strongSelf asyncTaskStarted];
             }
             
             // Note that we've finished this task:
-            [self removeRemoteRequest: dl];
-            [self asyncTasksFinished: 1];
+            [strongSelf removeRemoteRequest:dl];
+            [strongSelf asyncTasksFinished:1];
             --_httpConnectionCount;
             // Start another task if there are still revisions waiting to be pulled:
-            [self pullRemoteRevisions];
+            [strongSelf pullRemoteRevisions];
         }
-     ] autorelease];
+     ];
     [self addRemoteRequest: dl];
     dl.authorizer = _authorizer;
     [dl start];
@@ -397,8 +404,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     [self asyncTaskStarted];
     ++_httpConnectionCount;
-    NSMutableArray* remainingRevs = [[bulkRevs mutableCopy] autorelease];
-    NSArray* keys = [bulkRevs my_map: ^(TDRevision* rev) { return rev.docID; }];
+    NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
+    NSArray* keys = [bulkRevs my_map: ^(TD_Revision* rev) { return rev.docID; }];
     [self sendAsyncRequest: @"POST"
                       path: @"/_all_docs?include_docs=true"
                       body: $dict({@"keys", keys})
@@ -417,7 +424,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       for (NSDictionary* row in rows) {
                           NSDictionary* doc = $castIf(NSDictionary, row[@"doc"]);
                           if (doc && !doc[@"_attachments"]) {
-                              TDRevision* rev = [TDRevision revisionWithProperties: doc];
+                              TD_Revision* rev = [TD_Revision revisionWithProperties: doc];
                               NSUInteger pos = [remainingRevs indexOfObject: rev];
                               if (pos != NSNotFound) {
                                   rev.sequence = [remainingRevs[pos] sequence];
@@ -433,7 +440,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   if (remainingRevs.count) {
                       LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
                             self, (unsigned)remainingRevs.count, (unsigned)nRevs);
-                      for (TDRevision* rev in remainingRevs)
+                      for (TD_Revision* rev in remainingRevs)
                           [self queueRemoteRevision: rev];
                       [self pullRemoteRevisions];
                   }
@@ -457,10 +464,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     BOOL success = NO;
     @try{
         downloads = [downloads sortedArrayUsingSelector: @selector(compareSequences:)];
-        for (TDRevision* rev in downloads) {
+        for (TD_Revision* rev in downloads) {
             @autoreleasepool {
                 SequenceNumber fakeSequence = rev.sequence;
-                NSArray* history = [TDDatabase parseCouchDBRevisionHistory: rev.properties];
+                NSArray* history = [TD_Database parseCouchDBRevisionHistory: rev.properties];
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
                     self.error = TDStatusToNSError(kTDStatusUpstreamError, nil);
@@ -520,10 +527,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 @synthesize remoteSequenceID=_remoteSequenceID, conflicted=_conflicted;
 
-- (void) dealloc {
-    [_remoteSequenceID release];
-    [super dealloc];
-}
 
 @end
 

@@ -70,3 +70,13 @@ typedef NSUInteger TDJSONWritingOptions;
 + (NSData*) appendDictionary: (NSDictionary*)dict
         toJSONDictionaryData: (NSData*)json;
 @end
+
+
+/** Wrapper for an NSArray of JSON data, that avoids having to parse the data if it's not used.
+    NSData objects in the array will be parsed into native objects before being returned to the caller from -objectAtIndex. */
+@interface TDLazyArrayOfJSON : NSArray
+{
+    NSMutableArray* _array;
+}
+- (id) initWithArray: (NSMutableArray*)array;
+@end

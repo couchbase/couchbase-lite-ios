@@ -31,12 +31,6 @@
 }
 
 
-- (void)dealloc
-{
-    [_sequences release];
-    [_values release];
-    [super dealloc];
-}
 
 
 - (SequenceNumber) addValue: (id)value {
@@ -83,7 +77,7 @@
 
 
 TestCase(TDSequenceMap) {
-    TDSequenceMap* map = [[[TDSequenceMap alloc] init] autorelease];
+    TDSequenceMap* map = [[TDSequenceMap alloc] init];
     CAssertEq(map.checkpointedSequence, 0);
     CAssertEqual(map.checkpointedValue, nil);
     CAssert(map.isEmpty);

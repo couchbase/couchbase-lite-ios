@@ -17,7 +17,7 @@
 #import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDBlobStore.h"
-#import <TouchDB/TDDatabase.h>
+#import <TouchDB/TD_Database.h>
 #import "TDRouter.h"
 #import "TDReplicator.h"
 #import "CollectionUtils.h"
@@ -70,9 +70,10 @@
 }
 
 - (void) setAuthorizer: (id<TDAuthorizer>)authorizer {
-    if (ifSetObj(&_authorizer, authorizer)) {
+    if (_authorizer != authorizer) {
+        _authorizer = authorizer;
         [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
-                  forHTTPHeaderField: @"Authorization"];
+        forHTTPHeaderField: @"Authorization"];
     }
 }
 
@@ -92,31 +93,32 @@
         return;     // -clearConnection already called
     LogTo(RemoteRequest, @"%@: Starting...", self);
     Assert(!_connection);
-    _connection = [[NSURLConnection connectionWithRequest: _request delegate: self] retain];
+    _connection = [NSURLConnection connectionWithRequest: _request delegate: self];
+
     // Retaining myself shouldn't be necessary, because NSURLConnection is documented as retaining
     // its delegate while it's running. But GNUstep doesn't (currently) do this, so for
     // compatibility I retain myself until the connection completes (see -clearConnection.)
     // TODO: Remove this and the [self autorelease] below when I get the fix from GNUstep.
+#ifdef GNUSTEP
     [self retain];
+#endif
 }
 
 
 - (void) clearConnection {
-    [_request release];
     _request = nil;
     if (_connection) {
-        [_connection autorelease];
         _connection = nil;
-        [self autorelease];  // balances [self retain] in -start method
+        
+#ifdef GNUSTEP
+        [self release];
+#endif
     }
 }
 
 
 - (void)dealloc {
     [self clearConnection];
-    [_onCompletion release];
-    [_authorizer release];
-    [super dealloc];
 }
 
 
@@ -138,7 +140,6 @@
 
 - (void) startAfterDelay: (NSTimeInterval)delay {
     // assumes _connection already failed or canceled.
-    [_connection autorelease];
     _connection = nil;
     [self performSelector: @selector(start) withObject: nil afterDelay: delay];
 }
@@ -154,7 +155,7 @@
         NSError* error = [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCancelled
                                          userInfo: nil];
         [self respondWithResult: nil error: error];
-        [_onCompletion release];   // break cycles
+           // break cycles
         _onCompletion = nil;
     }
 }
@@ -193,7 +194,7 @@
     }
 
     [_connection cancel];
-    self.authorizer = [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
+    self.authorizer = [[TDBasicAuthorizer alloc] initWithCredential: cred];
     LogTo(RemoteRequest, @"%@ retrying with %@", self, _authorizer);
     [self startAfterDelay: 0.0];
     return true;
@@ -252,13 +253,16 @@
             CFRelease(subject);
         }
 #else
+#ifdef __OBJC_GC__
         NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
+#else
+        NSArray* trustProperties = (__bridge_transfer NSArray *)SecTrustCopyProperties(trust);
+#endif
         for (NSDictionary* property in trustProperties) {
             Warn(@"    %@: error = %@",
-                 property[(id)kSecPropertyTypeTitle],
-                 property[(id)kSecPropertyTypeError]);
+                 property[(__bridge id)kSecPropertyTypeTitle],
+                 property[(__bridge id)kSecPropertyTypeError]);
         }
-        [trustProperties release];
 #endif
         return NO;
     }
@@ -301,7 +305,7 @@
 {
     // The redirected request needs to be authorized again:
     if (![request valueForHTTPHeaderField: @"Authorization"]) {
-        NSMutableURLRequest* nuRequest = [[request mutableCopy] autorelease];
+        NSMutableURLRequest* nuRequest = [request mutableCopy];
         NSString* auth;
         if (_authorizer)
             auth = [_authorizer authorizeURLRequest: nuRequest forRealm: nil];
@@ -362,7 +366,6 @@
 }
 
 - (void) clearConnection {
-    [_jsonBuffer release];
     _jsonBuffer = nil;
     [super clearConnection];
 }

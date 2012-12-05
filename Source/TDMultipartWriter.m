@@ -30,18 +30,13 @@
         // Account for the final boundary to be written by -opened. Add its length now, because the
         // client is probably going to ask for my .length *before* it calls -open.
         NSString* finalBoundaryStr = $sprintf(@"\r\n--%@--", _boundary);
-        _finalBoundary = [[finalBoundaryStr dataUsingEncoding: NSUTF8StringEncoding] retain];
+        _finalBoundary = [finalBoundaryStr dataUsingEncoding: NSUTF8StringEncoding];
         _length += _finalBoundary.length;
     }
     return self;
 }
 
 
-- (void)dealloc {
-    [_boundary release];
-    [_finalBoundary release];
-    [super dealloc];
-}
 
 
 @synthesize boundary=_boundary;
@@ -53,7 +48,7 @@
 
 
 - (void) setNextPartsHeaders: (NSDictionary*)headers {
-    setObj(&_nextPartsHeaders, headers);
+    _nextPartsHeaders = headers;
 }
 
 
@@ -69,7 +64,6 @@
         [value replaceOccurrencesOfString: @"\n" withString: @""
                                   options: 0 range: NSMakeRange(0, value.length)];
         [headers appendFormat: @"%@: %@\r\n", name, value];
-        [value release];
     }
     [headers appendString: @"\r\n"];
     NSData* separator = [headers dataUsingEncoding: NSUTF8StringEncoding];
@@ -85,7 +79,7 @@
         // Append the final boundary:
         [super addInput: _finalBoundary length: 0];
         // _length was already adjusted for this in -init
-        setObj(&_finalBoundary, nil);
+        _finalBoundary = nil;
     }
     [super opened];
 }
@@ -108,8 +102,8 @@ TestCase(TDMultipartWriter) {
     NSString* expectedOutput = @"\r\n--BOUNDARY\r\nContent-Length: 16\r\n\r\n<part the first>\r\n--BOUNDARY\r\nContent-Length: 10\r\nContent-Type: something\r\n\r\n<2nd part>\r\n--BOUNDARY--";
     RequireTestCase(TDMultiStreamWriter);
     for (unsigned bufSize = 1; bufSize < expectedOutput.length+1; ++bufSize) {
-        TDMultipartWriter* mp = [[[TDMultipartWriter alloc] initWithContentType: @"foo/bar" 
-                                                                           boundary: @"BOUNDARY"] autorelease];
+        TDMultipartWriter* mp = [[TDMultipartWriter alloc] initWithContentType: @"foo/bar" 
+                                                                           boundary: @"BOUNDARY"];
         CAssertEqual(mp.contentType, @"foo/bar; boundary=\"BOUNDARY\"");
         CAssertEqual(mp.boundary, @"BOUNDARY");
         [mp addData: [@"<part the first>" dataUsingEncoding: NSUTF8StringEncoding]];

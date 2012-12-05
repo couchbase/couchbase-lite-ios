@@ -14,9 +14,9 @@
 //  and limitations under the License.
 
 #import "TDPusher.h"
-#import <TouchDB/TDDatabase.h>
-#import "TDDatabase+Insertion.h"
-#import <TouchDB/TDRevision.h>
+#import <TouchDB/TD_Database.h>
+#import "TD_Database+Insertion.h"
+#import <TouchDB/TD_Revision.h>
 #import "TDBatcher.h"
 #import "TDMultipartUploader.h"
 #import "TDInternal.h"
@@ -24,11 +24,11 @@
 #import "TDCanonicalJSON.h"
 
 
-static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
+static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
 
 
 @interface TDPusher ()
-- (BOOL) uploadMultipartRevision: (TDRevision*)rev;
+- (BOOL) uploadMultipartRevision: (TD_Revision*)rev;
 @end
 
 
@@ -43,8 +43,21 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 }
 
 
-- (TDFilterBlock) filter {
-    return _filterName ? [_db filterNamed: _filterName] : NULL;
+- (TD_FilterBlock) filter {
+    if (!_filterName)
+        return NULL;
+    TD_FilterBlock filter = [_db filterNamed: _filterName];
+    if (!filter) {
+        Warn(@"%@: No TDFilterBlock registered for filter '%@'", self, _filterName);
+        if (!_error) {
+            NSDictionary* info = $dict({NSLocalizedFailureReasonErrorKey, @"Unknown filter"});
+            self.error = [NSError errorWithDomain: TDHTTPErrorDomain
+                                             code: kTDStatusNotFound
+                                         userInfo: info];
+        }
+        [self stop];
+    }
+    return filter;
 }
 
 
@@ -77,9 +90,12 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_creatingTarget)
         return;
     
-    TDFilterBlock filter = self.filter;
-    if (!filter && _filterName)
-        Warn(@"%@: No TDFilterBlock registered for filter '%@'; ignoring", self, _filterName);
+    TD_FilterBlock filter = NULL;
+    if (_filterName) {
+        filter = self.filter;
+        if (!filter)
+            return; // missing filter block
+    }
     
     // Include conflicts so all conflicting revisions are replicated too
     TDChangesOptions options = kDefaultTDChangesOptions;
@@ -95,7 +111,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
-                                                     name: TDDatabaseChangeNotification object: _db];
+                                                     name: TD_DatabaseChangeNotification object: _db];
     }
 
 #ifdef GNUSTEP    // TODO: Multipart upload on GNUstep
@@ -108,7 +124,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     if (_observing) {
         _observing = NO;
         [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                        name: TDDatabaseChangeNotification
+                                                        name: TD_DatabaseChangeNotification
                                                       object: _db];
     }
 }
@@ -132,7 +148,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 
 - (void) stop {
-    setObj(&_uploaderQueue, nil);
+    _uploaderQueue = nil;
     _uploading = NO;
     [self stopObserving];
     [super stop];
@@ -144,19 +160,23 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
     // Skip revisions that originally came from the database I'm syncing to:
     if ([userInfo[@"source"] isEqual: _remote])
         return;
-    TDRevision* rev = userInfo[@"rev"];
-    TDFilterBlock filter = self.filter;
-    if (filter && !filter(rev, _filterParameters))
-        return;
+    TD_Revision* rev = userInfo[@"rev"];
+
+    if (_filterName) {
+        TD_FilterBlock filter = self.filter;
+        if (!filter || !filter(rev, _filterParameters))
+            return;
+    }
+    
     [self addToInbox: rev];
 }
 
 
-- (void) processInbox: (TDRevisionList*)changes {
+- (void) processInbox: (TD_RevisionList*)changes {
     // Generate a set of doc/rev IDs in the JSON format that _revs_diff wants:
     // <http://wiki.apache.org/couchdb/HttpPostRevsDiff>
     NSMutableDictionary* diffs = $mdict();
-    for (TDRevision* rev in changes) {
+    for (TD_Revision* rev in changes) {
         NSString* docID = rev.docID;
         NSMutableArray* revs = diffs[docID];
         if (!revs) {
@@ -178,7 +198,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
             __block SequenceNumber lastInboxSequence = 0;
-            NSArray* docsToSend = [changes.allRevisions my_map: ^id(TDRevision* rev) {
+            NSArray* docsToSend = [changes.allRevisions my_map: ^id(TD_Revision* rev) {
                 NSDictionary* properties;
                 @autoreleasepool {
                     // Is this revision in the server's 'missing' list?
@@ -204,18 +224,18 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                         // Look for the latest common ancestor and stub out older attachments:
                         NSArray* possible = revResults[@"possible_ancestors"];
                         int minRevPos = findCommonAncestor(rev, possible);
-                        [TDDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
+                        [TD_Database stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
                                        attachmentsFollow: NO];
                         properties = rev.properties;
                         // If the rev has huge attachments, send it under separate cover:
                         if (!_dontSendMultipart && [self uploadMultipartRevision: rev])
                             return nil;
                     }
-                    [properties retain];  // (to survive impending autorelease-pool drain)
+                      // (to survive impending autorelease-pool drain)
                 }
                 lastInboxSequence = rev.sequence;
                 Assert(properties[@"_id"]);
-                return [properties autorelease];
+                return properties;
             }];
             
             // Post the revisions to the destination:
@@ -233,7 +253,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 // Post the revisions to the destination. "new_edits":false means that the server should
 // use the given _rev IDs instead of making up new ones.
 - (void) uploadBulkDocs: (NSArray*)docsToSend
-                changes: (TDRevisionList*)changes
+                changes: (TD_RevisionList*)changes
            lastSequence: (SequenceNumber)lastInboxSequence
 {
     NSUInteger numDocsToSend = docsToSend.count;
@@ -254,7 +274,12 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                           if (item[@"error"]) {
                               // One of the docs failed to save:
                               Warn(@"%@: _bulk_docs got an error: %@", self, item);
-                              error = TDStatusToNSError(kTDStatusUpstreamError, nil);
+                              TDStatus status = kTDStatusUpstreamError;
+                              if ($equal(item[@"error"], @"unauthorized"))
+                                  status = kTDStatusUnauthorized;
+                              NSString* docID = item[@"id"];
+                              NSURL* url = docID ? [_remote URLByAppendingPathComponent: docID] : nil;
+                              error = TDStatusToNSError(status, url);
                           }
                       }
                   }
@@ -272,7 +297,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 }
 
 
-- (BOOL) uploadMultipartRevision: (TDRevision*)rev {
+- (BOOL) uploadMultipartRevision: (TD_Revision*)rev {
     // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream.
     // It's important to scan the _attachments entries in the same order in which they will appear
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
@@ -283,8 +308,8 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
         if (attachment[@"follows"]) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
-                bodyStream = [[[TDMultipartWriter alloc] initWithContentType: @"multipart/related"
-                                                                      boundary: nil] autorelease];
+                bodyStream = [[TDMultipartWriter alloc] initWithContentType: @"multipart/related"
+                                                                      boundary: nil];
                 [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
                 // Use canonical JSON encoder so that _attachments keys will be written in the
                 // same order that this for loop is processing the attachments.
@@ -309,7 +334,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
     NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeID(rev.docID));
     NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
-    __block TDMultipartUploader* uploader = [[[TDMultipartUploader alloc]
+    __block TDMultipartUploader* uploader = [[TDMultipartUploader alloc]
                                   initWithURL: [NSURL URLWithString: urlStr]
                                      streamer: bodyStream
                                requestHeaders: self.requestHeaders
@@ -335,7 +360,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
                   _uploading = NO;
                   [self startNextUpload];
               }
-     ] autorelease];
+     ];
     uploader.authorizer = _authorizer;
     [self addRemoteRequest: uploader];
     LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
@@ -349,7 +374,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 // Fallback to upload a revision if uploadMultipartRevision failed due to the server's rejecting
 // multipart format.
-- (void) uploadJSONRevision: (TDRevision*)rev {
+- (void) uploadJSONRevision: (TD_Revision*)rev {
     // Get the revision's properties:
     NSError* error;
     if (![_db inlineFollowingAttachmentsIn: rev error: &error]) {
@@ -389,15 +414,15 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleIDs);
 
 // Given a revision and an array of revIDs, finds the latest common ancestor revID
 // and returns its generation #. If there is none, returns 0.
-static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
+static int findCommonAncestor(TD_Revision* rev, NSArray* possibleRevIDs) {
     if (possibleRevIDs.count == 0)
         return 0;
-    NSArray* history = [TDDatabase parseCouchDBRevisionHistory: rev.properties];
+    NSArray* history = [TD_Database parseCouchDBRevisionHistory: rev.properties];
     NSString* ancestorID = [history firstObjectCommonWithArray: possibleRevIDs];
     if (!ancestorID)
         return 0;
     int generation;
-    if (![TDRevision parseRevID: ancestorID intoGeneration: &generation andSuffix: NULL])
+    if (![TD_Revision parseRevID: ancestorID intoGeneration: &generation andSuffix: NULL])
         generation = 0;
     return generation;
 }
@@ -410,7 +435,7 @@ static int findCommonAncestor(TDRevision* rev, NSArray* possibleRevIDs) {
 
 TestCase(TDPusher_findCommonAncestor) {
     NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
-    TDRevision* rev = [TDRevision revisionWithProperties: $dict({@"_revisions", revDict})];
+    TD_Revision* rev = [TD_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
     CAssertEq(findCommonAncestor(rev, @[]), 0);
     CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-nope"]), 0);
     CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-first"]), 1);

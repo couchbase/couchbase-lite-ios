@@ -1,5 +1,5 @@
 //
-//  TDView_Tests.m
+//  TD_View_Tests.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/8/11.
@@ -13,29 +13,29 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDView.h"
-#import "TDDatabase+Insertion.h"
+#import "TD_View.h"
+#import "TD_Database+Insertion.h"
 #import "TDInternal.h"
 #import "Test.h"
 
 
 #if DEBUG
 
-static TDDatabase* createDB(void) {
-    return [TDDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"TouchDB_ViewTest.touchdb"]];
+static TD_Database* createDB(void) {
+    return [TD_Database createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"TouchDB_ViewTest.touchdb"]];
 }
 
-TestCase(TDView_Create) {
-    RequireTestCase(TDDatabase);
-    TDDatabase *db = createDB();
+TestCase(TD_View_Create) {
+    RequireTestCase(TD_Database);
+    TD_Database *db = createDB();
     
     CAssertNil([db existingViewNamed: @"aview"]);
     
-    TDView* view = [db viewNamed: @"aview"];
+    TD_View* view = [db viewNamed: @"aview"];
     CAssert(view);
     CAssertEq(view.database, db);
     CAssertEqual(view.name, @"aview");
-    CAssertNull(view.mapBlock);
+    CAssert(view.mapBlock == nil, nil);
     CAssertEq([db existingViewNamed: @"aview"], view);
 
     
@@ -57,16 +57,16 @@ TestCase(TDView_Create) {
 }
 
 
-static TDRevision* putDoc(TDDatabase* db, NSDictionary* props) {
-    TDRevision* rev = [[[TDRevision alloc] initWithProperties: props] autorelease];
+static TD_Revision* putDoc(TD_Database* db, NSDictionary* props) {
+    TD_Revision* rev = [[TD_Revision alloc] initWithProperties: props];
     TDStatus status;
-    TDRevision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    TD_Revision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(status < 300);
     return result;
 }
 
 
-static NSArray* putDocs(TDDatabase* db) {
+static NSArray* putDocs(TD_Database* db) {
     NSMutableArray* docs = $marray();
     [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"key", @"four"}))];
@@ -77,8 +77,8 @@ static NSArray* putDocs(TDDatabase* db) {
 }
 
 
-static TDView* createView(TDDatabase* db) {
-    TDView* view = [db viewNamed: @"aview"];
+static TD_View* createView(TD_Database* db) {
+    TD_View* view = [db viewNamed: @"aview"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
@@ -89,16 +89,16 @@ static TDView* createView(TDDatabase* db) {
 }
 
 
-TestCase(TDView_Index) {
-    RequireTestCase(TDView_Create);
-    TDDatabase *db = createDB();
-    TDRevision* rev1 = putDoc(db, $dict({@"key", @"one"}));
-    TDRevision* rev2 = putDoc(db, $dict({@"key", @"two"}));
-    TDRevision* rev3 = putDoc(db, $dict({@"key", @"three"}));
+TestCase(TD_View_Index) {
+    RequireTestCase(TD_View_Create);
+    TD_Database *db = createDB();
+    TD_Revision* rev1 = putDoc(db, $dict({@"key", @"one"}));
+    TD_Revision* rev2 = putDoc(db, $dict({@"key", @"two"}));
+    TD_Revision* rev3 = putDoc(db, $dict({@"key", @"three"}));
     putDoc(db, $dict({@"_id", @"_design/foo"}));
     putDoc(db, $dict({@"clef", @"quatre"}));
     
-    TDView* view = createView(db);
+    TD_View* view = createView(db);
     CAssertEq(view.viewID, 1);
     
     CAssert(view.stale);
@@ -114,15 +114,15 @@ TestCase(TDView_Index) {
     CAssertEq([view updateIndex], kTDStatusNotModified);
     
     // Now add a doc and update a doc:
-    TDRevision* threeUpdated = [[[TDRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO] autorelease];
+    TD_Revision* threeUpdated = [[TD_Revision alloc] initWithDocID: rev3.docID revID: nil deleted:NO];
     threeUpdated.properties = $dict({@"key", @"3hree"});
     TDStatus status;
     rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
-    TDRevision* rev4 = putDoc(db, $dict({@"key", @"four"}));
+    TD_Revision* rev4 = putDoc(db, $dict({@"key", @"four"}));
     
-    TDRevision* twoDeleted = [[[TDRevision alloc] initWithDocID: rev2.docID revID: nil deleted:YES] autorelease];
+    TD_Revision* twoDeleted = [[TD_Revision alloc] initWithDocID: rev2.docID revID: nil deleted:YES];
     [db putRevision: twoDeleted prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
@@ -149,22 +149,22 @@ TestCase(TDView_Index) {
 }
 
 
-TestCase(TDView_MapConflicts) {
-    RequireTestCase(TDView_Index);
-    TDDatabase *db = createDB();
+TestCase(TD_View_MapConflicts) {
+    RequireTestCase(TD_View_Index);
+    TD_Database *db = createDB();
     NSArray* docs = putDocs(db);
-    TDRevision* leaf1 = docs[1];
+    TD_Revision* leaf1 = docs[1];
     
     // Create a conflict:
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
-    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TD_Revision* leaf2 = [[TD_Revision alloc] initWithProperties: props];
     TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
     
-    TDView* view = [db viewNamed: @"conflicts"];
+    TD_View* view = [db viewNamed: @"conflicts"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         NSString* docID = doc[@"_id"];
         NSArray* conflicts = $cast(NSArray, doc[@"_conflicts"]);
@@ -183,15 +183,15 @@ TestCase(TDView_MapConflicts) {
 }
 
 
-TestCase(TDView_ConflictWinner) {
+TestCase(TD_View_ConflictWinner) {
     // If a view is re-indexed, and a document in the view has gone into conflict,
     // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
-    RequireTestCase(TDView_Index);
-    TDDatabase *db = createDB();
+    RequireTestCase(TD_View_Index);
+    TD_Database *db = createDB();
     NSArray* docs = putDocs(db);
-    TDRevision* leaf1 = docs[1];
+    TD_Revision* leaf1 = docs[1];
     
-    TDView* view = createView(db);
+    TD_View* view = createView(db);
     CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -205,7 +205,7 @@ TestCase(TDView_ConflictWinner) {
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
-    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TD_Revision* leaf2 = [[TD_Revision alloc] initWithProperties: props];
     TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
@@ -223,15 +223,15 @@ TestCase(TDView_ConflictWinner) {
 }
 
 
-TestCase(TDView_ConflictLoser) {
+TestCase(TD_View_ConflictLoser) {
     // Like the ConflictWinner test, except the newer revision is the loser,
     // so it shouldn't be indexed at all. Instead, the older still-winning revision
     // should be indexed again, this time with a '_conflicts' property.
-    TDDatabase *db = createDB();
+    TD_Database *db = createDB();
     NSArray* docs = putDocs(db);
-    TDRevision* leaf1 = docs[1];
+    TD_Revision* leaf1 = docs[1];
     
-    TDView* view = createView(db);
+    TD_View* view = createView(db);
     CAssertEq([view updateIndex], kTDStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -245,7 +245,7 @@ TestCase(TDView_ConflictLoser) {
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-...."},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
-    TDRevision* leaf2 = [[[TDRevision alloc] initWithProperties: props] autorelease];
+    TD_Revision* leaf2 = [[TD_Revision alloc] initWithProperties: props];
     TDStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
@@ -263,11 +263,11 @@ TestCase(TDView_ConflictLoser) {
 }
 
 
-TestCase(TDView_Query) {
-    RequireTestCase(TDView_Index);
-    TDDatabase *db = createDB();
+TestCase(TD_View_Query) {
+    RequireTestCase(TD_View_Index);
+    TD_Database *db = createDB();
     putDocs(db);
-    TDView* view = createView(db);
+    TD_View* view = createView(db);
     CAssertEq([view updateIndex], kTDStatusOK);
     
     // Query all rows:
@@ -316,7 +316,8 @@ TestCase(TDView_Query) {
     
     // Specific keys:
     options = kDefaultTDQueryOptions;
-    options.keys = @[@"two", @"four"];
+    NSArray* keys = @[@"two", @"four"];
+    options.keys = keys;
     rows = [view queryWithOptions: &options status: &status];
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
@@ -324,13 +325,13 @@ TestCase(TDView_Query) {
 }
 
 
-TestCase(TDView_AllDocsQuery) {
-    TDDatabase *db = createDB();
+TestCase(TD_View_AllDocsQuery) {
+    TD_Database *db = createDB();
     NSArray* docs = putDocs(db);
     NSDictionary* expectedRow[docs.count];
     memset(&expectedRow, 0, sizeof(expectedRow));
     int i = 0;
-    for (TDRevision* rev in docs) {
+    for (TD_Revision* rev in docs) {
         expectedRow[i++] = $dict({@"id",  rev.docID},
                                  {@"key", rev.docID},
                                  {@"value", $dict({@"rev", rev.revID})});
@@ -383,8 +384,8 @@ TestCase(TDView_AllDocsQuery) {
                               {@"offset", @0}));
 
     // Delete a document:
-    TDRevision* del = docs[0];
-    del = [[[TDRevision alloc] initWithDocID: del.docID revID: del.revID deleted: YES] autorelease];
+    TD_Revision* del = docs[0];
+    del = [[TD_Revision alloc] initWithDocID: del.docID revID: del.revID deleted: YES];
     TDStatus status;
     del = [db putRevision: del prevRevisionID: del.revID allowConflict: NO status: &status];
     CAssertEq(status, kTDStatusOK);
@@ -403,14 +404,14 @@ TestCase(TDView_AllDocsQuery) {
 }
 
 
-TestCase(TDView_Reduce) {
-    RequireTestCase(TDView_Query);
-    TDDatabase *db = createDB();
+TestCase(TD_View_Reduce) {
+    RequireTestCase(TD_View_Query);
+    TD_Database *db = createDB();
     putDoc(db, $dict({@"_id", @"CD"},      {@"cost", @(8.99)}));
     putDoc(db, $dict({@"_id", @"App"},     {@"cost", @(1.95)}));
     putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", @(6.50)}));
     
-    TDView* view = [db viewNamed: @"totaler"];
+    TD_View* view = [db viewNamed: @"totaler"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
@@ -418,7 +419,7 @@ TestCase(TDView_Reduce) {
         if (cost)
             emit(doc[@"_id"], cost);
     } reduceBlock: ^(NSArray* keys, NSArray* values, BOOL rereduce) {
-        return [TDView totalValues: values];
+        return [TD_View totalValues: values];
     } version: @"1"];
 
     CAssertEq([view updateIndex], kTDStatusOK);
@@ -439,9 +440,9 @@ TestCase(TDView_Reduce) {
 }
 
 
-TestCase(TDView_Grouped) {
-    RequireTestCase(TDView_Reduce);
-    TDDatabase *db = createDB();
+TestCase(TD_View_Grouped) {
+    RequireTestCase(TD_View_Reduce);
+    TD_Database *db = createDB();
     putDoc(db, $dict({@"_id", @"1"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
                      {@"track", @"Ether"}, {@"time", @(231)}));
     putDoc(db, $dict({@"_id", @"2"}, {@"artist", @"Gang Of Four"}, {@"album", @"Songs Of The Free"},
@@ -453,14 +454,14 @@ TestCase(TDView_Grouped) {
     putDoc(db, $dict({@"_id", @"5"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
                      {@"track", @"Not Great Men"}, {@"time", @(187)}));
     
-    TDView* view = [db viewNamed: @"grouper"];
+    TD_View* view = [db viewNamed: @"grouper"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         emit($array(doc[@"artist"],
                     doc[@"album"], 
                     doc[@"track"]),
              doc[@"time"]);
     } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
-        return [TDView totalValues: values];
+        return [TD_View totalValues: values];
     } version: @"1"];
     
     CAssertEq([view updateIndex], kTDStatusOK);
@@ -509,16 +510,16 @@ TestCase(TDView_Grouped) {
 }
 
 
-TestCase(TDView_GroupedStrings) {
-    RequireTestCase(TDView_Grouped);
-    TDDatabase *db = createDB();
+TestCase(TD_View_GroupedStrings) {
+    RequireTestCase(TD_View_Grouped);
+    TD_Database *db = createDB();
     putDoc(db, $dict({@"name", @"Alice"}));
     putDoc(db, $dict({@"name", @"Albert"}));
     putDoc(db, $dict({@"name", @"Naomi"}));
     putDoc(db, $dict({@"name", @"Jens"}));
     putDoc(db, $dict({@"name", @"Jed"}));
     
-    TDView* view = [db viewNamed: @"default/names"];
+    TD_View* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
          NSString *name = doc[@"name"];
          if (name)
@@ -540,7 +541,7 @@ TestCase(TDView_GroupedStrings) {
 }
 
 
-TestCase(TDView_Collation) {
+TestCase(TD_View_Collation) {
     // Based on CouchDB's "view_collation.js" test
     NSArray* testKeys = @[$null,
                                                    $false,
@@ -562,13 +563,13 @@ TestCase(TDView_Collation) {
                                                    @[@"b", @"c", @"a"],
                                                    @[@"b", @"d"],
                                                    @[@"b", @"d", @"e"]];
-    RequireTestCase(TDView_Query);
-    TDDatabase *db = createDB();
+    RequireTestCase(TD_View_Query);
+    TD_Database *db = createDB();
     int i = 0;
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
 
-    TDView* view = [db viewNamed: @"default/names"];
+    TD_View* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         emit(doc[@"name"], nil);
     } reduceBlock: NULL version:@"1.0"];
@@ -583,7 +584,7 @@ TestCase(TDView_Collation) {
 }
 
 
-TestCase(TDView_CollationRaw) {
+TestCase(TD_View_CollationRaw) {
     NSArray* testKeys = @[@0,
                                                    @(2.5),
                                                    @(10),
@@ -606,13 +607,13 @@ TestCase(TDView_CollationRaw) {
                                                    @"ba",
                                                    @"bb",
                                                    @"~"];
-    RequireTestCase(TDView_Query);
-    TDDatabase *db = createDB();
+    RequireTestCase(TD_View_Query);
+    TD_Database *db = createDB();
     int i = 0;
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
 
-    TDView* view = [db viewNamed: @"default/names"];
+    TD_View* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         emit(doc[@"name"], nil);
     } reduceBlock: NULL version:@"1.0"];
@@ -628,18 +629,18 @@ TestCase(TDView_CollationRaw) {
 }
 
 
-TestCase(TDView_LinkedDocs) {
-    RequireTestCase(TDView_Query);
-    TDDatabase *db = createDB();
+TestCase(TD_View_LinkedDocs) {
+    RequireTestCase(TD_View_Query);
+    TD_Database *db = createDB();
     NSArray* revs = putDocs(db);
     
     NSDictionary* docs[5];
     int i = 0;
-    for (TDRevision* rev in revs) {
+    for (TD_Revision* rev in revs) {
         docs[i++] = [db getDocumentWithID: rev.docID revisionID: rev.revID].properties;
     }
 
-    TDView* view = [db viewNamed: @"linkview"];
+    TD_View* view = [db viewNamed: @"linkview"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         NSString* key = doc[@"key"];
         NSDictionary* value = nil;
@@ -671,7 +672,16 @@ TestCase(TDView_LinkedDocs) {
                                          {@"value", $dict({@"_id", @"11111"})},
                                          {@"doc", docs[2]}));
     CAssertEqual(rows, expectedRows);
-    
+}
+
+
+TestCase(TD_View) {
+    RequireTestCase(TD_View_MapConflicts);
+    RequireTestCase(TD_View_ConflictWinner);
+    RequireTestCase(TD_View_ConflictLoser);
+    RequireTestCase(TD_View_LinkedDocs);
+    RequireTestCase(TD_View_Collation);
+    RequireTestCase(TD_View_CollationRaw);
 }
 
 

@@ -14,9 +14,9 @@
 //  and limitations under the License.
 
 #import "TDRouter.h"
-#import <TouchDB/TDDatabase.h>
-#import "TDBody.h"
-#import "TDServer.h"
+#import <TouchDB/TD_Database.h>
+#import "TD_Body.h"
+#import "TD_Server.h"
 #import "TDBase64.h"
 #import "TDInternal.h"
 #import "Test.h"
@@ -27,12 +27,12 @@
 #pragma mark - TESTS
 
 
-static TDDatabaseManager* createDBManager(void) {
-    return [TDDatabaseManager createEmptyAtTemporaryPath: @"TDRouterTest"];
+static TD_DatabaseManager* createDBManager(void) {
+    return [TD_DatabaseManager createEmptyAtTemporaryPath: @"TDRouterTest"];
 }
 
 
-static TDResponse* SendRequest(TDDatabaseManager* server, NSString* method, NSString* path,
+static TDResponse* SendRequest(TD_DatabaseManager* server, NSString* method, NSString* path,
                                NSDictionary* headers, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"touchdb://" stringByAppendingString: path]];
     CAssert(url, @"Invalid URL: <%@>", path);
@@ -49,7 +49,7 @@ static TDResponse* SendRequest(TDDatabaseManager* server, NSString* method, NSSt
             CAssertNil(error);
         }
     }
-    TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    TDRouter* router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     __block TDResponse* response = nil;
     __block NSUInteger dataLength = 0;
@@ -69,7 +69,7 @@ static id ParseJSONResponse(TDResponse* response) {
     NSString* jsonStr = nil;
     id result = nil;
     if (json) {
-        jsonStr = [[[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding] autorelease];
+        jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
         CAssert(jsonStr);
         NSError* error;
         result = [TDJSON JSONObjectWithData: json options: 0 error: &error];
@@ -80,7 +80,7 @@ static id ParseJSONResponse(TDResponse* response) {
 
 static TDResponse* sLastResponse;
 
-static id SendBody(TDDatabaseManager* server, NSString* method, NSString* path, id bodyObj,
+static id SendBody(TD_DatabaseManager* server, NSString* method, NSString* path, id bodyObj,
                    TDStatus expectedStatus, id expectedResult) {
     sLastResponse = SendRequest(server, method, path, nil, bodyObj);
     id result = ParseJSONResponse(sLastResponse);
@@ -93,12 +93,12 @@ static id SendBody(TDDatabaseManager* server, NSString* method, NSString* path, 
     return result;
 }
 
-static id Send(TDDatabaseManager* server, NSString* method, NSString* path,
+static id Send(TD_DatabaseManager* server, NSString* method, NSString* path,
                int expectedStatus, id expectedResult) {
     return SendBody(server, method, path, nil, expectedStatus, expectedResult);
 }
 
-static void CheckCacheable(TDDatabaseManager* server, NSString* path) {
+static void CheckCacheable(TD_DatabaseManager* server, NSString* path) {
     NSString* eTag = (sLastResponse.headers)[@"Etag"];
     CAssert(eTag.length > 0, @"Missing eTag in response for %@", path);
     sLastResponse = SendRequest(server, @"GET", path, $dict({@"If-None-Match", eTag}), nil);
@@ -107,8 +107,8 @@ static void CheckCacheable(TDDatabaseManager* server, NSString* path) {
 
 
 TestCase(TDRouter_Server) {
-    RequireTestCase(TDDatabaseManager);
-    TDDatabaseManager* server = createDBManager();
+    RequireTestCase(TD_DatabaseManager);
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"GET", @"/", kTDStatusOK, $dict({@"TouchDB", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
                                           {@"version", [TDRouter versionString]}));
@@ -129,7 +129,7 @@ TestCase(TDRouter_Server) {
 
 TestCase(TDRouter_Databases) {
     RequireTestCase(TDRouter_Server);
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/database", kTDStatusCreated, nil);
     
     NSDictionary* dbInfo = Send(server, @"GET", @"/database", kTDStatusOK, nil);
@@ -155,7 +155,7 @@ TestCase(TDRouter_Databases) {
 TestCase(TDRouter_Docs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     kTDStatusCreated, nil);
@@ -233,10 +233,10 @@ TestCase(TDRouter_Docs) {
 
 
 TestCase(TDRouter_LocalDocs) {
-    RequireTestCase(TDDatabase_LocalDocs);
+    RequireTestCase(TD_Database_LocalDocs);
     RequireTestCase(TDRouter_Docs);
     // PUT a local doc:
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}), 
                                     kTDStatusCreated, nil);
@@ -260,7 +260,7 @@ TestCase(TDRouter_LocalDocs) {
 
 TestCase(TDRouter_AllDocs) {
     // PUT:
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     
     NSDictionary* result;
@@ -308,15 +308,15 @@ TestCase(TDRouter_AllDocs) {
 
 TestCase(TDRouter_Views) {
     // PUT:
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kTDStatusCreated, nil);
     SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kTDStatusCreated, nil);
     SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kTDStatusCreated, nil);
     
-    TDDatabase* db = [server databaseNamed: @"db"];
-    TDView* view = [db viewNamed: @"design/view"];
+    TD_Database* db = [server databaseNamed: @"db"];
+    TD_View* view = [db viewNamed: @"design/view"];
     [view setMapBlock: ^(NSDictionary* doc, TDMapEmitBlock emit) {
         if (doc[@"message"])
             emit(doc[@"message"], nil);
@@ -353,13 +353,13 @@ TestCase(TDRouter_Views) {
 
 
 TestCase(TDRouter_ContinuousChanges) {
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
 
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kTDStatusCreated, nil);
 
     __block TDResponse* response = nil;
-    __block NSMutableData* body = [NSMutableData data];
+    NSMutableData* body = [NSMutableData data];
     __block BOOL finished = NO;
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///db/_changes?feed=continuous"];
@@ -395,12 +395,11 @@ TestCase(TDRouter_ContinuousChanges) {
     CAssert(!finished);
     
     [router stop];
-    [router release];
     [server close];
 }
 
 
-static NSDictionary* createDocWithAttachments(TDDatabaseManager* server,
+static NSDictionary* createDocWithAttachments(TD_DatabaseManager* server,
                                               NSData* attach1, NSData* attach2) {
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSString* base64 = [TDBase64 encode: attach1];
@@ -418,7 +417,7 @@ static NSDictionary* createDocWithAttachments(TDDatabaseManager* server,
 
 
 TestCase(TDRouter_GetAttachment) {
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
 
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
@@ -495,7 +494,7 @@ TestCase(TDRouter_GetAttachment) {
 
 
 TestCase(TDRouter_GetRange) {
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
 
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
@@ -527,7 +526,7 @@ TestCase(TDRouter_GetRange) {
 TestCase(TDRouter_PutMultipart) {
     RequireTestCase(TDRouter_Docs);
     RequireTestCase(TDMultipartDownloader);
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
@@ -558,7 +557,7 @@ TestCase(TDRouter_PutMultipart) {
 TestCase(TDRouter_OpenRevs) {
     RequireTestCase(TDRouter_Databases);
     // PUT:
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     kTDStatusCreated, nil);
@@ -594,7 +593,7 @@ TestCase(TDRouter_OpenRevs) {
 
 TestCase(TDRouter_RevsDiff) {
     RequireTestCase(TDRouter_Databases);
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     NSDictionary* doc1r1 = SendBody(server, @"PUT", @"/db/11111", $dict(), kTDStatusCreated,nil);
     NSString* doc1r1ID = doc1r1[@"rev"];
@@ -663,16 +662,16 @@ TestCase(TDRouter_RevsDiff) {
 
 TestCase(TDRouter_AccessCheck) {
     RequireTestCase(TDRouter_Databases);
-    TDDatabaseManager* server = createDBManager();
+    TD_DatabaseManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kTDStatusCreated, nil);
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///db/"];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = @"GET";
-    TDRouter* router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    TDRouter* router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     __block BOOL calledOnAccessCheck = NO;
-    router.onAccessCheck = ^TDStatus(TDDatabase* accessDB, NSString* docID, SEL action) {
+    router.onAccessCheck = ^TDStatus(TD_Database* accessDB, NSString* docID, SEL action) {
         CAssert([accessDB.name isEqualToString: @"db"]);
         calledOnAccessCheck = YES;
         return 200;
@@ -681,10 +680,10 @@ TestCase(TDRouter_AccessCheck) {
     CAssert(calledOnAccessCheck);
     CAssert(router.response.status == 200);
     
-    router = [[[TDRouter alloc] initWithDatabaseManager: server request: request] autorelease];
+    router = [[TDRouter alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     calledOnAccessCheck = NO;
-    router.onAccessCheck = ^TDStatus(TDDatabase* accessDB, NSString* docID, SEL action) {
+    router.onAccessCheck = ^TDStatus(TD_Database* accessDB, NSString* docID, SEL action) {
         CAssert([accessDB.name isEqualToString: @"db"]);
         calledOnAccessCheck = YES;
         return 401;

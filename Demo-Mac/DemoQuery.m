@@ -31,7 +31,7 @@
     self = [super init];
     if (self != nil) {
         _modelClass = [CouchModel class];
-        _query = [[query asLiveQuery] retain];
+        _query = [query asLiveQuery];
 
         _query.prefetch = YES;        // for efficiency, include docs on first load
         [_query start];
@@ -45,10 +45,7 @@
 
 - (void) dealloc
 {
-    [_entries release];
     [_query removeObserver: self forKeyPath: @"rows"];
-    [_query release];
-    [super dealloc];
 }
 
 
@@ -78,7 +75,6 @@
         NSLog(@"    ...entries changed! (was %u, now %u)", 
               (unsigned)_entries.count, (unsigned)entries.count);
         [self willChangeValueForKey: @"entries"];
-        [_entries release];
         _entries = [entries mutableCopy];
         [self didChangeValueForKey: @"entries"];
     }

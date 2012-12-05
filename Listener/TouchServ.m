@@ -18,8 +18,8 @@
 #import <TouchDB/TDRouter.h>
 #import <TouchDBListener/TDListener.h>
 #import <TouchDB/TDPusher.h>
-#import <TouchDB/TDDatabaseManager.h>
-#import <TouchDB/TDDatabase+Replication.h>
+#import <TouchDB/TD_DatabaseManager.h>
+#import <TouchDB/TD_Database+Replication.h>
 
 #if DEBUG
 #import "Logging.h"
@@ -53,13 +53,13 @@ static NSString* GetServerPath() {
 }
 
 
-static bool doReplicate( TDServer* server, const char* replArg,
+static bool doReplicate( TD_Server* server, const char* replArg,
                         BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password)
 {
-    NSURL* remote = [NSMakeCollectable(CFURLCreateWithBytes(NULL, (const UInt8*)replArg,
+    NSURL* remote = CFBridgingRelease(CFURLCreateWithBytes(NULL, (const UInt8*)replArg,
                                                            strlen(replArg),
-                                                           kCFStringEncodingUTF8, NULL)) autorelease];
+                                                           kCFStringEncodingUTF8, NULL));
     if (!remote || !remote.scheme) {
         fprintf(stderr, "Invalid remote URL <%s>\n", replArg);
         return false;
@@ -82,12 +82,11 @@ static bool doReplicate( TDServer* server, const char* replArg,
         if (port == 0)
             port = [remote.scheme isEqualToString: @"https"] ? 443 : 80;
         NSURLProtectionSpace* space;
-        space = [[[NSURLProtectionSpace alloc] initWithHost: remote.host
-                                                       port: port
-                                                   protocol: remote.scheme
-                                                      realm: nil
-                                       authenticationMethod: NSURLAuthenticationMethodDefault]
-                 autorelease];
+        space = [[NSURLProtectionSpace alloc] initWithHost: remote.host
+                                                      port: port
+                                                  protocol: remote.scheme
+                                                     realm: nil
+                                      authenticationMethod: NSURLAuthenticationMethodDefault];
         [[NSURLCredentialStorage sharedCredentialStorage] setDefaultCredential: cred
                                                             forProtectionSpace: space];
     }
@@ -97,9 +96,9 @@ static bool doReplicate( TDServer* server, const char* replArg,
     else
         Log(@"Pushing %@ --> <%@> ...", dbName, remote);
     
-    [server tellDatabaseManager: ^(TDDatabaseManager *dbm) {
+    [server tellDatabaseManager: ^(TD_DatabaseManager *dbm) {
         TDReplicator* repl = nil;
-        TDDatabase* db = [dbm existingDatabaseNamed: dbName];
+        TD_Database* db = [dbm existingDatabaseNamed: dbName];
         if (pull) {
             if (db) {
                 if (![db deleteDatabase: nil]) {
@@ -134,7 +133,7 @@ int main (int argc, const char * argv[])
         EnableLogTo(TDListener, YES);
 #endif
 
-        TDDatabaseManagerOptions options = kTDDatabaseManagerDefaultOptions;
+        TD_DatabaseManagerOptions options = kTD_DatabaseManagerDefaultOptions;
         const char* replArg = NULL, *user = NULL, *password = NULL;
         BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
         
@@ -160,7 +159,7 @@ int main (int argc, const char * argv[])
         }
 
         NSError* error;
-        TDServer* server = [[TDServer alloc] initWithDirectory: GetServerPath()
+        TD_Server* server = [[TD_Server alloc] initWithDirectory: GetServerPath()
                                                        options: &options
                                                          error: &error];
         if (error) {
@@ -200,8 +199,6 @@ int main (int argc, const char * argv[])
         [[NSRunLoop currentRunLoop] run];
         
         Log(@"TouchServ quitting");
-        [listener release];
-        [server release];
     }
     return 0;
 }

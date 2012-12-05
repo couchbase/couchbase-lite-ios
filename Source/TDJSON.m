@@ -38,7 +38,6 @@
         NSData* json = [super dataWithJSONObject: object 
                                          options: (options & ~TDJSONWritingAllowFragments)
                                            error: NULL];
-        [object release];
         return [json subdataWithRange: NSMakeRange(1, json.length - 2)];
     } else {
         return [super dataWithJSONObject: object options: options error: error];
@@ -105,5 +104,32 @@
     return newJson;
 }
 
+
+@end
+
+
+@implementation TDLazyArrayOfJSON
+
+- (id) initWithArray: (NSMutableArray*)array {
+    self = [super init];
+    if (self) {
+        _array = array;
+    }
+    return self;
+}
+
+- (NSUInteger)count {
+    return _array.count;
+}
+
+- (id)objectAtIndex:(NSUInteger)index {
+    id obj = [_array objectAtIndex: index];
+    if ([obj isKindOfClass: [NSData class]]) {
+        obj = [TDJSON JSONObjectWithData: obj options: TDJSONReadingAllowFragments
+                                   error: nil];
+        [_array replaceObjectAtIndex: index withObject: obj];
+    }
+    return obj;
+}
 
 @end

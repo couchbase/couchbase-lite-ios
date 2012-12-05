@@ -16,7 +16,7 @@
 #import "TDListener.h"
 #import "TDHTTPServer.h"
 #import "TDHTTPConnection.h"
-#import "TDServer.h"
+#import "TD_Server.h"
 
 #import "HTTPServer.h"
 
@@ -27,10 +27,10 @@
 @synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm;
 
 
-- (id) initWithTDServer: (TDServer*)server port: (UInt16)port {
+- (id) initWithTDServer: (TD_Server*)server port: (UInt16)port {
     self = [super init];
     if (self) {
-        _tdServer = [server retain];
+        _tdServer = server;
         _httpServer = [[TDHTTPServer alloc] init];
         _httpServer.listener = self;
         _httpServer.tdServer = _tdServer;
@@ -45,11 +45,6 @@
 - (void)dealloc
 {
     [self stop];
-    [_tdServer release];
-    [_httpServer release];
-    [_realm release];
-    [_passwords release];
-    [super dealloc];
 }
 
 
@@ -79,7 +74,6 @@
 
 
 - (void) setPasswords: (NSDictionary*)passwords {
-    [_passwords autorelease];
     _passwords = [passwords copy];
     _requiresAuth = (_passwords != nil);
 }

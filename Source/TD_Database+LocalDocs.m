@@ -1,5 +1,5 @@
 //
-//  TDDatabase+LocalDocs.m
+//  TD_Database+LocalDocs.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 1/10/12.
@@ -13,21 +13,21 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDDatabase+LocalDocs.h"
-#import <TouchDB/TDRevision.h>
-#import "TDBody.h"
+#import "TD_Database+LocalDocs.h"
+#import <TouchDB/TD_Revision.h>
+#import "TD_Body.h"
 #import "TDInternal.h"
 
 #import "FMDatabase.h"
 
 
-@implementation TDDatabase (LocalDocs)
+@implementation TD_Database (LocalDocs)
 
 
-- (TDRevision*) getLocalDocumentWithID: (NSString*)docID 
+- (TD_Revision*) getLocalDocumentWithID: (NSString*)docID 
                             revisionID: (NSString*)revID
 {
-    TDRevision* result = nil;
+    TD_Revision* result = nil;
     FMResultSet *r = [_fmdb executeQuery: @"SELECT revid, json FROM localdocs WHERE docid=?",docID];
     if ([r next]) {
         NSString* gotRevID = [r stringForColumnIndex: 0];
@@ -46,7 +46,7 @@
         }
         properties[@"_id"] = docID;
         properties[@"_rev"] = gotRevID;
-        result = [[[TDRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO] autorelease];
+        result = [[TD_Revision alloc] initWithDocID: docID revID: gotRevID deleted:NO];
         result.properties = properties;
     }
     [r close];
@@ -54,7 +54,7 @@
 }
 
 
-- (TDRevision*) putLocalRevision: (TDRevision*)revision
+- (TD_Revision*) putLocalRevision: (TD_Revision*)revision
                   prevRevisionID: (NSString*)prevRevID
                           status: (TDStatus*)outStatus
 {
@@ -68,7 +68,7 @@
         NSData* json = [self encodeDocumentJSON: revision];
         NSString* newRevID;
         if (prevRevID) {
-            unsigned generation = [TDRevision generationFromRevID: prevRevID];
+            unsigned generation = [TD_Revision generationFromRevID: prevRevID];
             if (generation == 0) {
                 *outStatus = kTDStatusBadID;
                 return nil;
@@ -96,7 +96,7 @@
             return nil;
         }
         *outStatus = kTDStatusCreated;
-        return [[revision copyWithDocID: docID revID: newRevID] autorelease];
+        return [revision copyWithDocID: docID revID: newRevID];
         
     } else {
         // DELETE:

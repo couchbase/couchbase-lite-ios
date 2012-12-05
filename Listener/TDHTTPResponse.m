@@ -17,7 +17,7 @@
 #import "TDHTTPConnection.h"
 #import "TDListener.h"
 #import "TDRouter.h"
-#import "TDBody.h"
+#import "TD_Body.h"
 
 #import "Logging.h"
 
@@ -38,7 +38,7 @@
     if (self) {
         //EnableLog(YES);
         //EnableLogTo(TDListenerVerbose, YES);
-        _router = [router retain];
+        _router = router;
         _connection = connection;
         router.onResponseReady = ^(TDResponse* r) {
             [self onResponseReady: r];
@@ -51,7 +51,7 @@
         };
 
         if (connection.listener.readOnly) {
-            router.onAccessCheck = ^TDStatus(TDDatabase* db, NSString* docID, SEL action) {
+            router.onAccessCheck = ^TDStatus(TD_Database* db, NSString* docID, SEL action) {
                 NSString* method = router.request.HTTPMethod;
                 if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"])
                     return kTDStatusOK;
@@ -68,19 +68,16 @@
         // Run the router, asynchronously:
         LogTo(TDListenerVerbose, @"%@: Starting...", self);
         [router start];
-        [self retain];      // will be released in -cleanUp
         LogTo(TDListenerVerbose, @"%@: Returning from -init", self);
     }
     return self;
 }
 
+#if 0
 - (void)dealloc {
     LogTo(TDListenerVerbose, @"DEALLOC %@", self);
-    [_router release];
-    [_response release];
-    [_data release];
-    [super dealloc];
 }
+#endif
 
 
 - (NSString*) description {
@@ -116,7 +113,7 @@
 
 - (void) onResponseReady: (TDResponse*)response {
     @synchronized(self) {
-        _response = [response retain];
+        _response = response;
         LogTo(TDListener, @"    %@ --> %i", self, _response.status);
         if (_delayedHeaders)
             [_connection responseHasAvailableData: self];
@@ -143,7 +140,6 @@
             _dataMutable = NO;
         } else {
             if (!_dataMutable) {
-                [_data autorelease];
                 _data = [_data mutableCopy];
                 _dataMutable = YES;
             }
@@ -185,7 +181,6 @@
         if (range.length == bytesAvailable) {
             // Client has read all of the available data, so we can discard it
             _dataOffset += _data.length;
-            [_data autorelease];
             _data = nil;
         }
         LogTo(TDListenerVerbose, @"%@ sending %u bytes", self, (unsigned)result.length);
@@ -207,7 +202,6 @@
     _router.onFinished = nil;
     if (!_finished) {
         _finished = true;
-        [self autorelease];
     }
 }
 
@@ -233,7 +227,6 @@
             if (pretty) {
                 NSString* contentType = (_response.headers)[@"Content-Type"];
                 if ([contentType hasPrefix: @"application/json"] && _data.length < 100000) {
-                    [_data release];
                     _data = [_response.body.asPrettyJSON mutableCopy];
                 }
             }
@@ -246,7 +239,6 @@
 - (void)connectionDidClose {
     @synchronized(self) {
         _connection = nil;
-        [_data release];
         _data = nil;
         [self cleanUp];
     }

@@ -1,5 +1,5 @@
 //
-//  TDServer.m
+//  TD_Server.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 11/30/11.
@@ -13,55 +13,66 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDServer.h"
-#import <TouchDB/TDDatabase.h>
+#import "TD_Server.h"
+#import <TouchDB/TD_Database.h>
 #import "TDReplicatorManager.h"
 #import "TDMisc.h"
-#import "TDDatabaseManager.h"
+#import "TD_DatabaseManager.h"
 #import "TDInternal.h"
 #import "TDURLProtocol.h"
 #import "MYBlockUtils.h"
 
 
-@implementation TDServer
+@implementation TD_Server
 
 
 #if DEBUG
-+ (TDServer*) createEmptyAtPath: (NSString*)path {
++ (TD_Server*) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
-    TDServer* server = [[self alloc] initWithDirectory: path error: &error];
+    TD_Server* server = [[self alloc] initWithDirectory: path error: &error];
     Assert(server, @"Failed to create server at %@: %@", path, error);
     AssertEqual(server.directory, path);
-    return [server autorelease];
+    return server;
 }
 
-+ (TDServer*) createEmptyAtTemporaryPath: (NSString*)name {
++ (TD_Server*) createEmptyAtTemporaryPath: (NSString*)name {
     return [self createEmptyAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: name]];
 }
 #endif
 
 
 - (id) initWithDirectory: (NSString*)dirPath
-                 options: (const TDDatabaseManagerOptions*)options
+                 options: (const TD_DatabaseManagerOptions*)options
                    error: (NSError**)outError
 {
     if (outError) *outError = nil;
     self = [super init];
     if (self) {
-        _manager = [[TDDatabaseManager alloc] initWithDirectory: dirPath
+        _manager = [[TD_DatabaseManager alloc] initWithDirectory: dirPath
                                                         options: options
                                                           error: outError];
         if (!_manager) {
-            [self release];
             return nil;
         }
         
         _serverThread = [[NSThread alloc] initWithTarget: self
                                                 selector: @selector(runServerThread)
                                                   object: nil];
-        LogTo(TDServer, @"Starting server thread %@ ...", _serverThread);
+        LogTo(TD_Server, @"Starting server thread %@ ...", _serverThread);
         [_serverThread start];
+
+        // Don't start the replicator immediately; instead, give the app a chance to install
+        // filter and validation functions, otherwise persistent replications may behave
+        // incorrectly. The delayed-perform means the replicator won't start until after
+        // the caller (and its caller, etc.) returns back to the runloop.
+        MYAfterDelay(0.0, ^{
+            if (_serverThread) {
+                [self queue: ^{
+                    [_manager replicatorManager];
+                }];
+            }
+        });
     }
     return self;
 }
@@ -73,21 +84,21 @@
 
 - (void)dealloc
 {
-    LogTo(TDServer, @"DEALLOC");
+    LogTo(TD_Server, @"DEALLOC");
     if (_serverThread) Warn(@"%@ dealloced with _serverThread still set: %@", self, _serverThread);
-    [_manager release];
-    [super dealloc];
 }
 
 
 - (void) close {
     if (_serverThread) {
-        [self queue: ^{
-            LogTo(TDServer, @"Stopping server thread...");
+        [self waitForDatabaseManager:^id(TD_DatabaseManager* mgr) {
+            LogTo(TD_Server, @"Stopping server thread...");
             [TDURLProtocol unregisterServer: self];
+            [_manager close];
+            _manager = nil;
             _stopRunLoop = YES;
+            return nil;
         }];
-        [_serverThread release];
         _serverThread = nil;
     }
 }
@@ -100,31 +111,24 @@
 
 - (void) runServerThread {
     @autoreleasepool {
-        [[self retain] autorelease]; // ensure self stays alive till this method returns
-        
-        @autoreleasepool {
-            LogTo(TDServer, @"Server thread starting...");
+        LogTo(TD_Server, @"Server thread starting...");
 
-            [[NSThread currentThread] setName:@"TouchDB"];
-            
-#ifndef GNUSTEP
-            // Add a no-op source so the runloop won't stop on its own:
-            CFRunLoopSourceContext context = {};  // all zeros
-            CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
-            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
-            CFRelease(source);
-#endif
-            
-            // Initialize the replicator, if it's enabled:
-            [_manager replicatorManager];
-        }
+        [[NSThread currentThread] setName:@"TouchDB"];
         
+#ifndef GNUSTEP
+        // Add a no-op source so the runloop won't stop on its own:
+        CFRunLoopSourceContext context = {};  // all zeros
+        CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+        CFRelease(source);
+#endif
+
         // Now run:
         while (!_stopRunLoop && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                                          beforeDate: [NSDate distantFuture]])
             ;
         
-        LogTo(TDServer, @"Server thread exiting");
+        LogTo(TD_Server, @"Server thread exiting");
 
         // Clean up; this has to be done on the server thread, not in the -close method.
         [_manager close];
@@ -138,13 +142,30 @@
 }
 
 
-- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TDDatabase*))block {
+- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(TD_Database*))block {
     [self queue: ^{ block([_manager databaseNamed: dbName]); }];
 }
 
 
-- (void) tellDatabaseManager: (void (^)(TDDatabaseManager*))block {
+- (void) tellDatabaseManager: (void (^)(TD_DatabaseManager*))block {
     [self queue: ^{ block(_manager); }];
+}
+
+
+- (id) waitForDatabaseManager: (id (^)(TD_DatabaseManager*))block {
+    __block id result = nil;
+    NSConditionLock* lock = [[NSConditionLock alloc] initWithCondition: 0];
+    [self queue: ^{
+        [lock lockWhenCondition: 0];
+        @try {
+            result = block(_manager);
+        } @finally {
+            [lock unlockWithCondition: 1];
+        }
+    }];
+    [lock lockWhenCondition: 1];  // wait till block finishes
+    [lock unlock];
+    return result;
 }
 
 
@@ -153,9 +174,9 @@
 
 
 NSURL* TDStartServer(NSString* serverDirectory, NSError** outError) {
-    CAssert(![TDURLProtocol server], @"A TDServer is already running");
-    TDServer* tdServer = [[[TDServer alloc] initWithDirectory: serverDirectory
-                                                        error: outError] autorelease];
+    CAssert(![TDURLProtocol server], @"A TD_Server is already running");
+    TD_Server* tdServer = [[TD_Server alloc] initWithDirectory: serverDirectory
+                                                        error: outError];
     if (!tdServer)
         return nil;
     return [TDURLProtocol registerServer: tdServer forHostname: nil];
@@ -164,6 +185,6 @@ NSURL* TDStartServer(NSString* serverDirectory, NSError** outError) {
 
 
 
-TestCase(TDServer) {
-    RequireTestCase(TDDatabaseManager);
+TestCase(TD_Server) {
+    RequireTestCase(TD_DatabaseManager);
 }

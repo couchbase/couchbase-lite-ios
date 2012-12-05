@@ -15,7 +15,7 @@
 
 #import "TDURLProtocol.h"
 #import "TDRouter.h"
-#import "TDServer.h"
+#import "TD_Server.h"
 #import "TDInternal.h"
 #import "MYBlockUtils.h"
 
@@ -38,14 +38,14 @@ static NSMutableDictionary* sHostMap;
 #pragma mark - REGISTERING SERVERS:
 
 
-+ (void) setServer: (TDServer*)server {
++ (void) setServer: (TD_Server*)server {
     @synchronized(self) {
         [self registerServer: server forHostname: nil];
     }
 }
 
 
-+ (TDServer*) server {
++ (TD_Server*) server {
     @synchronized(self) {
         return [self serverForHostname: nil];
     }
@@ -59,7 +59,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 + (void) forgetServers {
     @synchronized(self) {
-        [sHostMap release];
         sHostMap = nil;
     }
 }
@@ -72,7 +71,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
 }
 
 
-+ (NSURL*) registerServer: (TDServer*)server forHostname: (NSString*)hostname {
++ (NSURL*) registerServer: (TD_Server*)server forHostname: (NSString*)hostname {
     @synchronized(self) {
         if (!sHostMap)
             sHostMap = [[NSMutableDictionary alloc] init];
@@ -82,7 +81,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
 }
 
 
-+ (NSURL*) registerServer: (TDServer*)server {
++ (NSURL*) registerServer: (TD_Server*)server {
     @synchronized(self) {
         NSString* hostname = [[sHostMap allKeysForObject: server] lastObject];
         if (!hostname) {
@@ -97,21 +96,21 @@ static NSString* normalizeHostname( NSString* hostname ) {
 }
 
 
-+ (void) unregisterServer: (TDServer*)server {
++ (void) unregisterServer: (TD_Server*)server {
     @synchronized(self) {
         [sHostMap removeObjectsForKeys: [sHostMap allKeysForObject: server]];
     }
 }
 
 
-+ (TDServer*) serverForHostname: (NSString*)hostname {
++ (TD_Server*) serverForHostname: (NSString*)hostname {
     @synchronized(self) {
         return sHostMap[normalizeHostname(hostname)];
     }
 }
 
 
-+ (TDServer*) serverForURL: (NSURL*)url {
++ (TD_Server*) serverForURL: (NSURL*)url {
     NSString* scheme = url.scheme.lowercaseString;
     if ([scheme isEqualToString: kScheme])
         return [self serverForHostname: url.host];
@@ -154,8 +153,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 - (void) dealloc {
     [_router stop];
-    [_router release];
-    [super dealloc];
 }
 
 
@@ -164,7 +161,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 - (void) startLoading {
     LogTo(TDURLProtocol, @"Loading <%@>", self.request.URL);
-    TDServer* server = [[self class] serverForURL: self.request.URL];
+    TD_Server* server = [[self class] serverForURL: self.request.URL];
     if (!server) {
         NSError* error = [NSError errorWithDomain: NSURLErrorDomain
                                              code: NSURLErrorCannotFindHost userInfo: nil];
@@ -174,23 +171,29 @@ static NSString* normalizeHostname( NSString* hostname ) {
     
     NSThread* loaderThread = [NSThread currentThread];
     _router = [[TDRouter alloc] initWithServer: server request: self.request isLocal: YES];
+    
+    __weak id weakSelf = self;
+    
     _router.onResponseReady = ^(TDResponse* routerResponse) {
-        [self performSelector: @selector(onResponseReady:)
-                     onThread: loaderThread
-                   withObject: routerResponse
-                waitUntilDone: NO];
+        id strongSelf = weakSelf;
+        [strongSelf performSelector: @selector(onResponseReady:)
+                           onThread: loaderThread
+                         withObject: routerResponse
+                      waitUntilDone: NO];
     };
     _router.onDataAvailable = ^(NSData* data, BOOL finished) {
-        [self performSelector: @selector(onDataAvailable:)
-                     onThread: loaderThread
-                   withObject: data
-                waitUntilDone: NO];
+        id strongSelf = weakSelf;
+        [strongSelf performSelector: @selector(onDataAvailable:)
+                           onThread: loaderThread
+                         withObject: data
+                      waitUntilDone: NO];
     };
     _router.onFinished = ^{
-        [self performSelector: @selector(onFinished)
-                     onThread: loaderThread
-                   withObject: nil
-                waitUntilDone: NO];
+        id strongSelf = weakSelf;
+        [strongSelf performSelector: @selector(onFinished)
+                           onThread: loaderThread
+                         withObject: nil
+                      waitUntilDone: NO];
     };
     [_router start];
 }
@@ -207,7 +210,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
                                                             headerFields: routerResponse.headers];
     [self.client URLProtocol: self didReceiveResponse: response 
           cacheStoragePolicy: NSURLCacheStorageNotAllowed];
-    [response release];
 }
 
 
@@ -252,7 +254,7 @@ TestCase(TDURLProtocol_Registration) {
     CAssertEqual(error.domain, NSURLErrorDomain);
     CAssertEq(error.code, NSURLErrorCannotFindHost);
     
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDURLProtocolTest"];
+    TD_Server* server = [TD_Server createEmptyAtTemporaryPath: @"TDURLProtocolTest"];
     NSURL* root = [TDURLProtocol registerServer: server forHostname: @"some.hostname"];
     CAssertEqual(root, url);
     CAssertEq([TDURLProtocol serverForHostname: @"some.hostname"], server);
@@ -278,7 +280,7 @@ TestCase(TDURLProtocol_Registration) {
 TestCase(TDURLProtocol) {
     RequireTestCase(TDRouter);
     [TDURLProtocol forgetServers];
-    TDServer* server = [TDServer createEmptyAtTemporaryPath: @"TDURLProtocolTest"];
+    TD_Server* server = [TD_Server createEmptyAtTemporaryPath: @"TDURLProtocolTest"];
     [TDURLProtocol setServer: server];
     
     NSURL* url = [NSURL URLWithString: @"touchdb:///"];
@@ -288,7 +290,7 @@ TestCase(TDURLProtocol) {
     NSData* body = [NSURLConnection sendSynchronousRequest: req 
                                          returningResponse: &response 
                                                      error: &error];
-    NSString* bodyStr = [[[NSString alloc] initWithData: body encoding: NSUTF8StringEncoding] autorelease];
+    NSString* bodyStr = [[NSString alloc] initWithData: body encoding: NSUTF8StringEncoding];
     Log(@"Response = %@", response);
     Log(@"MIME Type = %@", response.MIMEType);
     Log(@"Body = %@", bodyStr);

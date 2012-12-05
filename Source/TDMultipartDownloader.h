@@ -7,7 +7,7 @@
 //
 
 #import "TDRemoteRequest.h"
-@class TDMultipartDocumentReader, TDDatabase;
+@class TDMultipartDocumentReader, TD_Database;
 
 
 /** Downloads a remote CouchDB document in multipart format.
@@ -19,7 +19,7 @@
 }
 
 - (id) initWithURL: (NSURL*)url
-          database: (TDDatabase*)database
+          database: (TD_Database*)database
     requestHeaders: (NSDictionary *) requestHeaders
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion;
 

@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDServer, TDRouter;
+@class TD_Server, TDRouter;
 
 @interface TDURLProtocol : NSURLProtocol
 {
@@ -22,25 +22,25 @@
     (This URL will have the hostname of the touchdb: URL with ".touchdb." appended.) */
 + (NSURL*) HTTPURLForServerURL: (NSURL*)serverURL;
 
-/** Registers a TDServer instance with a URL hostname.
+/** Registers a TD_Server instance with a URL hostname.
     'touchdb:' URLs with that hostname will be routed to that server.
     If the server is nil, that hostname is unregistered, and URLs with that hostname will cause a host-not-found error.
     If the hostname is nil or an empty string, "localhost" is substituted. */
-+ (NSURL*) registerServer: (TDServer*)server forHostname: (NSString*)hostname;
++ (NSURL*) registerServer: (TD_Server*)server forHostname: (NSString*)hostname;
 
-/** Returns the TDServer instance that's been registered with a specific hostname. */
-+ (TDServer*) serverForHostname: (NSString*)hostname;
+/** Returns the TD_Server instance that's been registered with a specific hostname. */
++ (TD_Server*) serverForHostname: (NSString*)hostname;
 
-/** Registers a TDServer instance with a new unique hostname, and returns the root URL at which the server can now be reached. */
-+ (NSURL*) registerServer: (TDServer*)server;
+/** Registers a TD_Server instance with a new unique hostname, and returns the root URL at which the server can now be reached. */
++ (NSURL*) registerServer: (TD_Server*)server;
 
-/** Unregisters a TDServer. After this, the server can be safely closed. */
-+ (void) unregisterServer: (TDServer*)server;
+/** Unregisters a TD_Server. After this, the server can be safely closed. */
++ (void) unregisterServer: (TD_Server*)server;
 
 /** A convenience to register a server with the default hostname "localhost". */
-+ (void) setServer: (TDServer*)server;
++ (void) setServer: (TD_Server*)server;
 
 /** Returns the server registered with the hostname "localhost". */
-+ (TDServer*) server;
++ (TD_Server*) server;
 
 @end

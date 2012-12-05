@@ -40,7 +40,6 @@
                                            withIntermediateDirectories: NO
                                                             attributes: nil
                                                                  error: outError]) {
-                [self release];
                 return nil;
             }
         }
@@ -49,11 +48,6 @@
 }
 
 
-- (void)dealloc {
-    [_path release];
-    [_tempDir release];
-    [super dealloc];
-}
 
 
 + (TDBlobKey) keyForBlob: (NSData*)blob {
@@ -84,7 +78,6 @@
     strlcat(out, kFileExtension, sizeof(out));
     NSString* name =  [[NSString alloc] initWithCString: out encoding: NSASCIIStringEncoding];
     NSString* path = [_path stringByAppendingPathComponent: name];
-    [name release];
     return path;
 }
 
@@ -258,7 +251,6 @@
         NSString* filename = [TDCreateUUID() stringByAppendingPathExtension: @"blobtmp"];
         _tempPath = [[_store.tempDir stringByAppendingPathComponent: filename] copy];
         if (!_tempPath) {
-            [self release];
             return nil;
         }
         NSDictionary* attributes = nil;
@@ -268,12 +260,10 @@
         if (![[NSFileManager defaultManager] createFileAtPath: _tempPath
                                                      contents: nil
                                                    attributes: attributes]) {
-            [self release];
             return nil;
         }
-        _out = [[NSFileHandle fileHandleForWritingAtPath: _tempPath] retain];
+        _out = [NSFileHandle fileHandleForWritingAtPath: _tempPath];
         if (!_out) {
-            [self release];
             return nil;
         }
     }
@@ -290,7 +280,6 @@
 
 - (void) closeFile {
     [_out closeFile];
-    [_out release];
     _out = nil;    
 }
 
@@ -319,7 +308,6 @@
     NSString* dstPath = [_store pathForKey: _blobKey];
     if ([[NSFileManager defaultManager] moveItemAtPath: _tempPath
                                                 toPath: dstPath error:NULL]) {
-        [_tempPath release];
         _tempPath = nil;
     } else {
         // If the move fails, assume it means a file with the same name already exists; in that
@@ -333,14 +321,12 @@
     [self closeFile];
     if (_tempPath) {
         [[NSFileManager defaultManager] removeItemAtPath: _tempPath error: NULL];
-        [_tempPath release];
         _tempPath = nil;
     }
 }
 
 - (void) dealloc {
     [self cancel];      // Close file, and delete it if it hasn't been installed yet
-    [super dealloc];
 }
 
 

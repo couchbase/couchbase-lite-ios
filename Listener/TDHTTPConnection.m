@@ -19,7 +19,7 @@
 #import "TDHTTPServer.h"
 #import "TDHTTPResponse.h"
 #import "TDListener.h"
-#import "TDServer.h"
+#import "TD_Server.h"
 #import "TDRouter.h"
 
 #import "HTTPMessage.h"
@@ -75,10 +75,9 @@
                                                 request: urlRequest
                                                 isLocal: NO];
     router.processRanges = NO;  // The HTTP server framework does this already
-    TDHTTPResponse* response = [[[TDHTTPResponse alloc] initWithRouter: router
-                                                         forConnection: self] autorelease];
+    TDHTTPResponse* response = [[TDHTTPResponse alloc] initWithRouter: router
+                                                         forConnection: self];
     
-    [router release];
     return response;
 }
 

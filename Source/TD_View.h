@@ -1,5 +1,5 @@
 //
-//  TDView.h
+//  TD_View.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/8/11.
@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <TouchDB/TDDatabase.h>
+#import <TouchDB/TD_Database.h>
 
 
 typedef void (^TDMapEmitBlock)(id key, id value);
@@ -61,10 +61,10 @@ typedef enum {
 
 
 /** Represents a view available in a database. */
-@interface TDView : NSObject
+@interface TD_View : NSObject
 {
     @private
-    TDDatabase* _db;
+    TD_Database* __weak _db;
     NSString* _name;
     int _viewID;
     TDMapBlock _mapBlock;
@@ -75,7 +75,7 @@ typedef enum {
 
 - (void) deleteView;
 
-@property (readonly) TDDatabase* database;
+@property (readonly) TD_Database* database;
 @property (readonly) NSString* name;
 
 @property (readonly) TDMapBlock mapBlock;

@@ -59,7 +59,7 @@ int main (int argc, const char * argv[]) {
     CouchTouchDBServer* server = [CouchTouchDBServer sharedInstance];
     NSAssert(!server.error, @"Error initializing TouchDB: %@", server.error);
 
-    _database = [[server databaseNamed: dbName] retain];
+    _database = [server databaseNamed: dbName];
     
     RESTOperation* op = [_database create];
     if (![op wait]) {
@@ -94,7 +94,7 @@ int main (int argc, const char * argv[]) {
     
     CouchQuery* q = [design queryViewNamed: @"byDate"];
     q.descending = YES;
-    self.query = [[[DemoQuery alloc] initWithQuery: q] autorelease];
+    self.query = [[DemoQuery alloc] initWithQuery: q];
     self.query.modelClass =_tableController.objectClass;
     
     // Start watching any persistent replications already configured:
@@ -102,9 +102,9 @@ int main (int argc, const char * argv[]) {
     
 #ifdef FOR_TESTING_PURPOSES
     // Start a listener socket:
-    [server tellTDServer: ^(TDServer* tdServer) {
+    [server tellTDServer: ^(TD_Server* tdServer) {
         // Register support for handling certain JS functions used in the CouchDB unit tests:
-        [TDView setCompiler: self];
+        [TD_View setCompiler: self];
         
         sListener = [[TDListener alloc] initWithTDServer: tdServer port: 8888];
         [sListener start];
@@ -113,6 +113,15 @@ int main (int argc, const char * argv[]) {
 #endif
 }
 
+
+- (IBAction) applicationWillTerminate:(id)sender {
+    [(CouchTouchDBServer*)_database.server close];
+}
+
+
+- (IBAction) compact: (id)sender {
+    [_database compact];
+}
 
 
 #pragma mark - SYNC UI:
@@ -188,6 +197,22 @@ int main (int argc, const char * argv[]) {
 }
 
 
+- (void) resetReplication: (CouchPersistentReplication*)repl {
+    [repl setValue: @YES ofProperty: @"reset"];
+    [repl restart];
+}
+
+- (IBAction) resetSync: (id)sender {
+    NSURL* syncURL = self.syncURL;
+    if (!syncURL) {
+        NSBeep();
+        return;
+    }
+    [self resetReplication: [_database replicationFromDatabaseAtURL: syncURL]];
+    [self resetReplication: [_database replicationToDatabaseAtURL: syncURL]];
+}
+
+
 #pragma mark - SYNC:
 
 
@@ -220,22 +245,15 @@ int main (int argc, const char * argv[]) {
     [repl removeObserver: self forKeyPath: @"mode"];
 }
 
-- (void) forgetReplication: (CouchPersistentReplication**)repl {
-    if (*repl) {
-        [self stopObservingReplication: *repl];
-        [*repl release];
-        *repl = nil;
-    }
-}
-
 
 - (void) startContinuousSyncWith: (NSURL*)otherDbURL {
-    [self forgetReplication: &_pull];
-    [self forgetReplication: &_push];
-    
+    if (_pull)
+        [self stopObservingReplication: _pull];
+    if (_push)
+        [self stopObservingReplication: _push];
     NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
-    _pull = [repls[0] retain];
-    _push = [repls[1] retain];
+    _pull = repls[0];
+    _push = repls[1];
     [self observeReplication: _pull];
     [self observeReplication: _push];
     
@@ -341,7 +359,7 @@ int main (int argc, const char * argv[]) {
             emit(doc[@"foo"], nil);
         };
     }
-    return [[mapBlock copy] autorelease];
+    return [mapBlock copy];
 }
 
 
@@ -351,10 +369,10 @@ int main (int argc, const char * argv[]) {
     TDReduceBlock reduceBlock = NULL;
     if ([reduceSource isEqualToString: @"(function (keys, values) {return sum(values);})"]) {
         reduceBlock = ^(NSArray* keys, NSArray* values, BOOL rereduce) {
-            return [TDView totalValues: values];
+            return [TD_View totalValues: values];
         };
     }
-    return [[reduceBlock copy] autorelease];
+    return [reduceBlock copy];
 }
 
 #endif

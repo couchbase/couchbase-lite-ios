@@ -1,5 +1,5 @@
 //
-//  TDAttachment.m
+//  TD_Attachment.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 4/3/12.
@@ -13,10 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TDAttachment.h"
+#import "TD_Attachment.h"
 
 
-@implementation TDAttachment
+@implementation TD_Attachment
 
 
 @synthesize name=_name, contentType=_contentType;
@@ -33,12 +33,6 @@
 }
 
 
-- (void)dealloc
-{
-    [_name release];
-    [_contentType release];
-    [super dealloc];
-}
 
 
 - (bool) isValid {

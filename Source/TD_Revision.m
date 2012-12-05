@@ -1,5 +1,5 @@
 //
-//  TDRevision.m
+//  TD_Revision.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 12/2/11.
@@ -13,12 +13,12 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import <TouchDB/TDRevision.h>
-#import "TDBody.h"
+#import <TouchDB/TD_Revision.h>
+#import "TD_Body.h"
 #import "TDMisc.h"
 
 
-@implementation TDRevision
+@implementation TD_Revision
 
 - (id) initWithDocID: (NSString*)docID 
                revID: (NSString*)revID 
@@ -28,7 +28,6 @@
     if (self) {
         if (!docID && (revID || deleted)) {
             // Illegal rev
-            [self release];
             return nil;
         }
         _docID = docID.copy;
@@ -38,7 +37,7 @@
     return self;
 }
 
-- (id) initWithBody: (TDBody*)body {
+- (id) initWithBody: (TD_Body*)body {
     Assert(body);
     self = [self initWithDocID: body[@"_id"]
                          revID: body[@"_rev"]
@@ -50,24 +49,17 @@
 }
 
 - (id) initWithProperties: (NSDictionary*)properties {
-    TDBody* body = [[[TDBody alloc] initWithProperties: properties] autorelease];
+    TD_Body* body = [[TD_Body alloc] initWithProperties: properties];
     if (!body) {
-        [self release];
         return nil;
     }
     return [self initWithBody: body];
 }
 
-+ (TDRevision*) revisionWithProperties: (NSDictionary*)properties {
-    return [[[self alloc] initWithProperties: properties] autorelease];
++ (TD_Revision*) revisionWithProperties: (NSDictionary*)properties {
+    return [[self alloc] initWithProperties: properties];
 }
 
-- (void)dealloc {
-    [_docID release];
-    [_revID release];
-    [_body release];
-    [super dealloc];
-}
 
 @synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing,
             body=_body, sequence=_sequence;
@@ -99,7 +91,6 @@
     BOOL parsed = [scanner scanInt: outNum] && [scanner scanString: @"-" intoString: NULL];
     if (outSuffix)
         *outSuffix = [revID substringFromIndex: scanner.scanLocation];
-    [scanner release];
     return parsed && *outNum > 0 && (!outSuffix || (*outSuffix).length > 0);
 }
 
@@ -109,7 +100,7 @@
 }
 
 - (void) setProperties:(NSDictionary *)properties {
-    self.body = [TDBody bodyWithProperties: properties];
+    self.body = [TD_Body bodyWithProperties: properties];
 }
 
 - (id)objectForKeyedSubscript:(id)key {
@@ -121,7 +112,7 @@
 }
 
 - (void) setAsJSON:(NSData *)asJSON {
-    self.body = [TDBody bodyWithJSON: asJSON];
+    self.body = [TD_Body bodyWithJSON: asJSON];
 }
 
 - (NSString*) description {
@@ -136,15 +127,15 @@
     return _docID.hash ^ _revID.hash;
 }
 
-- (NSComparisonResult) compareSequences: (TDRevision*)rev {
+- (NSComparisonResult) compareSequences: (TD_Revision*)rev {
     NSParameterAssert(rev != nil);
     return TDSequenceCompare(_sequence, rev->_sequence);
 }
 
-- (TDRevision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID {
+- (TD_Revision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID {
     Assert(docID && revID);
     Assert(!_docID || $equal(_docID, docID));
-    TDRevision* rev = [[[self class] alloc] initWithDocID: docID revID: revID deleted: _deleted];
+    TD_Revision* rev = [[[self class] alloc] initWithDocID: docID revID: revID deleted: _deleted];
 
     // Update the _id and _rev in the new object's JSON:
     NSDictionary* properties = self.properties;
@@ -153,7 +144,6 @@
     [nuProperties setValue: docID forKey: @"_id"];
     [nuProperties setValue: revID forKey: @"_rev"];
     rev.properties = nuProperties;
-    [nuProperties release];
 
     return rev;
 }
@@ -163,7 +153,7 @@
 
 
 
-@implementation TDRevisionList
+@implementation TD_RevisionList
 
 - (id)init {
     self = [super init];
@@ -182,10 +172,6 @@
     return self;
 }
 
-- (void)dealloc {
-    [_revs release];
-    [super dealloc];
-}
 
 - (NSString*) description {
     return _revs.description;
@@ -197,20 +183,20 @@
 
 @synthesize allRevisions=_revs;
 
-- (TDRevision*) objectAtIndexedSubscript: (NSUInteger)index {
+- (TD_Revision*) objectAtIndexedSubscript: (NSUInteger)index {
     return _revs[index];
 }
 
-- (void) addRev: (TDRevision*)rev {
+- (void) addRev: (TD_Revision*)rev {
     [_revs addObject: rev];
 }
 
-- (void) removeRev: (TDRevision*)rev {
+- (void) removeRev: (TD_Revision*)rev {
     [_revs removeObject: rev];
 }
 
-- (TDRevision*) revWithDocID: (NSString*)docID revID: (NSString*)revID {
-    for (TDRevision* rev in _revs) {
+- (TD_Revision*) revWithDocID: (NSString*)docID revID: (NSString*)revID {
+    for (TD_Revision* rev in _revs) {
         if ($equal(rev.docID, docID) && $equal(rev.revID, revID))
             return rev;
     }
@@ -314,15 +300,15 @@ NSComparisonResult TDCompareRevIDs(NSString* revID1, NSString* revID2) {
 #if DEBUG
 
 static BOOL parseRevID(NSString* revID, int *gen, NSString** suffix) {
-    return [TDRevision parseRevID: revID intoGeneration: gen andSuffix: suffix];
+    return [TD_Revision parseRevID: revID intoGeneration: gen andSuffix: suffix];
 }
 
 static int collateRevs(const char* rev1, const char* rev2) {
     return TDCollateRevIDs(NULL, (int)strlen(rev1), rev1, (int)strlen(rev2), rev2);
 }
 
-TestCase(TDDatabase_ParseRevID) {
-    RequireTestCase(TDDatabase);
+TestCase(TD_Database_ParseRevID) {
+    RequireTestCase(TD_Database);
     int num;
     NSString* suffix;
     CAssert(parseRevID(@"1-utiopturoewpt", &num, &suffix));

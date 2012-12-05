@@ -179,8 +179,6 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
     NSString* str1 = createStringFromJSON(in1);
     NSString* str2 = createStringFromJSON(in2);
     int result = (int)[str1 localizedCompare: str2];
-    [str1 release];
-    [str2 release];
     return result;
 }
 
@@ -205,13 +203,15 @@ static double readNumber(const char* start, const char* end, char** endOfNumber)
 }
 
 
-int TDCollateJSON(void *context,
-               int len1, const void * chars1,
-               int len2, const void * chars2)
+int TDCollateJSONLimited(void *context,
+                         int len1, const void * chars1,
+                         int len2, const void * chars2,
+                         unsigned arrayLimit)
 {
     const char* str1 = chars1;
     const char* str2 = chars2;
     int depth = 0;
+    unsigned arrayIndex = 0;
     
     do {
         // Get the types of the next token in each string:
@@ -219,6 +219,10 @@ int TDCollateJSON(void *context,
         ValueType type2 = valueTypeOf(*str2);
         // If types don't match, stop and return their relative ordering:
         if (type1 != type2) {
+            if (depth == 1 && (type1 == kComma || type2 == kComma)) {
+                if (++arrayIndex >= arrayLimit)
+                    return 0;
+            }
             if (context != kTDCollateJSON_Raw)
                 return cmp(type1, type2);
             else
@@ -272,9 +276,14 @@ int TDCollateJSON(void *context,
             case kEndObject:
                 ++str1;
                 ++str2;
+                if (depth == 1 && (++arrayIndex >= arrayLimit))
+                    return 0;
                 --depth;
                 break;
             case kComma:
+                if (depth == 1 && (++arrayIndex >= arrayLimit))
+                    return 0;
+                // else fall through:
             case kColon:
                 ++str1;
                 ++str2;
@@ -284,6 +293,14 @@ int TDCollateJSON(void *context,
         }
     } while (depth > 0);    // Keep going as long as we're inside an array or object
     return 0;
+}
+
+
+int TDCollateJSON(void *context,
+                  int len1, const void * chars1,
+                  int len2, const void * chars2)
+{
+    return TDCollateJSONLimited(context, len1, chars1, len2, chars2, UINT_MAX);
 }
 
 
@@ -313,7 +330,7 @@ TestCase(TDCollateConvertEscape) {
     testEscape("\\u0000", 0);
 }
 
-static int collate(void *mode, const void * str1, const void * str2) {
+static int collateLimited(void *mode, const void * str1, const void * str2, unsigned arrayLimit) {
     // Be evil and put numeric garbage past the ends of str1 and str2 (see bug #138):
     size_t len1 = strlen(str1), len2 = strlen(str2);
     char buf1[len1 + 3], buf2[len2 + 3];
@@ -321,7 +338,11 @@ static int collate(void *mode, const void * str1, const void * str2) {
     strlcat(buf1, "99", sizeof(buf1));
     strlcpy(buf2, str2, sizeof(buf1));
     strlcat(buf2, "88", sizeof(buf1));
-    return TDCollateJSON(mode, (int)len1, buf1, (int)len2, buf2);
+    return TDCollateJSONLimited(mode, (int)len1, buf1, (int)len2, buf2, arrayLimit);
+}
+
+static int collate(void *mode, const void * str1, const void * str2) {
+    return collateLimited(mode, str1, str2, UINT_MAX);
 }
 
 TestCase(TDCollateScalars) {
@@ -406,5 +427,14 @@ TestCase(TDCollateUnicodeStrings) {
     CAssertEq(collate(mode, encode(@"ømø"), encode(@"omo")), 1);
     CAssertEq(collate(mode, encode(@"\t"), encode(@" ")), -1);
     CAssertEq(collate(mode, encode(@"\001"), encode(@" ")), -1);
+}
+
+TestCase(TDCollateLimited) {
+    void* mode = kTDCollateJSON_Unicode;
+    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[4,\"wow\"]", 1), 1);
+    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"wow\"]", 1), 0);
+    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"MOM\"]", 1), 0);
+    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5]", 1), 0);
+    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"MOM\"]", 2), 1);
 }
 #endif

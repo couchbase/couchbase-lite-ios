@@ -31,11 +31,6 @@
 }
 
 
-- (void)dealloc {
-    [_inbox release];
-    [_processor release];
-    [super dealloc];
-}
 
 
 - (void) unschedule {
@@ -63,7 +58,7 @@
     if (count == 0) {
         return;
     } else if (count <= _capacity) {
-        toProcess = [_inbox autorelease];
+        toProcess = _inbox;
         _inbox = nil;
     } else {
         toProcess = [_inbox subarrayWithRange: NSMakeRange(0, _capacity)];
@@ -105,7 +100,7 @@
 - (void) flushAll {
     if (_inbox.count > 0) {
         [self unschedule];
-        NSArray* toProcess = [_inbox autorelease];
+        NSArray* toProcess = _inbox;
         _inbox = nil;
         _processor(toProcess);
     }

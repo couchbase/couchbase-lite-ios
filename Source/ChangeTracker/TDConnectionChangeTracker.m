@@ -23,17 +23,26 @@
 #import "MYURLUtils.h"
 
 
+static NSURL* AddDotToURLHost( NSURL* url );
 static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
 
 
 @implementation TDConnectionChangeTracker
+
+- (NSURL*) changesFeedURL {
+    // Really ugly workaround for CFNetwork, to make sure that long-running connections like these
+    // don't end up using the same socket pool as regular connections to the same host; otherwise
+    // the regular connections can get stuck indefinitely behind a long-running one.
+    // (This substitution appends a "." to the host name, if it didn't already end with one.)
+    return AddDotToURLHost([super changesFeedURL]);
+}
 
 - (BOOL) start {
     if(_connection)
         return NO;
     [super start];
     _inputBuffer = [[NSMutableData alloc] init];
-    
+
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: self.changesFeedURL];
     request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     request.timeoutInterval = 6.02e23;
@@ -56,7 +65,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
         [request setValue: value forHTTPHeaderField: key];
     }];
     
-    _connection = [[NSURLConnection connectionWithRequest: request delegate: self] retain];
+    _connection = [NSURLConnection connectionWithRequest: request delegate: self];
     _startTime = CFAbsoluteTimeGetCurrent();
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
@@ -64,9 +73,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
 
 
 - (void) clearConnection {
-    [_connection autorelease];
     _connection = nil;
-    [_inputBuffer release];
     _inputBuffer = nil;
 }
 
@@ -97,7 +104,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
     }
 
     [_connection cancel];
-    self.authorizer = [[[TDBasicAuthorizer alloc] initWithCredential: cred] autorelease];
+    self.authorizer = [[TDBasicAuthorizer alloc] initWithCredential: cred];
     LogTo(ChangeTracker, @"Got 401 but retrying with %@", _authorizer);
     [self clearConnection];
     [self start];
@@ -126,7 +133,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
         if (challengeIsForDottedHost) {
             // Update the policy with the correct original hostname (without the "." suffix):
             host = _databaseURL.host;
-            SecPolicyRef policy = SecPolicyCreateSSL(YES, (CFStringRef)host);
+            SecPolicyRef policy = SecPolicyCreateSSL(YES, (__bridge CFStringRef)host);
             trust = CopyTrustWithPolicy(trust, policy);
             CFRelease(policy);
         } else {
@@ -226,7 +233,7 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     // Now parse the entire response as a JSON document:
-    NSData* input = [_inputBuffer retain];
+    NSData* input = _inputBuffer;
     LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
     BOOL restart = NO;
     NSString* errorMessage = nil;
@@ -241,7 +248,6 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy);
         // ran out of changes due to a _limit rather than because we hit the end.
         restart = _mode == kLongPoll || numChanges == (NSInteger)_limit;
     }
-    [input release];
     
     [self clearConnection];
     
@@ -291,3 +297,51 @@ static SecTrustRef CopyTrustWithPolicy(SecTrustRef trust, SecPolicyRef policy) {
     return trust;
 #endif
 }
+
+
+static NSURL* AddDotToURLHost( NSURL* url ) {
+    CAssert(url);
+    UInt8 urlBytes[1024];
+    CFIndex nBytes = CFURLGetBytes((CFURLRef)url, urlBytes, sizeof(urlBytes) - 1);
+    if (nBytes > 0) {
+        CFRange range;
+        CFURLGetByteRangeForComponent((CFURLRef)url, kCFURLComponentHost, &range);
+        if (range.length >= 2) {
+            CFIndex end = range.location + range.length - 1;
+            if (urlBytes[end] == '/' || urlBytes[end] == ':')
+                --end;
+            if (isalpha(urlBytes[end])) {
+                // Alright, insert the '.' after end:
+                memmove(&urlBytes[end+2], &urlBytes[end+1], nBytes - end);
+                urlBytes[end+1] = '.';
+                NSURL* newURL = (id)(CFURLCreateWithBytes(NULL, urlBytes, nBytes + 1,
+                                                          kCFStringEncodingUTF8, NULL));
+                if (newURL)
+                    url = [newURL autorelease];
+                else
+                    Warn(@"AddDotToURLHost: Failed to add dot to <%@> -- result is <%.*s>",
+                         url, (int)nBytes+1, urlBytes);
+            }
+        }
+    }
+    return url;
+}
+
+
+#if DEBUG
+static NSString* addDot( NSString* urlStr ) {
+    return AddDotToURLHost([NSURL URLWithString: urlStr]).absoluteString;
+}
+
+TestCase(AddDotToURLHost) {
+    CAssertEqual(addDot(@"http://x/y"),                 @"http://x./y");
+    CAssertEqual(addDot(@"http://foo.com"),             @"http://foo.com.");
+    CAssertEqual(addDot(@"http://foo.com/"),            @"http://foo.com./");
+    CAssertEqual(addDot(@"http://foo.com/bar"),         @"http://foo.com./bar");
+    CAssertEqual(addDot(@"http://foo.com:123/"),        @"http://foo.com.:123/");
+    CAssertEqual(addDot(@"http://user:pass@foo.com/"),  @"http://user:pass@foo.com./");
+    CAssertEqual(addDot(@"http://foo.com./"),           @"http://foo.com./");
+    CAssertEqual(addDot(@"http://localhost/"),          @"http://localhost./");
+    CAssertEqual(addDot(@"http://10.0.1.12/"),          @"http://10.0.1.12/");
+}
+#endif

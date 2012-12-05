@@ -25,7 +25,7 @@
 
 
 - (id) initWithURL: (NSURL*)url
-          database: (TDDatabase*)database
+          database: (TD_Database*)database
     requestHeaders: (NSDictionary *) requestHeaders
       onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
@@ -52,10 +52,6 @@
 }
 
 
-- (void) dealloc {
-    [_reader release];
-    [super dealloc];
-}
 
 
 - (NSDictionary*) document {
@@ -119,13 +115,13 @@ TestCase(TDMultipartDownloader) {
     RequireTestCase(TDMultipartReader_Simple);
     RequireTestCase(TDMultipartReader_Types);
     
-    TDDatabase* db = [TDDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"TDMultipartDownloader"]];
+    TD_Database* db = [TD_Database createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"TDMultipartDownloader"]];
     //NSString* urlStr = @"http://127.0.0.1:5984/demo-shopping-attachments/2F9078DF-3C72-44C2-8332-B07B3A29FFE4"
     NSString* urlStr = @"http://127.0.0.1:5984/attach-test/oneBigAttachment";
     urlStr = [urlStr stringByAppendingString: @"?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;
-    [[[[TDMultipartDownloader alloc] initWithURL: url
+    [[[TDMultipartDownloader alloc] initWithURL: url
                                        database: db
                                  requestHeaders: nil
                                    onCompletion: ^(id result, NSError * error)
@@ -148,7 +144,7 @@ TestCase(TDMultipartDownloader) {
          }
          CAssertEq(db.attachmentStore.count, attachments.count);
          done = YES;
-    }] autorelease] start];
+    }] start];
     
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
