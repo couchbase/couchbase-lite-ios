@@ -48,10 +48,12 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     NSDictionary* _options;
     NSDictionary* _requestHeaders;
     @private
+    NSString* _serverType;
     CBLReachability* _host;
 #if TARGET_OS_IPHONE
     NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;
 #endif
+
 }
 
 + (NSString *)progressChangedNotification;

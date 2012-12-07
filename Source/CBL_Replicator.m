@@ -620,6 +620,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 - (void) removeRemoteRequest: (CBLRemoteRequest*)request {
+    if (!_serverType)
+        _serverType = request.responseHeaders[@"Server"];
     [_remoteRequests removeObjectIdenticalTo: request];
 }
 

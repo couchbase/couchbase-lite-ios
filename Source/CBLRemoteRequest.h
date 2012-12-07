@@ -30,6 +30,7 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
     CBLRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
     int _status;
+    NSDictionary* _responseHeaders;
     UInt8 _retryCount;
     bool _dontLog404;
     bool _challenged;
@@ -54,6 +55,8 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
 
 /** Stops the request, calling the onCompletion block. */
 - (void) stop;
+
+@property (readonly) NSDictionary* responseHeaders;
 
 /** JSON-compatible dictionary with status information, to be returned from _active_tasks API */
 @property (readonly) NSMutableDictionary* statusInfo;
