@@ -574,6 +574,14 @@ TestCase(TD_Database_Attachments) {
 }
 
 
+static TDBlobStoreWriter* blobForData(TD_Database* db, NSData* data) {
+    TDBlobStoreWriter* blob = db.attachmentWriter;
+    [blob appendData: data];
+    [blob finish];
+    return blob;
+}
+
+
 TestCase(TD_Database_PutAttachment) {
     RequireTestCase(TD_Database_Attachments);
     // Start with a fresh database in /tmp:
@@ -607,17 +615,20 @@ TestCase(TD_Database_PutAttachment) {
     
     // Update the attachment directly:
     NSData* attachv2 = [@"Replaced body of attach" dataUsingEncoding: NSUTF8StringEncoding];
-    [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+    [db updateAttachment: @"attach" body: blobForData(db, attachv2)
+                    type: @"application/foo"
                 encoding: kTDAttachmentEncodingNone
                  ofDocID: rev1.docID revID: nil
                   status: &status];
     CAssertEq(status, kTDStatusConflict);
-    [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+    [db updateAttachment: @"attach" body: blobForData(db, attachv2)
+                    type: @"application/foo"
                 encoding: kTDAttachmentEncodingNone
                  ofDocID: rev1.docID revID: @"1-bogus"
                   status: &status];
     CAssertEq(status, kTDStatusConflict);
-    TD_Revision* rev2 = [db updateAttachment: @"attach" body: attachv2 type: @"application/foo"
+    TD_Revision* rev2 = [db updateAttachment: @"attach" body: blobForData(db, attachv2)
+                                        type: @"application/foo"
                                    encoding: kTDAttachmentEncodingNone
                                     ofDocID: rev1.docID revID: rev1.revID
                                      status: &status];
@@ -633,6 +644,10 @@ TestCase(TD_Database_PutAttachment) {
                                                          {@"length", @(23)},
                                                          {@"stub", $true},
                                                          {@"revpos", @2})}));
+
+    NSData* gotAttach = [db getAttachmentForSequence: gotRev2.sequence named: @"attach"
+                                                type: NULL encoding: NULL status: &status];
+    CAssertEqual(gotAttach, attachv2);
     
     // Delete the attachment:
     [db updateAttachment: @"nosuchattach" body: nil type: nil

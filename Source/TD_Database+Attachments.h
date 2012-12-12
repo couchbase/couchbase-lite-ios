@@ -68,7 +68,7 @@ typedef enum {
 /** Updates or deletes an attachment, creating a new document revision in the process.
     Used by the PUT / DELETE methods called on attachment URLs. */
 - (TD_Revision*) updateAttachment: (NSString*)filename
-                            body: (NSData*)body
+                            body: (TDBlobStoreWriter*)body
                             type: (NSString*)contentType
                         encoding: (TDAttachmentEncoding)encoding
                          ofDocID: (NSString*)docID

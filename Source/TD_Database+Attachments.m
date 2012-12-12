@@ -69,6 +69,13 @@
 }
 
 
+- (void) rememberAttachmentWriter: (TDBlobStoreWriter*)writer forDigest:(NSString*)digest {
+    if (!_pendingAttachmentsByDigest)
+        _pendingAttachmentsByDigest = [[NSMutableDictionary alloc] init];
+    _pendingAttachmentsByDigest[digest] = writer;
+}
+
+
 // This is ONLY FOR TESTS (see TDMultipartDownloader.m)
 #if DEBUG
 - (id) attachmentWriterForAttachment: (NSDictionary*)attachment {
@@ -561,7 +568,7 @@
 
 
 - (TD_Revision*) updateAttachment: (NSString*)filename
-                            body: (NSData*)body
+                            body: (TDBlobStoreWriter*)body
                             type: (NSString*)contentType
                         encoding: (TDAttachmentEncoding)encoding
                          ofDocID: (NSString*)docID
@@ -593,14 +600,10 @@
     if (!attachments)
         attachments = $mdict();
     if (body) {
-        TDBlobKey key;
-        if (![self storeBlob: body creatingKey: &key]) {
-            *outStatus = kTDStatusAttachmentError;
-            return nil;
-        }
+        TDBlobKey key = body.blobKey;
         NSString* digest = [@"sha1-" stringByAppendingString: [TDBase64 encode: &key
                                                                         length: sizeof(key)]];
-        [self rememberPendingKey: key forDigest: digest];
+        [self rememberAttachmentWriter: body forDigest: digest];
         NSString* encodingName = (encoding == kTDAttachmentEncodingGZIP) ? @"gzip" : nil;
         attachments[filename] = $dict({@"digest", digest},
                                       {@"length", @(body.length)},
