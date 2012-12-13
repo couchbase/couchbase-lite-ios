@@ -34,7 +34,8 @@
 
 
 - (BOOL) start {
-    NSAssert(!_trackingInput, @"Already started");
+    if (_trackingInput)
+        return NO;
 
     LogTo(ChangeTracker, @"%@: Starting...", self);
     [super start];
