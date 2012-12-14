@@ -34,7 +34,8 @@
 
 
 - (BOOL) start {
-    NSAssert(!_trackingInput, @"Already started");
+    if (_trackingInput)
+        return NO;
 
     LogTo(ChangeTracker, @"%@: Starting...", self);
     [super start];
@@ -51,6 +52,14 @@
     
     if (_unauthResponse && _credential) {
         NSString* password = _credential.password;
+        if (!password) {
+            // For some reason the password sometimes isn't accessible, even though we checked
+            // .hasPassword when setting _credential earlier. (See #195.) Keychain bug??
+            // If this happens, try looking up the credential again:
+            LogTo(ChangeTracker, @"Huh, couldn't get password of %@; trying again", _credential);
+            _credential = [self credentialForResponse: _unauthResponse];
+            password = _credential.password;
+        }
         if (password) {
             CFIndex unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
             Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,
@@ -59,7 +68,10 @@
                                                   kCFHTTPAuthenticationSchemeBasic,
                                                   unauthStatus == 407));
         } else {
-            Warn(@"%@: Unable to get password of %@", self, _credential);
+            Warn(@"%@: Unable to get password of credential %@", self, _credential);
+            _credential = nil;
+            CFRelease(_unauthResponse);
+            _unauthResponse = NULL;
         }
     } else if (_authorizer) {
         NSString* authHeader = [_authorizer authorizeHTTPMessage: request forRealm: nil];

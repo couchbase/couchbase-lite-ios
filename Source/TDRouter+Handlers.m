@@ -854,7 +854,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (TDStatus) updateAttachment: (NSString*)attachment docID: (NSString*)docID body: (NSData*)body {
+- (TDStatus) updateAttachment: (NSString*)attachment
+                        docID: (NSString*)docID
+                         body: (TDBlobStoreWriter*)body
+{
     TDStatus status;
     TD_Revision* rev = [_db updateAttachment: attachment 
                                        body: body
@@ -874,16 +877,35 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (TDStatus) do_PUT: (TD_Database*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    return [self updateAttachment: attachment
-                            docID: docID
-                             body: (_request.HTTPBody ?: [NSData data])];
+    TDBlobStoreWriter* blob = db.attachmentWriter;
+    NSInputStream* bodyStream = _request.HTTPBodyStream;
+    if (bodyStream) {
+        // OPT: Should read this asynchronously
+        NSMutableData* buffer = [NSMutableData dataWithLength: 32768];
+        NSInteger bytesRead;
+        do {
+            bytesRead = [bodyStream read: buffer.mutableBytes maxLength: buffer.length];
+            if (bytesRead > 0) {
+                [blob appendData: [NSData dataWithBytesNoCopy: buffer.mutableBytes
+                                                       length: bytesRead freeWhenDone: NO]];
+            }
+        } while (bytesRead > 0);
+        if (bytesRead < 0)
+            return kTDStatusBadAttachment;
+        
+    } else {
+        NSData* body = _request.HTTPBody;
+        if (body)
+            [blob appendData: body];
+    }
+    [blob finish];
+
+    return [self updateAttachment: attachment docID: docID body: blob];
 }
 
 
 - (TDStatus) do_DELETE: (TD_Database*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    return [self updateAttachment: attachment
-                            docID: docID
-                             body: nil];
+    return [self updateAttachment: attachment docID: docID body: nil];
 }
 
 
