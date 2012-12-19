@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "TD_DatabaseManager.h"
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
 #import "TDMisc.h"

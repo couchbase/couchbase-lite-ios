@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 @class TDReplicator;
 
 

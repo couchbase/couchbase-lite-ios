@@ -6,7 +6,7 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 #import "TD_Database+Attachments.h"
 #import "TD_DatabaseManager.h"
 #import "TD_View.h"

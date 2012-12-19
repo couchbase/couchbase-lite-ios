@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "TDRouter.h"
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 #import "TD_Body.h"
 #import "TD_Server.h"
 #import "TDBase64.h"

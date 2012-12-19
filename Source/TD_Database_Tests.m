@@ -14,14 +14,14 @@
 //  and limitations under the License.
 
 
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 #import "TD_Database+Attachments.h"
 #import "TD_Database+Insertion.h"
 #import "TD_Database+LocalDocs.h"
 #import "TD_Database+Replication.h"
 #import "TD_Attachment.h"
 #import "TD_Body.h"
-#import <TouchDB/TD_Revision.h>
+#import "TD_Revision.h"
 #import "TDBlobStore.h"
 #import "TDBase64.h"
 #import "TDInternal.h"
