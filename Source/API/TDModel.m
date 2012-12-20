@@ -77,6 +77,7 @@
 - (void) dealloc
 {
     LogTo(TouchModel, @"%@ dealloc", self);
+    Assert(!_needsSave, @"%@ dealloc with unsaved changes!", self);
     _document.modelObject = nil;
 }
 
@@ -137,7 +138,7 @@
     if (!rev)
         return YES;
     LogTo(TouchModel, @"%@ Deleting document", self);
-    _needsSave = NO;        // prevent any pending saves
+    self.needsSave = NO;        // prevent any pending saves
     rev = [rev deleteDocument: outError];
     if (!rev)
         return NO;
@@ -189,7 +190,7 @@
 #pragma mark - SAVING:
 
 
-@synthesize isNew=_isNew, autosaves=_autosaves, needsSave=_needsSave;
+@synthesize isNew=_isNew, autosaves=_autosaves;
 
 
 - (void) setAutosaves: (bool) autosaves {
@@ -208,18 +209,36 @@
 }
 
 
+- (bool) needsSave {
+    return _needsSave;
+}
+
+
+- (void) setNeedsSave: (bool)needsSave {
+    if (needsSave != _needsSave) {
+        _needsSave = needsSave;
+        NSMutableSet* unsaved = self.database.unsavedModelsMutable;
+        if (needsSave)
+            [unsaved addObject: self];
+        else
+            [unsaved removeObject: self];
+    }
+}
+
+
 - (void) didSave {
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return;
-    self.needsSave = NO;
     _isNew = NO;
     _properties = nil;
     _changedNames = nil;
     _changedAttachments = nil;
+    self.needsSave = NO;
 }
 
 
-- (BOOL) save: (NSError**)outError {
+// Internal version of -save: that doesn't invoke -didSave
+- (BOOL) justSave: (NSError**)outError {
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return YES;
     NSDictionary* properties = self.propertiesToSave;
@@ -232,8 +251,15 @@
             Warn(@"%@: Save failed: %@", self, error);
         return NO;
     }
-    [self didSave];
     return YES;
+}
+
+
+- (BOOL) save: (NSError**)outError {
+    BOOL ok = [self justSave: outError];
+    if (ok)
+        [self didSave];
+    return ok;
 }
 
 
@@ -244,7 +270,7 @@
     BOOL saved = [db inTransaction: ^{
         for (TDModel* model in models) {
             NSAssert(model.database == db, @"Models must share a common db");
-            if (![model save: outError])
+            if (![model justSave: outError])
                 return NO;
         }
         return YES;

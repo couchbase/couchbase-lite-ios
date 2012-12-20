@@ -23,11 +23,12 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
     TDDatabaseManager* _manager;
     TD_Database* _tddb;
     TDCache* _docCache;
-    TDModelFactory* _modelFactory;   // used in category method in TDModelFactory.m
+    TDModelFactory* _modelFactory;  // used in category method in TDModelFactory.m
+    NSMutableSet* _unsavedModelsMutable;   // All TDModels that have unsaved changes
 }
 
 
-@synthesize tddb=_tddb, manager=_manager;
+@synthesize tddb=_tddb, manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
 
 
 - (id) initWithManager: (TDDatabaseManager*)manager
@@ -37,6 +38,7 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
     if (self) {
         _manager = manager;
         _tddb = tddb;
+        _unsavedModelsMutable = [NSMutableSet set];
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(tddbNotification:) name: nil object: tddb];
         if (0)
@@ -211,6 +213,16 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 #pragma mark - REPLICATION:
 
 
+- (NSArray*) allReplications {
+    NSMutableArray* result = $marray();
+    for (TDReplication* repl in _manager.allReplications) {
+        if (repl.localDatabase == self)
+            [result addObject: repl];
+    }
+    return result;
+}
+
+
 - (TDReplication*) pushToURL: (NSURL*)url {
     return [_manager replicationWithDatabase: self remote: url pull: NO create: YES];
 }
@@ -229,7 +241,27 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 
 
 
-@implementation TDDatabase (TouchModelFactory)
+@implementation TDDatabase (TDModel)
+
+- (NSArray*) unsavedModels {
+    if (_unsavedModelsMutable.count == 0)
+        return nil;
+    return [_unsavedModelsMutable allObjects];
+}
+
+- (BOOL) saveAllModels: (NSError**)outError {
+    NSArray* unsaved = self.unsavedModels;
+    if (unsaved.count == 0)
+        return YES;
+    return [TDModel saveModels: unsaved error: outError];
+}
+
+
+@end
+
+
+
+@implementation TDDatabase (TDModelFactory)
 
 - (TDModelFactory*) modelFactory {
     if (!_modelFactory)

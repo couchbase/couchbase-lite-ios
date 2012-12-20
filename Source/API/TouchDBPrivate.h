@@ -22,13 +22,14 @@
 @property (readonly) TD_Server* tdServer;
 #endif
 @property (readonly) TD_DatabaseManager* tdManager;
+@property (readonly) NSArray* allReplications;
 - (TDReplication*) replicationWithDatabase: (TDDatabase*)db
                                        remote: (NSURL*)remote
                                          pull: (BOOL)pull
                                        create: (BOOL)create;
 - (NSArray*) createReplicationsBetween: (TDDatabase*)database
-and: (NSURL*)otherDbURL
-exclusively: (bool)exclusively;
+                                   and: (NSURL*)otherDbURL
+                           exclusively: (bool)exclusively;
 @end
 
 
@@ -36,6 +37,7 @@ exclusively: (bool)exclusively;
 - (id) initWithManager: (TDDatabaseManager*)manager
             TD_Database: (TD_Database*)tddb;
 @property (readonly, nonatomic) TD_Database* tddb;
+@property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 @end
 
 

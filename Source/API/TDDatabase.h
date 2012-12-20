@@ -90,6 +90,9 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 - (BOOL) inTransaction: (BOOL(^)(void))block;
 
 
+/** Returns an array of all current TDReplications involving this database. */
+- (NSArray*) allReplications;
+
 /** Creates a replication that will 'push' to a database at the given URL.
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */
 - (TDReplication*) pushToURL: (NSURL*)url;

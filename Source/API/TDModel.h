@@ -139,3 +139,16 @@
 - (TDDatabase*) databaseForModelProperty: (NSString*)propertyName;
 
 @end
+
+
+
+
+@interface TDDatabase (TDModel)
+
+/** All TDModels associated with this database whose needsSave is true. */
+@property (readonly) NSArray* unsavedModels;
+
+/** Saves changes to all TDModels associated with this database whose needsSave is true. */
+- (BOOL) saveAllModels: (NSError**)outError;
+
+@end
