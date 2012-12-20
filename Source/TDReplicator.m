@@ -215,6 +215,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                  }
                 ];
 
+    // If client didn't set an authorizer, use basic auth if credential is available:
+    if (!_authorizer)
+        _authorizer = [[TDBasicAuthorizer alloc] initWithURL: _remote];
+
     self.running = YES;
     _startTime = CFAbsoluteTimeGetCurrent();
     
