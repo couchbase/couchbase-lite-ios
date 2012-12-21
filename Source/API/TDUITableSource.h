@@ -1,5 +1,5 @@
 //
-//  CouchUITableSource.h
+//  TDUITableSource.h
 //  TouchDB
 //
 //  Created by Jens Alfke on 8/2/11.
@@ -10,7 +10,11 @@
 @class TDDocument, TDLiveQuery, TDQueryRow, RESTOperation;
 
 /** A UITableView data source driven by a TDLiveQuery. */
-@interface TDUITableSource : NSObject <UITableViewDataSource>
+@interface TDUITableSource : NSObject <UITableViewDataSource
+#if (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000)
+                                                            , UIDataSourceModelAssociation
+#endif
+                                                                                          >
 
 @property (nonatomic, retain) IBOutlet UITableView* tableView;
 
@@ -30,6 +34,9 @@
 
 /** Convenience accessor to find the index path of the row with a given document. */
 - (NSIndexPath*) indexPathForDocument: (TDDocument*)document;
+
+/** Convenience accessor to return the query row at a given index path. */
+- (TDQueryRow*) rowAtIndexPath: (NSIndexPath*)path;
 
 /** Convenience accessor to return the document at a given index path. */
 - (TDDocument*) documentAtIndexPath: (NSIndexPath*)path;

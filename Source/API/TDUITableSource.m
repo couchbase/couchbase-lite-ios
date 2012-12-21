@@ -64,10 +64,15 @@
 }
 
 
-- (TDDocument*) documentAtIndexPath: (NSIndexPath*)path {
+- (TDQueryRow*) rowAtIndexPath: (NSIndexPath*)path {
     if (path.section == 0)
-        return [[_rows objectAtIndex: path.row] document];
+        return [_rows objectAtIndex: path.row];
     return nil;
+}
+
+
+- (TDDocument*) documentAtIndexPath: (NSIndexPath*)path {
+    return [self rowAtIndexPath: path].document;
 }
 
 
@@ -250,6 +255,36 @@
 - (void) deleteDocuments: (NSArray*)documents {
     NSArray* paths = [documents my_map: ^(id doc) {return [self indexPathForDocument: doc];}];
     [self deleteDocuments: documents atIndexes: paths];
+}
+
+
+#pragma mark - STATE RESTORATION:
+
+
+- (NSString *) modelIdentifierForElementAtIndexPath:(NSIndexPath *)idx
+                                             inView:(UIView *)view
+{
+    TDQueryRow* row = [self rowAtIndexPath: idx];
+    Log(@"ModelIdentifier = %@", row.key);//TEMP
+    return row.key;
+}
+
+
+- (NSIndexPath *) indexPathForElementWithModelIdentifier:(NSString *)identifier
+                                                  inView:(UIView *)view
+{
+    Log(@"Restoring modelIdentifier %@", identifier);//TEMP
+    if (identifier) {
+        NSUInteger i = 0;
+        for (TDQueryRow* row in _rows) {
+            if ($equal(row.key, identifier)) {
+                Log(@"\t...restored to index %u", i);//TEMP
+                return [NSIndexPath indexPathForItem: i inSection: 0];
+            }
+            ++i;
+        }
+    }
+    return nil;
 }
 
 
