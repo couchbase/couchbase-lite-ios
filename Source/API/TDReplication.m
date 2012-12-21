@@ -44,18 +44,20 @@ NSString* const kTDReplicationChangeNotification = @"TouchReplicationChange";
     NSError* _error;
 
     TDReplicator* _bg_replicator;       // ONLY used on the server thread
-    TD_Database* _bg_serverDatabase;     // ONLY used on the server thread
+    TD_Database* _bg_serverDatabase;    // ONLY used on the server thread
+    NSString* _bg_documentID;           // ONLY used on the server thread
 }
 
 
-// Instantiate a new non-persistent replication
+// Instantiate a new replication; it is not persistent yet
 - (id) initWithDatabase: (TDDatabase*)database
                  remote: (NSURL*)remote
                    pull: (BOOL)pull
 {
     NSParameterAssert(database);
     NSParameterAssert(remote);
-    self = [super initWithNewDocumentInDatabase: database];
+    TDDatabase* replicatorDB = [database.manager databaseNamed: @"_replicator"];
+    self = [super initWithNewDocumentInDatabase: replicatorDB];
     if (self) {
         _remoteURL = remote;
         _pull = pull;
@@ -224,6 +226,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (void) observeReplicatorManager {
+    _bg_documentID = self.document.documentID;
     _mainThread = [NSThread currentThread];
 #if RUN_IN_BACKGROUND
     [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
@@ -242,22 +245,26 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (void) start {
-    // This is a no-op for persistent replications -- they're started by the TDReplicatorManager.
-    if (_started || self.persistent)
-        return;
-    _started = YES;
-    _mainThread = [NSThread currentThread];
+    if (self.persistent) {
+        // Removing the _replication_state property triggers the replicator manager to start it.
+        [self setValue: nil ofProperty: @"_replication_state"];
 
-    [self tellDatabaseManager:^(TD_DatabaseManager* dbmgr) {
-        // This runs on the server thread:
-        [self bg_startReplicator: dbmgr
-                          dbName: self.localDatabase.name
-                          remote: self.remoteURL
-                            pull: self.pull
-                    createTarget: self.create_target
-                      continuous: self.continuous
-                         options: self.currentProperties];
-    }];
+    } else if (!_started) {
+        // Non-persistent replications I run myself:
+        _started = YES;
+        _mainThread = [NSThread currentThread];
+
+        [self tellDatabaseManager:^(TD_DatabaseManager* dbmgr) {
+            // This runs on the server thread:
+            [self bg_startReplicator: dbmgr
+                              dbName: self.localDatabase.name
+                              remote: self.remoteURL
+                                pull: self.pull
+                        createTarget: self.create_target
+                          continuous: self.continuous
+                             options: self.currentProperties];
+        }];
+    }
 }
 
 
@@ -303,6 +310,8 @@ static inline BOOL isLocalDBName(NSString* url) {
         changed = YES;
     }
     if (changed) {
+        LogTo(TDReplication, @"%@: mode=%d, completed=%u, total=%u (changed=%d)",
+              self, mode, (unsigned)changesProcessed, (unsigned)changesTotal, changed);
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kTDReplicationChangeNotification object: self];
     }
@@ -348,16 +357,13 @@ static inline BOOL isLocalDBName(NSString* url) {
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_replicationProgressChanged: (NSNotification*)n
 {
-    TDReplicator* tdReplicator;
+    TDReplicator* tdReplicator = n.object;
     if (_bg_replicator) {
-        tdReplicator = _bg_replicator;
+        AssertEq(tdReplicator, _bg_replicator);
     } else {
         // Persistent replications get this notification for every TDReplicator,
-        // so quickly weed out non-matching ones:
-        tdReplicator = n.object;
-        if (tdReplicator.db != _bg_serverDatabase)
-            return;
-        if (!$equal(tdReplicator.remote, _remoteURL) || tdReplicator.isPush == _pull)
+        // so weed out non-matching ones:
+        if (!$equal(tdReplicator.documentID, _bg_documentID))
             return;
     }
     

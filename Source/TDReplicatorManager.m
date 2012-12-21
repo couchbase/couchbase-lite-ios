@@ -210,9 +210,9 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     }
     
     // Only certain keys can be changed or removed:
-    NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", nil];
+    NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", @"continuous", nil];
     NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params",
-                                                      @"heartbeat", @"feed", nil];
+                                                      @"heartbeat", @"feed", @"continuous", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
     return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context current_Revision])
@@ -347,7 +347,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     _replicatorsByDocID[rev.docID] = repl;
     NSString* replicationID = properties[@"_replication_id"] ?: TDCreateUUID();
     repl.sessionID = replicationID;
-    repl.filterName = $castIf(NSString, properties[@"filter"]);;
+    repl.documentID = rev.docID;
+    repl.filterName = $castIf(NSString, properties[@"filter"]);
     repl.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
     repl.options = properties;
     repl.requestHeaders = headers;

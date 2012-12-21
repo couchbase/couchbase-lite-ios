@@ -38,6 +38,7 @@ extern NSString* TDReplicatorStoppedNotification;
     unsigned _revisionsFailed;
     NSError* _error;
     NSString* _sessionID;
+    NSString* _documentID;
     TDBatcher* _batcher;
     NSMutableArray* _remoteRequests;
     int _asyncTaskCount;
@@ -95,6 +96,9 @@ extern NSString* TDReplicatorStoppedNotification;
 
 /** A unique-per-process string identifying this replicator instance. */
 @property (copy, nonatomic) NSString* sessionID;
+
+/** Document ID of the persistent replication this is associated with. */
+@property (copy, nonatomic) NSString* documentID;
 
 /** Number of changes (docs or other metadata) transferred so far. */
 @property (readonly, nonatomic) NSUInteger changesProcessed;
