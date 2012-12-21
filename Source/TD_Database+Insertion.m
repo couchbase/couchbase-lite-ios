@@ -735,6 +735,9 @@
             break;
         }
     }
+    if (TDStatusIsError(status))
+        LogTo(TDValidation, @"Failed update of %@: %d %@:\n  Old doc = %@\n  New doc = %@",
+             oldRev, context.errorType, context.errorMessage, oldRev.properties, newRev.properties);
     return status;
 }
 
@@ -823,7 +826,7 @@
     NSDictionary* nuu = _newRevision.properties;
     for (NSString* key in self.changedKeys) {
         if (!enumerator(key, cur[key], nuu[key])) {
-            if (!_errorMessage)
+            if ($equal(_errorMessage, @"invalid document"))
                 self.errorMessage = $sprintf(@"Illegal change to '%@' property", key);
             return NO;
         }
