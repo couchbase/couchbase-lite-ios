@@ -288,8 +288,19 @@ NSString* const TD_DatabaseChangeNotification = @"TD_DatabaseChange";
     TD_Revision* winningRev = nil;
     @try {
         //// PART I: In which are performed lookups and validations prior to the insert...
-        
+
+        // Get the doc's numeric ID (doc_id) and its current winning revision:
         SInt64 docNumericID = docID ? [self getDocNumericID: docID] : 0;
+        BOOL oldWinnerWasDeletion = NO;
+        NSString* oldWinningRevID = nil;
+        BOOL makeOldWinnerNonCurrent = NO;
+        if (docNumericID > 0) {
+            // Look up which rev is the winner, before this insertion
+            //OPT: This rev ID could be cached in the 'docs' row
+            oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
+                                                     isDeleted: &oldWinnerWasDeletion];
+        }
+
         SequenceNumber parentSequence = 0;
         if (prevRevID) {
             // Replacing: make sure given prevRevID is current & find its sequence number:
@@ -345,25 +356,13 @@ NSString* const TD_DatabaseChangeNotification = @"TD_DatabaseChange";
                         return nil;
                 } else {
                     // Doc ID exists; check whether current winning revision is deleted:
-                    r = [_fmdb executeQuery: @"SELECT sequence, deleted FROM revs "
-                                              "WHERE doc_id=? and current=1 ORDER BY revid DESC LIMIT 1",
-                                             @(docNumericID)];
-                    if (!r)
+                    if (oldWinnerWasDeletion) {
+                        makeOldWinnerNonCurrent = YES;
+                    } else if (oldWinningRevID) {
+                        // The current winning revision is not deleted, so this is a conflict
+                        *outStatus = kTDStatusConflict;
                         return nil;
-                    if ([r next]) {
-                        if ([r boolForColumnIndex: 1]) {
-                            // Make the deleted revision no longer current:
-                            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                                       @([r longLongIntForColumnIndex: 0])])
-                                return nil;
-                        } else if (!allowConflict) {
-                            // The current winning revision is not deleted, so this is a conflict
-                            *outStatus = kTDStatusConflict;
-                            return nil;
-                        }
                     }
-                    [r close];
-                    r = nil;
                 }
             } else {
                 // Inserting first revision, with no docID given (POST): generate a unique docID:
@@ -374,13 +373,7 @@ NSString* const TD_DatabaseChangeNotification = @"TD_DatabaseChange";
             }
         }
 
-        // Look up which rev is the winner, before this insertion
-        //OPT: This rev ID could be cached in the 'docs' row
-        BOOL oldWinnerWasDeletion;
-        NSString* oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                           isDeleted: &oldWinnerWasDeletion];
-        
-        //// PART II: In which insertion occurs...
+        //// PART II: In which we prepare for insertion...
         
         // Get the attachments:
         NSDictionary* attachments = [self attachmentsFromRevision: rev status: &status];
@@ -411,13 +404,13 @@ NSString* const TD_DatabaseChangeNotification = @"TD_DatabaseChange";
         Assert(docID);
         rev = [rev copyWithDocID: docID revID: newRevID];
         
-        // Now insert the rev itself:
-        
         // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
         // is missing due to compaction or replication.
         // Instead, store an empty zero-length blob.
         if (json == nil)
             json = [NSData data];
+        
+        //// PART III: In which the actual insertion finally takes place:
         
         SequenceNumber sequence = [self insertRevision: rev
                                           docNumericID: docNumericID
@@ -425,21 +418,38 @@ NSString* const TD_DatabaseChangeNotification = @"TD_DatabaseChange";
                                                current: YES
                                                   JSON: json];
         if (!sequence) {
-            // The insert failed. If it was due to a constraint violation, that means an identical
-            // revision already exists; so just return it.
-            if (_fmdb.lastErrorCode == SQLITE_CONSTRAINT) {
+            // The insert failed. If it was due to a constraint violation, that means a revision
+            // already exists with identical contents and the same parent rev. We can ignore this
+            // insert call, then, _unless_ it has the effect of un-deleting the document. [#205]
+            if (_fmdb.lastErrorCode != SQLITE_CONSTRAINT)
+                return nil;
+            LogTo(TD_Database, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
+            if (!oldWinnerWasDeletion || deleted) {
+                // no-op
                 *outStatus = kTDStatusOK;
                 rev.body = nil;
                 return rev;
-            } else {
-                return nil;
             }
+            sequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
+                                                 "WHERE doc_id=? and revid=?",
+                        @(docNumericID), newRevID];
+            if (sequence <= 0)
+                return nil;
+            rev.sequence = sequence;
+            // Make the old revision current again:
+            if (![_fmdb executeUpdate: @"UPDATE revs SET current=1 WHERE sequence=?", @(sequence)])
+                return nil;
         }
         
         // Make replaced rev non-current:
         if (parentSequence > 0) {
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                                        @(parentSequence)])
+                return nil;
+        }
+        if (makeOldWinnerNonCurrent) {
+            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE doc_id=? and revid=?",
+                                       @(docNumericID), oldWinningRevID])
                 return nil;
         }
 
