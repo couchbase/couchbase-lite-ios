@@ -48,7 +48,7 @@
 /** Looks up the attachment with the given name (without fetching its contents yet). */
 - (TDAttachment*) attachmentNamed: (NSString*)name;
 
-/** All attachments, as TouchAttachment objects. */
+/** All attachments, as TDAttachment objects. */
 @property (readonly) NSArray* attachments;
 
 @end
@@ -99,7 +99,7 @@
 
 /** Creates or updates an attachment.
     The attachment data will be written to the database when the revision is saved.
-    @param attachment  A newly-created TouchAttachment (not yet associated with any revision)
+    @param attachment  A newly-created TDAttachment (not yet associated with any revision)
     @param name  The attachment name. */
 - (void) addAttachment: (TDAttachment*)attachment named: (NSString*)name;
 

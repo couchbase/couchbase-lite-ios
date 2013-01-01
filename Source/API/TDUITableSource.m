@@ -173,7 +173,7 @@
         // Allow the delegate to customize the cell:
         id delegate = _tableView.delegate;
         if ([delegate respondsToSelector: @selector(couchTableSource:willUseCell:forRow:)])
-            [(id<TouchUITableDelegate>)delegate couchTableSource: self willUseCell: cell forRow: row];
+            [(id<TDUITableDelegate>)delegate couchTableSource: self willUseCell: cell forRow: row];
     }
     return cell;
 }

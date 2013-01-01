@@ -60,7 +60,7 @@ typedef enum {
 @property NSUInteger groupLevel;
 
 /** If set to YES, the results will include the entire document contents of the associated rows.
-    These can be accessed via TouchQueryRow's -documentProperties property.
+    These can be accessed via TDQueryRow's -documentProperties property.
     This can be a good optimization if you know you'll need the entire contents of each document.
     (This property is equivalent to "include_docs" in the CouchDB API.) */
 @property BOOL prefetch;

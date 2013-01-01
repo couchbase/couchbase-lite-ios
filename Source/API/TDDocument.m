@@ -11,7 +11,7 @@
 #import "TD_Revision.h"
 
 
-NSString* const kTDDocumentChangeNotification = @"TouchDocumentChange";
+NSString* const kTDDocumentChangeNotification = @"TDDocumentChange";
 
 
 @implementation TDDocument
@@ -223,7 +223,7 @@ NSString* const kTDDocumentChangeNotification = @"TouchDocumentChange";
     if (idProp && ![idProp isEqual: self.documentID])
         Warn(@"Trying to PUT wrong _id to %@: %@", self, properties);
 
-    // Process _attachments dict, converting TouchAttachments to dicts:
+    // Process _attachments dict, converting TDAttachments to dicts:
     NSDictionary* attachments = properties[@"_attachments"];
     if (attachments.count) {
         NSDictionary* expanded = [TDAttachment installAttachmentBodies: attachments

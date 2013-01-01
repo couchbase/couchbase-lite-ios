@@ -1,5 +1,5 @@
 //
-//  TouchAttachment.m
+//  TDAttachment.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/21/12.
@@ -143,7 +143,7 @@
 }
 
 
-// Goes through an _attachments dictionary and replaces any values that are TouchAttachment objects
+// Goes through an _attachments dictionary and replaces any values that are TDAttachment objects
 // with proper JSON metadata dicts. It registers the attachment bodies with the blob store and sets
 // the metadata 'digest' and 'follows' properties accordingly.
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments

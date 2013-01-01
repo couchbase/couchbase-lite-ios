@@ -12,11 +12,11 @@
 
 
 /** Generic model class for TouchDB documents.
-    There's a 1::1 mapping between these and TouchDocuments; call +modelForDocument: to get (or create) a model object for a document, and .document to get the document of a model.
+    There's a 1::1 mapping between these and TDDocuments; call +modelForDocument: to get (or create) a model object for a document, and .document to get the document of a model.
     You should subclass this and declare properties in the subclass's @@interface. As with NSManagedObject, you don't need to implement their accessor methods or declare instance variables; simply note them as '@@dynamic' in the class @@implementation. The property value will automatically be fetched from or stored to the document, using the same name.
     Supported scalar types are bool, char, short, int, double. These map to JSON numbers, except 'bool' which maps to JSON 'true' and 'false'. (Use bool instead of BOOL.)
     Supported object types are NSString, NSNumber, NSData, NSDate, NSArray, NSDictionary. (NSData and NSDate are not native JSON; they will be automatically converted to/from strings in base64 and ISO date formats, respectively.)
-    Additionally, a property's type can be a pointer to a TouchModel subclass. This provides references between model objects. The raw property value in the document must be a string whose value is interpreted as a document ID. */
+    Additionally, a property's type can be a pointer to a TDModel subclass. This provides references between model objects. The raw property value in the document must be a string whose value is interpreted as a document ID. */
 @interface TDModel : MYDynamicObject <TDDocumentModel>
 {
     @private
@@ -31,10 +31,10 @@
     NSMutableDictionary* _changedAttachments;
 }
 
-/** Returns the TouchModel associated with a TouchDocument, or creates & assigns one if necessary.
-    If the TouchDocument already has an associated model, it's returned. Otherwise a new one is instantiated.
-    If you call this on TouchModel itself, it'll delegate to the TouchModelFactory to decide what class to instantiate; this lets you map different classes to different "type" property values, for instance.
-    If you call this method on a TouchModel subclass, it will always instantiate an instance of that class; e.g. [MyWidgetModel modelForDocument: doc] always creates a MyWidgetModel. */
+/** Returns the TDModel associated with a TDDocument, or creates & assigns one if necessary.
+    If the TDDocument already has an associated model, it's returned. Otherwise a new one is instantiated.
+    If you call this on TDModel itself, it'll delegate to the TDModelFactory to decide what class to instantiate; this lets you map different classes to different "type" property values, for instance.
+    If you call this method on a TDModel subclass, it will always instantiate an instance of that class; e.g. [MyWidgetModel modelForDocument: doc] always creates a MyWidgetModel. */
 + (id) modelForDocument: (TDDocument*)document;
 
 /** Creates a new "untitled" model with a new unsaved document.
@@ -42,8 +42,8 @@
 - (id) initWithNewDocumentInDatabase: (TDDatabase*)database;
 
 /** Creates a new "untitled" model object with no document or database at all yet.
-    Setting its .database property will cause it to create a TouchDocument.
-    (This method is mostly here so that NSController objects can create TouchModels.) */
+    Setting its .database property will cause it to create a TDDocument.
+    (This method is mostly here so that NSController objects can create TDModels.) */
 - (id) init;
 
 /** The document this item is associated with. Will be nil if it's new and unsaved. */
@@ -84,7 +84,7 @@
 /** Bulk-saves changes to multiple model objects (which must all be in the same database).
     This invokes -[TDDatabase putChanges:], which sends a single request to _bulk_docs.
     Any unchanged models in the array are ignored.
-    @param models  An array of TouchModel objects, which must all be in the same database.
+    @param models  An array of TDModel objects, which must all be in the same database.
     @return  A RESTOperation that saves all changes, or nil if none of the models need saving. */
 + (BOOL) saveModels: (NSArray*)models error: (NSError**)outError;
 
@@ -111,7 +111,7 @@
 
 /** Creates or updates an attachment (in memory).
     The attachment data will be written to the database at the same time as property changes are saved.
-    @param attachment  A newly-created TouchAttachment (not yet associated with any revision)
+    @param attachment  A newly-created TDAttachment (not yet associated with any revision)
     @param name  The attachment name. */
 - (void) addAttachment: (TDAttachment*)attachment named: (NSString*)name;
 

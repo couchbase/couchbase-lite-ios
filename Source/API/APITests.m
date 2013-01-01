@@ -1,5 +1,5 @@
 //
-//  Test_Touch.m
+//  APITests.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/12/11.

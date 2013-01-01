@@ -87,12 +87,12 @@
 
 
 @protocol TDDocumentModel <NSObject>
-/** If a TouchDocument's modelObject implements this method, it will be called whenever the document posts a kTDDocumentChangeNotification. */
+/** If a TDDocument's modelObject implements this method, it will be called whenever the document posts a kTDDocumentChangeNotification. */
 - (void) tdDocumentChanged: (TDDocument*)doc;
 @end
 
 
 
-/** This notification is posted by a TouchDocument in response to an external change.
+/** This notification is posted by a TDDocument in response to an external change.
     It is not sent in response to 'local' changes made by this TDDatabase's object tree. */
 extern NSString* const kTDDocumentChangeNotification;

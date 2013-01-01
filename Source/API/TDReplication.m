@@ -1,5 +1,5 @@
 //
-//  TouchReplication.m
+//  TDReplication.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 6/22/12.
@@ -19,7 +19,7 @@
 #undef RUN_IN_BACKGROUND
 
 
-NSString* const kTDReplicationChangeNotification = @"TouchReplicationChange";
+NSString* const kTDReplicationChangeNotification = @"TDReplicationChange";
 
 
 @interface TDReplication ()

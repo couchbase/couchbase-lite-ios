@@ -65,7 +65,7 @@
 
 
 /** Additional methods for the table view's delegate, that will be invoked by the TDUITableSource. */
-@protocol TouchUITableDelegate <UITableViewDelegate>
+@protocol TDUITableDelegate <UITableViewDelegate>
 @optional
 
 /** Allows delegate to return its own custom cell, just like -tableView:cellForRowAtIndexPath:.

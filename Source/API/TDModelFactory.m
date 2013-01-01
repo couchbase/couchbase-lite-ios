@@ -1,5 +1,5 @@
 //
-//  TouchModelFactory.m
+//  TDModelFactory.m
 //  TouchDB
 //
 //  Created by Jens Alfke on 11/22/11.
@@ -47,7 +47,7 @@ static TDModelFactory* sSharedInstance;
     if ([klass isKindOfClass: [NSString class]]) {
         NSString* className = klass;
         klass = NSClassFromString(className);
-        NSAssert(klass, @"TouchModelFactory: no class named %@", className);
+        NSAssert(klass, @"TDModelFactory: no class named %@", className);
     }
     return klass;
 }

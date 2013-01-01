@@ -56,7 +56,7 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
     The first time you PUT to that document, it will be created on the server (via a POST). */
 - (TDDocument*) untitledDocument;
 
-/** Returns the already-instantiated cached TouchDocument with the given ID, or nil if none is yet cached. */
+/** Returns the already-instantiated cached TDDocument with the given ID, or nil if none is yet cached. */
 - (TDDocument*) cachedDocumentWithID: (NSString*)docID;
 
 /** Empties the cache of recently used TDDocument objects.
@@ -69,8 +69,8 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 
 - (TDQuery*) slowQueryWithMap: (TDMapBlock)mapBlock;
 
-/** Returns a TouchView object for the view with the given name.
-    (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the TouchView is assigned a map function.) */
+/** Returns a TDView object for the view with the given name.
+    (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the TDView is assigned a map function.) */
 - (TDView*) viewNamed: (NSString*)name;
 
 /** An array of all existing views. */
@@ -114,7 +114,7 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 
 /** This notification is posted by a TDDatabase in response to document changes.
     Only one notification is posted per runloop cycle, no matter how many documents changed.
-    If a change was not made by a TouchDocument belonging to this TDDatabase (i.e. it came
+    If a change was not made by a TDDocument belonging to this TDDatabase (i.e. it came
     from another process or from a "pull" replication), the notification's userInfo dictionary will
     contain an "external" key with a value of YES. */
 extern NSString* const kTDDatabaseChangeNotification;

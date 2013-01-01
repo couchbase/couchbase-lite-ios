@@ -20,7 +20,7 @@ typedef enum {
 
 /** A 'push' or 'pull' replication between a local and a remote database.
     Replications can be one-shot, continuous or persistent.
-    TouchReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
+    TDReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
 @interface TDReplication : TDModel
 
 /** The local database being replicated to/from. */
@@ -91,5 +91,5 @@ typedef enum {
 @end
 
 
-/** This notification is posted by a TouchReplication when its progress changes. */
+/** This notification is posted by a TDReplication when its progress changes. */
 extern NSString* const kTDReplicationChangeNotification;

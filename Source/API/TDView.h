@@ -30,7 +30,7 @@ typedef id (^TDReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 
 
 /** A "view" in a TouchDB database -- this is a type of map/reduce index.
-    The view can be queried using a TouchQuery. */
+    The view can be queried using a TDQuery. */
 @interface TDView : NSObject
 
 @property (readonly) TDDatabase* database;

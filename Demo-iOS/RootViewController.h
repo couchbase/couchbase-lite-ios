@@ -23,7 +23,7 @@
 @class TDDatabase, TDReplication;
 
 
-@interface RootViewController : UIViewController <TouchUITableDelegate, UITextFieldDelegate>
+@interface RootViewController : UIViewController <TDUITableDelegate, UITextFieldDelegate>
 {
     TDDatabase *database;
     NSURL* remoteSyncURL;
