@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 #import "TDView.h"
 
 

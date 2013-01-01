@@ -14,14 +14,14 @@
 //  and limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import <TouchDB/TouchDB.h>
-#import <TouchDB/TD_Server.h>
-#import <TouchDB/TDURLProtocol.h>
-#import <TouchDB/TDRouter.h>
-#import <TouchDBListener/TDListener.h>
-#import <TouchDB/TDPusher.h>
-#import <TouchDB/TD_DatabaseManager.h>
-#import <TouchDB/TD_Database+Replication.h>
+#import "TouchDB.h"
+#import "TD_Server.h"
+#import "TDURLProtocol.h"
+#import "TDRouter.h"
+#import "TDListener.h"
+#import "TDPusher.h"
+#import "TD_DatabaseManager.h"
+#import "TD_Database+Replication.h"
 #import "TDMisc.h"
 
 #if DEBUG

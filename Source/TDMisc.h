@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <TouchDB/TD_Revision.h>
+#import "TD_Revision.h"
 
 NSString* TDVersionString( void );
 

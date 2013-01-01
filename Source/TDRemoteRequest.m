@@ -17,7 +17,7 @@
 #import "TDAuthorizer.h"
 #import "TDMisc.h"
 #import "TDBlobStore.h"
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 #import "TDRouter.h"
 #import "TDReplicator.h"
 #import "CollectionUtils.h"

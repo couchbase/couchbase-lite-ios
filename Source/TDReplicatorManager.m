@@ -18,7 +18,7 @@
 
 #import "TDReplicatorManager.h"
 #import "TD_Server.h"
-#import <TouchDB/TD_Database.h>
+#import "TD_Database.h"
 #import "TD_Database+Insertion.h"
 #import "TD_Database+Replication.h"
 #import "TDPusher.h"
