@@ -987,10 +987,6 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     if (!options)
         options = &kDefaultTDQueryOptions;
     
-    SequenceNumber update_seq = 0;
-    if (options->updateSeq)
-        update_seq = self.lastSequence;     // TODO: needs to be atomic with the following SELECT
-    
     // Generate the SELECT statement, based on the options:
     NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid" mutableCopy];
     if (options->includeDocs)
@@ -1100,12 +1096,6 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     }
 
     return rows;
-    /* TEMP
-    NSUInteger totalRows = rows.count;      //??? Is this true, or does it ignore limit/offset?
-    return $dict({@"rows", rows},
-                 {@"total_rows", @(totalRows)},
-                 {@"offset", @(options->skip)},
-                 {@"update_seq", update_seq ? @(update_seq) : nil}); */
 }
 
 
