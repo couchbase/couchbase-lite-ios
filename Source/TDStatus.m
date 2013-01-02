@@ -27,6 +27,7 @@ struct StatusMapEntry {
 
 static const struct StatusMapEntry kStatusMap[] = {
     {kTDStatusNotFound,             404, "not_found"},           // for compatibility with CouchDB
+    {kTDStatusConflict,             409, "conflict"},
     {kTDStatusDuplicate,            412, "Already exists"},      // really 'Precondition Failed'
 
     {kTDStatusBadEncoding,          400, "Bad data encoding"},

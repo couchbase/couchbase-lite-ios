@@ -295,14 +295,17 @@
                     Assert(rev.revID);
                     if (!noNewEdits)
                         result = $dict({@"id", rev.docID}, {@"rev", rev.revID}, {@"ok", $true});
+                } else if (status >= 500) {
+                    return status;  // abort the whole thing if something goes badly wrong
                 } else if (allOrNothing) {
                     return status;  // all_or_nothing backs out if there's any error
-                } else if (status == kTDStatusForbidden) {
-                    result = $dict({@"id", docID}, {@"error", @"validation failed"});
-                } else if (status == kTDStatusConflict) {
-                    result = $dict({@"id", docID}, {@"error", @"conflict"});
                 } else {
-                    return status;  // abort the whole thing if something goes badly wrong
+                    NSString* error = nil;
+                    if (status == kTDStatusForbidden)
+                        error = @"validation failed";
+                    else
+                        TDStatusToHTTPStatus(status, &error);
+                    result = $dict({@"id", docID}, {@"error", error});
                 }
                 if (result)
                     [results addObject: result];

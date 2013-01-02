@@ -54,10 +54,12 @@ static TD_Revision* putDoc(TD_Database* db, NSDictionary* props) {
     TD_Revision* rev = [[TD_Revision alloc] initWithProperties: props];
     TDStatus status;
     TD_Revision* result = [db putRevision: rev
-                          prevRevisionID: props[@"_rev"]
-                           allowConflict: NO
-                                  status: &status];
+                           prevRevisionID: props[@"_rev"]
+                            allowConflict: NO
+                                   status: &status];
     CAssert(status < 300);
+    CAssert(result.sequence > 0);
+    CAssert(result.revID != nil);
     return result;
 }
 
@@ -207,6 +209,27 @@ TestCase(TD_Database_DeleteWithProperties) {
                                            {@"_rev", rev2.revID},
                                            {@"_deleted", $true},
                                            {@"property", @"newvalue"}));
+    readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
+    CAssertNil(readRev);
+    
+    // Make sure it's possible to create the doc from scratch again:
+    TD_Revision* rev3 = putDoc(db, $dict({@"_id", rev1.docID}, {@"property", @"newvalue"}));
+    CAssert([rev3.revID hasPrefix: @"3-"]);     // new rev is child of tombstone rev
+    readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
+    CAssertEqual(readRev.revID, rev3.revID);
+}
+
+
+TestCase(TD_Database_DeleteAndRecreate) {
+    // Test case for issue #205: Create a doc, delete it, create it again with the same content.
+    TD_Database* db = createDB();
+    TD_Revision* rev1 = putDoc(db, $dict({@"_id", @"dock"}, {@"property", @"value"}));
+    Log(@"Created: %@ -- %@", rev1, rev1.properties);
+    TD_Revision* rev2 = putDoc(db, $dict({@"_id", @"dock"}, {@"_rev", rev1.revID},
+                     {@"_deleted", $true}));
+    Log(@"Deleted: %@ -- %@", rev2, rev2.properties);
+    TD_Revision* rev3 = putDoc(db, $dict({@"_id", @"dock"}, {@"property", @"value"}));
+    Log(@"Recreated: %@ -- %@", rev3, rev3.properties);
 }
 
 

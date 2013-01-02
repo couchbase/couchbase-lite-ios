@@ -596,6 +596,16 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 }
 
 
+- (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
+                                revision: (NSString*)revID
+                             onlyCurrent: (BOOL)onlyCurrent
+{
+    NSString* sql = $sprintf(@"SELECT sequence FROM revs WHERE doc_id=? AND revid=? %@ LIMIT 1",
+                             (onlyCurrent ? @"AND current=1" : @""));
+    return [_fmdb longLongForQuery: sql, @(docNumericID), revID];
+}
+
+
 #pragma mark - HISTORY:
 
 
