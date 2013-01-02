@@ -301,14 +301,17 @@
                     Assert(rev.revID);
                     if (!noNewEdits)
                         result = $dict({@"id", rev.docID}, {@"rev", rev.revID}, {@"ok", $true});
+                } else if (status >= 500) {
+                    return status;  // abort the whole thing if something goes badly wrong
                 } else if (allOrNothing) {
                     return status;  // all_or_nothing backs out if there's any error
-                } else if (status == kTDStatusForbidden) {
-                    result = $dict({@"id", docID}, {@"error", @"validation failed"});
-                } else if (status == kTDStatusConflict) {
-                    result = $dict({@"id", docID}, {@"error", @"conflict"});
                 } else {
-                    return status;  // abort the whole thing if something goes badly wrong
+                    NSString* error = nil;
+                    if (status == kTDStatusForbidden)
+                        error = @"validation failed";
+                    else
+                        TDStatusToHTTPStatus(status, &error);
+                    result = $dict({@"id", docID}, {@"error", error});
                 }
                 if (result)
                     [results addObject: result];
@@ -868,7 +871,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (TDStatus) updateAttachment: (NSString*)attachment docID: (NSString*)docID body: (NSData*)body {
+- (TDStatus) updateAttachment: (NSString*)attachment
+                        docID: (NSString*)docID
+                         body: (TDBlobStoreWriter*)body
+{
     TDStatus status;
     TD_Revision* rev = [_db updateAttachment: attachment 
                                        body: body
@@ -888,16 +894,35 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (TDStatus) do_PUT: (TD_Database*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    return [self updateAttachment: attachment
-                            docID: docID
-                             body: (_request.HTTPBody ?: [NSData data])];
+    TDBlobStoreWriter* blob = db.attachmentWriter;
+    NSInputStream* bodyStream = _request.HTTPBodyStream;
+    if (bodyStream) {
+        // OPT: Should read this asynchronously
+        NSMutableData* buffer = [NSMutableData dataWithLength: 32768];
+        NSInteger bytesRead;
+        do {
+            bytesRead = [bodyStream read: buffer.mutableBytes maxLength: buffer.length];
+            if (bytesRead > 0) {
+                [blob appendData: [NSData dataWithBytesNoCopy: buffer.mutableBytes
+                                                       length: bytesRead freeWhenDone: NO]];
+            }
+        } while (bytesRead > 0);
+        if (bytesRead < 0)
+            return kTDStatusBadAttachment;
+        
+    } else {
+        NSData* body = _request.HTTPBody;
+        if (body)
+            [blob appendData: body];
+    }
+    [blob finish];
+
+    return [self updateAttachment: attachment docID: docID body: blob];
 }
 
 
 - (TDStatus) do_DELETE: (TD_Database*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    return [self updateAttachment: attachment
-                            docID: docID
-                             body: nil];
+    return [self updateAttachment: attachment docID: docID body: nil];
 }
 
 

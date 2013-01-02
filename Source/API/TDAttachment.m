@@ -122,19 +122,28 @@
 }
 
 
+static TDBlobStoreWriter* blobStoreWriterForBody(TD_Database* tddb, NSData* body) {
+    TDBlobStoreWriter* writer = tddb.attachmentWriter;
+    [writer appendData: body];
+    [writer finish];
+    return writer;
+}
+
+
 - (TDRevision*) updateBody: (NSData*)body
                   contentType: (NSString*)contentType
                         error: (NSError**)outError
 {
     Assert(_rev);
+    TDBlobStoreWriter* writer = blobStoreWriterForBody(_rev.database.tddb, body);
     TDStatus status;
     TD_Revision* newRev = [_rev.database.tddb updateAttachment: _name
-                                                         body: body
-                                                         type: contentType ?: self.contentType
-                                                     encoding: kTDAttachmentEncodingNone
-                                                      ofDocID: _rev.document.documentID
-                                                        revID: _rev.revisionID
-                                                       status: &status];
+                                                          body: writer
+                                                          type: contentType ?: self.contentType
+                                                      encoding: kTDAttachmentEncodingNone
+                                                       ofDocID: _rev.document.documentID
+                                                         revID: _rev.revisionID
+                                                        status: &status];
     if (!newRev) {
         if (outError) *outError = TDStatusToNSError(status, nil);
         return nil;
@@ -160,9 +169,7 @@
             if (body) {
                 // Copy attachment body into the database's blob store:
                 // OPT: If _body is an NSURL, could just copy the file without reading into RAM
-                TDBlobStoreWriter* writer = tddb.attachmentWriter;
-                [writer appendData: body];
-                [writer finish];
+                TDBlobStoreWriter* writer = blobStoreWriterForBody(tddb, body);
                 metadata[@"length"] = $object(body.length);
                 metadata[@"digest"] = writer.MD5DigestString;
                 metadata[@"follows"] = $true;

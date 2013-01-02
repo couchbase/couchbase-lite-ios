@@ -40,6 +40,8 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 
 - (BOOL) deleteDatabase: (NSError**)outError;
 
+- (BOOL) compact: (NSError**)outError;
+
 @property (readonly) NSUInteger documentCount;
 @property (readonly) SequenceNumber lastSequenceNumber;
 
@@ -88,7 +90,6 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
     Use this when performing bulk operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits. */
 - (BOOL) inTransaction: (BOOL(^)(void))block;
-
 
 /** Returns an array of all current TDReplications involving this database. */
 - (NSArray*) allReplications;

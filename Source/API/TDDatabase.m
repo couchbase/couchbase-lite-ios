@@ -110,6 +110,17 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 }
 
 
+- (BOOL) compact: (NSError**)outError {
+    TDStatus status = [_tddb compact];
+    if (TDStatusIsError(status)) {
+        if (outError)
+            *outError = TDStatusToNSError(status, nil);
+        return NO;
+    }
+    return YES;
+}
+
+
 #pragma mark - DOCUMENTS:
 
 

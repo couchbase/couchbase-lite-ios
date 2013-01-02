@@ -279,6 +279,11 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
+- (void) restart {
+    [self setValue: nil ofProperty: @"_replication_state"];
+}
+
+
 @synthesize running = _running, completed=_completed, total=_total, error = _error, mode=_mode;
 
 

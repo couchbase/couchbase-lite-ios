@@ -31,6 +31,17 @@
 }
 
 
+- (id)initWithURL: (NSURL*)url
+{
+    Log(@"TDBasicAuthorizer initWith <%@>", url);//TEMP
+    NSURLCredential *cred = [url my_credentialForRealm: nil
+                                  authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
+    if (!cred)
+        return nil;
+    return [self initWithCredential: cred];
+}
+
+
 - (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
                          forRealm: (NSString*)realm
 {

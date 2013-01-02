@@ -181,18 +181,20 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) close {
-    LogTo(TD_Server, @"CLOSE %@", self);
+    LogTo(TD_Server, @"CLOSING %@ ...", self);
     [_replicatorManager stop];
     _replicatorManager = nil;
     for (TD_Database* db in _databases.allValues) {
         [db close];
     }
     [_databases removeAllObjects];
+    LogTo(TD_Server, @"CLOSED %@", self);
 }
 
 
 - (TDReplicatorManager*) replicatorManager {
     if (!_replicatorManager && !_options.noReplicator) {
+        LogTo(TD_Server, @"Starting replicator manager for %@", self);
         _replicatorManager = [[TDReplicatorManager alloc] initWithDatabaseManager: self];
         [_replicatorManager start];
     }

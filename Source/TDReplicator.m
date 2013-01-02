@@ -195,6 +195,11 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     Assert(_db, @"Can't restart an already stopped TDReplicator");
     LogTo(Sync, @"%@ STARTING ...", self);
 
+    // Did client request a reset (i.e. starting over from first sequence?)
+    if (_options[@"reset"] != nil) {
+        [_db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
+    }
+
     // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
     // and _batcher retains the block, and of course I retain _batcher.
     // The cycle is broken in -stopped when I release _batcher.
@@ -208,6 +213,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                      [self updateActive];
                  }
                 ];
+
+    // If client didn't set an authorizer, use basic auth if credential is available:
+    if (!_authorizer)
+        _authorizer = [[TDBasicAuthorizer alloc] initWithURL: _remote];
 
     self.running = YES;
     _startTime = CFAbsoluteTimeGetCurrent();

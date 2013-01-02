@@ -108,6 +108,15 @@ int main (int argc, const char * argv[]) {
 }
 
 
+- (IBAction) applicationWillTerminate:(id)sender {
+    [_database.manager close];
+}
+
+
+- (IBAction) compact: (id)sender {
+    [_database compact: NULL];
+}
+
 
 #pragma mark - SYNC UI:
 
@@ -178,6 +187,17 @@ int main (int argc, const char * argv[]) {
         }
          */
     }
+}
+
+
+- (void) resetReplication: (TDReplication*)repl {
+    [repl setValue: @YES ofProperty: @"reset"];
+    [repl restart];
+}
+
+- (IBAction) resetSync: (id)sender {
+    for (TDReplication* repl in _database.allReplications)
+        [self resetReplication: repl];
 }
 
 

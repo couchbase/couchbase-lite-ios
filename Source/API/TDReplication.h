@@ -75,6 +75,8 @@ typedef enum {
 /** Stops replication, asynchronously. */
 - (void) stop;
 
+- (void) restart;
+
 @property (nonatomic, readonly) bool running;
 
 /** The number of completed changes processed, if the task is active, else 0 (observable). */

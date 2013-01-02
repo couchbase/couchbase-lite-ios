@@ -61,6 +61,18 @@
                                                   object: nil];
         LogTo(TD_Server, @"Starting server thread %@ ...", _serverThread);
         [_serverThread start];
+
+        // Don't start the replicator immediately; instead, give the app a chance to install
+        // filter and validation functions, otherwise persistent replications may behave
+        // incorrectly. The delayed-perform means the replicator won't start until after
+        // the caller (and its caller, etc.) returns back to the runloop.
+        MYAfterDelay(0.0, ^{
+            if (_serverThread) {
+                [self queue: ^{
+                    [_manager replicatorManager];
+                }];
+            }
+        });
     }
     return self;
 }
@@ -79,13 +91,16 @@
 
 - (void) close {
     if (_serverThread) {
-        [self queue: ^{
+        [self waitForDatabaseManager:^id(TD_DatabaseManager* mgr) {
             LogTo(TD_Server, @"Stopping server thread...");
-            
+
             Class tdURLProtocol = NSClassFromString(@"TDURLProtocol");
             if (tdURLProtocol)
                 [tdURLProtocol unregisterServer: self];
+            [_manager close];
+            _manager = nil;
             _stopRunLoop = YES;
+            return nil;
         }];
         _serverThread = nil;
     }
@@ -110,10 +125,7 @@
         CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
         CFRelease(source);
 #endif
-            
-        // Initialize the replicator, if it's enabled:
-        [_manager replicatorManager];
-        
+
         // Now run:
         while (!_stopRunLoop && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                                          beforeDate: [NSDate distantFuture]])
@@ -156,6 +168,23 @@
         }
     }];
     [lock lockWhenCondition: 1];  // wait till block finishes
+    return result;
+}
+
+
+- (id) waitForDatabaseManager: (id (^)(TD_DatabaseManager*))block {
+    __block id result = nil;
+    NSConditionLock* lock = [[NSConditionLock alloc] initWithCondition: 0];
+    [self queue: ^{
+        [lock lockWhenCondition: 0];
+        @try {
+            result = block(_manager);
+        } @finally {
+            [lock unlockWithCondition: 1];
+        }
+    }];
+    [lock lockWhenCondition: 1];  // wait till block finishes
+    [lock unlock];
     return result;
 }
 
