@@ -24,6 +24,9 @@
 @property (readonly) TDBlobStore* attachmentStore;
 - (BOOL) openFMDB;
 - (SInt64) getDocNumericID: (NSString*)docID;
+- (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
+                                revision: (NSString*)revID
+                             onlyCurrent: (BOOL)onlyCurrent;
 - (TD_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       numericID: (SInt64)docNumericID
                                     onlyCurrent: (BOOL)onlyCurrent;
