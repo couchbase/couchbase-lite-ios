@@ -279,7 +279,6 @@
         SInt64 docNumericID = docID ? [self getDocNumericID: docID] : 0;
         BOOL oldWinnerWasDeletion = NO;
         NSString* oldWinningRevID = nil;
-        BOOL makeOldWinnerNonCurrent = NO;
         if (docNumericID > 0) {
             // Look up which rev is the winner, before this insertion
             //OPT: This rev ID could be cached in the 'docs' row
@@ -294,10 +293,8 @@
                 *outStatus = kTDStatusNotFound;
                 return nil;
             }
-            NSString* sql = $sprintf(@"SELECT sequence FROM revs "
-                                      "WHERE doc_id=? AND revid=? %@ LIMIT 1",
-                                     (allowConflict ? @"" : @"AND current=1"));
-            parentSequence = [_fmdb longLongForQuery: sql, @(docNumericID), prevRevID];
+            parentSequence = [self getSequenceOfDocument: docNumericID revision: prevRevID
+                                             onlyCurrent: !allowConflict];
             if (parentSequence == 0) {
                 // Not found: kTDStatusNotFound or a kTDStatusConflict, depending on whether there is any current revision
                 if (!allowConflict && [self existsDocumentWithID: docID revisionID: nil])
@@ -310,7 +307,7 @@
             if (_validations.count > 0) {
                 // Fetch the previous revision and validate the new one against it:
                 TD_Revision* prevRev = [[TD_Revision alloc] initWithDocID: docID revID: prevRevID
-                                                                deleted: NO];
+                                                                  deleted: NO];
                 status = [self validateRevision: rev previousRevision: prevRev];
                 if (TDStatusIsError(status)) {
                     *outStatus = status;
@@ -321,7 +318,7 @@
         } else {
             // Inserting first revision.
             if (deleted && docID) {
-                // Didn't specify a revision to delete: kTDStatusNotFound or a kTDStatusConflict, depending
+                // Didn't specify a revision to delete: NotFound or a Conflict, depending
                 *outStatus = [self existsDocumentWithID: docID revisionID: nil] ? kTDStatusConflict : kTDStatusNotFound;
                 return nil;
             }
@@ -343,7 +340,10 @@
                 } else {
                     // Doc ID exists; check whether current winning revision is deleted:
                     if (oldWinnerWasDeletion) {
-                        makeOldWinnerNonCurrent = YES;
+                        prevRevID = oldWinningRevID;
+                        parentSequence = [self getSequenceOfDocument: docNumericID
+                                                            revision: prevRevID
+                                                         onlyCurrent: NO];
                     } else if (oldWinningRevID) {
                         // The current winning revision is not deleted, so this is a conflict
                         *outStatus = kTDStatusConflict;
@@ -406,36 +406,19 @@
         if (!sequence) {
             // The insert failed. If it was due to a constraint violation, that means a revision
             // already exists with identical contents and the same parent rev. We can ignore this
-            // insert call, then, _unless_ it has the effect of un-deleting the document. [#205]
+            // insert call, then.
             if (_fmdb.lastErrorCode != SQLITE_CONSTRAINT)
                 return nil;
             LogTo(TD_Database, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
-            if (!oldWinnerWasDeletion || deleted) {
-                // no-op
-                *outStatus = kTDStatusOK;
-                rev.body = nil;
-                return rev;
-            }
-            sequence = [_fmdb longLongForQuery: @"SELECT sequence FROM revs "
-                                                 "WHERE doc_id=? and revid=?",
-                        @(docNumericID), newRevID];
-            if (sequence <= 0)
-                return nil;
-            rev.sequence = sequence;
-            // Make the old revision current again:
-            if (![_fmdb executeUpdate: @"UPDATE revs SET current=1 WHERE sequence=?", @(sequence)])
-                return nil;
+            *outStatus = kTDStatusOK;
+            rev.body = nil;
+            return rev;
         }
         
         // Make replaced rev non-current:
         if (parentSequence > 0) {
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                                        @(parentSequence)])
-                return nil;
-        }
-        if (makeOldWinnerNonCurrent) {
-            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE doc_id=? and revid=?",
-                                       @(docNumericID), oldWinningRevID])
                 return nil;
         }
 

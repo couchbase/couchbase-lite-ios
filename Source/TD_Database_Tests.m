@@ -214,6 +214,14 @@ TestCase(TD_Database_DeleteWithProperties) {
                                            {@"_rev", rev2.revID},
                                            {@"_deleted", $true},
                                            {@"property", @"newvalue"}));
+    readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
+    CAssertNil(readRev);
+    
+    // Make sure it's possible to create the doc from scratch again:
+    TD_Revision* rev3 = putDoc(db, $dict({@"_id", rev1.docID}, {@"property", @"newvalue"}));
+    CAssert([rev3.revID hasPrefix: @"3-"]);     // new rev is child of tombstone rev
+    readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
+    CAssertEqual(readRev.revID, rev3.revID);
 }
 
 
