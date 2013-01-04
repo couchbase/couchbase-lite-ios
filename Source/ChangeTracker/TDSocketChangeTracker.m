@@ -392,7 +392,6 @@
         [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
     } else {
         Warn(@"%@: Can't connect, giving up: %@", self, error);
-        [self stop];
 
         // Map lower-level errors from CFStream to higher-level NSURLError ones:
         if ($equal(error.domain, NSPOSIXErrorDomain)) {
@@ -403,11 +402,13 @@
         }
 
         self.error = error;
+        [self stop];
     }
 }
 
 
 - (void) stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
+    __unused id keepMeAround = self; // retain myself so I can't be dealloced during this method
     switch (eventCode) {
         case NSStreamEventHasBytesAvailable: {
             LogTo(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);
