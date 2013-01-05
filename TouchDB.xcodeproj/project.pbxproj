@@ -352,6 +352,9 @@
 		27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F1E4A61697995C00F0E50F /* TDJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4A51697995C00F0E50F /* TDJSViewCompiler.m */; };
+		27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
+		27F1E4AB16979A0B00F0E50F /* TDJSViewCompiler_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4AA16979A0B00F0E50F /* TDJSViewCompiler_Test.m */; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		DA147C0C14BCA98A0052DA4D /* TDListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* TDListener.m */; };
 		DA147C0D14BCA98A0052DA4D /* TDHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* TDHTTPConnection.m */; };
@@ -784,6 +787,10 @@
 		27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableURLRequest+Parameters.h"; sourceTree = "<group>"; };
 		27F128AF156AC1C8008465C2 /* TDOAuth1Authorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDOAuth1Authorizer.h; sourceTree = "<group>"; };
 		27F128B0156AC1C9008465C2 /* TDOAuth1Authorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDOAuth1Authorizer.m; sourceTree = "<group>"; };
+		27F1E4A41697995C00F0E50F /* TDJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TDJSViewCompiler.h; path = ../Source/TDJSViewCompiler.h; sourceTree = "<group>"; };
+		27F1E4A51697995C00F0E50F /* TDJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDJSViewCompiler.m; path = ../Source/TDJSViewCompiler.m; sourceTree = "<group>"; };
+		27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		27F1E4AA16979A0B00F0E50F /* TDJSViewCompiler_Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDJSViewCompiler_Test.m; path = ../Source/TDJSViewCompiler_Test.m; sourceTree = "<group>"; };
 		27F87BE61558890600F0A416 /* TDGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* TDGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDGNUstep.m; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* TouchDB */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TouchDB; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -903,6 +910,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */,
 				27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */,
 				270B3E26148939BD00E0A926 /* TouchDB.framework in Frameworks */,
 				27E11F1214AD172F0006B340 /* TouchDBListener.framework in Frameworks */,
@@ -1329,7 +1337,11 @@
 				27C706D01488679500F0F099 /* ShoppingDemo.xib */,
 				27C706D11488679500F0F099 /* ShoppingItem.h */,
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
+				27F1E4A41697995C00F0E50F /* TDJSViewCompiler.h */,
+				27F1E4A51697995C00F0E50F /* TDJSViewCompiler.m */,
+				27F1E4AA16979A0B00F0E50F /* TDJSViewCompiler_Test.m */,
 				27990702149D2576003D4338 /* CouchCocoa.framework */,
+				27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */,
 			);
 			path = "Demo-Mac";
 			sourceTree = "<group>";
@@ -2218,6 +2230,8 @@
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
+				27F1E4A61697995C00F0E50F /* TDJSViewCompiler.m in Sources */,
+				27F1E4AB16979A0B00F0E50F /* TDJSViewCompiler_Test.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
