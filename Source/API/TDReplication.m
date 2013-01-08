@@ -355,7 +355,7 @@ static inline BOOL isLocalDBName(NSString* url) {
                                              selector: @selector(bg_replicationProgressChanged:)
                                                  name: TDReplicatorProgressChangedNotification
                                                object: _bg_replicator];
-    [self bg_replicationProgressChanged: nil];
+    [self bg_updateProgress: _bg_replicator];
 }
 
 
@@ -371,8 +371,12 @@ static inline BOOL isLocalDBName(NSString* url) {
         if (!$equal(tdReplicator.documentID, _bg_documentID))
             return;
     }
-    
-    // OK, this is my replication, so get its state:
+    [self bg_updateProgress: tdReplicator];
+}
+
+
+// CAREFUL: This is called on the server's background thread!
+- (void) bg_updateProgress: (TDReplicator*)tdReplicator {
     TDReplicationMode mode;
     if (!tdReplicator.running)
         mode = kTDReplicationStopped;
