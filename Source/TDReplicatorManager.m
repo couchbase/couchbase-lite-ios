@@ -25,6 +25,7 @@
 #import "TDPuller.h"
 #import "TD_View.h"
 #import "TDOAuth1Authorizer.h"
+#import "TDBrowserIDAuthorizer.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 #import "MYBlockUtils.h"
@@ -168,18 +169,26 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     if (outAuthorizer) {
         *outAuthorizer = nil;
         NSDictionary* auth = $castIf(NSDictionary, remoteDict[@"auth"]);
-        NSDictionary* oauth = $castIf(NSDictionary, auth[@"oauth"]);
-        if (oauth) {
-            NSString* consumerKey = $castIf(NSString, oauth[@"consumer_key"]);
-            NSString* consumerSec = $castIf(NSString, oauth[@"consumer_secret"]);
-            NSString* token = $castIf(NSString, oauth[@"token"]);
-            NSString* tokenSec = $castIf(NSString, oauth[@"token_secret"]);
-            NSString* sigMethod = $castIf(NSString, oauth[@"signature_method"]);
-            *outAuthorizer = [[TDOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
-                                                               consumerSecret: consumerSec
-                                                                        token: token
-                                                                  tokenSecret: tokenSec
-                                                              signatureMethod: sigMethod];
+        if (auth) {
+            NSDictionary* oauth = $castIf(NSDictionary, auth[@"oauth"]);
+            if (oauth) {
+                NSString* consumerKey = $castIf(NSString, oauth[@"consumer_key"]);
+                NSString* consumerSec = $castIf(NSString, oauth[@"consumer_secret"]);
+                NSString* token = $castIf(NSString, oauth[@"token"]);
+                NSString* tokenSec = $castIf(NSString, oauth[@"token_secret"]);
+                NSString* sigMethod = $castIf(NSString, oauth[@"signature_method"]);
+                *outAuthorizer = [[TDOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
+                                                                   consumerSecret: consumerSec
+                                                                            token: token
+                                                                      tokenSecret: tokenSec
+                                                                  signatureMethod: sigMethod];
+            } else {
+                NSDictionary* browserid = $castIf(NSDictionary, auth[@"browserid"]);
+                if (browserid) {
+                    NSString* assertion = $castIf(NSString, browserid[@"assertion"]);
+                    *outAuthorizer = [[TDBrowserIDAuthorizer alloc] initWithAssertion: assertion];
+                }
+            }
             if (!*outAuthorizer)
                 return kTDStatusBadRequest;
         }

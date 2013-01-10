@@ -319,7 +319,7 @@
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    LogTo(RemoteRequest, @"%@: Got %lu bytes", self, (unsigned long)data.length);
+    LogTo(RemoteRequestVerbose, @"%@: Got %lu bytes", self, (unsigned long)data.length);
 }
 
 

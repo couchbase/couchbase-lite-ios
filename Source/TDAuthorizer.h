@@ -20,6 +20,11 @@
 - (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
                           forRealm: (NSString*)realm;
 
+@optional
+
+@property (readonly) NSDictionary* loginParameters;
+@property (readonly) NSString* loginPath;
+
 @end
 
 

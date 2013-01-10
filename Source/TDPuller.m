@@ -407,7 +407,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
     NSArray* keys = [bulkRevs my_map: ^(TD_Revision* rev) { return rev.docID; }];
     [self sendAsyncRequest: @"POST"
-                      path: @"/_all_docs?include_docs=true"
+                      path: @"_all_docs?include_docs=true"
                       body: $dict({@"keys", keys})
               onCompletion:^(id result, NSError *error) {
                   if (error) {

@@ -72,6 +72,25 @@
     return $sprintf(@"%@[%@/****]", self.class, _credential.user);
 }
 
+#if 0
+// If enabled, these methods would make TouchDB use cookie-based login intstead of basic auth;
+// but there's not really much point in doing so, as such logins expire, which would cause trouble
+// with long-lived replications.
+
+- (NSString*) loginPath {
+    return @"/_session";
+}
+
+- (NSDictionary*) loginParameters {
+    NSString* username = _credential.user;
+    NSString* password = _credential.password;
+    if (username && password) {
+        return @{@"name": username, @"password": password};
+    }
+    return nil;
+}
+#endif
+
 @end
 
 
