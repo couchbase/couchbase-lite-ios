@@ -16,7 +16,7 @@
 #import "TDReplicator.h"
 #import "TDPusher.h"
 #import "TDPuller.h"
-#import <TouchDB/TD_Database.h>
+#import "TD_Database+Replication.h"
 #import "TDRemoteRequest.h"
 #import "TDAuthorizer.h"
 #import "TDBatcher.h"
@@ -137,6 +137,14 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
+- (bool) hasSameSettingsAs: (TDReplicator*)other {
+    return _db == other->_db && $equal(_remote, other->_remote) && self.isPush == other.isPush
+        && _continuous == other->_continuous && $equal(_filterName, other->_filterName)
+        && $equal(_filterParameters, other->_filterParameters) && $equal(_options, other->_options)
+        && $equal(_requestHeaders, other->_requestHeaders);
+}
+
+
 - (NSString*) lastSequence {
     return _lastSequence;
 }
@@ -195,6 +203,8 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         return;
     Assert(_db, @"Can't restart an already stopped TDReplicator");
     LogTo(Sync, @"%@ STARTING ...", self);
+
+    [_db addActiveReplicator: self];
 
     // Did client request a reset (i.e. starting over from first sequence?)
     if (_options[@"reset"] != nil) {
