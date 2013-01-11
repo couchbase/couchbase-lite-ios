@@ -11,13 +11,17 @@
 
 
 typedef struct TDDatabaseManagerOptions {
-    bool readOnly;
-    bool noReplicator;
+    bool readOnly;      /**< No modifications to databases are allowed. */
+    bool noReplicator;  /**< Persistent replications will not run. */
 } TDDatabaseManagerOptions;
 
 
-/** Top-level TouchDB object; manages a collection of databases as a CouchDB server does. */
-@interface TDDatabaseManager : NSObject
+/** Top-level TouchDB object; manages a collection of databases as a CouchDB server does.
+    A TDDatabaseManager and all the objects descending from it may only be used on a single
+    thread. To work with databases on another thread, create a new TDDatabaseManager instance for
+    that thread (and be sure to use the .noReplicator option.) The easist way to do this is simply
+    to call -copy on the existing manager. */
+@interface TDDatabaseManager : NSObject <NSCopying>
 
 /** A shared per-process instance. This should only be used on the main thread. */
 + (TDDatabaseManager*) sharedInstance;

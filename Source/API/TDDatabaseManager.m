@@ -74,6 +74,13 @@
 }
 
 
+- (id) copyWithZone: (NSZone*)zone {
+    TDDatabaseManagerOptions options = _options;
+    options.noReplicator = true;        // Don't want to run multiple replicator tasks
+    return [[[self class] alloc] initWithDirectory: _mgr.directory options: &options error: NULL];
+}
+
+
 - (void) close {
     [_mgr close];
     _mgr = nil;
@@ -172,8 +179,8 @@
     if (!create)
         return nil;
     TDReplication* repl = [[TDReplication alloc] initWithDatabase: db
-                                                                 remote: remote
-                                                                   pull: pull];
+                                                           remote: remote
+                                                             pull: pull];
     [_replications addObject: repl];
     return repl;
 }
