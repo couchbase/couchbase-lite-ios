@@ -32,28 +32,7 @@
     return _activeReplicators;
 }
 
-- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
-                                           push: (BOOL)push {
-    TDReplicator* repl;
-    for (repl in _activeReplicators) {
-        if ($equal(repl.remote, remote) && repl.isPush == push && repl.running)
-            return repl;
-    }
-    return nil;
-}
-
-- (TDReplicator*) replicatorWithRemoteURL: (NSURL*)remote
-                                     push: (BOOL)push
-                               continuous: (BOOL)continuous {
-    TDReplicator* repl = [self activeReplicatorWithRemoteURL: remote push: push];
-    if (repl)
-        return repl;
-    repl = [[TDReplicator alloc] initWithDB: self
-                                     remote: remote 
-                                       push: push
-                                 continuous: continuous];
-    if (!repl)
-        return nil;
+- (void) addActiveReplicator: (TDReplicator*)repl {
     if (!_activeReplicators) {
         _activeReplicators = [[NSMutableArray alloc] init];
         [[NSNotificationCenter defaultCenter] addObserver: self
@@ -61,8 +40,17 @@
                                                      name: TDReplicatorStoppedNotification
                                                    object: nil];
     }
-    [_activeReplicators addObject: repl];
-    return repl;
+    if (![_activeReplicators containsObject: repl])
+        [_activeReplicators addObject: repl];
+}
+
+
+- (TDReplicator*) activeReplicatorLike: (TDReplicator*)repl {
+    for (TDReplicator* activeRepl in _activeReplicators) {
+        if ([activeRepl hasSameSettingsAs: repl])
+            return activeRepl;
+    }
+    return nil;
 }
 
 

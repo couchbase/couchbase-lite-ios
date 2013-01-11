@@ -339,14 +339,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     BOOL continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
     LogTo(Sync, @"TDReplicatorManager creating (remote=%@, push=%d, create=%d, continuous=%d)",
           remote, push, createTarget, continuous);
-    TDReplicator* repl = [localDb replicatorWithRemoteURL: remote
+    TDReplicator* repl = [[TDReplicator alloc] initWithDB: localDb
+                                                   remote: remote
                                                      push: push
                                                continuous: continuous];
     if (!repl)
         return;
-    if (!_replicatorsByDocID)
-        _replicatorsByDocID = [[NSMutableDictionary alloc] init];
-    _replicatorsByDocID[rev.docID] = repl;
     NSString* replicationID = properties[@"_replication_id"] ?: TDCreateUUID();
     repl.sessionID = replicationID;
     repl.documentID = rev.docID;
@@ -357,6 +355,10 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     repl.authorizer = authorizer;
     if (push)
         ((TDPusher*)repl).createTarget = createTarget;
+    
+    if (!_replicatorsByDocID)
+        _replicatorsByDocID = [[NSMutableDictionary alloc] init];
+    _replicatorsByDocID[rev.docID] = repl;
     
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(replicatorChanged:)

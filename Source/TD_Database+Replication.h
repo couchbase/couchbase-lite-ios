@@ -14,12 +14,9 @@
 
 @property (readonly) NSArray* activeReplicators;
 
-- (TDReplicator*) activeReplicatorWithRemoteURL: (NSURL*)remote
-                                           push: (BOOL)push;
+- (TDReplicator*) activeReplicatorLike: (TDReplicator*)repl;
 
-- (TDReplicator*) replicatorWithRemoteURL: (NSURL*)remote
-                                     push: (BOOL)push
-                               continuous: (BOOL)continuous;
+- (void) addActiveReplicator: (TDReplicator*)repl;
 
 - (BOOL) findMissingRevisions: (TD_RevisionList*)revs;
 

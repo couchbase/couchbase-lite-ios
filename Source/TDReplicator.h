@@ -70,6 +70,9 @@ extern NSString* TDReplicatorStoppedNotification;
 
 @property (strong) id<TDAuthorizer> authorizer;
 
+/** Do these two replicators have identical settings? */
+- (bool) hasSameSettingsAs: (TDReplicator*)other;
+
 /** Starts the replicator.
     Replicators run asynchronously so nothing will happen until later.
     A replicator can only be started once; don't reuse it after it stops. */

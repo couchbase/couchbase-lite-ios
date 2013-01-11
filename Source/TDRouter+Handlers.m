@@ -80,27 +80,31 @@
         return status;
     
     BOOL continuous = [$castIf(NSNumber, body[@"continuous"]) boolValue];
-    BOOL cancel = [$castIf(NSNumber, body[@"cancel"]) boolValue];
-    if (!cancel) {
+
+    TDReplicator* repl = [[TDReplicator alloc] initWithDB: db
+                                                   remote: remote
+                                                     push: push
+                                               continuous: continuous];
+    if (!repl)
+        return kTDStatusServerError;
+    repl.filterName = $castIf(NSString, body[@"filter"]);
+    repl.filterParameters = $castIf(NSDictionary, body[@"query_params"]);
+    repl.options = body;
+    repl.requestHeaders = headers;
+    repl.authorizer = authorizer;
+    if (push)
+        ((TDPusher*)repl).createTarget = createTarget;
+
+    if ([$castIf(NSNumber, body[@"cancel"]) boolValue]) {
+        // Cancel replication:
+        TDReplicator* activeRepl = [db activeReplicatorLike: repl];
+        if (!activeRepl)
+            return kTDStatusNotFound;
+        [activeRepl stop];
+    } else {
         // Start replication:
-        TDReplicator* repl = [db replicatorWithRemoteURL: remote push: push continuous: continuous];
-        if (!repl)
-            return kTDStatusServerError;
-        repl.filterName = $castIf(NSString, body[@"filter"]);;
-        repl.filterParameters = $castIf(NSDictionary, body[@"query_params"]);
-        repl.options = body;
-        repl.requestHeaders = headers;
-        repl.authorizer = authorizer;
-        if (push)
-            ((TDPusher*)repl).createTarget = createTarget;
         [repl start];
         _response.bodyObject = $dict({@"session_id", repl.sessionID});
-    } else {
-        // Cancel replication:
-        TDReplicator* repl = [db activeReplicatorWithRemoteURL: remote push: push];
-        if (!repl)
-            return kTDStatusNotFound;
-        [repl stop];
     }
     return kTDStatusOK;
 }

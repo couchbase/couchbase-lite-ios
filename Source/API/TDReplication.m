@@ -337,9 +337,10 @@ static inline BOOL isLocalDBName(NSString* url) {
 {
     // The setup should use parameters, not ivars, because the ivars may change on the main thread.
     _bg_serverDatabase = [server_dbmgr databaseNamed: dbName];
-    TDReplicator* repl = [_bg_serverDatabase replicatorWithRemoteURL: remote
-                                                                push: !pull
-                                                          continuous: continuous];
+    TDReplicator* repl = [[TDReplicator alloc] initWithDB: _bg_serverDatabase
+                                                   remote: remote
+                                                     push: !pull
+                                               continuous: continuous];
     if (!repl)
         return;
     repl.filterName = options[@"filter"];

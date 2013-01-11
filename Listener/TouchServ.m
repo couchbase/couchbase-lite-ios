@@ -116,7 +116,8 @@ static bool doReplicate( TD_Server* server, const char* replArg,
             return;
         }
         [db open];
-        repl = [db replicatorWithRemoteURL: remote push: !pull continuous: continuous];
+        repl = [[TDReplicator alloc] initWithDB: db remote: remote push: !pull
+                                     continuous: continuous];
         if (createTarget && !pull)
             ((TDPusher*)repl).createTarget = YES;
         if (!repl)
