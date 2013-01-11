@@ -181,16 +181,20 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 - (void) setRemoteDictionaryValue: (id)value forKey: (NSString*)key {
     BOOL isPull = self.pull;
-    id remote = isPull ? self.source : self.target;
-    if ([remote isKindOfClass: [NSString class]])
-        remote = [NSMutableDictionary dictionaryWithObject: remote forKey: @"url"];
+    id oldRemote = isPull ? self.source : self.target;
+    NSMutableDictionary* remote;
+    if ([oldRemote isKindOfClass: [NSString class]])
+        remote = [NSMutableDictionary dictionaryWithObject: oldRemote forKey: @"url"];
     else
         remote = [NSMutableDictionary dictionaryWithDictionary: remote];
     [remote setValue: value forKey: key];
-    if (isPull)
-        self.source = remote;
-    else
-        self.target = remote;
+    if (!$equal(remote, oldRemote)) {
+        if (isPull)
+            self.source = remote;
+        else
+            self.target = remote;
+        [self restart];
+    }
 }
 
 
@@ -209,6 +213,18 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 - (void) setOAuth: (NSDictionary*)oauth {
     NSDictionary* auth = oauth ? @{@"oauth": oauth} : nil;
+    [self setRemoteDictionaryValue: auth forKey: @"auth"];
+}
+
+- (NSString*) browserIDAssertion {
+    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
+    return auth[@"browserid"][@"assertion"];
+}
+
+- (void) setBrowserIDAssertion:(NSString *)assertion {
+    NSDictionary* auth = nil;
+    if (assertion)
+        auth = @{@"browserid": @{@"assertion": assertion}};
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
@@ -256,13 +272,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
         [self tellDatabaseManager:^(TD_DatabaseManager* dbmgr) {
             // This runs on the server thread:
-            [self bg_startReplicator: dbmgr
-                              dbName: self.localDatabase.name
-                              remote: self.remoteURL
-                                pull: self.pull
-                        createTarget: self.create_target
-                          continuous: self.continuous
-                             options: self.currentProperties];
+            [self bg_startReplicator: dbmgr properties: self.currentProperties];
         }];
     }
 }
@@ -328,30 +338,23 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_startReplicator: (TD_DatabaseManager*)server_dbmgr
-                     dbName: (NSString*)dbName
-                     remote: (NSURL*)remote
-                       pull: (bool)pull
-               createTarget: (bool)createTarget
-                 continuous: (bool)continuous
-                    options: (NSDictionary*)options
+                 properties: (NSDictionary*)properties
 {
-    // The setup should use parameters, not ivars, because the ivars may change on the main thread.
-    _bg_serverDatabase = [server_dbmgr databaseNamed: dbName];
-    TDReplicator* repl = [[TDReplicator alloc] initWithDB: _bg_serverDatabase
-                                                   remote: remote
-                                                     push: !pull
-                                               continuous: continuous];
-    if (!repl)
+    // The setup should use properties, not ivars, because the ivars may change on the main thread.
+    TDStatus status;
+    TDReplicator* repl = [server_dbmgr replicatorWithProperties: properties status: &status];
+    if (!repl) {
+        MYOnThread(_mainThread, ^{
+            [self updateMode: kTDReplicationStopped
+                       error: TDStatusToNSError(status, nil)
+                   processed: 0 ofTotal: 0];
+        });
         return;
-    repl.filterName = options[@"filter"];
-    repl.filterParameters = options[@"query_params"];
-    repl.options = options;
-    repl.requestHeaders = options[@"headers"];
-    if (!pull)
-        ((TDPusher*)repl).createTarget = createTarget;
-    [repl start];
-    
+    }
     _bg_replicator = repl;
+    _bg_serverDatabase = repl.db;
+    [repl start];
+
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(bg_replicationProgressChanged:)
                                                  name: TDReplicatorProgressChangedNotification

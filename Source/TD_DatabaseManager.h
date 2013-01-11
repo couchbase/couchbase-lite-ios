@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TD_Database, TDReplicatorManager;
+#import "TDStatus.h"
+@class TD_Database, TDReplicator, TDReplicatorManager;
 
 
 typedef struct TD_DatabaseManagerOptions {
@@ -47,5 +48,9 @@ extern const TD_DatabaseManagerOptions kTD_DatabaseManagerDefaultOptions;
 @property (readonly) NSArray* allOpenDatabases;
 
 - (void) close;
+
+- (TDStatus) validateReplicatorProperties: (NSDictionary*)properties;
+- (TDReplicator*) replicatorWithProperties: (NSDictionary*)body
+                                    status: (TDStatus*)outStatus;
 
 @end

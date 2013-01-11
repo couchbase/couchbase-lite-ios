@@ -15,6 +15,9 @@
 
 #import "TD_DatabaseManager.h"
 #import "TD_Database.h"
+#import "TDOAuth1Authorizer.h"
+#import "TDBrowserIDAuthorizer.h"
+#import "TDPusher.h"
 #import "TDReplicatorManager.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
@@ -189,6 +192,163 @@ static NSCharacterSet* kIllegalNameChars;
     }
     [_databases removeAllObjects];
     LogTo(TD_Server, @"CLOSED %@", self);
+}
+
+
+#pragma mark - REPLICATION:
+
+
+// Replication 'source' or 'target' property may be a string or a dictionary. Normalize to dict form
+static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key) {
+    id value = properties[key];
+    if ([value isKindOfClass: [NSDictionary class]])
+        return value;
+    else if ([value isKindOfClass: [NSString class]])
+        return $dict({@"url", value});
+    else
+        return nil;
+}
+
+
+- (TDStatus) parseReplicatorProperties: (NSDictionary*)properties
+                            toDatabase: (TD_Database**)outDatabase   // may be NULL
+                                remote: (NSURL**)outRemote          // may be NULL
+                                isPush: (BOOL*)outIsPush
+                          createTarget: (BOOL*)outCreateTarget
+                               headers: (NSDictionary**)outHeaders
+                            authorizer: (id<TDAuthorizer>*)outAuthorizer
+{
+    // http://wiki.apache.org/couchdb/Replication
+    NSDictionary* sourceDict = parseSourceOrTarget(properties, @"source");
+    NSDictionary* targetDict = parseSourceOrTarget(properties, @"target");
+    NSString* source = sourceDict[@"url"];
+    NSString* target = targetDict[@"url"];
+    if (!source || !target)
+        return kTDStatusBadRequest;
+
+    *outCreateTarget = [$castIf(NSNumber, properties[@"create_target"]) boolValue];
+    *outIsPush = NO;
+    TD_Database* db = nil;
+    NSDictionary* remoteDict = nil;
+    if ([TD_DatabaseManager isValidDatabaseName: source]) {
+        if (outDatabase)
+            db = [self existingDatabaseNamed: source];
+        remoteDict = targetDict;
+        *outIsPush = YES;
+    } else {
+        if (![TD_DatabaseManager isValidDatabaseName: target])
+            return kTDStatusBadID;
+        remoteDict = sourceDict;
+        if (outDatabase) {
+            if (*outCreateTarget) {
+                db = [self databaseNamed: target];
+                if (![db open])
+                    return kTDStatusDBError;
+            } else {
+                db = [self existingDatabaseNamed: target];
+            }
+        }
+    }
+    NSURL* remote = [NSURL URLWithString: remoteDict[@"url"]];
+    if (![@[@"http", @"https", @"touchdb"] containsObject: remote.scheme.lowercaseString])
+        return kTDStatusBadRequest;
+    if (outDatabase) {
+        *outDatabase = db;
+        if (!db)
+            return kTDStatusNotFound;
+    }
+    if (outRemote)
+        *outRemote = remote;
+    if (outHeaders)
+        *outHeaders = $castIf(NSDictionary, remoteDict[@"headers"]);
+    
+    if (outAuthorizer) {
+        *outAuthorizer = nil;
+        NSDictionary* auth = $castIf(NSDictionary, remoteDict[@"auth"]);
+        if (auth) {
+            NSDictionary* oauth = $castIf(NSDictionary, auth[@"oauth"]);
+            if (oauth) {
+                NSString* consumerKey = $castIf(NSString, oauth[@"consumer_key"]);
+                NSString* consumerSec = $castIf(NSString, oauth[@"consumer_secret"]);
+                NSString* token = $castIf(NSString, oauth[@"token"]);
+                NSString* tokenSec = $castIf(NSString, oauth[@"token_secret"]);
+                NSString* sigMethod = $castIf(NSString, oauth[@"signature_method"]);
+                *outAuthorizer = [[TDOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
+                                                                   consumerSecret: consumerSec
+                                                                            token: token
+                                                                      tokenSecret: tokenSec
+                                                                  signatureMethod: sigMethod];
+            } else {
+                NSDictionary* browserid = $castIf(NSDictionary, auth[@"browserid"]);
+                if (browserid) {
+                    NSString* assertion = $castIf(NSString, browserid[@"assertion"]);
+                    *outAuthorizer = [[TDBrowserIDAuthorizer alloc] initWithAssertion: assertion];
+                }
+            }
+            if (!*outAuthorizer)
+                return kTDStatusBadRequest;
+        }
+    }
+    
+    return kTDStatusOK;
+}
+
+
+- (TDStatus) validateReplicatorProperties: (NSDictionary*)properties {
+    BOOL push, createTarget;
+    return [self parseReplicatorProperties: properties toDatabase: NULL
+                                    remote: NULL isPush: &push createTarget: &createTarget
+                                   headers: NULL
+                                authorizer: NULL];
+}
+
+
+- (TDReplicator*) replicatorWithProperties: (NSDictionary*)properties
+                                    status: (TDStatus*)outStatus
+{
+    // Extract the parameters from the JSON request body:
+    // http://wiki.apache.org/couchdb/Replication
+    TD_Database* db;
+    NSURL* remote;
+    BOOL push, createTarget;
+    NSDictionary* headers;
+    id<TDAuthorizer> authorizer;
+
+    TDStatus status = [self parseReplicatorProperties: properties
+                                           toDatabase: &db remote: &remote
+                                               isPush: &push
+                                         createTarget: &createTarget
+                                              headers: &headers
+                                           authorizer: &authorizer];
+    if (TDStatusIsError(status)) {
+        if (outStatus)
+            *outStatus = status;
+        return nil;
+    }
+
+    BOOL continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
+
+    TDReplicator* repl = [[TDReplicator alloc] initWithDB: db
+                                                   remote: remote
+                                                     push: push
+                                               continuous: continuous];
+    if (!repl) {
+        if (outStatus)
+            *outStatus = kTDStatusServerError;
+        return nil;
+    }
+    
+    repl.filterName = $castIf(NSString, properties[@"filter"]);
+    repl.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
+    repl.options = properties;
+    repl.requestHeaders = headers;
+    repl.authorizer = authorizer;
+    if (push)
+        ((TDPusher*)repl).createTarget = createTarget;
+    
+    if (outStatus)
+        *outStatus = kTDStatusOK;
+    return repl;
 }
 
 
