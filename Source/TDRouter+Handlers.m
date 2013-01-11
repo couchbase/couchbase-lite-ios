@@ -58,42 +58,15 @@
 }
 
 - (TDStatus) do_POST_replicate {
-    // Extract the parameters from the JSON request body:
-    // http://wiki.apache.org/couchdb/Replication
-    TD_Database* db;
-    NSURL* remote;
-    BOOL push, createTarget;
-    NSDictionary* headers;
-    id<TDAuthorizer> authorizer;
     NSDictionary* body = self.bodyAsDictionary;
-    TDStatus status = [_dbManager.replicatorManager parseReplicatorProperties: body
-                                                                   toDatabase: &db remote: &remote
-                                                                       isPush: &push
-                                                                 createTarget: &createTarget
-                                                                      headers: &headers
-                                                                   authorizer: &authorizer];
-    if (TDStatusIsError(status))
-        return status;
-    
-    BOOL continuous = [$castIf(NSNumber, body[@"continuous"]) boolValue];
-
-    TDReplicator* repl = [[TDReplicator alloc] initWithDB: db
-                                                   remote: remote
-                                                     push: push
-                                               continuous: continuous];
+    TDStatus status;
+    TDReplicator* repl = [_dbManager replicatorWithProperties: body status: &status];
     if (!repl)
-        return kTDStatusServerError;
-    repl.filterName = $castIf(NSString, body[@"filter"]);
-    repl.filterParameters = $castIf(NSDictionary, body[@"query_params"]);
-    repl.options = body;
-    repl.requestHeaders = headers;
-    repl.authorizer = authorizer;
-    if (push)
-        ((TDPusher*)repl).createTarget = createTarget;
+        return status;
 
     if ([$castIf(NSNumber, body[@"cancel"]) boolValue]) {
         // Cancel replication:
-        TDReplicator* activeRepl = [db activeReplicatorLike: repl];
+        TDReplicator* activeRepl = [repl.db activeReplicatorLike: repl];
         if (!activeRepl)
             return kTDStatusNotFound;
         [activeRepl stop];

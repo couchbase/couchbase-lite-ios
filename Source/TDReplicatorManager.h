@@ -31,13 +31,4 @@ extern NSString* const kTDReplicatorDatabaseName;
 - (void) start;
 - (void) stop;
 
-/** Examines the JSON object describing a replication and determines the local database and remote URL, and some of the other parameters. */
-- (TDStatus) parseReplicatorProperties: (NSDictionary*)body
-                            toDatabase: (TD_Database**)outDatabase
-                                remote: (NSURL**)outRemote
-                                isPush: (BOOL*)outIsPush
-                          createTarget: (BOOL*)outCreateTarget
-                               headers: (NSDictionary**)outHeaders
-                            authorizer: (id<TDAuthorizer>*)outAuthorizer;
-
 @end
