@@ -39,17 +39,28 @@
 
     LogTo(ChangeTracker, @"%@: Starting...", self);
     [super start];
-    
+
+    NSURL* url = self.changesFeedURL;
     CFHTTPMessageRef request = CFHTTPMessageCreateRequest(NULL, CFSTR("GET"),
-                                                          (__bridge CFURLRef)self.changesFeedURL,
+                                                          (__bridge CFURLRef)url,
                                                           kCFHTTPVersion1_1);
     Assert(request);
     
-    // Add headers.
+    // Add headers from my .requestHeaders property:
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         CFHTTPMessageSetHeaderFieldValue(request, (__bridge CFStringRef)key, (__bridge CFStringRef)value);
     }];
-    
+
+    // Add cookie headers from the NSHTTPCookieStorage:
+    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: url];
+    NSDictionary* cookieHeaders = [NSHTTPCookie requestHeaderFieldsWithCookies: cookies];
+    for (NSString* headerName in cookieHeaders) {
+        CFHTTPMessageSetHeaderFieldValue(request,
+                                         (__bridge CFStringRef)headerName,
+                                         (__bridge CFStringRef)cookieHeaders[headerName]);
+    }
+
+    // If this is a retry, set auth headers from the credential we got:
     if (_unauthResponse && _credential) {
         NSString* password = _credential.password;
         if (!password) {
@@ -80,6 +91,7 @@
                                              (__bridge CFStringRef)(authHeader));
     }
 
+    // Now open the connection:
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)
