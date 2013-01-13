@@ -433,17 +433,17 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
     if ([_authorizer respondsToSelector: @selector(loginParameters)]) {
         NSDictionary* loginParameters = _authorizer.loginParameters;
         if (loginParameters != nil) {
-            LogTo(Sync, @"Logging in with %@ at %@ ...", _authorizer.class, _authorizer.loginPath);
+            LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, _authorizer.loginPath);
             [self asyncTaskStarted];
             [self sendAsyncRequest: @"POST"
                               path: _authorizer.loginPath
                               body: _authorizer.loginParameters
                       onCompletion: ^(id result, NSError *error) {
                           if (error) {
-                              LogTo(Sync, @"Login failed!");
+                              LogTo(Sync, @"%@: Login failed!", self);
                               self.error = error;
                           } else {
-                              LogTo(Sync, @"Successfully logged in!");
+                              LogTo(Sync, @"%@: Successfully logged in!", self);
                               [self fetchRemoteCheckpointDoc];
                           }
                           [self asyncTasksFinished: 1];
