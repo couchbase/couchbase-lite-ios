@@ -186,7 +186,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     if ([oldRemote isKindOfClass: [NSString class]])
         remote = [NSMutableDictionary dictionaryWithObject: oldRemote forKey: @"url"];
     else
-        remote = [NSMutableDictionary dictionaryWithDictionary: remote];
+        remote = [NSMutableDictionary dictionaryWithDictionary: oldRemote];
     [remote setValue: value forKey: key];
     if (!$equal(remote, oldRemote)) {
         if (isPull)

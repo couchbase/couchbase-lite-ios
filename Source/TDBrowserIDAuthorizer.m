@@ -13,7 +13,7 @@
 - (id) initWithAssertion:(NSString *)assertion {
     self = [super init];
     if (self) {
-        if (!_assertion)
+        if (!assertion)
             return nil;
         _assertion = [assertion copy];
     }
