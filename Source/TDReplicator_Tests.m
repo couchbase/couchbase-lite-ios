@@ -152,7 +152,7 @@ TestCase(TDPuller) {
     [db open];
     
     id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
-    CAssertEqual(lastSeq, @"2");
+    CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
     CAssertEq(db.lastSequence, 3);

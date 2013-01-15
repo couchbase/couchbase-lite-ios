@@ -33,11 +33,11 @@
 @interface TDPulledRevision : TD_Revision
 {
 @private
-    NSString* _remoteSequenceID;
+    id _remoteSequenceID;
     bool _conflicted;
 }
 
-@property (copy) NSString* remoteSequenceID;
+@property (copy) id remoteSequenceID;
 @property bool conflicted;
 
 @end
