@@ -13,6 +13,7 @@
 #import "TD_Database+Replication.h"
 #import "TD_DatabaseManager.h"
 #import "TD_Server.h"
+#import "TDBrowserIDAuthorizer.h"
 #import "MYBlockUtils.h"
 
 
@@ -216,16 +217,29 @@ static inline BOOL isLocalDBName(NSString* url) {
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
-- (NSString*) browserIDAssertion {
-    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
-    return auth[@"browserid"][@"assertion"];
+- (NSURL*) browserIDOrigin {
+    return [TDBrowserIDAuthorizer originForSite: self.remoteURL];
 }
 
-- (void) setBrowserIDAssertion:(NSString *)assertion {
+- (NSString*) browserIDEmailAddress {
+    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
+    return auth[@"browserid"][@"email"];
+}
+
+- (void) setBrowserIDEmailAddress:(NSString *)email {
     NSDictionary* auth = nil;
-    if (assertion)
-        auth = @{@"browserid": @{@"assertion": assertion}};
+    if (email)
+        auth = @{@"browserid": @{@"email": email}};
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
+}
+
+- (void) registerBrowserIDAssertion: (NSString*)assertion {
+    NSString* email = self.browserIDEmailAddress;
+    Assert(email != nil, @"Must set browserIDEmailAddress first");
+    [TDBrowserIDAuthorizer registerAssertion: assertion
+                             forEmailAddress: email
+                                      toSite: self.remoteURL];
+    [self restart];
 }
 
 

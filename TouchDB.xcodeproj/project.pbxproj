@@ -1001,6 +1001,7 @@
 				279EB2D7149192C700E74185 /* Router */,
 				27821BB4148E7D590099B373 /* Replicator */,
 				27E2E62E159A26A1005B9234 /* Networking */,
+				2776A5A316A48EEB006FF199 /* Auth */,
 				279EB2D8149192DF00E74185 /* Support */,
 				2713789014BCCA7B0058C5CD /* Tests */,
 			);
@@ -1196,6 +1197,19 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		2776A5A316A48EEB006FF199 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				270F5703156AE0BF000FEB8F /* TDAuthorizer.h */,
+				270F5704156AE0BF000FEB8F /* TDAuthorizer.m */,
+				27F128AF156AC1C8008465C2 /* TDOAuth1Authorizer.h */,
+				27F128B0156AC1C9008465C2 /* TDOAuth1Authorizer.m */,
+				2776A58F16A0C3A6006FF199 /* TDBrowserIDAuthorizer.h */,
+				2776A59016A0C3A6006FF199 /* TDBrowserIDAuthorizer.m */,
+			);
+			name = Auth;
+			sourceTree = "<group>";
+		};
 		27821BB4148E7D590099B373 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
@@ -1254,12 +1268,6 @@
 				279EB2DA1491C34300E74185 /* TDCollateJSON.m */,
 				279906EC149ABFC1003D4338 /* TDBatcher.h */,
 				279906ED149ABFC2003D4338 /* TDBatcher.m */,
-				270F5703156AE0BF000FEB8F /* TDAuthorizer.h */,
-				270F5704156AE0BF000FEB8F /* TDAuthorizer.m */,
-				27F128AF156AC1C8008465C2 /* TDOAuth1Authorizer.h */,
-				27F128B0156AC1C9008465C2 /* TDOAuth1Authorizer.m */,
-				2776A58F16A0C3A6006FF199 /* TDBrowserIDAuthorizer.h */,
-				2776A59016A0C3A6006FF199 /* TDBrowserIDAuthorizer.m */,
 				279C7E2C14F424090004A1E8 /* TDSequenceMap.h */,
 				279C7E2D14F424090004A1E8 /* TDSequenceMap.m */,
 				27DA4306158FA35600F9E7B5 /* TDCache.h */,

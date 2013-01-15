@@ -65,8 +65,14 @@ typedef enum {
     Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret", and optionally "signature_method". */
 @property (nonatomic, copy) NSDictionary* OAuth;
 
-/** BrowserID (aka Persona) 'assertion' string used to authenticate to the remote server. */
-@property (nonatomic, copy) NSString* browserIDAssertion;
+/** The base URL of the remote server. Use this as the "origin" parameter when requesting BrowserID authentication. */
+@property (readonly) NSURL* browserIDOrigin;
+
+/** Email address for remote login with BrowserID (aka Persona). */
+@property (nonatomic, copy) NSString* browserIDEmailAddress;
+
+/** Registers a BrowserID 'assertion' (ID verification) string that will be used on the next login to the remote server. */
+- (void) registerBrowserIDAssertion: (NSString*)assertion;
 
 
 #pragma mark - STATUS:
