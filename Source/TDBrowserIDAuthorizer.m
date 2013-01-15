@@ -8,19 +8,66 @@
 
 #import "TDBrowserIDAuthorizer.h"
 
+
+static NSMutableDictionary* sAssertions;
+
+
 @implementation TDBrowserIDAuthorizer
 
-- (id) initWithAssertion:(NSString *)assertion {
+
++ (NSURL*) originForSite: (NSURL*)url {
+    NSString* scheme = url.scheme.lowercaseString;
+    NSMutableString* str = [NSMutableString stringWithFormat: @"%@://%@",
+                            scheme, url.host.lowercaseString];
+    NSNumber* port = url.port;
+    if (port) {
+        int defaultPort = [scheme isEqualToString: @"https"] ? 443 : 80;
+        if (port.intValue != defaultPort)
+            [str appendFormat: @":%@", port];
+    }
+    [str appendString: @"/"];
+    return [NSURL URLWithString: str];
+}
+
+
++ (void) registerAssertion: (NSString*)assertion
+           forEmailAddress: (NSString*)email
+                    toSite: (NSURL*)site
+{
+    @synchronized(self) {
+        if (!sAssertions)
+            sAssertions = [NSMutableDictionary dictionary];
+        id key = @[email, [self originForSite: site]];
+        sAssertions[key] = assertion;
+    }
+}
+
+
++ (NSString*) takeAssertionForEmailAddress: (NSString*)email
+                                      site: (NSURL*)site
+{
+    @synchronized(self) {
+        id key = @[email, [self originForSite: site]];
+        NSString* assertion = sAssertions[key];
+        //[sAssertions removeObjectForKey: key];
+        return assertion;
+    }
+}
+
+
+@synthesize emailAddress=_emailAddress;
+
+
+- (id) initWithEmailAddress: (NSString*)emailAddress {
     self = [super init];
     if (self) {
-        if (!assertion)
+        if (!emailAddress)
             return nil;
-        _assertion = [assertion copy];
+        _emailAddress = [emailAddress copy];
     }
     return self;
 }
 
-@synthesize assertion=_assertion;
 
 - (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
                          forRealm: (NSString*)realm
@@ -29,6 +76,7 @@
     return nil;
 }
 
+
 - (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
                           forRealm: (NSString*)realm
 {
@@ -36,12 +84,17 @@
     return nil;
 }
 
+
 - (NSString*) loginPath {
     return @"/_browserid";
 }
 
-- (NSDictionary*) loginParameters {
-    return @{@"assertion": _assertion};
+
+- (NSDictionary*) loginParametersForSite: (NSURL*)site {
+    NSString* assertion = [[self class] takeAssertionForEmailAddress: _emailAddress site: site];
+    if (!assertion)
+        return nil;
+    return @{@"assertion": assertion};
 }
 
 @end

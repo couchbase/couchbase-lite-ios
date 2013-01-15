@@ -272,12 +272,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             } else {
                 NSDictionary* browserid = $castIf(NSDictionary, auth[@"browserid"]);
                 if (browserid) {
-                    NSString* assertion = $castIf(NSString, browserid[@"assertion"]);
-                    *outAuthorizer = [[TDBrowserIDAuthorizer alloc] initWithAssertion: assertion];
+                    NSString* email = $castIf(NSString, browserid[@"email"]);
+                    *outAuthorizer = [[TDBrowserIDAuthorizer alloc] initWithEmailAddress: email];
                 }
             }
             if (!*outAuthorizer)
-                return kTDStatusBadRequest;
+                Warn(@"Invalid authorizer settings: %@", auth);
         }
     }
     

@@ -10,8 +10,14 @@
 
 @interface TDBrowserIDAuthorizer: NSObject <TDAuthorizer>
 
-- (id) initWithAssertion: (NSString*)assertion;
++ (NSURL*) originForSite: (NSURL*)url;
 
-@property (readonly) NSString* assertion;
++ (void) registerAssertion: (NSString*)assertion
+           forEmailAddress: (NSString*)email
+                    toSite: (NSURL*)site;
+
+- (id) initWithEmailAddress: (NSString*)emailAddress;
+
+@property (readonly) NSString* emailAddress;
 
 @end

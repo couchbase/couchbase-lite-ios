@@ -338,7 +338,7 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
         _lastSequence = nil;
         self.error = nil;
 
-        [self login];
+        [self checkSession];
         [self postProgressChanged];
     }
     return YES;
@@ -430,30 +430,60 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 }
 
 
+// Before doing anything else, determine whether we have an active login session.
+- (void) checkSession {
+    if (![_authorizer respondsToSelector: @selector(loginParametersForSite:)])
+        [self fetchRemoteCheckpointDoc];
+
+    // First check whether a session exists
+    [self asyncTaskStarted];
+    [self sendAsyncRequest: @"GET"
+                      path: @"/_session"
+                      body: nil
+              onCompletion: ^(id result, NSError *error) {
+                  if (error) {
+                      LogTo(Sync, @"%@: Session check failed: %@", self, error);
+                      self.error = error;
+                  } else {
+                      NSString* username = $castIf(NSString, [[result objectForKey: @"userCtx"] objectForKey: @"name"]);
+                      if (username) {
+                          LogTo(Sync, @"%@: Active session, logged in as '%@'", self, username);
+                          [self fetchRemoteCheckpointDoc];
+                      } else {
+                          [self login];
+                      }
+                  }
+                  [self asyncTasksFinished: 1];
+              }
+     ];
+}
+
+
+// If there is no login session, attempt to log in, if the authorizer knows the parameters.
 - (void) login {
-    if ([_authorizer respondsToSelector: @selector(loginParameters)]) {
-        NSDictionary* loginParameters = _authorizer.loginParameters;
-        if (loginParameters != nil) {
-            LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, _authorizer.loginPath);
-            [self asyncTaskStarted];
-            [self sendAsyncRequest: @"POST"
-                              path: _authorizer.loginPath
-                              body: _authorizer.loginParameters
-                      onCompletion: ^(id result, NSError *error) {
-                          if (error) {
-                              LogTo(Sync, @"%@: Login failed!", self);
-                              self.error = error;
-                          } else {
-                              LogTo(Sync, @"%@: Successfully logged in!", self);
-                              [self fetchRemoteCheckpointDoc];
-                          }
-                          [self asyncTasksFinished: 1];
-                      }];
-            return;
-        }
+    NSDictionary* loginParameters = [_authorizer loginParametersForSite: _remote];
+    if (loginParameters == nil) {
+        LogTo(Sync, @"%@: Authorizer has no login parameters, so skipping login", self);
+        [self fetchRemoteCheckpointDoc];
+        return;
     }
-    
-    [self fetchRemoteCheckpointDoc];
+
+    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, _authorizer.loginPath);
+    [self asyncTaskStarted];
+    [self sendAsyncRequest: @"POST"
+                      path: _authorizer.loginPath
+                      body: loginParameters
+              onCompletion: ^(id result, NSError *error) {
+                  if (error) {
+                      LogTo(Sync, @"%@: Login failed!", self);
+                      self.error = error;
+                  } else {
+                      LogTo(Sync, @"%@: Successfully logged in!", self);
+                      [self fetchRemoteCheckpointDoc];
+                  }
+                  [self asyncTasksFinished: 1];
+              }
+     ];
 }
 
 

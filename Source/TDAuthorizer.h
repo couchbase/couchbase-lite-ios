@@ -22,8 +22,8 @@
 
 @optional
 
-@property (readonly) NSDictionary* loginParameters;
 @property (readonly) NSString* loginPath;
+- (NSDictionary*) loginParametersForSite: (NSURL*)site;
 
 @end
 

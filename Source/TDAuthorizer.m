@@ -81,7 +81,7 @@
     return @"/_session";
 }
 
-- (NSDictionary*) loginParameters {
+- (NSDictionary*) loginParametersForSite: (NSURL*)site {
     NSString* username = _credential.user;
     NSString* password = _credential.password;
     if (username && password) {
