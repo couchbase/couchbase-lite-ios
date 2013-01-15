@@ -432,8 +432,10 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {
-    if (![_authorizer respondsToSelector: @selector(loginParametersForSite:)])
+    if (![_authorizer respondsToSelector: @selector(loginParametersForSite:)]) {
         [self fetchRemoteCheckpointDoc];
+        return;
+    }
 
     // First check whether a session exists
     [self asyncTaskStarted];
