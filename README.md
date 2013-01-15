@@ -47,20 +47,20 @@ And by "_mobile apps_" we're focusing on iOS and [Android][11], although there's
 
 ## Development Status ##
 
-TouchDB 1.0 was released on November 5, 2012.
+TouchDB 1.0.1 was released on January 15, 2013.
 
-In general, the "stable" branch represents the latest stable release, while the "master" branch has the latest commits and may not be stable.
+In general, the "stable" branch represents the latest stable release, while the "master" branch has the latest commits and may not be solid. Any other branches are probably experimental.
 
 ## Downloading TouchDB ##
 
-* [Stable builds][16] (releases, betas and candidates)
-* [Latest revisions][19] (built hourly after any commits. May not be stable; use at your own risk.)
+* [Latest stable build][20].
+* [Latest revisions][19] (built hourly after any commits. Each archive is timestamped. May not be stable; use at your own risk.)
 
 ## Building TouchDB ##
 
 ### On a Mac ###
 
-(You might prefer to just [download][16] the latest stable release. But if you want to build it yourself...)
+(You might prefer to just [download][20] the latest stable release. But if you want to build it yourself...)
 
 For full details see the [wiki page][7]. The basic steps are:
 
@@ -87,7 +87,7 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [13]: http://wiki.gnustep.org/index.php/Platform_compatibility
 [14]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/BUILDING.txt
 [15]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/SETUP.txt
-[16]: https://github.com/couchbaselabs/TouchDB-iOS/downloads
 [17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
 [18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo
 [19]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/
+[20]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/TouchDB.zip
