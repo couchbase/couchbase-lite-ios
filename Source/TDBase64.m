@@ -31,6 +31,9 @@ static int8_t kDecodingTable[256];
         for (NSUInteger i = 0; i < sizeof(kEncodingTable); i++) {
             kDecodingTable[kEncodingTable[i]] = (int8_t)i;
         }
+        // Alternate characters used in the URL-safe Base64 encoding (RFC 4648, sec. 5)
+        kDecodingTable['-'] = 62;
+        kDecodingTable['='] = 63;
     }
 }
 
@@ -69,10 +72,14 @@ static int8_t kDecodingTable[256];
 
 
 + (NSData*) decode: (const char*)string length: (size_t)inputLength {
-    if ((string == NULL) || (inputLength % 4 != 0)) {
+    if (inputLength % 4 != 0)
         return nil;
-    }
-    
+    return [self decodeURLSafe: string length: inputLength];
+}
+
++ (NSData*) decodeURLSafe: (const char*)string length: (size_t)inputLength {
+    if (string == NULL)
+        return nil;
     while (inputLength > 0 && string[inputLength - 1] == '=') {
         inputLength--;
     }
@@ -109,6 +116,12 @@ static int8_t kDecodingTable[256];
 + (NSData*) decode:(NSString*) string {
     NSData* ascii = [string dataUsingEncoding: NSASCIIStringEncoding];
     return [self decode: ascii.bytes length: ascii.length];
+}
+
+
++ (NSData*) decodeURLSafe: (NSString*)string {
+    NSData* ascii = [string dataUsingEncoding: NSASCIIStringEncoding];
+    return [self decodeURLSafe: ascii.bytes length: ascii.length];
 }
 
 

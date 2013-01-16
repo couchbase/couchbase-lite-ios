@@ -233,13 +233,15 @@ static inline BOOL isLocalDBName(NSString* url) {
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
-- (void) registerBrowserIDAssertion: (NSString*)assertion {
-    NSString* email = self.browserIDEmailAddress;
-    Assert(email != nil, @"Must set browserIDEmailAddress first");
-    [TDBrowserIDAuthorizer registerAssertion: assertion
-                             forEmailAddress: email
-                                      toSite: self.remoteURL];
+- (bool) registerBrowserIDAssertion: (NSString*)assertion {
+    NSString* email = [TDBrowserIDAuthorizer registerAssertion: assertion];
+    if (!email) {
+        Warn(@"Invalid BrowserID assertion: %@", assertion);
+        return false;
+    }
+    self.browserIDEmailAddress = email;
     [self restart];
+    return true;
 }
 
 

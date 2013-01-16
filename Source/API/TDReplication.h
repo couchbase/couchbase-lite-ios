@@ -71,8 +71,8 @@ typedef enum {
 /** Email address for remote login with BrowserID (aka Persona). */
 @property (nonatomic, copy) NSString* browserIDEmailAddress;
 
-/** Registers a BrowserID 'assertion' (ID verification) string that will be used on the next login to the remote server. */
-- (void) registerBrowserIDAssertion: (NSString*)assertion;
+/** Registers a BrowserID 'assertion' (ID verification) string that will be used on the next login to the remote server. This also sets browserIDEmailAddress. */
+- (bool) registerBrowserIDAssertion: (NSString*)assertion;
 
 
 #pragma mark - STATUS:
