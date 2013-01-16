@@ -88,6 +88,11 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 }
 
 
+- (NSURL*) internalURL {
+    return [_manager.internalURL URLByAppendingPathComponent: self.name isDirectory: YES];
+}
+
+
 - (BOOL) inTransaction: (BOOL(^)(void))block {
     return 200 == [_tddb inTransaction: ^TDStatus {
         return block() ? 200 : 999;

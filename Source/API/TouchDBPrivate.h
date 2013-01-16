@@ -18,9 +18,7 @@
 
 
 @interface TDDatabaseManager ()
-#if 0
-@property (readonly) TD_Server* tdServer;
-#endif
+@property (readonly) TD_Server* backgroundServer;
 @property (readonly) TD_DatabaseManager* tdManager;
 @property (readonly) NSArray* allReplications;
 - (TDReplication*) replicationWithDatabase: (TDDatabase*)db

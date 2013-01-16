@@ -12,6 +12,7 @@
 #import "TD_Database.h"
 #import "TD_DatabaseManager.h"
 #import "TD_Server.h"
+#import "TDURLProtocol.h"
 #import "TDInternal.h"
 
 
@@ -20,6 +21,7 @@
     TDDatabaseManagerOptions _options;
     TD_DatabaseManager* _mgr;
     TD_Server* _server;
+    NSURL* _internalURL;
     NSMutableArray* _replications;
 }
 
@@ -100,21 +102,31 @@
 }
 
 
-#if 0
-- (TD_Server*) tdServer {
+- (TD_Server*) backgroundServer {
     if (!_server) {
-        TDDatabaseManagerOptions tdOptions = {
+        TD_DatabaseManagerOptions tdOptions = {
             .readOnly = _options.readOnly,
-            .noReplicator = _options.noReplicator
+            .noReplicator = true
         };
         _server = [[TD_Server alloc] initWithDirectory: _mgr.directory
-                                              options: &tdOptions
-                                                error: nil];
+                                               options: &tdOptions
+                                                 error: nil];
         LogTo(TDDatabase, @"%@ created %@", self, _server);
     }
     return _server;
 }
-#endif
+
+
+- (NSURL*) internalURL {
+    if (!_internalURL) {
+        if (!self.backgroundServer)
+            return nil;
+        Class tdURLProtocol = NSClassFromString(@"TDURLProtocol");
+        Assert(tdURLProtocol, @"TDURLProtocol class not found; link TouchDBListener.framework");
+        _internalURL = [tdURLProtocol registerServer: _server];
+    }
+    return _internalURL;
+}
 
 
 - (NSArray*) allDatabaseNames {

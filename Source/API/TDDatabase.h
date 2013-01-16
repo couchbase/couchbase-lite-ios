@@ -110,6 +110,11 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 - (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
 
 
+/** The 'touchdb:' URL of the database's REST API.
+    Only available if you've linked with the TouchDBListener framework. */
+@property (readonly) NSURL* internalURL;
+
+
 @end
 
 

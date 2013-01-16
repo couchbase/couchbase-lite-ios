@@ -56,5 +56,8 @@ typedef struct TDDatabaseManagerOptions {
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;
 
+/** The 'touchdb:' URL of the database manager's REST API.
+    Only available if you've linked with the TouchDBListener framework. */
+@property (readonly) NSURL* internalURL;
 
 @end
