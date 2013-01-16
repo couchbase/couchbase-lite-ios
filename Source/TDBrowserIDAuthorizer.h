@@ -12,12 +12,12 @@
 
 + (NSURL*) originForSite: (NSURL*)url;
 
-+ (void) registerAssertion: (NSString*)assertion
-           forEmailAddress: (NSString*)email
-                    toSite: (NSURL*)site;
++ (NSString*) registerAssertion: (NSString*)assertion;
 
 - (id) initWithEmailAddress: (NSString*)emailAddress;
 
 @property (readonly) NSString* emailAddress;
+
+- (NSString*) assertionForSite: (NSURL*)site;
 
 @end
