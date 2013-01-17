@@ -493,16 +493,16 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
 
 
 - (TDRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
-                                     path: (NSString*)relativePath
+                                     path: (NSString*)path
                                      body: (id)body
                              onCompletion: (TDRemoteRequestCompletionBlock)onCompletion
 {
-    LogTo(SyncVerbose, @"%@: %@ .%@", self, method, relativePath);
+    LogTo(SyncVerbose, @"%@: %@ %@", self, method, path);
     NSURL* url;
-    if ([relativePath hasPrefix: @"/"]) {
-        url = [[NSURL URLWithString: relativePath relativeToURL: _remote] absoluteURL];
+    if ([path hasPrefix: @"/"]) {
+        url = [[NSURL URLWithString: path relativeToURL: _remote] absoluteURL];
     } else {
-        url = [_remote URLByAppendingPathComponent: relativePath];
+        url = TDAppendToURL(_remote, path);
     }
     onCompletion = [onCompletion copy];
     
