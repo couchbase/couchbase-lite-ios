@@ -332,10 +332,9 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
     self.changesTotal++;
     [self asyncTaskStarted];
 
-    NSString* path = $sprintf(@"/%@?new_edits=false", TDEscapeID(rev.docID));
-    NSString* urlStr = [_remote.absoluteString stringByAppendingString: path];
+    NSString* path = $sprintf(@"%@?new_edits=false", TDEscapeID(rev.docID));
     __block TDMultipartUploader* uploader = [[TDMultipartUploader alloc]
-                                  initWithURL: [NSURL URLWithString: urlStr]
+                                  initWithURL: TDAppendToURL(_remote, path)
                                      streamer: bodyStream
                                requestHeaders: self.requestHeaders
                                  onCompletion: ^(id response, NSError *error) {

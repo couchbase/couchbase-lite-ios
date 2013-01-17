@@ -95,11 +95,7 @@
 }
 
 - (NSURL*) changesFeedURL {
-    NSMutableString* urlStr = [_databaseURL.absoluteString mutableCopy];
-    if (![urlStr hasSuffix: @"/"])
-        [urlStr appendString: @"/"];
-    [urlStr appendString: self.changesFeedPath];
-    return [NSURL URLWithString: urlStr];
+    return TDAppendToURL(_databaseURL, self.changesFeedPath);
 }
 
 - (NSString*) description {

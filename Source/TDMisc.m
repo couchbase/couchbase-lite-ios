@@ -278,6 +278,18 @@ NSURL* TDURLWithoutQuery( NSURL* url ) {
 #endif
 }
 
+
+NSURL* TDAppendToURL(NSURL* baseURL, NSString* toAppend) {
+    if (toAppend.length == 0 || $equal(toAppend, @"."))
+        return baseURL;
+    NSMutableString* urlStr = baseURL.absoluteString.mutableCopy;
+    if (![urlStr hasSuffix: @"/"])
+        [urlStr appendString: @"/"];
+    [urlStr appendString: toAppend];
+    return [NSURL URLWithString: urlStr];
+}
+
+
 TestCase(TDQuoteString) {
     CAssertEqual(TDQuoteString(@""), @"\"\"");
     CAssertEqual(TDQuoteString(@"foo"), @"\"foo\"");
