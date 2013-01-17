@@ -135,7 +135,7 @@ static TDBlobStoreWriter* blobStoreWriterForBody(TD_Database* tddb, NSData* body
                         error: (NSError**)outError
 {
     Assert(_rev);
-    TDBlobStoreWriter* writer = blobStoreWriterForBody(_rev.database.tddb, body);
+    TDBlobStoreWriter* writer = body ? blobStoreWriterForBody(_rev.database.tddb, body) : nil;
     TDStatus status;
     TD_Revision* newRev = [_rev.database.tddb updateAttachment: _name
                                                           body: writer
