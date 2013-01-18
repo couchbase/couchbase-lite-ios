@@ -9,6 +9,7 @@
 #import "TouchDBPrivate.h"
 #import "TD_Database+Insertion.h"
 #import "TD_Revision.h"
+#import "TD_DatabaseChange.h"
 
 
 NSString* const kTDDocumentChangeNotification = @"TDDocumentChange";
@@ -142,7 +143,8 @@ NSString* const kTDDocumentChangeNotification = @"TDDocumentChange";
 
 
 // Notification from the TDDatabase that a (current, winning) revision has been added
-- (void) revisionAdded: (TD_Revision*)rev source: (NSURL*)source {
+- (void) revisionAdded: (TD_DatabaseChange*)change {
+    TD_Revision* rev = change.winningRevision;
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
         _currentRevision = [[TDRevision alloc] initWithDocument: self revision: rev];
     }

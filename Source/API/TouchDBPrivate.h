@@ -9,7 +9,7 @@
 #import "TouchDB.h"
 #import "TDCache.h"
 #import "TD_Database.h"
-@class TD_DatabaseManager, TD_Server;
+@class TD_DatabaseChange, TD_DatabaseManager, TD_Server;
 
 
 @interface TD_Database ()
@@ -43,7 +43,7 @@
 - (id)initWithDatabase: (TDDatabase*)database
             documentID: (NSString*)docID;
 - (TDRevision*) revisionFromRev: (TD_Revision*)rev;
-- (void) revisionAdded: (TD_Revision*)rev source: (NSURL*)source;
+- (void) revisionAdded: (TD_DatabaseChange*)change;
 - (void) loadCurrentRevisionFrom: (TDQueryRow*)row;
 - (TDRevision*) putProperties: (NSDictionary*)properties
                        prevRevID: (NSString*)prevID

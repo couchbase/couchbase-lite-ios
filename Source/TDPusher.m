@@ -17,6 +17,7 @@
 #import "TD_Database.h"
 #import "TD_Database+Insertion.h"
 #import "TD_Revision.h"
+#import "TD_DatabaseChange.h"
 #import "TDBatcher.h"
 #import "TDMultipartUploader.h"
 #import "TDInternal.h"
@@ -157,10 +158,10 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
 
 - (void) dbChanged: (NSNotification*)n {
     NSArray* changes = (n.userInfo)[@"changes"];
-    for (NSDictionary* change in changes) {
+    for (TD_DatabaseChange* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
-        if (![change[@"source"] isEqual: _remote]) {
-            TD_Revision* rev = change[@"rev"];
+        if (![change.source isEqual: _remote]) {
+            TD_Revision* rev = change.addedRevision;
             if (_filterName) {
                 TD_FilterBlock filter = self.filter;
                 if (!filter || !filter(rev, _filterParameters))

@@ -23,6 +23,7 @@
 #import "TD_Body.h"
 #import "TDMultipartDocumentReader.h"
 #import "TD_Revision.h"
+#import "TD_DatabaseChange.h"
 #import "TD_Server.h"
 #import "TDReplicator.h"
 #import "TDReplicatorManager.h"
@@ -431,9 +432,9 @@
 
 - (void) dbChanged: (NSNotification*)n {
     NSMutableArray* changes = $marray();
-    for (NSDictionary* change in (n.userInfo)[@"changes"]) {
-        TD_Revision* rev = change[@"rev"];
-        TD_Revision* winningRev = change[@"winner"];
+    for (TD_DatabaseChange* change in (n.userInfo)[@"changes"]) {
+        TD_Revision* rev = change.addedRevision;
+        TD_Revision* winningRev = change.winningRevision;
 
         if (!_changesIncludeConflicts) {
             if (!winningRev)

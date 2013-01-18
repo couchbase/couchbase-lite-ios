@@ -15,7 +15,7 @@
 #import "TDReplicator.h"
 #import "TDRemoteRequest.h"
 #import "TDBlobStore.h"
-@class TD_Attachment, TDBlobStoreWriter;
+@class TD_Attachment, TDBlobStoreWriter, TD_DatabaseChange;
 
 
 @interface TD_Database ()
@@ -37,11 +37,10 @@
                                             deleted: (BOOL)deleted
                                            sequence: (SequenceNumber)sequence
                                             options: (TDContentOptions)options;
-- (void) notifyChange: (TD_Revision*)rev
-               source: (NSURL*)source
-           winningRev: (TD_Revision*)winningRev;
+- (void) notifyChange: (TD_DatabaseChange*)change;
 - (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
-                               isDeleted: (BOOL*)outIsDeleted;
+                               isDeleted: (BOOL*)outIsDeleted
+                              isConflict: (BOOL*)outIsConflict;
 @end
 
 @interface TD_Database (Insertion_Internal)

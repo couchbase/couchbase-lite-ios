@@ -21,6 +21,7 @@
 #import "TD_Database.h"
 #import "TD_Database+Insertion.h"
 #import "TD_Database+Replication.h"
+#import "TD_DatabaseChange.h"
 #import "TDPusher.h"
 #import "TDPuller.h"
 #import "TD_View.h"
@@ -317,8 +318,8 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
 - (void) dbChanged: (NSNotification*)n {
     if (_updateInProgress)
         return;
-    for (NSDictionary* change in n.userInfo[@"changes"]) {
-        TD_Revision* rev = change[@"rev"];
+    for (TD_DatabaseChange* change in n.userInfo[@"changes"]) {
+        TD_Revision* rev = change.winningRevision;
         LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
         NSString* docID = rev.docID;
         if ([docID hasPrefix: @"_"])

@@ -21,6 +21,7 @@
 #import "TD_Revision.h"
 #import "TDCanonicalJSON.h"
 #import "TD_Attachment.h"
+#import "TD_DatabaseChange.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 #import "Test.h"
@@ -206,7 +207,8 @@
         // Doc was alive. How does this deletion affect the winning rev ID?
         BOOL deleted;
         NSString* winningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                        isDeleted: &deleted];
+                                                        isDeleted: &deleted
+                                                       isConflict: NULL];
         if (!$equal(winningRevID, oldWinningRevID)) {
             if ($equal(winningRevID, newRev.revID))
                 return newRev;
@@ -272,18 +274,21 @@
     FMResultSet* r = nil;
     TDStatus status;
     TD_Revision* winningRev = nil;
+    BOOL maybeConflict = NO;
     @try {
         //// PART I: In which are performed lookups and validations prior to the insert...
 
         // Get the doc's numeric ID (doc_id) and its current winning revision:
         SInt64 docNumericID = docID ? [self getDocNumericID: docID] : 0;
         BOOL oldWinnerWasDeletion = NO;
+        BOOL wasConflicted = NO;
         NSString* oldWinningRevID = nil;
         if (docNumericID > 0) {
             // Look up which rev is the winner, before this insertion
             //OPT: This rev ID could be cached in the 'docs' row
             oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                     isDeleted: &oldWinnerWasDeletion];
+                                                     isDeleted: &oldWinnerWasDeletion
+                                                    isConflict: &wasConflicted];
         }
 
         SequenceNumber parentSequence = 0;
@@ -358,6 +363,10 @@
                     return nil;
             }
         }
+
+        // There may be a conflict if (a) the document was already in conflict, or
+        // (b) a conflict is created by adding a non-deletion child of a non-winning rev.
+        maybeConflict = wasConflicted || (!deleted && !$equal(prevRevID, oldWinningRevID));
 
         //// PART II: In which we prepare for insertion...
         
@@ -449,7 +458,10 @@
         return nil;
     
     //// EPILOGUE: A change notification is sent...
-    [self notifyChange: rev source: nil winningRev: winningRev];
+    TD_DatabaseChange* change = [[TD_DatabaseChange alloc] initWithAddedRevision: rev
+                                                                 winningRevision: winningRev];
+    change.maybeConflict = maybeConflict;
+    [self notifyChange: change];
     return rev;
 }
 
@@ -473,6 +485,7 @@
     
     BOOL success = NO;
     TD_Revision* winningRev = nil;
+    BOOL maybeConflict = NO;
     [self beginTransaction];
     @try {
         // First look up the document's row-id and all locally-known revisions of it:
@@ -507,13 +520,15 @@
         //OPT: This rev ID could be cached in the 'docs' row
         BOOL oldWinnerWasDeletion;
         NSString* oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                           isDeleted: &oldWinnerWasDeletion];
+                                                           isDeleted: &oldWinnerWasDeletion
+                                                          isConflict: &maybeConflict];
 
         // Walk through the remote history in chronological order, matching each revision ID to
         // a local revision. When the list diverges, start creating blank local revisions to fill
         // in the local history:
         SequenceNumber sequence = 0;
         SequenceNumber localParentSequence = 0;
+        NSString* localParentRevID = nil;
         for (NSInteger i = historyCount - 1; i>=0; --i) {
             NSString* revID = history[i];
             TD_Revision* localRev = [localRevs revWithDocID: docID revID: revID];
@@ -522,9 +537,17 @@
                 sequence = localRev.sequence;
                 Assert(sequence > 0);
                 localParentSequence = sequence;
+                localParentRevID = revID;
                 
             } else {
                 // This revision isn't known, so add it:
+
+                if (sequence == localParentSequence) {
+                    // This is the point where we branch off of the existing rev tree.
+                    // If the branch wasn't from the single existing leaf, this creates a conflict.
+                    maybeConflict = maybeConflict || (!rev.deleted && !$equal(localParentRevID, revID));
+                }
+
                 TD_Revision* newRev;
                 NSData* json = nil;
                 BOOL current = NO;
@@ -565,8 +588,13 @@
             }
         }
 
+        if (localParentSequence == sequence) {
+            success = YES;
+            return kTDStatusOK;      // No-op: No new revisions were inserted.
+        }
+
         // Mark the latest local rev as no longer current:
-        if (localParentSequence > 0 && localParentSequence != sequence) {
+        if (localParentSequence > 0) {
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
                   @(localParentSequence)])
                 return kTDStatusDBError;
@@ -577,14 +605,17 @@
                                  oldWinner: oldWinningRevID oldDeleted: oldWinnerWasDeletion
                                     newRev: rev];
 
-
         success = YES;
     } @finally {
         [self endTransaction: success];
     }
     
     // Notify and return:
-    [self notifyChange: rev source: source winningRev: winningRev];
+    TD_DatabaseChange* change = [[TD_DatabaseChange alloc] initWithAddedRevision: rev
+                                                                     winningRevision: winningRev];
+    change.maybeConflict = maybeConflict;
+    change.source = source;
+    [self notifyChange: change];
     return kTDStatusCreated;
 }
 

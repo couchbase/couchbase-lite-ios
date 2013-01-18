@@ -161,6 +161,9 @@
 		2776A59216A0C3A6006FF199 /* TDBrowserIDAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* TDBrowserIDAuthorizer.h */; };
 		2776A59316A0C3A6006FF199 /* TDBrowserIDAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* TDBrowserIDAuthorizer.m */; };
 		2776A59616A0C3B1006FF199 /* TDBrowserIDAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* TDBrowserIDAuthorizer.m */; };
+		2776A63016A9BCBC006FF199 /* TD_DatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* TD_DatabaseChange.h */; };
+		2776A63116A9BCBC006FF199 /* TD_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* TD_DatabaseChange.m */; };
+		2776A63216A9BCBC006FF199 /* TD_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* TD_DatabaseChange.m */; };
 		27821BB7148E7D6F0099B373 /* TDReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* TDReplicator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27821BB8148E7D6F0099B373 /* TDReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* TDReplicator.m */; };
 		27821BBC149001B30099B373 /* TDReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* TDReplicator_Tests.m */; };
@@ -664,6 +667,8 @@
 		2773ADC614BD1EB80027A292 /* TD_Database+LocalDocs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TD_Database+LocalDocs.m"; sourceTree = "<group>"; };
 		2776A58F16A0C3A6006FF199 /* TDBrowserIDAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDBrowserIDAuthorizer.h; sourceTree = "<group>"; };
 		2776A59016A0C3A6006FF199 /* TDBrowserIDAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDBrowserIDAuthorizer.m; sourceTree = "<group>"; };
+		2776A62E16A9BCBC006FF199 /* TD_DatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TD_DatabaseChange.h; sourceTree = "<group>"; };
+		2776A62F16A9BCBC006FF199 /* TD_DatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TD_DatabaseChange.m; sourceTree = "<group>"; };
 		27821BB5148E7D6F0099B373 /* TDReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TDReplicator.h; sourceTree = "<group>"; };
 		27821BB6148E7D6F0099B373 /* TDReplicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDReplicator.m; sourceTree = "<group>"; };
 		27821BBB149001B20099B373 /* TDReplicator_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TDReplicator_Tests.m; sourceTree = "<group>"; };
@@ -1046,6 +1051,8 @@
 				27F074AA11CD5D7A00E9A2AB /* TD_Body.m */,
 				270B3E3714898DF200E0A926 /* TD_Revision.h */,
 				270B3E3814898DF200E0A926 /* TD_Revision.m */,
+				2776A62E16A9BCBC006FF199 /* TD_DatabaseChange.h */,
+				2776A62F16A9BCBC006FF199 /* TD_DatabaseChange.m */,
 				27A7209E152B959100C0A0E8 /* TD_Attachment.h */,
 				27A7209F152B959100C0A0E8 /* TD_Attachment.m */,
 				27C706401486BBD500F0F099 /* TD_Server.h */,
@@ -1653,6 +1660,7 @@
 				270D6FC1164484190081812D /* TDSocketChangeTracker.h in Headers */,
 				275A29021649A11900B0D8EE /* TouchDBPrivate.h in Headers */,
 				2776A59116A0C3A6006FF199 /* TDBrowserIDAuthorizer.h in Headers */,
+				2776A63016A9BCBC006FF199 /* TD_DatabaseChange.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2141,6 +2149,7 @@
 				270D6FC2164484190081812D /* TDSocketChangeTracker.m in Sources */,
 				27B15517164A118100DF5E2C /* TD_Database_Tests.m in Sources */,
 				2776A59316A0C3A6006FF199 /* TDBrowserIDAuthorizer.m in Sources */,
+				2776A63116A9BCBC006FF199 /* TD_DatabaseChange.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2267,6 +2276,7 @@
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				27B15518164A118100DF5E2C /* TD_Database_Tests.m in Sources */,
 				2776A59616A0C3B1006FF199 /* TDBrowserIDAuthorizer.m in Sources */,
+				2776A63216A9BCBC006FF199 /* TD_DatabaseChange.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

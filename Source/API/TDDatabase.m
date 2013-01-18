@@ -8,6 +8,7 @@
 
 #import "TouchDBPrivate.h"
 #import "TD_Database+Insertion.h"
+#import "TD_DatabaseChange.h"
 #import "TDModelFactory.h"
 #import "TDCache.h"
 #import "TD_DatabaseManager.h"
@@ -72,11 +73,12 @@ NSString* const kTDDatabaseChangeNotification = @"TDDatabaseChange";
 // Notified of a change in the TD_Database:
 - (void) tddbNotification: (NSNotification*)n {
     if ([n.name isEqualToString: TD_DatabaseChangesNotification]) {
-        for (NSDictionary* change in (n.userInfo)[@"changes"]) {
-            TD_Revision* rev = change[@"winner"];
-            NSURL* source = change[@"source"];
-            
-            [[self cachedDocumentWithID: rev.docID] revisionAdded: rev source: source];
+        for (TD_DatabaseChange* change in (n.userInfo)[@"changes"]) {
+            TD_Revision* winningRev = change.winningRevision;
+            NSURL* source = change.source;
+
+            // Notify the corresponding instantiated TDDocument object (if any):
+            [[self cachedDocumentWithID: winningRev.docID] revisionAdded: change];
 
             // Post a database-changed notification, but only post one per runloop cycle by using
             // a notification queue. If the current notification has the "external" flag, make sure

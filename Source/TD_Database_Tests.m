@@ -22,6 +22,7 @@
 #import "TD_Attachment.h"
 #import "TD_Body.h"
 #import "TD_Revision.h"
+#import "TD_DatabaseChange.h"
 #import "TDBlobStore.h"
 #import "TDBase64.h"
 #import "TDInternal.h"
@@ -80,8 +81,8 @@ TestCase(TD_Database_CRUD) {
                    queue: nil
                    usingBlock: ^(NSNotification* n) {
                        NSArray* changes = n.userInfo[@"changes"];
-                       for (NSDictionary* change in changes) {
-                           TD_Revision* rev = change[@"rev"];
+                       for (TD_DatabaseChange* change in changes) {
+                           TD_Revision* rev = change.addedRevision;
                            CAssert(rev);
                            CAssert(rev.docID);
                            CAssert(rev.revID);
@@ -335,13 +336,18 @@ static void verifyHistory(TD_Database* db, TD_Revision* rev, NSArray* history, b
 }
 
 
+static TD_DatabaseChange* announcement(TD_Revision* rev, TD_Revision* winner) {
+    return [[TD_DatabaseChange alloc] initWithAddedRevision: rev winningRevision: winner];
+}
+
+
 TestCase(TD_Database_RevTree) {
     RequireTestCase(TD_Database_CRUD);
     // Start with a fresh database in /tmp:
     TD_Database* db = createDB();
 
     // Track the latest database-change notification that's posted:
-    __block NSDictionary* noteInfo = nil;
+    __block TD_DatabaseChange* change = nil;
     id observer = [[NSNotificationCenter defaultCenter]
                    addObserverForName: TD_DatabaseChangesNotification
                    object: db
@@ -349,39 +355,39 @@ TestCase(TD_Database_RevTree) {
                    usingBlock: ^(NSNotification *n) {
                        NSArray* changes = n.userInfo[@"changes"];
                        CAssert(changes.count == 1, @"Multiple changes posted!");
-                       CAssert(!noteInfo, @"Multiple notifications posted!");
-                       noteInfo = changes[0];
+                       CAssert(!change, @"Multiple notifications posted!");
+                       change = changes[0];
                    }];
 
     TD_Revision* rev = [[TD_Revision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     NSArray* history = @[rev.revID, @"3-thrice", @"2-too", @"1-won"];
-    noteInfo = nil;
+    change = nil;
     TDStatus status = [db forceInsert: rev revisionHistory: history source: nil];
     CAssertEq(status, kTDStatusCreated);
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, rev, history, false);
-    CAssertEqual(noteInfo, (@{ @"rev" : rev, @"winner": rev }));
+    CAssertEqual(change, announcement(rev, rev));
 
 
     TD_Revision* conflict = [[TD_Revision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO];
     conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
                                 {@"message", @"yo"});
     NSArray* conflictHistory = @[conflict.revID, @"4-delta", @"3-gamma", @"2-too", @"1-won"];
-    noteInfo = nil;
+    change = nil;
     status = [db forceInsert: conflict revisionHistory: conflictHistory source: nil];
     CAssertEq(status, kTDStatusCreated);
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, conflict, conflictHistory, false);
-    CAssertEqual(noteInfo, (@{ @"rev" : conflict, @"winner": conflict }));
+    CAssertEqual(change, announcement(conflict, conflict));
 
     // Add an unrelated document:
     TD_Revision* other = [[TD_Revision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO];
     other.properties = $dict({@"language", @"jp"});
-    noteInfo = nil;
+    change = nil;
     status = [db forceInsert: other revisionHistory: @[other.revID] source: nil];
     CAssertEq(status, kTDStatusCreated);
-    CAssertEqual(noteInfo, (@{ @"rev" : other, @"winner": other }));
+    CAssertEqual(change, announcement(other, other));
 
     // Fetch one of those phantom revisions with no body:
     TD_Revision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too"];
@@ -412,19 +418,19 @@ TestCase(TD_Database_RevTree) {
 
     // Delete the current winning rev, leaving the other one:
     TD_Revision* del1 = [[TD_Revision alloc] initWithDocID: conflict.docID revID: nil deleted: YES];
-    noteInfo = nil;
+    change = nil;
     del1 = [db putRevision: del1 prevRevisionID: conflict.revID
              allowConflict: NO status: &status];
     CAssertEq(status, 200);
     current = [db getDocumentWithID: rev.docID revisionID: nil];
     CAssertEqual(current, rev);
-    CAssertEqual(noteInfo, (@{ @"rev" : del1, @"winner": rev }));
+    CAssertEqual(change, announcement(del1, rev));
     
     verifyHistory(db, rev, history, true);
 
     // Delete the remaining rev:
     TD_Revision* del2 = [[TD_Revision alloc] initWithDocID: rev.docID revID: nil deleted: YES];
-    noteInfo = nil;
+    change = nil;
     del2 = [db putRevision: del2 prevRevisionID: rev.revID
              allowConflict: NO status: &status];
     CAssertEq(status, 200);
@@ -432,7 +438,7 @@ TestCase(TD_Database_RevTree) {
     CAssertEqual(current, nil);
 
     TD_Revision* maxDel = TDCompareRevIDs(del1.revID, del2.revID) > 0 ? del1 : nil;
-    CAssertEqual(noteInfo, (@{ @"rev" : del2, @"winner": maxDel }));
+    CAssertEqual(change, announcement(del2, maxDel));
 
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
 }
