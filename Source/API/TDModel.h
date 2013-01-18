@@ -67,6 +67,10 @@
     Defaults to NO, requiring you to call -save manually. */
 @property (nonatomic) bool autosaves;
 
+/** How long to wait after a change before auto-saving, if autosaves is true.
+    Default value is 0.0; subclasses can override this to add a delay. */
+@property (readonly) NSTimeInterval autosaveDelay;
+
 /** Does this model have unsaved changes? */
 @property (readonly) bool needsSave;
 
@@ -150,5 +154,8 @@
 
 /** Saves changes to all TDModels associated with this database whose needsSave is true. */
 - (BOOL) saveAllModels: (NSError**)outError;
+
+/** Immediately runs any pending autosaves for all TDModels associated with this database. */
+- (BOOL) autosaveAllModels: (NSError**)outError;
 
 @end
