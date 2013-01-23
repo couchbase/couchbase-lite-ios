@@ -24,12 +24,29 @@
 
 static JSValueRef IDToValue(JSContextRef ctx, id object);
 static id ValueToID(JSContextRef ctx, JSValueRef value);
+void WarnJSException(JSContextRef context, NSString* warning, JSValueRef exception);
+
+
+@interface TDJSViewCompiler ()
+@property (readonly) JSGlobalContextRef context;
+@end
+
+
+@interface TDJSFunction : NSObject
+- (id) initWithOwner: (TDJSViewCompiler*)owner
+          sourceCode: (NSString*)source
+          paramNames: (NSArray*)paramNames;
+- (JSValueRef) call: (id)param1, ...;
+@end
 
 
 @implementation TDJSViewCompiler
 {
     JSGlobalContextRef _context;
 }
+
+
+@synthesize context=_context;
 
 
 // This is a kludge that remembers the emit block passed to the currently active map block.
@@ -46,7 +63,6 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
                                size_t argumentCount, const JSValueRef arguments[],
                                JSValueRef* exception)
 {
-    NSLog(@"EMIT!");
     id key = nil, value = nil;
     if (argumentCount > 0) {
         key = ValueToID(ctx, arguments[0]);
@@ -87,34 +103,18 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
     if (![language isEqualToString: @"javascript"])
         return nil;
 
-    // The source code given is a complete function, like "function(doc){....}".
-    // But JSObjectMakeFunction wants the source code of the _body_ of a function.
-    // Therefore we wrap the given source in an expression that will call it:
-    mapSource = [NSString stringWithFormat: @"(%@)(doc);", mapSource];
-
     // Compile the function:
-    JSStringRef paramName = JSStringCreateWithCFString(CFSTR("doc"));
-    JSStringRef body = JSStringCreateWithCFString((__bridge CFStringRef)mapSource);
-    JSValueRef exception = NULL;
-    JSObjectRef fn = JSObjectMakeFunction(_context, NULL, 1, &paramName, body, NULL, 1, &exception);
-    JSStringRelease(body);
-    JSStringRelease(paramName);
-
-    if (!fn) {
-        [self warn: @"JS map compile failed" withJSException: exception];
+    TDJSFunction* fn = [[TDJSFunction alloc] initWithOwner: self
+                                                sourceCode: mapSource
+                                                paramNames: @[@"doc"]];
+    if (!fn)
         return nil;
-    }
 
     // Return the TDMapBlock; the code inside will be called when TouchDB wants to run the map fn:
     TDMapBlock mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
-        JSValueRef jsDoc = IDToValue(_context, doc);
         sCurrentEmitBlock = emit;
-        JSValueRef exception = NULL;
-        JSValueRef result = JSObjectCallAsFunction(_context, fn, NULL, 1, &jsDoc, &exception);
+        [fn call: doc];
         sCurrentEmitBlock = nil;
-        if (!result) {
-            [self warn: @"JS map function failed" withJSException: exception];
-        }
     };
     return [mapBlock copy];
 }
@@ -124,73 +124,125 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
     if (![language isEqualToString: @"javascript"])
         return nil;
 
-    // The source code given is a complete function, like "function(k,v,re){....}".
-    // But JSObjectMakeFunction wants the source code of the _body_ of a function.
-    // Therefore we wrap the given source in an expression that will call it:
-    reduceSource = [NSString stringWithFormat: @"return (%@)(keys,values,rereduce);", reduceSource];
-
     // Compile the function:
-    JSStringRef paramNames[3] = {
-        JSStringCreateWithCFString(CFSTR("keys")),
-        JSStringCreateWithCFString(CFSTR("values")),
-        JSStringCreateWithCFString(CFSTR("rereduce"))
-    };
-    JSStringRef body = JSStringCreateWithCFString((__bridge CFStringRef)reduceSource);
-    JSValueRef exception = NULL;
-    JSObjectRef fn = JSObjectMakeFunction(_context, NULL, 3, paramNames, body, NULL, 1, &exception);
-    JSStringRelease(body);
-    JSStringRelease(paramNames[0]);
-    JSStringRelease(paramNames[1]);
-    JSStringRelease(paramNames[2]);
-
-    if (!fn) {
-        [self warn: @"JS reduce compile failed" withJSException: exception];
+    TDJSFunction* fn = [[TDJSFunction alloc] initWithOwner: self
+                                                sourceCode: reduceSource
+                                                paramNames: @[@"keys", @"values", @"rereduce"]];
+    if (!fn)
         return nil;
-    }
 
     // Return the TDReduceBlock; the code inside will be called when TouchDB wants to reduce:
     TDReduceBlock reduceBlock = ^id(NSArray* keys, NSArray* values, BOOL rereduce) {
-        JSValueRef jsParams[3] = {
-            IDToValue(_context, keys),
-            IDToValue(_context, values),
-            JSValueMakeBoolean(_context, rereduce)
-        };
-        JSValueRef exception = NULL;
-        JSValueRef result = JSObjectCallAsFunction(_context, fn, NULL, 3, jsParams, &exception);
-        if (!result) {
-            [self warn: @"JS reduce function failed" withJSException: exception];
-        }
+        JSValueRef result = [fn call: keys, values, @(rereduce)];
         return ValueToID(_context, result);
     };
     return [reduceBlock copy];
 }
 
 
-- (void) warn: (NSString*)warning withJSException: (JSValueRef)exception {
-    JSStringRef error = JSValueToStringCopy(_context, exception, NULL);
-    CFStringRef cfError = error ? JSStringCopyCFString(NULL, error) : NULL;
-    NSLog(@"*** WARNING: %@: %@", warning, cfError);
-    if (cfError)
-        CFRelease(cfError);
+@end
+
+
+
+
+@implementation TDJSFunction
+{
+    TDJSViewCompiler* _owner;
+    unsigned _nParams;
+    JSObjectRef _fn;
 }
 
+- (id) initWithOwner: (TDJSViewCompiler*)owner
+          sourceCode: (NSString*)source
+          paramNames: (NSArray*)paramNames
+{
+    self = [super init];
+    if (self) {
+        _owner = owner;
+        _nParams = (unsigned)paramNames.count;
+
+        // The source code given is a complete function, like "function(doc){....}".
+        // But JSObjectMakeFunction wants the source code of the _body_ of a function.
+        // Therefore we wrap the given source in an expression that will call it:
+        NSString* body = [NSString stringWithFormat: @"return (%@)(%@);",
+                                               source, [paramNames componentsJoinedByString: @","]];
+
+        // Compile the function:
+        JSStringRef jsParamNames[_nParams];
+        for (NSUInteger i = 0; i < _nParams; ++i)
+            jsParamNames[i] = JSStringCreateWithCFString((__bridge CFStringRef)paramNames[i]);
+        JSStringRef jsBody = JSStringCreateWithCFString((__bridge CFStringRef)body);
+        JSValueRef exception;
+        _fn = JSObjectMakeFunction(_owner.context, NULL, _nParams, jsParamNames, jsBody,
+                                   NULL, 1, &exception);
+        JSStringRelease(jsBody);
+        for (NSUInteger i = 0; i < _nParams; ++i)
+            JSStringRelease(jsParamNames[i]);
+        
+        if (!_fn) {
+            WarnJSException(_owner.context, @"JS function compile failed", exception);
+            return nil;
+        }
+        JSValueProtect(_owner.context, _fn);
+    }
+    return self;
+}
+
+- (JSValueRef) call: (id)param1, ... {
+    JSContextRef context = _owner.context;
+    JSValueRef jsParams[_nParams];
+    jsParams[0] = IDToValue(context, param1);
+    if (_nParams > 1) {
+        va_list args;
+        va_start(args, param1);
+        for (NSUInteger i = 1; i < _nParams; ++i)
+            jsParams[i] = IDToValue(context, va_arg(args, id));
+        va_end(args);
+    }
+    JSValueRef exception = NULL;
+    JSValueRef result = JSObjectCallAsFunction(context, _fn, NULL, _nParams, jsParams, &exception);
+    if (!result)
+        WarnJSException(context, @"JS function threw exception", exception);
+    return result;
+}
+
+- (void)dealloc
+{
+    if (_fn)
+        JSValueUnprotect(_owner.context, _fn);
+}
 
 @end
 
 
+
+
 // Converts a JSON-compatible NSObject to a JSValue.
 static JSValueRef IDToValue(JSContextRef ctx, id object) {
-    if (!object)
+    if (object == nil) {
         return NULL;
-    //FIX: Going through JSON is inefficient.
-    NSData* json = [NSJSONSerialization dataWithJSONObject: object options: 0 error: NULL];
-    if (!json)
-        return NULL;
-    NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
-    JSStringRef jsStr = JSStringCreateWithCFString((__bridge CFStringRef)jsonStr);
-    JSValueRef value = JSValueMakeFromJSONString(ctx, jsStr);
-    JSStringRelease(jsStr);
-    return value;
+    } else if (object == (id)kCFBooleanFalse || object == (id)kCFBooleanTrue) {
+        return JSValueMakeBoolean(ctx, object == (id)kCFBooleanTrue);
+    } else if (object == [NSNull null]) {
+        return JSValueMakeNull(ctx);
+    } else if ([object isKindOfClass: [NSNumber class]]) {
+        return JSValueMakeNumber(ctx, [object doubleValue]);
+    } else if ([object isKindOfClass: [NSString class]]) {
+        JSStringRef jsStr = JSStringCreateWithCFString((__bridge CFStringRef)object);
+        JSValueRef value = JSValueMakeString(ctx, jsStr);
+        JSStringRelease(jsStr);
+        return value;
+    } else {
+        //FIX: Going through JSON is inefficient.
+        NSData* json = [NSJSONSerialization dataWithJSONObject: object options: 0 error: NULL];
+        if (!json)
+            return NULL;
+        NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
+        JSStringRef jsStr = JSStringCreateWithCFString((__bridge CFStringRef)jsonStr);
+        JSValueRef value = JSValueMakeFromJSONString(ctx, jsStr);
+        JSStringRelease(jsStr);
+        return value;
+    }
 }
 
 
@@ -208,4 +260,13 @@ static id ValueToID(JSContextRef ctx, JSValueRef value) {
     NSData* data = [str dataUsingEncoding: NSUTF8StringEncoding];
     NSArray* result = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
     return [result objectAtIndex: 0];
+}
+
+
+void WarnJSException(JSContextRef context, NSString* warning, JSValueRef exception) {
+    JSStringRef error = JSValueToStringCopy(context, exception, NULL);
+    CFStringRef cfError = error ? JSStringCopyCFString(NULL, error) : NULL;
+    NSLog(@"*** WARNING: %@: %@", warning, cfError);
+    if (cfError)
+        CFRelease(cfError);
 }
