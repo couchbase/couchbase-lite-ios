@@ -319,7 +319,7 @@ static inline BOOL isLocalDBName(NSString* url) {
           processed: (NSUInteger)changesProcessed
             ofTotal: (NSUInteger)changesTotal
 {
-    if (!_started)
+    if (!_started && !self.persistent)
         return;
     if (mode == kTDReplicationStopped)
         _started = NO;
