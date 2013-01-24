@@ -26,7 +26,6 @@ extern NSString* TDReplicatorStoppedNotification;
     NSThread* _thread;
     TD_Database* __weak _db;
     NSURL* _remote;
-    TDReachability* _host;
     BOOL _continuous;
     NSString* _filterName;
     NSDictionary* _filterParameters;
@@ -46,6 +45,8 @@ extern NSString* TDReplicatorStoppedNotification;
     id<TDAuthorizer> _authorizer;
     NSDictionary* _options;
     NSDictionary* _requestHeaders;
+    @private
+    TDReachability* _host;
 }
 
 + (NSString *)progressChangedNotification;
