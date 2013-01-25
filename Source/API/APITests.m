@@ -342,7 +342,6 @@ TestCase(API_History) {
 
 #pragma mark - ATTACHMENTS
 
-#if 0
 TestCase(API_Attachments) {
     TDDatabase* db = createEmptyDB();
     NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -355,25 +354,34 @@ TestCase(API_Attachments) {
     CAssertNil([rev attachmentNamed: @"index.html"]);
     
     NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
-    TDAttachment* attach = [doc putAttachmentWithName: @"index.html"
-                                                 type: @"text/plain; charset=utf-8"
-                                                 body: body];
+    TDAttachment* attach = [[TDAttachment alloc] initWithContentType:@"text/plain; charset=utf-8" body:body];
+    CAssert(attach);
+    
+    TDNewRevision *rev2 = [doc newRevision];
+    [rev2 addAttachment:attach named:@"index.html"];
+    
+    NSError * error;
+    TDRevision *rev3 = [rev2 save:&error];
+    
+    CAssertNil(error);
+    CAssert(rev3);
+    CAssertEq(rev3.attachmentNames.count, (NSUInteger)1);
+    
+    attach = [rev3 attachmentNamed:@"index.html"];
     CAssert(attach);
     CAssertEq(attach.document, doc);
     CAssertEqual(attach.name, @"index.html");
-
-    TDRevision* rev2 = attach.revision;
-    CAssertEq(rev2.document, doc);
-    CAssert([rev2.revisionID hasPrefix: @"2-"]);
-    Log(@"Now attachments = %@", rev2.attachmentNames);
-    CAssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
-
-    attach = [rev2 attachmentNamed: @"index.html"];
+    CAssertEqual(rev3.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
+    
     CAssertEqual(attach.contentType, @"text/plain; charset=utf-8");
     CAssertEqual(attach.body, body);
     CAssertEq(attach.length, (UInt64)body.length);
+
+    TDRevision *rev4 = [attach updateBody:nil contentType:nil error:&error];
+    CAssert(!error);
+    CAssert(rev4);
+    CAssertEq([rev4.attachmentNames count], (NSUInteger)0);
 }
-#endif
 
 #pragma mark - CHANGE TRACKING
 
@@ -608,6 +616,7 @@ TestCase(API) {
     RequireTestCase(API_AllDocuments);
     RequireTestCase(API_RowsIfChanged);
     RequireTestCase(API_History);
+    RequireTestCase(API_Attachments);
     RequireTestCase(API_ChangeTracking);
     RequireTestCase(API_CreateView);
     RequireTestCase(API_Validation);

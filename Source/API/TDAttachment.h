@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class TDDocument, TDRevisionBase;
+@class TDDocument, TDRevisionBase, TDRevision;
 
 
 /** A binary attachment to a document revision.
@@ -49,7 +49,7 @@
 
 /** Updates the body, creating a new document revision in the process.
     If all you need to do to a document is update a single attachment this is an easy way to do it; but if you need to change multiple attachments, or change other body properties, do them in one step by calling -putProperties:error: on the revision or document. */
-- (TDAttachment*) updateBody: (NSData*)body
+- (TDRevision*) updateBody: (NSData*)body
                  contentType: (NSString*)contentType
                        error: (NSError**)outError;
 
