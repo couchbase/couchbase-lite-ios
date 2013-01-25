@@ -51,7 +51,7 @@ typedef enum {
 @property (nonatomic, copy) NSString* filter;
 
 /** Parameters to pass to the filter function.
-    Should be a JSON-compatible dictionary. */
+    Should map strings to strings. */
 @property (nonatomic, copy) NSDictionary* query_params;
 
 /** Sets the documents to specify as part of the replication. */
@@ -60,6 +60,11 @@ typedef enum {
 /** Extra HTTP headers to send in all requests to the remote server.
     Should map strings (header names) to strings. */
 @property (nonatomic, copy) NSDictionary* headers;
+
+
+#pragma mark - AUTHENTICATION:
+
+@property NSURLCredential* credential;
 
 /** OAuth parameters that the replicator should use when authenticating to the remote database.
     Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret", and optionally "signature_method". */

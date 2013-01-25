@@ -15,6 +15,7 @@
 #import "TD_Server.h"
 #import "TDBrowserIDAuthorizer.h"
 #import "MYBlockUtils.h"
+#import "MYURLUtils.h"
 
 
 #undef RUN_IN_BACKGROUND
@@ -205,6 +206,37 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 - (void) setHeaders: (NSDictionary*)headers {
     [self setRemoteDictionaryValue: headers forKey: @"headers"];
+}
+
+
+#pragma mark - AUTHENTICATION:
+
+
+- (NSURLCredential*) credential {
+    return [self.remoteURL my_credentialForRealm: nil
+                            authenticationMethod: NSURLAuthenticationMethodDefault];
+}
+
+- (void) setCredential:(NSURLCredential *)cred {
+    // Hardcoded username doesn't mix with stored credentials.
+    NSURL* url = self.remoteURL;
+    NSString* urlStr = url.my_URLByRemovingUser.absoluteString;
+    if (self.pull)
+        self.target = urlStr;
+    else
+        self.source = urlStr;
+
+    NSURLProtectionSpace* space = [url my_protectionSpaceWithRealm: nil
+                                            authenticationMethod: NSURLAuthenticationMethodDefault];
+    NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
+    if (cred) {
+        [storage setDefaultCredential: cred forProtectionSpace: space];
+    } else {
+        cred = [storage defaultCredentialForProtectionSpace: space];
+        if (cred)
+            [storage removeCredential: cred forProtectionSpace: space];
+    }
+    [self restart];
 }
 
 - (NSDictionary*) OAuth {
