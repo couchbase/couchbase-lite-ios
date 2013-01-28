@@ -35,6 +35,9 @@ NSString* const TD_DatabaseWillCloseNotification = @"TD_DatabaseWillClose";
 NSString* const TD_DatabaseWillBeDeletedNotification = @"TD_DatabaseWillBeDeleted";
 
 
+static id<TDFilterCompiler> sFilterCompiler;
+
+
 @implementation TD_Database
 
 
@@ -920,6 +923,26 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
+#pragma mark - FILTERS:
+
+
+- (id) getDesignDocFunction: (NSString*)fnName
+                        key: (NSString*)key
+                   language: (NSString**)outLanguage
+{
+    NSArray* path = [fnName componentsSeparatedByString: @"/"];
+    if (path.count != 2)
+        return nil;
+    TD_Revision* rev = [self getDocumentWithID: [@"_design/" stringByAppendingString: path[0]]
+                                    revisionID: nil];
+    if (!rev)
+        return nil;
+    *outLanguage = rev[@"language"] ?: @"javascript";
+    NSDictionary* container = $castIf(NSDictionary, rev[key]);
+    return container[path[1]];
+}
+
+
 - (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock {
     if (!_filters)
         _filters = [[NSMutableDictionary alloc] init];
@@ -928,6 +951,43 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 - (TD_FilterBlock) filterNamed: (NSString*)filterName {
     return _filters[filterName];
+}
+
+
++ (void) setFilterCompiler: (id<TDFilterCompiler>)compiler {
+    sFilterCompiler = compiler;
+}
+
++ (id<TDFilterCompiler>) filterCompiler {
+    return sFilterCompiler;
+}
+
+
+- (TD_FilterBlock) compileFilterNamed: (NSString*)filterName status: (TDStatus*)outStatus {
+    TD_FilterBlock filter = [self filterNamed: filterName];
+    if (filter)
+        return filter;
+    if (!sFilterCompiler) {
+        *outStatus = kTDStatusNotFound;
+        return nil;
+    }
+    NSString* language;
+    NSString* source = $castIf(NSString, [self getDesignDocFunction: filterName
+                                                                key: @"filters"
+                                                           language: &language]);
+    if (!source) {
+        *outStatus = kTDStatusNotFound;
+        return nil;
+    }
+
+    filter = [sFilterCompiler compileFilterFunction: source language: language];
+    if (!filter) {
+        Warn(@"Filter %@ failed to compile", filterName);
+        *outStatus = kTDStatusCallbackError;
+        return nil;
+    }
+    [self defineFilter: filterName asBlock: filter];
+    return filter;
 }
 
 
@@ -998,27 +1058,20 @@ const TDChangesOptions kDefaultTDChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     
     // No TouchDB view is defined, or it hasn't had a map block assigned;
     // see if there's a CouchDB view definition we can compile:
-    NSArray* path = [tdViewName componentsSeparatedByString: @"/"];
-    if (path.count != 2) {
+    if (![TD_View compiler]) {
         *outStatus = kTDStatusNotFound;
         return nil;
     }
-    TD_Revision* rev = [self getDocumentWithID: [@"_design/" stringByAppendingString: path[0]]
-                                    revisionID: nil];
-    if (!rev) {
-        *outStatus = kTDStatusNotFound;
-        return nil;
-    }
-    NSDictionary* views = $castIf(NSDictionary, rev[@"views"]);
-    NSDictionary* viewProps = $castIf(NSDictionary, views[path[1]]);
+    NSString* language;
+    NSDictionary* viewProps = $castIf(NSDictionary, [self getDesignDocFunction: tdViewName
+                                                                           key: @"views"
+                                                                      language: &language]);
     if (!viewProps) {
         *outStatus = kTDStatusNotFound;
         return nil;
     }
-    
-    // If there is a CouchDB view, see if it can be compiled from source:
     view = [self viewNamed: tdViewName];
-    if (![view compileFromProperties: viewProps]) {
+    if (![view compileFromProperties: viewProps language: language]) {
         *outStatus = kTDStatusCallbackError;
         return nil;
     }

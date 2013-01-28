@@ -388,6 +388,7 @@
 		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
 		27F5B18716519F2400126D0D /* TDUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* TDUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27F5B18916519F8F00126D0D /* MYDynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27F6D02B16B72885006E1576 /* TDJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F6D02A16B72885006E1576 /* TDJSFunction.m */; };
 		27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
 		27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
 		27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */; };
@@ -842,6 +843,8 @@
 		27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		27F1E4AA16979A0B00F0E50F /* TDJSViewCompiler_Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDJSViewCompiler_Test.m; path = ../Source/TDJSViewCompiler_Test.m; sourceTree = "<group>"; };
 		27F5B175164D74EA00126D0D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		27F6D02916B72885006E1576 /* TDJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TDJSFunction.h; path = Source/TDJSFunction.h; sourceTree = SOURCE_ROOT; };
+		27F6D02A16B72885006E1576 /* TDJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TDJSFunction.m; path = Source/TDJSFunction.m; sourceTree = SOURCE_ROOT; };
 		27F87BE61558890600F0A416 /* TDGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* TDGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDGNUstep.m; sourceTree = "<group>"; };
 		27FAEEDA164C8A3E00A3C0C2 /* background.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = background.jpg; sourceTree = "<group>"; };
@@ -1392,6 +1395,8 @@
 				27C706D01488679500F0F099 /* ShoppingDemo.xib */,
 				27C706D11488679500F0F099 /* ShoppingItem.h */,
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
+				27F6D02916B72885006E1576 /* TDJSFunction.h */,
+				27F6D02A16B72885006E1576 /* TDJSFunction.m */,
 				27F1E4A41697995C00F0E50F /* TDJSViewCompiler.h */,
 				27F1E4A51697995C00F0E50F /* TDJSViewCompiler.m */,
 				27F1E4AA16979A0B00F0E50F /* TDJSViewCompiler_Test.m */,
@@ -2312,6 +2317,7 @@
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
 				27F1E4A61697995C00F0E50F /* TDJSViewCompiler.m in Sources */,
 				27F1E4AB16979A0B00F0E50F /* TDJSViewCompiler_Test.m in Sources */,
+				27F6D02B16B72885006E1576 /* TDJSFunction.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -99,8 +99,9 @@ static id<TDViewCompiler> sCompiler;
 }
 
 
-- (BOOL) compileFromProperties: (NSDictionary*)viewProps {
-    NSString* language = viewProps[@"language"] ?: @"javascript";
+- (BOOL) compileFromProperties: (NSDictionary*)viewProps language: (NSString*)language {
+    if (!language)
+        language = @"javascript";
     NSString* mapSource = viewProps[@"map"];
     if (!mapSource)
         return NO;

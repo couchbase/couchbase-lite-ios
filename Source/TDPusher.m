@@ -47,14 +47,12 @@ static int findCommonAncestor(TD_Revision* rev, NSArray* possibleIDs);
 - (TD_FilterBlock) filter {
     if (!_filterName)
         return NULL;
-    TD_FilterBlock filter = [_db filterNamed: _filterName];
+    TDStatus status;
+    TD_FilterBlock filter = [_db compileFilterNamed: _filterName status: &status];
     if (!filter) {
-        Warn(@"%@: No TDFilterBlock registered for filter '%@'", self, _filterName);
+        Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
         if (!_error) {
-            NSDictionary* info = $dict({NSLocalizedFailureReasonErrorKey, @"Unknown filter"});
-            self.error = [NSError errorWithDomain: TDHTTPErrorDomain
-                                             code: kTDStatusNotFound
-                                         userInfo: info];
+            self.error = TDStatusToNSError(status, nil);
         }
         [self stop];
     }

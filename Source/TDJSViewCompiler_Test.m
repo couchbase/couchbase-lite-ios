@@ -7,6 +7,7 @@
 //
 
 #import "TDJSViewCompiler.h"
+#import "TD_Revision.h"
 #import "Test.h"
 
 
@@ -44,7 +45,41 @@ TestCase(JSReduceFunction) {
 }
 
 
-TestCase(TDJSViewCompiler) {
+TestCase(JSFilterFunction) {
+    TDJSFilterCompiler* c = [[TDJSFilterCompiler alloc] init];
+    TD_FilterBlock filterBlock = [c compileFilterFunction: @"function(doc,req){return doc.ok;}"
+                                                 language: @"javascript"];
+    CAssert(filterBlock);
+
+    TD_Revision* rev = [[TD_Revision alloc] initWithProperties: @{@"foo": @666}];
+    CAssert(!filterBlock(rev,nil));
+    rev = [[TD_Revision alloc] initWithProperties: @{@"ok": $false}];
+    CAssert(!filterBlock(rev,nil));
+    rev = [[TD_Revision alloc] initWithProperties: @{@"ok": $true}];
+    CAssert(filterBlock(rev,nil));
+    rev = [[TD_Revision alloc] initWithProperties: @{@"ok": @"mais oui"}];
+    CAssert(filterBlock(rev,nil));
+}
+
+
+TestCase(JSFilterFunctionWithParams) {
+    TDJSFilterCompiler* c = [[TDJSFilterCompiler alloc] init];
+    TD_FilterBlock filterBlock = [c compileFilterFunction: @"function(doc,req){return doc.name == req.name;}"
+                                                 language: @"javascript"];
+    CAssert(filterBlock);
+
+    NSDictionary* params = @{@"name": @"jens"};
+    TD_Revision* rev = [[TD_Revision alloc] initWithProperties: @{@"foo": @666}];
+    CAssert(!filterBlock(rev, params));
+    rev = [[TD_Revision alloc] initWithProperties: @{@"name": @"bob"}];
+    CAssert(!filterBlock(rev, params));
+    rev = [[TD_Revision alloc] initWithProperties: @{@"name": @"jens"}];
+    CAssert(filterBlock(rev, params));
+}
+
+
+TestCase(TDJSCompiler) {
     RequireTestCase(JSMapFunction);
     RequireTestCase(JSReduceFunction);
+    RequireTestCase(JSFilterFunction);
 }

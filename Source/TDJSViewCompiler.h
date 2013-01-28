@@ -13,7 +13,8 @@
 //  and limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
+#import "TDJSFunction.h"
+#import <TouchDB/TD_Database.h>
 #import <TouchDB/TD_View.h>
 
 
@@ -21,5 +22,13 @@
     Requires the JavaScriptCore framework; this is a public system framework on Mac OS but private
     on iOS; so on the latter platform you'll need to link your app with your own copy of
     JavaScriptCore. See <https://github.com/phoboslab/JavaScriptCore-iOS>. */
-@interface TDJSViewCompiler : NSObject <TDViewCompiler>
+@interface TDJSViewCompiler : TDJSCompiler <TDViewCompiler>
+@end
+
+
+/** A filter compiler for TouchDB that compiles and runs traditional JavaScript filter functions.
+    Requires the JavaScriptCore framework; this is a public system framework on Mac OS but private
+    on iOS; so on the latter platform you'll need to link your app with your own copy of
+    JavaScriptCore. See <https://github.com/phoboslab/JavaScriptCore-iOS>. */
+@interface TDJSFilterCompiler : TDJSCompiler <TDFilterCompiler>
 @end

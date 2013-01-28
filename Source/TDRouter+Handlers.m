@@ -498,9 +498,10 @@
     
     NSString* filterName = [self query: @"filter"];
     if (filterName) {
-        _changesFilter = [_db filterNamed: filterName];
+        TDStatus status;
+        _changesFilter = [_db compileFilterNamed: filterName status: &status];
         if (!_changesFilter)
-            return kTDStatusNotFound;
+            return status;
         _changesFilterParams = [self.jsonQueries copy];
     }
     
@@ -980,7 +981,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return kTDStatusNotModified;
 
     TD_View* view = [_db viewNamed: @"@@TEMPVIEW@@"];
-    if (![view compileFromProperties: props])
+    if (![view compileFromProperties: props language: @"javascript"])
         return kTDStatusBadRequest;
 
     @try {

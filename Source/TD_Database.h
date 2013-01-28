@@ -28,6 +28,13 @@ extern NSString* const TD_DatabaseWillBeDeletedNotification;
 /** Filter block, used in changes feeds and replication. */
 typedef BOOL (^TD_FilterBlock) (TD_Revision* revision, NSDictionary* params);
 
+/** An external object that knows how to map source code of some sort into executable functions. */
+@protocol TDFilterCompiler <NSObject>
+- (TD_FilterBlock) compileFilterFunction: (NSString*)filterSource language: (NSString*)language;
+@end
+
+
+
 
 /** Options for what metadata to include in document bodies */
 typedef unsigned TDContentOptions;
@@ -182,5 +189,10 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 - (void) defineFilter: (NSString*)filterName asBlock: (TD_FilterBlock)filterBlock;
 
 - (TD_FilterBlock) filterNamed: (NSString*)filterName;
+
+- (TD_FilterBlock) compileFilterNamed: (NSString*)filterName status: (TDStatus*)outStatus;
+
++ (void) setFilterCompiler: (id<TDFilterCompiler>)compiler;
++ (id<TDFilterCompiler>) filterCompiler;
 
 @end
