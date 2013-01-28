@@ -16,6 +16,8 @@
 #import "TD_View.h"
 #import "TDInternal.h"
 #import "TDCollateJSON.h"
+#import "TDCanonicalJSON.h"
+#import "TDMisc.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -95,6 +97,39 @@ static id<TDViewCompiler> sCompiler;
         return NO;
     return (fmdb.changes > 0);
 }
+
+
+- (BOOL) compileFromProperties: (NSDictionary*)viewProps {
+    NSString* language = viewProps[@"language"] ?: @"javascript";
+    NSString* mapSource = viewProps[@"map"];
+    if (!mapSource)
+        return NO;
+    TDMapBlock mapBlock = [[TD_View compiler] compileMapFunction: mapSource language: language];
+    if (!mapBlock) {
+        Warn(@"View %@ has unknown map function: %@", _name, mapSource);
+        return NO;
+    }
+    NSString* reduceSource = viewProps[@"reduce"];
+    TDReduceBlock reduceBlock = NULL;
+    if (reduceSource) {
+        reduceBlock =[[TD_View compiler] compileReduceFunction: reduceSource language: language];
+        if (!reduceBlock) {
+            Warn(@"View %@ has unknown reduce function: %@", _name, reduceSource);
+            return NO;
+        }
+    }
+
+    // Version string is based on a digest of the properties:
+    NSString* version = TDHexSHA1Digest([TDCanonicalJSON canonicalData: viewProps]);
+
+    [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
+
+    NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
+    self.collation = ($equal(options[@"collation"], @"raw")) ? kTDViewCollationRaw
+                                                             : kTDViewCollationUnicode;
+    return YES;
+}
+
 
 
 - (void) removeIndex {

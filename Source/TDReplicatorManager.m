@@ -236,7 +236,7 @@ NSString* const kTDReplicatorDatabaseName = @"_replicator";
     NSString* replicationID = properties[@"_replication_id"] ?: TDCreateUUID();
     repl.sessionID = replicationID;
     repl.documentID = rev.docID;
-    
+
     if (!_replicatorsByDocID)
         _replicatorsByDocID = [[NSMutableDictionary alloc] init];
     _replicatorsByDocID[rev.docID] = repl;

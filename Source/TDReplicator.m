@@ -21,6 +21,7 @@
 #import "TDAuthorizer.h"
 #import "TDBatcher.h"
 #import "TDReachability.h"
+#import "TDURLProtocol.h"
 #import "TDInternal.h"
 #import "TDMisc.h"
 #import "TDBase64.h"
@@ -238,18 +239,22 @@ NSString* TDReplicatorStoppedNotification = @"TDReplicatorStopped";
                                                object: nil];
 #endif
     
-    // Start reachability checks. (This creates another ref cycle, because
-    // the block also retains a ref to self. Cycle is also broken in -stopped.)
     _online = NO;
-    _host = [[TDReachability alloc] initWithHostName: _remote.host];
-    
-    __weak id weakSelf = self;
-    _host.onChange = ^{
-        TDReplicator *strongSelf = weakSelf;
-        [strongSelf reachabilityChanged:strongSelf->_host];
-    };
-    [_host start];
-    [self reachabilityChanged: _host];
+    if ([NSClassFromString(@"TDURLProtocol") handlesURL: _remote]) {
+        [self goOnline];    // local-to-local replication
+    } else {
+        // Start reachability checks. (This creates another ref cycle, because
+        // the block also retains a ref to self. Cycle is also broken in -stopped.)
+        _host = [[TDReachability alloc] initWithHostName: _remote.host];
+        
+        __weak id weakSelf = self;
+        _host.onChange = ^{
+            TDReplicator *strongSelf = weakSelf;
+            [strongSelf reachabilityChanged:strongSelf->_host];
+        };
+        [_host start];
+        [self reachabilityChanged: _host];
+    }
 }
 
 

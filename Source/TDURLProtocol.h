@@ -43,6 +43,9 @@
 /** Returns the server registered with the hostname "localhost". */
 + (TD_Server*) server;
 
+/** Returns YES if TDURLProtocol will handle this URL. */
++ (BOOL) handlesURL: (NSURL*)url;
+
 @end
 
 

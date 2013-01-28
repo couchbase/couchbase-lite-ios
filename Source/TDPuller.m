@@ -171,7 +171,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     for (NSDictionary* change in changes) {
         @autoreleasepool {
             // Process each change from the feed:
-            NSString* remoteSequenceID = [change[@"seq"] description];
+            id remoteSequenceID = change[@"seq"];
             NSString* docID = change[@"id"];
             if (!docID || ![TD_Database isValidDocumentID: docID])
                 continue;
@@ -243,7 +243,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) processInbox: (TD_RevisionList*)inbox {
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
-    NSString* lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
+    id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger total = _changesTotal - inbox.count;
     if (![_db findMissingRevisions: inbox]) {
         Warn(@"%@ failed to look up local revs", self);

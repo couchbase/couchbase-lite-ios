@@ -166,6 +166,11 @@ extern const TDChangesOptions kDefaultTDChangesOptions;
 
 - (TD_View*) makeAnonymousView;
 
+/** Returns the view with the given name. If there is none, and the name is in CouchDB
+    format ("designdocname/viewname"), it attempts to load the view properties from the
+    design document and compile them with the TDViewCompiler. */
+- (TD_View*) compileViewNamed: (NSString*)name status: (TDStatus*)outStatus;
+
 @property (readonly) NSArray* allViews;
 
 - (TD_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence

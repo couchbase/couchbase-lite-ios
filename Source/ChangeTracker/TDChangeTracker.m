@@ -78,8 +78,13 @@
                                               kModeNames[_mode], _heartbeat*1000.0];
     if (_includeConflicts)
         [path appendString: @"&style=all_docs"];
-    if (_lastSequenceID)
-        [path appendFormat: @"&since=%@", TDEscapeURLParam([_lastSequenceID description])];
+    id seq = _lastSequenceID;
+    if (seq) {
+        // BigCouch is now using arrays as sequence IDs. These need to be sent back JSON-encoded.
+        if ([seq isKindOfClass: [NSArray class]] || [seq isKindOfClass: [NSDictionary class]])
+            seq = [TDJSON stringWithJSONObject: seq options: 0 error: nil];
+        [path appendFormat: @"&since=%@", TDEscapeURLParam([seq description])];
+    }
     if (_limit > 0)
         [path appendFormat: @"&limit=%u", _limit];
     if (_filterName) {

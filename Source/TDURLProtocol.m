@@ -137,15 +137,19 @@ static NSString* normalizeHostname( NSString* hostname ) {
 }
 
 
-#pragma mark - INITIALIZATION:
-
-
-+ (BOOL)canInitWithRequest:(NSURLRequest *)request {
-    NSURL* url = request.URL;
++ (BOOL) handlesURL: (NSURL*)url {
     if ([url.scheme caseInsensitiveCompare: kScheme] == 0)
         return YES;
     else
         return [self serverForURL: url] != nil;
+}
+
+
+#pragma mark - INITIALIZATION:
+
+
++ (BOOL)canInitWithRequest:(NSURLRequest *)request {
+    return [self handlesURL: request.URL];
 }
 
 

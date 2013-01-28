@@ -907,55 +907,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 #pragma mark - VIEW QUERIES:
 
 
-- (TD_View*) compileView: (NSString*)viewName fromProperties: (NSDictionary*)viewProps {
-    NSString* language = viewProps[@"language"] ?: @"javascript";
-    NSString* mapSource = viewProps[@"map"];
-    if (!mapSource)
-        return nil;
-    TDMapBlock mapBlock = [[TD_View compiler] compileMapFunction: mapSource language: language];
-    if (!mapBlock) {
-        Warn(@"View %@ has unknown map function: %@", viewName, mapSource);
-        return nil;
-    }
-    NSString* reduceSource = viewProps[@"reduce"];
-    TDReduceBlock reduceBlock = NULL;
-    if (reduceSource) {
-        reduceBlock =[[TD_View compiler] compileReduceFunction: reduceSource language: language];
-        if (!reduceBlock) {
-            Warn(@"View %@ has unknown reduce function: %@", viewName, reduceSource);
-            return nil;
-        }
-    }
-    
-    TD_View* view = [_db viewNamed: viewName];
-    [view setMapBlock: mapBlock reduceBlock: reduceBlock version: @"1"];
-    
-    NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
-    if ($equal(options[@"collation"], @"raw"))
-        view.collation = kTDViewCollationRaw;
-    return view;
-}
-
-
 - (TDStatus) queryDesignDoc: (NSString*)designDoc view: (NSString*)viewName keys: (NSArray*)keys {
     NSString* tdViewName = $sprintf(@"%@/%@", designDoc, viewName);
-    TD_View* view = [_db existingViewNamed: tdViewName];
-    if (!view || !view.mapBlock) {
-        // No TouchDB view is defined, or it hasn't had a map block assigned;
-        // see if there's a CouchDB view definition we can compile:
-        TD_Revision* rev = [_db getDocumentWithID: [@"_design/" stringByAppendingString: designDoc]
-                                      revisionID: nil];
-        if (!rev)
-            return kTDStatusNotFound;
-        NSDictionary* views = $castIf(NSDictionary, rev[@"views"]);
-        NSDictionary* viewProps = $castIf(NSDictionary, views[viewName]);
-        if (!viewProps)
-            return kTDStatusNotFound;
-        // If there is a CouchDB view, see if it can be compiled from source:
-        view = [self compileView: tdViewName fromProperties: viewProps];
-        if (!view)
-            return kTDStatusDBError;
-    }
+    TDStatus status;
+    TD_View* view = [_db compileViewNamed: tdViewName status: &status];
+    if (!view)
+        return status;
     
     TDQueryOptions options;
     if (![self getQueryOptions: &options])
@@ -963,7 +920,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (keys)
         options.keys = keys;
     
-    TDStatus status = [view updateIndex];
+    status = [view updateIndex];
     if (status >= kTDStatusBadRequest)
         return status;
     
@@ -1022,9 +979,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if ([self cacheWithEtag: $sprintf(@"%lld", _db.lastSequence)])  // conditional GET
         return kTDStatusNotModified;
 
-    TD_View* view = [self compileView: @"@@TEMPVIEW@@" fromProperties: props];
-    if (!view)
-        return kTDStatusDBError;
+    TD_View* view = [_db viewNamed: @"@@TEMPVIEW@@"];
+    if (![view compileFromProperties: props])
+        return kTDStatusBadRequest;
+
     @try {
         TDStatus status = [view updateIndex];
         if (status >= kTDStatusBadRequest)
