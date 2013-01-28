@@ -88,6 +88,9 @@ typedef enum {
          reduceBlock: (TDReduceBlock)reduceBlock
              version: (NSString*)version;
 
+/** Compiles a view (using the registered TDViewCompiler) from the properties found in a CouchDB-style design document. */
+- (BOOL) compileFromProperties: (NSDictionary*)viewProps;
+
 - (void) removeIndex;
 
 /** Is the view's index currently out of date? */
