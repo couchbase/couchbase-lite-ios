@@ -51,8 +51,8 @@
         };
 
         if (connection.listener.readOnly) {
+            NSString* method = router.request.HTTPMethod;
             router.onAccessCheck = ^TDStatus(TD_Database* db, NSString* docID, SEL action) {
-                NSString* method = router.request.HTTPMethod;
                 if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"])
                     return kTDStatusOK;
                 if ([method isEqualToString: @"POST"]) {
