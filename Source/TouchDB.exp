@@ -11,10 +11,12 @@
 .objc_class_name_TDQueryRow
 .objc_class_name_TDModel
 .objc_class_name_TDModelFactory
+.objc_class_name_TDJSON
 .objc_class_name_MYDynamicObject
 
 _kTDDatabaseChangeNotification
 _kTDDocumentChangeNotification
+
 
 # Non-public symbols that are used by TDRouter and TDListener:
 .objc_class_name_TD_Database
@@ -33,7 +35,6 @@ _kTDDocumentChangeNotification
 .objc_class_name_TD_DatabaseManager
 .objc_class_name_TDMultipartDocumentReader
 .objc_class_name_TDMultipartWriter
-.objc_class_name_TDJSON
 
 _TDStatusToHTTPStatus
 _TDStatusToNSError

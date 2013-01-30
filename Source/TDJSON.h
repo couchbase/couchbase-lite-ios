@@ -30,17 +30,18 @@ enum {
 };
 typedef NSUInteger TDJSONReadingOptions;
 
-/** Identical to the corresponding NSJSON option flags. */
+/** Identical to the corresponding NSJSON option flags, with one addition. */
 enum {
     TDJSONWritingPrettyPrinted = (1UL << 0),
     
-    TDJSONWritingAllowFragments = (1UL << 23)           // This one I made up
+    TDJSONWritingAllowFragments = (1UL << 23)  /**< Allows input to be an NSString or NSValue. */
 };
 typedef NSUInteger TDJSONWritingOptions;
 
 
 #if USE_NSJSON
 
+/** Useful extensions for JSON serialization/parsing. */
 @interface TDJSON : NSJSONSerialization
 @end
 
@@ -86,5 +87,8 @@ typedef NSUInteger TDJSONWritingOptions;
 {
     NSMutableArray* _array;
 }
+
+/** Initialize a lazy array.
+    @param array   An NSArray of NSData objects, each containing JSON. */
 - (id) initWithArray: (NSMutableArray*)array;
 @end
