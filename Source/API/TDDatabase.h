@@ -12,10 +12,6 @@
 @protocol TDValidationContext;
 
 
-/** Database sequence ID */
-typedef SInt64 SequenceNumber;
-
-
 /** Validation block, used to approve revisions being added to the database. */
 typedef BOOL (^TDValidationBlock) (TDRevision* newRevision,
                                    id<TDValidationContext> context);
@@ -38,12 +34,31 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 /** The database manager that owns this database. */
 @property (readonly) TDDatabaseManager* manager;
 
-- (BOOL) deleteDatabase: (NSError**)outError;
+/** The number of documents in the database. */
+@property (readonly) NSUInteger documentCount;
 
+/** The latest sequence number used.
+    Every new revision is assigned a new sequence number, so this property increases monotonically
+    as changes are made to the database. It can be used to check whether the database has changed
+    between two points in time. */
+@property (readonly) SInt64 lastSequenceNumber;
+
+/** The 'touchdb:' URL of the database's REST API.
+    Only available if you've linked with the TouchDBListener framework. */
+@property (readonly) NSURL* internalURL;
+
+
+#pragma mark - HOUSEKEEPING:
+
+/** Compacts the database file by purging non-current revisions, deleting unused attachment files,
+    and running a SQLite "VACUUM" command. */
 - (BOOL) compact: (NSError**)outError;
 
-@property (readonly) NSUInteger documentCount;
-@property (readonly) SequenceNumber lastSequenceNumber;
+/** Deletes the database. */
+- (BOOL) deleteDatabase: (NSError**)outError;
+
+
+#pragma mark - DOCUMENT ACCESS:
 
 /** Instantiates a TDDocument object with the given ID.
     Doesn't touch the on-disk database; a document with that ID doesn't even need to exist yet.
@@ -66,9 +81,16 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 - (void) clearDocumentCache;
 
 
-/** Returns a query that matches all documents in the database. */
+#pragma mark - VIEWS AND OTHER CALLBACKS:
+
+/** Returns a query that matches all documents in the database.
+    This is like querying an imaginary view that emits every document's ID as a key. */
 - (TDQuery*) queryAllDocuments;
 
+/** Creates a one-shot query with the given map function. This is equivalent to creating an
+    anonymous TDView and then deleting it immediately after querying it. It may be useful during
+    development, but in general this is inefficient if this map will be used more than once,
+    because the entire view has to be regenerated from scratch every time. */
 - (TDQuery*) slowQueryWithMap: (TDMapBlock)mapBlock;
 
 /** Returns a TDView object for the view with the given name.
@@ -78,18 +100,23 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 /** An array of all existing views. */
 @property (readonly) NSArray* allViews;
 
-
-/** Define or clear a named document validation function.  */
+/** Defines or clears a named document validation function.
+    Before any change to the database, all registered validation functions are called and given a
+    chance to reject it. (This includes incoming changes from a pull replication.) */
 - (void) defineValidation: (NSString*)validationName asBlock: (TDValidationBlock)validationBlock;
 
 
-/** Define or clear a named filter function.  */
+/** Defines or clears a named filter function.
+    Filters are used by push replications to choose which documents to send. */
 - (void) defineFilter: (NSString*)filterName asBlock: (TDFilterBlock)filterBlock;
 
 
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
     Use this when performing bulk operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits. */
 - (BOOL) inTransaction: (BOOL(^)(void))block;
+
+
+#pragma mark - REPLICATION:
 
 /** Returns an array of all current TDReplications involving this database. */
 - (NSArray*) allReplications;
@@ -110,12 +137,9 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 - (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
 
 
-/** The 'touchdb:' URL of the database's REST API.
-    Only available if you've linked with the TouchDBListener framework. */
-@property (readonly) NSURL* internalURL;
-
-
 @end
+
+
 
 
 /** This notification is posted by a TDDatabase in response to document changes.
@@ -126,11 +150,14 @@ typedef BOOL (^TDFilterBlock) (TDRevision* revision, NSDictionary* params);
 extern NSString* const kTDDatabaseChangeNotification;
 
 
+
+
 typedef BOOL (^TDChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue);
 
 
 /** Context passed into a TDValidationBlock. */
 @protocol TDValidationContext <NSObject>
+
 /** The contents of the current revision of the document, or nil if this is a new document. */
 @property (readonly) TDRevision* currentRevision;
 
@@ -141,6 +168,9 @@ typedef BOOL (^TDChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue
 /** The error message to return in the HTTP response, if the validate block returns NO.
     The default value is "invalid document". */
 @property (copy) NSString* errorMessage;
+
+
+#pragma mark - CONVENIENCE METHODS:
 
 /** Returns an array of all the keys whose values are different between the current and new revisions. */
 @property (readonly) NSArray* changedKeys;

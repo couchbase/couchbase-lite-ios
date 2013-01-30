@@ -29,15 +29,20 @@ typedef id (^TDReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 #define REDUCEBLOCK(BLOCK) ^id(NSArray* keys, NSArray* values, BOOL rereduce){BLOCK}
 
 
-/** A "view" in a TouchDB database -- this is a type of map/reduce index.
+/** A "view" in a TouchDB database -- essentially a persistent index managed by map/reduce.
     The view can be queried using a TDQuery. */
 @interface TDView : NSObject
 
+/** The database that owns this view. */
 @property (readonly) TDDatabase* database;
 
+/** The name of the view. */
 @property (readonly) NSString* name;
 
+/** The map function that controls how index rows are created from documents. */
 @property (readonly) TDMapBlock mapBlock;
+
+/** The optional reduce function, which aggregates together multiple rows. */
 @property (readonly) TDReduceBlock reduceBlock;
 
 /** Defines or deletes a view.
@@ -54,6 +59,7 @@ typedef id (^TDReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 - (BOOL) setMapBlock: (TDMapBlock)mapBlock
              version: (NSString*)version;
 
+/** Creates a new query object for this view. The query can be customized and then executed. */
 - (TDQuery*) query;
 
 @end

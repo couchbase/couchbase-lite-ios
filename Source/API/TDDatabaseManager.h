@@ -26,10 +26,10 @@ typedef struct TDDatabaseManagerOptions {
 /** A shared per-process instance. This should only be used on the main thread. */
 + (TDDatabaseManager*) sharedInstance;
 
-/** Default initializer. Starts up an in-process server, on the current thread, that stores databases in the default Application Support directory. */
+/** Default initializer. Stores databases in the default Application Support directory. */
 - (id)init;
 
-/** Starts up a database manager, on the current thread, that stores its data at the given path.
+/** Initializes a database manager, on the current thread, that stores its data at the given path.
     @param directory  Path to data directory. If it doesn't already exist it will be created.
     @param options  If non-NULL, a pointer to options (read-only and no-replicator).
     @param outError  On return, the error if any. */

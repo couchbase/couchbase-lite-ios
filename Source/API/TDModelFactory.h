@@ -13,9 +13,6 @@
 /** A configurable mapping from TDDocument to TDModel.
     It associates a model class with a value of the document's "type" property. */
 @interface TDModelFactory : NSObject
-{
-    NSMutableDictionary* _typeDict;
-}
 
 /** Returns a global shared TDModelFactory that's consulted by all databases.
     Mappings registered in this instance will be used as a fallback by all other instances if they don't have their own. */
@@ -47,4 +44,5 @@
 /** The TDModel factory object to be used by this database.
     Every database has its own instance by default, but you can set this property to use a different one -- either to use a custom subclass, or to share a factory among multiple databases, or both. */
 @property (retain) TDModelFactory* modelFactory;
+
 @end

@@ -12,6 +12,9 @@
 
 
 @implementation TDModelFactory
+{
+    NSMutableDictionary* _typeDict;
+}
 
 
 static TDModelFactory* sSharedInstance;

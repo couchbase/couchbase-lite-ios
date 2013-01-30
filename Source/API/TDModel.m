@@ -21,6 +21,17 @@
 
 
 @implementation TDModel
+{
+    TDDocument* _document;
+    CFAbsoluteTime _changedTime;
+    bool _autosaves :1;
+    bool _isNew     :1;
+    bool _needsSave :1;
+
+    NSMutableDictionary* _properties;   // Cached property values, including changed values
+    NSMutableSet* _changedNames;        // Names of properties that have been changed but not saved
+    NSMutableDictionary* _changedAttachments;
+}
 
 
 - (id)init {

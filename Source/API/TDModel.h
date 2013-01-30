@@ -18,18 +18,6 @@
     Supported object types are NSString, NSNumber, NSData, NSDate, NSArray, NSDictionary. (NSData and NSDate are not native JSON; they will be automatically converted to/from strings in base64 and ISO date formats, respectively.)
     Additionally, a property's type can be a pointer to a TDModel subclass. This provides references between model objects. The raw property value in the document must be a string whose value is interpreted as a document ID. */
 @interface TDModel : MYDynamicObject <TDDocumentModel>
-{
-    @private
-    TDDocument* _document;
-    CFAbsoluteTime _changedTime;
-    bool _autosaves :1;
-    bool _isNew     :1;
-    bool _needsSave :1;
-
-    NSMutableDictionary* _properties;   // Cached property values, including changed values
-    NSMutableSet* _changedNames;        // Names of properties that have been changed but not saved
-    NSMutableDictionary* _changedAttachments;
-}
 
 /** Returns the TDModel associated with a TDDocument, or creates & assigns one if necessary.
     If the TDDocument already has an associated model, it's returned. Otherwise a new one is instantiated.
@@ -59,22 +47,23 @@
 
 #pragma mark - SAVING:
 
-/** Writes any changes to a new revision of the document, asynchronously.
-    Does nothing and returns nil if no changes have been made. */
+/** Writes any changes to a new revision of the document.
+    Returns YES without doing anything, if no changes have been made. */
 - (BOOL) save: (NSError**)outError;
 
 /** Should changes be saved back to the database automatically?
     Defaults to NO, requiring you to call -save manually. */
 @property (nonatomic) bool autosaves;
 
-/** How long to wait after a change before auto-saving, if autosaves is true.
+/** How long to wait after the first change before auto-saving, if autosaves is true.
     Default value is 0.0; subclasses can override this to add a delay. */
 @property (readonly) NSTimeInterval autosaveDelay;
 
 /** Does this model have unsaved changes? */
 @property (readonly) bool needsSave;
 
-/** The document's current properties, in externalized JSON format. */
+/** The document's current properties (including unsaved changes) in externalized JSON format.
+    This is what will be written to the TDDocument when the model is saved. */
 - (NSDictionary*) propertiesToSave;
 
 /** Deletes the document from the database. 
@@ -86,8 +75,9 @@
 @property (readonly) NSTimeInterval timeSinceExternallyChanged;
 
 /** Bulk-saves changes to multiple model objects (which must all be in the same database).
-    This invokes -[TDDatabase putChanges:], which sends a single request to _bulk_docs.
+    The saves are performed in one transaction, for efficiency.
     Any unchanged models in the array are ignored.
+    See also: -[TDDatabase saveAllModels:].
     @param models  An array of TDModel objects, which must all be in the same database.
     @return  A RESTOperation that saves all changes, or nil if none of the models need saving. */
 + (BOOL) saveModels: (NSArray*)models error: (NSError**)outError;
@@ -146,7 +136,7 @@
 
 
 
-
+/** TDDatabase methods for use with TDModel. */
 @interface TDDatabase (TDModel)
 
 /** All TDModels associated with this database whose needsSave is true. */
@@ -155,7 +145,9 @@
 /** Saves changes to all TDModels associated with this database whose needsSave is true. */
 - (BOOL) saveAllModels: (NSError**)outError;
 
-/** Immediately runs any pending autosaves for all TDModels associated with this database. */
+/** Immediately runs any pending autosaves for all TDModels associated with this database.
+    (On iOS, this will automatically be called when the application is about to quit or go into the
+    background. On Mac OS it is NOT called automatically.) */
 - (BOOL) autosaveAllModels: (NSError**)outError;
 
 @end

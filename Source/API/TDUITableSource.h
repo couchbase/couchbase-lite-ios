@@ -9,15 +9,20 @@
 #import <UIKit/UIKit.h>
 @class TDDocument, TDLiveQuery, TDQueryRow, RESTOperation;
 
-/** A UITableView data source driven by a TDLiveQuery. */
+/** A UITableView data source driven by a TDLiveQuery.
+    It populates the table rows from the query rows, and automatically updates the table as the
+    query results change when the database is updated.
+    A TDUITableSource can be created in a nib. If so, its tableView outlet should be wired up to
+    the UITableView it manages, and the table view's dataSource outlet should be wired to it. */
 @interface TDUITableSource : NSObject <UITableViewDataSource
 #if (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000)
                                                             , UIDataSourceModelAssociation
 #endif
                                                                                           >
-
+/** The table view to manage. */
 @property (nonatomic, retain) IBOutlet UITableView* tableView;
 
+/** The query whose rows will be displayed in the table. */
 @property (retain) TDLiveQuery* query;
 
 /** Rebuilds the table from the query's current .rows property. */

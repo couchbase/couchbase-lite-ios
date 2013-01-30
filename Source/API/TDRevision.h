@@ -17,17 +17,20 @@
 /** The document this is a revision of. */
 @property (readonly) TDDocument* document;
 
+/** The database this revision's document belongs to. */
 @property (readonly) TDDatabase* database;
 
-/** Does this revision mark the deletion of its document? */
+/** Does this revision mark the deletion of its document?
+    (In other words, does it have a "_deleted" property?) */
 @property (readonly) BOOL isDeleted;
 
-/** The ID of this revision. Will be nil if this is a TDNewRevision. */
+/** The ID of this revision. Will be nil if this is an unsaved TDNewRevision. */
 @property (readonly) NSString* revisionID;
 
 /** The revision's contents as parsed from JSON.
     Keys beginning with "_" are defined and reserved by TouchDB; others are app-specific.
-    The properties are cached for the lifespan of this object, so subsequent calls after the first are cheap. */
+    The first call to this method may need to fetch the properties from disk, but subsequent calls
+    are very cheap. */
 @property (readonly, copy) NSDictionary* properties;
 
 /** The user-defined properties, without the ones reserved by TouchDB.
@@ -42,7 +45,7 @@
 
 #pragma mark ATTACHMENTS
 
-/** The names of all attachments (array of strings). */
+/** The names of all attachments (an array of strings). */
 @property (readonly) NSArray* attachmentNames;
 
 /** Looks up the attachment with the given name (without fetching its contents yet). */
@@ -55,16 +58,17 @@
 
 
 
-/** An existing revision of a TDDocument. */
+/** An existing revision of a TDDocument. Most of its API is inherited from TDRevisionBase. */
 @interface TDRevision : TDRevisionBase
 
 /** Has this object fetched its contents from the database yet? */
 @property (readonly) BOOL propertiesAreLoaded;
 
-/** Creates a new mutable revision whose properties and attachments you can modify and then save. */
+/** Creates a new mutable child revision whose properties and attachments are initially identical
+    to this one's, which you can modify and then save. */
 - (TDNewRevision*) newRevision;
 
-/** Saves a new revision with the given properties.
+/** Creates and saves a new revision with the given properties.
     This will fail with a 412 error if the receiver is not the current revision of the document. */
 - (TDRevision*) putProperties: (NSDictionary*)properties
                         error: (NSError**)outError;
@@ -72,24 +76,28 @@
 /** Deletes the document by creating a new deletion-marker revision. */
 - (TDRevision*) deleteDocument: (NSError**)outError;
 
+/** Returns the history of this document as an array of TDRevisions, in forward order.
+    Older revisions are NOT guaranteed to have their properties available. */
 - (NSArray*) getRevisionHistory: (NSError**)outError;
 
 @end
 
 
 
-/** An unsaved new revision. */
+/** An unsaved new revision. Most of its API is inherited from TDRevisionBase. */
 @interface TDNewRevision : TDRevisionBase
 
+// These properties are overridden to be settable:
 @property (readwrite) BOOL isDeleted;
 @property (readwrite, copy) NSMutableDictionary* properties;
 @property (readonly, copy) NSDictionary* userProperties;
-
-@property (readonly) TDRevision* parentRevision;
-@property (readonly) NSString* parentRevisionID;
-
-/** Property setter, enables [] assignment */
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key;
+
+/** The revision this one is a child of. */
+@property (readonly) TDRevision* parentRevision;
+
+/** The ID of the parentRevision. */
+@property (readonly) NSString* parentRevisionID;
 
 /** Saves the new revision to the database.
     This will fail with a 412 error if its parent (the revision it was created from) is not the current revision of the document.

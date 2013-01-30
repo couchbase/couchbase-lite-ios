@@ -36,7 +36,8 @@ typedef enum {
 #pragma mark - OPTIONS:
 
 /** Is this replication remembered persistently in the _replicator database?
-    Persistent continuous replications will automatically restart on the next launch. */
+    Persistent continuous replications will automatically restart on the next launch
+    or (on iOS) when the app returns to the foreground. */
 @property bool persistent;
 
 /** Should the target database be created if it doesn't already exist? (Defaults to NO). */
@@ -64,34 +65,56 @@ typedef enum {
 
 #pragma mark - AUTHENTICATION:
 
+/** The credential (generally username+password) to use to authenticate to the remote database.
+    This can either come from the URL itself (if it's of the form "http://user:pass@example.com")
+    or be stored in the NSURLCredentialStore, which is a wrapper around the Keychain. */
 @property NSURLCredential* credential;
 
 /** OAuth parameters that the replicator should use when authenticating to the remote database.
-    Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret", and optionally "signature_method". */
+    Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret",
+    and optionally "signature_method". */
 @property (nonatomic, copy) NSDictionary* OAuth;
 
-/** The base URL of the remote server. Use this as the "origin" parameter when requesting BrowserID authentication. */
+/** The base URL of the remote server, for use as the "origin" parameter when requesting BrowserID authentication. */
 @property (readonly) NSURL* browserIDOrigin;
 
-/** Email address for remote login with BrowserID (aka Persona). */
+/** Email address for remote login with BrowserID (aka Persona). This is stored persistently in
+    the replication document, but it's not sufficient for login (you also need to go through the
+    BrowserID protocol to get a signed assertion, which you then pass to the
+    -registerBrowserIDAssertion: method.)*/
 @property (nonatomic, copy) NSString* browserIDEmailAddress;
 
-/** Registers a BrowserID 'assertion' (ID verification) string that will be used on the next login to the remote server. This also sets browserIDEmailAddress. */
+/** Registers a BrowserID 'assertion' (ID verification) string that will be used on the next login to the remote server. This also sets browserIDEmailAddress.
+    Note: An assertion is a type of certificate and typically has a very short lifespan (like, a
+    few minutes.) For this reason it's not stored in the replication document, but instead kept
+    in an in-memory registry private to the BrowserID authorizer. You should initiate a replication
+    immediately after registering the assertion, so that the replicator engine can use it to
+    authenticate before it expires. After that, the replicator will have a login session cookie
+    that should last significantly longer before needing to be renewed. */
 - (bool) registerBrowserIDAssertion: (NSString*)assertion;
 
 
 #pragma mark - STATUS:
 
-/** Starts the replication, asynchronously.
-    @return  The operation to start replication, or nil if replication is already started. */
+/** Starts the replication, asynchronously. */
 - (void) start;
 
 /** Stops replication, asynchronously. */
 - (void) stop;
 
+/** Restarts a completed or failed replication. */
 - (void) restart;
 
+/** The replication's current state, one of {stopped, offline, idle, active}. */
+@property (nonatomic, readonly) TDReplicationMode mode;
+
+/** YES while the replication is running, NO if it's stopped.
+    Note that a continuous replication never actually stops; it only goes idle waiting for new
+    data to appear. */
 @property (nonatomic, readonly) bool running;
+
+/** The error status of the replication, or nil if there have not been any errors since it started. */
+@property (nonatomic, readonly, retain) NSError* error;
 
 /** The number of completed changes processed, if the task is active, else 0 (observable). */
 @property (nonatomic, readonly) unsigned completed;
@@ -99,13 +122,11 @@ typedef enum {
 /** The total number of changes to be processed, if the task is active, else 0 (observable). */
 @property (nonatomic, readonly) unsigned total;
 
-@property (nonatomic, readonly, retain) NSError* error;
-
-@property (nonatomic, readonly) TDReplicationMode mode;
-
 
 @end
 
 
-/** This notification is posted by a TDReplication when its progress changes. */
+/** This notification is posted by a TDReplication when any of these properties change:
+    {mode, running, error, completed, total}. It's often more convenient to observe this
+    notification rather than observing each property individually. */
 extern NSString* const kTDReplicationChangeNotification;

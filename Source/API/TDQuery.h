@@ -20,7 +20,7 @@ typedef enum {
 } TDStaleness;
 
 
-/** Represents a TouchDB 'view', or a view-like resource like _all_documents. */
+/** Represents a query of a TouchDB 'view', or of a view-like resource like _all_documents. */
 @interface TDQuery : NSObject
 
 /** The database that contains this view. */
@@ -30,7 +30,7 @@ typedef enum {
 @property NSUInteger limit;
 
 /** The number of initial rows to skip. Default value is 0.
-    Should only be used with small values. For efficient paging, use startkey and limit.*/
+    Should only be used with small values. For efficient paging, use startKey and limit.*/
 @property NSUInteger skip;
 
 /** Should the rows be returned in descending key order? Default value is NO. */
@@ -50,7 +50,8 @@ typedef enum {
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
 @property (copy) NSString* endKeyDocID;
 
-/** If set, allows faster results at the expense of returning possibly out-of-date data. */
+/** If set, the view will not be updated for this query, even if the database has changed.
+    This allows faster results at the expense of returning possibly out-of-date data. */
 @property TDStaleness stale;
 
 /** If non-nil, the query will fetch only the rows with the given keys. */
@@ -65,6 +66,8 @@ typedef enum {
     (This property is equivalent to "include_docs" in the CouchDB API.) */
 @property BOOL prefetch;
 
+/** If set to YES, every row in the result will have a "_local_seq" property containing the
+    sequence ID of the revision it's from. */
 @property BOOL sequences;
 
 /** If non-nil, the error of the last execution of the query.
@@ -85,7 +88,7 @@ typedef enum {
 
 
 /** A TDQuery subclass that automatically refreshes the result rows every time the database changes.
-    All you need to do is watch for changes to the .rows property. */
+    All you need to do is use KVO to observe changes to the .rows property. */
 @interface TDLiveQuery : TDQuery
 
 /** In TDLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
@@ -116,7 +119,10 @@ typedef enum {
 /** A result row from a TouchDB view query. */
 @interface TDQueryRow : NSObject
 
+/** The row's key: this is the first parameter passed to the emit() call that generated the row. */
 @property (readonly) id key;
+
+/** The row's value: this is the second parameter passed to the emit() call that generated the row. */
 @property (readonly) id value;
 
 /** The ID of the document described by this view row.
