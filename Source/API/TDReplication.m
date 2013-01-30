@@ -181,9 +181,16 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
+- (void) setRemote: (id)remote {
+    if (self.pull)
+        self.source = remote;
+    else
+        self.target = remote;
+}
+
+
 - (void) setRemoteDictionaryValue: (id)value forKey: (NSString*)key {
-    BOOL isPull = self.pull;
-    id oldRemote = isPull ? self.source : self.target;
+    id oldRemote = self.pull ? self.source : self.target;
     NSMutableDictionary* remote;
     if ([oldRemote isKindOfClass: [NSString class]])
         remote = [NSMutableDictionary dictionaryWithObject: oldRemote forKey: @"url"];
@@ -191,10 +198,7 @@ static inline BOOL isLocalDBName(NSString* url) {
         remote = [NSMutableDictionary dictionaryWithDictionary: oldRemote];
     [remote setValue: value forKey: key];
     if (!$equal(remote, oldRemote)) {
-        if (isPull)
-            self.source = remote;
-        else
-            self.target = remote;
+        [self setRemote: remote];
         [self restart];
     }
 }
@@ -220,11 +224,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (void) setCredential:(NSURLCredential *)cred {
     // Hardcoded username doesn't mix with stored credentials.
     NSURL* url = self.remoteURL;
-    NSString* urlStr = url.my_URLByRemovingUser.absoluteString;
-    if (self.pull)
-        self.target = urlStr;
-    else
-        self.source = urlStr;
+    [self setRemote: url.my_URLByRemovingUser.absoluteString];
 
     NSURLProtectionSpace* space = [url my_protectionSpaceWithRealm: nil
                                             authenticationMethod: NSURLAuthenticationMethodDefault];
