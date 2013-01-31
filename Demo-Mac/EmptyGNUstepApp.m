@@ -1,14 +1,14 @@
 //
 //  EmptyGNUstepApp.m
-//  TouchDB
+//  CouchbaseLite
 //
 //  Created by Jens Alfke on 2/27/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import <TouchDB/TouchDB.h>
-#import <TouchDB/TDRouter.h>
+#import <CouchbaseLite/CouchbaseLite.h>
+#import <CouchbaseLite/CBLRouter.h>
 
 #if DEBUG
 #import "Logging.h"
@@ -24,15 +24,15 @@ int main (int argc, const char * argv[])
     @autoreleasepool {
 #if DEBUG
         EnableLog(YES);
-        //EnableLogTo(TDDatabase, YES);
-        //EnableLogTo(TDDatabaseVerbose, YES);
+        //EnableLogTo(CBLDatabase, YES);
+        //EnableLogTo(CBLDatabaseVerbose, YES);
         RunTestCases(argc, argv);
 #endif
         /*
         NSError* error;
-        TDServer* server = [[TDServer alloc] initWithDirectory: @"/tmp/touchdbserver" error: &error];
+        CBLServer* server = [[CBLServer alloc] initWithDirectory: @"/tmp/touchdbserver" error: &error];
         if (!server) {
-            Warn(@"FATAL: Error initializing TDServer: %@", error);
+            Warn(@"FATAL: Error initializing CBLServer: %@", error);
             exit(1);
         }
         NSLog(@"Started server %@", server);

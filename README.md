@@ -1,10 +1,11 @@
-# TouchDB #
+# Couchbase Lite #
+## (née TouchDB)
 
 by Jens Alfke (jens@couchbase.com)  
 with contributions from Alexander Edge, Chris Kau, David Venable, Derek Clarkson, Fabien Franzen, fcandalija, J Chris Anderson, Marty Schoch, Mike Lamb, Paul Mietz Egli, Robin Lu  
 and technical advice from Damien Katz and Filipe Manana
 
-**TouchDB** is a lightweight [Apache CouchDB][1]-compatible database engine suitable for embedding into mobile or desktop apps. Think of it this way: If CouchDB is MySQL, then TouchDB is SQLite.
+**Couchbase Lite** is a lightweight [Apache CouchDB][1]-compatible database engine suitable for embedding into mobile or desktop apps. Think of it this way: If CouchDB is MySQL, and Couchbase Server is Oracle, then Couchbase Lite is SQLite.
 
 By "_CouchDB-compatible_" I mean that it can replicate with CouchDB, and that its data model and high-level design are "Couch-like" enough to make it familiar to CouchDB/Couchbase developers. Its REST API is nearly identical, though it doesn't support a few CouchDB features, like user accounts, that aren't useful in mobile apps. Its implementation is _not_ based on CouchDB's (it's not even written in Erlang.) It _does_ support replication to and from CouchDB.
 
@@ -39,7 +40,7 @@ And by "_mobile apps_" we're focusing on iOS and [Android][11], although there's
 
 ## License ##
 
- * TouchDB itself is under the Apache License 2.0.
+ * Couchbase Lite itself is under the Apache License 2.0.
  * [FMDB][5], by [Gus Mueller][8], is under the MIT License.
  * [Google Toolbox For Mac][10] is under the Apache License 2.0.
  * [CocoaHTTPServer][9], by Robbie Hanson, is under the BSD License.
@@ -47,16 +48,16 @@ And by "_mobile apps_" we're focusing on iOS and [Android][11], although there's
 
 ## Development Status ##
 
-TouchDB 1.0.1 was released on January 15, 2013.
+Couchbase Lite (aka TouchDB) 1.0.1 was released on January 15, 2013.
 
 In general, the "stable" branch represents the latest stable release, while the "master" branch has the latest commits and may not be solid. Any other branches are probably experimental.
 
-## Downloading TouchDB ##
+## Downloading Couchbase Lite ##
 
 * [Latest stable build][20].
 * [Latest revisions][19] (built hourly after any commits. Each archive is timestamped. May not be stable; use at your own risk.)
 
-## Building TouchDB ##
+## Building Couchbase Lite ##
 
 ### On a Mac ###
 
@@ -64,7 +65,7 @@ In general, the "stable" branch represents the latest stable release, while the 
 
 For full details see the [wiki page][7]. The basic steps are:
 
- 1. Clone the TouchDB repository to your local disk.
+ 1. Clone the Couchbase Lite repository to your local disk.
  2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the dependent library repos (such as [FMDB][5] and [MYUtilities][6]) into the vendor/ subdirectory.
  3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
 
@@ -73,20 +74,20 @@ For full details see the [wiki page][7]. The basic steps are:
 Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep` directory.
 
 [1]: http://couchdb.apache.org
-[2]: https://github.com/couchbaselabs/TouchDB-iOS/wiki
+[2]: https://github.com/couchbaselabs/CouchbaseLite-iOS/wiki
 [3]: http://couchbase.com
 [5]: https://github.com/couchbaselabs/fmdb
 [6]: https://bitbucket.org/snej/myutilities/overview
-[7]: https://github.com/couchbaselabs/TouchDB-iOS/wiki/Building-TouchDB
+[7]: https://github.com/couchbaselabs/CouchbaseLite-iOS/wiki/Building-CouchbaseLite
 [8]: https://github.com/ccgus/
 [9]: https://github.com/robbiehanson/CocoaHTTPServer
 [10]: http://code.google.com/p/google-toolbox-for-mac/
-[11]: https://github.com/couchbaselabs/TouchDB-Android
+[11]: https://github.com/couchbaselabs/CouchbaseLite-Android
 [12]: http://www.gnustep.org/
 [13]: http://wiki.gnustep.org/index.php/Platform_compatibility
-[14]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/BUILDING.txt
-[15]: https://github.com/couchbaselabs/TouchDB-iOS/blob/master/GNUstep/SETUP.txt
+[14]: https://github.com/couchbaselabs/CouchbaseLite-iOS/blob/master/GNUstep/BUILDING.txt
+[15]: https://github.com/couchbaselabs/CouchbaseLite-iOS/blob/master/GNUstep/SETUP.txt
 [17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
 [18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo
 [19]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/
-[20]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/TouchDB.zip
+[20]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/CouchbaseLite.zip

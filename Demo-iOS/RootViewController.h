@@ -19,16 +19,16 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "TDUITableSource.h"
-@class TDDatabase, TDReplication;
+#import "CBLUITableSource.h"
+@class CBLDatabase, CBLReplication;
 
 
-@interface RootViewController : UIViewController <TDUITableDelegate, UITextFieldDelegate>
+@interface RootViewController : UIViewController <CBLUITableDelegate, UITextFieldDelegate>
 {
-    TDDatabase *database;
+    CBLDatabase *database;
     NSURL* remoteSyncURL;
-    TDReplication* _pull;
-    TDReplication* _push;
+    CBLReplication* _pull;
+    CBLReplication* _push;
     
     UITableView *tableView;
     IBOutlet UIProgressView *progress;
@@ -38,9 +38,9 @@
 }
 
 @property(nonatomic, strong) IBOutlet UITableView *tableView;
-@property(nonatomic, strong) IBOutlet TDUITableSource* dataSource;
+@property(nonatomic, strong) IBOutlet CBLUITableSource* dataSource;
 
--(void)useDatabase:(TDDatabase*)theDatabase;
+-(void)useDatabase:(CBLDatabase*)theDatabase;
 
 - (IBAction)configureSync:(id)sender;
 - (IBAction) deleteCheckedItems:(id)sender;

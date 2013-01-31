@@ -49,9 +49,9 @@ static NSData* ImageJPEGData(NSImage* image);
     if (_picture && picture == _picture)
         return;
     
-    TDAttachment* attachment = nil;
+    CBLAttachment* attachment = nil;
     if (picture)
-        attachment = [[TDAttachment alloc] initWithContentType: @"image/jpeg"
+        attachment = [[CBLAttachment alloc] initWithContentType: @"image/jpeg"
                                                              body: ImageJPEGData(picture)];
     [self addAttachment: attachment named: @"picture"];
     _picture = picture;

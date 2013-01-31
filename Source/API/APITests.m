@@ -1,6 +1,6 @@
 //
 //  APITests.m
-//  TouchDB
+//  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/12/11.
 //  Copyright 2011 Couchbase, Inc.
@@ -13,18 +13,18 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "TouchDB.h"
+#import "CouchbaseLite.h"
 #import "Test.h"
 
 
 #if DEBUG
 
 
-static TDDatabase* createEmptyDB(void) {
-    TDDatabaseManager* dbmgr = [TDDatabaseManager sharedInstance];
+static CBLDatabase* createEmptyDB(void) {
+    CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
     NSError* error;
-    TDDatabase* db = [dbmgr databaseNamed: @"test_db"];
+    CBLDatabase* db = [dbmgr databaseNamed: @"test_db"];
     if (db)
         CAssert([db deleteDatabase: &error], @"Couldn't delete old test_db: %@", error);
     db = [dbmgr createDatabaseNamed: @"test_db" error: &error];
@@ -33,9 +33,9 @@ static TDDatabase* createEmptyDB(void) {
 }
 
 
-static TDDocument* createDocumentWithProperties(TDDatabase* db,
+static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
                                                    NSDictionary* properties) {
-    TDDocument* doc = [db untitledDocument];
+    CBLDocument* doc = [db untitledDocument];
     CAssert(doc != nil);
     CAssertNil(doc.currentRevisionID);
     CAssertNil(doc.currentRevision);
@@ -53,7 +53,7 @@ static TDDocument* createDocumentWithProperties(TDDatabase* db,
 }
 
 
-static void createDocuments(TDDatabase* db, unsigned n) {
+static void createDocuments(CBLDatabase* db, unsigned n) {
     for (unsigned i=0; i<n; i++) {
         NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
         createDocumentWithProperties(db, properties);
@@ -65,20 +65,20 @@ static void createDocuments(TDDatabase* db, unsigned n) {
 
 
 TestCase(API_Server) {
-    TDDatabaseManager* dbmgr = [TDDatabaseManager sharedInstance];
+    CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
     for (NSString* name in dbmgr.allDatabaseNames) {
-        TDDatabase* db = [dbmgr databaseNamed: name];
+        CBLDatabase* db = [dbmgr databaseNamed: name];
         Log(@"Database '%@': %u documents", db.name, (unsigned)db.documentCount);
     }
 }
 
 
 TestCase(API_CreateDocument) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     NSDictionary* properties = @{@"testName": @"testCreateDocument",
                                 @"tag": @1337};
-    TDDocument* doc = createDocumentWithProperties(db, properties);
+    CBLDocument* doc = createDocumentWithProperties(db, properties);
     
     NSString* docID = doc.documentID;
     CAssert(docID.length > 10, @"Invalid doc ID: '%@'", docID);
@@ -93,15 +93,15 @@ TestCase(API_CreateRevisions) {
     RequireTestCase(API_CreateDocument);
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
     @"tag": @1337};
-    TDDatabase* db = createEmptyDB();
-    TDDocument* doc = createDocumentWithProperties(db, properties);
-    TDRevision* rev1 = doc.currentRevision;
+    CBLDatabase* db = createEmptyDB();
+    CBLDocument* doc = createDocumentWithProperties(db, properties);
+    CBLRevision* rev1 = doc.currentRevision;
     CAssert([rev1.revisionID hasPrefix: @"1-"]);
 
     NSMutableDictionary* properties2 = [properties mutableCopy];
     properties2[@"tag"] = @4567;
     NSError* error;
-    TDRevision* rev2 = [rev1 putProperties: properties2 error: &error];
+    CBLRevision* rev2 = [rev1 putProperties: properties2 error: &error];
     CAssert(rev2, @"Put failed: %@", error);
 
     CAssert([doc.currentRevisionID hasPrefix: @"2-"],
@@ -117,9 +117,9 @@ TestCase(API_CreateNewRevisions) {
     RequireTestCase(API_CreateRevisions);
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
     @"tag": @1337};
-    TDDatabase* db = createEmptyDB();
-    TDDocument* doc = [db untitledDocument];
-    TDNewRevision* newRev = [doc newRevision];
+    CBLDatabase* db = createEmptyDB();
+    CBLDocument* doc = [db untitledDocument];
+    CBLNewRevision* newRev = [doc newRevision];
 
     CAssertEq(newRev.document, doc);
     CAssertEq(newRev.database, db);
@@ -132,7 +132,7 @@ TestCase(API_CreateNewRevisions) {
     CAssertEqual(newRev.userProperties, properties);
 
     NSError* error;
-    TDRevision* rev1 = [newRev save: &error];
+    CBLRevision* rev1 = [newRev save: &error];
     CAssert(rev1, @"Save 1 failed: %@", error);
     CAssertEqual(rev1, doc.currentRevision);
     CAssert([rev1.revisionID hasPrefix: @"1-"]);
@@ -146,7 +146,7 @@ TestCase(API_CreateNewRevisions) {
     CAssertEqual(newRev.userProperties, rev1.userProperties);
 
     newRev[@"tag"] = @4567;
-    TDRevision* rev2 = [newRev save: &error];
+    CBLRevision* rev2 = [newRev save: &error];
     CAssert(rev2, @"Save 2 failed: %@", error);
     CAssertEqual(rev2, doc.currentRevision);
     CAssert([rev2.revisionID hasPrefix: @"2-"]);
@@ -157,22 +157,22 @@ TestCase(API_CreateNewRevisions) {
 
 #if 0
 TestCase(API_SaveMultipleDocuments) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     NSMutableArray* docs = [NSMutableArray array];
     for (int i=0; i<5; i++) {
         NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
                                     @"testSaveMultipleDocuments", @"testName",
                                     [NSNumber numberWithInt: i], @"sequence",
                                     nil];
-        TDDocument* doc = createDocumentWithProperties(db, properties);
+        CBLDocument* doc = createDocumentWithProperties(db, properties);
         [docs addObject: doc];
     }
     
     NSMutableArray* revisions = [NSMutableArray array];
     NSMutableArray* revisionProperties = [NSMutableArray array];
     
-    for (TDDocument* doc in docs) {
-        TDRevision* revision = doc.currentRevision;
+    for (CBLDocument* doc in docs) {
+        CBLRevision* revision = doc.currentRevision;
         CAssert([revision.revisionID hasPrefix: @"1-"],
                      @"Expected 1st revision: %@ in %@", doc.currentRevisionID, doc);
         NSMutableDictionary* properties = revision.properties.mutableCopy;
@@ -183,7 +183,7 @@ TestCase(API_SaveMultipleDocuments) {
     
     CAssertWait([db putChanges: revisionProperties toRevisions: revisions]);
     
-    for (TDDocument* doc in docs) {
+    for (CBLDocument* doc in docs) {
         CAssert([doc.currentRevisionID hasPrefix: @"2-"],
                      @"Expected 2nd revision: %@ in %@", doc.currentRevisionID, doc);
         CAssertEqual([doc.currentRevision.properties objectForKey: @"misc"],
@@ -193,12 +193,12 @@ TestCase(API_SaveMultipleDocuments) {
 
 
 TestCase(API_SaveMultipleUnsavedDocuments) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     NSMutableArray* docs = [NSMutableArray array];
     NSMutableArray* docProperties = [NSMutableArray array];
     
     for (int i=0; i<5; i++) {
-        TDDocument* doc = [db untitledDocument];
+        CBLDocument* doc = [db untitledDocument];
         [docs addObject: doc];
         [docProperties addObject: [NSDictionary dictionaryWithObject: [NSNumber numberWithInt: i]
                                                               forKey: @"order"]];
@@ -207,7 +207,7 @@ TestCase(API_SaveMultipleUnsavedDocuments) {
     CAssertWait([db putChanges: docProperties toRevisions: docs]);
     
     for (int i=0; i<5; i++) {
-        TDDocument* doc = [docs objectAtIndex: i];
+        CBLDocument* doc = [docs objectAtIndex: i];
         CAssert([doc.currentRevisionID hasPrefix: @"1-"],
                      @"Expected 2nd revision: %@ in %@", doc.currentRevisionID, doc);
         CAssertEqual([doc.currentRevision.properties objectForKey: @"order"],
@@ -217,20 +217,20 @@ TestCase(API_SaveMultipleUnsavedDocuments) {
 
 
 TestCase(API_DeleteMultipleDocuments) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     NSMutableArray* docs = [NSMutableArray array];
     for (int i=0; i<5; i++) {
         NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
                                     @"testDeleteMultipleDocuments", @"testName",
                                     [NSNumber numberWithInt: i], @"sequence",
                                     nil];
-        TDDocument* doc = createDocumentWithProperties(properties);
+        CBLDocument* doc = createDocumentWithProperties(properties);
         [docs addObject: doc];
     }
     
     CAssertWait([db deleteDocuments: docs]);
     
-    for (TDDocument* doc in docs) {
+    for (CBLDocument* doc in docs) {
         CAssert(doc.isDeleted);
     }
     
@@ -239,9 +239,9 @@ TestCase(API_DeleteMultipleDocuments) {
 #endif
 
 TestCase(API_DeleteDocument) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     NSDictionary* properties = @{@"testName": @"testDeleteDocument"};
-    TDDocument* doc = createDocumentWithProperties(db, properties);
+    CBLDocument* doc = createDocumentWithProperties(db, properties);
     CAssert(!doc.isDeleted);
     NSError* error;
     CAssert([doc deleteDocument: &error]);
@@ -250,7 +250,7 @@ TestCase(API_DeleteDocument) {
 
 
 TestCase(API_AllDocuments) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 5;
     createDocuments(db, kNDocs);
 
@@ -258,16 +258,16 @@ TestCase(API_AllDocuments) {
     [db clearDocumentCache];
     
     Log(@"----- all documents -----");
-    TDQuery* query = [db queryAllDocuments];
+    CBLQuery* query = [db queryAllDocuments];
     //query.prefetch = YES;
     Log(@"Getting all documents: %@", query);
     
-    TDQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = query.rows;
     CAssertEq(rows.count, kNDocs);
     NSUInteger n = 0;
-    for (TDQueryRow* row in rows) {
+    for (CBLQueryRow* row in rows) {
         Log(@"    --> %@", row);
-        TDDocument* doc = row.document;
+        CBLDocument* doc = row.document;
         CAssert(doc, @"Couldn't get doc from query");
         CAssert(doc.currentRevision.propertiesAreLoaded, @"QueryRow should have preloaded revision contents");
         Log(@"        Properties = %@", doc.properties);
@@ -280,15 +280,15 @@ TestCase(API_AllDocuments) {
 
 
 TestCase(API_RowsIfChanged) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 5;
     createDocuments(db, kNDocs);
     // clear the cache so all documents/revisions will be re-fetched:
     [db clearDocumentCache];
     
-    TDQuery* query = [db queryAllDocuments];
+    CBLQuery* query = [db queryAllDocuments];
     query.prefetch = NO;    // Prefetching prevents view caching, so turn it off
-    TDQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = query.rows;
     CAssertEq(rows.count, kNDocs);
     
     // Make sure the query is cached (view eTag hasn't changed):
@@ -302,12 +302,12 @@ TestCase(API_RowsIfChanged) {
 #pragma mark - HISTORY
 
 TestCase(API_History) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     NSMutableDictionary* properties = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                 @"test06_History", @"testName",
                                 @1, @"tag",
                                 nil];
-    TDDocument* doc = createDocumentWithProperties(db, properties);
+    CBLDocument* doc = createDocumentWithProperties(db, properties);
     NSString* rev1ID = [doc.currentRevisionID copy];
     Log(@"1st revision: %@", rev1ID);
     CAssert([rev1ID hasPrefix: @"1-"], @"1st revision looks wrong: '%@'", rev1ID);
@@ -325,12 +325,12 @@ TestCase(API_History) {
     Log(@"Revisions = %@", revisions);
     CAssertEq(revisions.count, 2u);
     
-    TDRevision* rev1 = revisions[0];
+    CBLRevision* rev1 = revisions[0];
     CAssertEqual(rev1.revisionID, rev1ID);
     NSDictionary* gotProperties = rev1.properties;
     CAssertEqual(gotProperties[@"tag"], @1);
     
-    TDRevision* rev2 = revisions[1];
+    CBLRevision* rev2 = revisions[1];
     CAssertEqual(rev2.revisionID, rev2ID);
     CAssertEq(rev2, doc.currentRevision);
     gotProperties = rev2.properties;
@@ -343,25 +343,25 @@ TestCase(API_History) {
 #pragma mark - ATTACHMENTS
 
 TestCase(API_Attachments) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
                                 @"testAttachments", @"testName",
                                 nil];
-    TDDocument* doc = createDocumentWithProperties(db, properties);
-    TDRevision* rev = doc.currentRevision;
+    CBLDocument* doc = createDocumentWithProperties(db, properties);
+    CBLRevision* rev = doc.currentRevision;
     
     CAssertEq(rev.attachmentNames.count, (NSUInteger)0);
     CAssertNil([rev attachmentNamed: @"index.html"]);
     
     NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
-    TDAttachment* attach = [[TDAttachment alloc] initWithContentType:@"text/plain; charset=utf-8" body:body];
+    CBLAttachment* attach = [[CBLAttachment alloc] initWithContentType:@"text/plain; charset=utf-8" body:body];
     CAssert(attach);
     
-    TDNewRevision *rev2 = [doc newRevision];
+    CBLNewRevision *rev2 = [doc newRevision];
     [rev2 addAttachment:attach named:@"index.html"];
     
     NSError * error;
-    TDRevision *rev3 = [rev2 save:&error];
+    CBLRevision *rev3 = [rev2 save:&error];
     
     CAssertNil(error);
     CAssert(rev3);
@@ -377,7 +377,7 @@ TestCase(API_Attachments) {
     CAssertEqual(attach.body, body);
     CAssertEq(attach.length, (UInt64)body.length);
 
-    TDRevision *rev4 = [attach updateBody:nil contentType:nil error:&error];
+    CBLRevision *rev4 = [attach updateBody:nil contentType:nil error:&error];
     CAssert(!error);
     CAssert(rev4);
     CAssertEq([rev4.attachmentNames count], (NSUInteger)0);
@@ -387,9 +387,9 @@ TestCase(API_Attachments) {
 
 
 TestCase(API_ChangeTracking) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     __block int changeCount = 0;
-    [[NSNotificationCenter defaultCenter] addObserverForName: kTDDatabaseChangeNotification
+    [[NSNotificationCenter defaultCenter] addObserverForName: kCBLDatabaseChangeNotification
                                                       object: db
                                                        queue: nil
                                                   usingBlock: ^(NSNotification *n) {
@@ -411,16 +411,16 @@ TestCase(API_ChangeTracking) {
 
 
 TestCase(API_CreateView) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
 
-    TDView* view = [db viewNamed: @"vu"];
+    CBLView* view = [db viewNamed: @"vu"];
     CAssert(view);
     CAssertEq(view.database, db);
     CAssertEqual(view.name, @"vu");
     CAssert(view.mapBlock == NULL);
     CAssert(view.reduceBlock == NULL);
 
-    [view setMapBlock:^(NSDictionary *doc, TDMapEmitBlock emit) {
+    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
         emit(doc[@"sequence"], nil);
     } version: @"1"];
 
@@ -429,16 +429,16 @@ TestCase(API_CreateView) {
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
 
-    TDQuery* query = [view query];
+    CBLQuery* query = [view query];
     CAssertEq(query.database, db);
     query.startKey = @23;
     query.endKey = @33;
-    TDQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = query.rows;
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
 
     int expectedKey = 23;
-    for (TDQueryRow* row in rows) {
+    for (CBLQueryRow* row in rows) {
         CAssertEq([row.key intValue], expectedKey);
         ++expectedKey;
     }
@@ -447,20 +447,20 @@ TestCase(API_CreateView) {
 
 #if 0
 TestCase(API_RunSlowView) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 50;
     [self createDocuments: kNDocs];
     
-    TDQuery* query = [db slowQueryWithMap: @"function(doc){emit(doc.sequence,null);};"];
+    CBLQuery* query = [db slowQueryWithMap: @"function(doc){emit(doc.sequence,null);};"];
     query.startKey = [NSNumber numberWithInt: 23];
     query.endKey = [NSNumber numberWithInt: 33];
-    TDQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = query.rows;
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
     CAssertEq(rows.totalCount, kNDocs);
     
     int expectedKey = 23;
-    for (TDQueryRow* row in rows) {
+    for (CBLQueryRow* row in rows) {
         CAssertEq([row.key intValue], expectedKey);
         ++expectedKey;
     }
@@ -469,10 +469,10 @@ TestCase(API_RunSlowView) {
 
 
 TestCase(API_Validation) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
 
     [db defineValidation: @"uncool"
-                 asBlock: ^BOOL(TDRevision *newRevision, id<TDValidationContext> context) {
+                 asBlock: ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context) {
                      if (!newRevision.properties[@"groovy"]) {
                          context.errorMessage = @"uncool";
                          return NO;
@@ -481,7 +481,7 @@ TestCase(API_Validation) {
                  }];
     
     NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
-    TDDocument* doc = [db untitledDocument];
+    CBLDocument* doc = [db untitledDocument];
     NSError *error;
     CAssert([doc putProperties: properties error: &error]);
     
@@ -494,34 +494,34 @@ TestCase(API_Validation) {
 
 
 TestCase(API_ViewWithLinkedDocs) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 50;
     NSMutableArray* docs = [NSMutableArray array];
     NSString* lastDocID = @"";
     for (NSUInteger i=0; i<kNDocs; i++) {
         NSDictionary* properties = @{ @"sequence" : @(i),
                                       @"prev": lastDocID };
-        TDDocument* doc = createDocumentWithProperties(db, properties);
+        CBLDocument* doc = createDocumentWithProperties(db, properties);
         [docs addObject: doc];
         lastDocID = doc.documentID;
     }
     
     // The map function will emit the ID of the previous document, causing that document to be
     // included when include_docs (aka prefetch) is enabled.
-    TDQuery* query = [db slowQueryWithMap: ^(NSDictionary *doc, TDMapEmitBlock emit) {
+    CBLQuery* query = [db slowQueryWithMap: ^(NSDictionary *doc, CBLMapEmitBlock emit) {
         emit(doc[@"sequence"], @{ @"_id": doc[@"prev"] });
     }];
     query.startKey = @23;
     query.endKey = @33;
     query.prefetch = YES;
-    TDQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = query.rows;
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
     
     int rowNumber = 23;
-    for (TDQueryRow* row in rows) {
+    for (CBLQueryRow* row in rows) {
         CAssertEq([row.key intValue], rowNumber);
-        TDDocument* prevDoc = docs[rowNumber-1];
+        CBLDocument* prevDoc = docs[rowNumber-1];
         CAssertEqual(row.documentID, prevDoc.documentID);
         CAssertEq(row.document, prevDoc);
         ++rowNumber;
@@ -537,7 +537,7 @@ TestCase(API_ViewWithLinkedDocs) {
                                 @"testCreateDocument", @"testName",
                                 [NSNumber numberWithInt:1337], @"tag",
                                 nil];
-    TDDocument* doc = createDocumentWithProperties(properties);
+    CBLDocument* doc = createDocumentWithProperties(properties);
     
     NSString* docID = doc.documentID;
     CAssert(docID.length > 10, @"Invalid doc ID: '%@'", docID);
@@ -552,7 +552,7 @@ TestCase(API_ViewWithLinkedDocs) {
     NSDictionary *showsJson = [NSDictionary dictionaryWithObject:showFunction forKey:showFunctionName];
     NSString *designDocumentId = @"_design/testPathMap";
     NSDictionary *designDocumentProperties = [NSDictionary dictionaryWithObject:showsJson forKey:@"shows"];
-    TDDocument *designDocument = [self.db documentWithID:designDocumentId];
+    CBLDocument *designDocument = [self.db documentWithID:designDocumentId];
     [[designDocument putProperties:designDocumentProperties] wait];
     
     self.db.documentPathMap = ^(NSString *docId) {
@@ -580,24 +580,24 @@ TestCase(API_ViewWithLinkedDocs) {
 
 
 TestCase(API_ViewOptions) {
-    TDDatabase* db = createEmptyDB();
+    CBLDatabase* db = createEmptyDB();
     createDocuments(db, 5);
 
-    TDView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: ^(NSDictionary *doc, TDMapEmitBlock emit) {
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: ^(NSDictionary *doc, CBLMapEmitBlock emit) {
         emit(doc[@"_id"], doc[@"_local_seq"]);
     } version: @"1"];
         
-    TDQuery* query = [view query];
-    TDQueryEnumerator* rows = query.rows;
-    for (TDQueryRow* row in rows) {
+    CBLQuery* query = [view query];
+    CBLQueryEnumerator* rows = query.rows;
+    for (CBLQueryRow* row in rows) {
         CAssertEqual(row.value, nil);
         Log(@"row _id = %@, local_seq = %@", row.key, row.value);
     }
     
     query.sequences = YES;
     rows = query.rows;
-    for (TDQueryRow* row in rows) {
+    for (CBLQueryRow* row in rows) {
         CAssert([row.value isKindOfClass: [NSNumber class]], @"Unexpected value: %@", row.value);
         Log(@"row _id = %@, local_seq = %@", row.key, row.value);
     }

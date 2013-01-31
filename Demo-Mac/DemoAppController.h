@@ -14,10 +14,10 @@
 //  and limitations under the License.
 
 #import <Cocoa/Cocoa.h>
-@class TDDatabase, TDReplication, DemoQuery;
+@class CBLDatabase, CBLReplication, DemoQuery;
 
 
-/** Generic application delegate for simple Mac OS TouchDB demo apps.
+/** Generic application delegate for simple Mac OS CouchbaseLite demo apps.
     The name of the (local) database to use should be added to the app's Info.plist
     under the 'DemoDatabase' key. */
 @interface DemoAppController : NSObject
@@ -33,10 +33,10 @@
     IBOutlet NSTextField* _syncURLField;
     IBOutlet NSButtonCell* _syncPushCheckbox, *_syncPullCheckbox;
     
-    TDDatabase* _database;
+    CBLDatabase* _database;
     DemoQuery* _query;
     BOOL _syncConfiguringDefault;
-    TDReplication *_pull, *_push;
+    CBLReplication *_pull, *_push;
     BOOL _glowing;
 }
 

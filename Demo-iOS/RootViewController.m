@@ -22,14 +22,14 @@
 #import "ConfigViewController.h"
 #import "DemoAppDelegate.h"
 
-#import "TouchDB.h"
-#import "TD_View.h"
-#import "TD_Database+Insertion.h"
-#import "TDJSON.h"
+#import "CouchbaseLite.h"
+#import "CBL_View.h"
+#import "CBL_Database+Insertion.h"
+#import "CBLJSON.h"
 
 
 @interface RootViewController ()
-@property(nonatomic, strong)TDDatabase *database;
+@property(nonatomic, strong)CBLDatabase *database;
 @property(nonatomic, strong)NSURL* remoteSyncURL;
 @end
 
@@ -70,7 +70,7 @@
 
     // Create a query sorted by descending date, i.e. newest items first:
     NSAssert(database!=nil, @"Not hooked up to database yet");
-    TDLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
+    CBLLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
     query.descending = YES;
     
     self.dataSource.query = query;
@@ -92,7 +92,7 @@
 }
 
 
-- (void)useDatabase:(TDDatabase*)theDatabase {
+- (void)useDatabase:(CBLDatabase*)theDatabase {
     self.database = theDatabase;
     
     // Create a 'view' containing list items sorted by date:
@@ -107,7 +107,7 @@
         if (newRevision.isDeleted)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
-        if (date && ! [TDJSON dateWithJSONObject: date]) {
+        if (date && ! [CBLJSON dateWithJSONObject: date]) {
             context.errorMessage = [@"invalid date " stringByAppendingString: [date description]];
             return NO;
         }
@@ -127,9 +127,9 @@
 
 
 // Customize the appearance of table view cells.
-- (void)couchTableSource:(TDUITableSource*)source
+- (void)couchTableSource:(CBLUITableSource*)source
              willUseCell:(UITableViewCell*)cell
-                  forRow:(TDQueryRow*)row
+                  forRow:(CBLQueryRow*)row
 {
     // Set the cell background and font:
     static UIColor* kBGColor;
@@ -161,8 +161,8 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    TDQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
-    TDDocument *doc = [row document];
+    CBLQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
+    CBLDocument *doc = [row document];
 
     // Toggle the document's 'checked' property:
     NSMutableDictionary *docContent = [doc.properties mutableCopy];
@@ -183,8 +183,8 @@
 - (NSArray*)checkedDocuments {
     // If there were a whole lot of documents, this would be more efficient with a custom query.
     NSMutableArray* checked = [NSMutableArray array];
-    for (TDQueryRow* row in self.dataSource.rows) {
-        TDDocument* doc = row.document;
+    for (CBLQueryRow* row in self.dataSource.rows) {
+        CBLDocument* doc = row.document;
         if ([[doc.properties valueForKey:@"check"] boolValue])
             [checked addObject: doc];
     }
@@ -242,11 +242,11 @@
     // Create the new document's properties:
 	NSDictionary *inDocument = [NSDictionary dictionaryWithObjectsAndKeys:text, @"text",
                                 [NSNumber numberWithBool:NO], @"check",
-                                [TDJSON JSONObjectWithDate: [NSDate date]], @"created_at",
+                                [CBLJSON JSONObjectWithDate: [NSDate date]], @"created_at",
                                 nil];
 
     // Save the document:
-    TDDocument* doc = [database untitledDocument];
+    CBLDocument* doc = [database untitledDocument];
     NSError* error;
     if (![doc putProperties: inDocument error: &error]) {
         [self showErrorAlert: @"Couldn't save new item" forError: error];
@@ -280,9 +280,9 @@
         _push = [repls objectAtIndex: 1];
         NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
         [nctr addObserver: self selector: @selector(replicationProgress:)
-                     name: kTDReplicationChangeNotification object: _pull];
+                     name: kCBLReplicationChangeNotification object: _pull];
         [nctr addObserver: self selector: @selector(replicationProgress:)
-                     name: kTDReplicationChangeNotification object: _push];
+                     name: kCBLReplicationChangeNotification object: _push];
     }
 }
 
@@ -330,7 +330,7 @@
 
 
 - (void) replicationProgress: (NSNotificationCenter*)n {
-    if (_pull.mode == kTDReplicationActive || _push.mode == kTDReplicationActive) {
+    if (_pull.mode == kCBLReplicationActive || _push.mode == kCBLReplicationActive) {
         unsigned completed = _pull.completed + _push.completed;
         unsigned total = _pull.total + _push.total;
         NSLog(@"SYNC progress: %u / %u", completed, total);

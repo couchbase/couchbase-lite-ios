@@ -6,11 +6,11 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import <TouchDB/TouchDB.h>
+#import <CouchbaseLite/CouchbaseLite.h>
 @class NSImage;
 
 
-@interface ShoppingItem : TDModel
+@interface ShoppingItem : CBLModel
 {
     NSImage* _picture;
 }

@@ -14,18 +14,18 @@
 //  and limitations under the License.
 
 #import "DemoQuery.h"
-#import <TouchDB/TouchDB.h>
+#import <CouchbaseLite/CouchbaseLite.h>
 
 
 @interface DemoQuery ()
-- (void) loadEntriesFrom: (TDQueryEnumerator*)rows;
+- (void) loadEntriesFrom: (CBLQueryEnumerator*)rows;
 @end
 
 
 @implementation DemoQuery
 
 
-- (id) initWithQuery: (TDQuery*)query modelClass: (Class)modelClass {
+- (id) initWithQuery: (CBLQuery*)query modelClass: (Class)modelClass {
     NSParameterAssert(query);
     self = [super init];
     if (self != nil) {
@@ -45,13 +45,13 @@
 }
 
 
-- (void) loadEntriesFrom: (TDQueryEnumerator*)rows {
+- (void) loadEntriesFrom: (CBLQueryEnumerator*)rows {
     NSLog(@"Reloading %lu rows from sequence #%lu...",
           (unsigned long)rows.count, (unsigned long)rows.sequenceNumber);
     NSMutableArray* entries = [NSMutableArray array];
 
-    for (TDQueryRow* row in rows) {
-        TDModel* item = [_modelClass modelForDocument: row.document];
+    for (CBLQueryRow* row in rows) {
+        CBLModel* item = [_modelClass modelForDocument: row.document];
         item.autosaves = YES;
         [entries addObject: item];
         // If this item isn't in the prior _entries, it's an external insertion:
@@ -59,7 +59,7 @@
             [item markExternallyChanged];
     }
 
-    for (TDModel* item in _entries) {
+    for (CBLModel* item in _entries) {
         if ([item isNew])
             [entries addObject: item];
     }
@@ -99,12 +99,12 @@
 }
 
 
-- (TDModel*)objectInEntriesAtIndex: (NSUInteger)index {
+- (CBLModel*)objectInEntriesAtIndex: (NSUInteger)index {
     return self._entries[index];
 }
 
 
-- (void) insertObject: (TDModel*)object inEntriesAtIndex: (NSUInteger)index {
+- (void) insertObject: (CBLModel*)object inEntriesAtIndex: (NSUInteger)index {
     [self._entries insertObject: object atIndex: index];
     object.autosaves = YES;
     object.database = _query.database;
@@ -112,7 +112,7 @@
 
 
 - (void) removeObjectFromEntriesAtIndex: (NSUInteger)index {
-    TDModel* item = self._entries[index];
+    CBLModel* item = self._entries[index];
     item.database = nil;
     [_entries removeObjectAtIndex: index];
 }

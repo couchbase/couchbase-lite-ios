@@ -14,15 +14,15 @@
 //  and limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "TouchDB.h"
-#import "TD_Server.h"
-#import "TDURLProtocol.h"
-#import "TDRouter.h"
-#import "TDListener.h"
-#import "TDPusher.h"
-#import "TD_DatabaseManager.h"
-#import "TD_Database+Replication.h"
-#import "TDMisc.h"
+#import "CouchbaseLite.h"
+#import "CBL_Server.h"
+#import "CBL_URLProtocol.h"
+#import "CBL_Router.h"
+#import "CBLListener.h"
+#import "CBL_Pusher.h"
+#import "CBL_DatabaseManager.h"
+#import "CBL_Database+Replication.h"
+#import "CBLMisc.h"
 
 #if DEBUG
 #import "Logging.h"
@@ -44,19 +44,19 @@ static NSString* GetServerPath() {
                                                          NSUserDomainMask, YES);
     NSString* path = paths[0];
     path = [path stringByAppendingPathComponent: bundleID];
-    path = [path stringByAppendingPathComponent: @"TouchDB"];
+    path = [path stringByAppendingPathComponent: @"CouchbaseLite"];
     NSError* error = nil;
     if (![[NSFileManager defaultManager] createDirectoryAtPath: path
                                   withIntermediateDirectories: YES
                                                    attributes: nil error: &error]) {
-        NSLog(@"FATAL: Couldn't create TouchDB server dir at %@", path);
+        NSLog(@"FATAL: Couldn't create CouchbaseLite server dir at %@", path);
         exit(1);
     }
     return path;
 }
 
 
-static bool doReplicate( TD_Server* server, const char* replArg,
+static bool doReplicate( CBL_Server* server, const char* replArg,
                         BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password)
 {
@@ -99,9 +99,9 @@ static bool doReplicate( TD_Server* server, const char* replArg,
     else
         Log(@"Pushing %@ --> <%@> ...", dbName, remote);
     
-    [server tellDatabaseManager: ^(TD_DatabaseManager *dbm) {
-        TDReplicator* repl = nil;
-        TD_Database* db = [dbm existingDatabaseNamed: dbName];
+    [server tellDatabaseManager: ^(CBL_DatabaseManager *dbm) {
+        CBL_Replicator* repl = nil;
+        CBL_Database* db = [dbm existingDatabaseNamed: dbName];
         if (pull) {
             if (db) {
                 if (![db deleteDatabase: nil]) {
@@ -116,10 +116,10 @@ static bool doReplicate( TD_Server* server, const char* replArg,
             return;
         }
         [db open];
-        repl = [[TDReplicator alloc] initWithDB: db remote: remote push: !pull
+        repl = [[CBL_Replicator alloc] initWithDB: db remote: remote push: !pull
                                      continuous: continuous];
         if (createTarget && !pull)
-            ((TDPusher*)repl).createTarget = YES;
+            ((CBL_Pusher*)repl).createTarget = YES;
         if (!repl)
             fprintf(stderr, "Unable to create replication.\n");
         [repl start];
@@ -134,10 +134,10 @@ int main (int argc, const char * argv[])
     @autoreleasepool {
 #if DEBUG
         EnableLog(YES);
-        EnableLogTo(TDListener, YES);
+        EnableLogTo(CBLListener, YES);
 #endif
 
-        TD_DatabaseManagerOptions options = kTD_DatabaseManagerDefaultOptions;
+        CBL_DatabaseManagerOptions options = kCBL_DatabaseManagerDefaultOptions;
         const char* replArg = NULL, *user = NULL, *password = NULL;
         BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
         
@@ -163,28 +163,28 @@ int main (int argc, const char * argv[])
         }
 
         NSError* error;
-        TD_Server* server = [[TD_Server alloc] initWithDirectory: GetServerPath()
+        CBL_Server* server = [[CBL_Server alloc] initWithDirectory: GetServerPath()
                                                        options: &options
                                                          error: &error];
         if (error) {
-            Warn(@"FATAL: Error initializing TouchDB: %@", error);
+            Warn(@"FATAL: Error initializing CouchbaseLite: %@", error);
             exit(1);
         }
-        [TDURLProtocol setServer: server];
+        [CBL_URLProtocol setServer: server];
         
         // Start a listener socket:
-        TDListener* listener = [[TDListener alloc] initWithTDServer: server port: kPortNumber];
+        CBLListener* listener = [[CBLListener alloc] initWithCBLServer: server port: kPortNumber];
         listener.readOnly = options.readOnly;
 
         if (auth) {
             srandomdev();
             NSString* password = [NSString stringWithFormat: @"%lx", random()];
-            listener.passwords = @{@"touchdb": password};
-            Log(@"Auth required: user='touchdb', password='%@'", password);
+            listener.passwords = @{@"cbl": password};
+            Log(@"Auth required: user='cbl', password='%@'", password);
         }
 
         // Advertise via Bonjour, and set a TXT record just as an example:
-        [listener setBonjourName: @"TouchServ" type: @"_touchdb._tcp."];
+        [listener setBonjourName: @"TouchServ" type: @"_cbl._tcp."];
         NSData* value = [@"value" dataUsingEncoding: NSUTF8StringEncoding];
         listener.TXTRecordDictionary = @{@"Key": value};
         
@@ -195,7 +195,7 @@ int main (int argc, const char * argv[])
                 return 1;
         } else {
             Log(@"TouchServ %@ is listening%@ on port %d ... relax!",
-                TDVersionString(),
+                CBLVersionString(),
                 (listener.readOnly ? @" in read-only mode" : @""),
                 listener.port);
         }

@@ -1,22 +1,22 @@
 //
 //  EmptyAppDelegate.m
-//  TouchDB
+//  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/18/11.
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
 #import "EmptyAppDelegate.h"
-#import "TouchDB.h"
+#import "CouchbaseLite.h"
 #import "Test.h"
 
 @implementation EmptyAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    TDDatabaseManager* mgr = [TDDatabaseManager sharedInstance];
+    CBLManager* mgr = [CBLManager sharedInstance];
     if (!mgr)
-        [NSException raise: NSInternalInconsistencyException format: @"Couldn't initialize TouchDB"];
+        [NSException raise: NSInternalInconsistencyException format: @"Couldn't initialize CouchbaseLite"];
     return YES;
 }
 

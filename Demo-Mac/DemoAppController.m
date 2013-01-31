@@ -15,17 +15,17 @@
 
 #import "DemoAppController.h"
 #import "DemoQuery.h"
-#import "TDJSON.h"
+#import "CBLJSON.h"
 #import "Test.h"
 #import "MYBlockUtils.h"
-#import <TouchDB/TouchDB.h>
+#import <CouchbaseLite/CouchbaseLite.h>
 
 #undef FOR_TESTING_PURPOSES
 #ifdef FOR_TESTING_PURPOSES
-#import <TouchDBListener/TDListener.h>
-@interface DemoAppController () <TDViewCompiler>
+#import <CouchbaseLiteListener/CBLListener.h>
+@interface DemoAppController () <CBLViewCompiler>
 @end
-static TDListener* sListener;
+static CBLListener* sListener;
 #endif
 
 #define ENABLE_REPLICATION
@@ -50,12 +50,12 @@ int main (int argc, const char * argv[]) {
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = bundleInfo[@"DemoDatabase"];
     if (!dbName) {
-        NSLog(@"FATAL: Please specify a TouchDB database name in the app's Info.plist under the 'DemoDatabase' key");
+        NSLog(@"FATAL: Please specify a CouchbaseLite database name in the app's Info.plist under the 'DemoDatabase' key");
         exit(1);
     }
     
     NSError* error;
-    _database = [[TDDatabaseManager sharedInstance] createDatabaseNamed: dbName
+    _database = [[CBLManager sharedInstance] createDatabaseNamed: dbName
                                                                      error: &error];
     if (!_database) {
         NSAssert(NO, @"Error creating db: %@", error);
@@ -72,7 +72,7 @@ int main (int argc, const char * argv[]) {
         if (newRevision.isDeleted)
             return YES;
         id date = newRevision[@"created_at"];
-        if (date && ! [TDJSON dateWithJSONObject: date]) {
+        if (date && ! [CBLJSON dateWithJSONObject: date]) {
             context.errorMessage = [@"invalid date " stringByAppendingString: date];
             return NO;
         }
@@ -86,7 +86,7 @@ int main (int argc, const char * argv[]) {
     })];
 
     
-    TDQuery* q = [[_database viewNamed: @"byDate"] query];
+    CBLQuery* q = [[_database viewNamed: @"byDate"] query];
     q.descending = YES;
     self.query = [[DemoQuery alloc] initWithQuery: q
                                        modelClass: _tableController.objectClass];
@@ -96,11 +96,11 @@ int main (int argc, const char * argv[]) {
     
 #ifdef FOR_TESTING_PURPOSES
     // Start a listener socket:
-    [server tellTDServer: ^(TD_Server* tdServer) {
-        // Register support for handling certain JS functions used in the TouchDB unit tests:
-        [TD_View setCompiler: self];
+    [server tellCBLServer: ^(CBL_Server* tdServer) {
+        // Register support for handling certain JS functions used in the CouchbaseLite unit tests:
+        [CBL_View setCompiler: self];
         
-        sListener = [[TDListener alloc] initWithTDServer: tdServer port: 8888];
+        sListener = [[CBLListener alloc] initWithCBLServer: tdServer port: 8888];
         [sListener start];
     }];
 
@@ -190,13 +190,13 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (void) resetReplication: (TDReplication*)repl {
+- (void) resetReplication: (CBLReplication*)repl {
     [repl setValue: @YES ofProperty: @"reset"];
     [repl restart];
 }
 
 - (IBAction) resetSync: (id)sender {
-    for (TDReplication* repl in _database.allReplications)
+    for (CBLReplication* repl in _database.allReplications)
         [self resetReplication: repl];
 }
 
@@ -219,14 +219,14 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (void) observeReplication: (TDReplication*)repl {
+- (void) observeReplication: (CBLReplication*)repl {
     [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"total" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
 }
 
-- (void) stopObservingReplication: (TDReplication*)repl {
+- (void) stopObservingReplication: (CBLReplication*)repl {
     [repl removeObserver: self forKeyPath: @"completed"];
     [repl removeObserver: self forKeyPath: @"total"];
     [repl removeObserver: self forKeyPath: @"error"];
@@ -262,19 +262,19 @@ int main (int argc, const char * argv[]) {
         value = 3;  // red
         tooltip = _push.error.localizedDescription;
     } else switch(MAX(_pull.mode, _push.mode)) {
-        case kTDReplicationStopped:
+        case kCBLReplicationStopped:
             value = 3; 
             tooltip = @"Sync stopped";
             break;  // red
-        case kTDReplicationOffline:
+        case kCBLReplicationOffline:
             value = 2;  // yellow
             tooltip = @"Offline";
             break;
-        case kTDReplicationIdle:
+        case kCBLReplicationIdle:
             value = 0;
             tooltip = @"Everything's in sync!";
             break;
-        case kTDReplicationActive:
+        case kCBLReplicationActive:
             value = 1;
             tooltip = @"Syncing data...";
             break;
@@ -293,7 +293,7 @@ int main (int argc, const char * argv[]) {
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
                          change:(NSDictionary *)change context:(void *)context
 {
-    TDReplication* repl = object;
+    CBLReplication* repl = object;
     NSLog(@"SYNC mode=%d", repl.mode);
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
@@ -335,21 +335,21 @@ int main (int argc, const char * argv[]) {
 
 #ifdef FOR_TESTING_PURPOSES
 
-// These map/reduce functions are used in the TouchDB 'basics.js' unit tests. By recognizing them
+// These map/reduce functions are used in the CouchbaseLite 'basics.js' unit tests. By recognizing them
 // here and returning equivalent native blocks, we can run those tests.
 
-- (TDMapBlock) compileMapFunction: (NSString*)mapSource language:(NSString *)language {
+- (CBLMapBlock) compileMapFunction: (NSString*)mapSource language:(NSString *)language {
     if (![language isEqualToString: @"javascript"])
         return NULL;
-    TDMapBlock mapBlock = NULL;
+    CBLMapBlock mapBlock = NULL;
     if ([mapSource isEqualToString: @"(function (doc) {if (doc.a == 4) {emit(null, doc.b);}})"]) {
-        mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
             if ([doc[@"a"] isEqual: @4])
                 emit(nil, doc[@"b"]);
         };
     } else if ([mapSource isEqualToString: @"(function (doc) {emit(doc.foo, null);})"] ||
                [mapSource isEqualToString: @"function(doc) { emit(doc.foo, null); }"]) {
-        mapBlock = ^(NSDictionary* doc, TDMapEmitBlock emit) {
+        mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
             emit(doc[@"foo"], nil);
         };
     }
@@ -357,13 +357,13 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (TDReduceBlock) compileReduceFunction: (NSString*)reduceSource language:(NSString *)language {
+- (CBLReduceBlock) compileReduceFunction: (NSString*)reduceSource language:(NSString *)language {
     if (![language isEqualToString: @"javascript"])
         return NULL;
-    TDReduceBlock reduceBlock = NULL;
+    CBLReduceBlock reduceBlock = NULL;
     if ([reduceSource isEqualToString: @"(function (keys, values) {return sum(values);})"]) {
         reduceBlock = ^(NSArray* keys, NSArray* values, BOOL rereduce) {
-            return [TD_View totalValues: values];
+            return [CBL_View totalValues: values];
         };
     }
     return [reduceBlock copy];
@@ -385,7 +385,7 @@ int main (int argc, const char * argv[]) {
     NSArray* items = _tableController.arrangedObjects;
     if (row >= (NSInteger)items.count)
         return;                 // Don't know why I get called on illegal rows, but it happens...
-    TDModel* item = items[row];
+    CBLModel* item = items[row];
     NSTimeInterval changedFor = item.timeSinceExternallyChanged;
     if (changedFor > 0 && changedFor < kChangeGlowDuration) {
         float fraction = (float)(1.0 - changedFor / kChangeGlowDuration);

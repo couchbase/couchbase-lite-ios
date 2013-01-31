@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #  BuildFatLibrary.sh
-#  TouchDB
+#  CouchbaseLite
 #
 #  Added by Jens Alfke on 5/16/12.
 
