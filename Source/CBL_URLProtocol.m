@@ -120,7 +120,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
     if ([scheme isEqualToString: @"http"] || [scheme isEqualToString: @"https"]) {
         NSString* host = url.host;
         if ([host hasSuffix: @".cblite."]) {
-            host = [host substringToIndex: host.length - 9];
+            host = [host substringToIndex: host.length - 8];
             return [self serverForHostname: host];
         }
     }
