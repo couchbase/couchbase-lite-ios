@@ -49,6 +49,11 @@
 @implementation CBL_Database (Attachments)
 
 
+- (NSString*) attachmentStorePath {
+    return [[_path stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
+}
+
+
 - (CBL_BlobStoreWriter*) attachmentWriter {
     return [[CBL_BlobStoreWriter alloc] initWithStore: _attachments];
 }

@@ -41,22 +41,11 @@ static id<CBLFilterCompiler> sFilterCompiler;
 @implementation CBL_Database
 
 
-static BOOL removeItemIfExists(NSString* path, NSError** outError) {
-    NSFileManager* fmgr = [NSFileManager defaultManager];
-    return [fmgr removeItemAtPath: path error: outError] || ![fmgr fileExistsAtPath: path];
-}
-
-
-- (NSString*) attachmentStorePath {
-    return [[_path stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
-}
-
-
 + (CBL_Database*) createEmptyDBAtPath: (NSString*)path {
-    if (!removeItemIfExists(path, NULL))
+    if (!CBLRemoveFileIfExists(path, NULL))
         return nil;
     CBL_Database *db = [[self alloc] initWithPath: path];
-    if (!removeItemIfExists(db.attachmentStorePath, NULL))
+    if (!CBLRemoveFileIfExists(db.attachmentStorePath, NULL))
         return nil;
     if (![db open: nil])
         return nil;
@@ -93,21 +82,6 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
 
 - (BOOL) exists {
     return [[NSFileManager defaultManager] fileExistsAtPath: _path];
-}
-
-
-- (BOOL) replaceWithDatabaseFile: (NSString*)databasePath
-                 withAttachments: (NSString*)attachmentsPath
-                           error: (NSError**)outError
-{
-    Assert(!_open, @"Already-open database cannot be replaced");
-    NSString* dstAttachmentsPath = self.attachmentStorePath;
-    NSFileManager* fmgr = [NSFileManager defaultManager];
-    return [fmgr copyItemAtPath: databasePath toPath: _path error: outError] &&
-           removeItemIfExists(dstAttachmentsPath, outError) &&
-           (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath 
-                                              toPath: dstAttachmentsPath
-                                               error: outError]);
 }
 
 
@@ -341,8 +315,8 @@ static BOOL removeItemIfExists(NSString* path, NSError** outError) {
     } else if (!self.exists) {
         return YES;
     }
-    return removeItemIfExists(_path, outError) 
-        && removeItemIfExists(self.attachmentStorePath, outError);
+    return CBLRemoveFileIfExists(_path, outError) 
+        && CBLRemoveFileIfExists(self.attachmentStorePath, outError);
 }
 
 - (void) dealloc {
@@ -1058,7 +1032,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     
     // No CouchbaseLite view is defined, or it hasn't had a map block assigned;
     // see if there's a CouchDB view definition we can compile:
-    if (![CBL_View compiler]) {
+    if (![CBLView compiler]) {
         *outStatus = kCBLStatusNotFound;
         return nil;
     }

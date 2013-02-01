@@ -10,10 +10,13 @@
 #import "CouchbaseLitePrivate.h"
 
 #import "CBL_Database.h"
+#import "CBL_Database+Attachments.h"
 #import "CBL_DatabaseManager.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
 #import "CBLInternal.h"
+#import "CBLMisc.h"
+#import "CBLStatus.h"
 
 
 @implementation CBLManager
@@ -161,6 +164,29 @@
     if (![db open: outError])
         return nil;
     return [self databaseForDatabase: db];
+}
+
+
+- (BOOL) replaceDatabaseNamed: (NSString*)databaseName
+             withDatabaseFile: (NSString*)databasePath
+              withAttachments: (NSString*)attachmentsPath
+                        error: (NSError**)outError
+{
+    CBL_Database* db = [_mgr databaseNamed: databaseName];
+    if (!db) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+        return NO;
+    }
+    Assert(!db.open, @"Already-open database cannot be replaced");
+    NSString* dstAttachmentsPath = db.attachmentStorePath;
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    return [fmgr copyItemAtPath: databasePath toPath: db.path error: outError] &&
+    CBLRemoveFileIfExists(dstAttachmentsPath, outError) &&
+    (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath
+                                       toPath: dstAttachmentsPath
+                                        error: outError]);
+
 }
 
 

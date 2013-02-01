@@ -29,6 +29,13 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 #define REDUCEBLOCK(BLOCK) ^id(NSArray* keys, NSArray* values, BOOL rereduce){BLOCK}
 
 
+/** An external object that knows how to map source code of some sort into executable functions. */
+@protocol CBLViewCompiler <NSObject>
+- (CBLMapBlock) compileMapFunction: (NSString*)mapSource language: (NSString*)language;
+- (CBLReduceBlock) compileReduceFunction: (NSString*)reduceSource language: (NSString*)language;
+@end
+
+
 /** A "view" in a CouchbaseLite database -- essentially a persistent index managed by map/reduce.
     The view can be queried using a CBLQuery. */
 @interface CBLView : NSObject
@@ -61,5 +68,8 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 
 /** Creates a new query object for this view. The query can be customized and then executed. */
 - (CBLQuery*) query;
+
++ (void) setCompiler: (id<CBLViewCompiler>)compiler;
++ (id<CBLViewCompiler>) compiler;
 
 @end

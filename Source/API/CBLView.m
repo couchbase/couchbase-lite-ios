@@ -64,4 +64,16 @@
 }
 
 
+static id<CBLViewCompiler> sCompiler;
+
+
++ (void) setCompiler: (id<CBLViewCompiler>)compiler {
+    sCompiler = compiler;
+}
+
++ (id<CBLViewCompiler>) compiler {
+    return sCompiler;
+}
+
+
 @end

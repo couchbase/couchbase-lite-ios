@@ -57,6 +57,9 @@ BOOL CBLMayBeTransientError( NSError* error );
 /** Returns YES if this error appears to be due to a creating a file/dir that already exists. */
 BOOL CBLIsFileExistsError( NSError* error );
 
+/** Removes a file if it exists; does nothing if it doesn't. */
+BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError);
+
 /** Returns the input URL without the query string or fragment identifier, just ending with the path. */
 NSURL* CBLURLWithoutQuery( NSURL* url );
 

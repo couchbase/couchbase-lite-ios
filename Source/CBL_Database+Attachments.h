@@ -19,6 +19,8 @@ typedef enum {
 
 @interface CBL_Database (Attachments)
 
+@property (readonly) NSString* attachmentStorePath;
+
 /** Creates a CBL_BlobStoreWriter object that can be used to stream an attachment to the store. */
 - (CBL_BlobStoreWriter*) attachmentWriter;
 

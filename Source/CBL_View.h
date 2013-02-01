@@ -40,13 +40,6 @@ typedef enum {
 } CBLViewCollation;
 
 
-/** An external object that knows how to map source code of some sort into executable functions. */
-@protocol CBLViewCompiler <NSObject>
-- (CBLMapBlock) compileMapFunction: (NSString*)mapSource language: (NSString*)language;
-- (CBLReduceBlock) compileReduceFunction: (NSString*)reduceSource language: (NSString*)language;
-@end
-
-
 /** Represents a view available in a database. */
 @interface CBL_View : NSObject
 {
@@ -98,9 +91,6 @@ typedef enum {
 
 /** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
 + (NSNumber*) totalValues: (NSArray*)values;
-
-+ (void) setCompiler: (id<CBLViewCompiler>)compiler;
-+ (id<CBLViewCompiler>) compiler;
 
 @end
 

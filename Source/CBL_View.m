@@ -34,9 +34,6 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 };
 
 
-static id<CBLViewCompiler> sCompiler;
-
-
 @implementation CBL_View
 
 
@@ -105,7 +102,7 @@ static id<CBLViewCompiler> sCompiler;
     NSString* mapSource = viewProps[@"map"];
     if (!mapSource)
         return NO;
-    CBLMapBlock mapBlock = [[CBL_View compiler] compileMapFunction: mapSource language: language];
+    CBLMapBlock mapBlock = [[CBLView compiler] compileMapFunction: mapSource language: language];
     if (!mapBlock) {
         Warn(@"View %@ has unknown map function: %@", _name, mapSource);
         return NO;
@@ -113,7 +110,7 @@ static id<CBLViewCompiler> sCompiler;
     NSString* reduceSource = viewProps[@"reduce"];
     CBLReduceBlock reduceBlock = NULL;
     if (reduceSource) {
-        reduceBlock =[[CBL_View compiler] compileReduceFunction: reduceSource language: language];
+        reduceBlock =[[CBLView compiler] compileReduceFunction: reduceSource language: language];
         if (!reduceBlock) {
             Warn(@"View %@ has unknown reduce function: %@", _name, reduceSource);
             return NO;
@@ -627,15 +624,6 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
     for (NSNumber* value in values)
         total += value.doubleValue;
     return @(total);
-}
-
-
-+ (void) setCompiler: (id<CBLViewCompiler>)compiler {
-    sCompiler = compiler;
-}
-
-+ (id<CBLViewCompiler>) compiler {
-    return sCompiler;
 }
 
 

@@ -248,6 +248,12 @@ BOOL CBLMayBeTransientError( NSError* error ) {
 }
 
 
+BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    return [fmgr removeItemAtPath: path error: outError] || ![fmgr fileExistsAtPath: path];
+}
+
+
 NSURL* CBLURLWithoutQuery( NSURL* url ) {
 #ifdef GNUSTEP
     // No CFURL on GNUstep :(

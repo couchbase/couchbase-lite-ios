@@ -17,8 +17,9 @@ ARGV.each do |filename|
     outfilename = filename + ".temp"
     File.open(outfilename, "w") do |out|
         IO.foreach(filename) do |line|
-        	line.gsub!(/\bCouchCocoa\b/,	 'CouchbaseLite')
-        	line.gsub!(/\b(k?)Couch([A-Z])/, '\1CBL\2')
+        	line.gsub!(/\bCouchCocoa\b/,	        'CouchbaseLite')
+        	line.gsub!(/\bCouchTouchDBServer\b/,	'CBLManager')
+        	line.gsub!(/\b(k?)Couch([A-Z])/,      '\1CBL\2')
         	out.puts line
         end
     end
