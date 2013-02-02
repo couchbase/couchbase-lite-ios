@@ -57,8 +57,10 @@ typedef struct CBLManagerOptions {
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;
 
-/** The 'cbl:' URL of the database manager's REST API.
-    Only available if you've linked with the CouchbaseLiteListener framework. */
+/** The base URL of the database manager's REST API. You can access this URL within this process,
+    using NSURLConnection or other APIs that use that (such as XMLHTTPRequest inside a WebView),
+    but it isn't available outside the process.
+    This method is only available if you've linked with the CouchbaseLiteListener framework. */
 @property (readonly) NSURL* internalURL;
 
 /** Replaces or installs a database from a file.

@@ -15,8 +15,7 @@
 
 #import <Foundation/Foundation.h>
 #import "CouchbaseLite.h"
-#import "CBL_Server.h"
-#import "CBL_URLProtocol.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBL_Router.h"
 #import "CBLListener.h"
 #import "CBL_Pusher.h"
@@ -56,7 +55,7 @@ static NSString* GetServerPath() {
 }
 
 
-static bool doReplicate( CBL_Server* server, const char* replArg,
+static bool doReplicate( CBLManager* server, const char* replArg,
                         BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password)
 {
@@ -98,33 +97,33 @@ static bool doReplicate( CBL_Server* server, const char* replArg,
         Log(@"Pulling from <%@> --> %@ ...", remote, dbName);
     else
         Log(@"Pushing %@ --> <%@> ...", dbName, remote);
-    
-    [server tellDatabaseManager: ^(CBL_DatabaseManager *dbm) {
-        CBL_Replicator* repl = nil;
-        CBL_Database* db = [dbm existingDatabaseNamed: dbName];
-        if (pull) {
-            if (db) {
-                if (![db deleteDatabase: nil]) {
-                    fprintf(stderr, "Couldn't delete existing database '%s'\n", dbName.UTF8String);
-                    return;
-                }
+
+    // Actually replicate -- this could probably be cleaned up to use the public API.
+    CBL_DatabaseManager *dbm = server.tdManager;
+    CBL_Replicator* repl = nil;
+    CBL_Database* db = [dbm existingDatabaseNamed: dbName];
+    if (pull) {
+        if (db) {
+            if (![db deleteDatabase: nil]) {
+                fprintf(stderr, "Couldn't delete existing database '%s'\n", dbName.UTF8String);
+                return false;
             }
-            db = [dbm databaseNamed: dbName];
         }
-        if (!db) {
-            fprintf(stderr, "No such database '%s'\n", dbName.UTF8String);
-            return;
-        }
-        [db open];
-        repl = [[CBL_Replicator alloc] initWithDB: db remote: remote push: !pull
-                                     continuous: continuous];
-        if (createTarget && !pull)
-            ((CBL_Pusher*)repl).createTarget = YES;
-        if (!repl)
-            fprintf(stderr, "Unable to create replication.\n");
-        [repl start];
-    }];
-        
+        db = [dbm databaseNamed: dbName];
+    }
+    if (!db) {
+        fprintf(stderr, "No such database '%s'\n", dbName.UTF8String);
+        return false;
+    }
+    [db open];
+    repl = [[CBL_Replicator alloc] initWithDB: db remote: remote push: !pull
+                                 continuous: continuous];
+    if (createTarget && !pull)
+        ((CBL_Pusher*)repl).createTarget = YES;
+    if (!repl)
+        fprintf(stderr, "Unable to create replication.\n");
+    [repl start];
+
     return true;
 }
 
@@ -137,7 +136,7 @@ int main (int argc, const char * argv[])
         EnableLogTo(CBLListener, YES);
 #endif
 
-        CBL_DatabaseManagerOptions options = kCBL_DatabaseManagerDefaultOptions;
+        CBLManagerOptions options = {false, false};
         const char* replArg = NULL, *user = NULL, *password = NULL;
         BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
         
@@ -163,17 +162,16 @@ int main (int argc, const char * argv[])
         }
 
         NSError* error;
-        CBL_Server* server = [[CBL_Server alloc] initWithDirectory: GetServerPath()
+        CBLManager* server = [[CBLManager alloc] initWithDirectory: GetServerPath()
                                                        options: &options
                                                          error: &error];
         if (error) {
             Warn(@"FATAL: Error initializing CouchbaseLite: %@", error);
             exit(1);
         }
-        [CBL_URLProtocol setServer: server];
-        
+
         // Start a listener socket:
-        CBLListener* listener = [[CBLListener alloc] initWithCBLServer: server port: kPortNumber];
+        CBLListener* listener = [[CBLListener alloc] initWithManager: server port: kPortNumber];
         listener.readOnly = options.readOnly;
 
         if (auth) {

@@ -7,24 +7,16 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLHTTPServer, CBL_Server;
+@class CBLHTTPServer, CBLManager;
 
 
 /** A simple HTTP server that provides remote access to the CouchbaseLite REST API. */
 @interface CBLListener : NSObject
-{
-    CBLHTTPServer* _httpServer;
-    CBL_Server* _tdServer;
-    NSString* _realm;
-    BOOL _readOnly;
-    BOOL _requiresAuth;
-    NSDictionary* _passwords;
-}
 
 /** Initializes a CBLListener.
-    @param server  The CBL_Server whose databases to serve.
+    @param manager  The CBLManager whose databases to serve.
     @param port  The TCP port number to listen on. Use 0 to automatically pick an available port (you can get the port number after the server starts by getting the .port property.) */
-- (id) initWithCBLServer: (CBL_Server*)server port: (UInt16)port;
+- (id) initWithManager: (CBLManager*)manager port: (UInt16)port;
 
 /** The TCP port number that the listener is listening on.
     If the listener has not yet started, this will return 0. */
@@ -45,7 +37,7 @@
 @property BOOL readOnly;
 
 /** If set to YES, all requests will be required to authenticate.
-    Setting a .passwords dictionary automatically enables this.*/
+    Setting the .passwords property automatically enables this.*/
 @property BOOL requiresAuth;
 
 /** Security realm string to return in authentication challenges. */

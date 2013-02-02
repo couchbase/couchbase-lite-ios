@@ -126,7 +126,7 @@
             return nil;
         Class tdURLProtocol = NSClassFromString(@"CBL_URLProtocol");
         Assert(tdURLProtocol, @"CBL_URLProtocol class not found; link CouchbaseLiteListener.framework");
-        _internalURL = [tdURLProtocol registerServer: _server];
+        _internalURL = [tdURLProtocol HTTPURLForServerURL: [tdURLProtocol registerServer: _server]];
     }
     return _internalURL;
 }

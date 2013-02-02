@@ -43,8 +43,10 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     between two points in time. */
 @property (readonly) SInt64 lastSequenceNumber;
 
-/** The 'cbl:' URL of the database's REST API.
-    Only available if you've linked with the CouchbaseLiteListener framework. */
+/** The URL of the database in the REST API. You can access this URL within this process,
+    using NSURLConnection or other APIs that use that (such as XMLHTTPRequest inside a WebView),
+    but it isn't available outside the process.
+    This method is only available if you've linked with the CouchbaseLiteListener framework. */
 @property (readonly) NSURL* internalURL;
 
 

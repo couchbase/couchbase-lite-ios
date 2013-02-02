@@ -16,21 +16,30 @@
 #import "CBLListener.h"
 #import "CBLHTTPServer.h"
 #import "CBLHTTPConnection.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
 
 #import "HTTPServer.h"
 
 
 @implementation CBLListener
+{
+    CBLHTTPServer* _httpServer;
+    CBL_Server* _tdServer;
+    NSString* _realm;
+    BOOL _readOnly;
+    BOOL _requiresAuth;
+    NSDictionary* _passwords;
+}
 
 
 @synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm;
 
 
-- (id) initWithCBLServer: (CBL_Server*)server port: (UInt16)port {
+- (id) initWithManager: (CBLManager*)manager port: (UInt16)port {
     self = [super init];
     if (self) {
-        _tdServer = server;
+        _tdServer = manager.backgroundServer;
         _httpServer = [[CBLHTTPServer alloc] init];
         _httpServer.listener = self;
         _httpServer.tdServer = _tdServer;
