@@ -36,7 +36,7 @@ typedef void (^OnFinishedBlock)();
     OnFinishedBlock _onFinished;
     BOOL _running;
     BOOL _longpoll;
-    CBL_FilterBlock _changesFilter;
+    CBLFilterBlock _changesFilter;
     NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
     BOOL _changesIncludeConflicts;

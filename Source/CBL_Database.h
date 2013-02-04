@@ -25,15 +25,6 @@ extern NSString* const CBL_DatabaseWillCloseNotification;
 extern NSString* const CBL_DatabaseWillBeDeletedNotification;
 
 
-/** Filter block, used in changes feeds and replication. */
-typedef BOOL (^CBL_FilterBlock) (CBL_Revision* revision, NSDictionary* params);
-
-/** An external object that knows how to map source code of some sort into executable functions. */
-@protocol CBLFilterCompiler <NSObject>
-- (CBL_FilterBlock) compileFilterFunction: (NSString*)filterSource language: (NSString*)language;
-@end
-
-
 
 
 /** Options for what metadata to include in document bodies */
@@ -172,17 +163,18 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const CBLChangesOptions*)options
-                                  filter: (CBL_FilterBlock)filter
+                                  filter: (CBLFilterBlock)filter
                                   params: (NSDictionary*)filterParams;
 
 /** Define or clear a named filter function. These aren't used directly by CBL_Database, but they're looked up by CBL_Router when a _changes request has a ?filter parameter. */
-- (void) defineFilter: (NSString*)filterName asBlock: (CBL_FilterBlock)filterBlock;
+- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock;
 
-- (CBL_FilterBlock) filterNamed: (NSString*)filterName;
+- (CBLFilterBlock) filterNamed: (NSString*)filterName;
 
-- (CBL_FilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus;
+- (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus;
 
-+ (void) setFilterCompiler: (id<CBLFilterCompiler>)compiler;
-+ (id<CBLFilterCompiler>) filterCompiler;
+- (BOOL) runFilter: (CBLFilterBlock)filter
+            params: (NSDictionary*)filterParams
+        onRevision: (CBL_Revision*)rev;
 
 @end

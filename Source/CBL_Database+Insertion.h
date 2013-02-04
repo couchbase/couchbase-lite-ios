@@ -8,12 +8,6 @@
 
 #import "CBL_Database.h"
 #import "CBLDatabase.h"
-@protocol CBL_ValidationContext;
-
-
-/** Validation block, used to approve revisions being added to the database. */
-typedef BOOL (^CBL_ValidationBlock) (CBL_Revision* newRevision,
-                                   id<CBL_ValidationContext> context);
 
 
 @interface CBL_Database (Insertion)
@@ -42,8 +36,8 @@ typedef BOOL (^CBL_ValidationBlock) (CBL_Revision* newRevision,
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;
 
 /** Define or clear a named document validation function.  */
-- (void) defineValidation: (NSString*)validationName asBlock: (CBL_ValidationBlock)validationBlock;
-- (CBL_ValidationBlock) validationNamed: (NSString*)validationName;
+- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock;
+- (CBLValidationBlock) validationNamed: (NSString*)validationName;
 
 /** Compacts the database storage by removing the bodies and attachments of obsolete revisions. */
 - (CBLStatus) compact;
@@ -54,10 +48,4 @@ typedef BOOL (^CBL_ValidationBlock) (CBL_Revision* newRevision,
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
                      result: (NSDictionary**)outResult;
 
-@end
-
-
-
-@protocol CBL_ValidationContext <CBLValidationContext>
-@property (readonly) CBL_Revision* current_Revision;
 @end

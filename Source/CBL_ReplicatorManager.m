@@ -25,6 +25,7 @@
 #import "CBL_Pusher.h"
 #import "CBL_Puller.h"
 #import "CBL_View.h"
+#import "CBLRevision.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
@@ -35,12 +36,6 @@
 
 
 NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
-
-
-@interface CBL_ReplicatorManager ()
-- (BOOL) validateRevision: (CBL_Revision*)newRev context: (id<CBL_ValidationContext>)context;
-- (void) processAllDocs;
-@end
 
 
 @implementation CBL_ReplicatorManager
@@ -67,7 +62,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) start {
     [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock:
-         ^BOOL(CBL_Revision *newRevision, id<CBL_ValidationContext> context) {
+         ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context) {
              return [self validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
@@ -104,9 +99,9 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 
 // Validation function for the _replicator database:
-- (BOOL) validateRevision: (CBL_Revision*)newRev context: (id<CBL_ValidationContext>)context {
+- (BOOL) validateRevision: (CBLRevision*)newRev context: (id<CBLValidationContext>)context {
     // Ignore the change if it's one I'm making myself, or if it's a deletion:
-    if (_updateInProgress || newRev.deleted)
+    if (_updateInProgress || newRev.isDeleted)
         return YES;
     
     // First make sure the basic properties are valid:
@@ -123,7 +118,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
                                               @"heartbeat", @"feed", @"reset", @"continuous", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
     return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
-        if (![context current_Revision])
+        if (![context currentRevision])
             return ![key hasPrefix: @"_"];
         
         // allow change of 'headers' and 'auth' in target and source

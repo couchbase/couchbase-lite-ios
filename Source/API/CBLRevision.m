@@ -20,7 +20,6 @@
 @synthesize document=_document;
 
 - (id)initWithDocument: (CBLDocument*)doc {
-    Assert(doc != nil);
     self = [super init];
     if (self) {
         _document = doc;

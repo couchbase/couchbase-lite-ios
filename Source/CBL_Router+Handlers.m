@@ -451,7 +451,7 @@
             }
         }
         
-        if (_changesFilter && !_changesFilter(rev, _changesFilterParams))
+        if (![_db runFilter: _changesFilter params: _changesFilterParams onRevision:rev])
             continue;
 
         [changes addObject: rev];

@@ -35,9 +35,6 @@ NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
 
-static id<CBLFilterCompiler> sFilterCompiler;
-
-
 @implementation CBL_Database
 
 
@@ -847,7 +844,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const CBLChangesOptions*)options
-                                  filter: (CBL_FilterBlock)filter
+                                  filter: (CBLFilterBlock)filter
                                   params: (NSDictionary*)filterParams
 {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
@@ -883,7 +880,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                           intoRevision: rev
                                options: options->contentOptions];
             }
-            if (!filter || filter(rev, filterParams))
+            if ([self runFilter: filter params: filterParams onRevision: rev])
                 [changes addRev: rev];
         }
     }
@@ -894,6 +891,17 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         [changes limit: options->limit];
     }
     return changes;
+}
+
+
+- (BOOL) runFilter: (CBLFilterBlock)filter
+            params: (NSDictionary*)filterParams
+        onRevision: (CBL_Revision*)rev
+{
+    if (!filter)
+        return YES;
+    CBLRevision* publicRev = [[CBLRevision alloc] initWithCBLDB: self revision: rev];
+    return filter(publicRev, filterParams);
 }
 
 
@@ -917,31 +925,23 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (void) defineFilter: (NSString*)filterName asBlock: (CBL_FilterBlock)filterBlock {
+- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
     if (!_filters)
         _filters = [[NSMutableDictionary alloc] init];
     [_filters setValue: [filterBlock copy] forKey: filterName];
 }
 
-- (CBL_FilterBlock) filterNamed: (NSString*)filterName {
+- (CBLFilterBlock) filterNamed: (NSString*)filterName {
     return _filters[filterName];
 }
 
 
-+ (void) setFilterCompiler: (id<CBLFilterCompiler>)compiler {
-    sFilterCompiler = compiler;
-}
-
-+ (id<CBLFilterCompiler>) filterCompiler {
-    return sFilterCompiler;
-}
-
-
-- (CBL_FilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus {
-    CBL_FilterBlock filter = [self filterNamed: filterName];
+- (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus {
+    CBLFilterBlock filter = [self filterNamed: filterName];
     if (filter)
         return filter;
-    if (!sFilterCompiler) {
+    id<CBLFilterCompiler> compiler = [CBLDatabase filterCompiler];
+    if (!compiler) {
         *outStatus = kCBLStatusNotFound;
         return nil;
     }
@@ -954,7 +954,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         return nil;
     }
 
-    filter = [sFilterCompiler compileFilterFunction: source language: language];
+    filter = [compiler compileFilterFunction: source language: language];
     if (!filter) {
         Warn(@"Filter %@ failed to compile", filterName);
         *outStatus = kCBLStatusCallbackError;

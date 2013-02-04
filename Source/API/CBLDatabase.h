@@ -25,6 +25,12 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 #define FILTERBLOCK(BLOCK) ^BOOL(CBLRevision* revision, NSDictionary* params) {BLOCK}
 
 
+/** An external object that knows how to convert source code into an executable filter. */
+@protocol CBLFilterCompiler <NSObject>
+- (CBLFilterBlock) compileFilterFunction: (NSString*)filterSource language: (NSString*)language;
+@end
+
+
 /** A CouchbaseLite database. */
 @interface CBLDatabase : NSObject
 
@@ -111,6 +117,13 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Defines or clears a named filter function.
     Filters are used by push replications to choose which documents to send. */
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock;
+
+
+/** Registers an object that can compile source code into executable filter blocks. */
++ (void) setFilterCompiler: (id<CBLFilterCompiler>)compiler;
+
+/** Returns the currently registered filter compiler (nil by default). */
++ (id<CBLFilterCompiler>) filterCompiler;
 
 
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.

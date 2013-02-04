@@ -44,11 +44,11 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 }
 
 
-- (CBL_FilterBlock) filter {
+- (CBLFilterBlock) filter {
     if (!_filterName)
         return NULL;
     CBLStatus status;
-    CBL_FilterBlock filter = [_db compileFilterNamed: _filterName status: &status];
+    CBLFilterBlock filter = [_db compileFilterNamed: _filterName status: &status];
     if (!filter) {
         Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
         if (!_error) {
@@ -89,7 +89,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     if (_creatingTarget)
         return;
     
-    CBL_FilterBlock filter = NULL;
+    CBLFilterBlock filter = NULL;
     if (_filterName) {
         filter = self.filter;
         if (!filter)
@@ -161,8 +161,8 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         if (![change.source isEqual: _remote]) {
             CBL_Revision* rev = change.addedRevision;
             if (_filterName) {
-                CBL_FilterBlock filter = self.filter;
-                if (!filter || !filter(rev, _filterParameters))
+                CBLFilterBlock filter = self.filter;
+                if (!filter || ![_db runFilter: filter params: _filterParameters onRevision: rev])
                     continue;
             }
             [self addToInbox: rev];

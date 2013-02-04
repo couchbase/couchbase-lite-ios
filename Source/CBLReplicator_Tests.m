@@ -19,6 +19,7 @@
 #import "CBL_Server.h"
 #import "CBL_Database+Replication.h"
 #import "CBL_Database+Insertion.h"
+#import "CBLRevision.h"
 #import "CBLOAuth1Authorizer.h"
 #import "CBLBase64.h"
 #import "CBLInternal.h"
@@ -104,7 +105,7 @@ TestCase(CBL_Pusher) {
     [db open];
     
     __block int filterCalls = 0;
-    [db defineFilter: @"filter" asBlock: ^BOOL(CBL_Revision *revision, NSDictionary* params) {
+    [db defineFilter: @"filter" asBlock: ^BOOL(CBLRevision *revision, NSDictionary* params) {
         Log(@"Test filter called with params = %@", params);
         Log(@"Rev = %@, properties = %@", revision, revision.properties);
         CAssert(revision.properties);

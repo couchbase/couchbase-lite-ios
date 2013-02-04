@@ -23,6 +23,9 @@
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChange";
 
 
+static id<CBLFilterCompiler> sFilterCompiler;
+
+
 @implementation CBLDatabase
 {
     CBLManager* _manager;
@@ -225,26 +228,21 @@ NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChange";
 
 
 - (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
-    CBL_ValidationBlock wrapperBlock = nil;
-    if (validationBlock) {
-        wrapperBlock = ^(CBL_Revision* newRevision, id<CBL_ValidationContext> context) {
-            CBLRevision* publicRevision = [[CBLRevision alloc] initWithCBLDB: _tddb revision: newRevision];
-            return validationBlock(publicRevision, context);
-        };
-    }
-    [_tddb defineValidation: validationName asBlock: wrapperBlock];
+    [_tddb defineValidation: validationName asBlock: validationBlock];
 }
 
 
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
-    CBL_FilterBlock wrapperBlock = nil;
-    if (filterBlock) {
-        wrapperBlock = ^(CBL_Revision* revision, NSDictionary* params) {
-            CBLRevision* publicRevision = [[CBLRevision alloc] initWithCBLDB: _tddb revision: revision];
-            return filterBlock(publicRevision, params);
-        };
-    }
-    [_tddb defineFilter: filterName asBlock: wrapperBlock];
+    [_tddb defineFilter: filterName asBlock: filterBlock];
+}
+
+
++ (void) setFilterCompiler: (id<CBLFilterCompiler>)compiler {
+    sFilterCompiler = compiler;
+}
+
++ (id<CBLFilterCompiler>) filterCompiler {
+    return sFilterCompiler;
 }
 
 

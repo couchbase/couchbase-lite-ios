@@ -37,7 +37,7 @@
 #endif
 
 
-@interface CBL_ValidationContext : NSObject <CBL_ValidationContext>
+@interface CBLValidationContext : NSObject <CBLValidationContext>
 {
     @private
     CBL_Database* _db;
@@ -739,7 +739,7 @@
 #pragma mark - VALIDATION:
 
 
-- (void) defineValidation: (NSString*)validationName asBlock: (CBL_ValidationBlock)validationBlock {
+- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
     if (validationBlock) {
         if (!_validations)
             _validations = [[NSMutableDictionary alloc] init];
@@ -749,7 +749,7 @@
     }
 }
 
-- (CBL_ValidationBlock) validationNamed: (NSString*)validationName {
+- (CBLValidationBlock) validationNamed: (NSString*)validationName {
     return _validations[validationName];
 }
 
@@ -757,13 +757,14 @@
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev {
     if (_validations.count == 0)
         return kCBLStatusOK;
-    CBL_ValidationContext* context = [[CBL_ValidationContext alloc] initWithDatabase: self
+    CBLRevision* publicRev = [[CBLRevision alloc] initWithCBLDB: self revision: newRev];
+    CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];
     CBLStatus status = kCBLStatusOK;
     for (NSString* validationName in _validations) {
-        CBL_ValidationBlock validation = [self validationNamed: validationName];
-        if (!validation(newRev, context)) {
+        CBLValidationBlock validation = [self validationNamed: validationName];
+        if (!validation(publicRev, context)) {
             status = context.errorType;
             break;
         }
@@ -782,7 +783,7 @@
 
 
 
-@implementation CBL_ValidationContext
+@implementation CBLValidationContext
 
 - (id) initWithDatabase: (CBL_Database*)db
                revision: (CBL_Revision*)currentRevision

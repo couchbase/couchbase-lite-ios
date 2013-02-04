@@ -14,6 +14,7 @@
 
 #import "CBLJSViewCompiler.h"
 #import "CBLJSFunction.h"
+#import "CBLRevision.h"
 #import <JavaScriptCore/JavaScript.h>
 #import <JavaScriptCore/JSStringRefCF.h>
 
@@ -135,7 +136,7 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
 @implementation CBLJSFilterCompiler
 
 
-- (CBL_FilterBlock) compileFilterFunction: (NSString*)filterSource language: (NSString*)language {
+- (CBLFilterBlock) compileFilterFunction: (NSString*)filterSource language: (NSString*)language {
     if (![language isEqualToString: @"javascript"])
         return nil;
 
@@ -148,7 +149,7 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
 
     // Return the CBLMapBlock; the code inside will be called when CouchbaseLite wants to run the map fn:
     JSContextRef ctx = self.context;
-    CBL_FilterBlock block = ^BOOL(CBL_Revision* revision, NSDictionary* params) {
+    CBLFilterBlock block = ^BOOL(CBLRevision* revision, NSDictionary* params) {
         return JSValueToBoolean(ctx, [fn call: revision.properties, params]);
     };
     return [block copy];
