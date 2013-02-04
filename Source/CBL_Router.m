@@ -291,7 +291,7 @@ static NSArray* splitPath( NSURL* url ) {
         } else if (!validName) {
             return kCBLStatusBadID;
         } else {
-            _db = [_dbManager databaseNamed: dbName];
+            _db = [_dbManager _databaseNamed: dbName];
             if (!_db)
                 return kCBLStatusNotFound;
             [message appendString: @":"];

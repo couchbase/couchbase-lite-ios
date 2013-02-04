@@ -15,7 +15,7 @@
 #import "CBL_Replicator.h"
 #import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
-@class CBL_Attachment, CBL_BlobStoreWriter, CBL_DatabaseChange;
+@class CBL_Attachment, CBL_BlobStoreWriter, CBL_DatabaseChange, CBL_ReplicatorManager;
 
 
 @interface CBL_Database ()
@@ -87,7 +87,7 @@
 @end
 
 
-@interface CBL_DatabaseManager ()
+@interface CBL_DatabaseManager (Testing)
 @property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 #if DEBUG
 + (CBL_DatabaseManager*) createEmptyAtPath: (NSString*)path;  // for testing

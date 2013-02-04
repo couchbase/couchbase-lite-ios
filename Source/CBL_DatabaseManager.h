@@ -8,46 +8,22 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLStatus.h"
-@class CBL_Database, CBL_Replicator, CBL_ReplicatorManager;
+#import "CBLManager.h"
+@class CBL_Database, CBL_Replicator;
+
+#ifndef CBL_DatabaseManager
+#define CBL_DatabaseManager CBLManager  // class name CBL_DatabaseManager is being phased out
+#endif
 
 
-typedef struct CBL_DatabaseManagerOptions {
-    bool readOnly;
-    bool noReplicator;
-} CBL_DatabaseManagerOptions;
+@interface CBL_DatabaseManager (Internal)
 
-extern const CBL_DatabaseManagerOptions kCBL_DatabaseManagerDefaultOptions;
+- (CBL_Database*) _databaseNamed: (NSString*)name;
+- (CBL_Database*) _existingDatabaseNamed: (NSString*)name;
 
+- (BOOL) _deleteDatabase: (CBL_Database*)db error: (NSError**)outError;
 
-/** Manages a directory containing CBL_Databases. */
-@interface CBL_DatabaseManager : NSObject 
-{
-    @private
-    NSString* _dir;
-    CBL_DatabaseManagerOptions _options;
-    NSMutableDictionary* _databases;
-    CBL_ReplicatorManager* _replicatorManager;
-}
-
-+ (BOOL) isValidDatabaseName: (NSString*)name;
-
-+ (NSString*) defaultDirectory;
-
-- (id) initWithDirectory: (NSString*)dirPath
-                 options: (const CBL_DatabaseManagerOptions*)options
-                   error: (NSError**)outError;
-
-@property (readonly) NSString* directory;
-
-- (CBL_Database*) databaseNamed: (NSString*)name;
-- (CBL_Database*) existingDatabaseNamed: (NSString*)name;
-
-- (BOOL) deleteDatabase: (CBL_Database*)db error: (NSError**)outError;
-
-@property (readonly) NSArray* allDatabaseNames;
 @property (readonly) NSArray* allOpenDatabases;
-
-- (void) close;
 
 - (CBLStatus) validateReplicatorProperties: (NSDictionary*)properties;
 - (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)body

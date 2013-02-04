@@ -55,7 +55,7 @@ static NSString* GetServerPath() {
 }
 
 
-static bool doReplicate( CBLManager* server, const char* replArg,
+static bool doReplicate(CBLManager* dbm, const char* replArg,
                         BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password)
 {
@@ -99,9 +99,8 @@ static bool doReplicate( CBLManager* server, const char* replArg,
         Log(@"Pushing %@ --> <%@> ...", dbName, remote);
 
     // Actually replicate -- this could probably be cleaned up to use the public API.
-    CBL_DatabaseManager *dbm = server.tdManager;
     CBL_Replicator* repl = nil;
-    CBL_Database* db = [dbm existingDatabaseNamed: dbName];
+    CBL_Database* db = [dbm _existingDatabaseNamed: dbName];
     if (pull) {
         if (db) {
             if (![db deleteDatabase: nil]) {
@@ -109,7 +108,7 @@ static bool doReplicate( CBLManager* server, const char* replArg,
                 return false;
             }
         }
-        db = [dbm databaseNamed: dbName];
+        db = [dbm _databaseNamed: dbName];
     }
     if (!db) {
         fprintf(stderr, "No such database '%s'\n", dbName.UTF8String);

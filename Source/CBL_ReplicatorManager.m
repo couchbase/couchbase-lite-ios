@@ -45,7 +45,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     self = [super init];
     if (self) {
         _dbManager = dbManager;
-        _replicatorDB = [dbManager databaseNamed: kCBL_ReplicatorDatabaseName];
+        _replicatorDB = [dbManager _databaseNamed: kCBL_ReplicatorDatabaseName];
         if (!_replicatorDB) {
             return nil;
         }

@@ -12,24 +12,56 @@
 #import "CBL_Database.h"
 #import "CBL_Database+Attachments.h"
 #import "CBL_DatabaseManager.h"
+#import "CBL_Pusher.h"
+#import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
+#import "CBLBrowserIDAuthorizer.h"
+#import "CBLOAuth1Authorizer.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 
 
+#define kDBExtension @"touchdb" // For backward compatibility reasons we're not changing this
+
+
+static const CBLManagerOptions kCBLManagerDefaultOptions;
+
+
 @implementation CBLManager
 {
+    NSString* _dir;
     CBLManagerOptions _options;
-    CBL_DatabaseManager* _mgr;
+    NSMutableDictionary* _databases;
+    CBL_ReplicatorManager* _replicatorManager;
     CBL_Server* _server;
     NSURL* _internalURL;
     NSMutableArray* _replications;
 }
 
 
-@synthesize tdManager=_mgr;
+// http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
+#define kLegalChars @"abcdefghijklmnopqrstuvwxyz0123456789_$()+-/"
+static NSCharacterSet* kIllegalNameChars;
+
++ (void) initialize {
+    if (self == [CBLManager class]) {
+        kIllegalNameChars = [[NSCharacterSet characterSetWithCharactersInString: kLegalChars]
+                             invertedSet];
+    }
+}
+
+
++ (NSString*) defaultDirectory {
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                                         NSUserDomainMask, YES);
+    NSString* path = paths[0];
+#if !TARGET_OS_IPHONE
+    path = [path stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]];
+#endif
+    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
+}
 
 
 + (CBLManager*) sharedInstance {
@@ -42,9 +74,9 @@
 }
 
 
-- (id)init {
+- (id) init {
     NSError* error;
-    self = [self initWithDirectory: [CBL_DatabaseManager defaultDirectory]
+    self = [self initWithDirectory: [[self class] defaultDirectory]
                            options: NULL
                              error: &error];
     if (!self)
@@ -56,41 +88,74 @@
 - (id) initWithDirectory: (NSString*)directory
                  options: (const CBLManagerOptions*)options
                    error: (NSError**)outError {
+    if (outError) *outError = nil;
     self = [super init];
     if (self) {
-        if (options)
-            _options = *options;
+        _dir = [directory copy];
+        _databases = [[NSMutableDictionary alloc] init];
+        _options = options ? *options : kCBLManagerDefaultOptions;
 
-        CBL_DatabaseManagerOptions tdOptions = {
-            .readOnly = _options.readOnly,
-            .noReplicator = _options.noReplicator
-        };
-        _mgr = [[CBL_DatabaseManager alloc] initWithDirectory: directory
-                                                    options: &tdOptions
-                                                      error: outError];
-        if (!_mgr) {
-            return nil;
+        // Create the directory but don't fail if it already exists:
+        NSError* error;
+        if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
+                                       withIntermediateDirectories: YES
+                                                        attributes: nil
+                                                             error: &error]) {
+            if (!CBLIsFileExistsError(error)) {
+                if (outError) *outError = error;
+                return nil;
+            }
         }
-        [_mgr replicatorManager];
+
         _replications = [[NSMutableArray alloc] init];
+
+        if (!_options.noReplicator) {
+            LogTo(CBLDatabase, @"Starting replicator manager for %@", self);
+            _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
+            [_replicatorManager start];
+        }
         LogTo(CBLDatabase, @"Created %@", self);
     }
     return self;
 }
 
 
+#if DEBUG
++ (CBLManager*) createEmptyAtPath: (NSString*)path {
+    [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
+    NSError* error;
+    CBLManager* dbm = [[self alloc] initWithDirectory: path
+                                              options: NULL
+                                                error: &error];
+    Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
+    AssertEqual(dbm.directory, path);
+    return dbm;
+}
+
++ (CBLManager*) createEmptyAtTemporaryPath: (NSString*)name {
+    return [self createEmptyAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: name]];
+}
+#endif
+
+
 - (id) copyWithZone: (NSZone*)zone {
     CBLManagerOptions options = _options;
     options.noReplicator = true;        // Don't want to run multiple replicator tasks
-    return [[[self class] alloc] initWithDirectory: _mgr.directory options: &options error: NULL];
+    return [[[self class] alloc] initWithDirectory: self.directory options: &options error: NULL];
 }
 
 
 - (void) close {
-    [_mgr close];
-    _mgr = nil;
+    LogTo(CBLDatabase, @"CLOSING %@ ...", self);
     [_server close];
     _server = nil;
+    [_replicatorManager stop];
+    _replicatorManager = nil;
+    for (CBL_Database* db in _databases.allValues) {
+        [db close];
+    }
+    [_databases removeAllObjects];
+    LogTo(CBLDatabase, @"CLOSED %@", self);
 }
 
 
@@ -100,20 +165,23 @@
 }
 
 
+@synthesize directory = _dir;
+
+
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], _mgr.directory);
+    return $sprintf(@"%@[%@]", [self class], self.directory);
 }
 
 
 - (CBL_Server*) backgroundServer {
     if (!_server) {
-        CBL_DatabaseManagerOptions tdOptions = {
+        CBLManagerOptions tdOptions = {
             .readOnly = _options.readOnly,
             .noReplicator = true
         };
-        _server = [[CBL_Server alloc] initWithDirectory: _mgr.directory
-                                               options: &tdOptions
-                                                 error: nil];
+        _server = [[CBL_Server alloc] initWithDirectory: self.directory
+                                                options: &tdOptions
+                                                  error: nil];
         LogTo(CBLDatabase, @"%@ created %@", self, _server);
     }
     return _server;
@@ -132,14 +200,43 @@
 }
 
 
+#pragma mark - DATABASES (PUBLIC API):
+
+
++ (BOOL) isValidDatabaseName: (NSString*)name {
+    if (name.length > 0 && [name rangeOfCharacterFromSet: kIllegalNameChars].length == 0
+        && islower([name characterAtIndex: 0]))
+        return YES;
+    return $equal(name, kCBL_ReplicatorDatabaseName);
+}
+
+
+- (NSString*) pathForName: (NSString*)name {
+    if (![[self class] isValidDatabaseName: name])
+        return nil;
+    name = [name stringByReplacingOccurrencesOfString: @"/" withString: @":"];
+    return [_dir stringByAppendingPathComponent:[name stringByAppendingPathExtension:kDBExtension]];
+}
+
+
 - (NSArray*) allDatabaseNames {
-    return _mgr.allDatabaseNames;
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: NULL];
+    files = [files pathsMatchingExtensions: @[kDBExtension]];
+    return [files my_map: ^(id filename) {
+        return [[filename stringByDeletingPathExtension]
+                stringByReplacingOccurrencesOfString: @":" withString: @"/"];
+    }];
+}
+
+
+- (NSArray*) allOpenDatabases {
+    return _databases.allValues;
 }
 
 
 - (CBLDatabase*) databaseForDatabase: (CBL_Database*)tddb {
     CBLDatabase* touchDatabase = tddb.touchDatabase;
-    if (!touchDatabase) {
+    if (!touchDatabase && tddb) {
         touchDatabase = [[CBLDatabase alloc] initWithManager: self
                                                     CBL_Database: tddb];
         tddb.touchDatabase = touchDatabase;
@@ -149,10 +246,7 @@
 
 
 - (CBLDatabase*) databaseNamed: (NSString*)name {
-    CBL_Database* db = [_mgr existingDatabaseNamed: name];
-    if (![db open])
-        return nil;
-    return [self databaseForDatabase: db];
+    return [self databaseForDatabase: [self _existingDatabaseNamed: name]];
 }
 
 - (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
@@ -160,7 +254,7 @@
 }
 
 - (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
-    CBL_Database* db = [_mgr databaseNamed: name];
+    CBL_Database* db = [self _databaseNamed: name];
     if (![db open: outError])
         return nil;
     return [self databaseForDatabase: db];
@@ -172,7 +266,7 @@
               withAttachments: (NSString*)attachmentsPath
                         error: (NSError**)outError
 {
-    CBL_Database* db = [_mgr databaseNamed: databaseName];
+    CBL_Database* db = [self _databaseNamed: databaseName];
     if (!db) {
         if (outError)
             *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
@@ -190,7 +284,7 @@
 }
 
 
-#pragma mark - REPLICATION:
+#pragma mark - REPLICATIONs (PUBLIC API):
 
 
 - (NSArray*) allReplications {
@@ -249,3 +343,240 @@
 
 
 @end
+
+
+
+
+@implementation CBLManager (Internal)
+
+
+- (CBL_Database*) _databaseNamed: (NSString*)name create: (BOOL)create {
+    if (_options.readOnly)
+        create = NO;
+    CBL_Database* db = _databases[name];
+    if (!db) {
+        NSString* path = [self pathForName: name];
+        if (!path)
+            return nil;
+        db = [[CBL_Database alloc] initWithPath: path];
+        db.readOnly = _options.readOnly;
+        if (!create && !db.exists) {
+            return nil;
+        }
+        db.name = name;
+        _databases[name] = db;
+    }
+    return db;
+}
+
+
+- (CBL_Database*) _databaseNamed: (NSString*)name {
+    return [self _databaseNamed: name create: YES];
+}
+
+
+- (CBL_Database*) _existingDatabaseNamed: (NSString*)name {
+    CBL_Database* db = [self _databaseNamed: name create: NO];
+    if (db && ![db open])
+        db = nil;
+    return db;
+}
+
+
+- (BOOL) _deleteDatabase: (CBL_Database*)db error: (NSError**)outError {
+    if (![db deleteDatabase: outError])
+        return NO;
+    [_databases removeObjectForKey: db.name];
+    return YES;
+}
+
+
+#pragma mark - REPLICATION:
+
+
+// Replication 'source' or 'target' property may be a string or a dictionary. Normalize to dict form
+static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key) {
+    id value = properties[key];
+    if ([value isKindOfClass: [NSDictionary class]])
+        return value;
+    else if ([value isKindOfClass: [NSString class]])
+        return $dict({@"url", value});
+    else
+        return nil;
+}
+
+
+- (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
+                            toDatabase: (CBL_Database**)outDatabase   // may be NULL
+                                remote: (NSURL**)outRemote          // may be NULL
+                                isPush: (BOOL*)outIsPush
+                          createTarget: (BOOL*)outCreateTarget
+                               headers: (NSDictionary**)outHeaders
+                            authorizer: (id<CBLAuthorizer>*)outAuthorizer
+{
+    // http://wiki.apache.org/couchdb/Replication
+    NSDictionary* sourceDict = parseSourceOrTarget(properties, @"source");
+    NSDictionary* targetDict = parseSourceOrTarget(properties, @"target");
+    NSString* source = sourceDict[@"url"];
+    NSString* target = targetDict[@"url"];
+    if (!source || !target)
+        return kCBLStatusBadRequest;
+
+    *outCreateTarget = [$castIf(NSNumber, properties[@"create_target"]) boolValue];
+    *outIsPush = NO;
+    CBL_Database* db = nil;
+    NSDictionary* remoteDict = nil;
+    if ([CBLManager isValidDatabaseName: source]) {
+        if (outDatabase)
+            db = [self _existingDatabaseNamed: source];
+        remoteDict = targetDict;
+        *outIsPush = YES;
+    } else {
+        if (![CBLManager isValidDatabaseName: target])
+            return kCBLStatusBadID;
+        remoteDict = sourceDict;
+        if (outDatabase) {
+            if (*outCreateTarget) {
+                db = [self _databaseNamed: target];
+                if (![db open])
+                    return kCBLStatusDBError;
+            } else {
+                db = [self _existingDatabaseNamed: target];
+            }
+        }
+    }
+    NSURL* remote = [NSURL URLWithString: remoteDict[@"url"]];
+    if (![@[@"http", @"https", @"cbl"] containsObject: remote.scheme.lowercaseString])
+        return kCBLStatusBadRequest;
+    if (outDatabase) {
+        *outDatabase = db;
+        if (!db)
+            return kCBLStatusNotFound;
+    }
+    if (outRemote)
+        *outRemote = remote;
+    if (outHeaders)
+        *outHeaders = $castIf(NSDictionary, remoteDict[@"headers"]);
+    
+    if (outAuthorizer) {
+        *outAuthorizer = nil;
+        NSDictionary* auth = $castIf(NSDictionary, remoteDict[@"auth"]);
+        if (auth) {
+            NSDictionary* oauth = $castIf(NSDictionary, auth[@"oauth"]);
+            if (oauth) {
+                NSString* consumerKey = $castIf(NSString, oauth[@"consumer_key"]);
+                NSString* consumerSec = $castIf(NSString, oauth[@"consumer_secret"]);
+                NSString* token = $castIf(NSString, oauth[@"token"]);
+                NSString* tokenSec = $castIf(NSString, oauth[@"token_secret"]);
+                NSString* sigMethod = $castIf(NSString, oauth[@"signature_method"]);
+                *outAuthorizer = [[CBLOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
+                                                                   consumerSecret: consumerSec
+                                                                            token: token
+                                                                      tokenSecret: tokenSec
+                                                                  signatureMethod: sigMethod];
+            } else {
+                NSDictionary* browserid = $castIf(NSDictionary, auth[@"browserid"]);
+                if (browserid) {
+                    NSString* email = $castIf(NSString, browserid[@"email"]);
+                    *outAuthorizer = [[CBLBrowserIDAuthorizer alloc] initWithEmailAddress: email];
+                }
+            }
+            if (!*outAuthorizer)
+                Warn(@"Invalid authorizer settings: %@", auth);
+        }
+    }
+    
+    return kCBLStatusOK;
+}
+
+
+- (CBLStatus) validateReplicatorProperties: (NSDictionary*)properties {
+    BOOL push, createTarget;
+    return [self parseReplicatorProperties: properties toDatabase: NULL
+                                    remote: NULL isPush: &push createTarget: &createTarget
+                                   headers: NULL
+                                authorizer: NULL];
+}
+
+
+- (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)properties
+                                    status: (CBLStatus*)outStatus
+{
+    // Extract the parameters from the JSON request body:
+    // http://wiki.apache.org/couchdb/Replication
+    CBL_Database* db;
+    NSURL* remote;
+    BOOL push, createTarget;
+    NSDictionary* headers;
+    id<CBLAuthorizer> authorizer;
+
+    CBLStatus status = [self parseReplicatorProperties: properties
+                                            toDatabase: &db remote: &remote
+                                                isPush: &push
+                                          createTarget: &createTarget
+                                               headers: &headers
+                                            authorizer: &authorizer];
+    if (CBLStatusIsError(status)) {
+        if (outStatus)
+            *outStatus = status;
+        return nil;
+    }
+
+    BOOL continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
+
+    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db
+                                                       remote: remote
+                                                         push: push
+                                                   continuous: continuous];
+    if (!repl) {
+        if (outStatus)
+            *outStatus = kCBLStatusServerError;
+        return nil;
+    }
+
+    repl.filterName = $castIf(NSString, properties[@"filter"]);
+    repl.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
+    repl.options = properties;
+    repl.requestHeaders = headers;
+    repl.authorizer = authorizer;
+    if (push)
+        ((CBL_Pusher*)repl).createTarget = createTarget;
+
+    if (outStatus)
+        *outStatus = kCBLStatusOK;
+    return repl;
+}
+
+
+- (CBL_ReplicatorManager*) replicatorManager {
+    return _replicatorManager;
+}
+
+
+@end
+
+
+
+
+#pragma mark - TESTS
+#if DEBUG
+
+TestCase(CBLManager) {
+    RequireTestCase(CBL_Database);
+    CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
+    CBL_Database* db = [dbm _databaseNamed: @"foo"];
+    CAssert(db != nil);
+    CAssertEqual(db.name, @"foo");
+    CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);
+    CAssert(!db.exists);
+    
+    CAssertEq([dbm _databaseNamed: @"foo"], db);
+    
+    CAssertEqual(dbm.allDatabaseNames, @[]);    // because foo doesn't exist yet
+    
+    CAssert([db open]);
+    CAssert(db.exists);
+    CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);    // because foo doesn't exist yet
+}
+
+#endif

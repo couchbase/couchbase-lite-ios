@@ -284,7 +284,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 #if RUN_IN_BACKGROUND
     [self.database.manager.tdServer tellDatabaseManager: block];
 #else
-    block(self.database.manager.tdManager);
+    block(self.database.manager);
 #endif
 }
 

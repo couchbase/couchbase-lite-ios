@@ -43,7 +43,7 @@
 
 
 - (id) initWithDirectory: (NSString*)dirPath
-                 options: (const CBL_DatabaseManagerOptions*)options
+                 options: (const CBLManagerOptions*)options
                    error: (NSError**)outError
 {
     if (outError) *outError = nil;
@@ -146,7 +146,7 @@
 
 
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBL_Database*))block {
-    [self queue: ^{ block([_manager databaseNamed: dbName]); }];
+    [self queue: ^{ block([_manager _databaseNamed: dbName]); }];
 }
 
 
@@ -161,7 +161,7 @@
     [self queue: ^{
         [lock lockWhenCondition: 0];
         @try {
-            CBL_Database* db = [_manager databaseNamed: dbName];
+            CBL_Database* db = [_manager _databaseNamed: dbName];
             result = block(db);
         } @finally {
             [lock unlockWithCondition: 1];

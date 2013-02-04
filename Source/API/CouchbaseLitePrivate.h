@@ -19,7 +19,6 @@
 
 @interface CBLManager ()
 @property (readonly) CBL_Server* backgroundServer;
-@property (readonly) CBL_DatabaseManager* tdManager;
 @property (readonly) NSArray* allReplications;
 - (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
                                        remote: (NSURL*)remote

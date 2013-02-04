@@ -79,8 +79,6 @@
 		274C391E149FAE0000A5E89B /* CBL_Database+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBL_Database+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* CBL_Database+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBL_Database+Attachments.m */; };
 		2751D4E4151BAE7000F7FD57 /* CBL_DatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* CBL_DatabaseManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		2751D4E5151BAE7000F7FD57 /* CBL_DatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2751D4E3151BAE7000F7FD57 /* CBL_DatabaseManager.m */; };
-		2751D4E6151BAE7000F7FD57 /* CBL_DatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2751D4E3151BAE7000F7FD57 /* CBL_DatabaseManager.m */; };
 		2753156E14ACEFC90065964D /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155114ACEFC90065964D /* DDData.h */; };
 		2753157214ACEFC90065964D /* DDNumber.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155314ACEFC90065964D /* DDNumber.h */; };
 		2753157614ACEFC90065964D /* DDRange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155514ACEFC90065964D /* DDRange.h */; };
@@ -600,7 +598,6 @@
 		274C391B149FAE0000A5E89B /* CBL_Database+Attachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBL_Database+Attachments.m"; sourceTree = "<group>"; };
 		274F9807152E6E0C00247C46 /* CBLStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStatus.h; sourceTree = "<group>"; };
 		2751D4E2151BAE7000F7FD57 /* CBL_DatabaseManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_DatabaseManager.h; sourceTree = "<group>"; };
-		2751D4E3151BAE7000F7FD57 /* CBL_DatabaseManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_DatabaseManager.m; sourceTree = "<group>"; };
 		2753155114ACEFC90065964D /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDData.h; sourceTree = "<group>"; };
 		2753155214ACEFC90065964D /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDData.m; sourceTree = "<group>"; };
 		2753155314ACEFC90065964D /* DDNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDNumber.h; sourceTree = "<group>"; };
@@ -1050,7 +1047,6 @@
 				2773ADC514BD1EB80027A292 /* CBL_Database+LocalDocs.h */,
 				2773ADC614BD1EB80027A292 /* CBL_Database+LocalDocs.m */,
 				2751D4E2151BAE7000F7FD57 /* CBL_DatabaseManager.h */,
-				2751D4E3151BAE7000F7FD57 /* CBL_DatabaseManager.m */,
 				279EB2CC149140DE00E74185 /* CBL_View.h */,
 				279EB2CD149140DE00E74185 /* CBL_View.m */,
 				27F074A911CD5D7A00E9A2AB /* CBL_Body.h */,
@@ -2117,7 +2113,6 @@
 				27103F8414E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				27C40C7A14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */,
 				279C7E2F14F424090004A1E8 /* CBLSequenceMap.m in Sources */,
-				2751D4E5151BAE7000F7FD57 /* CBL_DatabaseManager.m in Sources */,
 				272B85151523691700A90CB2 /* CBLJSON.m in Sources */,
 				27ADC07A152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				278B0CA1152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
@@ -2244,7 +2239,6 @@
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
-				2751D4E6151BAE7000F7FD57 /* CBL_DatabaseManager.m in Sources */,
 				272B85161523691700A90CB2 /* CBLJSON.m in Sources */,
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				278B0CA2152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,

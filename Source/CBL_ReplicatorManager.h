@@ -7,7 +7,7 @@
 //
 
 #import "CBL_Database.h"
-@class CBL_DatabaseManager;
+#import "CBL_DatabaseManager.h"
 @protocol CBLAuthorizer;
 
 

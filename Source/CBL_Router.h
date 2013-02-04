@@ -7,7 +7,8 @@
 //
 
 #import "CBL_Database.h"
-@class CBL_Server, CBL_DatabaseManager, CBLResponse, CBL_Body, CBLMultipartWriter;
+#import "CBL_DatabaseManager.h"
+@class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter;
 
 
 typedef CBLStatus (^OnAccessCheckBlock)(CBL_Database*, NSString *docID, SEL action);

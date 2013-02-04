@@ -32,7 +32,6 @@ _kCBLDocumentChangeNotification
 .objc_class_name_CBL_Puller
 
 .objc_class_name_CBL_Server
-.objc_class_name_CBL_DatabaseManager
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
 
@@ -49,5 +48,4 @@ _CBL_ReplicatorStoppedNotification
 
 _kDefaultCBLChangesOptions
 _kDefaultCBLQueryOptions
-_kCBL_DatabaseManagerDefaultOptions
 _kCBL_ReplicatorDatabaseName

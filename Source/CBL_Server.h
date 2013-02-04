@@ -23,7 +23,7 @@
 - (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
 
 - (id) initWithDirectory: (NSString*)dirPath
-                 options: (const CBL_DatabaseManagerOptions*)options
+                 options: (const CBLManagerOptions*)options
                    error: (NSError**)outError;
 
 @property (readonly) NSString* directory;

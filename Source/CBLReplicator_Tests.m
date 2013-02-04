@@ -101,7 +101,7 @@ static NSString* replic8(CBL_Database* db, NSString* urlStr, BOOL push, NSString
 TestCase(CBL_Pusher) {
     RequireTestCase(CBL_Database);
     CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
-    CBL_Database* db = [server databaseNamed: @"db"];
+    CBL_Database* db = [server _databaseNamed: @"db"];
     [db open];
     
     __block int filterCalls = 0;
@@ -149,7 +149,7 @@ TestCase(CBL_Pusher) {
 TestCase(CBL_Puller) {
     RequireTestCase(CBL_Pusher);
     CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
-    CBL_Database* db = [server databaseNamed: @"db"];
+    CBL_Database* db = [server _databaseNamed: @"db"];
     [db open];
     
     id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
@@ -187,7 +187,7 @@ TestCase(CBL_Puller_FromCouchApp) {
     
     RequireTestCase(CBL_Puller);
     CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
-    CBL_Database* db = [server databaseNamed: @"couchapp_helloworld"];
+    CBL_Database* db = [server _databaseNamed: @"couchapp_helloworld"];
     [db open];
     
     replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
@@ -221,7 +221,7 @@ TestCase(CBL_ReplicatorManager) {
     RequireTestCase(ParseReplicatorProperties);
     CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
     CAssert([server replicatorManager]);    // start the replicator
-    CBL_Database* replicatorDb = [server databaseNamed: kCBL_ReplicatorDatabaseName];
+    CBL_Database* replicatorDb = [server _databaseNamed: kCBL_ReplicatorDatabaseName];
     CAssert(replicatorDb);
     CAssert([replicatorDb open]);
     
@@ -239,7 +239,7 @@ TestCase(CBL_ReplicatorManager) {
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusForbidden);
     
-    CBL_Database* sourceDB = [server databaseNamed: @"foo"];
+    CBL_Database* sourceDB = [server _databaseNamed: @"foo"];
     CAssert([sourceDB open]);
 
     // Now try a valid replication document:
@@ -288,14 +288,14 @@ TestCase(CBL_ReplicatorManager) {
     CAssert(newRepl.running);
 
     // Now delete the database, and check that the replication doc is deleted too:
-    CAssert([server deleteDatabase: sourceDB error: NULL]);
+    CAssert([server _deleteDatabase: sourceDB error: NULL]);
     CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil]);
     
     [server close];
 }
 
 
-@interface CBL_DatabaseManager (Internal)
+@interface CBL_DatabaseManager (Seekrit)
 - (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
                             toDatabase: (CBL_Database**)outDatabase   // may be NULL
                                 remote: (NSURL**)outRemote          // may be NULL
@@ -308,7 +308,7 @@ TestCase(CBL_ReplicatorManager) {
 
 TestCase(ParseReplicatorProperties) {
     CBL_DatabaseManager* dbManager = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
-    CBL_Database* localDB = [dbManager databaseNamed: @"foo"];
+    CBL_Database* localDB = [dbManager _databaseNamed: @"foo"];
 
     CBL_Database* db = nil;
     NSURL* remote = nil;

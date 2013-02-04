@@ -186,7 +186,7 @@
 - (CBLStatus) do_DELETE: (CBL_Database*)db {
     if ([self query: @"rev"])
         return kCBLStatusBadID;  // CouchDB checks for this; probably meant to be a document deletion
-    return [_dbManager deleteDatabase: db error: NULL] ? kCBLStatusOK : kCBLStatusNotFound;
+    return [_dbManager _deleteDatabase: db error: NULL] ? kCBLStatusOK : kCBLStatusNotFound;
 }
 
 
