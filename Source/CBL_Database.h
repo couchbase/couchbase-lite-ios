@@ -71,17 +71,16 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     CBL_BlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
-    __weak CBLDatabase* _touchDatabase;
+    __weak CBLDatabase* _publicDatabase;
+    __weak CBLManager* _manager;
     NSMutableArray* _changesToNotify;
 }    
         
-- (id) initWithPath: (NSString*)path;
+- (id) initWithPath: (NSString*)path manager: (CBLManager*)manager;
 - (BOOL) open: (NSError**)outError;
 - (BOOL) open;
 - (BOOL) close;
 - (BOOL) deleteDatabase: (NSError**)outError;
-
-+ (CBL_Database*) createEmptyDBAtPath: (NSString*)path;
 
 /** Should the database file be opened in read-only mode? */
 @property BOOL readOnly;
@@ -89,8 +88,11 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (readonly) NSString* path;
 @property (readonly, copy) NSString* name;
 @property (readonly) NSThread* thread;
+@property (readonly) CBLManager* manager;
 @property (readonly) BOOL exists;
 @property (readonly) UInt64 totalDataSize;
+
+@property (readonly, weak) CBLDatabase* publicDatabase;
 
 @property (readonly) NSUInteger documentCount;
 @property (readonly) SequenceNumber lastSequence;

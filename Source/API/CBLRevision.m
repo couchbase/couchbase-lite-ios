@@ -115,7 +115,7 @@
 
 
 - (id)initWithCBLDB: (CBL_Database*)tddb revision: (CBL_Revision*)rev {
-    CBLDocument* doc = [tddb.touchDatabase documentWithID: rev.docID];
+    CBLDocument* doc = [tddb.publicDatabase documentWithID: rev.docID];
     return [self initWithDocument: doc revision: rev];
 }
 

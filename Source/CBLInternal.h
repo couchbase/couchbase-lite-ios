@@ -19,6 +19,9 @@
 
 
 @interface CBL_Database ()
+#if DEBUG
++ (CBL_Database*) createEmptyDBAtPath: (NSString*)path;
+#endif
 @property (readwrite, copy) NSString* name;  // make it settable
 @property (readonly) FMDatabase* fmdb;
 @property (readonly) CBL_BlobStore* attachmentStore;

@@ -134,7 +134,6 @@ static id<CBLFilterCompiler> sFilterCompiler;
     if (![_manager _deleteDatabase: _tddb error: outError])
         return NO;
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    _tddb.touchDatabase = nil;
     _tddb = nil;
     return YES;
 }

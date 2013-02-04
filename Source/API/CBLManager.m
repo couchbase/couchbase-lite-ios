@@ -234,19 +234,8 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (CBLDatabase*) databaseForDatabase: (CBL_Database*)tddb {
-    CBLDatabase* touchDatabase = tddb.touchDatabase;
-    if (!touchDatabase && tddb) {
-        touchDatabase = [[CBLDatabase alloc] initWithManager: self
-                                                    CBL_Database: tddb];
-        tddb.touchDatabase = touchDatabase;
-    }
-    return touchDatabase;
-}
-
-
 - (CBLDatabase*) databaseNamed: (NSString*)name {
-    return [self databaseForDatabase: [self _existingDatabaseNamed: name]];
+    return [self _existingDatabaseNamed: name].publicDatabase;
 }
 
 - (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
@@ -257,7 +246,7 @@ static NSCharacterSet* kIllegalNameChars;
     CBL_Database* db = [self _databaseNamed: name];
     if (![db open: outError])
         return nil;
-    return [self databaseForDatabase: db];
+    return db.publicDatabase;
 }
 
 
@@ -358,7 +347,7 @@ static NSCharacterSet* kIllegalNameChars;
         NSString* path = [self pathForName: name];
         if (!path)
             return nil;
-        db = [[CBL_Database alloc] initWithPath: path];
+        db = [[CBL_Database alloc] initWithPath: path manager: self];
         db.readOnly = _options.readOnly;
         if (!create && !db.exists) {
             return nil;

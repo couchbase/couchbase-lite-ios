@@ -23,6 +23,7 @@
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
 #import "CBLMisc.h"
+#import "CBLDatabase.h"
 #import "CouchbaseLitePrivate.h"
 
 #import "FMDatabase.h"
@@ -41,7 +42,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 + (CBL_Database*) createEmptyDBAtPath: (NSString*)path {
     if (!CBLRemoveFileIfExists(path, NULL))
         return nil;
-    CBL_Database *db = [[self alloc] initWithPath: path];
+    CBL_Database *db = [[self alloc] initWithPath: path manager: nil];
     if (!CBLRemoveFileIfExists(db.attachmentStorePath, NULL))
         return nil;
     if (![db open: nil])
@@ -50,10 +51,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (id) initWithPath: (NSString*)path {
+- (id) initWithPath: (NSString*)path manager: (CBLManager*)manager {
     if (self = [super init]) {
         Assert([path hasPrefix: @"/"], @"Path must be absolute");
         _path = [path copy];
+        _manager = manager;
         _name = [path.lastPathComponent.stringByDeletingPathExtension copy];
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = 10;
@@ -325,8 +327,17 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 @synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments,
-            readOnly=_readOnly, touchDatabase=_touchDatabase, thread=_thread;
+            readOnly=_readOnly, publicDatabase=_publicDatabase, thread=_thread, manager=_manager;
 
+
+- (CBLDatabase*) publicDatabase {
+    CBLDatabase* db = _publicDatabase;
+    if (!db) {
+        db = [[CBLDatabase alloc] initWithManager: _manager CBL_Database: self];
+        _publicDatabase = db;
+    }
+    return db;
+}
 
 - (UInt64) totalDataSize {
     NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: NULL];

@@ -12,11 +12,6 @@
 @class CBL_DatabaseChange, CBLManager, CBL_Server;
 
 
-@interface CBL_Database ()
-@property (weak, nonatomic) CBLDatabase* touchDatabase;
-@end
-
-
 @interface CBLManager ()
 @property (readonly) CBL_Server* backgroundServer;
 @property (readonly) NSArray* allReplications;
