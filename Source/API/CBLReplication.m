@@ -11,7 +11,7 @@
 
 #import "CBL_Pusher.h"
 #import "CBL_Database+Replication.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 #import "CBL_Server.h"
 #import "CBLBrowserIDAuthorizer.h"
 #import "MYBlockUtils.h"
@@ -280,7 +280,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 #pragma mark - START/STOP:
 
 
-- (void) tellDatabaseManager: (void (^)(CBL_DatabaseManager*))block {
+- (void) tellDatabaseManager: (void (^)(CBLManager*))block {
 #if RUN_IN_BACKGROUND
     [self.database.manager.tdServer tellDatabaseManager: block];
 #else
@@ -318,7 +318,7 @@ static inline BOOL isLocalDBName(NSString* url) {
         _started = YES;
         _mainThread = [NSThread currentThread];
 
-        [self tellDatabaseManager:^(CBL_DatabaseManager* dbmgr) {
+        [self tellDatabaseManager:^(CBLManager* dbmgr) {
             // This runs on the server thread:
             [self bg_startReplicator: dbmgr properties: self.currentProperties];
         }];
@@ -330,7 +330,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     // This is a no-op for persistent replications
     if (self.persistent)
         return;
-    [self tellDatabaseManager:^(CBL_DatabaseManager* dbmgr) {
+    [self tellDatabaseManager:^(CBLManager* dbmgr) {
         // This runs on the server thread:
         [self bg_stopReplicator];
     }];
@@ -391,7 +391,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 // CAREFUL: This is called on the server's background thread!
-- (void) bg_startReplicator: (CBL_DatabaseManager*)server_dbmgr
+- (void) bg_startReplicator: (CBLManager*)server_dbmgr
                  properties: (NSDictionary*)properties
 {
     // The setup should use properties, not ivars, because the ivars may change on the main thread.

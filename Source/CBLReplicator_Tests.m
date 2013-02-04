@@ -100,7 +100,7 @@ static NSString* replic8(CBL_Database* db, NSString* urlStr, BOOL push, NSString
 
 TestCase(CBL_Pusher) {
     RequireTestCase(CBL_Database);
-    CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
     CBL_Database* db = [server _databaseNamed: @"db"];
     [db open];
     
@@ -148,7 +148,7 @@ TestCase(CBL_Pusher) {
 
 TestCase(CBL_Puller) {
     RequireTestCase(CBL_Pusher);
-    CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
     CBL_Database* db = [server _databaseNamed: @"db"];
     [db open];
     
@@ -186,7 +186,7 @@ TestCase(CBL_Puller_FromCouchApp) {
     }
     
     RequireTestCase(CBL_Puller);
-    CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
     CBL_Database* db = [server _databaseNamed: @"couchapp_helloworld"];
     [db open];
     
@@ -219,7 +219,7 @@ static CBL_Replicator* findActiveReplicator(CBL_Database* db, NSURL* remote, BOO
 
 TestCase(CBL_ReplicatorManager) {
     RequireTestCase(ParseReplicatorProperties);
-    CBL_DatabaseManager* server = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
     CAssert([server replicatorManager]);    // start the replicator
     CBL_Database* replicatorDb = [server _databaseNamed: kCBL_ReplicatorDatabaseName];
     CAssert(replicatorDb);
@@ -295,7 +295,7 @@ TestCase(CBL_ReplicatorManager) {
 }
 
 
-@interface CBL_DatabaseManager (Seekrit)
+@interface CBLManager (Seekrit)
 - (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
                             toDatabase: (CBL_Database**)outDatabase   // may be NULL
                                 remote: (NSURL**)outRemote          // may be NULL
@@ -307,7 +307,7 @@ TestCase(CBL_ReplicatorManager) {
 
 
 TestCase(ParseReplicatorProperties) {
-    CBL_DatabaseManager* dbManager = [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
+    CBLManager* dbManager = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
     CBL_Database* localDB = [dbManager _databaseNamed: @"foo"];
 
     CBL_Database* db = nil;

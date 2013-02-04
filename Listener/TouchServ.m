@@ -19,7 +19,7 @@
 #import "CBL_Router.h"
 #import "CBLListener.h"
 #import "CBL_Pusher.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 #import "CBL_Database+Replication.h"
 #import "CBLMisc.h"
 

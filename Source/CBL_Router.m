@@ -44,7 +44,7 @@
 @implementation CBL_Router
 
 
-- (id) initWithDatabaseManager: (CBL_DatabaseManager*)dbManager request: (NSURLRequest*)request {
+- (id) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request {
     NSParameterAssert(request);
     self = [super init];
     if (self) {
@@ -285,7 +285,7 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger pathLen = _path.count;
     if (pathLen > 0) {
         NSString* dbName = _path[0];
-        BOOL validName = [CBL_DatabaseManager isValidDatabaseName: dbName];
+        BOOL validName = [CBLManager isValidDatabaseName: dbName];
         if ([dbName hasPrefix: @"_"] && !validName) {
             [message appendString: dbName]; // special root path, like /_all_dbs
         } else if (!validName) {
@@ -578,7 +578,7 @@ static NSArray* splitPath( NSURL* url ) {
     if (_dbManager) {
         [self run];
     } else {
-        [_server tellDatabaseManager: ^(CBL_DatabaseManager* dbm) {
+        [_server tellDatabaseManager: ^(CBLManager* dbm) {
             _dbManager = dbm;
             [self run];
         }];

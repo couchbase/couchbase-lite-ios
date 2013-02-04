@@ -7,7 +7,7 @@
 //
 
 #import "CBL_Database.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 @class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter;
 
 
@@ -21,7 +21,7 @@ typedef void (^OnFinishedBlock)();
 {
     @private
     CBL_Server* _server;
-    CBL_DatabaseManager* _dbManager;
+    CBLManager* _dbManager;
     NSURLRequest* _request;
     NSMutableArray* _path;
     NSDictionary* _queries;

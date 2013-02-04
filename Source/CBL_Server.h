@@ -6,16 +6,16 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 
 
 /** Thread-safe top-level interface to CouchbaseLite API.
-    A CBL_Server owns a background thread on which it runs a CBL_DatabaseManager and all related tasks.
+    A CBL_Server owns a background thread on which it runs a CBLManager and all related tasks.
     The database objects can only be called by queueing blocks that will run on the background thread. */
 @interface CBL_Server : NSObject
 {
     @private
-    CBL_DatabaseManager* _manager;
+    CBLManager* _manager;
     NSThread* _serverThread;
     BOOL _stopRunLoop;
 }
@@ -29,7 +29,7 @@
 @property (readonly) NSString* directory;
 
 - (void) queue: (void(^)())block;
-- (void) tellDatabaseManager: (void (^)(CBL_DatabaseManager*))block;
+- (void) tellDatabaseManager: (void (^)(CBLManager*))block;
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBL_Database*))block;
 - (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(CBL_Database*))block;
 

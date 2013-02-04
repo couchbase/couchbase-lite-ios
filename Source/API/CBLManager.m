@@ -11,7 +11,7 @@
 
 #import "CBL_Database.h"
 #import "CBL_Database+Attachments.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 #import "CBL_Pusher.h"
 #import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"

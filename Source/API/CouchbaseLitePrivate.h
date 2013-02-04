@@ -9,7 +9,7 @@
 #import "CouchbaseLite.h"
 #import "CBLCache.h"
 #import "CBL_Database.h"
-@class CBL_DatabaseChange, CBL_DatabaseManager, CBL_Server;
+@class CBL_DatabaseChange, CBLManager, CBL_Server;
 
 
 @interface CBL_Database ()

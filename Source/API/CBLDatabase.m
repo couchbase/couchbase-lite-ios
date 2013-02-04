@@ -11,7 +11,7 @@
 #import "CBL_DatabaseChange.h"
 #import "CBLModelFactory.h"
 #import "CBLCache.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIApplication.h>

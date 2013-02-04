@@ -7,7 +7,7 @@
 //
 
 #import "CBL_Database.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 @protocol CBLAuthorizer;
 
 
@@ -19,13 +19,13 @@ extern NSString* const kCBL_ReplicatorDatabaseName;
     A CBL_Server owns an instance of this class. */
 @interface CBL_ReplicatorManager : NSObject
 {
-    CBL_DatabaseManager* _dbManager;
+    CBLManager* _dbManager;
     CBL_Database* _replicatorDB;
     NSMutableDictionary* _replicatorsByDocID;
     BOOL _updateInProgress;
 }
 
-- (id) initWithDatabaseManager: (CBL_DatabaseManager*)dbManager;
+- (id) initWithDatabaseManager: (CBLManager*)dbManager;
 
 - (void) start;
 - (void) stop;

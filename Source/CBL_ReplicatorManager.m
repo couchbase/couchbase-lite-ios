@@ -41,7 +41,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 @implementation CBL_ReplicatorManager
 
 
-- (id) initWithDatabaseManager: (CBL_DatabaseManager*)dbManager {
+- (id) initWithDatabaseManager: (CBLManager*)dbManager {
     self = [super init];
     if (self) {
         _dbManager = dbManager;

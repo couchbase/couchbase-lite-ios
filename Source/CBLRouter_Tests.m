@@ -27,12 +27,12 @@
 #pragma mark - TESTS
 
 
-static CBL_DatabaseManager* createDBManager(void) {
-    return [CBL_DatabaseManager createEmptyAtTemporaryPath: @"CBL_RouterTest"];
+static CBLManager* createDBManager(void) {
+    return [CBLManager createEmptyAtTemporaryPath: @"CBL_RouterTest"];
 }
 
 
-static CBLResponse* SendRequest(CBL_DatabaseManager* server, NSString* method, NSString* path,
+static CBLResponse* SendRequest(CBLManager* server, NSString* method, NSString* path,
                                NSDictionary* headers, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"cbl://" stringByAppendingString: path]];
     CAssert(url, @"Invalid URL: <%@>", path);
@@ -80,7 +80,7 @@ static id ParseJSONResponse(CBLResponse* response) {
 
 static CBLResponse* sLastResponse;
 
-static id SendBody(CBL_DatabaseManager* server, NSString* method, NSString* path, id bodyObj,
+static id SendBody(CBLManager* server, NSString* method, NSString* path, id bodyObj,
                    CBLStatus expectedStatus, id expectedResult) {
     sLastResponse = SendRequest(server, method, path, nil, bodyObj);
     id result = ParseJSONResponse(sLastResponse);
@@ -93,12 +93,12 @@ static id SendBody(CBL_DatabaseManager* server, NSString* method, NSString* path
     return result;
 }
 
-static id Send(CBL_DatabaseManager* server, NSString* method, NSString* path,
+static id Send(CBLManager* server, NSString* method, NSString* path,
                int expectedStatus, id expectedResult) {
     return SendBody(server, method, path, nil, expectedStatus, expectedResult);
 }
 
-static void CheckCacheable(CBL_DatabaseManager* server, NSString* path) {
+static void CheckCacheable(CBLManager* server, NSString* path) {
     NSString* eTag = (sLastResponse.headers)[@"Etag"];
     CAssert(eTag.length > 0, @"Missing eTag in response for %@", path);
     sLastResponse = SendRequest(server, @"GET", path, $dict({@"If-None-Match", eTag}), nil);
@@ -107,8 +107,8 @@ static void CheckCacheable(CBL_DatabaseManager* server, NSString* path) {
 
 
 TestCase(CBL_Router_Server) {
-    RequireTestCase(CBL_DatabaseManager);
-    CBL_DatabaseManager* server = createDBManager();
+    RequireTestCase(CBLManager);
+    CBLManager* server = createDBManager();
     Send(server, @"GET", @"/", kCBLStatusOK, $dict({@"CouchbaseLite", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
                                           {@"version", CBLVersionString()}));
@@ -129,7 +129,7 @@ TestCase(CBL_Router_Server) {
 
 TestCase(CBL_Router_Databases) {
     RequireTestCase(CBL_Router_Server);
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/database", kCBLStatusCreated, nil);
     
     NSDictionary* dbInfo = Send(server, @"GET", @"/database", kCBLStatusOK, nil);
@@ -155,7 +155,7 @@ TestCase(CBL_Router_Databases) {
 TestCase(CBL_Router_Docs) {
     RequireTestCase(CBL_Router_Databases);
     // PUT:
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     kCBLStatusCreated, nil);
@@ -236,7 +236,7 @@ TestCase(CBL_Router_LocalDocs) {
     RequireTestCase(CBL_Database_LocalDocs);
     RequireTestCase(CBL_Router_Docs);
     // PUT a local doc:
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}), 
                                     kCBLStatusCreated, nil);
@@ -260,7 +260,7 @@ TestCase(CBL_Router_LocalDocs) {
 
 TestCase(CBL_Router_AllDocs) {
     // PUT:
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     
     NSDictionary* result;
@@ -308,7 +308,7 @@ TestCase(CBL_Router_AllDocs) {
 
 TestCase(CBL_Router_Views) {
     // PUT:
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
@@ -353,7 +353,7 @@ TestCase(CBL_Router_Views) {
 
 
 TestCase(CBL_Router_ContinuousChanges) {
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
 
     SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
@@ -399,7 +399,7 @@ TestCase(CBL_Router_ContinuousChanges) {
 }
 
 
-static NSDictionary* createDocWithAttachments(CBL_DatabaseManager* server,
+static NSDictionary* createDocWithAttachments(CBLManager* server,
                                               NSData* attach1, NSData* attach2) {
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     NSString* base64 = [CBLBase64 encode: attach1];
@@ -417,7 +417,7 @@ static NSDictionary* createDocWithAttachments(CBL_DatabaseManager* server,
 
 
 TestCase(CBL_Router_GetAttachment) {
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
 
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
@@ -494,7 +494,7 @@ TestCase(CBL_Router_GetAttachment) {
 
 
 TestCase(CBL_Router_GetRange) {
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
 
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
@@ -526,7 +526,7 @@ TestCase(CBL_Router_GetRange) {
 TestCase(CBL_Router_PutMultipart) {
     RequireTestCase(CBL_Router_Docs);
     RequireTestCase(CBLMultipartDownloader);
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
@@ -557,7 +557,7 @@ TestCase(CBL_Router_PutMultipart) {
 TestCase(CBL_Router_OpenRevs) {
     RequireTestCase(CBL_Router_Databases);
     // PUT:
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
                                     kCBLStatusCreated, nil);
@@ -593,7 +593,7 @@ TestCase(CBL_Router_OpenRevs) {
 
 TestCase(CBL_Router_RevsDiff) {
     RequireTestCase(CBL_Router_Databases);
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     NSDictionary* doc1r1 = SendBody(server, @"PUT", @"/db/11111", $dict(), kCBLStatusCreated,nil);
     NSString* doc1r1ID = doc1r1[@"rev"];
@@ -662,7 +662,7 @@ TestCase(CBL_Router_RevsDiff) {
 
 TestCase(CBL_Router_AccessCheck) {
     RequireTestCase(CBL_Router_Databases);
-    CBL_DatabaseManager* server = createDBManager();
+    CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     
     NSURL* url = [NSURL URLWithString: @"cbl:///db/"];

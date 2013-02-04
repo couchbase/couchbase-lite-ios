@@ -8,7 +8,7 @@
 
 #import "CBL_Database.h"
 #import "CBL_Database+Attachments.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 #import "CBL_View.h"
 #import "CBL_Server.h"
 #import "CBL_Router.h"
@@ -87,17 +87,17 @@
 @end
 
 
-@interface CBL_DatabaseManager (Testing)
+@interface CBLManager (Testing)
 @property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 #if DEBUG
-+ (CBL_DatabaseManager*) createEmptyAtPath: (NSString*)path;  // for testing
-+ (CBL_DatabaseManager*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
++ (CBLManager*) createEmptyAtPath: (NSString*)path;  // for testing
++ (CBLManager*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
 @end
 
 
 @interface CBL_Router ()
-- (id) initWithDatabaseManager: (CBL_DatabaseManager*)dbManager request: (NSURLRequest*)request;
+- (id) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
 @end
 
 

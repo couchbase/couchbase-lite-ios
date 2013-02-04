@@ -17,7 +17,7 @@
 #import "CBL_Database.h"
 #import "CBL_ReplicatorManager.h"
 #import "CBLMisc.h"
-#import "CBL_DatabaseManager.h"
+#import "CBLManager+Internal.h"
 #import "CBLInternal.h"
 #import "CBL_URLProtocol.h"
 #import "MYBlockUtils.h"
@@ -49,7 +49,7 @@
     if (outError) *outError = nil;
     self = [super init];
     if (self) {
-        _manager = [[CBL_DatabaseManager alloc] initWithDirectory: dirPath
+        _manager = [[CBLManager alloc] initWithDirectory: dirPath
                                                         options: options
                                                           error: outError];
         if (!_manager) {
@@ -91,7 +91,7 @@
 
 - (void) close {
     if (_serverThread) {
-        [self waitForDatabaseManager:^id(CBL_DatabaseManager* mgr) {
+        [self waitForDatabaseManager:^id(CBLManager* mgr) {
             LogTo(CBL_Server, @"Stopping server thread...");
 
             Class tdURLProtocol = NSClassFromString(@"CBL_URLProtocol");
@@ -150,7 +150,7 @@
 }
 
 
-- (void) tellDatabaseManager: (void (^)(CBL_DatabaseManager*))block {
+- (void) tellDatabaseManager: (void (^)(CBLManager*))block {
     [self queue: ^{ block(_manager); }];
 }
 
@@ -172,7 +172,7 @@
 }
 
 
-- (id) waitForDatabaseManager: (id (^)(CBL_DatabaseManager*))block {
+- (id) waitForDatabaseManager: (id (^)(CBLManager*))block {
     __block id result = nil;
     NSConditionLock* lock = [[NSConditionLock alloc] initWithCondition: 0];
     [self queue: ^{
@@ -195,5 +195,5 @@
 
 
 TestCase(CBL_Server) {
-    RequireTestCase(CBL_DatabaseManager);
+    RequireTestCase(CBLManager);
 }
