@@ -23,7 +23,7 @@
 #import "DemoAppDelegate.h"
 
 #import "CouchbaseLite.h"
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBL_Database+Insertion.h"
 #import "CBLJSON.h"
 

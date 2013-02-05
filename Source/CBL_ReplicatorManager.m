@@ -24,7 +24,7 @@
 #import "CBL_DatabaseChange.h"
 #import "CBL_Pusher.h"
 #import "CBL_Puller.h"
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBLRevision.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"

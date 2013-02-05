@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBL_Database+Insertion.h"
 #import "CBLInternal.h"
 #import "Test.h"
@@ -31,7 +31,7 @@ TestCase(CBL_View_Create) {
     
     CAssertNil([db existingViewNamed: @"aview"]);
     
-    CBL_View* view = [db viewNamed: @"aview"];
+    CBLView* view = [db viewNamed: @"aview"];
     CAssert(view);
     CAssertEqual(view.name, @"aview");
     CAssert(view.mapBlock == nil, nil);
@@ -76,8 +76,8 @@ static NSArray* putDocs(CBL_Database* db) {
 }
 
 
-static CBL_View* createView(CBL_Database* db) {
-    CBL_View* view = [db viewNamed: @"aview"];
+static CBLView* createView(CBL_Database* db) {
+    CBLView* view = [db viewNamed: @"aview"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
@@ -102,7 +102,7 @@ TestCase(CBL_View_Index) {
     putDoc(db, $dict({@"_id", @"_design/foo"}));
     putDoc(db, $dict({@"clef", @"quatre"}));
     
-    CBL_View* view = createView(db);
+    CBLView* view = createView(db);
     CAssertEq(view.viewID, 1);
     
     CAssert(view.stale);
@@ -168,7 +168,7 @@ TestCase(CBL_View_MapConflicts) {
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
     
-    CBL_View* view = [db viewNamed: @"conflicts"];
+    CBLView* view = [db viewNamed: @"conflicts"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         NSString* docID = doc[@"_id"];
         NSArray* conflicts = $cast(NSArray, doc[@"_conflicts"]);
@@ -195,7 +195,7 @@ TestCase(CBL_View_ConflictWinner) {
     NSArray* docs = putDocs(db);
     CBL_Revision* leaf1 = docs[1];
     
-    CBL_View* view = createView(db);
+    CBLView* view = createView(db);
     CAssertEq([view updateIndex], kCBLStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -235,7 +235,7 @@ TestCase(CBL_View_ConflictLoser) {
     NSArray* docs = putDocs(db);
     CBL_Revision* leaf1 = docs[1];
     
-    CBL_View* view = createView(db);
+    CBLView* view = createView(db);
     CAssertEq([view updateIndex], kCBLStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -271,7 +271,7 @@ TestCase(CBL_View_Query) {
     RequireTestCase(CBL_View_Index);
     CBL_Database *db = createDB();
     putDocs(db);
-    CBL_View* view = createView(db);
+    CBLView* view = createView(db);
     CAssertEq([view updateIndex], kCBLStatusOK);
     
     // Query all rows:
@@ -402,7 +402,7 @@ TestCase(CBL_View_Reduce) {
     putDoc(db, $dict({@"_id", @"App"},     {@"cost", @(1.95)}));
     putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", @(6.50)}));
     
-    CBL_View* view = [db viewNamed: @"totaler"];
+    CBLView* view = [db viewNamed: @"totaler"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
@@ -410,7 +410,7 @@ TestCase(CBL_View_Reduce) {
         if (cost)
             emit(doc[@"_id"], cost);
     } reduceBlock: ^(NSArray* keys, NSArray* values, BOOL rereduce) {
-        return [CBL_View totalValues: values];
+        return [CBLView totalValues: values];
     } version: @"1"];
 
     CAssertEq([view updateIndex], kCBLStatusOK);
@@ -445,14 +445,14 @@ TestCase(CBL_View_Grouped) {
     putDoc(db, $dict({@"_id", @"5"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
                      {@"track", @"Not Great Men"}, {@"time", @(187)}));
     
-    CBL_View* view = [db viewNamed: @"grouper"];
+    CBLView* view = [db viewNamed: @"grouper"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         emit($array(doc[@"artist"],
                     doc[@"album"], 
                     doc[@"track"]),
              doc[@"time"]);
     } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
-        return [CBL_View totalValues: values];
+        return [CBLView totalValues: values];
     } version: @"1"];
     
     CAssertEq([view updateIndex], kCBLStatusOK);
@@ -510,7 +510,7 @@ TestCase(CBL_View_GroupedStrings) {
     putDoc(db, $dict({@"name", @"Jens"}));
     putDoc(db, $dict({@"name", @"Jed"}));
     
-    CBL_View* view = [db viewNamed: @"default/names"];
+    CBLView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
          NSString *name = doc[@"name"];
          if (name)
@@ -560,7 +560,7 @@ TestCase(CBL_View_Collation) {
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
 
-    CBL_View* view = [db viewNamed: @"default/names"];
+    CBLView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         emit(doc[@"name"], nil);
     } reduceBlock: NULL version:@"1.0"];
@@ -604,7 +604,7 @@ TestCase(CBL_View_CollationRaw) {
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
 
-    CBL_View* view = [db viewNamed: @"default/names"];
+    CBLView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         emit(doc[@"name"], nil);
     } reduceBlock: NULL version:@"1.0"];
@@ -631,7 +631,7 @@ TestCase(CBL_View_LinkedDocs) {
         docs[i++] = [db getDocumentWithID: rev.docID revisionID: rev.revID].properties;
     }
 
-    CBL_View* view = [db viewNamed: @"linkview"];
+    CBLView* view = [db viewNamed: @"linkview"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         NSString* key = doc[@"key"];
         NSDictionary* value = nil;
@@ -666,7 +666,7 @@ TestCase(CBL_View_LinkedDocs) {
 }
 
 
-TestCase(CBL_View) {
+TestCase(CBLView) {
     RequireTestCase(CBL_View_MapConflicts);
     RequireTestCase(CBL_View_ConflictWinner);
     RequireTestCase(CBL_View_ConflictLoser);

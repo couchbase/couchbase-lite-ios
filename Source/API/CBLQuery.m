@@ -7,7 +7,7 @@
 //
 
 #import "CouchbaseLitePrivate.h"
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBL_Database.h"
 
 
@@ -25,7 +25,7 @@
 @implementation CBLQuery
 {
     CBLDatabase* _database;
-    CBL_View* _view;              // nil for _all_docs query
+    CBLView* _view;              // nil for _all_docs query
     BOOL _temporaryView;
     NSUInteger _limit, _skip;
     id _startKey, _endKey;
@@ -41,7 +41,7 @@
 
 
 // A nil view refers to 'all documents'
-- (instancetype) initWithDatabase: (CBLDatabase*)database view: (CBL_View*)view {
+- (instancetype) initWithDatabase: (CBLDatabase*)database view: (CBLView*)view {
     self = [super init];
     if (self) {
         _database = database;
@@ -53,7 +53,7 @@
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database mapBlock: (CBLMapBlock)mapBlock {
-    CBL_View* view = [database.tddb makeAnonymousView];
+    CBLView* view = [database.tddb makeAnonymousView];
     if (self = [self initWithDatabase: database view: view]) {
         _temporaryView = YES;
         [view setMapBlock: mapBlock reduceBlock: nil version: @""];

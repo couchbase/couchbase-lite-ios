@@ -98,7 +98,7 @@ int main (int argc, const char * argv[]) {
     // Start a listener socket:
     [server tellCBLServer: ^(CBL_Server* tdServer) {
         // Register support for handling certain JS functions used in the CouchbaseLite unit tests:
-        [CBL_View setCompiler: self];
+        [CBLView setCompiler: self];
         
         sListener = [[CBLListener alloc] initWithCBLServer: tdServer port: 8888];
         [sListener start];
@@ -363,7 +363,7 @@ int main (int argc, const char * argv[]) {
     CBLReduceBlock reduceBlock = NULL;
     if ([reduceSource isEqualToString: @"(function (keys, values) {return sum(values);})"]) {
         reduceBlock = ^(NSArray* keys, NSArray* values, BOOL rereduce) {
-            return [CBL_View totalValues: values];
+            return [CBLView totalValues: values];
         };
     }
     return [reduceBlock copy];

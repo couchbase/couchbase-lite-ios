@@ -316,7 +316,7 @@ TestCase(CBL_Router_Views) {
     SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
     
     CBL_Database* db = [server databaseNamed: @"db"];
-    CBL_View* view = [db viewNamed: @"design/view"];
+    CBLView* view = [db viewNamed: @"design/view"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         if (doc[@"message"])
             emit(doc[@"message"], nil);

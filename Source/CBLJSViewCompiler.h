@@ -14,8 +14,8 @@
 //
 
 #import "CBLJSFunction.h"
-#import <CouchbaseLite/CBL_Database.h>
-#import <CouchbaseLite/CBL_View.h>
+#import <CouchbaseLite/CBLDatabase.h>
+#import <CouchbaseLite/CBLView.h>
 
 
 /** A view compiler for CouchbaseLite that compiles and runs traditional JavaScript map/reduce functions.

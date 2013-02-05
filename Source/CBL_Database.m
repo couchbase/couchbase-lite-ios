@@ -288,7 +288,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     LogTo(CBL_Database, @"Close %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
                                                         object: self];
-    for (CBL_View* view in _views.allValues)
+    for (CBLView* view in _views.allValues)
         [view databaseClosing];
     
     _views = nil;
@@ -979,7 +979,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 #pragma mark - VIEWS:
 
 
-- (CBL_View*) registerView: (CBL_View*)view {
+- (CBLView*) registerView: (CBLView*)view {
     if (!view)
         return nil;
     if (!_views)
@@ -989,19 +989,19 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (CBL_View*) viewNamed: (NSString*)name {
-    CBL_View* view = _views[name];
+- (CBLView*) viewNamed: (NSString*)name {
+    CBLView* view = _views[name];
     if (view)
         return view;
-    return [self registerView: [[CBL_View alloc] initWithDatabase: self name: name]];
+    return [self registerView: [[CBLView alloc] initWithDatabase: self name: name]];
 }
 
 
-- (CBL_View*) existingViewNamed: (NSString*)name {
-    CBL_View* view = _views[name];
+- (CBLView*) existingViewNamed: (NSString*)name {
+    CBLView* view = _views[name];
     if (view)
         return view;
-    view = [[CBL_View alloc] initWithDatabase: self name: name];
+    view = [[CBLView alloc] initWithDatabase: self name: name];
     if (!view.viewID)
         return nil;
     return [self registerView: view];
@@ -1028,7 +1028,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (CBL_View*) makeAnonymousView {
+- (CBLView*) makeAnonymousView {
     for (int n = 1; true; ++n) {
         NSString* name = $sprintf(@"$anon$%d", n);
         if ([_fmdb intForQuery: @"SELECT count(*) FROM views WHERE name=?", name] <= 0)
@@ -1036,8 +1036,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     }
 }
 
-- (CBL_View*) compileViewNamed: (NSString*)tdViewName status: (CBLStatus*)outStatus {
-    CBL_View* view = [self existingViewNamed: tdViewName];
+- (CBLView*) compileViewNamed: (NSString*)tdViewName status: (CBLStatus*)outStatus {
+    CBLView* view = [self existingViewNamed: tdViewName];
     if (view && view.mapBlock)
         return view;
     
@@ -1064,7 +1064,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-//FIX: This has a lot of code in common with -[CBL_View queryWithOptions:status:]. Unify the two!
+//FIX: This has a lot of code in common with -[CBLView queryWithOptions:status:]. Unify the two!
 - (NSArray*) getAllDocs: (const CBLQueryOptions*)options {
     if (!options)
         options = &kDefaultCBLQueryOptions;

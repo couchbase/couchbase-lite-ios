@@ -1,5 +1,5 @@
 //
-//  CBL_View.h
+//  CBLView+Internal.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/8/11.
@@ -38,11 +38,6 @@ typedef enum {
     kCBLViewCollationRaw,
     kCBLViewCollationASCII
 } CBLViewCollation;
-
-
-#ifndef CBL_View
-#define CBL_View CBLView
-#endif
 
 
 @interface CBLView ()

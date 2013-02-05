@@ -19,7 +19,7 @@
 #import "CBL_Database+Insertion.h"
 #import "CBL_Database+LocalDocs.h"
 #import "CBL_Database+Replication.h"
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartDocumentReader.h"
 #import "CBL_Revision.h"
@@ -911,7 +911,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 - (CBLStatus) queryDesignDoc: (NSString*)designDoc view: (NSString*)viewName keys: (NSArray*)keys {
     NSString* tdViewName = $sprintf(@"%@/%@", designDoc, viewName);
     CBLStatus status;
-    CBL_View* view = [_db compileViewNamed: tdViewName status: &status];
+    CBLView* view = [_db compileViewNamed: tdViewName status: &status];
     if (!view)
         return status;
     
@@ -935,7 +935,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) queryView: (CBL_View*)view withOptions: (const CBLQueryOptions*)options {
+- (CBLStatus) queryView: (CBLView*)view withOptions: (const CBLQueryOptions*)options {
     CBLStatus status;
     NSArray* rows = [view _queryWithOptions: options status: &status];
     if (!rows)
@@ -980,7 +980,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if ([self cacheWithEtag: $sprintf(@"%lld", _db.lastSequence)])  // conditional GET
         return kCBLStatusNotModified;
 
-    CBL_View* view = [_db viewNamed: @"@@TEMPVIEW@@"];
+    CBLView* view = [_db viewNamed: @"@@TEMPVIEW@@"];
     if (![view compileFromProperties: props language: @"javascript"])
         return kCBLStatusBadRequest;
 

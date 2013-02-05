@@ -1,5 +1,5 @@
 //
-//  CBL_View.m
+//  CBLView+Internal.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/8/11.
@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"

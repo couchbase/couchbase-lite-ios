@@ -16,7 +16,7 @@
 #import "CBL_Router.h"
 #import "CBL_Database+Insertion.h"
 #import "CBL_Server.h"
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartWriter.h"
 #import "CBL_ReplicatorManager.h"

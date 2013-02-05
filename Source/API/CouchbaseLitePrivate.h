@@ -78,7 +78,7 @@
 
 @interface CBLQuery ()
 - (instancetype) initWithDatabase: (CBLDatabase*)database
-                             view: (CBL_View*)view                  __attribute__((nonnull(1)));
+                             view: (CBLView*)view                  __attribute__((nonnull(1)));
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                          mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
 @end

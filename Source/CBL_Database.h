@@ -9,8 +9,8 @@
 
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
-@class FMDatabase, CBL_View, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase;
-struct CBLQueryOptions;      // declared in CBL_View.h
+@class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase;
+struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
 /** NSNotification posted when one or more documents have been updated.

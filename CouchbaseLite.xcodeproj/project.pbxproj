@@ -203,8 +203,8 @@
 		279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE40814D8AA23009F3FA6 /* CBLMultipartDownloader.h */; };
 		279CE40B14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */; };
 		279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */; };
-		279EB2CE149140DE00E74185 /* CBL_View.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBL_View.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		279EB2CF149140DE00E74185 /* CBL_View.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* CBL_View.m */; };
+		279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBLView+Internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		279EB2CF149140DE00E74185 /* CBLView+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* CBLView+Internal.m */; };
 		279EB2D11491442500E74185 /* CBLInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D01491442500E74185 /* CBLInternal.h */; };
 		279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* CBLCollateJSON.h */; };
 		279EB2DC1491C34300E74185 /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2DA1491C34300E74185 /* CBLCollateJSON.m */; };
@@ -231,7 +231,7 @@
 		27B0B79F1492932800A817AD /* CBLBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* CBLBase64.m */; };
 		27B0B7AA1492B83B00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27B0B7CD1492B86C00A817AD /* CBL_Database.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBL_Database.m */; };
-		27B0B7CE1492B86F00A817AD /* CBL_View.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* CBL_View.m */; };
+		27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* CBLView+Internal.m */; };
 		27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */; };
 		27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* CBL_Revision.m */; };
 		27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* CBL_Server.m */; };
@@ -250,7 +250,7 @@
 		27B0B7F71492BC7A00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F61492BC7A00A817AD /* Foundation.framework */; };
 		27B0B7F91492BC8100A817AD /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F81492BC8000A817AD /* libsqlite3.dylib */; };
 		27B0B7FB1492BDE800A817AD /* CBL_Database.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* CBL_Database.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		27B0B7FC1492BDE800A817AD /* CBL_View.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBL_View.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27B0B7FC1492BDE800A817AD /* CBLView+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBLView+Internal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27B0B7FD1492BDE800A817AD /* CBL_Body.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* CBL_Body.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27B0B7FE1492BDE800A817AD /* CBL_Revision.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* CBL_Revision.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27B0B7FF1492BDE800A817AD /* CBL_Server.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706401486BBD500F0F099 /* CBL_Server.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -597,7 +597,7 @@
 		274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmptyAppDelegate.m; sourceTree = "<group>"; };
 		274C391B149FAE0000A5E89B /* CBL_Database+Attachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBL_Database+Attachments.m"; sourceTree = "<group>"; };
 		274F9807152E6E0C00247C46 /* CBLStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStatus.h; sourceTree = "<group>"; };
-		2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CBLManager+Internal.h"; path = "../CBLManager+Internal.h"; sourceTree = "<group>"; };
+		2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLManager+Internal.h"; sourceTree = "<group>"; };
 		2753155114ACEFC90065964D /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDData.h; sourceTree = "<group>"; };
 		2753155214ACEFC90065964D /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDData.m; sourceTree = "<group>"; };
 		2753155314ACEFC90065964D /* DDNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDNumber.h; sourceTree = "<group>"; };
@@ -697,8 +697,8 @@
 		279CE40414D88031009F3FA6 /* CBLBlobStore_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBlobStore_Tests.m; sourceTree = "<group>"; };
 		279CE40814D8AA23009F3FA6 /* CBLMultipartDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartDownloader.h; sourceTree = "<group>"; };
 		279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartDownloader.m; sourceTree = "<group>"; };
-		279EB2CC149140DE00E74185 /* CBL_View.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_View.h; sourceTree = "<group>"; };
-		279EB2CD149140DE00E74185 /* CBL_View.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_View.m; sourceTree = "<group>"; };
+		279EB2CC149140DE00E74185 /* CBLView+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLView+Internal.h"; sourceTree = "<group>"; };
+		279EB2CD149140DE00E74185 /* CBLView+Internal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLView+Internal.m"; sourceTree = "<group>"; };
 		279EB2D01491442500E74185 /* CBLInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLInternal.h; sourceTree = "<group>"; };
 		279EB2D91491C34300E74185 /* CBLCollateJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLCollateJSON.h; sourceTree = "<group>"; };
 		279EB2DA1491C34300E74185 /* CBLCollateJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLCollateJSON.m; sourceTree = "<group>"; };
@@ -1046,8 +1046,9 @@
 				27AA40A014AA8A6600E2A5FF /* CBL_Database+Replication.m */,
 				2773ADC514BD1EB80027A292 /* CBL_Database+LocalDocs.h */,
 				2773ADC614BD1EB80027A292 /* CBL_Database+LocalDocs.m */,
-				279EB2CC149140DE00E74185 /* CBL_View.h */,
-				279EB2CD149140DE00E74185 /* CBL_View.m */,
+				2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */,
+				279EB2CC149140DE00E74185 /* CBLView+Internal.h */,
+				279EB2CD149140DE00E74185 /* CBLView+Internal.m */,
 				27F074A911CD5D7A00E9A2AB /* CBL_Body.h */,
 				27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */,
 				270B3E3714898DF200E0A926 /* CBL_Revision.h */,
@@ -1409,7 +1410,6 @@
 				270B3E1F148938D800E0A926 /* CouchbaseLite.h */,
 				27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */,
 				27DA4343159125B500F9E7B5 /* CBLManager.h */,
-				2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */,
 				27DA4344159125B500F9E7B5 /* CBLManager.m */,
 				27DA42FB158E7D3500F9E7B5 /* CBLDatabase.h */,
 				27DA42FC158E7D3500F9E7B5 /* CBLDatabase.m */,
@@ -1609,7 +1609,7 @@
 				270B3E251489392C00E0A926 /* CBL_Router.h in Headers */,
 				270B3E241489392600E0A926 /* CBL_Server.h in Headers */,
 				270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */,
-				279EB2CE149140DE00E74185 /* CBL_View.h in Headers */,
+				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
 				2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
 				2753157E14ACEFC90065964D /* HTTPConnection.h in Headers */,
@@ -1690,7 +1690,7 @@
 				2711CE0114C7595900505D55 /* CBL_Database+Insertion.h in Headers */,
 				2711CE1414C75B6E00505D55 /* CBL_Database+LocalDocs.h in Headers */,
 				2711CE0414C759BD00505D55 /* CBL_Database+Replication.h in Headers */,
-				27B0B7FC1492BDE800A817AD /* CBL_View.h in Headers */,
+				27B0B7FC1492BDE800A817AD /* CBLView+Internal.h in Headers */,
 				27B0B7FD1492BDE800A817AD /* CBL_Body.h in Headers */,
 				27B0B7FE1492BDE800A817AD /* CBL_Revision.h in Headers */,
 				27B0B7FF1492BDE800A817AD /* CBL_Server.h in Headers */,
@@ -2090,7 +2090,7 @@
 				270B3E3F148D7F0000E0A926 /* CBL_Pusher.m in Sources */,
 				27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */,
 				27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */,
-				279EB2CF149140DE00E74185 /* CBL_View.m in Sources */,
+				279EB2CF149140DE00E74185 /* CBLView+Internal.m in Sources */,
 				279EB2DC1491C34300E74185 /* CBLCollateJSON.m in Sources */,
 				27B0B7801491E76200A817AD /* CBL_View_Tests.m in Sources */,
 				27846FF115D5C8250030122F /* APITests.m in Sources */,
@@ -2212,7 +2212,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27B0B7CD1492B86C00A817AD /* CBL_Database.m in Sources */,
-				27B0B7CE1492B86F00A817AD /* CBL_View.m in Sources */,
+				27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */,
 				27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */,
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
 				27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */,

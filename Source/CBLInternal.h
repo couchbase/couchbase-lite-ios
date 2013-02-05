@@ -9,7 +9,7 @@
 #import "CBL_Database.h"
 #import "CBL_Database+Attachments.h"
 #import "CBLManager+Internal.h"
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBL_Server.h"
 #import "CBL_Router.h"
 #import "CBL_Replicator.h"

@@ -7,7 +7,7 @@
 //
 
 #import "CouchbaseLitePrivate.h"
-#import "CBL_View.h"
+#import "CBLView+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
