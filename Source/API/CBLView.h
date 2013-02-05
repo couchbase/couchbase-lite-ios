@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDatabase, CBLQuery;
+@class CBLDatabase, CBLQuery, CBL_Database;
 
 
 typedef void (^CBLMapEmitBlock)(id key, id value);
@@ -39,6 +39,16 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 /** A "view" in a CouchbaseLite database -- essentially a persistent index managed by map/reduce.
     The view can be queried using a CBLQuery. */
 @interface CBLView : NSObject
+{
+    @private
+    CBL_Database* __weak _db;
+    NSString* _name;
+    int _viewID;
+    CBLMapBlock _mapBlock;
+    CBLReduceBlock _reduceBlock;
+    uint8_t _collation;
+    uint8_t /*CBLContentOptions*/ _mapContentOptions;
+}
 
 /** The database that owns this view. */
 @property (readonly) CBLDatabase* database;
@@ -66,11 +76,21 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock
              version: (NSString*)version                            __attribute__((nonnull(1,2)));
 
+/** Is the view's index currently out of date? */
+@property (readonly) BOOL stale;
+
+@property (readonly) SInt64 lastSequenceIndexed;
+
+- (void) removeIndex;
+
 /** Deletes the view, persistently. */
 - (void) deleteView;
 
 /** Creates a new query object for this view. The query can be customized and then executed. */
 - (CBLQuery*) query;
+
+/** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
++ (NSNumber*) totalValues: (NSArray*)values;
 
 + (void) setCompiler: (id<CBLViewCompiler>)compiler;
 + (id<CBLViewCompiler>) compiler;

@@ -206,15 +206,12 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (CBLView*) viewNamed: (NSString*)name {
-    CBL_View* view = [_tddb viewNamed: name];
-    return view ? [[CBLView alloc] initWithDatabase: self view: view] : nil;
+    return [_tddb viewNamed: name];
 }
 
 
 - (NSArray*) allViews {
-    return [_tddb.allViews my_map:^id(CBL_View* view) {
-        return [[CBLView alloc] initWithDatabase: self view: view];
-    }];
+    return _tddb.allViews;
 }
 
 

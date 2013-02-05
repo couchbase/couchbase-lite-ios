@@ -937,7 +937,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 - (CBLStatus) queryView: (CBL_View*)view withOptions: (const CBLQueryOptions*)options {
     CBLStatus status;
-    NSArray* rows = [view queryWithOptions: options status: &status];
+    NSArray* rows = [view _queryWithOptions: options status: &status];
     if (!rows)
         return status;
     rows = [rows my_map:^(CBL_QueryRow* row) {return row.asJSONDictionary;}];

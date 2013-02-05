@@ -14,6 +14,8 @@
 
 #import <Foundation/Foundation.h>
 
+#define CBL_View CBLView // temporary
+
 #import "CBLJSON.h"
 
 #import "CollectionUtils.h"

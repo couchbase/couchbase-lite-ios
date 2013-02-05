@@ -40,57 +40,42 @@ typedef enum {
 } CBLViewCollation;
 
 
-/** Represents a view available in a database. */
-@interface CBL_View : NSObject
-{
-    @private
-    CBL_Database* __weak _db;
-    NSString* _name;
-    int _viewID;
-    CBLMapBlock _mapBlock;
-    CBLReduceBlock _reduceBlock;
-    CBLViewCollation _collation;
-    CBLContentOptions _mapContentOptions;
-}
+#ifndef CBL_View
+#define CBL_View CBLView
+#endif
 
-- (void) deleteView;
 
-@property (readonly) CBL_Database* database;
-@property (readonly) NSString* name;
+@interface CBLView ()
+- (instancetype) initWithDatabase: (CBL_Database*)db name: (NSString*)name;
 
-@property (readonly) CBLMapBlock mapBlock;
-@property (readonly) CBLReduceBlock reduceBlock;
+- (void) databaseClosing;
 
-@property CBLViewCollation collation;
-@property CBLContentOptions mapContentOptions;
+@property (readonly) int viewID;
+@end
 
-- (BOOL) setMapBlock: (CBLMapBlock)mapBlock
-         reduceBlock: (CBLReduceBlock)reduceBlock
-             version: (NSString*)version;
+
+@interface CBLView (Internal)
+
+#if DEBUG  // for unit tests only
+- (void) setCollation: (CBLViewCollation)collation;
+- (NSArray*) dump;
+#endif
+
+//@property CBLContentOptions mapContentOptions;
 
 /** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
 - (BOOL) compileFromProperties: (NSDictionary*)viewProps
                       language: (NSString*)language;
 
-- (void) removeIndex;
-
-/** Is the view's index currently out of date? */
-@property (readonly) BOOL stale;
-
 /** Updates the view's index (incrementally) if necessary.
-    @return  200 if updated, 304 if already up-to-date, else an error code */
+ @return  200 if updated, 304 if already up-to-date, else an error code */
 - (CBLStatus) updateIndex;
-
-@property (readonly) SequenceNumber lastSequenceIndexed;
 
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
     @return  An array of CBL_QueryRows. */
-- (NSArray*) queryWithOptions: (const CBLQueryOptions*)options
-                       status: (CBLStatus*)outStatus;
-
-/** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
-+ (NSNumber*) totalValues: (NSArray*)values;
+- (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
+                        status: (CBLStatus*)outStatus;
 
 @end
 

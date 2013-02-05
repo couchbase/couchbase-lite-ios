@@ -74,14 +74,6 @@
 @end
 
 
-@interface CBL_View ()
-- (instancetype) initWithDatabase: (CBL_Database*)db name: (NSString*)name;
-@property (readonly) int viewID;
-- (NSArray*) dump;
-- (void) databaseClosing;
-@end
-
-
 @interface CBL_Server ()
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path;  // for testing

@@ -20,7 +20,6 @@ _kCBLDocumentChangeNotification
 
 # Non-public symbols that are used by CBLRouter and CBLListener:
 .objc_class_name_CBL_Database
-.objc_class_name_CBL_View
 .objc_class_name_CBL_BlobStore
 .objc_class_name_CBL_BlobStoreWriter
 .objc_class_name_CBL_Body

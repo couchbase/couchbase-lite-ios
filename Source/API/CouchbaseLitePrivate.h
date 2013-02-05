@@ -76,12 +76,6 @@
 @end
 
 
-@interface CBLView ()
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                             view: (CBL_View*)view                  __attribute__((nonnull));
-@end
-
-
 @interface CBLQuery ()
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBL_View*)view                  __attribute__((nonnull(1)));

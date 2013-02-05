@@ -127,7 +127,7 @@
             }
             lastSequence = _view.lastSequenceIndexed;
         }
-        rows = [_view queryWithOptions: &options status: &_status];
+        rows = [_view _queryWithOptions: &options status: &_status];
         // TODO: Implement kCBLStaleUpdateAfter
         
     } else {

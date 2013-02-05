@@ -150,16 +150,16 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 /** Returns the value of an _all_docs query, as an array of CBL_QueryRow. */
 - (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;
 
-- (CBL_View*) viewNamed: (NSString*)name;
+- (CBLView*) viewNamed: (NSString*)name;
 
-- (CBL_View*) existingViewNamed: (NSString*)name;
+- (CBLView*) existingViewNamed: (NSString*)name;
 
-- (CBL_View*) makeAnonymousView;
+- (CBLView*) makeAnonymousView;
 
 /** Returns the view with the given name. If there is none, and the name is in CouchDB
     format ("designdocname/viewname"), it attempts to load the view properties from the
     design document and compile them with the CBLViewCompiler. */
-- (CBL_View*) compileViewNamed: (NSString*)name status: (CBLStatus*)outStatus;
+- (CBLView*) compileViewNamed: (NSString*)name status: (CBLStatus*)outStatus;
 
 @property (readonly) NSArray* allViews;
 
