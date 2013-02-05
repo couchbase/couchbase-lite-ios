@@ -64,7 +64,7 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-+ (CBLManager*) sharedInstance {
++ (instancetype) sharedInstance {
     static CBLManager* sInstance;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -74,7 +74,7 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (id) init {
+- (instancetype) init {
     NSError* error;
     self = [self initWithDirectory: [[self class] defaultDirectory]
                            options: NULL
@@ -85,9 +85,10 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (id) initWithDirectory: (NSString*)directory
-                 options: (const CBLManagerOptions*)options
-                   error: (NSError**)outError {
+- (instancetype) initWithDirectory: (NSString*)directory
+                           options: (const CBLManagerOptions*)options
+                             error: (NSError**)outError
+{
     if (outError) *outError = nil;
     self = [super init];
     if (self) {
@@ -121,7 +122,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 #if DEBUG
-+ (CBLManager*) createEmptyAtPath: (NSString*)path {
++ (instancetype) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
     CBLManager* dbm = [[self alloc] initWithDirectory: path
@@ -132,7 +133,7 @@ static NSCharacterSet* kIllegalNameChars;
     return dbm;
 }
 
-+ (CBLManager*) createEmptyAtTemporaryPath: (NSString*)name {
++ (instancetype) createEmptyAtTemporaryPath: (NSString*)name {
     return [self createEmptyAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: name]];
 }
 #endif

@@ -33,7 +33,7 @@ static void ClientCallback(SCNetworkReachabilityRef target,
 @implementation CBLReachability
 
 
-- (id) initWithHostName: (NSString*)hostName {
+- (instancetype) initWithHostName: (NSString*)hostName {
     self = [super init];
     if (self) {
         if (!hostName.length)

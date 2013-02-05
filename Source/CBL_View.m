@@ -37,7 +37,7 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 @implementation CBL_View
 
 
-- (id) initWithDatabase: (CBL_Database*)db name: (NSString*)name {
+- (instancetype) initWithDatabase: (CBL_Database*)db name: (NSString*)name {
     Assert(db);
     Assert(name.length);
     self = [super init];
@@ -641,8 +641,8 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
 
 @synthesize key=_key, value=_value, docID=_docID, properties=_properties;
 
-- (id)initWithDocID: (NSString*)docID key: (id)key value: (id)value
-         properties: (NSDictionary*)properties
+- (instancetype) initWithDocID: (NSString*)docID key: (id)key value: (id)value
+                    properties: (NSDictionary*)properties
 {
     self = [super init];
     if (self) {

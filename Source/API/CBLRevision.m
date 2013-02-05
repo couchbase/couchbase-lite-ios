@@ -19,7 +19,7 @@
 
 @synthesize document=_document;
 
-- (id)initWithDocument: (CBLDocument*)doc {
+- (instancetype) initWithDocument: (CBLDocument*)doc {
     self = [super init];
     if (self) {
         _document = doc;
@@ -104,7 +104,7 @@
 }
 
 
-- (id)initWithDocument: (CBLDocument*)doc revision: (CBL_Revision*)rev {
+- (instancetype) initWithDocument: (CBLDocument*)doc revision: (CBL_Revision*)rev {
     Assert(rev != nil);
     self = [super initWithDocument: doc];
     if (self) {
@@ -114,7 +114,7 @@
 }
 
 
-- (id)initWithCBLDB: (CBL_Database*)tddb revision: (CBL_Revision*)rev {
+- (instancetype) initWithCBLDB: (CBL_Database*)tddb revision: (CBL_Revision*)rev {
     CBLDocument* doc = [tddb.publicDatabase documentWithID: rev.docID];
     return [self initWithDocument: doc revision: rev];
 }
@@ -222,7 +222,7 @@
 
 @synthesize document=_document, parentRevisionID=_parentRevID, properties=_properties;
 
-- (id)initWithDocument: (CBLDocument*)doc parent: (CBLRevision*)parent {
+- (instancetype) initWithDocument: (CBLDocument*)doc parent: (CBLRevision*)parent {
     Assert(doc != nil);
     self = [super init];
     if (self) {

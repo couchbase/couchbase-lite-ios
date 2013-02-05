@@ -25,7 +25,7 @@ extern double GrocerySyncVersionNumber;
 @synthesize urlField, versionField, autoSyncSwitch;
 
 
-- (id)init {
+- (instancetype) init {
     self = [super initWithNibName: @"ConfigViewController" bundle: nil];
     if (self) {
         // Custom initialization

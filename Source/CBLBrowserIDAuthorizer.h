@@ -14,7 +14,7 @@
 
 + (NSString*) registerAssertion: (NSString*)assertion;
 
-- (id) initWithEmailAddress: (NSString*)emailAddress;
+- (instancetype) initWithEmailAddress: (NSString*)emailAddress;
 
 @property (readonly) NSString* emailAddress;
 

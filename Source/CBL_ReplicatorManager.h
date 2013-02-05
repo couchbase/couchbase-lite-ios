@@ -25,7 +25,7 @@ extern NSString* const kCBL_ReplicatorDatabaseName;
     BOOL _updateInProgress;
 }
 
-- (id) initWithDatabaseManager: (CBLManager*)dbManager;
+- (instancetype) initWithDatabaseManager: (CBLManager*)dbManager;
 
 - (void) start;
 - (void) stop;

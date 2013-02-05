@@ -18,9 +18,10 @@
 @implementation CBLBatcher
 
 
-- (id) initWithCapacity: (NSUInteger)capacity
-                  delay: (NSTimeInterval)delay
-              processor: (void (^)(NSArray*))block {
+- (instancetype) initWithCapacity: (NSUInteger)capacity
+                            delay: (NSTimeInterval)delay
+                        processor: (void (^)(NSArray*))block
+{
     self = [super init];
     if (self) {
         _capacity = capacity;

@@ -53,10 +53,10 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 + (NSString *)progressChangedNotification;
 + (NSString *)stoppedNotification;
 
-- (id) initWithDB: (CBL_Database*)db
-           remote: (NSURL*)remote
-             push: (BOOL)push
-       continuous: (BOOL)continuous;
+- (instancetype) initWithDB: (CBL_Database*)db
+                     remote: (NSURL*)remote
+                       push: (BOOL)push
+                 continuous: (BOOL)continuous;
 
 @property (weak, readonly) CBL_Database* db;
 @property (readonly) NSURL* remote;

@@ -34,11 +34,11 @@
 }
 
 
-- (id)init {
+- (instancetype) init {
     return [self initWithDocument: nil];
 }
 
-- (id) initWithDocument: (CBLDocument*)document
+- (instancetype) initWithDocument: (CBLDocument*)document
 {
     self = [super init];
     if (self) {
@@ -55,7 +55,7 @@
 }
 
 
-- (id) initWithNewDocumentInDatabase: (CBLDatabase*)database {
+- (instancetype) initWithNewDocumentInDatabase: (CBLDatabase*)database {
     NSParameterAssert(database);
     self = [self initWithDocument: nil];
     if (self) {
@@ -65,7 +65,7 @@
 }
 
 
-+ (id) modelForDocument: (CBLDocument*)document {
++ (instancetype) modelForDocument: (CBLDocument*)document {
     NSParameterAssert(document);
     CBLModel* model = document.modelObject;
     if (model) {

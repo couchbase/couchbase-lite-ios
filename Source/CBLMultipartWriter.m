@@ -22,7 +22,7 @@
 @implementation CBLMultipartWriter
 
 
-- (id) initWithContentType: (NSString*)type boundary: (NSString*)boundary {
+- (instancetype) initWithContentType: (NSString*)type boundary: (NSString*)boundary {
     self = [super init];
     if (self) {
         _contentType = [type copy];

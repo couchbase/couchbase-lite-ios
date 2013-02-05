@@ -97,8 +97,8 @@ typedef enum {
 
 /** One result of a view query. */
 @interface CBL_QueryRow : NSObject
-- (id)initWithDocID: (NSString*)docID key: (id)key value: (id)value
-         properties: (NSDictionary*)properties;
+- (instancetype) initWithDocID: (NSString*)docID key: (id)key value: (id)value
+                    properties: (NSDictionary*)properties;
 @property (readonly, nonatomic) id key;
 @property (readonly, nonatomic) id value;
 @property (readonly, nonatomic) NSString* docID;

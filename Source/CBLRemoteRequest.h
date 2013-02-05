@@ -35,11 +35,11 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
 }
 
 /** Creates a request; call -start to send it on its way. */
-- (id) initWithMethod: (NSString*)method 
-                  URL: (NSURL*)url 
-                 body: (id)body
-       requestHeaders: (NSDictionary *)requestHeaders
-         onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
+- (instancetype) initWithMethod: (NSString*)method
+                            URL: (NSURL*)url
+                           body: (id)body
+                 requestHeaders: (NSDictionary *)requestHeaders
+                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @property (strong, nonatomic) id<CBLAuthorizer>authorizer;
 

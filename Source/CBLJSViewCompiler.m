@@ -70,7 +70,7 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
 }
 
 
-- (id)init {
+- (instancetype) init {
     self = [super init];
     if (self) {
         JSGlobalContextRef context = self.context;

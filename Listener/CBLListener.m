@@ -36,7 +36,7 @@
 @synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm;
 
 
-- (id) initWithManager: (CBLManager*)manager port: (UInt16)port {
+- (instancetype) initWithManager: (CBLManager*)manager port: (UInt16)port {
     self = [super init];
     if (self) {
         _tdServer = manager.backgroundServer;

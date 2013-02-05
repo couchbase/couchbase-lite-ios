@@ -19,9 +19,9 @@
 /** Wrapper for a compiled JavaScript function. */
 @interface CBLJSFunction : NSObject
 
-- (id) initWithCompiler: (CBLJSCompiler*)compiler
-             sourceCode: (NSString*)source
-             paramNames: (NSArray*)paramNames;
+- (instancetype) initWithCompiler: (CBLJSCompiler*)compiler
+                       sourceCode: (NSString*)source
+                       paramNames: (NSArray*)paramNames;
 
 - (JSValueRef) call: (id)param1, ...;
 

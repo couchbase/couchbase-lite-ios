@@ -52,11 +52,11 @@ typedef enum CBLChangeTrackerMode {
     unsigned _retryCount;
 }
 
-- (id)initWithDatabaseURL: (NSURL*)databaseURL
-                     mode: (CBLChangeTrackerMode)mode
-                conflicts: (BOOL)includeConflicts
-             lastSequence: (id)lastSequenceID
-                   client: (id<CBLChangeTrackerClient>)client;
+- (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
+                                mode: (CBLChangeTrackerMode)mode
+                           conflicts: (BOOL)includeConflicts
+                        lastSequence: (id)lastSequenceID
+                              client: (id<CBLChangeTrackerClient>)client;
 
 @property (readonly, nonatomic) NSURL* databaseURL;
 @property (readonly, nonatomic) NSString* databaseName;

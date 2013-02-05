@@ -25,7 +25,7 @@
 @implementation DemoQuery
 
 
-- (id) initWithQuery: (CBLQuery*)query modelClass: (Class)modelClass {
+- (instancetype) initWithQuery: (CBLQuery*)query modelClass: (Class)modelClass {
     NSParameterAssert(query);
     self = [super init];
     if (self != nil) {

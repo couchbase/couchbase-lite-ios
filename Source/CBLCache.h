@@ -48,8 +48,8 @@
     NSCache* _cache;
 }
 
-- (id) init;
-- (id) initWithRetainLimit: (NSUInteger)retainLimit;
+- (instancetype) init;
+- (instancetype) initWithRetainLimit: (NSUInteger)retainLimit;
 
 /** Adds a resource to the cache.
     Does nothing if the resource is already in the cache.

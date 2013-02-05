@@ -26,13 +26,13 @@ typedef SInt64 SequenceNumber;
     bool _missing;
 }
 
-- (id) initWithDocID: (NSString*)docID 
-               revID: (NSString*)revID 
-             deleted: (BOOL)deleted;
-- (id) initWithBody: (CBL_Body*)body;
-- (id) initWithProperties: (NSDictionary*)properties;
+- (instancetype) initWithDocID: (NSString*)docID
+                         revID: (NSString*)revID
+                       deleted: (BOOL)deleted;
+- (instancetype) initWithBody: (CBL_Body*)body;
+- (instancetype) initWithProperties: (NSDictionary*)properties;
 
-+ (CBL_Revision*) revisionWithProperties: (NSDictionary*)properties;
++ (instancetype) revisionWithProperties: (NSDictionary*)properties;
 
 @property (readonly) NSString* docID;
 @property (readonly) NSString* revID;
@@ -72,8 +72,8 @@ typedef SInt64 SequenceNumber;
     NSMutableArray* _revs;
 }
 
-- (id) init;
-- (id) initWithArray: (NSArray*)revs;
+- (instancetype) init;
+- (instancetype) initWithArray: (NSArray*)revs;
 
 @property (readonly) NSUInteger count;
 

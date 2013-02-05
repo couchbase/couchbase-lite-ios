@@ -18,10 +18,10 @@
 
 @implementation CBLMultipartUploader
 
-- (id) initWithURL: (NSURL *)url
-          streamer: (CBLMultipartWriter*)writer
-    requestHeaders: (NSDictionary *) requestHeaders
-      onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
+- (instancetype) initWithURL: (NSURL *)url
+                    streamer: (CBLMultipartWriter*)writer
+              requestHeaders: (NSDictionary *) requestHeaders
+                onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     Assert(writer);
     self = [super initWithMethod: @"PUT" 

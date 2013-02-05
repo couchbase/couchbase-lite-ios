@@ -31,7 +31,7 @@ typedef struct CBLBlobKey {
     NSString* _tempDir;
 }
 
-- (id) initWithPath: (NSString*)dir error: (NSError**)outError;
+- (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError;
 
 - (NSData*) blobForKey: (CBLBlobKey)key;
 - (NSInputStream*) blobInputStreamForKey: (CBLBlobKey)key
@@ -76,7 +76,7 @@ typedef struct {
     CBLMD5Key _MD5Digest;
 }
 
-- (id) initWithStore: (CBL_BlobStore*)store;
+- (instancetype) initWithStore: (CBL_BlobStore*)store;
 
 /** Appends data to the blob. Call this when new data is available. */
 - (void) appendData: (NSData*)data;

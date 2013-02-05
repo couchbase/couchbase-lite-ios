@@ -38,10 +38,10 @@
 @property (readonly, copy) NSDictionary* userProperties;
 
 /** Shorthand for [self.properties objectForKey: key]. */
-- (id) propertyForKey: (NSString*)key;
+- (id) propertyForKey: (NSString*)key                                   __attribute__((nonnull));
 
 /** Same as -propertyForKey:. Enables "[]" access in Xcode 4.4+ */
-- (id) objectForKeyedSubscript: (NSString*)key;
+- (id) objectForKeyedSubscript: (NSString*)key                          __attribute__((nonnull));
 
 #pragma mark ATTACHMENTS
 
@@ -49,7 +49,7 @@
 @property (readonly) NSArray* attachmentNames;
 
 /** Looks up the attachment with the given name (without fetching its contents yet). */
-- (CBLAttachment*) attachmentNamed: (NSString*)name;
+- (CBLAttachment*) attachmentNamed: (NSString*)name                     __attribute__((nonnull));
 
 /** All attachments, as CBLAttachment objects. */
 @property (readonly) NSArray* attachments;
@@ -109,10 +109,11 @@
     The attachment data will be written to the database when the revision is saved.
     @param attachment  A newly-created CBLAttachment (not yet associated with any revision)
     @param name  The attachment name. */
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name;
+- (void) addAttachment: (CBLAttachment*)attachment
+                 named: (NSString*)name                                 __attribute__((nonnull(2)));
 
 /** Deletes any existing attachment with the given name.
     The attachment will be deleted from the database when the revision is saved. */
-- (void) removeAttachmentNamed: (NSString*)name;
+- (void) removeAttachmentNamed: (NSString*)name                         __attribute__((nonnull));
 
 @end

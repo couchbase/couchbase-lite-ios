@@ -54,8 +54,8 @@ static NSData* kCRLFCRLF;
 }
 
 
-- (id) initWithContentType: (NSString*)contentType
-                  delegate: (id<CBLMultipartReaderDelegate>)delegate
+- (instancetype) initWithContentType: (NSString*)contentType
+                            delegate: (id<CBLMultipartReaderDelegate>)delegate
 {
     self = [super init];
     if (self) {

@@ -44,7 +44,7 @@
 @implementation CBL_Router
 
 
-- (id) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request {
+- (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request {
     NSParameterAssert(request);
     self = [super init];
     if (self) {
@@ -62,9 +62,9 @@
     return self;
 }
 
-- (id) initWithServer: (CBL_Server*)server
-              request: (NSURLRequest*)request
-              isLocal: (BOOL)isLocal
+- (instancetype) initWithServer: (CBL_Server*)server
+                        request: (NSURLRequest*)request
+                        isLocal: (BOOL)isLocal
 {
     NSParameterAssert(server);
     NSParameterAssert(request);
@@ -608,8 +608,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 @implementation CBLResponse
 
-- (id) init
-{
+- (instancetype) init {
     self = [super init];
     if (self) {
         _status = kCBLStatusOK;

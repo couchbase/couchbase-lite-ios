@@ -18,7 +18,7 @@
 
 @implementation CBL_Body
 
-- (id) initWithProperties: (NSDictionary*)properties {
+- (instancetype) initWithProperties: (NSDictionary*)properties {
     NSParameterAssert(properties);
     self = [super init];
     if (self) {
@@ -27,11 +27,11 @@
     return self;
 }
 
-- (id) initWithArray: (NSArray*)array {
+- (instancetype) initWithArray: (NSArray*)array {
     return [self initWithProperties: (id)array];
 }
 
-- (id) initWithJSON: (NSData*)json {
+- (instancetype) initWithJSON: (NSData*)json {
     self = [super init];
     if (self) {
         _json = json ? [json copy] : [[NSData alloc] init];
@@ -39,10 +39,10 @@
     return self;
 }
 
-+ (CBL_Body*) bodyWithProperties: (NSDictionary*)properties {
++ (instancetype) bodyWithProperties: (NSDictionary*)properties {
     return [[self alloc] initWithProperties: properties];
 }
-+ (CBL_Body*) bodyWithJSON: (NSData*)json {
++ (instancetype) bodyWithJSON: (NSData*)json {
     return [[self alloc] initWithJSON: json];
 }
 

@@ -66,10 +66,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (id) initWithDB: (CBL_Database*)db
-           remote: (NSURL*)remote
-             push: (BOOL)push
-       continuous: (BOOL)continuous
+- (instancetype) initWithDB: (CBL_Database*)db
+                     remote: (NSURL*)remote
+                       push: (BOOL)push
+                 continuous: (BOOL)continuous
 {
     NSParameterAssert(db);
     NSParameterAssert(remote);

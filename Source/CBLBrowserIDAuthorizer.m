@@ -86,7 +86,7 @@ static bool parseAssertion(NSString* assertion,
 @synthesize emailAddress=_emailAddress;
 
 
-- (id) initWithEmailAddress: (NSString*)emailAddress {
+- (instancetype) initWithEmailAddress: (NSString*)emailAddress {
     self = [super init];
     if (self) {
         if (!emailAddress)

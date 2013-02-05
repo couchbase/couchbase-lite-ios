@@ -19,7 +19,7 @@
     NSMutableString* _output;
 }
 
-- (id) initWithObject: (id)object;
+- (instancetype) initWithObject: (id)object;
 
 /** If non-nil, dictionary keys beginning with this prefix will be ignored. */
 @property (nonatomic, copy) NSString* ignoreKeyPrefix;

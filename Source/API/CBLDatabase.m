@@ -39,8 +39,8 @@ static id<CBLFilterCompiler> sFilterCompiler;
 @synthesize tddb=_tddb, manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
 
 
-- (id) initWithManager: (CBLManager*)manager
-            CBL_Database: (CBL_Database*)tddb
+- (instancetype) initWithManager: (CBLManager*)manager
+                    CBL_Database: (CBL_Database*)tddb
 {
     self = [super init];
     if (self) {

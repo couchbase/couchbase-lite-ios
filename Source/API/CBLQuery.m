@@ -12,12 +12,12 @@
 
 
 @interface CBLQueryEnumerator ()
-- (id) initWithDatabase: (CBLDatabase*)db rows: (NSArray*)rows;
+- (instancetype) initWithDatabase: (CBLDatabase*)db rows: (NSArray*)rows;
 @end
 
 
 @interface CBLQueryRow ()
-- (id) initWithDatabase: (CBLDatabase*)db result: (id)result;
+- (instancetype) initWithDatabase: (CBLDatabase*)db result: (id)result;
 @end
 
 
@@ -41,7 +41,7 @@
 
 
 // A nil view refers to 'all documents'
-- (id) initWithDatabase: (CBLDatabase*)database view: (CBL_View*)view {
+- (instancetype) initWithDatabase: (CBLDatabase*)database view: (CBL_View*)view {
     self = [super init];
     if (self) {
         _database = database;
@@ -52,7 +52,7 @@
 }
 
 
-- (id)initWithDatabase: (CBLDatabase*)database mapBlock: (CBLMapBlock)mapBlock {
+- (instancetype) initWithDatabase: (CBLDatabase*)database mapBlock: (CBLMapBlock)mapBlock {
     CBL_View* view = [database.tddb makeAnonymousView];
     if (self = [self initWithDatabase: database view: view]) {
         _temporaryView = YES;
@@ -62,7 +62,7 @@
 }
 
 
-- (id) initWithQuery: (CBLQuery*)query {
+- (instancetype) initWithQuery: (CBLQuery*)query {
     self = [self initWithDatabase: query->_database view: query->_view];
     if (self) {
         _limit = query.limit;
@@ -235,8 +235,8 @@
 @synthesize sequenceNumber=_sequenceNumber;
 
 
-- (id) initWithDatabase: (CBLDatabase*)database
-                   rows: (NSArray*)rows
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                             rows: (NSArray*)rows
 {
     NSParameterAssert(database);
     self = [super init];
@@ -300,7 +300,7 @@
 }
 
 
-- (id) initWithDatabase: (CBLDatabase*)database result: (CBL_QueryRow*)result {
+- (instancetype) initWithDatabase: (CBLDatabase*)database result: (CBL_QueryRow*)result {
     self = [super init];
     if (self) {
         _database = database;

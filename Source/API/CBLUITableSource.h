@@ -38,13 +38,13 @@
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
 
 /** Convenience accessor to find the index path of the row with a given document. */
-- (NSIndexPath*) indexPathForDocument: (CBLDocument*)document;
+- (NSIndexPath*) indexPathForDocument: (CBLDocument*)document           __attribute__((nonnull));
 
 /** Convenience accessor to return the query row at a given index path. */
-- (CBLQueryRow*) rowAtIndexPath: (NSIndexPath*)path;
+- (CBLQueryRow*) rowAtIndexPath: (NSIndexPath*)path                     __attribute__((nonnull));
 
 /** Convenience accessor to return the document at a given index path. */
-- (CBLDocument*) documentAtIndexPath: (NSIndexPath*)path;
+- (CBLDocument*) documentAtIndexPath: (NSIndexPath*)path                __attribute__((nonnull));
 
 
 #pragma mark Displaying The Table:

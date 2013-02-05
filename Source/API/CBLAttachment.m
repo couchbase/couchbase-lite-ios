@@ -23,9 +23,9 @@
 }
 
 
-- (id) initWithRevision: (CBLRevisionBase*)rev
-                   name: (NSString*)name
-               metadata: (NSDictionary*)metadata
+- (instancetype) initWithRevision: (CBLRevisionBase*)rev
+                             name: (NSString*)name
+                         metadata: (NSDictionary*)metadata
 {
     NSParameterAssert(rev);
     NSParameterAssert(name);
@@ -40,8 +40,8 @@
 }
 
 
-- (id) initWithContentType: (NSString*)contentType
-                      body: (id)body
+- (instancetype) initWithContentType: (NSString*)contentType
+                                body: (id)body
 {
     NSParameterAssert(contentType);
     NSParameterAssert(body);
@@ -131,8 +131,8 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBL_Database* tddb, NSData* b
 
 
 - (CBLRevision*) updateBody: (NSData*)body
-                  contentType: (NSString*)contentType
-                        error: (NSError**)outError
+                contentType: (NSString*)contentType
+                      error: (NSError**)outError
 {
     Assert(_rev);
     CBL_BlobStoreWriter* writer = body ? blobStoreWriterForBody(_rev.database.tddb, body) : nil;

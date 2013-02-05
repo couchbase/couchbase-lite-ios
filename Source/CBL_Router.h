@@ -43,7 +43,9 @@ typedef void (^OnFinishedBlock)();
     BOOL _changesIncludeConflicts;
 }
 
-- (id) initWithServer: (CBL_Server*)server request: (NSURLRequest*)request isLocal: (BOOL)isLocal;
+- (instancetype) initWithServer: (CBL_Server*)server
+                        request: (NSURLRequest*)request
+                        isLocal: (BOOL)isLocal;
 
 @property BOOL processRanges;
 

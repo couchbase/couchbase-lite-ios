@@ -22,12 +22,12 @@ static const NSUInteger kDefaultRetainLimit = 50;
 @implementation CBLCache
 
 
-- (id)init {
+- (instancetype) init {
     return [self initWithRetainLimit: kDefaultRetainLimit];
 }
 
 
-- (id)initWithRetainLimit: (NSUInteger)retainLimit {
+- (instancetype) initWithRetainLimit: (NSUInteger)retainLimit {
     self = [super init];
     if (self) {
 #if CBLCACHE_IS_SMART

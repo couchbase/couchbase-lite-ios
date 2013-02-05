@@ -18,27 +18,27 @@
 - (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
                                        remote: (NSURL*)remote
                                          pull: (BOOL)pull
-                                       create: (BOOL)create;
+                                       create: (BOOL)create         __attribute__((nonnull));
 - (NSArray*) createReplicationsBetween: (CBLDatabase*)database
                                    and: (NSURL*)otherDbURL
-                           exclusively: (bool)exclusively;
+                           exclusively: (bool)exclusively           __attribute__((nonnull(1)));
 @end
 
 
 @interface CBLDatabase ()
-- (id) initWithManager: (CBLManager*)manager
-            CBL_Database: (CBL_Database*)tddb;
+- (instancetype) initWithManager: (CBLManager*)manager
+                    CBL_Database: (CBL_Database*)tddb               __attribute__((nonnull));
 @property (readonly, nonatomic) CBL_Database* tddb;
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 @end
 
 
 @interface CBLDocument () <CBLCacheable>
-- (id)initWithDatabase: (CBLDatabase*)database
-            documentID: (NSString*)docID;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)docID                 __attribute__((nonnull));
 - (CBLRevision*) revisionFromRev: (CBL_Revision*)rev;
-- (void) revisionAdded: (CBL_DatabaseChange*)change;
-- (void) loadCurrentRevisionFrom: (CBLQueryRow*)row;
+- (void) revisionAdded: (CBL_DatabaseChange*)change                 __attribute__((nonnull));
+- (void) loadCurrentRevisionFrom: (CBLQueryRow*)row                 __attribute__((nonnull));
 - (CBLRevision*) putProperties: (NSDictionary*)properties
                        prevRevID: (NSString*)prevID
                            error: (NSError**)outError;
@@ -51,43 +51,49 @@
 
 
 @interface CBLRevision ()
-- (id)initWithDocument: (CBLDocument*)doc revision: (CBL_Revision*)rev;
-- (id)initWithCBLDB: (CBL_Database*)tddb revision: (CBL_Revision*)rev;
+- (instancetype) initWithDocument: (CBLDocument*)doc
+                         revision: (CBL_Revision*)rev               __attribute__((nonnull(2)));
+- (instancetype) initWithCBLDB: (CBL_Database*)tddb
+                      revision: (CBL_Revision*)rev                  __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
 @end
 
 
 @interface CBLNewRevision ()
-- (id)initWithDocument: (CBLDocument*)doc parent: (CBLRevision*)parent;
+- (instancetype) initWithDocument: (CBLDocument*)doc
+                           parent: (CBLRevision*)parent             __attribute__((nonnull(1)));
 @end
 
 
 @interface CBLAttachment ()
-- (id) initWithRevision: (CBLRevisionBase*)rev
-                   name: (NSString*)name
-               metadata: (NSDictionary*)metadata;
+- (instancetype) initWithRevision: (CBLRevisionBase*)rev
+                             name: (NSString*)name
+                         metadata: (NSDictionary*)metadata          __attribute__((nonnull));
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
-                             intoDatabase: (CBLDatabase*)database;
+                             intoDatabase: (CBLDatabase*)database   __attribute__((nonnull(2)));
 @property (readwrite, copy) NSString* name;
 @property (readwrite, retain) CBLRevisionBase* revision;
 @end
 
 
 @interface CBLView ()
-- (id)initWithDatabase: (CBLDatabase*)database view: (CBL_View*)view;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBL_View*)view                  __attribute__((nonnull));
 @end
 
 
 @interface CBLQuery ()
-- (id) initWithDatabase: (CBLDatabase*)database view: (CBL_View*)view;
-- (id)initWithDatabase: (CBLDatabase*)database mapBlock: (CBLMapBlock)mapBlock;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBL_View*)view                  __attribute__((nonnull(1)));
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                         mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
 @end
 
 
 @interface CBLReplication ()
-- (id) initWithDatabase: (CBLDatabase*)database
-                 remote: (NSURL*)remote
-                   pull: (BOOL)pull;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           remote: (NSURL*)remote
+                             pull: (BOOL)pull                       __attribute__((nonnull));
 @end
 
 

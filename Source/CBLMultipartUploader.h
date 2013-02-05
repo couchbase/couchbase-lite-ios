@@ -16,9 +16,9 @@
     CBLMultipartWriter* _multipartWriter;
 }
 
-- (id) initWithURL: (NSURL *)url
-          streamer: (CBLMultipartWriter*)streamer
-    requestHeaders: (NSDictionary *) requestHeaders
-      onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
+- (instancetype) initWithURL: (NSURL *)url
+                    streamer: (CBLMultipartWriter*)streamer
+              requestHeaders: (NSDictionary *) requestHeaders
+                onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @end

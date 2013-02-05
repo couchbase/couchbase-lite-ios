@@ -23,7 +23,7 @@
 /** Initializes an instance.
     @param type  The base content type, e.g. "application/json".
     @param boundary  The MIME part boundary to use, or nil to automatically generate one (a long random string). If you specify a boundary, you have to ensure that it appears nowhere in any of the input data! */
-- (id) initWithContentType: (NSString*)type boundary: (NSString*)boundary;
+- (instancetype) initWithContentType: (NSString*)type boundary: (NSString*)boundary;
 
 /** The full MIME Content-Type header value, including the boundary parameter. */
 @property (readonly) NSString* contentType;

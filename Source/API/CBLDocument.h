@@ -75,10 +75,10 @@
 @property (readonly, copy) NSDictionary* userProperties;
 
 /** Shorthand for [self.properties objectForKey: key]. */
-- (id) propertyForKey: (NSString*)key;
+- (id) propertyForKey: (NSString*)key                                   __attribute__((nonnull));
 
 /** Same as -propertyForKey:. Enables "[]" access in Xcode 4.4+ */
-- (id)objectForKeyedSubscript:(NSString*)key;
+- (id)objectForKeyedSubscript:(NSString*)key                            __attribute__((nonnull));
 
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties property.) */
 - (CBLRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
@@ -99,7 +99,7 @@
 /** Protocol that CBLDocument model objects must implement. See the CBLModel class. */
 @protocol CBLDocumentModel <NSObject>
 /** If a CBLDocument's modelObject implements this method, it will be called whenever the document posts a kCBLDocumentChangeNotification. */
-- (void) tdDocumentChanged: (CBLDocument*)doc;
+- (void) tdDocumentChanged: (CBLDocument*)doc                           __attribute__((nonnull));
 @end
 
 

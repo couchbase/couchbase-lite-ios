@@ -90,5 +90,5 @@ typedef NSUInteger CBLJSONWritingOptions;
 
 /** Initialize a lazy array.
     @param array   An NSArray of NSData objects, each containing JSON. */
-- (id) initWithArray: (NSMutableArray*)array;
+- (instancetype) initWithArray: (NSMutableArray*)array;
 @end

@@ -20,7 +20,7 @@
 
 @interface CBL_Database ()
 #if DEBUG
-+ (CBL_Database*) createEmptyDBAtPath: (NSString*)path;
++ (instancetype) createEmptyDBAtPath: (NSString*)path;
 #endif
 @property (readwrite, copy) NSString* name;  // make it settable
 @property (readonly) FMDatabase* fmdb;
@@ -75,7 +75,7 @@
 
 
 @interface CBL_View ()
-- (id) initWithDatabase: (CBL_Database*)db name: (NSString*)name;
+- (instancetype) initWithDatabase: (CBL_Database*)db name: (NSString*)name;
 @property (readonly) int viewID;
 - (NSArray*) dump;
 - (void) databaseClosing;
@@ -84,8 +84,8 @@
 
 @interface CBL_Server ()
 #if DEBUG
-+ (CBL_Server*) createEmptyAtPath: (NSString*)path;  // for testing
-+ (CBL_Server*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
++ (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
++ (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
 @end
 
@@ -93,14 +93,14 @@
 @interface CBLManager (Testing)
 @property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 #if DEBUG
-+ (CBLManager*) createEmptyAtPath: (NSString*)path;  // for testing
-+ (CBLManager*) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
++ (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
++ (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
 @end
 
 
 @interface CBL_Router ()
-- (id) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
+- (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
 @end
 
 

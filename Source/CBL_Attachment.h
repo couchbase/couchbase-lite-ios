@@ -27,7 +27,7 @@
     unsigned revpos;
 }
 
-- (id) initWithName: (NSString*)name contentType: (NSString*)contentType;
+- (instancetype) initWithName: (NSString*)name contentType: (NSString*)contentType;
 
 @property (readonly, nonatomic) NSString* name;
 @property (readonly, nonatomic) NSString* contentType;

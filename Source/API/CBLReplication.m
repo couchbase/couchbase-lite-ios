@@ -52,9 +52,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 // Instantiate a new replication; it is not persistent yet
-- (id) initWithDatabase: (CBLDatabase*)database
-                 remote: (NSURL*)remote
-                   pull: (BOOL)pull
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           remote: (NSURL*)remote
+                             pull: (BOOL)pull
 {
     NSParameterAssert(database);
     NSParameterAssert(remote);
@@ -75,7 +75,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 // Instantiate a persistent replication from an existing document in the _replicator db
-- (id) initWithDocument:(CBLDocument *)document {
+- (instancetype) initWithDocument:(CBLDocument *)document {
     self = [super initWithDocument: document];
     if (self) {
         if (!self.isNew) {

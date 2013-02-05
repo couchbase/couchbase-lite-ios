@@ -40,7 +40,7 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
              toDatabase: (CBL_Database*)database
                    then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock;
 
-- (id) initWithDatabase: (CBL_Database*)database;
+- (instancetype) initWithDatabase: (CBL_Database*)database;
 
 @property (readonly, nonatomic) CBLStatus status;
 @property (readonly, nonatomic) NSDictionary* document;

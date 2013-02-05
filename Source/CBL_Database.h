@@ -76,7 +76,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     NSMutableArray* _changesToNotify;
 }    
         
-- (id) initWithPath: (NSString*)path manager: (CBLManager*)manager;
+- (instancetype) initWithPath: (NSString*)path manager: (CBLManager*)manager;
 - (BOOL) open: (NSError**)outError;
 - (BOOL) open;
 - (BOOL) close;

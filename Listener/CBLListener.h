@@ -16,7 +16,7 @@
 /** Initializes a CBLListener.
     @param manager  The CBLManager whose databases to serve.
     @param port  The TCP port number to listen on. Use 0 to automatically pick an available port (you can get the port number after the server starts by getting the .port property.) */
-- (id) initWithManager: (CBLManager*)manager port: (UInt16)port;
+- (instancetype) initWithManager: (CBLManager*)manager port: (UInt16)port;
 
 /** The TCP port number that the listener is listening on.
     If the listener has not yet started, this will return 0. */

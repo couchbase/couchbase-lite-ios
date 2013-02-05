@@ -17,8 +17,8 @@
             maybeConflict=_maybeConflict, source=_source;
 
 
-- (id) initWithAddedRevision: (CBL_Revision*)addedRevision
-             winningRevision: (CBL_Revision*)winningRevision;
+- (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
+                       winningRevision: (CBL_Revision*)winningRevision;
 {
     self = [super init];
     if (self) {

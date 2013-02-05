@@ -27,7 +27,7 @@
 
 
 #if DEBUG
-+ (CBL_Server*) createEmptyAtPath: (NSString*)path {
++ (instancetype) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
     CBL_Server* server = [[self alloc] initWithDirectory: path error: &error];
@@ -36,15 +36,15 @@
     return server;
 }
 
-+ (CBL_Server*) createEmptyAtTemporaryPath: (NSString*)name {
++ (instancetype) createEmptyAtTemporaryPath: (NSString*)name {
     return [self createEmptyAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: name]];
 }
 #endif
 
 
-- (id) initWithDirectory: (NSString*)dirPath
-                 options: (const CBLManagerOptions*)options
-                   error: (NSError**)outError
+- (instancetype) initWithDirectory: (NSString*)dirPath
+                           options: (const CBLManagerOptions*)options
+                             error: (NSError**)outError
 {
     if (outError) *outError = nil;
     self = [super init];
@@ -77,7 +77,7 @@
     return self;
 }
 
-- (id) initWithDirectory: (NSString*)dirPath error: (NSError**)outError {
+- (instancetype) initWithDirectory: (NSString*)dirPath error: (NSError**)outError {
     return [self initWithDirectory: dirPath options: NULL error: outError];
 }
 

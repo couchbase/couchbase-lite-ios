@@ -33,7 +33,7 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
     CBLReachabilityOnChangeBlock _onChange;
 }
 
-- (id) initWithHostName: (NSString*)hostName;
+- (instancetype) initWithHostName: (NSString*)hostName;
 
 @property (readonly, nonatomic) NSString* hostName;
 

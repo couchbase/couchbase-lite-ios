@@ -72,17 +72,17 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     Doesn't touch the on-disk database; a document with that ID doesn't even need to exist yet.
     CBLDocuments are cached, so there will never be more than one instance (in this database)
     at a time with the same documentID. */
-- (CBLDocument*) documentWithID: (NSString*)docID;
+- (CBLDocument*) documentWithID: (NSString*)docID                       __attribute__((nonnull));
 
 /** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
-- (CBLDocument*)objectForKeyedSubscript: (NSString*)key;
+- (CBLDocument*)objectForKeyedSubscript: (NSString*)key                 __attribute__((nonnull));
 
 /** Creates a CBLDocument object with no current ID.
     The first time you PUT to that document, it will be created on the server (via a POST). */
 - (CBLDocument*) untitledDocument;
 
 /** Returns the already-instantiated cached CBLDocument with the given ID, or nil if none is yet cached. */
-- (CBLDocument*) cachedDocumentWithID: (NSString*)docID;
+- (CBLDocument*) cachedDocumentWithID: (NSString*)docID                  __attribute__((nonnull));
 
 /** Empties the cache of recently used CBLDocument objects.
     API calls will now instantiate and return new instances. */
@@ -99,11 +99,11 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     anonymous CBLView and then deleting it immediately after querying it. It may be useful during
     development, but in general this is inefficient if this map will be used more than once,
     because the entire view has to be regenerated from scratch every time. */
-- (CBLQuery*) slowQueryWithMap: (CBLMapBlock)mapBlock;
+- (CBLQuery*) slowQueryWithMap: (CBLMapBlock)mapBlock                    __attribute__((nonnull));
 
 /** Returns a CBLView object for the view with the given name.
     (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the CBLView is assigned a map function.) */
-- (CBLView*) viewNamed: (NSString*)name;
+- (CBLView*) viewNamed: (NSString*)name                                  __attribute__((nonnull));
 
 /** An array of all existing views. */
 @property (readonly) NSArray* allViews;
@@ -111,12 +111,14 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Defines or clears a named document validation function.
     Before any change to the database, all registered validation functions are called and given a
     chance to reject it. (This includes incoming changes from a pull replication.) */
-- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock;
+- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock
+                                                                     __attribute__((nonnull(1)));
 
 
 /** Defines or clears a named filter function.
     Filters are used by push replications to choose which documents to send. */
-- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock;
+- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock
+                                                                     __attribute__((nonnull(1)));
 
 
 /** Registers an object that can compile source code into executable filter blocks. */
@@ -128,7 +130,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
     Use this when performing bulk operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits. */
-- (BOOL) inTransaction: (BOOL(^)(void))block;
+- (BOOL) inTransaction: (BOOL(^)(void))bloc                         __attribute__((nonnull(1)));
 
 
 #pragma mark - REPLICATION:
@@ -138,14 +140,14 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 /** Creates a replication that will 'push' to a database at the given URL.
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (CBLReplication*) pushToURL: (NSURL*)url;
+- (CBLReplication*) pushToURL: (NSURL*)url                              __attribute__((nonnull));
 
 /** Creates a replication that will 'pull' from a database at the given URL.
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (CBLReplication*) pullFromURL: (NSURL*)url;
+- (CBLReplication*) pullFromURL: (NSURL*)url                            __attribute__((nonnull));
 
 /** Creates a pair of replications to both pull and push to database at the given URL.
-    @param otherDbURL  The URL of the remote database.
+    @param otherDbURL  The URL of the remote database, or nil for none.
     @param exclusively  If YES, any previously existing replications to or from otherDbURL will be deleted.
     @return  An array whose first element is the "pull" replication and second is the "push".
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */

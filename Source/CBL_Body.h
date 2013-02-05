@@ -18,12 +18,12 @@
     BOOL _error;
 }
 
-- (id) initWithProperties: (NSDictionary*)properties;
-- (id) initWithArray: (NSArray*)array;
-- (id) initWithJSON: (NSData*)json;
+- (instancetype) initWithProperties: (NSDictionary*)properties;
+- (instancetype) initWithArray: (NSArray*)array;
+- (instancetype) initWithJSON: (NSData*)json;
 
-+ (CBL_Body*) bodyWithProperties: (id)properties;
-+ (CBL_Body*) bodyWithJSON: (NSData*)json;
++ (instancetype) bodyWithProperties: (id)properties;
++ (instancetype) bodyWithJSON: (NSData*)json;
 
 @property (readonly) BOOL isValidJSON;
 @property (readonly) NSData* asJSON;

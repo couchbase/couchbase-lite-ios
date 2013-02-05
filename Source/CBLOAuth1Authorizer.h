@@ -19,10 +19,10 @@
     id<OASignatureProviding> _signatureProvider;
 }
 
-- (id) initWithConsumerKey: (NSString*)consumerKey
-            consumerSecret: (NSString*)consumerSecret
-                     token: (NSString*)token
-               tokenSecret: (NSString*)tokenSecret
-           signatureMethod: (NSString*)signatureMethod;
+- (instancetype) initWithConsumerKey: (NSString*)consumerKey
+                      consumerSecret: (NSString*)consumerSecret
+                               token: (NSString*)token
+                         tokenSecret: (NSString*)tokenSecret
+                     signatureMethod: (NSString*)signatureMethod;
 
 @end

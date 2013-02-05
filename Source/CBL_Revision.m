@@ -20,9 +20,9 @@
 
 @implementation CBL_Revision
 
-- (id) initWithDocID: (NSString*)docID 
-               revID: (NSString*)revID 
-             deleted: (BOOL)deleted
+- (instancetype) initWithDocID: (NSString*)docID
+                         revID: (NSString*)revID
+                       deleted: (BOOL)deleted
 {
     self = [super init];
     if (self) {
@@ -37,7 +37,7 @@
     return self;
 }
 
-- (id) initWithBody: (CBL_Body*)body {
+- (instancetype) initWithBody: (CBL_Body*)body {
     Assert(body);
     self = [self initWithDocID: body[@"_id"]
                          revID: body[@"_rev"]
@@ -48,7 +48,7 @@
     return self;
 }
 
-- (id) initWithProperties: (NSDictionary*)properties {
+- (instancetype) initWithProperties: (NSDictionary*)properties {
     CBL_Body* body = [[CBL_Body alloc] initWithProperties: properties];
     if (!body) {
         return nil;
@@ -56,7 +56,7 @@
     return [self initWithBody: body];
 }
 
-+ (CBL_Revision*) revisionWithProperties: (NSDictionary*)properties {
++ (instancetype) revisionWithProperties: (NSDictionary*)properties {
     return [[self alloc] initWithProperties: properties];
 }
 
@@ -163,7 +163,7 @@
 
 @implementation CBL_RevisionList
 
-- (id)init {
+- (instancetype) init {
     self = [super init];
     if (self) {
         _revs = [[NSMutableArray alloc] init];
@@ -171,7 +171,7 @@
     return self;
 }
 
-- (id) initWithArray: (NSArray*)revs {
+- (instancetype) initWithArray: (NSArray*)revs {
     Assert(revs);
     self = [super init];
     if (self) {

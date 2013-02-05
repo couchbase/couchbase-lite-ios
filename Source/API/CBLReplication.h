@@ -91,7 +91,7 @@ typedef enum {
     immediately after registering the assertion, so that the replicator engine can use it to
     authenticate before it expires. After that, the replicator will have a login session cookie
     that should last significantly longer before needing to be renewed. */
-- (bool) registerBrowserIDAssertion: (NSString*)assertion;
+- (bool) registerBrowserIDAssertion: (NSString*)assertion               __attribute__((nonnull));
 
 
 #pragma mark - STATUS:

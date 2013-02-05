@@ -18,7 +18,7 @@
     NSUInteger _firstValueSequence; // sequence # of first item in _values
 }
 
-- (id) init;
+- (instancetype) init;
 
 /** Adds a value to the map, assigning it a sequence number and returning it.
     Sequence numbers start at 1 and increment from there. */

@@ -26,8 +26,8 @@
     Returns nil if the content type isn't a valid multipart type, or doesn't contain a "boundary" parameter.
     @param contentType the entire MIME Content-Type string, with parameters.
     @param delegate  The delegate object that will be called as parts are parsed. */
-- (id) initWithContentType: (NSString*)contentType
-                  delegate: (id<CBLMultipartReaderDelegate>)delegate;
+- (instancetype) initWithContentType: (NSString*)contentType
+                            delegate: (id<CBLMultipartReaderDelegate>)delegate;
 
 /** Call this when more data is available. */
 - (void) appendData: (NSData*)data;

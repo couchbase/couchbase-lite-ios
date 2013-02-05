@@ -37,11 +37,11 @@
 }
 
 /** Initialize given a credential object that contains a username and password. */
-- (id) initWithCredential: (NSURLCredential*)credential;
+- (instancetype) initWithCredential: (NSURLCredential*)credential;
 
 /** Initialize given a URL alone -- will use a baked-in username/password in the URL,
     or look up a credential from the keychain. */
-- (id)initWithURL: (NSURL*)url;
+- (instancetype) initWithURL: (NSURL*)url;
 
 @end
 
@@ -58,9 +58,9 @@
 }
 
 /** Initialize given MAC credentials */
-- (id) initWithKey: (NSString*)key
-        identifier: (NSString*)identifier
-         algorithm: (NSString*)algorithm
-         issueTime: (NSDate*)issueTime;
+- (instancetype) initWithKey: (NSString*)key
+                  identifier: (NSString*)identifier
+                   algorithm: (NSString*)algorithm
+                   issueTime: (NSDate*)issueTime;
 
 @end

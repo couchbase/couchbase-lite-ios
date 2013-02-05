@@ -29,7 +29,7 @@
 
 @implementation CBL_BlobStore
 
-- (id) initWithPath: (NSString*)dir error: (NSError**)outError {
+- (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError {
     Assert(dir);
     self = [super init];
     if (self) {
@@ -240,7 +240,7 @@
 
 @synthesize length=_length, blobKey=_blobKey;
 
-- (id) initWithStore: (CBL_BlobStore*)store {
+- (instancetype) initWithStore: (CBL_BlobStore*)store {
     self = [super init];
     if (self) {
         _store = store;

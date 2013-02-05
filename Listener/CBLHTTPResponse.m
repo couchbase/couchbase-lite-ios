@@ -33,7 +33,7 @@
 @implementation CBLHTTPResponse
 
 
-- (id) initWithRouter: (CBL_Router*)router forConnection:(CBLHTTPConnection*)connection {
+- (instancetype) initWithRouter: (CBL_Router*)router forConnection:(CBLHTTPConnection*)connection {
     self = [super init];
     if (self) {
         //EnableLog(YES);

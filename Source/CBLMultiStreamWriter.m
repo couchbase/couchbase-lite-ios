@@ -32,7 +32,7 @@
 @synthesize error=_error, length=_length;
 
 
-- (id)initWithBufferSize: (NSUInteger)bufferSize {
+- (instancetype) initWithBufferSize: (NSUInteger)bufferSize {
     self = [super init];
     if (self) {
         _inputs = [[NSMutableArray alloc] init];
@@ -46,7 +46,7 @@
     return self;
 }
 
-- (id)init {
+- (instancetype) init {
     return [self initWithBufferSize: kDefaultBufferSize];
 }
 
@@ -346,7 +346,7 @@ TestCase(CBLMultiStreamWriter_Sync) {
 
 @implementation CBLMultiStreamWriterTester
 
-- (id)initWithStream: (NSInputStream*)stream {
+- (instancetype) initWithStream: (NSInputStream*)stream {
     self = [super init];
     if (self) {
         _stream = stream;

@@ -21,9 +21,9 @@
     void (^_processor)(NSArray*);
 }
 
-- (id) initWithCapacity: (NSUInteger)capacity
-                  delay: (NSTimeInterval)delay
-              processor: (void (^)(NSArray*))block;
+- (instancetype) initWithCapacity: (NSUInteger)capacity
+                            delay: (NSTimeInterval)delay
+                        processor: (void (^)(NSArray*))block;
 
 @property (readonly) NSUInteger count;
 

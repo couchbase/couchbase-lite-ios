@@ -18,10 +18,10 @@
     CBLMultipartDocumentReader* _reader;
 }
 
-- (id) initWithURL: (NSURL*)url
-          database: (CBL_Database*)database
-    requestHeaders: (NSDictionary *) requestHeaders
-      onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
+- (instancetype) initWithURL: (NSURL*)url
+                    database: (CBL_Database*)database
+              requestHeaders: (NSDictionary *) requestHeaders
+                onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @property (readonly) NSDictionary* document;
 

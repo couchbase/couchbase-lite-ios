@@ -39,7 +39,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 @implementation CBL_Database
 
 
-+ (CBL_Database*) createEmptyDBAtPath: (NSString*)path {
++ (instancetype) createEmptyDBAtPath: (NSString*)path {
     if (!CBLRemoveFileIfExists(path, NULL))
         return nil;
     CBL_Database *db = [[self alloc] initWithPath: path manager: nil];
@@ -51,7 +51,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (id) initWithPath: (NSString*)path manager: (CBLManager*)manager {
+- (instancetype) initWithPath: (NSString*)path manager: (CBLManager*)manager {
     if (self = [super init]) {
         Assert([path hasPrefix: @"/"], @"Path must be absolute");
         _path = [path copy];

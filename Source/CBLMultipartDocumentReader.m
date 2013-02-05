@@ -48,7 +48,7 @@
 }
 
 
-- (id) initWithDatabase: (CBL_Database*)database
+- (instancetype) initWithDatabase: (CBL_Database*)database
 {
     Assert(database);
     self = [super init];

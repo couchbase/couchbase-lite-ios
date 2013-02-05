@@ -18,13 +18,20 @@
 }
 
 
-- (id)initWithDatabase: (CBLDatabase*)database view: (CBL_View*)view {
+- (instancetype) initWithDatabase: (CBLDatabase*)database view: (CBL_View*)view {
     self = [super init];
     if (self) {
         _database = database;
         _view = view;
     }
     return self;
+}
+
+
+- (void) deleteView {
+    [_view deleteView];
+    _view = nil;
+    _database = nil;
 }
 
 
@@ -43,14 +50,7 @@
          reduceBlock: (CBLReduceBlock)reduceBlock
              version: (NSString*)version
 {
-    if (mapBlock) {
-        return [_view setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
-    } else {
-        [_view deleteView];
-        _view = nil;
-        _database = nil;
-        return YES;
-    }
+    return [_view setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 }
 
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock

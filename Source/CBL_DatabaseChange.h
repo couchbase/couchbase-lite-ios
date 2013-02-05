@@ -13,8 +13,8 @@
 /** Identifies a change to a database, i.e. a newly added revision. */
 @interface CBL_DatabaseChange : NSObject <NSCopying>
 
-- (id) initWithAddedRevision: (CBL_Revision*)addedRevision
-             winningRevision: (CBL_Revision*)winningRevision;
+- (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
+                       winningRevision: (CBL_Revision*)winningRevision;
 
 /** The revision just added. */
 @property (readonly) CBL_Revision* addedRevision;

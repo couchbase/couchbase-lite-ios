@@ -46,9 +46,9 @@
     NSString* _errorMessage;
     NSArray* _changedKeys;
 }
-- (id) initWithDatabase: (CBL_Database*)db
-               revision: (CBL_Revision*)currentRevision 
-               newRevision: (CBL_Revision*)newRevision;
+- (instancetype) initWithDatabase: (CBL_Database*)db
+                         revision: (CBL_Revision*)currentRevision
+                      newRevision: (CBL_Revision*)newRevision;
 @property (readonly) CBLRevision* currentRevision;
 @property int errorType;
 @property (copy) NSString* errorMessage;
@@ -785,9 +785,9 @@
 
 @implementation CBLValidationContext
 
-- (id) initWithDatabase: (CBL_Database*)db
-               revision: (CBL_Revision*)currentRevision
-            newRevision: (CBL_Revision*)newRevision
+- (instancetype) initWithDatabase: (CBL_Database*)db
+                         revision: (CBL_Revision*)currentRevision
+                      newRevision: (CBL_Revision*)newRevision
 {
     self = [super init];
     if (self) {

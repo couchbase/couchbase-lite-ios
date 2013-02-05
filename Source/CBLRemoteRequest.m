@@ -39,11 +39,11 @@
 }
 
 
-- (id) initWithMethod: (NSString*)method 
-                  URL: (NSURL*)url 
-                 body: (id)body
-       requestHeaders: (NSDictionary *)requestHeaders
-         onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
+- (instancetype) initWithMethod: (NSString*)method
+                            URL: (NSURL*)url
+                           body: (id)body
+                 requestHeaders: (NSDictionary *)requestHeaders
+                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     self = [super init];
     if (self) {

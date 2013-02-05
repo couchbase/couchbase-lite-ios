@@ -32,8 +32,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 #endif
 
 
-- (id)initWithDatabase: (CBLDatabase*)database
-            documentID: (NSString*)docID
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)docID
 {
     self = [super init];
     if (self) {

@@ -22,7 +22,7 @@
 @synthesize name=_name, contentType=_contentType;
 
 
-- (id) initWithName: (NSString*)name contentType: (NSString*)contentType {
+- (instancetype) initWithName: (NSString*)name contentType: (NSString*)contentType {
     Assert(name);
     self = [super init];
     if (self) {

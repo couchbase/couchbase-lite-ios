@@ -115,7 +115,7 @@ static NSComparisonResult callComparator(id a, id b, void* context) {
 
 @implementation BlockOperation
 
-- (id) initWithBlock: (void (^)(void))block {
+- (instancetype) initWithBlock: (void (^)(void))block {
     self = [super init];
     if (self)
         _blockToRun = [block copy];

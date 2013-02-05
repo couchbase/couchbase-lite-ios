@@ -30,7 +30,7 @@ static void WarnJSException(JSContextRef context, NSString* warning, JSValueRef 
 @synthesize context=_context;
 
 
-- (id)init {
+- (instancetype) init {
     self = [super init];
     if (self) {
         _context = JSGlobalContextCreate(NULL);
@@ -59,9 +59,9 @@ static void WarnJSException(JSContextRef context, NSString* warning, JSValueRef 
     JSObjectRef _fn;
 }
 
-- (id) initWithCompiler: (CBLJSCompiler*)compiler
-             sourceCode: (NSString*)source
-             paramNames: (NSArray*)paramNames
+- (instancetype) initWithCompiler: (CBLJSCompiler*)compiler
+                       sourceCode: (NSString*)source
+                       paramNames: (NSArray*)paramNames
 {
     self = [super init];
     if (self) {

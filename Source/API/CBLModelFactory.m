@@ -20,7 +20,7 @@
 static CBLModelFactory* sSharedInstance;
 
 
-+ (CBLModelFactory*) sharedInstance {
++ (instancetype) sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sSharedInstance = [[self alloc] init];
@@ -29,7 +29,7 @@ static CBLModelFactory* sSharedInstance;
 }
 
 
-- (id)init {
+- (instancetype) init {
     self = [super init];
     if (self) {
         _typeDict = [[NSMutableDictionary alloc] init];

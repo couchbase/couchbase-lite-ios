@@ -29,7 +29,7 @@
     Class _modelClass;
 }
 
-- (id) initWithQuery: (CBLQuery*)query modelClass: (Class)modelClass;
+- (instancetype) initWithQuery: (CBLQuery*)query modelClass: (Class)modelClass;
 
 /** The documents returned by the query, wrapped in DemoItem objects.
     An NSArrayController can be bound to this property. */

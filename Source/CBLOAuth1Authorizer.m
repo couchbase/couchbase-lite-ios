@@ -25,11 +25,11 @@
 @implementation CBLOAuth1Authorizer
 
 
-- (id) initWithConsumerKey: (NSString*)consumerKey
-            consumerSecret: (NSString*)consumerSecret
-                     token: (NSString*)token
-               tokenSecret: (NSString*)tokenSecret
-           signatureMethod: (NSString*)signatureMethod
+- (instancetype) initWithConsumerKey: (NSString*)consumerKey
+                      consumerSecret: (NSString*)consumerSecret
+                               token: (NSString*)token
+                         tokenSecret: (NSString*)tokenSecret
+                     signatureMethod: (NSString*)signatureMethod
 {
     self = [super init];
     if (self) {

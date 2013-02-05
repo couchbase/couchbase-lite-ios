@@ -40,11 +40,12 @@
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
 
-- (id)initWithDatabaseURL: (NSURL*)databaseURL
-                     mode: (CBLChangeTrackerMode)mode
-                conflicts: (BOOL)includeConflicts
-             lastSequence: (id)lastSequenceID
-                   client: (id<CBLChangeTrackerClient>)client {
+- (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
+                                mode: (CBLChangeTrackerMode)mode
+                           conflicts: (BOOL)includeConflicts
+                        lastSequence: (id)lastSequenceID
+                              client: (id<CBLChangeTrackerClient>)client
+{
     NSParameterAssert(databaseURL);
     NSParameterAssert(client);
     self = [super init];

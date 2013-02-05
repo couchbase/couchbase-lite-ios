@@ -21,7 +21,7 @@
 
 @implementation CBLBasicAuthorizer
 
-- (id) initWithCredential: (NSURLCredential*)credential {
+- (instancetype) initWithCredential: (NSURLCredential*)credential {
     Assert(credential);
     self = [super init];
     if (self) {
@@ -31,8 +31,7 @@
 }
 
 
-- (id)initWithURL: (NSURL*)url
-{
+- (instancetype) initWithURL: (NSURL*)url {
     Log(@"CBLBasicAuthorizer initWith <%@>", url);//TEMP
     NSURLCredential *cred = [url my_credentialForRealm: nil
                                   authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
@@ -96,10 +95,10 @@
 
 @implementation CBLMACAuthorizer
 
-- (id) initWithKey: (NSString*)key
-        identifier: (NSString*)identifier
-         algorithm: (NSString*)algorithm
-         issueTime: (NSDate*)issueTime
+- (instancetype) initWithKey: (NSString*)key
+                  identifier: (NSString*)identifier
+                   algorithm: (NSString*)algorithm
+                   issueTime: (NSDate*)issueTime
 {
     self = [super init];
     if (self) {

@@ -144,7 +144,7 @@ static NSDateFormatter* getISO8601Formatter() {
 
 @implementation CBLLazyArrayOfJSON
 
-- (id) initWithArray: (NSMutableArray*)array {
+- (instancetype) initWithArray: (NSMutableArray*)array {
     self = [super init];
     if (self) {
         _array = array;

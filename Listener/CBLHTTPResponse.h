@@ -25,7 +25,7 @@
     UInt64 _offset;             // Offset in response for next readData
 }
 
-- (id) initWithRouter: (CBL_Router*)router forConnection:(CBLHTTPConnection*)connection;
+- (instancetype) initWithRouter: (CBL_Router*)router forConnection:(CBLHTTPConnection*)connection;
 
 @property UInt64 offset;
 
