@@ -79,8 +79,10 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 /** Is the view's index currently out of date? */
 @property (readonly) BOOL stale;
 
+/** The last sequence number indexed so far. */
 @property (readonly) SInt64 lastSequenceIndexed;
 
+/** Deletes the view's persistent index. It will be regenerated on the next query. */
 - (void) removeIndex;
 
 /** Deletes the view, persistently. */
@@ -92,7 +94,9 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 /** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
 + (NSNumber*) totalValues: (NSArray*)values;
 
+/** Registers an object that can compile map/reduce functions from source code. */
 + (void) setCompiler: (id<CBLViewCompiler>)compiler;
+
 + (id<CBLViewCompiler>) compiler;
 
 @end

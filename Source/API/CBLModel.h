@@ -79,8 +79,10 @@
     Any unchanged models in the array are ignored.
     See also: -[CBLDatabase saveAllModels:].
     @param models  An array of CBLModel objects, which must all be in the same database.
+    @param outError  On return, the error (if the call failed.)
     @return  A RESTOperation that saves all changes, or nil if none of the models need saving. */
-+ (BOOL) saveModels: (NSArray*)models error: (NSError**)outError;
++ (BOOL) saveModels: (NSArray*)models
+              error: (NSError**)outError;
 
 /** Resets the timeSinceExternallyChanged property to zero. */
 - (void) markExternallyChanged;
@@ -93,7 +95,8 @@
 
 /** Sets a property by name.
     You can use this for document properties that you haven't added @@property declarations for. */
-- (BOOL) setValue: (id)value ofProperty: (NSString*)property            __attribute__((nonnull(2)));
+- (BOOL) setValue: (id)value
+       ofProperty: (NSString*)property                                  __attribute__((nonnull(2)));
 
 
 /** The names of all attachments (array of strings).
@@ -107,7 +110,8 @@
     The attachment data will be written to the database at the same time as property changes are saved.
     @param attachment  A newly-created CBLAttachment (not yet associated with any revision)
     @param name  The attachment name. */
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name __attribute__((nonnull(2)));
+- (void) addAttachment: (CBLAttachment*)attachment
+                 named: (NSString*)name                                 __attribute__((nonnull(2)));
 
 /** Deletes (in memory) any existing attachment with the given name.
     The attachment will be deleted from the database at the same time as property changes are saved. */

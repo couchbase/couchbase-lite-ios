@@ -27,11 +27,14 @@ typedef struct CBLManagerOptions {
 /** A shared per-process instance. This should only be used on the main thread. */
 + (instancetype) sharedInstance;
 
+/** Returns YES if the given name is a valid database name.
+    (Only the characters in "abcdefghijklmnopqrstuvwxyz0123456789_$()+-/" are allowed.) */
 + (BOOL) isValidDatabaseName: (NSString*)name                           __attribute__((nonnull));
 
+/** The default directory to use for a CBLManager. This is in the Application Support directory. */
 + (NSString*) defaultDirectory;
 
-/** Default initializer. Stores databases in the default Application Support directory. */
+/** Default initializer. Stores databases in the default directory. */
 - (instancetype) init;
 
 /** Initializes a CouchbaseLite manager that stores its data at the given path.
@@ -47,6 +50,7 @@ typedef struct CBLManagerOptions {
 /** Releases all resources used by the CBLManager instance and closes all its databases. */
 - (void) close;
 
+/** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
 
 /** Returns the database with the given name, or nil if it doesn't exist.

@@ -27,7 +27,8 @@
 /** Associates a value of the "type" property with a CBLModel subclass.
     @param classOrName  Either a CBLModel subclass, or its class name as an NSString.
     @param type  The value value of a document's "type" property that should indicate this class. */
-- (void) registerClass: (id)classOrName forDocumentType: (NSString*)type __attribute__((nonnull(2)));
+- (void) registerClass: (id)classOrName
+       forDocumentType: (NSString*)type                                 __attribute__((nonnull(2)));
 
 /** Returns the appropriate CBLModel subclass for this document.
     The default implementation just passes the document's "type" property value to -classForDocumentType:, but subclasses could override this to use different properties (or even the document ID) to decide. */

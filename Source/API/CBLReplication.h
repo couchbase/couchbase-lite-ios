@@ -10,11 +10,12 @@
 @class CBLDatabase;
 
 
+/** Describes the current status of a replication. */
 typedef enum {
-    kCBLReplicationStopped,
-    kCBLReplicationOffline,
-    kCBLReplicationIdle,
-    kCBLReplicationActive
+    kCBLReplicationStopped, /**< The replication is finished or hit a fatal error. */
+    kCBLReplicationOffline, /**< The remote host is currently unreachable. */
+    kCBLReplicationIdle,    /**< Continuous replication is caught up and waiting for more changes.*/
+    kCBLReplicationActive   /**< The replication is actively transferring data. */
 } CBLReplicationMode;
 
 
@@ -68,7 +69,7 @@ typedef enum {
 /** The credential (generally username+password) to use to authenticate to the remote database.
     This can either come from the URL itself (if it's of the form "http://user:pass@example.com")
     or be stored in the NSURLCredentialStore, which is a wrapper around the Keychain. */
-@property NSURLCredential* credential;
+@property (nonatomic, strong) NSURLCredential* credential;
 
 /** OAuth parameters that the replicator should use when authenticating to the remote database.
     Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret",
