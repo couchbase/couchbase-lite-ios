@@ -32,6 +32,7 @@
                       manager: (CBLManager*)manager
                      readOnly: (BOOL)readOnly;
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
+- (void) removeDocumentFromCache: (CBLDocument*)document;
 @end
 
 
