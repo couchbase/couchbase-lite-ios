@@ -30,6 +30,7 @@
                     CBL_Database: (CBL_Database*)tddb               __attribute__((nonnull));
 @property (readonly, nonatomic) CBL_Database* tddb;
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
+- (void) removeDocumentFromCache: (CBLDocument*)document;
 @end
 
 

@@ -187,6 +187,9 @@ static id<CBLFilterCompiler> sFilterCompiler;
     [_docCache forgetAllResources];
 }
 
+- (void) removeDocumentFromCache: (CBLDocument*)document {
+    [_docCache forgetResource: document];
+}
 
 - (CBLQuery*) queryAllDocuments {
     return [[CBLQuery alloc] initWithDatabase: self view: nil];

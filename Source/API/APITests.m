@@ -249,6 +249,19 @@ TestCase(API_DeleteDocument) {
 }
 
 
+TestCase(API_PurgeDocument) {
+    CBLDatabase* db = createEmptyDB();
+    NSDictionary* properties = @{@"testName": @"testPurgeDocument"};
+    CBLDocument* doc = createDocumentWithProperties(db, properties);
+    CAssert(doc);
+    
+    NSError* error;
+    CAssert([doc purgeDocument: &error]);
+    
+    CBLDocument* redoc = [db cachedDocumentWithID:doc.documentID];
+    CAssert(!redoc);
+}
+
 TestCase(API_AllDocuments) {
     CBLDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 5;
@@ -613,6 +626,7 @@ TestCase(API) {
     RequireTestCase(API_SaveMultipleUnsavedDocuments);
     RequireTestCase(API_DeleteMultipleDocuments);
     RequireTestCase(API_DeleteDocument);
+    RequireTestCase(API_PurgeDocument);
     RequireTestCase(API_AllDocuments);
     RequireTestCase(API_RowsIfChanged);
     RequireTestCase(API_History);
