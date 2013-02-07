@@ -102,7 +102,7 @@ TestCase(CBL_Pusher) {
     RequireTestCase(CBL_Database);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
     CBL_Database* db = [server _databaseNamed: @"db"];
-    [db open];
+    [db open: nil];
     
     __block int filterCalls = 0;
     [db defineFilter: @"filter" asBlock: ^BOOL(CBLRevision *revision, NSDictionary* params) {
@@ -150,18 +150,18 @@ TestCase(CBL_Puller) {
     RequireTestCase(CBL_Pusher);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
     CBL_Database* db = [server _databaseNamed: @"db"];
-    [db open];
+    [db open: nil];
     
     id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
     CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
-    CAssertEq(db.lastSequence, 3);
+    CAssertEq(db.lastSequenceNumber, 3);
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
     replic8(db, kRemoteDBURLStr, NO, nil);
-    CAssertEq(db.lastSequence, 3);
+    CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     CAssert(doc);
@@ -188,7 +188,7 @@ TestCase(CBL_Puller_FromCouchApp) {
     RequireTestCase(CBL_Puller);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
     CBL_Database* db = [server _databaseNamed: @"couchapp_helloworld"];
-    [db open];
+    [db open: nil];
     
     replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
 
@@ -223,7 +223,7 @@ TestCase(CBL_ReplicatorManager) {
     CAssert([server replicatorManager]);    // start the replicator
     CBL_Database* replicatorDb = [server _databaseNamed: kCBL_ReplicatorDatabaseName];
     CAssert(replicatorDb);
-    CAssert([replicatorDb open]);
+    CAssert([replicatorDb open: nil]);
     
     // Try some bogus validation docs that will fail the validator function:
     CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"source", @"foo"},
@@ -240,7 +240,7 @@ TestCase(CBL_ReplicatorManager) {
     CAssertEq(status, kCBLStatusForbidden);
     
     CBL_Database* sourceDB = [server _databaseNamed: @"foo"];
-    CAssert([sourceDB open]);
+    CAssert([sourceDB open: nil]);
 
     // Now try a valid replication document:
     NSURL* remote = [NSURL URLWithString: @"http://localhost:5984/tdreplicator_test"];
@@ -288,7 +288,7 @@ TestCase(CBL_ReplicatorManager) {
     CAssert(newRepl.running);
 
     // Now delete the database, and check that the replication doc is deleted too:
-    CAssert([server _deleteDatabase: sourceDB error: NULL]);
+    CAssert([sourceDB deleteDatabase: NULL]);
     CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil]);
     
     [server close];

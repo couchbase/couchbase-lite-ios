@@ -36,7 +36,7 @@
 static CBL_Database* createDB(void) {
     NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"cbl_test.sqlite3"];
     CBL_Database *db = [CBL_Database createEmptyDBAtPath: path];
-    CAssert([db open]);
+    CAssert([db open: nil]);
     return db;
 }
 
@@ -394,7 +394,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertNil(rev2);
     
     // Make sure no duplicate rows were inserted for the common revisions:
-    CAssertEq(db.lastSequence, 8u);
+    CAssertEq(db.lastSequenceNumber, 8u);
     
     // Make sure the revision with the higher revID wins the conflict:
     CBL_Revision* current = [db getDocumentWithID: rev.docID revisionID: nil];

@@ -298,7 +298,7 @@ static inline BOOL isLocalDBName(NSString* url) {
                                                        _bg_serverDatabase = tddb;
                                                    }];
 #else
-    _bg_serverDatabase = self.localDatabase.tddb;
+    _bg_serverDatabase = self.localDatabase;
 #endif
     // Observe *all* replication changes:
     [[NSNotificationCenter defaultCenter] addObserver: self

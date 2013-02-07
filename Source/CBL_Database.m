@@ -36,13 +36,22 @@ NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
 
-@implementation CBL_Database
+@implementation CBL_Database (Internal)
+
+
+- (FMDatabase*) fmdb {
+    return _fmdb;
+}
+
+- (CBL_BlobStore*) attachmentStore {
+    return _attachments;
+}
 
 
 + (instancetype) createEmptyDBAtPath: (NSString*)path {
     if (!CBLRemoveFileIfExists(path, NULL))
         return nil;
-    CBL_Database *db = [[self alloc] initWithPath: path manager: nil];
+    CBL_Database *db = [[self alloc] initWithPath: path name: nil manager: nil readOnly: NO];
     if (!CBLRemoveFileIfExists(db.attachmentStorePath, NULL))
         return nil;
     if (![db open: nil])
@@ -51,12 +60,17 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (instancetype) initWithPath: (NSString*)path manager: (CBLManager*)manager {
+- (instancetype) _initWithPath: (NSString*)path
+                          name: (NSString*)name
+                       manager: (CBLManager*)manager
+                      readOnly: (BOOL)readOnly
+{
     if (self = [super init]) {
         Assert([path hasPrefix: @"/"], @"Path must be absolute");
         _path = [path copy];
         _manager = manager;
-        _name = [path.lastPathComponent.stringByDeletingPathExtension copy];
+        _name = name ?: [path.lastPathComponent.stringByDeletingPathExtension copy];
+        _readOnly = readOnly;
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = 10;
 #if DEBUG
@@ -66,6 +80,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #endif
         _fmdb.traceExecution = WillLogTo(CBL_DatabaseVerbose);
         _thread = [NSThread currentThread];
+
         if (0) {
             // Appease the static analyzer by using these category ivars in this source file:
             _validations = nil;
@@ -277,10 +292,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return YES;
 }
 
-- (BOOL) open {
-    return [self open: nil];
-}
-
 - (BOOL) close {
     if (!_open)
         return NO;
@@ -304,40 +315,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return YES;
 }
 
-- (BOOL) deleteDatabase: (NSError**)outError {
-    LogTo(CBL_Database, @"Deleting %@", _path);
-    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
-                                                        object: self];
-    if (_open) {
-        if (![self close])
-            return NO;
-    } else if (!self.exists) {
-        return YES;
-    }
-    return CBLRemoveFileIfExists(_path, outError) 
-        && CBLRemoveFileIfExists(self.attachmentStorePath, outError);
-}
-
-- (void) dealloc {
-    if (_open) {
-        //Warn(@"%@ dealloced without being closed first!", self);
-        [self close];
-    }
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-
-@synthesize path=_path, name=_name, fmdb=_fmdb, attachmentStore=_attachments,
-            readOnly=_readOnly, publicDatabase=_publicDatabase, thread=_thread, manager=_manager;
-
-
-- (CBLDatabase*) publicDatabase {
-    CBLDatabase* db = _publicDatabase;
-    if (!db) {
-        db = [[CBLDatabase alloc] initWithManager: _manager CBL_Database: self];
-        _publicDatabase = db;
-    }
-    return db;
-}
 
 - (UInt64) totalDataSize {
     NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: NULL];
@@ -384,7 +361,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return YES;
 }
 
-- (CBLStatus) inTransaction: (CBLStatus(^)())block {
+- (CBLStatus) _inTransaction: (CBLStatus(^)())block {
     CBLStatus status;
     [self beginTransaction];
     @try {
@@ -416,6 +393,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseChangesNotification
                                                             object: self
                                                           userInfo: $dict({@"changes", changes})];
+        for (CBL_DatabaseChange* change in changes)
+            [self postPublicChangeNotification: change];
     }
 }
 
@@ -450,7 +429,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (SequenceNumber) lastSequence {
+- (SequenceNumber) lastSequenceNumber {
     return [_fmdb longLongForQuery: @"SELECT MAX(sequence) FROM revs"];
 }
 
@@ -936,17 +915,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
-    if (!_filters)
-        _filters = [[NSMutableDictionary alloc] init];
-    [_filters setValue: [filterBlock copy] forKey: filterName];
-}
-
-- (CBLFilterBlock) filterNamed: (NSString*)filterName {
-    return _filters[filterName];
-}
-
-
 - (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus {
     CBLFilterBlock filter = [self filterNamed: filterName];
     if (filter)
@@ -977,35 +945,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 #pragma mark - VIEWS:
-
-
-- (CBLView*) registerView: (CBLView*)view {
-    if (!view)
-        return nil;
-    if (!_views)
-        _views = [[NSMutableDictionary alloc] init];
-    _views[view.name] = view;
-    return view;
-}
-
-
-- (CBLView*) viewNamed: (NSString*)name {
-    CBLView* view = _views[name];
-    if (view)
-        return view;
-    return [self registerView: [[CBLView alloc] initWithDatabase: self name: name]];
-}
-
-
-- (CBLView*) existingViewNamed: (NSString*)name {
-    CBLView* view = _views[name];
-    if (view)
-        return view;
-    view = [[CBLView alloc] initWithDatabase: self name: name];
-    if (!view.viewID)
-        return nil;
-    return [self registerView: view];
-}
 
 
 - (NSArray*) allViews {

@@ -660,7 +660,7 @@
         *outResult = result;
     if (docsToRevs.count == 0)
         return kCBLStatusOK;
-    return [self inTransaction: ^CBLStatus {
+    return [self _inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
             SInt64 docNumericID = [self getDocNumericID: docID];
             if (!docNumericID) {
@@ -737,21 +737,6 @@
 
 
 #pragma mark - VALIDATION:
-
-
-- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
-    if (validationBlock) {
-        if (!_validations)
-            _validations = [[NSMutableDictionary alloc] init];
-        [_validations setValue: [validationBlock copy] forKey: validationName];
-    } else {
-        [_validations removeObjectForKey: validationName];
-    }
-}
-
-- (CBLValidationBlock) validationNamed: (NSString*)validationName {
-    return _validations[validationName];
-}
 
 
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev {

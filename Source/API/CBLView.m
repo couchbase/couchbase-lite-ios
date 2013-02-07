@@ -29,6 +29,10 @@
         _db = db;
         _name = [name copy];
         _viewID = -1;  // means 'unknown'
+        if (0) { // appease static analyzer
+            _collation = 0;
+            _mapContentOptions = 0;
+        }
     }
     return self;
 }
@@ -38,7 +42,7 @@
 
 
 - (CBLDatabase*) database {
-    return _db.publicDatabase;
+    return _db;
 }
 
 
@@ -63,7 +67,7 @@
     _mapBlock = mapBlock; // copied implicitly in ARC
     _reduceBlock = reduceBlock; // copied implicitly in ARC
     
-    if (![_db open])
+    if (![_db open: nil])
         return NO;
 
     // Update the version column in the db. This is a little weird looking because we want to
@@ -88,7 +92,7 @@
 
 
 - (BOOL) stale {
-    return self.lastSequenceIndexed < _db.lastSequence;
+    return self.lastSequenceIndexed < _db.lastSequenceNumber;
 }
 
 

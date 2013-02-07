@@ -115,7 +115,7 @@
 
 
 - (instancetype) initWithCBLDB: (CBL_Database*)tddb revision: (CBL_Revision*)rev {
-    CBLDocument* doc = [tddb.publicDatabase documentWithID: rev.docID];
+    CBLDocument* doc = [tddb documentWithID: rev.docID];
     return [self initWithDocument: doc revision: rev];
 }
 
@@ -143,7 +143,7 @@
 - (SequenceNumber) sequence {
     SequenceNumber sequence = _rev.sequence;
     if (sequence == 0) {
-        CBLStatus status = [self.database.tddb loadRevisionBody: _rev options: 0];
+        CBLStatus status = [self.database loadRevisionBody: _rev options: 0];
         if (CBLStatusIsError(status))
             Warn(@"Couldn't get sequence of %@: %d", self, status);
         sequence = _rev.sequence;
@@ -155,7 +155,7 @@
 - (NSDictionary*) properties {
     NSDictionary* properties = _rev.properties;
     if (!properties && !_checkedProperties) {
-        CBLStatus status = [self.database.tddb loadRevisionBody: _rev options: 0];
+        CBLStatus status = [self.database loadRevisionBody: _rev options: 0];
         if (CBLStatusIsError(status))
             Warn(@"Couldn't load properties of %@: %d", self, status);
         properties = _rev.properties;
@@ -171,7 +171,7 @@
 
 - (NSArray*) getRevisionHistory: (NSError**)outError {
     NSMutableArray* history = $marray();
-    for (CBL_Revision* rev in [self.database.tddb getRevisionHistory: _rev]) {
+    for (CBL_Revision* rev in [self.database getRevisionHistory: _rev]) {
         CBLRevision* revision;
         if ($equal(rev.revID, _rev.revID))
             revision = self;

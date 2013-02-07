@@ -7,15 +7,22 @@
 //
 
 #import "CouchbaseLitePrivate.h"
+#import "CBL_Database.h"
 #import "CBL_Database+Insertion.h"
 #import "CBL_DatabaseChange.h"
+#import "CBLInternal.h"
 #import "CBLModelFactory.h"
 #import "CBLCache.h"
 #import "CBLManager+Internal.h"
+#import "CBLMisc.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIApplication.h>
 #endif
+
+
+// NOTE: This file contains mostly just public-API method implementations.
+// The lower-level stuff is in CBL_Database.m, etc.
 
 
 #define kDocRetainLimit 50
@@ -28,27 +35,24 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 @implementation CBLDatabase
 {
-    CBLManager* _manager;
-    CBL_Database* _tddb;
     CBLCache* _docCache;
     CBLModelFactory* _modelFactory;  // used in category method in CBLModelFactory.m
     NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
 }
 
 
-@synthesize tddb=_tddb, manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
+@synthesize manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
+@synthesize path=_path, name=_name, open=_open, thread=_thread;
 
 
-- (instancetype) initWithManager: (CBLManager*)manager
-                    CBL_Database: (CBL_Database*)tddb
+- (instancetype) initWithPath: (NSString*)path
+                         name: (NSString*)name
+                      manager: (CBLManager*)manager
+                     readOnly: (BOOL)readOnly
 {
-    self = [super init];
+    self = [self _initWithPath: path name: name manager: manager readOnly: readOnly];
     if (self) {
-        _manager = manager;
-        _tddb = tddb;
         _unsavedModelsMutable = [NSMutableSet set];
-        [[NSNotificationCenter defaultCenter] addObserver: self
-                                                 selector: @selector(tddbNotification:) name: nil object: tddb];
 #if TARGET_OS_IPHONE
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(appBackgrounding:)
@@ -67,49 +71,42 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-- (void)dealloc
-{
+- (void)dealloc {
+    if (_open) {
+        //Warn(@"%@ dealloced without being closed first!", self);
+        [self close];
+    }
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 
-// Notified of a change in the CBL_Database:
-- (void) tddbNotification: (NSNotification*)n {
-    if ([n.name isEqualToString: CBL_DatabaseChangesNotification]) {
-        for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
-            CBL_Revision* winningRev = change.winningRevision;
-            NSURL* source = change.source;
+- (void) postPublicChangeNotification: (CBL_DatabaseChange*)change {
+    CBL_Revision* winningRev = change.winningRevision;
+    NSURL* source = change.source;
 
-            // Notify the corresponding instantiated CBLDocument object (if any):
-            [[self cachedDocumentWithID: winningRev.docID] revisionAdded: change];
+    // Notify the corresponding instantiated CBLDocument object (if any):
+    [[self cachedDocumentWithID: winningRev.docID] revisionAdded: change];
 
-            // Post a database-changed notification, but only post one per runloop cycle by using
-            // a notification queue. If the current notification has the "external" flag, make sure
-            // it gets posted by clearing any pending instance of the notification that doesn't have
-            // the flag.
-            NSDictionary* userInfo = source ? $dict({@"external", $true}) : nil;
-            NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
-                                                              object: self
-                                                            userInfo: userInfo];
-            NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-            if (source != nil)
-                [queue dequeueNotificationsMatching: n coalesceMask: NSNotificationCoalescingOnSender];
-            [queue enqueueNotification: n
-                          postingStyle: NSPostASAP 
-                          coalesceMask: NSNotificationCoalescingOnSender
-                              forModes: @[NSRunLoopCommonModes]];
-        }
-    }
+    // Post a database-changed notification, but only post one per runloop cycle by using
+    // a notification queue. If the current notification has the "external" flag, make sure
+    // it gets posted by clearing any pending instance of the notification that doesn't have
+    // the flag.
+    NSDictionary* userInfo = source ? $dict({@"external", $true}) : nil;
+    NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
+                                                      object: self
+                                                    userInfo: userInfo];
+    NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
+    if (source != nil)
+        [queue dequeueNotificationsMatching: n coalesceMask: NSNotificationCoalescingOnSender];
+    [queue enqueueNotification: n
+                  postingStyle: NSPostASAP 
+                  coalesceMask: NSNotificationCoalescingOnSender
+                      forModes: @[NSRunLoopCommonModes]];
 }
 
 
 - (void) appBackgrounding: (NSNotification*)n {
     [self autosaveAllModels: nil];
-}
-
-
-- (NSString*) name {
-    return _tddb.name;
 }
 
 
@@ -119,28 +116,36 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (BOOL) inTransaction: (BOOL(^)(void))block {
-    return 200 == [_tddb inTransaction: ^CBLStatus {
+    return 200 == [self _inTransaction: ^CBLStatus {
         return block() ? 200 : 999;
     }];
 }
 
 
 - (BOOL) create: (NSError**)outError {
-    return [_tddb open: outError];
+    return [self open: outError];
 }
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
-    if (![_manager _deleteDatabase: _tddb error: outError])
-        return NO;
+    LogTo(CBL_Database, @"Deleting %@", _path);
+    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
+                                                        object: self];
+    if (_open) {
+        if (![self close])
+            return NO;
+    } else if (!self.exists) {
+        return YES;
+    }
+    [_manager _forgetDatabase: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    _tddb = nil;
-    return YES;
+    return CBLRemoveFileIfExists(_path, outError)
+        && CBLRemoveFileIfExists(self.attachmentStorePath, outError);
 }
 
 
 - (BOOL) compact: (NSError**)outError {
-    CBLStatus status = [_tddb compact];
+    CBLStatus status = [self compact];
     if (CBLStatusIsError(status)) {
         if (outError)
             *outError = CBLStatusToNSError(status, nil);
@@ -174,7 +179,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (CBLDocument*) untitledDocument {
-    return [self documentWithID: [CBL_Database generateDocumentID]];
+    return [self documentWithID: [[self class] generateDocumentID]];
 }
 
 
@@ -193,25 +198,39 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-- (NSUInteger) documentCount {
-    return _tddb.documentCount;
-}
-
-- (SequenceNumber) lastSequenceNumber {
-    return _tddb.lastSequence;
-}
+// Appease the compiler; these are actually implemented in CBL_Database.m
+@dynamic documentCount, lastSequenceNumber;
 
 
 #pragma mark - VIEWS:
 
 
-- (CBLView*) viewNamed: (NSString*)name {
-    return [_tddb viewNamed: name];
+- (CBLView*) registerView: (CBLView*)view {
+    if (!view)
+        return nil;
+    if (!_views)
+        _views = [[NSMutableDictionary alloc] init];
+    _views[view.name] = view;
+    return view;
 }
 
 
-- (NSArray*) allViews {
-    return _tddb.allViews;
+- (CBLView*) existingViewNamed: (NSString*)name {
+    CBLView* view = _views[name];
+    if (view)
+        return view;
+    view = [[CBLView alloc] initWithDatabase: self name: name];
+    if (!view.viewID)
+        return nil;
+    return [self registerView: view];
+}
+
+
+- (CBLView*) viewNamed: (NSString*)name {
+    CBLView* view = _views[name];
+    if (view)
+        return view;
+    return [self registerView: [[CBLView alloc] initWithDatabase: self name: name]];
 }
 
 
@@ -224,12 +243,28 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
-    [_tddb defineValidation: validationName asBlock: validationBlock];
+    if (validationBlock) {
+        if (!_validations)
+            _validations = [[NSMutableDictionary alloc] init];
+        [_validations setValue: [validationBlock copy] forKey: validationName];
+    } else {
+        [_validations removeObjectForKey: validationName];
+    }
+}
+
+- (CBLValidationBlock) validationNamed: (NSString*)validationName {
+    return _validations[validationName];
 }
 
 
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
-    [_tddb defineFilter: filterName asBlock: filterBlock];
+    if (!_filters)
+        _filters = [[NSMutableDictionary alloc] init];
+    [_filters setValue: [filterBlock copy] forKey: filterName];
+}
+
+- (CBLFilterBlock) filterNamed: (NSString*)filterName {
+    return _filters[filterName];
 }
 
 

@@ -236,7 +236,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (CBLDatabase*) databaseNamed: (NSString*)name {
-    return [self _existingDatabaseNamed: name].publicDatabase;
+    return [self _existingDatabaseNamed: name];
 }
 
 - (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
@@ -247,7 +247,7 @@ static NSCharacterSet* kIllegalNameChars;
     CBL_Database* db = [self _databaseNamed: name];
     if (![db open: outError])
         return nil;
-    return db.publicDatabase;
+    return db;
 }
 
 
@@ -348,12 +348,13 @@ static NSCharacterSet* kIllegalNameChars;
         NSString* path = [self pathForName: name];
         if (!path)
             return nil;
-        db = [[CBL_Database alloc] initWithPath: path manager: self];
-        db.readOnly = _options.readOnly;
+        db = [[CBL_Database alloc] initWithPath: path
+                                           name: name
+                                        manager: self
+                                       readOnly: _options.readOnly];
         if (!create && !db.exists) {
             return nil;
         }
-        db.name = name;
         _databases[name] = db;
     }
     return db;
@@ -367,17 +368,14 @@ static NSCharacterSet* kIllegalNameChars;
 
 - (CBL_Database*) _existingDatabaseNamed: (NSString*)name {
     CBL_Database* db = [self _databaseNamed: name create: NO];
-    if (db && ![db open])
+    if (db && ![db open: nil])
         db = nil;
     return db;
 }
 
 
-- (BOOL) _deleteDatabase: (CBL_Database*)db error: (NSError**)outError {
-    if (![db deleteDatabase: outError])
-        return NO;
+- (void) _forgetDatabase: (CBL_Database*)db {
     [_databases removeObjectForKey: db.name];
-    return YES;
 }
 
 
@@ -428,7 +426,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         if (outDatabase) {
             if (*outCreateTarget) {
                 db = [self _databaseNamed: target];
-                if (![db open])
+                if (![db open: nil])
                     return kCBLStatusDBError;
             } else {
                 db = [self _existingDatabaseNamed: target];
@@ -564,7 +562,7 @@ TestCase(CBLManager) {
     
     CAssertEqual(dbm.allDatabaseNames, @[]);    // because foo doesn't exist yet
     
-    CAssert([db open]);
+    CAssert([db open: nil]);
     CAssert(db.exists);
     CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);    // because foo doesn't exist yet
 }

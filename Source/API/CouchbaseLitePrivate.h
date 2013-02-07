@@ -26,9 +26,10 @@
 
 
 @interface CBLDatabase ()
-- (instancetype) initWithManager: (CBLManager*)manager
-                    CBL_Database: (CBL_Database*)tddb               __attribute__((nonnull));
-@property (readonly, nonatomic) CBL_Database* tddb;
+- (instancetype) initWithPath: (NSString*)path
+                         name: (NSString*)name
+                      manager: (CBLManager*)manager
+                     readOnly: (BOOL)readOnly;
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 @end
 

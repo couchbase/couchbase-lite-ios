@@ -284,7 +284,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 - (void) processAllDocs {
     if (!_replicatorDB.exists)
         return;
-    [_replicatorDB open];
+    [_replicatorDB open: nil];
     LogTo(Sync, @"ReplicatorManager scanning existing _replicator docs...");
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     options.includeDocs = YES;
@@ -302,7 +302,8 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) appForegrounding: (NSNotification*)n {
     // Danger: This is called on the main thread!
-    MYOnThread(_replicatorDB.thread, ^{
+    MYOnThread(_replicatorDB.
+               thread, ^{
         LogTo(Sync, @"App activated -- restarting all replications");
         [self processAllDocs];
     });

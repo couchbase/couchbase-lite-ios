@@ -161,7 +161,7 @@
     if (CBLStatusIsError(status))
         return status;
     NSUInteger num_docs = db.documentCount;
-    SequenceNumber update_seq = db.lastSequence;
+    SequenceNumber update_seq = db.lastSequenceNumber;
     if (num_docs == NSNotFound || update_seq == NSNotFound)
         return kCBLStatusDBError;
     _response.bodyObject = $dict({@"db_name", db.name},
@@ -186,7 +186,7 @@
 - (CBLStatus) do_DELETE: (CBL_Database*)db {
     if ([self query: @"rev"])
         return kCBLStatusBadID;  // CouchDB checks for this; probably meant to be a document deletion
-    return [_dbManager _deleteDatabase: db error: NULL] ? kCBLStatusOK : kCBLStatusNotFound;
+    return [db deleteDatabase: NULL] ? kCBLStatusOK : kCBLStatusNotFound;
 }
 
 
@@ -205,7 +205,7 @@
 
 
 - (CBLStatus) do_GET_all_docs: (CBL_Database*)db {
-    if ([self cacheWithEtag: $sprintf(@"%lld", db.lastSequence)])
+    if ([self cacheWithEtag: $sprintf(@"%lld", db.lastSequenceNumber)])
         return kCBLStatusNotModified;
     
     CBLQueryOptions options;
@@ -237,7 +237,7 @@
     _response.bodyObject = $dict({@"rows", result},
                                  {@"total_rows", @(result.count)},
                                  {@"offset", @(options->skip)},
-                                 {@"update_seq", (options->updateSeq ? @(_db.lastSequence) : nil)});
+                                 {@"update_seq", (options->updateSeq ? @(_db.lastSequenceNumber) : nil)});
     return kCBLStatusOK;
 }
 
@@ -482,7 +482,7 @@
     BOOL continuous = !_longpoll && $equal(feed, @"continuous");
     
     // Regular poll is cacheable:
-    if (!_longpoll && !continuous && [self cacheWithEtag: $sprintf(@"%lld", _db.lastSequence)])
+    if (!_longpoll && !continuous && [self cacheWithEtag: $sprintf(@"%lld", _db.lastSequenceNumber)])
         return kCBLStatusNotModified;
 
     // Get options:
@@ -927,7 +927,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     
     // Check for conditional GET and set response Etag header:
     if (!keys) {
-        SequenceNumber eTag = options.includeDocs ? _db.lastSequence : view.lastSequenceIndexed;
+        SequenceNumber eTag = options.includeDocs ? _db.lastSequenceNumber : view.lastSequenceIndexed;
         if ([self cacheWithEtag: $sprintf(@"%lld", eTag)])
             return kCBLStatusNotModified;
     }
@@ -977,7 +977,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (![self getQueryOptions: &options])
         return kCBLStatusBadRequest;
     
-    if ([self cacheWithEtag: $sprintf(@"%lld", _db.lastSequence)])  // conditional GET
+    if ([self cacheWithEtag: $sprintf(@"%lld", _db.lastSequenceNumber)])  // conditional GET
         return kCBLStatusNotModified;
 
     CBLView* view = [_db viewNamed: @"@@TEMPVIEW@@"];

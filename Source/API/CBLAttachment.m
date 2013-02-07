@@ -96,7 +96,7 @@
         }
     } else if (_rev.sequence > 0) {
         CBLStatus status;
-        return [_rev.database.tddb getAttachmentForSequence: _rev.sequence
+        return [_rev.database getAttachmentForSequence: _rev.sequence
                                                       named: _name
                                                        type: NULL encoding: NULL
                                                      status: &status];
@@ -111,7 +111,7 @@
             return _body;
     } else if (_rev.sequence > 0) {
         CBLStatus status;
-        NSString* path = [_rev.database.tddb getAttachmentPathForSequence: _rev.sequence
+        NSString* path = [_rev.database getAttachmentPathForSequence: _rev.sequence
                                                                     named: _name
                                                                      type: NULL encoding: NULL
                                                                    status: &status];
@@ -135,9 +135,9 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBL_Database* tddb, NSData* b
                       error: (NSError**)outError
 {
     Assert(_rev);
-    CBL_BlobStoreWriter* writer = body ? blobStoreWriterForBody(_rev.database.tddb, body) : nil;
+    CBL_BlobStoreWriter* writer = body ? blobStoreWriterForBody(_rev.database, body) : nil;
     CBLStatus status;
-    CBL_Revision* newRev = [_rev.database.tddb updateAttachment: _name
+    CBL_Revision* newRev = [_rev.database updateAttachment: _name
                                                           body: writer
                                                           type: contentType ?: self.contentType
                                                       encoding: kCBLAttachmentEncodingNone
@@ -158,7 +158,7 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBL_Database* tddb, NSData* b
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (CBLDatabase*)database
 {
-    CBL_Database* tddb = database.tddb;
+    CBL_Database* tddb = database;
     return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
         CBLAttachment* attachment = $castIf(CBLAttachment, value);
         if (attachment) {

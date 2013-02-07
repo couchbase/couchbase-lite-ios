@@ -9,8 +9,14 @@
 
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
-@class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase;
+#import "CBLDatabase.h"
+@class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
+
+
+#ifndef CBL_Database
+#define CBL_Database CBLDatabase // temporary redefine of old name
+#endif
 
 
 /** NSNotification posted when one or more documents have been updated.
@@ -54,12 +60,13 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 
 
-/** A CouchbaseLite database. */
-@interface CBL_Database : NSObject
+// Additional instance variable and property declarations
+@interface CBLDatabase ()
 {
     @private
     NSString* _path;
     NSString* _name;
+    __weak CBLManager* _manager;
     FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _open;
@@ -71,33 +78,44 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     CBL_BlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
-    __weak CBLDatabase* _publicDatabase;
-    __weak CBLManager* _manager;
     NSMutableArray* _changesToNotify;
-}    
-        
-- (instancetype) initWithPath: (NSString*)path manager: (CBLManager*)manager;
-- (BOOL) open: (NSError**)outError;
-- (BOOL) open;
-- (BOOL) close;
-- (BOOL) deleteDatabase: (NSError**)outError;
+}
 
 /** Should the database file be opened in read-only mode? */
-@property BOOL readOnly;
+//@property (nonatomic) BOOL readOnly;
 
-@property (readonly) NSString* path;
-@property (readonly, copy) NSString* name;
-@property (readonly) NSThread* thread;
-@property (readonly) CBLManager* manager;
-@property (readonly) BOOL exists;
-@property (readonly) UInt64 totalDataSize;
+@property (nonatomic, readwrite, copy) NSString* name;  // make it settable
+@property (nonatomic, readonly) NSString* path;
+@property (nonatomic, readonly) NSThread* thread;
+@property (nonatomic, readonly) BOOL open;
 
-@property (readonly, weak) CBLDatabase* publicDatabase;
+- (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
+@end
 
-@property (readonly) NSUInteger documentCount;
-@property (readonly) SequenceNumber lastSequence;
-@property (readonly) NSString* privateUUID;
-@property (readonly) NSString* publicUUID;
+
+
+// Internal API
+@interface CBLDatabase (Internal)
+
+- (instancetype) _initWithPath: (NSString*)path
+                          name: (NSString*)name
+                       manager: (CBLManager*)manager
+                      readOnly: (BOOL)readOnly;
+#if DEBUG
++ (instancetype) createEmptyDBAtPath: (NSString*)path;
+#endif
+- (BOOL) openFMDB: (NSError**)outError;
+- (BOOL) open: (NSError**)outError;
+- (BOOL) close;
+
+@property (nonatomic, readonly) FMDatabase* fmdb;
+@property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
+
+@property (nonatomic, readonly) BOOL exists;
+@property (nonatomic, readonly) UInt64 totalDataSize;
+
+@property (nonatomic, readonly) NSString* privateUUID;
+@property (nonatomic, readonly) NSString* publicUUID;
 
 /** Begins a database transaction. Transactions can nest. Every -beginTransaction must be balanced by a later -endTransaction:. */
 - (BOOL) beginTransaction;
@@ -109,7 +127,9 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 /** Executes the block within a database transaction.
     If the block returns a non-OK status, the transaction is aborted/rolled back.
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
-- (CBLStatus) inTransaction: (CBLStatus(^)())block;
+- (CBLStatus) _inTransaction: (CBLStatus(^)())block;
+
+- (void) notifyChange: (CBL_DatabaseChange*)change;
 
 // DOCUMENTS:
 
@@ -126,7 +146,24 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (CBLStatus) loadRevisionBody: (CBL_Revision*)rev
                       options: (CBLContentOptions)options;
 
-/** Returns an array of CBLRevs in reverse chronological order,
+- (SInt64) getDocNumericID: (NSString*)docID;
+- (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
+                                revision: (NSString*)revID
+                             onlyCurrent: (BOOL)onlyCurrent;
+- (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
+                                      numericID: (SInt64)docNumericID
+                                    onlyCurrent: (BOOL)onlyCurrent;
+- (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
+                                              docID: (NSString*)docID
+                                              revID: (NSString*)revID
+                                            deleted: (BOOL)deleted
+                                           sequence: (SequenceNumber)sequence
+                                            options: (CBLContentOptions)options;
+- (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
+                               isDeleted: (BOOL*)outIsDeleted
+                              isConflict: (BOOL*)outIsConflict;
+
+/** Returns an array of CBL_Revisions in reverse chronological order,
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
 
@@ -147,12 +184,13 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 // VIEWS & QUERIES:
 
+/** An array of all existing views. */
+@property (readonly) NSArray* allViews;
+
+- (CBLStatus) deleteViewNamed: (NSString*)name;
+
 /** Returns the value of an _all_docs query, as an array of CBL_QueryRow. */
 - (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;
-
-- (CBLView*) viewNamed: (NSString*)name;
-
-- (CBLView*) existingViewNamed: (NSString*)name;
 
 - (CBLView*) makeAnonymousView;
 
@@ -161,17 +199,12 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     design document and compile them with the CBLViewCompiler. */
 - (CBLView*) compileViewNamed: (NSString*)name status: (CBLStatus*)outStatus;
 
-@property (readonly) NSArray* allViews;
+//@property (readonly) NSArray* allViews;
 
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const CBLChangesOptions*)options
                                   filter: (CBLFilterBlock)filter
                                   params: (NSDictionary*)filterParams;
-
-/** Define or clear a named filter function. These aren't used directly by CBL_Database, but they're looked up by CBL_Router when a _changes request has a ?filter parameter. */
-- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock;
-
-- (CBLFilterBlock) filterNamed: (NSString*)filterName;
 
 - (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus;
 

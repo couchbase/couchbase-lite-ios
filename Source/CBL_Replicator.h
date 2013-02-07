@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class CBL_Database, CBL_RevisionList, CBLBatcher, CBLReachability;
+@class CBLDatabase, CBL_RevisionList, CBLBatcher, CBLReachability;
 @protocol CBLAuthorizer;
 
 
@@ -23,7 +23,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 @interface CBL_Replicator : NSObject
 {
     @protected
-    CBL_Database* __weak _db;
+    CBLDatabase* __weak _db;
     NSThread* _thread;
     NSURL* _remote;
     BOOL _continuous;
@@ -53,12 +53,12 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 + (NSString *)progressChangedNotification;
 + (NSString *)stoppedNotification;
 
-- (instancetype) initWithDB: (CBL_Database*)db
+- (instancetype) initWithDB: (CBLDatabase*)db
                      remote: (NSURL*)remote
                        push: (BOOL)push
                  continuous: (BOOL)continuous;
 
-@property (weak, readonly) CBL_Database* db;
+@property (weak, readonly) CBLDatabase* db;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
 @property (readonly) BOOL continuous;

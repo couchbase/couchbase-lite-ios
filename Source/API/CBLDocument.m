@@ -81,7 +81,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (BOOL) purgeDocument: (NSError**)outError {
-    CBLStatus status = [_database.tddb purgeRevisions: @{self.documentID : @"*"} result: nil];
+    CBLStatus status = [_database purgeRevisions: @{self.documentID : @"*"} result: nil];
     if (CBLStatusIsError(status)) {
         if (outError) {
             *outError = CBLStatusToNSError(status, nil);
@@ -131,9 +131,9 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 - (CBLRevision*) revisionWithID: (NSString*)revID  {
     if (revID && $equal(revID, _currentRevision.revisionID))
         return _currentRevision;
-    return [self revisionFromRev: [_database.tddb getDocumentWithID: _docID revisionID: revID
-                                                            options: 0
-                                                             status: NULL]];
+    return [self revisionFromRev: [_database getDocumentWithID: _docID revisionID: revID
+                                                       options: 0
+                                                        status: NULL]];
 }
 
 
@@ -180,7 +180,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (NSArray*) getLeafRevisions: (NSError**)outError includeDeleted: (BOOL)includeDeleted {
-    CBL_RevisionList* revs = [_database.tddb getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
+    CBL_RevisionList* revs = [_database getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
     return [revs.allRevisions my_map: ^CBLRevision*(CBL_Revision* rev) {
         if (!includeDeleted && rev.deleted)
             return nil;
@@ -244,7 +244,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     if (properties)
         rev.properties = properties;
     CBLStatus status = 0;
-    rev = [_database.tddb putRevision: rev prevRevisionID: prevID allowConflict: NO status: &status];
+    rev = [_database putRevision: rev prevRevisionID: prevID allowConflict: NO status: &status];
     if (!rev) {
         if (outError) *outError = CBLStatusToNSError(status, nil);
         return nil;

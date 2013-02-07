@@ -120,7 +120,7 @@ static id fromJSON( NSData* json ) {
     @try {
         // Check whether we need to update at all:
         const SequenceNumber lastSequence = self.lastSequenceIndexed;
-        const SequenceNumber dbMaxSequence = _db.lastSequence;
+        const SequenceNumber dbMaxSequence = _db.lastSequenceNumber;
         if (lastSequence == dbMaxSequence) {
             status = kCBLStatusNotModified;
             return status;

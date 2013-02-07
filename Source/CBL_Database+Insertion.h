@@ -35,10 +35,6 @@
 /** Parses the _revisions dict from a document into an array of revision ID strings */
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;
 
-/** Define or clear a named document validation function.  */
-- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock;
-- (CBLValidationBlock) validationNamed: (NSString*)validationName;
-
 /** Compacts the database storage by removing the bodies and attachments of obsolete revisions. */
 - (CBLStatus) compact;
 

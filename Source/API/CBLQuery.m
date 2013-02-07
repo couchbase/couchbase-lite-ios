@@ -53,7 +53,7 @@
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database mapBlock: (CBLMapBlock)mapBlock {
-    CBLView* view = [database.tddb makeAnonymousView];
+    CBLView* view = [database makeAnonymousView];
     if (self = [self initWithDatabase: database view: view]) {
         _temporaryView = YES;
         [view setMapBlock: mapBlock reduceBlock: nil version: @""];
@@ -131,9 +131,9 @@
         // TODO: Implement kCBLStaleUpdateAfter
         
     } else {
-        rows = [_database.tddb getAllDocs: &options];
+        rows = [_database getAllDocs: &options];
         _status = rows ? kCBLStatusOK :kCBLStatusDBError; //FIX: getALlDocs should return status
-        lastSequence = _database.tddb.lastSequence;
+        lastSequence = _database.lastSequenceNumber;
     }
     
     if (rows)
@@ -156,7 +156,7 @@
 
 
 - (CBLQueryEnumerator*) rowsIfChanged {
-    if (_database.tddb.lastSequence == _lastSequence)
+    if (_database.lastSequenceNumber == _lastSequence)
         return nil;
     return self.rows;
 }

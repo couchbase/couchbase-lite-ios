@@ -18,34 +18,6 @@
 @class CBL_Attachment, CBL_BlobStoreWriter, CBL_DatabaseChange, CBL_ReplicatorManager;
 
 
-@interface CBL_Database ()
-#if DEBUG
-+ (instancetype) createEmptyDBAtPath: (NSString*)path;
-#endif
-@property (readwrite, copy) NSString* name;  // make it settable
-@property (readonly) FMDatabase* fmdb;
-@property (readonly) CBL_BlobStore* attachmentStore;
-- (BOOL) openFMDB: (NSError**)outError;
-- (SInt64) getDocNumericID: (NSString*)docID;
-- (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
-                                revision: (NSString*)revID
-                             onlyCurrent: (BOOL)onlyCurrent;
-- (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                      numericID: (SInt64)docNumericID
-                                    onlyCurrent: (BOOL)onlyCurrent;
-- (CBLStatus) deleteViewNamed: (NSString*)name;
-- (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
-                                              docID: (NSString*)docID
-                                              revID: (NSString*)revID
-                                            deleted: (BOOL)deleted
-                                           sequence: (SequenceNumber)sequence
-                                            options: (CBLContentOptions)options;
-- (void) notifyChange: (CBL_DatabaseChange*)change;
-- (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
-                               isDeleted: (BOOL*)outIsDeleted
-                              isConflict: (BOOL*)outIsConflict;
-@end
-
 @interface CBL_Database (Insertion_Internal)
 - (NSData*) encodeDocumentJSON: (CBL_Revision*)rev;
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev;

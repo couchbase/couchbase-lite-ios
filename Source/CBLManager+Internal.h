@@ -16,7 +16,7 @@
 - (CBL_Database*) _databaseNamed: (NSString*)name;
 - (CBL_Database*) _existingDatabaseNamed: (NSString*)name;
 
-- (BOOL) _deleteDatabase: (CBL_Database*)db error: (NSError**)outError;
+- (void) _forgetDatabase: (CBL_Database*)db;
 
 @property (readonly) NSArray* allOpenDatabases;
 
