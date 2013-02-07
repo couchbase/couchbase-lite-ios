@@ -1,5 +1,5 @@
 //
-//  CBL_Database+Insertion.m
+//  CBLDatabase+Insertion.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/27/11.
@@ -13,8 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Database+Insertion.h"
-#import "CBL_Database+Attachments.h"
+#import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBLDatabase.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLDocument.h"
@@ -40,13 +40,13 @@
 @interface CBLValidationContext : NSObject <CBLValidationContext>
 {
     @private
-    CBL_Database* _db;
+    CBLDatabase* _db;
     CBL_Revision* _currentRevision, *_newRevision;
     int _errorType;
     NSString* _errorMessage;
     NSArray* _changedKeys;
 }
-- (instancetype) initWithDatabase: (CBL_Database*)db
+- (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
                       newRevision: (CBL_Revision*)newRevision;
 @property (readonly) CBLRevision* currentRevision;
@@ -56,7 +56,7 @@
 
 
 
-@implementation CBL_Database (Insertion)
+@implementation CBLDatabase (Insertion)
 
 
 #pragma mark - DOCUMENT & REV IDS:
@@ -128,7 +128,7 @@
 
 /** Adds a new document ID to the 'docs' table. */
 - (SInt64) insertDocumentID: (NSString*)docID {
-    Assert([CBL_Database isValidDocumentID: docID]);  // this should be caught before I get here
+    Assert([CBLDatabase isValidDocumentID: docID]);  // this should be caught before I get here
     if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
         return -1;
     return _fmdb.lastInsertRowId;
@@ -176,7 +176,7 @@
         if (![key hasPrefix: @"_"]  || [sSpecialKeysToLeave member: key]) {
             properties[key] = origProps[key];
         } else if (![sSpecialKeysToRemove member: key]) {
-            Log(@"CBL_Database: Invalid top-level key '%@' in document to be inserted", key);
+            Log(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
             return nil;
         }
     }
@@ -259,12 +259,12 @@
               allowConflict: (BOOL)allowConflict
                      status: (CBLStatus*)outStatus
 {
-    LogTo(CBL_Database, @"PUT rev=%@, prevRevID=%@, allowConflict=%d", rev, prevRevID, allowConflict);
+    LogTo(CBLDatabase, @"PUT rev=%@, prevRevID=%@, allowConflict=%d", rev, prevRevID, allowConflict);
     Assert(outStatus);
     NSString* docID = rev.docID;
     BOOL deleted = rev.deleted;
     if (!rev || (prevRevID && !docID) || (deleted && !docID)
-             || (docID && ![CBL_Database isValidDocumentID: docID])) {
+             || (docID && ![CBLDatabase isValidDocumentID: docID])) {
         *outStatus = kCBLStatusBadID;
         return nil;
     }
@@ -418,7 +418,7 @@
             // insert call, then.
             if (_fmdb.lastErrorCode != SQLITE_CONSTRAINT)
                 return nil;
-            LogTo(CBL_Database, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
+            LogTo(CBLDatabase, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
             *outStatus = kCBLStatusOK;
             rev.body = nil;
             return rev;
@@ -473,7 +473,7 @@
 {
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
-    if (![CBL_Database isValidDocumentID: docID] || !revID)
+    if (![CBLDatabase isValidDocumentID: docID] || !revID)
         return kCBLStatusBadID;
     
     NSUInteger historyCount = history.count;
@@ -626,7 +626,7 @@
 - (CBLStatus) compact {
     // Can't delete any rows because that would lose revision tree history.
     // But we can remove the JSON of non-current revisions, which is most of the space.
-    Log(@"CBL_Database: Deleting JSON of old revisions...");
+    Log(@"CBLDatabase: Deleting JSON of old revisions...");
     if (![_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"])
         return kCBLStatusDBError;
 
@@ -713,7 +713,7 @@
                 [r close];
                 [seqsToPurge minusSet: seqsToKeep];
 
-                LogTo(CBL_Database, @"Purging doc '%@' revs (%@); asked for (%@)",
+                LogTo(CBLDatabase, @"Purging doc '%@' revs (%@); asked for (%@)",
                       docID, [revsToPurge.allObjects componentsJoinedByString: @", "],
                       [revIDs componentsJoinedByString: @", "]);
 
@@ -770,7 +770,7 @@
 
 @implementation CBLValidationContext
 
-- (instancetype) initWithDatabase: (CBL_Database*)db
+- (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
                       newRevision: (CBL_Revision*)newRevision
 {

@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDatabase, CBLQuery, CBL_Database;
+@class CBLDatabase, CBLQuery, CBLDatabase;
 
 
 typedef void (^CBLMapEmitBlock)(id key, id value);
@@ -41,7 +41,7 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 @interface CBLView : NSObject
 {
     @private
-    CBL_Database* __weak _db;
+    CBLDatabase* __weak _db;
     NSString* _name;
     int _viewID;
     CBLMapBlock _mapBlock;

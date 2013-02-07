@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "CBL_Router.h"
-#import "CBL_Database.h"
+#import "CBLDatabase.h"
 #import "CBL_Body.h"
 #import "CBL_Server.h"
 #import "CBLBase64.h"
@@ -315,7 +315,7 @@ TestCase(CBL_Router_Views) {
     SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
     SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
     
-    CBL_Database* db = [server databaseNamed: @"db"];
+    CBLDatabase* db = [server databaseNamed: @"db"];
     CBLView* view = [db viewNamed: @"design/view"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         if (doc[@"message"])
@@ -671,7 +671,7 @@ TestCase(CBL_Router_AccessCheck) {
     CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     __block BOOL calledOnAccessCheck = NO;
-    router.onAccessCheck = ^CBLStatus(CBL_Database* accessDB, NSString* docID, SEL action) {
+    router.onAccessCheck = ^CBLStatus(CBLDatabase* accessDB, NSString* docID, SEL action) {
         CAssert([accessDB.name isEqualToString: @"db"]);
         calledOnAccessCheck = YES;
         return 200;
@@ -683,7 +683,7 @@ TestCase(CBL_Router_AccessCheck) {
     router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
     CAssert(router!=nil);
     calledOnAccessCheck = NO;
-    router.onAccessCheck = ^CBLStatus(CBL_Database* accessDB, NSString* docID, SEL action) {
+    router.onAccessCheck = ^CBLStatus(CBLDatabase* accessDB, NSString* docID, SEL action) {
         CAssert([accessDB.name isEqualToString: @"db"]);
         calledOnAccessCheck = YES;
         return 401;

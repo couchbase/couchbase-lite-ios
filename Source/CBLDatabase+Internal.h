@@ -1,5 +1,5 @@
 /*
- *  CBL_Database.h
+ *  CBLDatabase+Internal.h
  *  CouchbaseLite
  *
  *  Created by Jens Alfke on 6/19/10.
@@ -12,11 +12,6 @@
 #import "CBLDatabase.h"
 @class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
-
-
-#ifndef CBL_Database
-#define CBL_Database CBLDatabase // temporary redefine of old name
-#endif
 
 
 /** NSNotification posted when one or more documents have been updated.

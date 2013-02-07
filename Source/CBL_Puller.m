@@ -14,8 +14,8 @@
 //  and limitations under the License.
 
 #import "CBL_Puller.h"
-#import "CBL_Database+Insertion.h"
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+Replication.h"
 #import "CBL_Revision.h"
 #import "CBLChangeTracker.h"
 #import "CBLAuthorizer.h"
@@ -173,7 +173,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             // Process each change from the feed:
             id remoteSequenceID = change[@"seq"];
             NSString* docID = change[@"id"];
-            if (!docID || ![CBL_Database isValidDocumentID: docID])
+            if (!docID || ![CBLDatabase isValidDocumentID: docID])
                 continue;
             
             BOOL deleted = [change[@"deleted"] isEqual: (id)kCFBooleanTrue];
@@ -465,7 +465,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         for (CBL_Revision* rev in downloads) {
             @autoreleasepool {
                 SequenceNumber fakeSequence = rev.sequence;
-                NSArray* history = [CBL_Database parseCouchDBRevisionHistory: rev.properties];
+                NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
                     self.error = CBLStatusToNSError(kCBLStatusUpstreamError, nil);

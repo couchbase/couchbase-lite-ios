@@ -52,7 +52,7 @@
 
         if (connection.listener.readOnly) {
             NSString* method = router.request.HTTPMethod;
-            router.onAccessCheck = ^CBLStatus(CBL_Database* db, NSString* docID, SEL action) {
+            router.onAccessCheck = ^CBLStatus(CBLDatabase* db, NSString* docID, SEL action) {
                 if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"])
                     return kCBLStatusOK;
                 if ([method isEqualToString: @"POST"]) {

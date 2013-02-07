@@ -20,7 +20,7 @@
 #import "CBLListener.h"
 #import "CBL_Pusher.h"
 #import "CBLManager+Internal.h"
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
 
 #if DEBUG
@@ -100,7 +100,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
 
     // Actually replicate -- this could probably be cleaned up to use the public API.
     CBL_Replicator* repl = nil;
-    CBL_Database* db = [dbm _existingDatabaseNamed: dbName];
+    CBLDatabase* db = [dbm _existingDatabaseNamed: dbName];
     if (pull) {
         if (db) {
             if (![db deleteDatabase: nil]) {

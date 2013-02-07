@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database+Attachments.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBL_BlobStore.h"
 
 

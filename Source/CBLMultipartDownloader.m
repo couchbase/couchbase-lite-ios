@@ -25,7 +25,7 @@
 
 
 - (instancetype) initWithURL: (NSURL*)url
-                    database: (CBL_Database*)database
+                    database: (CBLDatabase*)database
               requestHeaders: (NSDictionary *) requestHeaders
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
@@ -115,7 +115,7 @@ TestCase(CBLMultipartDownloader) {
     RequireTestCase(CBLMultipartReader_Simple);
     RequireTestCase(CBLMultipartReader_Types);
     
-    CBL_Database* db = [CBL_Database createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CBLMultipartDownloader"]];
+    CBLDatabase* db = [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CBLMultipartDownloader"]];
     //NSString* urlStr = @"http://127.0.0.1:5984/demo-shopping-attachments/2F9078DF-3C72-44C2-8332-B07B3A29FFE4"
     NSString* urlStr = @"http://127.0.0.1:5984/attach-test/oneBigAttachment";
     urlStr = [urlStr stringByAppendingString: @"?revs=true&attachments=true"];

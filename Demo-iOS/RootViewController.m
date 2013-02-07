@@ -24,7 +24,7 @@
 
 #import "CouchbaseLite.h"
 #import "CBLView+Internal.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBLJSON.h"
 
 

@@ -1,5 +1,5 @@
 //
-//  CBL_Database+Attachments.m
+//  CBLDatabase+Attachments.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/19/11.
@@ -24,8 +24,8 @@
                      "digest":"md5-muNoTiLXyJYP9QkvPukNng==", "length":9, "stub":true}}
 */
 
-#import "CBL_Database+Attachments.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBLBase64.h"
 #import "CBL_BlobStore.h"
 #import "CBL_Attachment.h"
@@ -46,7 +46,7 @@
 
 
 
-@implementation CBL_Database (Attachments)
+@implementation CBLDatabase (Attachments)
 
 
 - (NSString*) attachmentStorePath {
@@ -126,7 +126,7 @@
         return kCBLStatusOK;
         
     } else {
-        Warn(@"CBL_Database: No pending attachment for digest %@", digest);
+        Warn(@"CBLDatabase: No pending attachment for digest %@", digest);
         return kCBLStatusBadAttachment;
     }
 }
@@ -305,7 +305,7 @@
             } else {
                 data = [_attachments blobForKey: *(CBLBlobKey*)keyData.bytes];
                 if (!data)
-                    Warn(@"CBL_Database: Failed to get attachment for key %@", keyData);
+                    Warn(@"CBLDatabase: Failed to get attachment for key %@", keyData);
             }
         }
         

@@ -9,8 +9,8 @@
 #import "CBLManager.h"
 #import "CouchbaseLitePrivate.h"
 
-#import "CBL_Database.h"
-#import "CBL_Database+Attachments.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Pusher.h"
 #import "CBL_ReplicatorManager.h"
@@ -152,7 +152,7 @@ static NSCharacterSet* kIllegalNameChars;
     _server = nil;
     [_replicatorManager stop];
     _replicatorManager = nil;
-    for (CBL_Database* db in _databases.allValues) {
+    for (CBLDatabase* db in _databases.allValues) {
         [db close];
     }
     [_databases removeAllObjects];
@@ -244,7 +244,7 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 - (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
-    CBL_Database* db = [self _databaseNamed: name];
+    CBLDatabase* db = [self _databaseNamed: name];
     if (![db open: outError])
         return nil;
     return db;
@@ -256,7 +256,7 @@ static NSCharacterSet* kIllegalNameChars;
               withAttachments: (NSString*)attachmentsPath
                         error: (NSError**)outError
 {
-    CBL_Database* db = [self _databaseNamed: databaseName];
+    CBLDatabase* db = [self _databaseNamed: databaseName];
     if (!db) {
         if (outError)
             *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
@@ -340,15 +340,15 @@ static NSCharacterSet* kIllegalNameChars;
 @implementation CBLManager (Internal)
 
 
-- (CBL_Database*) _databaseNamed: (NSString*)name create: (BOOL)create {
+- (CBLDatabase*) _databaseNamed: (NSString*)name create: (BOOL)create {
     if (_options.readOnly)
         create = NO;
-    CBL_Database* db = _databases[name];
+    CBLDatabase* db = _databases[name];
     if (!db) {
         NSString* path = [self pathForName: name];
         if (!path)
             return nil;
-        db = [[CBL_Database alloc] initWithPath: path
+        db = [[CBLDatabase alloc] initWithPath: path
                                            name: name
                                         manager: self
                                        readOnly: _options.readOnly];
@@ -361,20 +361,20 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (CBL_Database*) _databaseNamed: (NSString*)name {
+- (CBLDatabase*) _databaseNamed: (NSString*)name {
     return [self _databaseNamed: name create: YES];
 }
 
 
-- (CBL_Database*) _existingDatabaseNamed: (NSString*)name {
-    CBL_Database* db = [self _databaseNamed: name create: NO];
+- (CBLDatabase*) _existingDatabaseNamed: (NSString*)name {
+    CBLDatabase* db = [self _databaseNamed: name create: NO];
     if (db && ![db open: nil])
         db = nil;
     return db;
 }
 
 
-- (void) _forgetDatabase: (CBL_Database*)db {
+- (void) _forgetDatabase: (CBLDatabase*)db {
     [_databases removeObjectForKey: db.name];
 }
 
@@ -395,7 +395,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 - (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
-                            toDatabase: (CBL_Database**)outDatabase   // may be NULL
+                            toDatabase: (CBLDatabase**)outDatabase   // may be NULL
                                 remote: (NSURL**)outRemote          // may be NULL
                                 isPush: (BOOL*)outIsPush
                           createTarget: (BOOL*)outCreateTarget
@@ -412,7 +412,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
     *outCreateTarget = [$castIf(NSNumber, properties[@"create_target"]) boolValue];
     *outIsPush = NO;
-    CBL_Database* db = nil;
+    CBLDatabase* db = nil;
     NSDictionary* remoteDict = nil;
     if ([CBLManager isValidDatabaseName: source]) {
         if (outDatabase)
@@ -492,7 +492,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 {
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
-    CBL_Database* db;
+    CBLDatabase* db;
     NSURL* remote;
     BOOL push, createTarget;
     NSDictionary* headers;
@@ -550,9 +550,9 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 #if DEBUG
 
 TestCase(CBLManager) {
-    RequireTestCase(CBL_Database);
+    RequireTestCase(CBLDatabase);
     CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
-    CBL_Database* db = [dbm _databaseNamed: @"foo"];
+    CBLDatabase* db = [dbm _databaseNamed: @"foo"];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");
     CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);

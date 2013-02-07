@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBL_Database, CBL_Revision;
+@class CBLDatabase, CBL_Revision;
 
 
 /** Identifies a change to a database, i.e. a newly added revision. */

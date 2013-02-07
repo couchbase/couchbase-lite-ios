@@ -6,12 +6,12 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
 @class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter;
 
 
-typedef CBLStatus (^OnAccessCheckBlock)(CBL_Database*, NSString *docID, SEL action);
+typedef CBLStatus (^OnAccessCheckBlock)(CBLDatabase*, NSString *docID, SEL action);
 typedef void (^OnResponseReadyBlock)(CBLResponse*);
 typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
 typedef void (^OnFinishedBlock)();
@@ -26,7 +26,7 @@ typedef void (^OnFinishedBlock)();
     NSMutableArray* _path;
     NSDictionary* _queries;
     CBLResponse* _response;
-    CBL_Database* _db;
+    CBLDatabase* _db;
     BOOL _local;
     BOOL _waiting;
     BOOL _responseSent;

@@ -14,11 +14,6 @@
 
 #import <Foundation/Foundation.h>
 
-#define MERGE_DATABASE 1
-#if MERGE_DATABASE
-#define CBL_Database CBLDatabase
-#endif
-
 #import "CBLJSON.h"
 
 #import "CollectionUtils.h"

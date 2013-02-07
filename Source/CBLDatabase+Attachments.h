@@ -1,13 +1,13 @@
 //
-//  CBL_Database+Attachments.h
+//  CBLDatabase+Attachments.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/18/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database.h"
-@class CBL_BlobStoreWriter, CBLMultipartWriter;
+#import "CBLDatabase+Internal.h"
+@class CBL_BlobStoreWriter, CBL_Revision, CBLMultipartWriter;
 
 
 /** Types of encoding/compression of stored attachments. */
@@ -17,7 +17,7 @@ typedef enum {
 } CBLAttachmentEncoding;
 
 
-@interface CBL_Database (Attachments)
+@interface CBLDatabase (Attachments)
 
 @property (readonly) NSString* attachmentStorePath;
 

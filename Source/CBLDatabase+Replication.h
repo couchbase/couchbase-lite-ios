@@ -1,16 +1,16 @@
 //
-//  CBL_Database+Replication.h
+//  CBLDatabase+Replication.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/18/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database.h"
+#import "CBL_Revision.h"
 @class CBL_Replicator;
 
 
-@interface CBL_Database (Replication)
+@interface CBLDatabase (Replication)
 
 @property (readonly) NSArray* activeReplicators;
 

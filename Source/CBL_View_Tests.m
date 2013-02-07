@@ -14,20 +14,20 @@
 //  and limitations under the License.
 
 #import "CBLView+Internal.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBLInternal.h"
 #import "Test.h"
 
 
 #if DEBUG
 
-static CBL_Database* createDB(void) {
-    return [CBL_Database createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite_ViewTest.touchdb"]];
+static CBLDatabase* createDB(void) {
+    return [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite_ViewTest.touchdb"]];
 }
 
 TestCase(CBL_View_Create) {
-    RequireTestCase(CBL_Database);
-    CBL_Database *db = createDB();
+    RequireTestCase(CBLDatabase);
+    CBLDatabase *db = createDB();
     
     CAssertNil([db existingViewNamed: @"aview"]);
     
@@ -56,7 +56,7 @@ TestCase(CBL_View_Create) {
 }
 
 
-static CBL_Revision* putDoc(CBL_Database* db, NSDictionary* props) {
+static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
     CBL_Revision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
@@ -65,7 +65,7 @@ static CBL_Revision* putDoc(CBL_Database* db, NSDictionary* props) {
 }
 
 
-static NSArray* putDocs(CBL_Database* db) {
+static NSArray* putDocs(CBLDatabase* db) {
     NSMutableArray* docs = $marray();
     [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"key", @"four"}))];
@@ -76,7 +76,7 @@ static NSArray* putDocs(CBL_Database* db) {
 }
 
 
-static CBLView* createView(CBL_Database* db) {
+static CBLView* createView(CBLDatabase* db) {
     CBLView* view = [db viewNamed: @"aview"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
@@ -95,7 +95,7 @@ static NSArray* rowsToDicts(NSArray* rows) {
 
 TestCase(CBL_View_Index) {
     RequireTestCase(CBL_View_Create);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     CBL_Revision* rev1 = putDoc(db, $dict({@"key", @"one"}));
     CBL_Revision* rev2 = putDoc(db, $dict({@"key", @"two"}));
     CBL_Revision* rev3 = putDoc(db, $dict({@"key", @"three"}));
@@ -155,7 +155,7 @@ TestCase(CBL_View_Index) {
 
 TestCase(CBL_View_MapConflicts) {
     RequireTestCase(CBL_View_Index);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     CBL_Revision* leaf1 = docs[1];
     
@@ -191,7 +191,7 @@ TestCase(CBL_View_ConflictWinner) {
     // If a view is re-indexed, and a document in the view has gone into conflict,
     // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
     RequireTestCase(CBL_View_Index);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     CBL_Revision* leaf1 = docs[1];
     
@@ -231,7 +231,7 @@ TestCase(CBL_View_ConflictLoser) {
     // Like the ConflictWinner test, except the newer revision is the loser,
     // so it shouldn't be indexed at all. Instead, the older still-winning revision
     // should be indexed again, this time with a '_conflicts' property.
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     CBL_Revision* leaf1 = docs[1];
     
@@ -269,7 +269,7 @@ TestCase(CBL_View_ConflictLoser) {
 
 TestCase(CBL_View_Query) {
     RequireTestCase(CBL_View_Index);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     putDocs(db);
     CBLView* view = createView(db);
     CAssertEq([view updateIndex], kCBLStatusOK);
@@ -330,7 +330,7 @@ TestCase(CBL_View_Query) {
 
 
 TestCase(CBL_View_AllDocsQuery) {
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     NSDictionary* expectedRow[docs.count];
     memset(&expectedRow, 0, sizeof(expectedRow));
@@ -397,7 +397,7 @@ TestCase(CBL_View_AllDocsQuery) {
 
 TestCase(CBL_View_Reduce) {
     RequireTestCase(CBL_View_Query);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     putDoc(db, $dict({@"_id", @"CD"},      {@"cost", @(8.99)}));
     putDoc(db, $dict({@"_id", @"App"},     {@"cost", @(1.95)}));
     putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", @(6.50)}));
@@ -433,7 +433,7 @@ TestCase(CBL_View_Reduce) {
 
 TestCase(CBL_View_Grouped) {
     RequireTestCase(CBL_View_Reduce);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     putDoc(db, $dict({@"_id", @"1"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
                      {@"track", @"Ether"}, {@"time", @(231)}));
     putDoc(db, $dict({@"_id", @"2"}, {@"artist", @"Gang Of Four"}, {@"album", @"Songs Of The Free"},
@@ -503,7 +503,7 @@ TestCase(CBL_View_Grouped) {
 
 TestCase(CBL_View_GroupedStrings) {
     RequireTestCase(CBL_View_Grouped);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     putDoc(db, $dict({@"name", @"Alice"}));
     putDoc(db, $dict({@"name", @"Albert"}));
     putDoc(db, $dict({@"name", @"Naomi"}));
@@ -555,7 +555,7 @@ TestCase(CBL_View_Collation) {
                                                    @[@"b", @"d"],
                                                    @[@"b", @"d", @"e"]];
     RequireTestCase(CBL_View_Query);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     int i = 0;
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
@@ -599,7 +599,7 @@ TestCase(CBL_View_CollationRaw) {
                                                    @"bb",
                                                    @"~"];
     RequireTestCase(CBL_View_Query);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     int i = 0;
     for (id key in testKeys)
         putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
@@ -622,7 +622,7 @@ TestCase(CBL_View_CollationRaw) {
 
 TestCase(CBL_View_LinkedDocs) {
     RequireTestCase(CBL_View_Query);
-    CBL_Database *db = createDB();
+    CBLDatabase *db = createDB();
     NSArray* revs = putDocs(db);
     
     NSDictionary* docs[5];

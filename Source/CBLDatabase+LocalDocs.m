@@ -1,5 +1,5 @@
 //
-//  CBL_Database+LocalDocs.m
+//  CBLDatabase+LocalDocs.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/10/12.
@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Database+LocalDocs.h"
+#import "CBLDatabase+LocalDocs.h"
 #import "CBL_Revision.h"
 #import "CBL_Body.h"
 #import "CBLInternal.h"
@@ -21,7 +21,7 @@
 #import "FMDatabase.h"
 
 
-@implementation CBL_Database (LocalDocs)
+@implementation CBLDatabase (LocalDocs)
 
 
 - (CBL_Revision*) getLocalDocumentWithID: (NSString*)docID 

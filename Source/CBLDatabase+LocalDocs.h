@@ -1,15 +1,17 @@
 //
-//  CBL_Database+LocalDocs.h
+//  CBLDatabase+LocalDocs.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/10/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database.h"
+#import "CBLDatabase.h"
+#import "CBLStatus.h"
+@class CBL_Revision;
 
 
-@interface CBL_Database (LocalDocs)
+@interface CBLDatabase (LocalDocs)
 
 - (CBL_Revision*) getLocalDocumentWithID: (NSString*)docID 
                             revisionID: (NSString*)revID;

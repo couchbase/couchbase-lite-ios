@@ -1,5 +1,5 @@
 //
-// CBL_Database.m
+// CBLDatabase.m
 // CouchbaseLite
 //
 // Created by Jens Alfke on 6/19/10.
@@ -13,8 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Database.h"
-#import "CBL_Database+Attachments.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBLInternal.h"
 #import "CBL_Revision.h"
 #import "CBL_DatabaseChange.h"
@@ -36,7 +36,7 @@ NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
 
-@implementation CBL_Database (Internal)
+@implementation CBLDatabase (Internal)
 
 
 - (FMDatabase*) fmdb {
@@ -51,7 +51,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 + (instancetype) createEmptyDBAtPath: (NSString*)path {
     if (!CBLRemoveFileIfExists(path, NULL))
         return nil;
-    CBL_Database *db = [[self alloc] initWithPath: path name: nil manager: nil readOnly: NO];
+    CBLDatabase *db = [[self alloc] initWithPath: path name: nil manager: nil readOnly: NO];
     if (!CBLRemoveFileIfExists(db.attachmentStorePath, NULL))
         return nil;
     if (![db open: nil])
@@ -76,7 +76,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
-        _fmdb.logsErrors = WillLogTo(CBL_Database);
+        _fmdb.logsErrors = WillLogTo(CBLDatabase);
 #endif
         _fmdb.traceExecution = WillLogTo(CBL_DatabaseVerbose);
         _thread = [NSThread currentThread];
@@ -108,7 +108,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     for (NSString* statement in [statements componentsSeparatedByString: @";"]) {
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             if (outError) *outError = self.fmdbError;
-            Warn(@"CBL_Database: Could not initialize schema of %@ -- May be an old/incompatible format. "
+            Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
                   "SQLite error: %@", _path, _fmdb.lastErrorMessage);
             [_fmdb close];
             return NO;
@@ -124,7 +124,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         flags |= SQLITE_OPEN_READONLY;
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    LogTo(CBL_Database, @"Open %@ (flags=%X)", _path, flags);
+    LogTo(CBLDatabase, @"Open %@ (flags=%X)", _path, flags);
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
         return NO;
@@ -158,7 +158,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     
     // Incompatible version changes increment the hundreds' place:
     if (dbVersion >= 100) {
-        Warn(@"CBL_Database: Database version (%d) is newer than I know how to work with", dbVersion);
+        Warn(@"CBLDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
         [_fmdb close];
         if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
         return NO;
@@ -296,7 +296,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (!_open)
         return NO;
     
-    LogTo(CBL_Database, @"Close %@", _path);
+    LogTo(CBLDatabase, @"Close %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
                                                         object: self];
     for (CBLView* view in _views.allValues)
@@ -340,16 +340,16 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)])
         return NO;
     ++_transactionLevel;
-    LogTo(CBL_Database, @"Begin transaction (level %d)...", _transactionLevel);
+    LogTo(CBLDatabase, @"Begin transaction (level %d)...", _transactionLevel);
     return YES;
 }
 
 - (BOOL) endTransaction: (BOOL)commit {
     Assert(_transactionLevel > 0);
     if (commit) {
-        LogTo(CBL_Database, @"Commit transaction (level %d)", _transactionLevel);
+        LogTo(CBLDatabase, @"Commit transaction (level %d)", _transactionLevel);
     } else {
-        LogTo(CBL_Database, @"CANCEL transaction (level %d)", _transactionLevel);
+        LogTo(CBLDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
         if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)])
             return NO;
         [_changesToNotify removeAllObjects];
@@ -387,7 +387,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 - (void) postChangeNotifications {
     if (_transactionLevel == 0 && _changesToNotify.count > 0) {
-        LogTo(CBL_Database, @"Posting %u change notifications", (unsigned)_changesToNotify.count);
+        LogTo(CBLDatabase, @"Posting %u change notifications", (unsigned)_changesToNotify.count);
         NSArray* changes = _changesToNotify;
         _changesToNotify = nil;
         [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseChangesNotification
@@ -400,8 +400,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (void) dbChanged: (NSNotification*)n {
-    CBL_Database* senderDB = n.object;
-    // Was this posted by a _different_ CBL_Database instance on the same database as me?
+    CBLDatabase* senderDB = n.object;
+    // Was this posted by a _different_ CBLDatabase instance on the same database as me?
     if (senderDB != self && [senderDB.path isEqualToString: _path]) {
         for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
             // CBL_Revision objects have mutable state inside, so copy this one first:
@@ -712,7 +712,7 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
     NSString* sql = $sprintf(@"SELECT revid FROM revs "
                               "WHERE doc_id=? and revid in (%@) and revid <= ? "
                               "ORDER BY revid DESC LIMIT 1", 
-                              [CBL_Database joinQuotedStrings: revIDs]);
+                              [CBLDatabase joinQuotedStrings: revIDs]);
     return [_fmdb stringForQuery: sql, @(docNumericID), rev.revID];
 }
     
@@ -1016,7 +1016,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
     if (options->keys)
-        [sql appendFormat: @" docid IN (%@) AND", [CBL_Database joinQuotedStrings: options->keys]];
+        [sql appendFormat: @" docid IN (%@) AND", [CBLDatabase joinQuotedStrings: options->keys]];
     [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
     if (!options->includeDeletedDocs)
         [sql appendString: @" AND deleted=0"];

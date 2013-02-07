@@ -7,7 +7,7 @@
 //
 
 #import "CouchbaseLitePrivate.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 
@@ -114,7 +114,7 @@
 }
 
 
-- (instancetype) initWithCBLDB: (CBL_Database*)tddb revision: (CBL_Revision*)rev {
+- (instancetype) initWithCBLDB: (CBLDatabase*)tddb revision: (CBL_Revision*)rev {
     CBLDocument* doc = [tddb documentWithID: rev.docID];
     return [self initWithDocument: doc revision: rev];
 }

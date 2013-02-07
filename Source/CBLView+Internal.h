@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBL_Database.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLView.h"
 
 
@@ -41,7 +41,7 @@ typedef enum {
 
 
 @interface CBLView ()
-- (instancetype) initWithDatabase: (CBL_Database*)db name: (NSString*)name;
+- (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name;
 
 - (void) databaseClosing;
 

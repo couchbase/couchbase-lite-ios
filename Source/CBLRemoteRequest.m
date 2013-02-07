@@ -17,7 +17,7 @@
 #import "CBLAuthorizer.h"
 #import "CBLMisc.h"
 #import "CBL_BlobStore.h"
-#import "CBL_Database.h"
+#import "CBLDatabase.h"
 #import "CBL_Router.h"
 #import "CBL_Replicator.h"
 #import "CollectionUtils.h"

@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "CBL_Router.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBL_Server.h"
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
@@ -309,7 +309,7 @@ static NSArray* splitPath( NSURL* url ) {
         NSString* name = _path[1];
         if (![name hasPrefix: @"_"]) {
             // Regular document
-            if (![CBL_Database isValidDocumentID: name])
+            if (![CBLDatabase isValidDocumentID: name])
                 return kCBLStatusBadID;
             docID = name;
         } else if ([name isEqualToString: @"_design"] || [name isEqualToString: @"_local"]) {

@@ -16,7 +16,7 @@
 #import "CBL_Replicator.h"
 #import "CBL_Pusher.h"
 #import "CBL_Puller.h"
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
 #import "CBLBatcher.h"
@@ -66,7 +66,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (instancetype) initWithDB: (CBL_Database*)db
+- (instancetype) initWithDB: (CBLDatabase*)db
                      remote: (NSURL*)remote
                        push: (BOOL)push
                  continuous: (BOOL)continuous

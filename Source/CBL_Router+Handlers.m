@@ -14,11 +14,11 @@
 //  and limitations under the License.
 
 #import "CBL_Router.h"
-#import "CBL_Database.h"
-#import "CBL_Database+Attachments.h"
-#import "CBL_Database+Insertion.h"
-#import "CBL_Database+LocalDocs.h"
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+LocalDocs.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartDocumentReader.h"
@@ -88,7 +88,7 @@
     int count = MIN(1000, [self intQuery: @"count" defaultValue: 1]);
     NSMutableArray* uuids = [NSMutableArray arrayWithCapacity: count];
     for (int i=0; i<count; i++)
-        [uuids addObject: [CBL_Database generateDocumentID]];
+        [uuids addObject: [CBLDatabase generateDocumentID]];
     _response.bodyObject = $dict({@"uuids", uuids});
     return kCBLStatusOK;
 }
@@ -97,7 +97,7 @@
 - (CBLStatus) do_GET_active_tasks {
     // http://wiki.apache.org/couchdb/HttpGetActiveTasks
     NSMutableArray* activity = $marray();
-    for (CBL_Database* db in _dbManager.allOpenDatabases) {
+    for (CBLDatabase* db in _dbManager.allOpenDatabases) {
         for (CBL_Replicator* repl in db.activeReplicators) {
             NSString* source = repl.remote.absoluteString;
             NSString* target = db.name;
@@ -155,7 +155,7 @@
 #pragma mark - DATABASE REQUESTS:
 
 
-- (CBLStatus) do_GET: (CBL_Database*)db {
+- (CBLStatus) do_GET: (CBLDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Database_Information
     CBLStatus status = [self openDB];
     if (CBLStatusIsError(status))
@@ -173,7 +173,7 @@
 }
 
 
-- (CBLStatus) do_PUT: (CBL_Database*)db {
+- (CBLStatus) do_PUT: (CBLDatabase*)db {
     if (db.exists)
         return kCBLStatusDuplicate;
     if (![db open])
@@ -183,14 +183,14 @@
 }
 
 
-- (CBLStatus) do_DELETE: (CBL_Database*)db {
+- (CBLStatus) do_DELETE: (CBLDatabase*)db {
     if ([self query: @"rev"])
         return kCBLStatusBadID;  // CouchDB checks for this; probably meant to be a document deletion
     return [db deleteDatabase: NULL] ? kCBLStatusOK : kCBLStatusNotFound;
 }
 
 
-- (CBLStatus) do_POST_purge: (CBL_Database*)db {
+- (CBLStatus) do_POST_purge: (CBLDatabase*)db {
     // <http://wiki.apache.org/couchdb/Purge_Documents>
     NSDictionary* body = self.bodyAsDictionary;
     if (!body)
@@ -204,7 +204,7 @@
 }
 
 
-- (CBLStatus) do_GET_all_docs: (CBL_Database*)db {
+- (CBLStatus) do_GET_all_docs: (CBLDatabase*)db {
     if ([self cacheWithEtag: $sprintf(@"%lld", db.lastSequenceNumber)])
         return kCBLStatusNotModified;
     
@@ -214,7 +214,7 @@
     return [self doAllDocs: &options];
 }
 
-- (CBLStatus) do_POST_all_docs: (CBL_Database*)db {
+- (CBLStatus) do_POST_all_docs: (CBLDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
     CBLQueryOptions options;
     if (![self getQueryOptions: &options])
@@ -242,7 +242,7 @@
 }
 
 
-- (CBLStatus) do_POST_bulk_docs: (CBL_Database*)db {
+- (CBLStatus) do_POST_bulk_docs: (CBLDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
     NSDictionary* body = self.bodyAsDictionary;
     NSArray* docs = $castIf(NSArray, body[@"docs"]);
@@ -264,7 +264,7 @@
                 CBL_Body* docBody = [CBL_Body bodyWithProperties: doc];
                 if (noNewEdits) {
                     rev = [[CBL_Revision alloc] initWithBody: docBody];
-                    NSArray* history = [CBL_Database parseCouchDBRevisionHistory: doc];
+                    NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: doc];
                     status = rev ? [db forceInsert: rev revisionHistory: history source: nil] : kCBLStatusBadParam;
                 } else {
                     status = [self update: db
@@ -305,7 +305,7 @@
 }
 
 
-- (CBLStatus) do_POST_revs_diff: (CBL_Database*)db {
+- (CBLStatus) do_POST_revs_diff: (CBLDatabase*)db {
     // http://wiki.apache.org/couchdb/HttpPostRevsDiff
     // Collect all of the input doc/revision IDs as CBL_Revisions:
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] init];
@@ -361,12 +361,12 @@
 }
 
 
-- (CBLStatus) do_POST_compact: (CBL_Database*)db {
+- (CBLStatus) do_POST_compact: (CBLDatabase*)db {
     CBLStatus status = [db compact];
     return status<300 ? kCBLStatusAccepted : status;   // CouchDB returns 202 'cause it's async
 }
 
-- (CBLStatus) do_POST_ensure_full_commit: (CBL_Database*)db {
+- (CBLStatus) do_POST_ensure_full_commit: (CBLDatabase*)db {
     return kCBLStatusOK;
 }
 
@@ -474,7 +474,7 @@
 }
 
 
-- (CBLStatus) do_GET_changes: (CBL_Database*)db {
+- (CBLStatus) do_GET_changes: (CBLDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     
     NSString* feed = [self query: @"feed"];
@@ -553,7 +553,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_GET: (CBL_Database*)db docID: (NSString*)docID {
+- (CBLStatus) do_GET: (CBLDatabase*)db docID: (NSString*)docID {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
     CBLContentOptions options = [self contentOptions];
@@ -592,7 +592,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             NSString* ancestorID = [_db findCommonAncestorOf: rev withRevIDs: attsSince];
             if (ancestorID)
                 minRevPos = [CBL_Revision generationFromRevID: ancestorID] + 1;
-            [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: minRevPos
+            [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos
                            attachmentsFollow: (acceptMultipart != nil)];
         }
 
@@ -649,7 +649,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_GET: (CBL_Database*)db docID: (NSString*)docID attachment: (NSString*)attachment {
+- (CBLStatus) do_GET: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
     CBLStatus status;
     CBL_Revision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
@@ -701,7 +701,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) update: (CBL_Database*)db
+- (CBLStatus) update: (CBLDatabase*)db
               docID: (NSString*)docID
                body: (CBL_Body*)body
            deleting: (BOOL)deleting
@@ -748,7 +748,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) update: (CBL_Database*)db
+- (CBLStatus) update: (CBLDatabase*)db
               docID: (NSString*)docID
                body: (CBL_Body*)body
            deleting: (BOOL)deleting
@@ -816,7 +816,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_POST: (CBL_Database*)db {
+- (CBLStatus) do_POST: (CBLDatabase*)db {
     CBLStatus status = [self openDB];
     if (CBLStatusIsError(status))
         return status;
@@ -826,7 +826,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_PUT: (CBL_Database*)db docID: (NSString*)docID {
+- (CBLStatus) do_PUT: (CBLDatabase*)db docID: (NSString*)docID {
     return [self readDocumentBodyThen: ^CBLStatus(CBL_Body *body) {
         if (![self query: @"new_edits"] || [self boolQuery: @"new_edits"]) {
             // Regular PUT:
@@ -838,14 +838,14 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 return kCBLStatusBadJSON;
             if (!$equal(rev.docID, docID) || !rev.revID)
                 return kCBLStatusBadID;
-            NSArray* history = [CBL_Database parseCouchDBRevisionHistory: body.properties];
+            NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: body.properties];
             return [_db forceInsert: rev revisionHistory: history source: nil];
         }
     }];
 }
 
 
-- (CBLStatus) do_DELETE: (CBL_Database*)db docID: (NSString*)docID {
+- (CBLStatus) do_DELETE: (CBLDatabase*)db docID: (NSString*)docID {
     return [self update: db docID: docID body: nil deleting: YES];
 }
 
@@ -872,7 +872,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_PUT: (CBL_Database*)db docID: (NSString*)docID attachment: (NSString*)attachment {
+- (CBLStatus) do_PUT: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
     CBL_BlobStoreWriter* blob = db.attachmentWriter;
     NSInputStream* bodyStream = _request.HTTPBodyStream;
     if (bodyStream) {
@@ -900,7 +900,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_DELETE: (CBL_Database*)db docID: (NSString*)docID attachment: (NSString*)attachment {
+- (CBLStatus) do_DELETE: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
     return [self updateAttachment: attachment docID: docID body: nil];
 }
 
@@ -950,12 +950,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_GET: (CBL_Database*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
+- (CBLStatus) do_GET: (CBLDatabase*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
     return [self queryDesignDoc: designDoc view: viewName keys: nil];
 }
 
 
-- (CBLStatus) do_POST: (CBL_Database*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
+- (CBLStatus) do_POST: (CBLDatabase*)db designDocID: (NSString*)designDoc view: (NSString*)viewName {
     NSArray* keys = $castIf(NSArray, (self.bodyAsDictionary)[@"keys"]);
     if (!keys)
         return kCBLStatusBadParam;
@@ -963,7 +963,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_POST_temp_view: (CBL_Database*)db {
+- (CBLStatus) do_POST_temp_view: (CBLDatabase*)db {
     if (![[_request valueForHTTPHeaderField: @"Content-Type"] hasPrefix: @"application/json"])
         return kCBLStatusUnsupportedType;
     CBL_Body* requestBody = [CBL_Body bodyWithJSON: _request.HTTPBody];

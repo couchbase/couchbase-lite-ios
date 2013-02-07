@@ -1,5 +1,5 @@
 //
-//  CBL_Database+Replication.m
+//  CBLDatabase+Replication.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/27/11.
@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLInternal.h"
 #import "CBL_Puller.h"
 #import "MYBlockUtils.h"
@@ -25,7 +25,7 @@
 #define kActiveReplicatorCleanupDelay 10.0
 
 
-@implementation CBL_Database (Replication)
+@implementation CBLDatabase (Replication)
 
 
 - (NSArray*) activeReplicators {
@@ -110,8 +110,8 @@
     NSString* sql = $sprintf(@"SELECT docid, revid FROM revs, docs "
                               "WHERE revid in (%@) AND docid IN (%@) "
                               "AND revs.doc_id == docs.doc_id",
-                             [CBL_Database joinQuotedStrings: revs.allRevIDs],
-                             [CBL_Database joinQuotedStrings: revs.allDocIDs]);
+                             [CBLDatabase joinQuotedStrings: revs.allRevIDs],
+                             [CBLDatabase joinQuotedStrings: revs.allDocIDs]);
     // ?? Not sure sqlite will optimize this fully. May need a first query that looks up all
     // the numeric doc_ids from the docids.
     FMResultSet* r = [_fmdb executeQuery: sql];

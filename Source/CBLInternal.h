@@ -6,8 +6,8 @@
 //  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database.h"
-#import "CBL_Database+Attachments.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBLManager+Internal.h"
 #import "CBLView+Internal.h"
 #import "CBL_Server.h"
@@ -18,12 +18,12 @@
 @class CBL_Attachment, CBL_BlobStoreWriter, CBL_DatabaseChange, CBL_ReplicatorManager;
 
 
-@interface CBL_Database (Insertion_Internal)
+@interface CBLDatabase (Insertion_Internal)
 - (NSData*) encodeDocumentJSON: (CBL_Revision*)rev;
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev;
 @end
 
-@interface CBL_Database (Attachments_Internal)
+@interface CBLDatabase (Attachments_Internal)
 - (void) rememberAttachmentWriter: (CBL_BlobStoreWriter*)writer;
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
 #if DEBUG
@@ -38,7 +38,7 @@
 - (BOOL) inlineFollowingAttachmentsIn: (CBL_Revision*)rev error: (NSError**)outError;
 @end
 
-@interface CBL_Database (Replication_Internal)
+@interface CBLDatabase (Replication_Internal)
 - (void) stopAndForgetReplicator: (CBL_Replicator*)repl;
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;

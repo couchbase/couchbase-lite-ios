@@ -8,15 +8,15 @@
 
 #import "CBLManager.h"
 #import "CBLStatus.h"
-@class CBL_Database, CBL_Replicator;
+@class CBLDatabase, CBL_Replicator;
 
 
 @interface CBLManager (Internal)
 
-- (CBL_Database*) _databaseNamed: (NSString*)name;
-- (CBL_Database*) _existingDatabaseNamed: (NSString*)name;
+- (CBLDatabase*) _databaseNamed: (NSString*)name;
+- (CBLDatabase*) _existingDatabaseNamed: (NSString*)name;
 
-- (void) _forgetDatabase: (CBL_Database*)db;
+- (void) _forgetDatabase: (CBLDatabase*)db;
 
 @property (readonly) NSArray* allOpenDatabases;
 

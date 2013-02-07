@@ -17,8 +17,8 @@
 #import "CBL_Pusher.h"
 #import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
-#import "CBL_Database+Replication.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase+Replication.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBLRevision.h"
 #import "CBLOAuth1Authorizer.h"
 #import "CBLBase64.h"
@@ -73,7 +73,7 @@ static void deleteRemoteDB(void) {
 }
 
 
-static NSString* replic8(CBL_Database* db, NSString* urlStr, BOOL push, NSString* filter) {
+static NSString* replic8(CBLDatabase* db, NSString* urlStr, BOOL push, NSString* filter) {
     NSURL* remote = [NSURL URLWithString: urlStr];
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO];
@@ -99,9 +99,9 @@ static NSString* replic8(CBL_Database* db, NSString* urlStr, BOOL push, NSString
 
 
 TestCase(CBL_Pusher) {
-    RequireTestCase(CBL_Database);
+    RequireTestCase(CBLDatabase);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
-    CBL_Database* db = [server _databaseNamed: @"db"];
+    CBLDatabase* db = [server _databaseNamed: @"db"];
     [db open: nil];
     
     __block int filterCalls = 0;
@@ -149,7 +149,7 @@ TestCase(CBL_Pusher) {
 TestCase(CBL_Puller) {
     RequireTestCase(CBL_Pusher);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
-    CBL_Database* db = [server _databaseNamed: @"db"];
+    CBLDatabase* db = [server _databaseNamed: @"db"];
     [db open: nil];
     
     id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
@@ -187,7 +187,7 @@ TestCase(CBL_Puller_FromCouchApp) {
     
     RequireTestCase(CBL_Puller);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
-    CBL_Database* db = [server _databaseNamed: @"couchapp_helloworld"];
+    CBLDatabase* db = [server _databaseNamed: @"couchapp_helloworld"];
     [db open: nil];
     
     replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
@@ -208,7 +208,7 @@ TestCase(CBL_Puller_FromCouchApp) {
 }
 
 
-static CBL_Replicator* findActiveReplicator(CBL_Database* db, NSURL* remote, BOOL isPush) {
+static CBL_Replicator* findActiveReplicator(CBLDatabase* db, NSURL* remote, BOOL isPush) {
     for (CBL_Replicator* repl in db.activeReplicators) {
         if (repl.db == db && $equal(repl.remote, remote) && repl.isPush == isPush)
             return repl;
@@ -221,7 +221,7 @@ TestCase(CBL_ReplicatorManager) {
     RequireTestCase(ParseReplicatorProperties);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
     CAssert([server replicatorManager]);    // start the replicator
-    CBL_Database* replicatorDb = [server _databaseNamed: kCBL_ReplicatorDatabaseName];
+    CBLDatabase* replicatorDb = [server _databaseNamed: kCBL_ReplicatorDatabaseName];
     CAssert(replicatorDb);
     CAssert([replicatorDb open: nil]);
     
@@ -239,7 +239,7 @@ TestCase(CBL_ReplicatorManager) {
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusForbidden);
     
-    CBL_Database* sourceDB = [server _databaseNamed: @"foo"];
+    CBLDatabase* sourceDB = [server _databaseNamed: @"foo"];
     CAssert([sourceDB open: nil]);
 
     // Now try a valid replication document:
@@ -297,7 +297,7 @@ TestCase(CBL_ReplicatorManager) {
 
 @interface CBLManager (Seekrit)
 - (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
-                            toDatabase: (CBL_Database**)outDatabase   // may be NULL
+                            toDatabase: (CBLDatabase**)outDatabase   // may be NULL
                                 remote: (NSURL**)outRemote          // may be NULL
                                 isPush: (BOOL*)outIsPush
                           createTarget: (BOOL*)outCreateTarget
@@ -308,9 +308,9 @@ TestCase(CBL_ReplicatorManager) {
 
 TestCase(ParseReplicatorProperties) {
     CBLManager* dbManager = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
-    CBL_Database* localDB = [dbManager _databaseNamed: @"foo"];
+    CBLDatabase* localDB = [dbManager _databaseNamed: @"foo"];
 
-    CBL_Database* db = nil;
+    CBLDatabase* db = nil;
     NSURL* remote = nil;
     BOOL isPush = NO, createTarget = NO;
     NSDictionary* headers = nil;

@@ -14,11 +14,11 @@
 //  and limitations under the License.
 
 
-#import "CBL_Database.h"
-#import "CBL_Database+Attachments.h"
-#import "CBL_Database+Insertion.h"
-#import "CBL_Database+LocalDocs.h"
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+LocalDocs.h"
+#import "CBLDatabase+Replication.h"
 #import "CBL_Attachment.h"
 #import "CBL_Body.h"
 #import "CBLRevision.h"
@@ -33,9 +33,9 @@
 #if DEBUG
 
 
-static CBL_Database* createDB(void) {
+static CBLDatabase* createDB(void) {
     NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"cbl_test.sqlite3"];
-    CBL_Database *db = [CBL_Database createEmptyDBAtPath: path];
+    CBLDatabase *db = [CBLDatabase createEmptyDBAtPath: path];
     CAssert([db open: nil]);
     return db;
 }
@@ -51,7 +51,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
-static CBL_Revision* putDoc(CBL_Database* db, NSDictionary* props) {
+static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
     CBL_Revision* result = [db putRevision: rev
@@ -67,7 +67,7 @@ static CBL_Revision* putDoc(CBL_Database* db, NSDictionary* props) {
 
 TestCase(CBL_Database_CRUD) {
     // Start with a fresh database in /tmp:
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     
     NSString* privateUUID = db.privateUUID, *publicUUID = db.publicUUID;
     NSLog(@"DB private UUID = '%@', public = '%@'", privateUUID, publicUUID);
@@ -188,7 +188,7 @@ TestCase(CBL_Database_CRUD) {
 
 TestCase(CBL_Database_EmptyDoc) {
     // Test case for issue #44, which is caused by a bug in CBLJSON.
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_Revision* rev = putDoc(db, $dict());
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     options.includeDocs = YES;
@@ -202,7 +202,7 @@ TestCase(CBL_Database_DeleteWithProperties) {
     // Test case for issue #50.
     // Test that it's possible to delete a document by PUTting a revision with _deleted=true,
     // and that the saved deleted revision will preserve any extra properties.
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_Revision* rev1 = putDoc(db, $dict({@"property", @"value"}));
     CBL_Revision* rev2 = putDoc(db, $dict({@"_id", rev1.docID},
                                         {@"_rev", rev1.revID},
@@ -228,7 +228,7 @@ TestCase(CBL_Database_DeleteWithProperties) {
 
 TestCase(CBL_Database_DeleteAndRecreate) {
     // Test case for issue #205: Create a doc, delete it, create it again with the same content.
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_Revision* rev1 = putDoc(db, $dict({@"_id", @"dock"}, {@"property", @"value"}));
     Log(@"Created: %@ -- %@", rev1, rev1.properties);
     CBL_Revision* rev2 = putDoc(db, $dict({@"_id", @"dock"}, {@"_rev", rev1.revID},
@@ -240,7 +240,7 @@ TestCase(CBL_Database_DeleteAndRecreate) {
 
 
 TestCase(CBL_Database_Validation) {
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
     [db defineValidation: @"hoopy" 
                  asBlock: ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context)
@@ -319,7 +319,7 @@ TestCase(CBL_Database_Validation) {
 }
 
 
-static void verifyHistory(CBL_Database* db, CBL_Revision* rev, NSArray* history, bool afterCompact) {
+static void verifyHistory(CBLDatabase* db, CBL_Revision* rev, NSArray* history, bool afterCompact) {
     CBL_Revision* gotRev = [db getDocumentWithID: rev.docID revisionID: nil];
     CAssertEqual(gotRev, rev);
     CAssertEqual(gotRev.properties, rev.properties);
@@ -344,7 +344,7 @@ static CBL_DatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner)
 TestCase(CBL_Database_RevTree) {
     RequireTestCase(CBL_Database_CRUD);
     // Start with a fresh database in /tmp:
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
 
     // Track the latest database-change notification that's posted:
     __block CBL_DatabaseChange* change = nil;
@@ -445,7 +445,7 @@ TestCase(CBL_Database_RevTree) {
 
 
 TestCase(CBL_Database_DeterministicRevIDs) {
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_Revision* rev = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
     NSString* revID = rev.revID;
     [db close];
@@ -457,7 +457,7 @@ TestCase(CBL_Database_DeterministicRevIDs) {
 
 
 TestCase(CBL_Database_DuplicateRev) {
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_Revision* rev1 = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
     
     NSDictionary* props = $dict({@"_id", @"mydoc"},
@@ -479,7 +479,7 @@ TestCase(CBL_Database_DuplicateRev) {
 #pragma mark - ATTACHMENTS:
 
 
-static void insertAttachment(CBL_Database* db, NSData* blob,
+static void insertAttachment(CBLDatabase* db, NSData* blob,
                                  SequenceNumber sequence,
                                  NSString* name, NSString* type,
                                  CBLAttachmentEncoding encoding,
@@ -499,7 +499,7 @@ static void insertAttachment(CBL_Database* db, NSData* blob,
 TestCase(CBL_Database_Attachments) {
     RequireTestCase(CBL_Database_CRUD);
     // Start with a fresh database in /tmp:
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_BlobStore* attachments = db.attachmentStore;
 
     CAssertEq(attachments.count, 0u);
@@ -610,7 +610,7 @@ TestCase(CBL_Database_Attachments) {
 }
 
 
-static CBL_BlobStoreWriter* blobForData(CBL_Database* db, NSData* data) {
+static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     CBL_BlobStoreWriter* blob = db.attachmentWriter;
     [blob appendData: data];
     [blob finish];
@@ -621,7 +621,7 @@ static CBL_BlobStoreWriter* blobForData(CBL_Database* db, NSData* data) {
 TestCase(CBL_Database_PutAttachment) {
     RequireTestCase(CBL_Database_Attachments);
     // Start with a fresh database in /tmp:
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     
     // Put a revision that includes an _attachments dict:
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
@@ -713,7 +713,7 @@ TestCase(CBL_Database_PutAttachment) {
 TestCase(CBL_Database_EncodedAttachment) {
     RequireTestCase(CBL_Database_Attachments);
     // Start with a fresh database in /tmp:
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
 
     // Add a revision and an attachment to it:
     CBL_Revision* rev1;
@@ -791,32 +791,32 @@ TestCase(CBL_Database_StubOutAttachmentsBeforeRevPos) {
     NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
     
     CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: NO];
+    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"stub", $true})})}));
     
     rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: NO];
+    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", goodbye})}));
     
     rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: NO];
+    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", attachments}));
     
     // Now test the "follows" mode:
     rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: YES];
+    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: YES];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"stub", $true})})}));
 
     rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: YES];
+    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: YES];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"follows", $true})})}));
     
     rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: YES];
+    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: YES];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"follows", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"follows", $true})})}));
     
@@ -828,7 +828,7 @@ TestCase(CBL_Database_StubOutAttachmentsBeforeRevPos) {
 
 TestCase(CBL_Database_ReplicatorSequences) {
     RequireTestCase(CBL_Database_CRUD);
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CAssertNil([db lastSequenceWithCheckpointID: @"pull"]);
     [db setLastSequence: @"lastpull" withCheckpointID: @"pull"];
     CAssertEqual([db lastSequenceWithCheckpointID: @"pull"], @"lastpull");
@@ -844,7 +844,7 @@ TestCase(CBL_Database_ReplicatorSequences) {
 
 TestCase(CBL_Database_LocalDocs) {
     // Start with a fresh database in /tmp:
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     
     // Create a document:
     NSMutableDictionary* props = $mdict({@"_id", @"_local/doc1"},
@@ -907,7 +907,7 @@ TestCase(CBL_Database_LocalDocs) {
 
 
 TestCase(CBL_Database_FindMissingRevisions) {
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_Revision* doc1r1 = putDoc(db, $dict({@"_id", @"11111"}, {@"key", @"one"}));
     CBL_Revision* doc2r1 = putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}));
     putDoc(db, $dict({@"_id", @"33333"}, {@"key", @"three"}));
@@ -938,7 +938,7 @@ TestCase(CBL_Database_FindMissingRevisions) {
 
 
 TestCase(CBL_Database_Purge) {
-    CBL_Database* db = createDB();
+    CBLDatabase* db = createDB();
     CBL_Revision* rev1 = putDoc(db, $dict({@"_id", @"doc"}, {@"key", @"1"}));
     CBL_Revision* rev2 = putDoc(db, $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"}));
     CBL_Revision* rev3 = putDoc(db, $dict({@"_id", @"doc"}, {@"_rev", rev2.revID}, {@"key", @"3"}));
@@ -963,7 +963,7 @@ TestCase(CBL_Database_Purge) {
 }
 
 
-TestCase(CBL_Database) {
+TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_CRUD);
     RequireTestCase(CBL_Database_DeleteWithProperties);
     RequireTestCase(CBL_Database_RevTree);

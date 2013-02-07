@@ -7,7 +7,7 @@
 //
 
 #import "CouchbaseLitePrivate.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
 #import "CBL_DatabaseChange.h"
 

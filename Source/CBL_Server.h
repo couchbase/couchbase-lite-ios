@@ -30,8 +30,8 @@
 
 - (void) queue: (void(^)())block;
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block;
-- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBL_Database*))block;
-- (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(CBL_Database*))block;
+- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
+- (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(CBLDatabase*))block;
 
 - (void) close;
 

@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "CBL_Server.h"
-#import "CBL_Database.h"
+#import "CBLDatabase.h"
 #import "CBL_ReplicatorManager.h"
 #import "CBLMisc.h"
 #import "CBLManager+Internal.h"
@@ -145,7 +145,7 @@
 }
 
 
-- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBL_Database*))block {
+- (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
     [self queue: ^{ block([_manager _databaseNamed: dbName]); }];
 }
 
@@ -155,13 +155,13 @@
 }
 
 
-- (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(CBL_Database*))block {
+- (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(CBLDatabase*))block {
     __block id result = nil;
     NSConditionLock* lock = [[NSConditionLock alloc] initWithCondition: 0];
     [self queue: ^{
         [lock lockWhenCondition: 0];
         @try {
-            CBL_Database* db = [_manager _databaseNamed: dbName];
+            CBLDatabase* db = [_manager _databaseNamed: dbName];
             result = block(db);
         } @finally {
             [lock unlockWithCondition: 1];

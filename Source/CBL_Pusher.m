@@ -14,8 +14,8 @@
 //  and limitations under the License.
 
 #import "CBL_Pusher.h"
-#import "CBL_Database.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
 #import "CBL_DatabaseChange.h"
 #import "CBLBatcher.h"
@@ -223,7 +223,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                         // Look for the latest common ancestor and stub out older attachments:
                         NSArray* possible = revResults[@"possible_ancestors"];
                         int minRevPos = findCommonAncestor(rev, possible);
-                        [CBL_Database stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
+                        [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
                                        attachmentsFollow: NO];
                         properties = rev.properties;
                         // If the rev has huge attachments, send it under separate cover:
@@ -415,7 +415,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
     if (possibleRevIDs.count == 0)
         return 0;
-    NSArray* history = [CBL_Database parseCouchDBRevisionHistory: rev.properties];
+    NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
     NSString* ancestorID = [history firstObjectCommonWithArray: possibleRevIDs];
     if (!ancestorID)
         return 0;

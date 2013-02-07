@@ -18,9 +18,9 @@
 
 #import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
-#import "CBL_Database.h"
-#import "CBL_Database+Insertion.h"
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+Replication.h"
 #import "CBL_DatabaseChange.h"
 #import "CBL_Pusher.h"
 #import "CBL_Puller.h"
@@ -357,7 +357,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 - (void) someDbDeleted: (NSNotification*)n {
     if (!_replicatorDB.exists)
         return;
-    CBL_Database* db = n.object;
+    CBLDatabase* db = n.object;
     if ([_dbManager.allOpenDatabases indexOfObjectIdenticalTo: db] == NSNotFound)
         return;
     NSString* dbName = db.name;

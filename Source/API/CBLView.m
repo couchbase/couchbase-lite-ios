@@ -21,7 +21,7 @@
 @implementation CBLView
 
 
-- (instancetype) initWithDatabase: (CBL_Database*)db name: (NSString*)name {
+- (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name {
     Assert(db);
     Assert(name.length);
     self = [super init];

@@ -316,7 +316,7 @@ static int collateRevs(const char* rev1, const char* rev2) {
 }
 
 TestCase(CBL_Database_ParseRevID) {
-    RequireTestCase(CBL_Database);
+    RequireTestCase(CBLDatabase);
     int num;
     NSString* suffix;
     CAssert(parseRevID(@"1-utiopturoewpt", &num, &suffix));

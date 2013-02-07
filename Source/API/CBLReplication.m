@@ -10,7 +10,7 @@
 #import "CouchbaseLitePrivate.h"
 
 #import "CBL_Pusher.h"
-#import "CBL_Database+Replication.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Server.h"
 #import "CBLBrowserIDAuthorizer.h"
@@ -46,7 +46,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSError* _error;
 
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
-    CBL_Database* _bg_serverDatabase;    // ONLY used on the server thread
+    CBLDatabase* _bg_serverDatabase;    // ONLY used on the server thread
     NSString* _bg_documentID;           // ONLY used on the server thread
 }
 
@@ -294,7 +294,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     _mainThread = [NSThread currentThread];
 #if RUN_IN_BACKGROUND
     [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
-                                                   to: ^(CBL_Database* tddb) {
+                                                   to: ^(CBLDatabase* tddb) {
                                                        _bg_serverDatabase = tddb;
                                                    }];
 #else

@@ -8,7 +8,7 @@
 
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
-#import "CBL_Database.h"
+#import "CBLDatabase.h"
 
 
 @interface CBLQueryEnumerator ()

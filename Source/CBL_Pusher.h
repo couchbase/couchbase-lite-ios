@@ -7,7 +7,7 @@
 //
 
 #import "CBL_Puller.h"
-#import "CBL_Database.h"
+#import "CBLDatabase.h"
 
 
 /** Replicator that pushes to a remote CouchDB. */

@@ -1,16 +1,16 @@
 //
-//  CBL_Database+Insertion.h
+//  CBLDatabase+Insertion.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/18/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDatabase.h"
 
 
-@interface CBL_Database (Insertion)
+@interface CBLDatabase (Insertion)
 
 + (BOOL) isValidDocumentID: (NSString*)str;
 

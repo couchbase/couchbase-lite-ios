@@ -7,8 +7,8 @@
 //
 
 #import "CouchbaseLitePrivate.h"
-#import "CBL_Database.h"
-#import "CBL_Database+Insertion.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBL_DatabaseChange.h"
 #import "CBLInternal.h"
 #import "CBLModelFactory.h"
@@ -22,7 +22,7 @@
 
 
 // NOTE: This file contains mostly just public-API method implementations.
-// The lower-level stuff is in CBL_Database.m, etc.
+// The lower-level stuff is in CBLDatabase.m, etc.
 
 
 #define kDocRetainLimit 50
@@ -128,7 +128,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
-    LogTo(CBL_Database, @"Deleting %@", _path);
+    LogTo(CBLDatabase, @"Deleting %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
     if (_open) {
@@ -198,7 +198,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-// Appease the compiler; these are actually implemented in CBL_Database.m
+// Appease the compiler; these are actually implemented in CBLDatabase.m
 @dynamic documentCount, lastSequenceNumber;
 
 

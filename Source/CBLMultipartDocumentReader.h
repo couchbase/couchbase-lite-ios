@@ -8,7 +8,7 @@
 
 #import "CBLMultipartReader.h"
 #import "CBLStatus.h"
-@class CBL_Database, CBL_Revision, CBL_BlobStoreWriter, CBLMultipartDocumentReader;
+@class CBLDatabase, CBL_Revision, CBL_BlobStoreWriter, CBLMultipartDocumentReader;
 
 
 typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentReader*);
@@ -17,7 +17,7 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
 @interface CBLMultipartDocumentReader : NSObject <CBLMultipartReaderDelegate, NSStreamDelegate>
 {
     @private
-    CBL_Database* _database;
+    CBLDatabase* _database;
     CBLStatus _status;
     CBLMultipartReader* _multipartReader;
     NSMutableData* _jsonBuffer;
@@ -31,16 +31,16 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
 // synchronous:
 + (NSDictionary*) readData: (NSData*)data
                     ofType: (NSString*)contentType
-                toDatabase: (CBL_Database*)database
+                toDatabase: (CBLDatabase*)database
                     status: (CBLStatus*)outStatus;
 
 // asynchronous:
 + (CBLStatus) readStream: (NSInputStream*)stream
                  ofType: (NSString*)contentType
-             toDatabase: (CBL_Database*)database
+             toDatabase: (CBLDatabase*)database
                    then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock;
 
-- (instancetype) initWithDatabase: (CBL_Database*)database;
+- (instancetype) initWithDatabase: (CBLDatabase*)database;
 
 @property (readonly, nonatomic) CBLStatus status;
 @property (readonly, nonatomic) NSDictionary* document;

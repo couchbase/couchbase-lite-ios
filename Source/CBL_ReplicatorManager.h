@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Database.h"
+#import "CBLDatabase.h"
 #import "CBLManager+Internal.h"
 @protocol CBLAuthorizer;
 
@@ -20,7 +20,7 @@ extern NSString* const kCBL_ReplicatorDatabaseName;
 @interface CBL_ReplicatorManager : NSObject
 {
     CBLManager* _dbManager;
-    CBL_Database* _replicatorDB;
+    CBLDatabase* _replicatorDB;
     NSMutableDictionary* _replicatorsByDocID;
     BOOL _updateInProgress;
 }

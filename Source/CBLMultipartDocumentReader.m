@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLMultipartDocumentReader.h"
-#import "CBL_Database+Attachments.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBL_BlobStore.h"
 #import "CBLInternal.h"
 #import "CBLBase64.h"
@@ -28,7 +28,7 @@
 
 + (NSDictionary*) readData: (NSData*)data
                     ofType: (NSString*)contentType
-                toDatabase: (CBL_Database*)database
+                toDatabase: (CBLDatabase*)database
                     status: (CBLStatus*)outStatus
 {
     if (data.length == 0) {
@@ -48,7 +48,7 @@
 }
 
 
-- (instancetype) initWithDatabase: (CBL_Database*)database
+- (instancetype) initWithDatabase: (CBLDatabase*)database
 {
     Assert(database);
     self = [super init];
@@ -137,7 +137,7 @@
 
 + (CBLStatus) readStream: (NSInputStream*)stream
                  ofType: (NSString*)contentType
-             toDatabase: (CBL_Database*)database
+             toDatabase: (CBLDatabase*)database
                    then: (CBLMultipartDocumentReaderCompletionBlock)onCompletion
 {
     CBLMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];

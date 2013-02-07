@@ -7,7 +7,7 @@
 //
 
 #import "CBLRemoteRequest.h"
-@class CBLMultipartDocumentReader, CBL_Database;
+@class CBLMultipartDocumentReader, CBLDatabase;
 
 
 /** Downloads a remote CouchDB document in multipart format.
@@ -19,7 +19,7 @@
 }
 
 - (instancetype) initWithURL: (NSURL*)url
-                    database: (CBL_Database*)database
+                    database: (CBLDatabase*)database
               requestHeaders: (NSDictionary *) requestHeaders
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 

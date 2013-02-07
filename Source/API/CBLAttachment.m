@@ -9,7 +9,7 @@
 #import "CBLAttachment.h"
 #import "CouchbaseLitePrivate.h"
 
-#import "CBL_Database+Attachments.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBL_BlobStore.h"
 #import "CBLInternal.h"
 
@@ -122,7 +122,7 @@
 }
 
 
-static CBL_BlobStoreWriter* blobStoreWriterForBody(CBL_Database* tddb, NSData* body) {
+static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* body) {
     CBL_BlobStoreWriter* writer = tddb.attachmentWriter;
     [writer appendData: body];
     [writer finish];
@@ -158,7 +158,7 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBL_Database* tddb, NSData* b
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (CBLDatabase*)database
 {
-    CBL_Database* tddb = database;
+    CBLDatabase* tddb = database;
     return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
         CBLAttachment* attachment = $castIf(CBLAttachment, value);
         if (attachment) {

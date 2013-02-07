@@ -8,8 +8,9 @@
 
 #import "CouchbaseLite.h"
 #import "CBLCache.h"
-#import "CBL_Database.h"
-@class CBL_DatabaseChange, CBLManager, CBL_Server;
+#import "CBLDatabase.h"
+#import "CBL_Revision.h"
+@class CBL_DatabaseChange, CBL_Revision, CBLManager, CBL_Server;
 
 
 @interface CBLManager ()
@@ -54,7 +55,7 @@
 @interface CBLRevision ()
 - (instancetype) initWithDocument: (CBLDocument*)doc
                          revision: (CBL_Revision*)rev               __attribute__((nonnull(2)));
-- (instancetype) initWithCBLDB: (CBL_Database*)tddb
+- (instancetype) initWithCBLDB: (CBLDatabase*)tddb
                       revision: (CBL_Revision*)rev                  __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
 @end
