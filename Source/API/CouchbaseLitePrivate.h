@@ -55,8 +55,8 @@
 @interface CBLRevision ()
 - (instancetype) initWithDocument: (CBLDocument*)doc
                          revision: (CBL_Revision*)rev               __attribute__((nonnull(2)));
-- (instancetype) initWithCBLDB: (CBLDatabase*)tddb
-                      revision: (CBL_Revision*)rev                  __attribute__((nonnull));
+- (instancetype) initWithDatabase: (CBLDatabase*)tddb
+                         revision: (CBL_Revision*)rev               __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
 @end
 

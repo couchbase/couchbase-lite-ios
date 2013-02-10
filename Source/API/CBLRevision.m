@@ -114,7 +114,7 @@
 }
 
 
-- (instancetype) initWithCBLDB: (CBLDatabase*)tddb revision: (CBL_Revision*)rev {
+- (instancetype) initWithDatabase: (CBLDatabase*)tddb revision: (CBL_Revision*)rev {
     CBLDocument* doc = [tddb documentWithID: rev.docID];
     return [self initWithDocument: doc revision: rev];
 }

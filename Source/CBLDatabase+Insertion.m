@@ -742,7 +742,7 @@
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev {
     if (_validations.count == 0)
         return kCBLStatusOK;
-    CBLRevision* publicRev = [[CBLRevision alloc] initWithCBLDB: self revision: newRev];
+    CBLRevision* publicRev = [[CBLRevision alloc] initWithDatabase: self revision: newRev];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];
@@ -795,7 +795,7 @@
 
 - (CBLRevision*) currentRevision {
     CBL_Revision* cur = self.current_Revision;
-    return cur ? [[CBLRevision alloc] initWithCBLDB: _db revision: cur] : nil;
+    return cur ? [[CBLRevision alloc] initWithDatabase: _db revision: cur] : nil;
 }
 
 @synthesize errorType=_errorType, errorMessage=_errorMessage;
