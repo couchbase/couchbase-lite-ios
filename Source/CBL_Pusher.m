@@ -192,7 +192,6 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         if (error) {
             self.error = error;
             [self revisionFailed];
-            [self stop];
         } else if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
