@@ -13,8 +13,9 @@
 
 @interface CBLManager (Internal)
 
-- (CBLDatabase*) _databaseNamed: (NSString*)name;
-- (CBLDatabase*) _existingDatabaseNamed: (NSString*)name;
+- (CBLDatabase*) _databaseNamed: (NSString*)name
+                      mustExist: (BOOL)mustExist
+                          error: (NSError**)outError;
 
 - (void) _forgetDatabase: (CBLDatabase*)db;
 

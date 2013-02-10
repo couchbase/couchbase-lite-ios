@@ -146,7 +146,7 @@
 
 
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
-    [self queue: ^{ block([_manager _databaseNamed: dbName]); }];
+    [self queue: ^{ block([_manager createDatabaseNamed: dbName error: NULL]); }];
 }
 
 
@@ -161,7 +161,7 @@
     [self queue: ^{
         [lock lockWhenCondition: 0];
         @try {
-            CBLDatabase* db = [_manager _databaseNamed: dbName];
+            CBLDatabase* db = [_manager createDatabaseNamed: dbName error: NULL];
             result = block(db);
         } @finally {
             [lock unlockWithCondition: 1];

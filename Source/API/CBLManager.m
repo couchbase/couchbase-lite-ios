@@ -212,14 +212,6 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (NSString*) pathForName: (NSString*)name {
-    if (![[self class] isValidDatabaseName: name])
-        return nil;
-    name = [name stringByReplacingOccurrencesOfString: @"/" withString: @":"];
-    return [_dir stringByAppendingPathComponent:[name stringByAppendingPathExtension:kDBExtension]];
-}
-
-
 - (NSArray*) allDatabaseNames {
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: NULL];
     files = [files pathsMatchingExtensions: @[kDBExtension]];
@@ -235,18 +227,22 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
-- (CBLDatabase*) databaseNamed: (NSString*)name {
-    return [self _existingDatabaseNamed: name];
+- (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
+    return [self databaseNamed: key error: NULL];
 }
 
-- (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
-    return [self databaseNamed: key];
+- (CBLDatabase*) databaseNamed: (NSString*)name error: (NSError**)outError {
+    CBLDatabase* db = [self _databaseNamed: name mustExist: YES error: outError];
+    if (![db open: outError])
+        db = nil;
+    return db;
 }
+
 
 - (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
-    CBLDatabase* db = [self _databaseNamed: name];
+    CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: outError];
     if (![db open: outError])
-        return nil;
+        db = nil;
     return db;
 }
 
@@ -256,20 +252,17 @@ static NSCharacterSet* kIllegalNameChars;
               withAttachments: (NSString*)attachmentsPath
                         error: (NSError**)outError
 {
-    CBLDatabase* db = [self _databaseNamed: databaseName];
-    if (!db) {
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+    CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
+    if (!db)
         return NO;
-    }
     Assert(!db.open, @"Already-open database cannot be replaced");
     NSString* dstAttachmentsPath = db.attachmentStorePath;
     NSFileManager* fmgr = [NSFileManager defaultManager];
     return [fmgr copyItemAtPath: databasePath toPath: db.path error: outError] &&
-    CBLRemoveFileIfExists(dstAttachmentsPath, outError) &&
-    (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath
-                                       toPath: dstAttachmentsPath
-                                        error: outError]);
+            CBLRemoveFileIfExists(dstAttachmentsPath, outError) &&
+            (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath
+                                               toPath: dstAttachmentsPath
+                                                error: outError]);
 
 }
 
@@ -279,7 +272,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 - (NSArray*) allReplications {
     NSMutableArray* replications = [_replications mutableCopy];
-    CBLQuery* q = [[self databaseNamed: @"_replicator"] queryAllDocuments];
+    CBLQuery* q = [self[@"_replicator"] queryAllDocuments];
     for (CBLQueryRow* row in q.rows) {
         CBLReplication* repl = [CBLReplication modelForDocument: row.document];
         if (![replications containsObject: repl])
@@ -340,36 +333,33 @@ static NSCharacterSet* kIllegalNameChars;
 @implementation CBLManager (Internal)
 
 
-- (CBLDatabase*) _databaseNamed: (NSString*)name create: (BOOL)create {
+// Instantiates a database but doesn't open the file yet.
+- (CBLDatabase*) _databaseNamed: (NSString*)name
+                      mustExist: (BOOL)mustExist
+                          error: (NSError**)outError
+{
     if (_options.readOnly)
-        create = NO;
+        mustExist = YES;
     CBLDatabase* db = _databases[name];
     if (!db) {
-        NSString* path = [self pathForName: name];
-        if (!path)
+        if (![[self class] isValidDatabaseName: name]) {
+            if (outError)
+                *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
             return nil;
-        db = [[CBLDatabase alloc] initWithPath: path
-                                           name: name
-                                        manager: self
-                                       readOnly: _options.readOnly];
-        if (!create && !db.exists) {
+        }
+        NSString* filename = [name stringByReplacingOccurrencesOfString: @"/" withString: @":"];
+        filename = [filename stringByAppendingPathExtension: kDBExtension];
+        db = [[CBLDatabase alloc] initWithPath: [_dir stringByAppendingPathComponent: filename]
+                                          name: name
+                                       manager: self
+                                      readOnly: _options.readOnly];
+        if (mustExist && !db.exists) {
+            if (outError)
+                *outError = CBLStatusToNSError(kCBLStatusNotFound, nil);
             return nil;
         }
         _databases[name] = db;
     }
-    return db;
-}
-
-
-- (CBLDatabase*) _databaseNamed: (NSString*)name {
-    return [self _databaseNamed: name create: YES];
-}
-
-
-- (CBLDatabase*) _existingDatabaseNamed: (NSString*)name {
-    CBLDatabase* db = [self _databaseNamed: name create: NO];
-    if (db && ![db open: nil])
-        db = nil;
     return db;
 }
 
@@ -416,7 +406,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     NSDictionary* remoteDict = nil;
     if ([CBLManager isValidDatabaseName: source]) {
         if (outDatabase)
-            db = [self _existingDatabaseNamed: source];
+            db = self[source];
         remoteDict = targetDict;
         *outIsPush = YES;
     } else {
@@ -425,11 +415,11 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         remoteDict = sourceDict;
         if (outDatabase) {
             if (*outCreateTarget) {
-                db = [self _databaseNamed: target];
-                if (![db open: nil])
+                db = [self _databaseNamed: target mustExist: NO error: NULL];
+                if (![db open: NULL])
                     return kCBLStatusDBError;
             } else {
-                db = [self _existingDatabaseNamed: target];
+                db = self[target];
             }
         }
     }
@@ -552,19 +542,18 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 TestCase(CBLManager) {
     RequireTestCase(CBLDatabase);
     CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
-    CBLDatabase* db = [dbm _databaseNamed: @"foo"];
+    CAssertEqual(dbm.allDatabaseNames, @[]);
+    CBLDatabase* db = [dbm databaseNamed: @"foo" error: NULL];
+    CAssert(db == nil);
+    
+    db = [dbm createDatabaseNamed: @"foo" error: NULL];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");
     CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);
-    CAssert(!db.exists);
-    
-    CAssertEq([dbm _databaseNamed: @"foo"], db);
-    
-    CAssertEqual(dbm.allDatabaseNames, @[]);    // because foo doesn't exist yet
-    
-    CAssert([db open: nil]);
     CAssert(db.exists);
-    CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);    // because foo doesn't exist yet
+    CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);
+
+    CAssertEq([dbm databaseNamed: @"foo" error: NULL], db);
 }
 
 #endif

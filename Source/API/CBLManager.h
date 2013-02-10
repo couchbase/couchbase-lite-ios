@@ -54,17 +54,18 @@ typedef struct CBLManagerOptions {
 @property (readonly) NSString* directory;
 
 /** Returns the database with the given name, or nil if it doesn't exist.
-    Multiple calls with the same name will return the same CouchDatabase instance. */
-- (CBLDatabase*) databaseNamed: (NSString*)name __attribute__((nonnull));
+    Multiple calls with the same name will return the same CBLDatabase instance. */
+- (CBLDatabase*) databaseNamed: (NSString*)name
+                         error: (NSError**)outError                     __attribute__((nonnull(1)));
 
 /** Same as -databaseNamed:. Enables "[]" access in Xcode 4.4+ */
 - (CBLDatabase*) objectForKeyedSubscript: (NSString*)key __attribute__((nonnull));
 
 /** Returns the database with the given name, creating it if it didn't already exist.
-    Multiple calls with the same name will return the same CouchDatabase instance.
+    Multiple calls with the same name will return the same CBLDatabase instance.
      NOTE: Database names may not contain capital letters! */
-- (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError
-                                                                    __attribute__((nonnull(1)));
+- (CBLDatabase*) createDatabaseNamed: (NSString*)name
+                               error: (NSError**)outError               __attribute__((nonnull(1)));
 
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;

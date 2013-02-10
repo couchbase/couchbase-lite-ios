@@ -101,8 +101,8 @@ static NSString* replic8(CBLDatabase* db, NSString* urlStr, BOOL push, NSString*
 TestCase(CBL_Pusher) {
     RequireTestCase(CBLDatabase);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
-    CBLDatabase* db = [server _databaseNamed: @"db"];
-    [db open: nil];
+    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CAssert(db);
     
     __block int filterCalls = 0;
     [db defineFilter: @"filter" asBlock: ^BOOL(CBLRevision *revision, NSDictionary* params) {
@@ -149,8 +149,8 @@ TestCase(CBL_Pusher) {
 TestCase(CBL_Puller) {
     RequireTestCase(CBL_Pusher);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
-    CBLDatabase* db = [server _databaseNamed: @"db"];
-    [db open: nil];
+    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CAssert(db);
     
     id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
     CAssertEqual(lastSeq, @2);
@@ -187,8 +187,8 @@ TestCase(CBL_Puller_FromCouchApp) {
     
     RequireTestCase(CBL_Puller);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
-    CBLDatabase* db = [server _databaseNamed: @"couchapp_helloworld"];
-    [db open: nil];
+    CBLDatabase* db = [server createDatabaseNamed: @"couchapp_helloworld" error: NULL];
+    CAssert(db);
     
     replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
 
@@ -221,9 +221,9 @@ TestCase(CBL_ReplicatorManager) {
     RequireTestCase(ParseReplicatorProperties);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
     CAssert([server replicatorManager]);    // start the replicator
-    CBLDatabase* replicatorDb = [server _databaseNamed: kCBL_ReplicatorDatabaseName];
+    CBLDatabase* replicatorDb = [server createDatabaseNamed: kCBL_ReplicatorDatabaseName
+                                                error: NULL];
     CAssert(replicatorDb);
-    CAssert([replicatorDb open: nil]);
     
     // Try some bogus validation docs that will fail the validator function:
     CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"source", @"foo"},
@@ -239,8 +239,8 @@ TestCase(CBL_ReplicatorManager) {
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusForbidden);
     
-    CBLDatabase* sourceDB = [server _databaseNamed: @"foo"];
-    CAssert([sourceDB open: nil]);
+    CBLDatabase* sourceDB = [server createDatabaseNamed: @"foo" error: NULL];
+    CAssert(sourceDB);
 
     // Now try a valid replication document:
     NSURL* remote = [NSURL URLWithString: @"http://localhost:5984/tdreplicator_test"];
@@ -308,7 +308,7 @@ TestCase(CBL_ReplicatorManager) {
 
 TestCase(ParseReplicatorProperties) {
     CBLManager* dbManager = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
-    CBLDatabase* localDB = [dbManager _databaseNamed: @"foo"];
+    CBLDatabase* localDB = [dbManager _databaseNamed: @"foo" mustExist: NO error: NULL];
 
     CBLDatabase* db = nil;
     NSURL* remote = nil;

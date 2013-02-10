@@ -24,7 +24,7 @@ static CBLDatabase* createEmptyDB(void) {
     CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
     NSError* error;
-    CBLDatabase* db = [dbmgr databaseNamed: @"test_db"];
+    CBLDatabase* db = dbmgr[@"test_db"];
     if (db)
         CAssert([db deleteDatabase: &error], @"Couldn't delete old test_db: %@", error);
     db = [dbmgr createDatabaseNamed: @"test_db" error: &error];
@@ -68,7 +68,7 @@ TestCase(API_Server) {
     CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
     for (NSString* name in dbmgr.allDatabaseNames) {
-        CBLDatabase* db = [dbmgr databaseNamed: name];
+        CBLDatabase* db = dbmgr[name];
         Log(@"Database '%@': %u documents", db.name, (unsigned)db.documentCount);
     }
 }

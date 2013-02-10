@@ -45,7 +45,9 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     self = [super init];
     if (self) {
         _dbManager = dbManager;
-        _replicatorDB = [dbManager _databaseNamed: kCBL_ReplicatorDatabaseName];
+        // Instantiate db but don't open/create the file yet:
+        _replicatorDB = [dbManager _databaseNamed: kCBL_ReplicatorDatabaseName
+                                        mustExist: NO error: NULL];
         if (!_replicatorDB) {
             return nil;
         }

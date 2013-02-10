@@ -58,7 +58,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 {
     NSParameterAssert(database);
     NSParameterAssert(remote);
-    CBLDatabase* replicatorDB = [database.manager databaseNamed: @"_replicator"];
+    CBLDatabase* replicatorDB = [database.manager createDatabaseNamed: @"_replicator" error: NULL];
+    if (!replicatorDB)
+        return nil;
     self = [super initWithNewDocumentInDatabase: replicatorDB];
     if (self) {
         _remoteURL = remote;
@@ -163,7 +165,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     NSString* name = self.sourceURLStr;
     if (!isLocalDBName(name))
         name = self.targetURLStr;
-    return [self.database.manager databaseNamed: name];
+    return self.database.manager[name];
 }
 
 

@@ -890,7 +890,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 {
     if (!filter)
         return YES;
-    CBLRevision* publicRev = [[CBLRevision alloc] initWithCBLDB: self revision: rev];
+    CBLRevision* publicRev = [[CBLRevision alloc] initWithDatabase: self revision: rev];
     return filter(publicRev, filterParams);
 }
 

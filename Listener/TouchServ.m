@@ -100,23 +100,27 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
 
     // Actually replicate -- this could probably be cleaned up to use the public API.
     CBL_Replicator* repl = nil;
-    CBLDatabase* db = [dbm _existingDatabaseNamed: dbName];
+    NSError* error = nil;
+    CBLDatabase* db = [dbm databaseNamed: dbName error: &error];
     if (pull) {
+        // Pull always deletes the local db, since it's used for testing the replicator.
         if (db) {
-            if (![db deleteDatabase: nil]) {
-                fprintf(stderr, "Couldn't delete existing database '%s'\n", dbName.UTF8String);
+            if (![db deleteDatabase: &error]) {
+                fprintf(stderr, "Couldn't delete existing database '%s': %s\n",
+                        dbName.UTF8String, error.localizedDescription.UTF8String);
                 return false;
             }
         }
-        db = [dbm _databaseNamed: dbName];
+        db = [dbm createDatabaseNamed: dbName error: &error];
     }
     if (!db) {
-        fprintf(stderr, "No such database '%s'\n", dbName.UTF8String);
+        fprintf(stderr, "Couldn't open database '%s': %s\n",
+                dbName.UTF8String, error.localizedDescription.UTF8String);
         return false;
     }
     [db open];
     repl = [[CBL_Replicator alloc] initWithDB: db remote: remote push: !pull
-                                 continuous: continuous];
+                                   continuous: continuous];
     if (createTarget && !pull)
         ((CBL_Pusher*)repl).createTarget = YES;
     if (!repl)

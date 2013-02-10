@@ -291,7 +291,8 @@ static NSArray* splitPath( NSURL* url ) {
         } else if (!validName) {
             return kCBLStatusBadID;
         } else {
-            _db = [_dbManager _databaseNamed: dbName];
+            // Instantiate the db object but don't create/open the file yet
+            _db = [_dbManager _databaseNamed: dbName mustExist: NO error: NULL];
             if (!_db)
                 return kCBLStatusNotFound;
             [message appendString: @":"];
