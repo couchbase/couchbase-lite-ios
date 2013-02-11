@@ -16,6 +16,7 @@
 #import "CBLView+Internal.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLInternal.h"
+#import "CouchbaseLitePrivate.h"
 #import "Test.h"
 
 
@@ -89,7 +90,7 @@ static CBLView* createView(CBLDatabase* db) {
 
 
 static NSArray* rowsToDicts(NSArray* rows) {
-    return [rows my_map:^(CBL_QueryRow* row) {return row.asJSONDictionary;}];
+    return [rows my_map:^(CBLQueryRow* row) {return row.asJSONDictionary;}];
 }
 
 

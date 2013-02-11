@@ -16,12 +16,6 @@
 @end
 
 
-@interface CBLQueryRow ()
-- (instancetype) initWithDatabase: (CBLDatabase*)db result: (id)result;
-@end
-
-
-
 @implementation CBLQuery
 {
     CBLDatabase* _database;
@@ -100,7 +94,7 @@
 }
 
 
-- (NSArray*) run {
+- (CBLQueryEnumerator*) rows {
     CBLQueryOptions options = {
         .startKey = _startKey,
         .endKey = _endKey,
@@ -135,23 +129,17 @@
         _status = rows ? kCBLStatusOK :kCBLStatusDBError; //FIX: getALlDocs should return status
         lastSequence = _database.lastSequenceNumber;
     }
+
+    if (!rows)
+        return nil;
     
-    if (rows)
-        _lastSequence = lastSequence;
-    return rows;
+    _lastSequence = lastSequence;
+    return [[CBLQueryEnumerator alloc] initWithDatabase: _database rows: rows];
 }
 
 
 - (NSError*) error {
     return CBLStatusIsError(_status) ? CBLStatusToNSError(_status, nil) : nil;
-}
-
-
-- (CBLQueryEnumerator*) rows {
-    NSArray* rows = self.run;
-    if (!rows)
-        return nil;
-    return [[CBLQueryEnumerator alloc] initWithDatabase: _database rows: rows];
 }
 
 
@@ -187,7 +175,7 @@
                                                    object: self.database];
     }
     if (!_rows) {
-        _rows = [super.rows copy];
+        _rows = super.rows;
         Log(@"CBLLiveQuery: Initial row count is %lu", (unsigned long)_rows.count);
     }
     // Have to return a copy because the enumeration has to start at item #0 every time
@@ -272,7 +260,7 @@
 
 
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index {
-    return [[CBLQueryRow alloc] initWithDatabase: _database result: _rows[index]];
+    return _rows[index];
 }
 
 
@@ -293,39 +281,70 @@
 
 
 
-@implementation CBLQueryRow
-{
-    CBLDatabase* _database;
-    CBL_QueryRow* _result;
+static id fromJSON( NSData* json ) {
+    if (!json)
+        return nil;
+    return [CBLJSON JSONObjectWithData: json
+                               options: CBLJSONReadingAllowFragments
+                                 error: NULL];
 }
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database result: (CBL_QueryRow*)result {
+
+
+@implementation CBLQueryRow
+{
+    CBLDatabase* _database;
+    id _key, _value;            // Usually starts as JSON NSData; parsed on demand
+    NSString* _sourceDocID;
+    NSDictionary* _documentProperties;
+}
+
+
+@synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID;
+
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                            docID: (NSString*)docID
+                              key: (id)key
+                            value: (id)value
+                    docProperties: (NSDictionary*)docProperties
+{
     self = [super init];
     if (self) {
         _database = database;
-        _result = result;
+        _sourceDocID = [docID copy];
+        _key = [key copy];
+        _value = [value copy];
+        _documentProperties = [docProperties copy];
     }
     return self;
 }
 
 
-- (id) key                              {return _result.key;}
-- (id) value                            {return _result.value;}
-- (NSString*) sourceDocumentID          {return _result.docID;}
-- (NSDictionary*) documentProperties    {return _result.properties;}
+- (id) key {
+    if ([_key isKindOfClass: [NSData class]])
+        _key = fromJSON(_key);
+    return _key;
+}
+
+- (id) value {
+    if ([_value isKindOfClass: [NSData class]])
+        _value = fromJSON(_value);
+    return _value;
+}
+
 
 - (NSString*) documentID {
-    NSString* docID = _result.properties[@"_id"];
-    if (!docID)
-        docID = _result.docID;
-    return docID;
+    // _documentProperties may have been 'redirected' from a different document
+    return _documentProperties[@"_id"] ?: _sourceDocID;
 }
+
 
 - (NSString*) documentRevision {
     // Get the revision id from either the embedded document contents,
     // or the '_rev' or 'rev' value key:
-    NSString* rev = _result.properties[@"_rev"];
+    NSString* rev = _documentProperties[@"_rev"];
     if (!rev) {
         id value = self.value;
         if ([value isKindOfClass: [NSDictionary class]]) {      // $castIf would log a warning
@@ -342,7 +361,7 @@
 
 
 - (id) keyAtIndex: (NSUInteger)index {
-    id key = _result.key;
+    id key = self.key;
     if ([key isKindOfClass:[NSArray class]])
         return (index < [key count]) ? key[index] : nil;
     else
@@ -368,6 +387,17 @@
 - (UInt64) localSequence {
     id seq = (self.documentProperties)[@"_local_seq"];
     return $castIf(NSNumber, seq).unsignedLongLongValue;
+}
+
+
+// This is used by the router
+- (NSDictionary*) asJSONDictionary {
+    if (_value || _sourceDocID)
+        return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _sourceDocID},
+                     {@"doc", _documentProperties});
+    else
+        return $dict({@"key", self.key}, {@"error", @"not_found"});
+
 }
 
 

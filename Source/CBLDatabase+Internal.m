@@ -1081,10 +1081,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             }
             NSDictionary* value = $dict({@"rev", revID},
                                         {@"deleted", (deleted ?$true : nil)});
-            CBL_QueryRow* change = [[CBL_QueryRow alloc] initWithDocID: docID
-                                                                 key: docID
-                                                               value: value
-                                                          properties: docContents];
+            CBLQueryRow* change = [[CBLQueryRow alloc] initWithDatabase: self
+                                                                  docID: docID
+                                                                    key: docID
+                                                                  value: value
+                                                          docProperties: docContents];
             if (options->keys)
                 docs[docID] = change;
             else
@@ -1096,7 +1097,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     // If given doc IDs, sort the output into that order, and add entries for missing docs:
     if (options->keys) {
         for (NSString* docID in options->keys) {
-            CBL_QueryRow* change = docs[docID];
+            CBLQueryRow* change = docs[docID];
             if (!change) {
                 NSDictionary* value = nil;
                 SInt64 docNumericID = [self getDocNumericID: docID];
@@ -1108,10 +1109,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                     if (revID)
                         value = $dict({@"rev", revID}, {@"deleted", $true});
                 }
-                change = [[CBL_QueryRow alloc] initWithDocID: (value ?docID :nil)
-                                                        key: docID
-                                                      value: value
-                                                 properties: nil];
+                change = [[CBLQueryRow alloc] initWithDatabase: self
+                                                         docID: (value ?docID :nil)
+                                                           key: docID
+                                                         value: value
+                                                 docProperties: nil];
             }
             [rows addObject: change];
         }

@@ -15,6 +15,7 @@
 
 #import "CBL_Router.h"
 #import "CBLDatabase.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+LocalDocs.h"
@@ -940,7 +941,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSArray* rows = [view _queryWithOptions: options status: &status];
     if (!rows)
         return status;
-    rows = [rows my_map:^(CBL_QueryRow* row) {return row.asJSONDictionary;}];
+    rows = [rows my_map:^(CBLQueryRow* row) {return row.asJSONDictionary;}];
     id updateSeq = options->updateSeq ? @(view.lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
                                  {@"total_rows", @(rows.count)},

@@ -15,6 +15,7 @@
 
 #import "CBLView+Internal.h"
 #import "CBLInternal.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
@@ -391,8 +392,8 @@ static id fromJSON( NSData* json ) {
         rows = $marray();
         while ([r next]) {
             @autoreleasepool {
-                id keyData = [r dataForColumnIndex: 0];
-                id valueData = [r dataForColumnIndex: 1];
+                NSData* keyData = [r dataForColumnIndex: 0];
+                NSData* valueData = [r dataForColumnIndex: 1];
                 Assert(keyData);
                 NSString* docID = [r stringForColumnIndex: 2];
                 id docContents = nil;
@@ -420,10 +421,11 @@ static id fromJSON( NSData* json ) {
                 LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
                       toJSONString(docID));
-                [rows addObject: [[CBL_QueryRow alloc] initWithDocID: docID
-                                                                key: keyData
-                                                              value: valueData
-                                                         properties: docContents]];
+                [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db
+                                                                 docID: docID
+                                                                   key: keyData
+                                                                 value: valueData
+                                                         docProperties: docContents]];
             }
         }
     }
@@ -491,10 +493,11 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
                     // This pair starts a new group, so reduce & record the last one:
                     id key = groupKey(lastKeyData, groupLevel);
                     id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
-                    [rows addObject: [[CBL_QueryRow alloc] initWithDocID: nil
-                                                                    key: key
-                                                                  value: reduced
-                                                             properties: nil]];
+                    [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db
+                                                                     docID: nil
+                                                                       key: key
+                                                                     value: reduced
+                                                             docProperties: nil]];
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
                 }
@@ -513,10 +516,11 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
         id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
         LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
-        [rows addObject: [[CBL_QueryRow alloc] initWithDocID: nil
-                                                        key: key
-                                                      value: reduced
-                                                 properties: nil]];
+        [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db
+                                                         docID: nil
+                                                           key: key
+                                                         value: reduced
+                                                 docProperties: nil]];
     }
     return rows;
 }
@@ -525,6 +529,7 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
 #pragma mark - OTHER:
 
 // This is really just for unit tests & debugging
+#if DEBUG
 - (NSArray*) dump {
     if (self.viewID <= 0)
         return nil;
@@ -543,54 +548,7 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
     [r close];
     return result;
 }
+#endif
 
-
-@end
-
-
-
-
-@implementation CBL_QueryRow
-{
-    id _key, _value;
-    NSString* _docID;
-    NSDictionary* _properties;
-}
-
-@synthesize key=_key, value=_value, docID=_docID, properties=_properties;
-
-- (instancetype) initWithDocID: (NSString*)docID key: (id)key value: (id)value
-                    properties: (NSDictionary*)properties
-{
-    self = [super init];
-    if (self) {
-        _docID = [docID copy];
-        _key = [key copy];
-        _value = [value copy];
-        _properties = [properties copy];
-    }
-    return self;
-}
-
-- (id) key {
-    if ([_key isKindOfClass: [NSData class]])
-        _key = fromJSON(_key);
-    return _key;
-}
-
-- (id) value {
-    if ([_value isKindOfClass: [NSData class]])
-        _value = fromJSON(_value);
-    return _value;
-}
-
-- (NSDictionary*) asJSONDictionary {
-    if (_value || _docID)
-        return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _docID},
-                     {@"doc", _properties});
-    else
-        return $dict({@"key", self.key}, {@"error", @"not_found"});
-
-}
 
 @end

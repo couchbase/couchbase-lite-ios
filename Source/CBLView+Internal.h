@@ -68,20 +68,8 @@ typedef enum {
 
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
-    @return  An array of CBL_QueryRows. */
+    @return  An array of CBLQueryRow. */
 - (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus;
 
-@end
-
-
-/** One result of a view query. */
-@interface CBL_QueryRow : NSObject
-- (instancetype) initWithDocID: (NSString*)docID key: (id)key value: (id)value
-                    properties: (NSDictionary*)properties;
-@property (readonly, nonatomic) id key;
-@property (readonly, nonatomic) id value;
-@property (readonly, nonatomic) NSString* docID;
-@property (readonly, nonatomic) NSDictionary* properties;
-@property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @end

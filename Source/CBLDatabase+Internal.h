@@ -184,7 +184,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 - (CBLStatus) deleteViewNamed: (NSString*)name;
 
-/** Returns the value of an _all_docs query, as an array of CBL_QueryRow. */
+/** Returns the value of an _all_docs query, as an array of CBLQueryRow. */
 - (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;
 
 - (CBLView*) makeAnonymousView;

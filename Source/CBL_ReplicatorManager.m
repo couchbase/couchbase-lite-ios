@@ -17,6 +17,7 @@
 //  http://www.couchbase.com/docs/couchdb-release-1.1/index.html
 
 #import "CBL_ReplicatorManager.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
@@ -290,8 +291,8 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     LogTo(Sync, @"ReplicatorManager scanning existing _replicator docs...");
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     options.includeDocs = YES;
-    for (CBL_QueryRow* row in [_replicatorDB getAllDocs: &options]) {
-        NSDictionary* docProps = row.properties;
+    for (CBLQueryRow* row in [_replicatorDB getAllDocs: &options]) {
+        NSDictionary* docProps = row.documentProperties;
         NSString* state = docProps[@"_replication_state"];
         if (state==nil || $equal(state, @"triggered") ||
                     [docProps[@"continuous"] boolValue]) {
@@ -366,8 +367,8 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     options.includeDocs = YES;
-    for (CBL_QueryRow* row in [_replicatorDB getAllDocs: &options]) {
-        NSDictionary* docProps = row.properties;
+    for (CBLQueryRow* row in [_replicatorDB getAllDocs: &options]) {
+        NSDictionary* docProps = row.documentProperties;
         NSString* source = $castIf(NSString, docProps[@"source"]);
         NSString* target = $castIf(NSString, docProps[@"target"]);
         if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
