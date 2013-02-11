@@ -14,6 +14,7 @@
 
 @implementation CBLRevisionBase
 {
+    @protected
     CBLDocument* _document;
 }
 
@@ -27,7 +28,7 @@
     return self;
 }
 
-- (CBLDatabase*) database        {return _document.database;}
+- (CBLDatabase*) database       {return _document.database;}
 - (NSString*) revisionID        {return nil;}
 - (SequenceNumber) sequence     {return 0;}
 - (NSDictionary*) properties    {AssertAbstractMethod();}
@@ -55,7 +56,13 @@
 
 - (BOOL) isDeleted {
     id del = self.properties[@"_deleted"];
-    return del == nil || del == $false;
+    return del != nil && del != $false;
+}
+
+
+- (NSString*) description {
+    return $sprintf(@"%@[%@/%@]", [self class], self.document.abbreviatedID,
+                    (self.revisionID ?: @""));
 }
 
 
@@ -114,14 +121,9 @@
 }
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)tddb revision: (CBL_Revision*)rev {
-    CBLDocument* doc = [tddb documentWithID: rev.docID];
+- (instancetype) initWithDatabase: (CBLDatabase*)db revision: (CBL_Revision*)rev {
+    CBLDocument* doc = [db documentWithID: rev.docID];
     return [self initWithDocument: doc revision: rev];
-}
-
-
-- (NSString*) description {
-    return $sprintf(@"%@[%@/%@]", [self class], self.document.abbreviatedID, _rev.revID);
 }
 
 
@@ -215,18 +217,16 @@
 
 @implementation CBLNewRevision
 {
-    CBLDocument* _document;
     NSString* _parentRevID;
     NSMutableDictionary* _properties;
 }
 
-@synthesize document=_document, parentRevisionID=_parentRevID, properties=_properties;
+@synthesize parentRevisionID=_parentRevID, properties=_properties;
 
 - (instancetype) initWithDocument: (CBLDocument*)doc parent: (CBLRevision*)parent {
     Assert(doc != nil);
-    self = [super init];
+    self = [super initWithDocument: doc];
     if (self) {
-        _document = doc;
         _parentRevID = parent.revisionID;
         _properties = [parent.properties mutableCopy];
         if (!_properties)
@@ -236,26 +236,8 @@
     return self;
 }
 
-- (CBLDatabase*) database {return _document.database;}
-
 - (CBLRevision*) parentRevision {
     return _parentRevID ? [_document revisionWithID: _parentRevID] : nil;
-}
-
-- (NSDictionary*) userProperties {
-    NSDictionary* rep = self.properties;
-    if (!rep)
-        return nil;
-    NSMutableDictionary* props = [NSMutableDictionary dictionary];
-    for (NSString* key in rep) {
-        if (![key hasPrefix: @"_"])
-            props[key] = rep[key];
-    }
-    return props;
-}
-
-- (id) objectForKeyedSubscript: (NSString*)key {
-    return _properties[key];
 }
 
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key {

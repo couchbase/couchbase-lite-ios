@@ -126,6 +126,7 @@ TestCase(API_CreateNewRevisions) {
     CAssertNil(newRev.parentRevisionID);
     CAssertNil(newRev.parentRevision);
     CAssertEqual(newRev.properties, $mdict({@"_id", doc.documentID}));
+    CAssert(!newRev.isDeleted);
 
     newRev[@"testName"] = @"testCreateRevisions";
     newRev[@"tag"] = @1337;
@@ -144,6 +145,7 @@ TestCase(API_CreateNewRevisions) {
     CAssertEqual(newRev.parentRevision, rev1);
     CAssertEqual(newRev.properties, rev1.properties);
     CAssertEqual(newRev.userProperties, rev1.userProperties);
+    CAssert(!newRev.isDeleted);
 
     newRev[@"tag"] = @4567;
     CBLRevision* rev2 = [newRev save: &error];
@@ -232,6 +234,7 @@ TestCase(API_DeleteMultipleDocuments) {
     
     for (CBLDocument* doc in docs) {
         CAssert(doc.isDeleted);
+        CAssert(doc.currentRevision.isDeleted);
     }
     
     CAssertEq([db getDocumentCount], (NSInteger)0);
@@ -243,9 +246,11 @@ TestCase(API_DeleteDocument) {
     NSDictionary* properties = @{@"testName": @"testDeleteDocument"};
     CBLDocument* doc = createDocumentWithProperties(db, properties);
     CAssert(!doc.isDeleted);
+    CAssert(!doc.currentRevision.isDeleted);
     NSError* error;
     CAssert([doc deleteDocument: &error]);
     CAssert(doc.isDeleted);
+    CAssert(doc.currentRevision.isDeleted);
 }
 
 
