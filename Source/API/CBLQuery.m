@@ -26,7 +26,7 @@
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
     CBLStaleness _stale;
-    BOOL _descending, _prefetch, _sequences;
+    BOOL _descending, _prefetch, _sequences, _mapOnly;
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;
@@ -67,6 +67,7 @@
         _prefetch = query.prefetch;
         self.keys = query.keys;
         _groupLevel = query.groupLevel;
+        _mapOnly = query.mapOnly;
         self.startKeyDocID = query.startKeyDocID;
         self.endKeyDocID = query.endKeyDocID;
         _stale = query.stale;
@@ -85,7 +86,7 @@
 
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
-            endKeyDocID=_endKeyDocID, stale=_stale, sequences=_sequences,
+            endKeyDocID=_endKeyDocID, stale=_stale, sequences=_sequences, mapOnly=_mapOnly,
             database=_database;
 
 
@@ -101,6 +102,7 @@
         .keys = _keys,
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
+        .reduce = !_mapOnly && _view.reduceBlock != nil,
         .groupLevel = (unsigned)_groupLevel,
         .descending = _descending,
         .includeDocs = _prefetch,

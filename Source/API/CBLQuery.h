@@ -57,6 +57,10 @@ typedef enum {
 /** If non-nil, the query will fetch only the rows with the given keys. */
 @property (copy) NSArray* keys;
 
+/** If set to YES, disables use of the reduce function.
+    (Equivalent to setting "?reduce=false" in the REST API.) */
+@property BOOL mapOnly;
+
 /** If non-zero, enables grouping of results, in views that have reduce functions. */
 @property NSUInteger groupLevel;
 
