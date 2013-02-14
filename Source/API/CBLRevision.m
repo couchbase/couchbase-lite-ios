@@ -241,7 +241,7 @@
 }
 
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key {
-    _properties[key] = object;
+    [_properties setValue: object forKey: key];
 }
 
 - (void) setIsDeleted:(BOOL)isDeleted {
