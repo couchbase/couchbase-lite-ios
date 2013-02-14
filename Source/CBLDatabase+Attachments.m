@@ -231,8 +231,8 @@
         *outStatus = kCBLStatusOK;
         if (outType)
             *outType = [r stringForColumnIndex: 1];
-        
-        *outEncoding = [r intForColumnIndex: 2];
+        if (outEncoding)
+            *outEncoding = [r intForColumnIndex: 2];
     } @finally {
         [r close];
     }
