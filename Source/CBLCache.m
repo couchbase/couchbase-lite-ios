@@ -35,7 +35,7 @@ static const NSUInteger kDefaultRetainLimit = 50;
         // key/value pairs when a value is dealloced.
         _map = [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsStrongMemory |
                                                        NSPointerFunctionsObjectPersonality
-                                         valueOptions: NSPointerFunctionsZeroingWeakMemory |
+                                         valueOptions: NSPointerFunctionsWeakMemory |
                                                        NSPointerFunctionsObjectPersonality
                                              capacity: 100];
 #else
