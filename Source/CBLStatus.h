@@ -49,3 +49,4 @@ static inline bool CBLStatusIsError(CBLStatus status) {return status >= 400;}
 int CBLStatusToHTTPStatus( CBLStatus status, NSString** outMessage );
 
 NSError* CBLStatusToNSError( CBLStatus status, NSURL* url );
+CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus);

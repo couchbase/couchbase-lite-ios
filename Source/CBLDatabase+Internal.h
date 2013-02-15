@@ -64,7 +64,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     __weak CBLManager* _manager;
     FMDatabase *_fmdb;
     BOOL _readOnly;
-    BOOL _open;
+    BOOL _isOpen;
     int _transactionLevel;
     NSThread* _thread;
     NSMutableDictionary* _views;
@@ -82,7 +82,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readwrite, copy) NSString* name;  // make it settable
 @property (nonatomic, readonly) NSString* path;
 @property (nonatomic, readonly) NSThread* thread;
-@property (nonatomic, readonly) BOOL open;
+@property (nonatomic, readonly) BOOL isOpen;
 
 - (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
 @end

@@ -148,8 +148,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (BOOL) open: (NSError**)outError {
-    if (_open)
+    if (_isOpen)
         return YES;
+    LogTo(CBLDatabase, @"Opening %@", self);
     if (![self openFMDB: outError])
         return NO;
     
@@ -288,12 +289,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return NO;
     }
 
-    _open = YES;
+    _isOpen = YES;
     return YES;
 }
 
 - (BOOL) close {
-    if (!_open)
+    if (!_isOpen)
         return NO;
     
     LogTo(CBLDatabase, @"Close %@", _path);
@@ -310,7 +311,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     
     if (![_fmdb close])
         return NO;
-    _open = NO;
+    _isOpen = NO;
     _transactionLevel = 0;
     return YES;
 }

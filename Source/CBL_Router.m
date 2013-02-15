@@ -233,8 +233,9 @@
     // As a special case, the _replicator db is created on demand (as though it already existed)
     if (!_db.exists && !$equal(_db.name, kCBL_ReplicatorDatabaseName))
         return kCBLStatusNotFound;
-    if (![_db open])
-        return kCBLStatusDBError;
+    NSError* error;
+    if (![_db open: &error])
+        return CBLStatusFromNSError(error, kCBLStatusDBError);
     return kCBLStatusOK;
 }
 

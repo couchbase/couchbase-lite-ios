@@ -42,7 +42,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 @synthesize manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
-@synthesize path=_path, name=_name, open=_open, thread=_thread;
+@synthesize path=_path, name=_name, isOpen=_isOpen, thread=_thread;
 
 
 - (instancetype) initWithPath: (NSString*)path
@@ -72,7 +72,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (void)dealloc {
-    if (_open) {
+    if (_isOpen) {
         //Warn(@"%@ dealloced without being closed first!", self);
         [self close];
     }
@@ -131,7 +131,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     LogTo(CBLDatabase, @"Deleting %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
-    if (_open) {
+    if (_isOpen) {
         if (![self close])
             return NO;
     } else if (!self.exists) {

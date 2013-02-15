@@ -69,3 +69,12 @@ NSError* CBLStatusToNSError( CBLStatus status, NSURL* url ) {
                                {NSLocalizedDescriptionKey, $sprintf(@"%i %@", status, reason)});
     return [NSError errorWithDomain: CBLHTTPErrorDomain code: status userInfo: info];
 }
+
+
+CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus) {
+    if (!error)
+        return kCBLStatusOK;
+    if (!$equal(error.domain, CBLHTTPErrorDomain))
+        return defaultStatus;
+    return (CBLStatus)error.code;
+}

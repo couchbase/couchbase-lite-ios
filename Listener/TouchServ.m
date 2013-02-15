@@ -113,12 +113,13 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         }
         db = [dbm createDatabaseNamed: dbName error: &error];
     }
+    if (db && ![db open: &error])
+        db = nil;
     if (!db) {
         fprintf(stderr, "Couldn't open database '%s': %s\n",
                 dbName.UTF8String, error.localizedDescription.UTF8String);
         return false;
     }
-    [db open];
     repl = [[CBL_Replicator alloc] initWithDB: db remote: remote push: !pull
                                    continuous: continuous];
     if (createTarget && !pull)

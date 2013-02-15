@@ -177,8 +177,9 @@
 - (CBLStatus) do_PUT: (CBLDatabase*)db {
     if (db.exists)
         return kCBLStatusDuplicate;
-    if (![db open])
-        return kCBLStatusDBError;
+    NSError* error;
+    if (![db open: &error])
+        return CBLStatusFromNSError(error, kCBLStatusDBError);
     [self setResponseLocation: _request.URL];
     return kCBLStatusCreated;
 }

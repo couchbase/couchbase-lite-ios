@@ -255,7 +255,7 @@ static NSCharacterSet* kIllegalNameChars;
     CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
     if (!db)
         return NO;
-    Assert(!db.open, @"Already-open database cannot be replaced");
+    Assert(!db.isOpen, @"Already-open database cannot be replaced");
     NSString* dstAttachmentsPath = db.attachmentStorePath;
     NSFileManager* fmgr = [NSFileManager defaultManager];
     return [fmgr copyItemAtPath: databasePath toPath: db.path error: outError] &&
