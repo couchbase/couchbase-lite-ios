@@ -35,6 +35,7 @@ _kCBLDocumentChangeNotification
 
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
+_CBLStatusFromNSError
 _CBLURLWithoutQuery
 _CBLSequenceCompare
 _CBLVersionString
