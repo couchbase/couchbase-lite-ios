@@ -236,6 +236,7 @@
     NSArray* result = [_db getAllDocs: options];
     if (!result)
         return kCBLStatusDBError;
+    result = [result my_map: ^id(CBLQueryRow* row) {return row.asJSONDictionary;}];
     _response.bodyObject = $dict({@"rows", result},
                                  {@"total_rows", @(result.count)},
                                  {@"offset", @(options->skip)},

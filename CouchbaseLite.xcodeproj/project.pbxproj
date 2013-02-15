@@ -140,8 +140,6 @@
 		27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; };
 		27731F001493FA3100815D67 /* CBL_BlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* CBL_BlobStore.m */; };
 		27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* CBL_BlobStore.m */; };
-		27731F1A1495CFEF00815D67 /* CBL_View_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* CBL_View_Tests.m */; };
-		27731F1C1495CFEF00815D67 /* CBLReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* CBLReplicator_Tests.m */; };
 		27731F1E1495CFEF00815D67 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libCouchbaseLite.a */; };
 		27731F1F1495CFEF00815D67 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F81492BC8000A817AD /* libsqlite3.dylib */; };
 		27731F201495CFEF00815D67 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7B81492B83C00A817AD /* UIKit.framework */; };
@@ -271,21 +269,22 @@
 		27B0B8551492D0A000A817AD /* CBL_View_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* CBL_View_Tests.m */; };
 		27B0B8571492D0AA00A817AD /* CBLReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* CBLReplicator_Tests.m */; };
 		27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B15516164A118100DF5E2C /* CBL_Database_Tests.m */; };
-		27B15518164A118100DF5E2C /* CBL_Database_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B15516164A118100DF5E2C /* CBL_Database_Tests.m */; };
 		27C40C7914EC58BC00994283 /* CBL_ReplicatorManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */; };
 		27C40C7A14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */; };
 		27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */; };
 		27C5305414DF3A050078F886 /* CBLMultipartUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C5305214DF3A050078F886 /* CBLMultipartUploader.h */; };
 		27C5305514DF3A050078F886 /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
 		27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
-		27C5308414E09E2B0078F886 /* CBLBlobStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40414D88031009F3FA6 /* CBLBlobStore_Tests.m */; };
-		27C5308514E09E2C0078F886 /* CBLBlobStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40414D88031009F3FA6 /* CBLBlobStore_Tests.m */; };
 		27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
 		27C706D31488679500F0F099 /* DemoAppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CC1488679500F0F099 /* DemoAppController.m */; };
 		27C706D41488679500F0F099 /* DemoQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CE1488679500F0F099 /* DemoQuery.m */; };
 		27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27C706D01488679500F0F099 /* ShoppingDemo.xib */; };
 		27C706D71488679500F0F099 /* ShoppingItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706D21488679500F0F099 /* ShoppingItem.m */; };
 		27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
+		27CB056816CEBCEC0040C9F8 /* CBLBlobStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40414D88031009F3FA6 /* CBLBlobStore_Tests.m */; };
+		27CB056916CEBD010040C9F8 /* CBLRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* CBLRouter_Tests.m */; };
+		27CB056B16CEBD1C0040C9F8 /* CBL_Database_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B15516164A118100DF5E2C /* CBL_Database_Tests.m */; };
+		27CB056C16CEBD4D0040C9F8 /* APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FF015D5C8250030122F /* APITests.m */; };
 		27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
@@ -386,7 +385,6 @@
 		27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		27F1E4AB16979A0B00F0E50F /* CBLJSViewCompiler_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4AA16979A0B00F0E50F /* CBLJSViewCompiler_Test.m */; };
 		27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27F3A5DD15ED496900263663 /* APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FF015D5C8250030122F /* APITests.m */; };
 		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
 		27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27F5B18916519F8F00126D0D /* MYDynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2206,9 +2204,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */,
-				27731F1A1495CFEF00815D67 /* CBL_View_Tests.m in Sources */,
-				27731F1C1495CFEF00815D67 /* CBLReplicator_Tests.m in Sources */,
-				27C5308514E09E2C0078F886 /* CBLBlobStore_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2263,7 +2258,6 @@
 				27DA435C15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
 				27E2E5A5159383E9005B9234 /* CBLAttachment.m in Sources */,
 				27E2E5CF159533A5005B9234 /* CBLReplication.m in Sources */,
-				27F3A5DD15ED496900263663 /* APITests.m in Sources */,
 				270D6FC3164484190081812D /* CBLSocketChangeTracker.m in Sources */,
 				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
 				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,
@@ -2284,7 +2278,6 @@
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
-				27B15518164A118100DF5E2C /* CBL_Database_Tests.m in Sources */,
 				2776A59616A0C3B1006FF199 /* CBLBrowserIDAuthorizer.m in Sources */,
 				2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
 			);
@@ -2307,9 +2300,11 @@
 				27731F3814967A5F00815D67 /* ConfigViewController.m in Sources */,
 				27B0B8551492D0A000A817AD /* CBL_View_Tests.m in Sources */,
 				27B0B8571492D0AA00A817AD /* CBLReplicator_Tests.m in Sources */,
-				27C5308414E09E2B0078F886 /* CBLBlobStore_Tests.m in Sources */,
 				27E7FAEC155D78C20025F93A /* CBLChangeTracker_Tests.m in Sources */,
 				27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */,
+				27CB056816CEBCEC0040C9F8 /* CBLBlobStore_Tests.m in Sources */,
+				27CB056B16CEBD1C0040C9F8 /* CBL_Database_Tests.m in Sources */,
+				27CB056C16CEBD4D0040C9F8 /* APITests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2324,6 +2319,7 @@
 				27F1E4A61697995C00F0E50F /* CBLJSViewCompiler.m in Sources */,
 				27F1E4AB16979A0B00F0E50F /* CBLJSViewCompiler_Test.m in Sources */,
 				27F6D02B16B72885006E1576 /* CBLJSFunction.m in Sources */,
+				27CB056916CEBD010040C9F8 /* CBLRouter_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

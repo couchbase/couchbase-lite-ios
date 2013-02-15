@@ -6,3 +6,6 @@
 
 .objc_class_name_CBLListener
 .objc_class_name_CBL_URLProtocol
+
+# Only for unit tests:
+.objc_class_name_CBL_Router

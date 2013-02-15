@@ -19,6 +19,7 @@
 #import "CBL_Server.h"
 #import "CBLBase64.h"
 #import "CBLInternal.h"
+#import "CBLMisc.h"
 #import "Test.h"
 #import "CBLJSON.h"
 
@@ -315,7 +316,7 @@ TestCase(CBL_Router_Views) {
     SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
     SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
     
-    CBLDatabase* db = [server databaseNamed: @"db"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CBLView* view = [db viewNamed: @"design/view"];
     [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         if (doc[@"message"])
