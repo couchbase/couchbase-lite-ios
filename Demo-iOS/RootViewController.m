@@ -211,7 +211,7 @@
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
     if (buttonIndex == 0)
         return;
-    [dataSource deleteDocuments: self.checkedDocuments];
+    [dataSource deleteDocuments: self.checkedDocuments error: NULL];
 }
 
 

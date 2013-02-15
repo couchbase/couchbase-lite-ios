@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-@class CBLDocument, CBLLiveQuery, CBLQueryRow, RESTOperation;
+@class CBLDocument, CBLLiveQuery, CBLQueryRow;
 
 /** A UITableView data source driven by a CBLLiveQuery.
     It populates the table rows from the query rows, and automatically updates the table as the
@@ -60,11 +60,13 @@
 /** Is the user allowed to delete rows by UI gestures? (Defaults to YES.) */
 @property (nonatomic) BOOL deletionAllowed;
 
-/** Asynchronously deletes the documents at the given row indexes, animating the removal from the table. */
-- (void) deleteDocumentsAtIndexes: (NSArray*)indexPaths;
+/** Deletes the documents at the given row indexes, animating the removal from the table. */
+- (BOOL) deleteDocumentsAtIndexes: (NSArray*)indexPaths
+                            error: (NSError**)outError                  __attribute__((nonnull(1)));
 
 /** Asynchronously deletes the given documents, animating the removal from the table. */
-- (void) deleteDocuments: (NSArray*)documents;
+- (BOOL) deleteDocuments: (NSArray*)documents
+                   error: (NSError**)outError                           __attribute__((nonnull(1)));
 
 @end
 
@@ -92,8 +94,8 @@
              willUseCell:(UITableViewCell*)cell
                   forRow:(CBLQueryRow*)row;
 
-/** Called if a CBLDB operation invoked by the source (e.g. deleting a document) fails. */
+/** Called upon failure of a document deletion triggered by the user deleting a row. */
 - (void)couchTableSource:(CBLUITableSource*)source
-         operationFailed:(RESTOperation*)op;
+         deleteFailed:(NSError*)error;
 
 @end

@@ -285,6 +285,7 @@
 		27C706D41488679500F0F099 /* DemoQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CE1488679500F0F099 /* DemoQuery.m */; };
 		27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27C706D01488679500F0F099 /* ShoppingDemo.xib */; };
 		27C706D71488679500F0F099 /* ShoppingItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706D21488679500F0F099 /* ShoppingItem.m */; };
+		27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
 		27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
@@ -757,6 +758,8 @@
 		27C706D01488679500F0F099 /* ShoppingDemo.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ShoppingDemo.xib; sourceTree = "<group>"; };
 		27C706D11488679500F0F099 /* ShoppingItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShoppingItem.h; sourceTree = "<group>"; };
 		27C706D21488679500F0F099 /* ShoppingItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShoppingItem.m; sourceTree = "<group>"; };
+		27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLUICollectionSource.m; sourceTree = "<group>"; };
+		27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLUICollectionSource.h; sourceTree = "<group>"; };
 		27CF5D2C152F514A0015D7A9 /* CBLStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLStatus.m; sourceTree = "<group>"; };
 		27D90B1615601C2F0000735E /* MYErrorUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
 		27D90B1715601C2F0000735E /* MYErrorUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYErrorUtils.m; sourceTree = "<group>"; };
@@ -1438,6 +1441,8 @@
 			children = (
 				27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */,
 				27DA4318158FD9B400F9E7B5 /* CBLUITableSource.m */,
+				27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */,
+				27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -2304,6 +2309,7 @@
 				27B0B8571492D0AA00A817AD /* CBLReplicator_Tests.m in Sources */,
 				27C5308414E09E2B0078F886 /* CBLBlobStore_Tests.m in Sources */,
 				27E7FAEC155D78C20025F93A /* CBLChangeTracker_Tests.m in Sources */,
+				27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -206,8 +206,7 @@
         
         NSError* error;
         if (![[self rowAtIndex:indexPath.row].document.currentRevision deleteDocument: &error]) {
-            TELL_DELEGATE(@selector(couchTableSource:operationFailed:), nil);
-            [self reloadFromQuery];
+            TELL_DELEGATE(@selector(couchTableSource:deleteFailed:), error);
             return;
         }
         
@@ -219,7 +218,10 @@
 }
 
 
-- (void) deleteDocuments: (NSArray*)documents atIndexes: (NSArray*)indexPaths {
+- (BOOL) deleteDocuments: (NSArray*)documents
+               atIndexes: (NSArray*)indexPaths
+                   error: (NSError**)outError
+{
     __block NSError* error = nil;
     BOOL ok = [_query.database inTransaction: ^{
         for (CBLDocument* doc in documents) {
@@ -229,9 +231,9 @@
         return YES;
     }];
     if (!ok) {
-        TELL_DELEGATE(@selector(couchTableSource:operationFailed:), nil);
-        [self reloadFromQuery];
-        return;
+        if (outError)
+            *outError = error;
+        return NO;
     }
     
     
@@ -243,18 +245,19 @@
     [_rows removeObjectsAtIndexes: indexSet];
 
     [_tableView deleteRowsAtIndexPaths: indexPaths withRowAnimation: UITableViewRowAnimationFade];
+    return YES;
 }
 
 
-- (void) deleteDocumentsAtIndexes: (NSArray*)indexPaths {
+- (BOOL) deleteDocumentsAtIndexes: (NSArray*)indexPaths error: (NSError**)outError {
     NSArray* docs = [indexPaths my_map: ^(id path) {return [self documentAtIndexPath: path];}];
-    [self deleteDocuments: docs atIndexes: indexPaths];
+    return [self deleteDocuments: docs atIndexes: indexPaths error: outError];
 }
 
 
-- (void) deleteDocuments: (NSArray*)documents {
+- (BOOL) deleteDocuments: (NSArray*)documents error: (NSError**)outError {
     NSArray* paths = [documents my_map: ^(id doc) {return [self indexPathForDocument: doc];}];
-    [self deleteDocuments: documents atIndexes: paths];
+    return [self deleteDocuments: documents atIndexes: paths error: outError];
 }
 
 

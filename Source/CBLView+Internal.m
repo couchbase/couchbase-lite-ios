@@ -379,7 +379,6 @@ static id fromJSON( NSData* json ) {
     bool group = options->group || groupLevel > 0;
     if (options->reduce || group) {
         // Reduced or grouped query:
-        // Reduced or grouped query:
         if (!_reduceBlock && !group) {
             Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
             *outStatus = kCBLStatusBadParam;

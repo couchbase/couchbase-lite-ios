@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import <Cocoa/Cocoa.h>
-@class CBLQuery, CBLLiveQuery, RESTOperation;
+@class CBLQuery, CBLLiveQuery;
 
 
 /** Simple controller for CouchbaseLite demo apps.
@@ -24,7 +24,6 @@
 @interface DemoQuery : NSObject
 {
     CBLLiveQuery* _query;
-    RESTOperation* _op;
     NSMutableArray* _entries;
     Class _modelClass;
 }
