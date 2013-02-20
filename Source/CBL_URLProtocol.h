@@ -19,7 +19,7 @@
 + (NSURL*) rootURL;
 
 /** An alternate root URL with HTTP scheme; use this for CouchApps in UIWebViews.
-    (This URL will have the hostname of the cbl: URL with ".cblite." appended.) */
+    (This URL will have the hostname of the cbl: URL with ".couchbase." appended.) */
 + (NSURL*) HTTPURLForServerURL: (NSURL*)serverURL;
 
 /** Registers a CBL_Server instance with a URL hostname.

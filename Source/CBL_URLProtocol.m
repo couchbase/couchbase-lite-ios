@@ -89,9 +89,10 @@ static NSString* normalizeHostname( NSString* hostname ) {
         NSString* hostname = [[sHostMap allKeysForObject: server] lastObject];
         if (!hostname) {
             int count = 0;
-            do {
-                hostname = $sprintf(@"server%d", ++count);
-            } while (sHostMap[hostname]);
+            hostname = @"lite";
+            while (sHostMap[hostname]) {
+                hostname = $sprintf(@"lite%d", ++count);
+            };
         }
         [self registerServer: server forHostname: hostname];
         return [self rootURLForHostname: hostname];
@@ -119,8 +120,8 @@ static NSString* normalizeHostname( NSString* hostname ) {
         return [self serverForHostname: url.host];
     if ([scheme isEqualToString: @"http"] || [scheme isEqualToString: @"https"]) {
         NSString* host = url.host;
-        if ([host hasSuffix: @".cblite."]) {
-            host = [host substringToIndex: host.length - 8];
+        if ([host hasSuffix: @".couchbase."]) {
+            host = [host substringToIndex: host.length - 11];
             return [self serverForHostname: host];
         }
     }
@@ -133,7 +134,7 @@ static NSString* normalizeHostname( NSString* hostname ) {
 }
 
 + (NSURL*) HTTPURLForServerURL: (NSURL*)serverURL {
-    return [NSURL URLWithString: $sprintf(@"http://%@.cblite./",
+    return [NSURL URLWithString: $sprintf(@"http://%@.couchbase./",
                                           normalizeHostname(serverURL.host))];
 }
 
