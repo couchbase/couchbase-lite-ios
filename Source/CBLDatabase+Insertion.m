@@ -466,10 +466,10 @@
 }
 
 
-/** Public method to add an existing revision of a document (probably being pulled). */
+/** Add an existing revision of a document (probably being pulled) plus its ancestors. */
 - (CBLStatus) forceInsert: (CBL_Revision*)rev
-         revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
-                  source: (NSURL*)source
+          revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
+                   source: (NSURL*)source
 {
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;

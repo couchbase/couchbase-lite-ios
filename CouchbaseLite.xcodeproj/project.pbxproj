@@ -2700,6 +2700,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				LD_GENERATE_MAP_FILE = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Couchbase Lite Empty App";
 				SDKROOT = iphoneos;
@@ -2727,6 +2728,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				LD_GENERATE_MAP_FILE = YES;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Couchbase Lite Empty App";
