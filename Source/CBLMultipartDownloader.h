@@ -15,6 +15,7 @@
 @interface CBLMultipartDownloader : CBLRemoteRequest
 {
     @private
+    CBLDatabase* _db;
     CBLMultipartDocumentReader* _reader;
 }
 

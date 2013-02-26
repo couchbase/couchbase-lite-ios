@@ -35,7 +35,7 @@
                   requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
-        _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: database];
+        _db = database;
     }
     return self;
 }
@@ -63,6 +63,7 @@
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+    _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
         // Check the content type to see whether it's a multipart response:
