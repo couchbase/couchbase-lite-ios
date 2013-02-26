@@ -17,15 +17,18 @@
                        winningRevision: (CBL_Revision*)winningRevision;
 
 /** The revision just added. */
-@property (readonly) CBL_Revision* addedRevision;
+@property (nonatomic, readonly) CBL_Revision* addedRevision;
 
 /** The revision that is now the default "winning" revision of the document. */
-@property (readonly) CBL_Revision* winningRevision;
+@property (nonatomic, readonly) CBL_Revision* winningRevision;
 
 /** True if the document might be in conflict. */
-@property bool maybeConflict;
+@property (nonatomic) bool maybeConflict;
 
 /** Remote database URL that this change was pulled from, if any. */
-@property (strong) NSURL* source;
+@property (nonatomic, strong) NSURL* source;
+
+/** Is this a relayed notification of one from another thread, not the original? */
+@property (nonatomic, readonly) bool echoed;
 
 @end

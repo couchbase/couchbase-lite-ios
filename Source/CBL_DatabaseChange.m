@@ -14,7 +14,7 @@
 
 
 @synthesize addedRevision=_addedRevision, winningRevision=_winningRevision,
-            maybeConflict=_maybeConflict, source=_source;
+            maybeConflict=_maybeConflict, source=_source, echoed=_echoed;
 
 
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
@@ -33,8 +33,9 @@
     // CBL_Revisions need to be copied because they contain mutable state:
     CBL_DatabaseChange* change =  [[[self class] alloc] initWithAddedRevision: [_addedRevision copy]
                                                          winningRevision: [_winningRevision copy]];
-    change.maybeConflict = _maybeConflict;
-    change.source = _source;
+    change->_maybeConflict = _maybeConflict;
+    change->_source = _source;
+    change->_echoed = true;
     return change;
 }
 

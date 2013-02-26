@@ -91,7 +91,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], _path);
+    return $sprintf(@"%@[<%p>%@]", [self class], self, self.name);
 }
 
 - (BOOL) exists {
@@ -290,6 +290,13 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     }
 
     _isOpen = YES;
+
+    // Listen for _any_ CBLDatabase changing, so I can detect changes made to my database
+    // file by other instances (running on other threads presumably.)
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(dbChanged:)
+                                                 name: CBL_DatabaseChangesNotification
+                                               object: nil];
     return YES;
 }
 
@@ -300,6 +307,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     LogTo(CBLDatabase, @"Close %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
                                                         object: self];
+    [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                    name: CBL_DatabaseChangesNotification
+                                                  object: nil];
     for (CBLView* view in _views.allValues)
         [view databaseClosing];
     
@@ -385,10 +395,24 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     [self postChangeNotifications];
 }
 
+- (void) notifyChanges: (NSArray*)changes {
+    if (!_changesToNotify)
+        _changesToNotify = [[NSMutableArray alloc] init];
+    [_changesToNotify addObjectsFromArray: changes];
+    [self postChangeNotifications];
+}
+
 
 - (void) postChangeNotifications {
-    if (_transactionLevel == 0 && _changesToNotify.count > 0) {
-        LogTo(CBLDatabase, @"Posting %u change notifications", (unsigned)_changesToNotify.count);
+    if (_transactionLevel == 0 && _isOpen && _changesToNotify.count > 0) {
+        if (WillLogTo(CBLDatabase)) {
+            unsigned nEchoed = 0;
+            for (CBL_DatabaseChange* change in _changesToNotify)
+                if (change.echoed)
+                    ++nEchoed;
+            LogTo(CBLDatabase, @"%@: Posting %u change notifications (%u echoed)",
+                  self, (unsigned)_changesToNotify.count, nEchoed);
+        }
         NSArray* changes = _changesToNotify;
         _changesToNotify = nil;
         [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseChangesNotification
@@ -404,11 +428,19 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     CBLDatabase* senderDB = n.object;
     // Was this posted by a _different_ CBLDatabase instance on the same database as me?
     if (senderDB != self && [senderDB.path isEqualToString: _path]) {
+        // Careful: I am being called on senderDB's thread, not my own!
+        NSMutableArray* echoedChanges = $marray();
         for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
-            // CBL_Revision objects have mutable state inside, so copy this one first:
-            CBL_DatabaseChange* copiedChange = [change copy];
+            if (!change.echoed) {
+                // CBL_Revision objects have mutable state inside, so copy it first:
+                [echoedChanges addObject: [change copy]];
+            }
+        }
+        if (echoedChanges.count > 0) {
+            LogTo(CBLDatabase, @"%@: Notified of %u changes by %@",
+                  self, (unsigned)echoedChanges.count, senderDB);
             MYOnThread(_thread, ^{
-                [self notifyChange: copiedChange];
+                [self notifyChanges: echoedChanges];
             });
         }
     }
