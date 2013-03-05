@@ -203,15 +203,22 @@
 {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         // Delete the document from the database.
-        
-        NSError* error;
-        if (![[self rowAtIndex:indexPath.row].document.currentRevision deleteDocument: &error]) {
-            TELL_DELEGATE(@selector(couchTableSource:deleteFailed:), error);
-            return;
+
+        CBLQueryRow* row = [self rowAtIndex: indexPath.row];
+        id<CBLUITableDelegate> delegate = (id<CBLUITableDelegate>)_tableView.delegate;
+        if ([delegate respondsToSelector: @selector(couchTableSource:deleteRow:)]) {
+            if (![delegate couchTableSource: self deleteRow: row])
+                return;
+        } else {
+            NSError* error;
+            if (![row.document.currentRevision deleteDocument: &error]) {
+                TELL_DELEGATE(@selector(couchTableSource:deleteFailed:), error);
+                return;
+            }
         }
-        
+
         // Delete the row from the table data source.
-        [_rows removeObjectAtIndex:indexPath.row];
+        [_rows removeObjectAtIndex: indexPath.row];
         [self.tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject:indexPath]
                               withRowAnimation: UITableViewRowAnimationFade];
     }

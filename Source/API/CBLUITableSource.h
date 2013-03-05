@@ -94,8 +94,17 @@
              willUseCell:(UITableViewCell*)cell
                   forRow:(CBLQueryRow*)row;
 
+/** Called when the user wants to delete a row.
+    If the delegate implements this method, it will be called *instead of* the
+    default behavior of deleting the associated document.
+    @param source  The CBLUITableSource
+    @param row  The query row corresponding to the row to delete
+    @return  True if the row was deleted, false if not. */
+- (bool)couchTableSource:(CBLUITableSource*)source
+               deleteRow:(CBLQueryRow*)row;
+
 /** Called upon failure of a document deletion triggered by the user deleting a row. */
 - (void)couchTableSource:(CBLUITableSource*)source
-         deleteFailed:(NSError*)error;
+            deleteFailed:(NSError*)error;
 
 @end
