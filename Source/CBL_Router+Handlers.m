@@ -26,6 +26,7 @@
 #import "CBL_Revision.h"
 #import "CBL_DatabaseChange.h"
 #import "CBL_Server.h"
+#import "CBLBrowserIDAuthorizer.h"
 #import "CBL_Replicator.h"
 #import "CBL_ReplicatorManager.h"
 #import "CBL_Pusher.h"
@@ -82,6 +83,18 @@
         _response.bodyObject = $dict({@"session_id", repl.sessionID});
     }
     return kCBLStatusOK;
+}
+
+- (CBLStatus) do_POST_browserid_assertion {
+    NSDictionary* body = self.bodyAsDictionary;
+    NSString* email = [CBLBrowserIDAuthorizer registerAssertion: body[@"assertion"]];
+    if (email != nil) {
+        _response.bodyObject = $dict({@"ok", @"registered"}, {@"email", email});
+        return kCBLStatusOK;
+    } else {
+        _response.bodyObject = $dict({@"error", @"invalid assertion"});
+        return kCBLStatusBadParam;
+    }
 }
 
 
