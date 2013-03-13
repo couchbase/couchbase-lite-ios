@@ -28,6 +28,7 @@ _kCBLDocumentChangeNotification
 .objc_class_name_CBL_Replicator
 .objc_class_name_CBL_Pusher
 .objc_class_name_CBL_Puller
+.objc_class_name_CBLBrowserIDAuthorizer
 
 .objc_class_name_CBL_Server
 .objc_class_name_CBLMultipartDocumentReader
