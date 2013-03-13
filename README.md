@@ -89,5 +89,5 @@ Please refer to the files [BUILDING.txt][14] and [SETUP.txt][15] in the `GNUstep
 [15]: https://github.com/couchbase/CouchbaseLite-iOS/blob/master/GNUstep/SETUP.txt
 [17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
 [18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo
-[19]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/
-[20]: http://files.couchbase.com/developer-previews/mobile/ios/touchdb/CouchbaseLite.zip
+[19]: http://files.couchbase.com/developer-previews/mobile/ios/CouchbaseLite/
+[20]: http://files.couchbase.com/developer-previews/mobile/ios/CouchbaseLite/CouchbaseLite.zip
