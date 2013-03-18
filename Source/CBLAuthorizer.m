@@ -76,7 +76,7 @@
 // but there's not really much point in doing so, as such logins expire, which would cause trouble
 // with long-lived replications.
 
-- (NSString*) loginPath {
+- (NSString*) loginPathForSite: (NSURL*)site {
     return @"/_session";
 }
 

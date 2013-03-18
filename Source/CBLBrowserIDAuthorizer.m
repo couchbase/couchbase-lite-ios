@@ -125,8 +125,8 @@ static bool parseAssertion(NSString* assertion,
 }
 
 
-- (NSString*) loginPath {
-    return @"/_browserid";
+- (NSString*) loginPathForSite:(NSURL *)site {
+    return [site.path stringByAppendingPathComponent: @"_browserid"];
 }
 
 

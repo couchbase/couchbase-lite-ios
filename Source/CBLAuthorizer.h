@@ -22,7 +22,7 @@
 
 @optional
 
-@property (readonly) NSString* loginPath;
+- (NSString*) loginPathForSite: (NSURL*)site;
 - (NSDictionary*) loginParametersForSite: (NSURL*)site;
 
 @end

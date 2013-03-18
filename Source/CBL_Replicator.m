@@ -474,10 +474,11 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         return;
     }
 
-    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, _authorizer.loginPath);
+    NSString* loginPath = [_authorizer loginPathForSite: _remote];
+    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, loginPath);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST"
-                      path: _authorizer.loginPath
+                      path: loginPath
                       body: loginParameters
               onCompletion: ^(id result, NSError *error) {
                   if (error) {
