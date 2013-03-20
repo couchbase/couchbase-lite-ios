@@ -13,7 +13,7 @@
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Server.h"
-#import "CBLBrowserIDAuthorizer.h"
+#import "CBLPersonaAuthorizer.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
 
@@ -251,29 +251,29 @@ static inline BOOL isLocalDBName(NSString* url) {
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
-- (NSURL*) browserIDOrigin {
-    return [CBLBrowserIDAuthorizer originForSite: self.remoteURL];
+- (NSURL*) personaOrigin {
+    return [CBLPersonaAuthorizer originForSite: self.remoteURL];
 }
 
-- (NSString*) browserIDEmailAddress {
+- (NSString*) personaEmailAddress {
     NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
-    return auth[@"browserid"][@"email"];
+    return auth[@"persona"][@"email"];
 }
 
-- (void) setBrowserIDEmailAddress:(NSString *)email {
+- (void) setPersonaEmailAddress:(NSString *)email {
     NSDictionary* auth = nil;
     if (email)
-        auth = @{@"browserid": @{@"email": email}};
+        auth = @{@"persona": @{@"email": email}};
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
-- (bool) registerBrowserIDAssertion: (NSString*)assertion {
-    NSString* email = [CBLBrowserIDAuthorizer registerAssertion: assertion];
+- (bool) registerPersonaAssertion: (NSString*)assertion {
+    NSString* email = [CBLPersonaAuthorizer registerAssertion: assertion];
     if (!email) {
-        Warn(@"Invalid BrowserID assertion: %@", assertion);
+        Warn(@"Invalid Persona assertion: %@", assertion);
         return false;
     }
-    self.browserIDEmailAddress = email;
+    self.personaEmailAddress = email;
     [self restart];
     return true;
 }

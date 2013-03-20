@@ -1,5 +1,5 @@
 //
-//  CBLBrowserIDAuthorizer.h
+//  CBLPersonaAuthorizer.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/9/13.
@@ -8,7 +8,8 @@
 
 #import "CBLAuthorizer.h"
 
-@interface CBLBrowserIDAuthorizer: NSObject <CBLAuthorizer>
+/** Authorizer for the Persona decentralized-identity system. See http://persona.org */
+@interface CBLPersonaAuthorizer: NSObject <CBLAuthorizer>
 
 + (NSURL*) originForSite: (NSURL*)url;
 

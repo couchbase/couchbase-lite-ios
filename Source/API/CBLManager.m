@@ -16,7 +16,7 @@
 #import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
-#import "CBLBrowserIDAuthorizer.h"
+#import "CBLPersonaAuthorizer.h"
 #import "CBLOAuth1Authorizer.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
@@ -470,10 +470,10 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                                                                       tokenSecret: tokenSec
                                                                   signatureMethod: sigMethod];
             } else {
-                NSDictionary* browserid = $castIf(NSDictionary, auth[@"browserid"]);
-                if (browserid) {
-                    NSString* email = $castIf(NSString, browserid[@"email"]);
-                    *outAuthorizer = [[CBLBrowserIDAuthorizer alloc] initWithEmailAddress: email];
+                NSDictionary* persona = $castIf(NSDictionary, auth[@"persona"]);
+                if (persona) {
+                    NSString* email = $castIf(NSString, persona[@"email"]);
+                    *outAuthorizer = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
                 }
             }
             if (!*outAuthorizer)

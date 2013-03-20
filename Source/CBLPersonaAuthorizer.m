@@ -1,18 +1,18 @@
 //
-//  CBLBrowserIDAuthorizer.m
+//  CBLPersonaAuthorizer.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/9/13.
 //
 //
 
-#import "CBLBrowserIDAuthorizer.h"
+#import "CBLPersonaAuthorizer.h"
 #import "CBLBase64.h"
 
 static NSMutableDictionary* sAssertions;
 
 
-@implementation CBLBrowserIDAuthorizer
+@implementation CBLPersonaAuthorizer
 
 
 static NSDictionary* decodeComponent(NSArray* components, NSUInteger index) {
@@ -126,7 +126,7 @@ static bool parseAssertion(NSString* assertion,
 
 
 - (NSString*) loginPathForSite:(NSURL *)site {
-    return [site.path stringByAppendingPathComponent: @"_browserid"];
+    return [site.path stringByAppendingPathComponent: @"_persona"];
 }
 
 
@@ -140,7 +140,7 @@ static bool parseAssertion(NSString* assertion,
 
 
 
-TestCase(TEBrowserIDAuthorizer) {
+TestCase(TEPersonaAuthorizer) {
     NSString* email, *origin;
     NSDate* exp;
     CAssert(!parseAssertion(@"", &email, &origin, &exp));
@@ -154,13 +154,13 @@ TestCase(TEBrowserIDAuthorizer) {
 
     // Register and retrieve the sample assertion:
     NSURL* originURL = [NSURL URLWithString: origin];
-    CAssertEqual([CBLBrowserIDAuthorizer registerAssertion: sampleAssertion], email);
-    NSString* gotAssertion = [CBLBrowserIDAuthorizer takeAssertionForEmailAddress: email
+    CAssertEqual([CBLPersonaAuthorizer registerAssertion: sampleAssertion], email);
+    NSString* gotAssertion = [CBLPersonaAuthorizer takeAssertionForEmailAddress: email
                                                                             site: originURL];
     CAssertEqual(gotAssertion, sampleAssertion);
     
     // -assertionForSite: should return nil because the assertion has expired by now:
-    CBLBrowserIDAuthorizer* auth = [[CBLBrowserIDAuthorizer alloc] initWithEmailAddress: email];
+    CBLPersonaAuthorizer* auth = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
     CAssertEqual(auth.emailAddress, email);
     CAssertEqual([auth assertionForSite: originURL], nil);
 }

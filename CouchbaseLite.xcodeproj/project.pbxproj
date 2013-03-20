@@ -157,10 +157,10 @@
 		2773ADC714BD1EB80027A292 /* CBLDatabase+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* CBLDatabase+LocalDocs.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2773ADC814BD1EB80027A292 /* CBLDatabase+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* CBLDatabase+LocalDocs.m */; };
 		2773ADC914BD1EB80027A292 /* CBLDatabase+LocalDocs.m in Sources */ = {isa = PBXBuildFile; fileRef = 2773ADC614BD1EB80027A292 /* CBLDatabase+LocalDocs.m */; };
-		2776A59116A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h */; };
-		2776A59216A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h */; };
-		2776A59316A0C3A6006FF199 /* CBLBrowserIDAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* CBLBrowserIDAuthorizer.m */; };
-		2776A59616A0C3B1006FF199 /* CBLBrowserIDAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* CBLBrowserIDAuthorizer.m */; };
+		2776A59116A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */; };
+		2776A59216A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */; };
+		2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */; };
+		2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */; };
 		2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */; };
 		2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
 		2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
@@ -670,8 +670,8 @@
 		27731F3B14967A8400815D67 /* ConfigViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ConfigViewController.xib; sourceTree = "<group>"; };
 		2773ADC514BD1EB80027A292 /* CBLDatabase+LocalDocs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+LocalDocs.h"; sourceTree = "<group>"; };
 		2773ADC614BD1EB80027A292 /* CBLDatabase+LocalDocs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+LocalDocs.m"; sourceTree = "<group>"; };
-		2776A58F16A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBrowserIDAuthorizer.h; sourceTree = "<group>"; };
-		2776A59016A0C3A6006FF199 /* CBLBrowserIDAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBrowserIDAuthorizer.m; sourceTree = "<group>"; };
+		2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLPersonaAuthorizer.h; sourceTree = "<group>"; };
+		2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLPersonaAuthorizer.m; sourceTree = "<group>"; };
 		2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_DatabaseChange.h; sourceTree = "<group>"; };
 		2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_DatabaseChange.m; sourceTree = "<group>"; };
 		27821BB5148E7D6F0099B373 /* CBL_Replicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Replicator.h; sourceTree = "<group>"; };
@@ -1221,8 +1221,8 @@
 				270F5704156AE0BF000FEB8F /* CBLAuthorizer.m */,
 				27F128AF156AC1C8008465C2 /* CBLOAuth1Authorizer.h */,
 				27F128B0156AC1C9008465C2 /* CBLOAuth1Authorizer.m */,
-				2776A58F16A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h */,
-				2776A59016A0C3A6006FF199 /* CBLBrowserIDAuthorizer.m */,
+				2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */,
+				2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */,
 			);
 			name = Auth;
 			sourceTree = "<group>";
@@ -1673,7 +1673,7 @@
 				27846FBC15D475DF0030122F /* MYStreamUtils.h in Headers */,
 				270D6FC1164484190081812D /* CBLSocketChangeTracker.h in Headers */,
 				275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */,
-				2776A59116A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h in Headers */,
+				2776A59116A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
 				2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */,
 				271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */,
 			);
@@ -1726,7 +1726,7 @@
 				275A29051649A13900B0D8EE /* CBLReplication.h in Headers */,
 				27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */,
 				27F5B18916519F8F00126D0D /* MYDynamicObject.h in Headers */,
-				2776A59216A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h in Headers */,
+				2776A59216A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
 				275A24E016B986CD00561DF0 /* CBLJSON.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2165,7 +2165,7 @@
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				270D6FC2164484190081812D /* CBLSocketChangeTracker.m in Sources */,
 				27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */,
-				2776A59316A0C3A6006FF199 /* CBLBrowserIDAuthorizer.m in Sources */,
+				2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */,
 				2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
 				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
 			);
@@ -2287,7 +2287,7 @@
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
-				2776A59616A0C3B1006FF199 /* CBLBrowserIDAuthorizer.m in Sources */,
+				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,
 				2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
 				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
 			);

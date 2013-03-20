@@ -76,23 +76,23 @@ typedef enum {
     and optionally "signature_method". */
 @property (nonatomic, copy) NSDictionary* OAuth;
 
-/** The base URL of the remote server, for use as the "origin" parameter when requesting BrowserID authentication. */
-@property (readonly) NSURL* browserIDOrigin;
+/** The base URL of the remote server, for use as the "origin" parameter when requesting Persona authentication. */
+@property (readonly) NSURL* personaOrigin;
 
-/** Email address for remote login with BrowserID (aka Persona). This is stored persistently in
+/** Email address for remote login with Persona (aka BrowserID). This is stored persistently in
     the replication document, but it's not sufficient for login (you also need to go through the
-    BrowserID protocol to get a signed assertion, which you then pass to the
-    -registerBrowserIDAssertion: method.)*/
-@property (nonatomic, copy) NSString* browserIDEmailAddress;
+    Persona protocol to get a signed assertion, which you then pass to the
+    -registerPersonaAssertion: method.)*/
+@property (nonatomic, copy) NSString* personaEmailAddress;
 
-/** Registers a BrowserID 'assertion' (ID verification) string that will be used on the next login to the remote server. This also sets browserIDEmailAddress.
+/** Registers a Persona 'assertion' (ID verification) string that will be used on the next login to the remote server. This also sets personaEmailAddress.
     Note: An assertion is a type of certificate and typically has a very short lifespan (like, a
     few minutes.) For this reason it's not stored in the replication document, but instead kept
-    in an in-memory registry private to the BrowserID authorizer. You should initiate a replication
+    in an in-memory registry private to the Persona authorizer. You should initiate a replication
     immediately after registering the assertion, so that the replicator engine can use it to
     authenticate before it expires. After that, the replicator will have a login session cookie
     that should last significantly longer before needing to be renewed. */
-- (bool) registerBrowserIDAssertion: (NSString*)assertion               __attribute__((nonnull));
+- (bool) registerPersonaAssertion: (NSString*)assertion               __attribute__((nonnull));
 
 
 #pragma mark - STATUS:
