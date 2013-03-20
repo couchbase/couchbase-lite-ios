@@ -20,11 +20,7 @@
     BOOL _stopRunLoop;
 }
 
-- (instancetype) initWithDirectory: (NSString*)dirPath error: (NSError**)outError;
-
-- (instancetype) initWithDirectory: (NSString*)dirPath
-                           options: (const CBLManagerOptions*)options
-                             error: (NSError**)outError;
+- (instancetype) initWithManager: (CBLManager*)newManager;
 
 @property (readonly) NSString* directory;
 

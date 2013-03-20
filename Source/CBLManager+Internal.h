@@ -8,7 +8,7 @@
 
 #import "CBLManager.h"
 #import "CBLStatus.h"
-@class CBLDatabase, CBL_Replicator;
+@class CBLDatabase, CBL_Replicator, CBL_Shared;
 
 
 @interface CBLManager (Internal)
@@ -20,6 +20,8 @@
 - (void) _forgetDatabase: (CBLDatabase*)db;
 
 @property (readonly) NSArray* allOpenDatabases;
+
+@property (readonly) CBL_Shared* shared;
 
 - (CBLStatus) validateReplicatorProperties: (NSDictionary*)properties;
 - (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)body

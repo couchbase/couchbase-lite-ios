@@ -13,7 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CouchbaseLite.h"
+#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "Test.h"
 
 
@@ -547,6 +548,44 @@ TestCase(API_ViewWithLinkedDocs) {
 }
 
 
+// Make sure that a database's map/reduce functions are shared with the shadow database instance
+// running in the background server.
+TestCase(API_SharedMapBlocks) {
+    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
+    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: nil];
+    [db defineFilter: @"phil" asBlock: ^BOOL(CBLRevision *revision, NSDictionary *params) {
+        return YES;
+    }];
+    [db defineValidation: @"val" asBlock: VALIDATIONBLOCK({
+        return YES;
+    })];
+    CBLView* view = [db viewNamed: @"view"];
+    BOOL ok = [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+        // nothing
+    } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
+        return nil;
+    } version: @"1"];
+    CAssert(ok, @"Couldn't set map/reduce");
+
+    CBLMapBlock map = view.mapBlock;
+    CBLReduceBlock reduce = view.reduceBlock;
+    CBLFilterBlock filter = [db filterNamed: @"phil"];
+    CBLValidationBlock validation = [db validationNamed: @"val"];
+
+    id result = [mgr.backgroundServer waitForDatabaseNamed: @"db" to: ^id(CBLDatabase *serverDb) {
+        CAssert(serverDb != nil);
+        CBLView* serverView = [serverDb viewNamed: @"view"];
+        CAssert(serverView != nil);
+        CAssertEq([serverDb filterNamed: @"phil"], filter);
+        CAssertEq([serverDb validationNamed: @"val"], validation);
+        CAssertEq(serverView.mapBlock, map);
+        CAssertEq(serverView.reduceBlock, reduce);
+        return @"ok";
+    }];
+    CAssertEqual(result, @"ok");
+}
+
+
 #if 0
 #pragma mark - Custom Path Maps
 
@@ -640,6 +679,7 @@ TestCase(API) {
     RequireTestCase(API_CreateView);
     RequireTestCase(API_Validation);
     RequireTestCase(API_ViewWithLinkedDocs);
+    RequireTestCase(API_SharedMapBlocks);
 //    RequireTestCase(API_ViewOptions);
 }
 

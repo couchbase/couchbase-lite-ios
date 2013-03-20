@@ -10,6 +10,7 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_DatabaseChange.h"
+#import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLModelFactory.h"
 #import "CBLCache.h"
@@ -134,11 +135,12 @@ static id<CBLFilterCompiler> sFilterCompiler;
     if (_isOpen) {
         if (![self close])
             return NO;
-    } else if (!self.exists) {
-        return YES;
     }
     [_manager _forgetDatabase: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+    if (!self.exists) {
+        return YES;
+    }
     return CBLRemoveFileIfExists(_path, outError)
         && CBLRemoveFileIfExists(self.attachmentStorePath, outError);
 }
@@ -246,28 +248,22 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
-    if (validationBlock) {
-        if (!_validations)
-            _validations = [[NSMutableDictionary alloc] init];
-        [_validations setValue: [validationBlock copy] forKey: validationName];
-    } else {
-        [_validations removeObjectForKey: validationName];
-    }
+    [self.shared setValue: [validationBlock copy]
+                  forType: @"validation" name: validationName inDatabaseNamed: _name];
 }
 
 - (CBLValidationBlock) validationNamed: (NSString*)validationName {
-    return _validations[validationName];
+    return [self.shared valueForType: @"validation" name: validationName inDatabaseNamed: _name];
 }
 
 
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
-    if (!_filters)
-        _filters = [[NSMutableDictionary alloc] init];
-    [_filters setValue: [filterBlock copy] forKey: filterName];
+    [self.shared setValue: [filterBlock copy]
+                  forType: @"filter" name: filterName inDatabaseNamed: _name];
 }
 
 - (CBLFilterBlock) filterNamed: (NSString*)filterName {
-    return _filters[filterName];
+    return [self.shared valueForType: @"filter" name: filterName inDatabaseNamed: _name];
 }
 
 

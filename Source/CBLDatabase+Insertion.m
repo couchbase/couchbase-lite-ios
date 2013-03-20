@@ -22,6 +22,7 @@
 #import "CBLCanonicalJSON.h"
 #import "CBL_Attachment.h"
 #import "CBL_DatabaseChange.h"
+#import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "Test.h"
@@ -309,7 +310,7 @@
                 return nil;
             }
             
-            if (_validations.count > 0) {
+            if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
                 // Fetch the previous revision and validate the new one against it:
                 CBL_Revision* prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
                                                                   deleted: NO];
@@ -504,7 +505,7 @@
         }
 
         // Validate against the latest common ancestor:
-        if (_validations.count > 0) {
+        if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
             CBL_Revision* oldRev = nil;
             for (NSUInteger i = 1; i<historyCount; ++i) {
                 oldRev = [localRevs revWithDocID: docID revID: history[i]];
@@ -740,14 +741,15 @@
 
 
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev {
-    if (_validations.count == 0)
+    NSDictionary* validations = [self.shared valuesOfType: @"validation" inDatabaseNamed: _name];
+    if (validations.count == 0)
         return kCBLStatusOK;
     CBLRevision* publicRev = [[CBLRevision alloc] initWithDatabase: self revision: newRev];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];
     CBLStatus status = kCBLStatusOK;
-    for (NSString* validationName in _validations) {
+    for (NSString* validationName in validations) {
         CBLValidationBlock validation = [self validationNamed: validationName];
         if (!validation(publicRev, context)) {
             status = context.errorType;

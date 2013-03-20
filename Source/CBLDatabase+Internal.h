@@ -10,7 +10,7 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange;
+@class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
@@ -68,12 +68,13 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     int _transactionLevel;
     NSThread* _thread;
     NSMutableDictionary* _views;
-    NSMutableDictionary* _validations;
-    NSMutableDictionary* _filters;
     CBL_BlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
     NSMutableArray* _changesToNotify;
+#if DEBUG
+    CBL_Shared* _debug_shared;
+#endif
 }
 
 /** Should the database file be opened in read-only mode? */
@@ -105,6 +106,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 @property (nonatomic, readonly) FMDatabase* fmdb;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
+@property (nonatomic, readonly) CBL_Shared* shared;
 
 @property (nonatomic, readonly) BOOL exists;
 @property (nonatomic, readonly) UInt64 totalDataSize;

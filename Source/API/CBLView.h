@@ -44,8 +44,6 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
     CBLDatabase* __weak _db;
     NSString* _name;
     int _viewID;
-    CBLMapBlock _mapBlock;
-    CBLReduceBlock _reduceBlock;
     uint8_t _collation;
     uint8_t /*CBLContentOptions*/ _mapContentOptions;
 }

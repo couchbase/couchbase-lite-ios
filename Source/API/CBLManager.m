@@ -18,6 +18,7 @@
 #import "CBL_URLProtocol.h"
 #import "CBLBrowserIDAuthorizer.h"
 #import "CBLOAuth1Authorizer.h"
+#import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
@@ -38,6 +39,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
     CBL_Server* _server;
     NSURL* _internalURL;
     NSMutableArray* _replications;
+    CBL_Shared *_shared;
 }
 
 
@@ -142,7 +144,16 @@ static NSCharacterSet* kIllegalNameChars;
 - (id) copyWithZone: (NSZone*)zone {
     CBLManagerOptions options = _options;
     options.noReplicator = true;        // Don't want to run multiple replicator tasks
-    return [[[self class] alloc] initWithDirectory: self.directory options: &options error: NULL];
+    NSError* error;
+    CBLManager* mgr = [[[self class] alloc] initWithDirectory: self.directory
+                                                      options: &options
+                                                        error: &error];
+    if (!mgr) {
+        Warn(@"Couldn't copy CBLManager: %@", error);
+        return nil;
+    }
+    mgr->_shared = self.shared;
+    return mgr;
 }
 
 
@@ -174,16 +185,20 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+- (CBL_Shared*) shared {
+    if (!_shared)
+        _shared = [[CBL_Shared alloc] init];
+    return _shared;
+}
+
+
 - (CBL_Server*) backgroundServer {
     if (!_server) {
-        CBLManagerOptions tdOptions = {
-            .readOnly = _options.readOnly,
-            .noReplicator = true
-        };
-        _server = [[CBL_Server alloc] initWithDirectory: self.directory
-                                                options: &tdOptions
-                                                  error: nil];
-        LogTo(CBLDatabase, @"%@ created %@", self, _server);
+        CBLManager* newManager = [self copy];
+        if (newManager) {
+            _server = [[CBL_Server alloc] initWithManager: newManager];
+            LogTo(CBLDatabase, @"%@ created %@", self, _server);
+        }
     }
     return _server;
 }
@@ -365,7 +380,9 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) _forgetDatabase: (CBLDatabase*)db {
-    [_databases removeObjectForKey: db.name];
+    NSString* name = db.name;
+    [_databases removeObjectForKey: name];
+    [_shared forgetDatabaseNamed: name];
 }
 
 

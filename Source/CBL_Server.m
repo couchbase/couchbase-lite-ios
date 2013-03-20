@@ -30,8 +30,9 @@
 + (instancetype) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
-    CBL_Server* server = [[self alloc] initWithDirectory: path error: &error];
-    Assert(server, @"Failed to create server at %@: %@", path, error);
+    CBLManager* manager = [[CBLManager alloc] initWithDirectory: path options: nil error: &error];
+    Assert(manager, @"Failed to create server at %@: %@", path, error);
+    CBL_Server* server = [[self alloc] initWithManager: manager];
     AssertEqual(server.directory, path);
     return server;
 }
@@ -42,20 +43,10 @@
 #endif
 
 
-- (instancetype) initWithDirectory: (NSString*)dirPath
-                           options: (const CBLManagerOptions*)options
-                             error: (NSError**)outError
-{
-    if (outError) *outError = nil;
+- (instancetype) initWithManager: (CBLManager*)newManager {
     self = [super init];
     if (self) {
-        _manager = [[CBLManager alloc] initWithDirectory: dirPath
-                                                        options: options
-                                                          error: outError];
-        if (!_manager) {
-            return nil;
-        }
-        
+        _manager = newManager;
         _serverThread = [[NSThread alloc] initWithTarget: self
                                                 selector: @selector(runServerThread)
                                                   object: nil];
@@ -76,11 +67,6 @@
     }
     return self;
 }
-
-- (instancetype) initWithDirectory: (NSString*)dirPath error: (NSError**)outError {
-    return [self initWithDirectory: dirPath options: NULL error: outError];
-}
-
 
 - (void)dealloc
 {

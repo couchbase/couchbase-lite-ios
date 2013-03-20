@@ -72,6 +72,9 @@
 		2711CE0314C759BD00505D55 /* CBLDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2711CE0414C759BD00505D55 /* CBLDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2711CE1414C75B6E00505D55 /* CBLDatabase+LocalDocs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2773ADC514BD1EB80027A292 /* CBLDatabase+LocalDocs.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 271C2AD216FA176300B8C9DB /* CBL_Shared.h */; };
+		271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
+		271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
 		272B85141523691700A90CB2 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		272B85151523691700A90CB2 /* CBLJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 272B85131523691700A90CB2 /* CBLJSON.m */; };
 		272B85161523691700A90CB2 /* CBLJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 272B85131523691700A90CB2 /* CBLJSON.m */; };
@@ -590,6 +593,8 @@
 		2711CDFF14C7595900505D55 /* CBLDatabase+Insertion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Insertion.h"; sourceTree = "<group>"; };
 		2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Replication.h"; sourceTree = "<group>"; };
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
+		271C2AD216FA176300B8C9DB /* CBL_Shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Shared.h; sourceTree = "<group>"; };
+		271C2AD316FA176300B8C9DB /* CBL_Shared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Shared.m; sourceTree = "<group>"; };
 		272B85121523691700A90CB2 /* CBLJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSON.h; sourceTree = "<group>"; };
 		272B85131523691700A90CB2 /* CBLJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSON.m; sourceTree = "<group>"; };
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
@@ -1050,6 +1055,8 @@
 				2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */,
 				279EB2CC149140DE00E74185 /* CBLView+Internal.h */,
 				279EB2CD149140DE00E74185 /* CBLView+Internal.m */,
+				271C2AD216FA176300B8C9DB /* CBL_Shared.h */,
+				271C2AD316FA176300B8C9DB /* CBL_Shared.m */,
 				27F074A911CD5D7A00E9A2AB /* CBL_Body.h */,
 				27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */,
 				270B3E3714898DF200E0A926 /* CBL_Revision.h */,
@@ -1668,6 +1675,7 @@
 				275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */,
 				2776A59116A0C3A6006FF199 /* CBLBrowserIDAuthorizer.h in Headers */,
 				2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */,
+				271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2159,6 +2167,7 @@
 				27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */,
 				2776A59316A0C3A6006FF199 /* CBLBrowserIDAuthorizer.m in Sources */,
 				2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
+				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2280,6 +2289,7 @@
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				2776A59616A0C3B1006FF199 /* CBLBrowserIDAuthorizer.m in Sources */,
 				2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
+				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -109,7 +109,8 @@ static id fromJSON( NSData* json ) {
 
 - (CBLStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
-    Assert(_mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
+    CBLMapBlock mapBlock = self.mapBlock;
+    Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
     
     int viewID = self.viewID;
     if (viewID <= 0)
@@ -262,7 +263,7 @@ static id fromJSON( NSData* json ) {
                 
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 LogTo(View, @"  call map for sequence=%lld...", sequence);
-                _mapBlock(properties, emit);
+                mapBlock(properties, emit);
                 if (emitFailed)
                     return kCBLStatusCallbackError;
             }
@@ -379,7 +380,7 @@ static id fromJSON( NSData* json ) {
     bool group = options->group || groupLevel > 0;
     if (options->reduce || group) {
         // Reduced or grouped query:
-        if (!_reduceBlock && !group) {
+        if (!self.reduceBlock && !group) {
             Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
             *outStatus = kCBLStatusBadParam;
             return nil;
@@ -462,20 +463,21 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
 
 
 // Invokes the reduce function on the parallel arrays of keys and values
-- (id) reduceKeys: (NSMutableArray*)keys values: (NSMutableArray*)values {
-    if (!_reduceBlock)
+static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutableArray* values) {
+    if (!reduceBlock)
         return nil;
     CBLLazyArrayOfJSON* lazyKeys = [[CBLLazyArrayOfJSON alloc] initWithArray: keys];
     CBLLazyArrayOfJSON* lazyVals = [[CBLLazyArrayOfJSON alloc] initWithArray: values];
-    id result = _reduceBlock(lazyKeys, lazyVals, NO);
+    id result = reduceBlock(lazyKeys, lazyVals, NO);
     return result ?: $null;
 }
 
 
 - (NSMutableArray*) reducedQuery: (FMResultSet*)r group: (BOOL)group groupLevel: (unsigned)groupLevel
 {
+    CBLReduceBlock reduce = self.reduceBlock;
     NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
-    if (_reduceBlock) {
+    if (reduce) {
         keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
         valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
     }
@@ -491,7 +493,7 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
                 if (lastKeyData) {
                     // This pair starts a new group, so reduce & record the last one:
                     id key = groupKey(lastKeyData, groupLevel);
-                    id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
+                    id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
                     [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db
                                                                      docID: nil
                                                                        key: key
@@ -512,7 +514,7 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
     if (keysToReduce.count > 0) {
         // Finish the last group (or the entire list, if no grouping):
         id key = group ? groupKey(lastKeyData, groupLevel) : $null;
-        id reduced = [self reduceKeys: keysToReduce values: valuesToReduce];
+        id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
         LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
         [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db

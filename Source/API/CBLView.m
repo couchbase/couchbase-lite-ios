@@ -8,6 +8,7 @@
 
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
+#import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
@@ -38,7 +39,7 @@
 }
 
 
-@synthesize name=_name, mapBlock=_mapBlock, reduceBlock=_reduceBlock;
+@synthesize name=_name;
 
 
 - (CBLDatabase*) database {
@@ -58,15 +59,27 @@
 }
 
 
+- (CBLMapBlock) mapBlock {
+    return [_db.shared valueForType: @"map" name: _name inDatabaseNamed: _db.name];
+}
+
+- (CBLReduceBlock) reduceBlock {
+    return [_db.shared valueForType: @"reduce" name: _name inDatabaseNamed: _db.name];
+}
+
+
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock
          reduceBlock: (CBLReduceBlock)reduceBlock
              version: (NSString *)version
 {
     Assert(mapBlock);
     Assert(version);
-    _mapBlock = mapBlock; // copied implicitly in ARC
-    _reduceBlock = reduceBlock; // copied implicitly in ARC
     
+    [_db.shared setValue: [mapBlock copy]
+                 forType: @"map" name: _name inDatabaseNamed: _db.name];
+    [_db.shared setValue: [reduceBlock copy]
+                 forType: @"reduce" name: _name inDatabaseNamed: _db.name];
+
     if (![_db open: nil])
         return NO;
 

@@ -1,5 +1,5 @@
 //
-// CBLDatabase.m
+// CBLDatabase+Internal.m
 // CouchbaseLite
 //
 // Created by Jens Alfke on 6/19/10.
@@ -22,6 +22,7 @@
 #import "CBL_BlobStore.h"
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
+#import "CBL_Shared.h"
 #import "CBLMisc.h"
 #import "CBLDatabase.h"
 #import "CouchbaseLitePrivate.h"
@@ -47,7 +48,22 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return _attachments;
 }
 
+- (CBL_Shared*)shared {
+#if DEBUG
+    if (_manager)
+        return _manager.shared;
+    // For unit testing purposes we create databases without managers (see createEmptyDBAtPath(),
+    // below.) Allow the .shared property to work in this state by creating a per-db instance:
+    if (!_debug_shared)
+        _debug_shared = [[CBL_Shared alloc] init];
+    return _debug_shared;
+#else
+    return _manager.shared;
+#endif
+}
 
+
+#if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)path {
     if (!CBLRemoveFileIfExists(path, NULL))
         return nil;
@@ -58,6 +74,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return nil;
     return db;
 }
+#endif
 
 
 - (instancetype) _initWithPath: (NSString*)path
@@ -83,7 +100,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
         if (0) {
             // Appease the static analyzer by using these category ivars in this source file:
-            _validations = nil;
             _pendingAttachmentsByDigest = nil;
         }
     }

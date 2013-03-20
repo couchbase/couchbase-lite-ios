@@ -247,8 +247,12 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 NSURL* CBLStartServer(NSString* serverDirectory, NSError** outError) {
     CAssert(![CBL_URLProtocol server], @"A CBL_Server is already running");
-    CBL_Server* tdServer = [[CBL_Server alloc] initWithDirectory: serverDirectory
-                                                       error: outError];
+    CBLManager* manager = [[CBLManager alloc] initWithDirectory: serverDirectory
+                                                        options: nil
+                                                          error: outError];
+    if (!manager)
+        return nil;
+    CBL_Server* tdServer = [[CBL_Server alloc] initWithManager: manager];
     if (!tdServer)
         return nil;
     return [CBL_URLProtocol registerServer: tdServer forHostname: nil];
