@@ -1130,11 +1130,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             }
             NSDictionary* value = $dict({@"rev", revID},
                                         {@"deleted", (deleted ?$true : nil)});
-            CBLQueryRow* change = [[CBLQueryRow alloc] initWithDatabase: self
-                                                                  docID: docID
-                                                                    key: docID
-                                                                  value: value
-                                                          docProperties: docContents];
+            CBLQueryRow* change = [[CBLQueryRow alloc] initWithDocID: docID
+                                                                 key: docID
+                                                               value: value
+                                                       docProperties: docContents];
             if (options->keys)
                 docs[docID] = change;
             else
@@ -1158,11 +1157,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                     if (revID)
                         value = $dict({@"rev", revID}, {@"deleted", $true});
                 }
-                change = [[CBLQueryRow alloc] initWithDatabase: self
-                                                         docID: (value ?docID :nil)
-                                                           key: docID
-                                                         value: value
-                                                 docProperties: nil];
+                change = [[CBLQueryRow alloc] initWithDocID: (value ?docID :nil)
+                                                        key: docID
+                                                      value: value
+                                              docProperties: nil];
             }
             [rows addObject: change];
         }

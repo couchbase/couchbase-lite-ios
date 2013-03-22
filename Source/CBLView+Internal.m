@@ -421,11 +421,10 @@ static id fromJSON( NSData* json ) {
                 LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
                       toJSONString(docID));
-                [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db
-                                                                 docID: docID
-                                                                   key: keyData
-                                                                 value: valueData
-                                                         docProperties: docContents]];
+                [rows addObject: [[CBLQueryRow alloc] initWithDocID: docID
+                                                                key: keyData
+                                                              value: valueData
+                                                      docProperties: docContents]];
             }
         }
     }
@@ -494,11 +493,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                     // This pair starts a new group, so reduce & record the last one:
                     id key = groupKey(lastKeyData, groupLevel);
                     id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-                    [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db
-                                                                     docID: nil
-                                                                       key: key
-                                                                     value: reduced
-                                                             docProperties: nil]];
+                    [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
+                                                                    key: key
+                                                                  value: reduced
+                                                          docProperties: nil]];
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
                 }
@@ -517,11 +515,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
         LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
-        [rows addObject: [[CBLQueryRow alloc] initWithDatabase: _db
-                                                         docID: nil
-                                                           key: key
-                                                         value: reduced
-                                                 docProperties: nil]];
+        [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
+                                                        key: key
+                                                      value: reduced
+                                              docProperties: nil]];
     }
     return rows;
 }

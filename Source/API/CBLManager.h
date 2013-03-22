@@ -70,12 +70,6 @@ typedef struct CBLManagerOptions {
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;
 
-/** The base URL of the database manager's REST API. You can access this URL within this process,
-    using NSURLConnection or other APIs that use that (such as XMLHTTPRequest inside a WebView),
-    but it isn't available outside the process.
-    This method is only available if you've linked with the CouchbaseLiteListener framework. */
-@property (readonly) NSURL* internalURL;
-
 /** Replaces or installs a database from a file.
     This is primarily used to install a canned database on first launch of an app, in which case you should first check .exists to avoid replacing the database if it exists already. The canned database would have been copied into your app bundle at build time.
     @param databaseName  The name of the database to replace.
@@ -88,5 +82,16 @@ typedef struct CBLManagerOptions {
               withAttachments: (NSString*)attachmentsPath
                         error: (NSError**)outError                  __attribute__((nonnull(1,2)));
 
+/** Asynchronously dispatches a block to run on a background thread. The block will be given a
+    CBLDatabase instance to use; <em>it must use that database instead of any CBL objects that are
+    in use on the surrounding code's thread.</em> Otherwise thread-safety will be violated, and
+    Really Bad Things that are intermittent and hard to debug can happen. */
+- (void) asyncTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
+
+/** The base URL of the database manager's REST API. You can access this URL within this process,
+    using NSURLConnection or other APIs that use that (such as XMLHTTPRequest inside a WebView),
+    but it isn't available outside the process.
+    This method is only available if you've linked with the CouchbaseLiteListener framework. */
+@property (readonly) NSURL* internalURL;
 
 @end

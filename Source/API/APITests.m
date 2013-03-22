@@ -548,6 +548,91 @@ TestCase(API_ViewWithLinkedDocs) {
 }
 
 
+TestCase(API_LiveQuery) {
+    RequireTestCase(API_CreateView);
+    CBLDatabase* db = createEmptyDB();
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+        emit(doc[@"sequence"], nil);
+    } version: @"1"];
+
+    static const NSUInteger kNDocs = 50;
+    createDocuments(db, kNDocs);
+
+    CBLLiveQuery* query = [[view query] asLiveQuery];
+    query.startKey = @23;
+    query.endKey = @33;
+    Log(@"Created %@", query);
+    CAssertNil(query.rows);
+
+    Log(@"Waiting for live query to update...");
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
+    bool finished = false;
+    while (!finished) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            break;
+        CBLQueryEnumerator* rows = query.rows;
+        Log(@"Live query rows = %@", rows);
+        if (rows != nil) {
+            CAssertNil(rows.error);
+            CAssertEq(rows.count, (NSUInteger)11);
+
+            int expectedKey = 23;
+            for (CBLQueryRow* row in rows) {
+                CAssertEq(row.document.database, db);
+                CAssertEq([row.key intValue], expectedKey);
+                ++expectedKey;
+            }
+            finished = true;
+        }
+    }
+    CAssert(finished, @"Live query timed out!");
+}
+
+
+TestCase(API_AsyncViewQuery) {
+    RequireTestCase(API_CreateView);
+    CBLDatabase* db = createEmptyDB();
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+        emit(doc[@"sequence"], nil);
+    } version: @"1"];
+
+    static const NSUInteger kNDocs = 50;
+    createDocuments(db, kNDocs);
+
+    CBLQuery* query = [view query];
+    query.startKey = @23;
+    query.endKey = @33;
+
+    __block bool finished = false;
+    NSThread* curThread = [NSThread currentThread];
+    [query runAsync: ^(CBLQueryEnumerator *rows) {
+        Log(@"Async query finished!");
+        CAssertEq([NSThread currentThread], curThread);
+        CAssert(rows);
+        CAssertNil(rows.error);
+        CAssertEq(rows.count, (NSUInteger)11);
+
+        int expectedKey = 23;
+        for (CBLQueryRow* row in rows) {
+            CAssertEq(row.document.database, db);
+            CAssertEq([row.key intValue], expectedKey);
+            ++expectedKey;
+        }
+        finished = true;
+    }];
+
+    Log(@"Waiting for async query to finish...");
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 5.0];
+    while (!finished) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            break;
+    }
+    CAssert(finished, @"Async query timed out!");
+}
+
+
 // Make sure that a database's map/reduce functions are shared with the shadow database instance
 // running in the background server.
 TestCase(API_SharedMapBlocks) {

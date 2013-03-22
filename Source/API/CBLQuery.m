@@ -9,10 +9,31 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
 #import "CBLDatabase.h"
+#import "CBL_Server.h"
+#import "MYBlockUtils.h"
+
+
+// Querying utilities for CBLDatabase. Defined down below.
+@interface CBLDatabase (Views)
+- (NSArray*) queryViewNamed: (NSString*)viewName
+                    options: (CBLQueryOptions)options
+               lastSequence: (SequenceNumber*)outLastSequence
+                     status: (CBLStatus*)outStatus;
+@end
 
 
 @interface CBLQueryEnumerator ()
-- (instancetype) initWithDatabase: (CBLDatabase*)db rows: (NSArray*)rows;
+- (instancetype) initWithDatabase: (CBLDatabase*)db
+                             rows: (NSArray*)rows
+                   sequenceNumber: (SequenceNumber)sequenceNumber;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           status: (CBLStatus)status;
+@property (nonatomic, readonly) CBLStatus status;
+@end
+
+
+@interface CBLQueryRow ()
+@property (nonatomic) CBLDatabase* database;
 @end
 
 
@@ -29,8 +50,9 @@
     BOOL _descending, _prefetch, _sequences, _mapOnly;
     NSArray *_keys;
     NSUInteger _groupLevel;
-    SInt64 _lastSequence;
-    CBLStatus _status;
+    SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
+    @protected
+    CBLStatus _status;          // Result status of last query (.error property derived from this)
 }
 
 
@@ -94,9 +116,8 @@
     return [[CBLLiveQuery alloc] initWithQuery: self];
 }
 
-
-- (CBLQueryEnumerator*) rows {
-    CBLQueryOptions options = {
+- (CBLQueryOptions) queryOptions {
+    return (CBLQueryOptions) {
         .startKey = _startKey,
         .endKey = _endKey,
         .keys = _keys,
@@ -109,34 +130,49 @@
         .updateSeq = YES,
         .localSeq = _sequences,
         .inclusiveEnd = YES,
+        .stale = _stale
     };
-    
-    NSArray* rows;
-    SequenceNumber lastSequence;
-    if (_view) {
-        lastSequence = _view.lastSequenceIndexed;
-        if (_stale == kCBLStaleNever || lastSequence <= 0) {
-            _status = [_view updateIndex];
-            if (CBLStatusIsError(_status)) {
-                Warn(@"Failed to update view index: %d", _status);
-                return nil;
-            }
-            lastSequence = _view.lastSequenceIndexed;
-        }
-        rows = [_view _queryWithOptions: &options status: &_status];
-        // TODO: Implement kCBLStaleUpdateAfter
-        
-    } else {
-        rows = [_database getAllDocs: &options];
-        _status = rows ? kCBLStatusOK :kCBLStatusDBError; //FIX: getALlDocs should return status
-        lastSequence = _database.lastSequenceNumber;
-    }
+}
 
-    if (!rows)
-        return nil;
+
+- (CBLQueryEnumerator*) rows {
+    NSArray* rows = [_database queryViewNamed: _view.name
+                                      options: self.queryOptions
+                                 lastSequence: &_lastSequence
+                                       status: &_status];
+    return [[CBLQueryEnumerator alloc] initWithDatabase: _database
+                                                   rows: rows
+                                         sequenceNumber: _lastSequence];
+}
+
+
+- (void) runAsync: (void (^)(CBLQueryEnumerator*))onComplete {
+    LogTo(Query, @"%@: Async query %@/%@...", self, _database.name, (_view.name ?: @"_all_docs"));
+    NSThread *callingThread = [NSThread currentThread];
+    NSString* viewName = _view.name;
+    CBLQueryOptions options = self.queryOptions;
     
-    _lastSequence = lastSequence;
-    return [[CBLQueryEnumerator alloc] initWithDatabase: _database rows: rows];
+    [_database.manager asyncTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
+        // On the background server thread, run the query:
+        CBLStatus status;
+        SequenceNumber lastSequence;
+        NSArray* rows = [bgdb queryViewNamed: viewName
+                                     options: options
+                                lastSequence: &lastSequence
+                                      status: &status];
+        MYOnThread(callingThread, ^{
+            // Back on original thread, call the onComplete block:
+            LogTo(Query, @"%@: ...async query finished (%u rows)", self, (unsigned)rows.count);
+            if (CBLStatusIsError(status)) {
+                onComplete([[CBLQueryEnumerator alloc] initWithDatabase: _database
+                                                                 status: status]);
+            } else {
+                onComplete([[CBLQueryEnumerator alloc] initWithDatabase: _database
+                                                                   rows: rows
+                                                         sequenceNumber: lastSequence]);
+            }
+        });
+    }];
 }
 
 
@@ -159,29 +195,55 @@
 
 @implementation CBLLiveQuery
 {
-    BOOL _observing, _updating;
+    BOOL _observing, _willUpdate;
     CBLQueryEnumerator* _rows;
 }
 
-- (void)dealloc {
+
+- (void) dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 
-- (CBLQueryEnumerator*) rows {
+- (void) start {
     if (!_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(databaseChanged)
                                                      name: kCBLDatabaseChangeNotification 
                                                    object: self.database];
+        [self update];
     }
-    if (!_rows) {
-        _rows = super.rows;
-        Log(@"CBLLiveQuery: Initial row count is %lu", (unsigned long)_rows.count);
+}
+
+
+- (void) stop {
+    if (_observing) {
+        _observing = NO;
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: kCBLDatabaseChangeNotification
+                                                      object: self.database];
     }
+    if (_willUpdate) {
+        _willUpdate = NO;
+        [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(update)
+                                                   object: nil];
+    }
+}
+
+
+- (CBLQueryEnumerator*) rows {
+    [self start];
     // Have to return a copy because the enumeration has to start at item #0 every time
     return [_rows copy];
+}
+
+
+- (void) addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath
+             options:(NSKeyValueObservingOptions)options context:(void *)context
+{
+    [self start];
+    [super addObserver: observer forKeyPath: keyPath options: options context: context];
 }
 
 
@@ -191,20 +253,24 @@
 
 
 - (void) databaseChanged {
-    if (!_updating) {
-        _updating = YES;
+    if (!_willUpdate) {
+        _willUpdate = YES;
         [self performSelector: @selector(update) withObject: nil afterDelay: 0.0];
     }
 }
 
 
 - (void) update {
-    _updating = NO;
-    CBLQueryEnumerator* rows = super.rows;
-    if (rows && ![rows isEqual: _rows]) {
-        Log(@"CBLLiveQuery: ...Rows changed! (now %lu)", (unsigned long)rows.count);
-        self.rows = rows;   // Triggers KVO notification
-    }
+    _willUpdate = NO;
+    [self runAsync: ^(CBLQueryEnumerator *rows) {
+        _status = rows.status;
+        if (CBLStatusIsError(_status)) {
+            Warn(@"%@: Error updating rows: %d", self, _status);
+        } else if(![rows isEqual: _rows]) {
+            LogTo(Query, @"%@: ...Rows changed! (now %lu)", self, (unsigned long)rows.count);
+            self.rows = rows;   // Triggers KVO notification
+        }
+    }];
 }
 
 
@@ -218,7 +284,8 @@
     CBLDatabase* _database;
     NSArray* _rows;
     NSUInteger _nextRow;
-    NSUInteger _sequenceNumber;
+    UInt64 _sequenceNumber;
+    CBLStatus _status;
 }
 
 
@@ -227,6 +294,7 @@
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              rows: (NSArray*)rows
+                   sequenceNumber: (SequenceNumber)sequenceNumber
 {
     NSParameterAssert(database);
     self = [super init];
@@ -234,7 +302,24 @@
         if (!rows)
             return nil;
         _database = database;
-        _rows = rows;
+        _rows = [rows copy];
+        _sequenceNumber = sequenceNumber;
+        _status = kCBLStatusOK;
+
+        // Fill in the rows' database reference now
+        for (CBLQueryRow* row in _rows)
+            row.database = database;
+    }
+    return self;
+}
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           status: (CBLStatus)status
+{
+    NSParameterAssert(database);
+    self = [super init];
+    if (self ) {
+        _status = status;
     }
     return self;
 }
@@ -242,7 +327,8 @@
 
 - (id) copyWithZone: (NSZone*)zone {
     return [[[self class] alloc] initWithDatabase: _database
-                                             rows: _rows];
+                                             rows: _rows
+                                   sequenceNumber: _sequenceNumber];
 }
 
 
@@ -278,6 +364,14 @@
 }
 
 
+@synthesize status=_status;
+
+
+- (NSError*) error {
+    return CBLStatusIsError(_status) ? CBLStatusToNSError(_status, nil) : nil;
+}
+
+
 @end
 
 
@@ -298,23 +392,26 @@ static id fromJSON( NSData* json ) {
 {
     CBLDatabase* _database;
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
+    __weak id _parsedKey, _parsedValue;
     NSString* _sourceDocID;
     NSDictionary* _documentProperties;
 }
 
 
-@synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID;
+@synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID,
+            database=_database;
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                            docID: (NSString*)docID
-                              key: (id)key
-                            value: (id)value
-                    docProperties: (NSDictionary*)docProperties
+- (instancetype) initWithDocID: (NSString*)docID
+                           key: (id)key
+                         value: (id)value
+                 docProperties: (NSDictionary*)docProperties
 {
     self = [super init];
     if (self) {
-        _database = database;
+        // Don't initialize _database yet. I might be instantiated on a background thread (if the
+        // query is async) which has a different CBLDatabase instance than the original caller.
+        // Instead, the database property will be filled in when I'm added to a CBLQueryEnumerator.
         _sourceDocID = [docID copy];
         _key = [key copy];
         _value = [value copy];
@@ -324,16 +421,41 @@ static id fromJSON( NSData* json ) {
 }
 
 
+- (BOOL) isEqual:(id)object {
+    if (object == self)
+        return YES;
+    if (![object isKindOfClass: [CBLQueryRow class]])
+        return NO;
+    CBLQueryRow* other = object;
+    return _database == other->_database
+        && $equal(_key, other->_key) && $equal(_value, other->_value)
+        && $equal(_sourceDocID, other->_sourceDocID)
+        && $equal(_documentProperties, other->_documentProperties);
+}
+
+
 - (id) key {
-    if ([_key isKindOfClass: [NSData class]])
-        _key = fromJSON(_key);
-    return _key;
+    id key = _parsedKey;
+    if (!key) {
+        key = _key;
+        if ([key isKindOfClass: [NSData class]]) {  // _key may start out as unparsed JSON data
+            key = fromJSON(_key);
+            _parsedKey = key;
+        }
+    }
+    return key;
 }
 
 - (id) value {
-    if ([_value isKindOfClass: [NSData class]])
-        _value = fromJSON(_value);
-    return _value;
+    id value = _parsedValue;
+    if (!value) {
+        value = _value;
+        if ([value isKindOfClass: [NSData class]]) {   // _value may start out as unparsed JSON data
+            value = fromJSON(_value);
+            _parsedValue = value;
+        }
+    }
+    return value;
 }
 
 
@@ -409,6 +531,57 @@ static id fromJSON( NSData* json ) {
             [CBLJSON stringWithJSONObject: self.key options: CBLJSONWritingAllowFragments error: nil],
             [CBLJSON stringWithJSONObject: self.value options: CBLJSONWritingAllowFragments error: nil],
             self.documentID];
+}
+
+
+@end
+
+
+
+
+@implementation CBLDatabase (Views)
+
+- (NSArray*) queryViewNamed: (NSString*)viewName
+                    options: (CBLQueryOptions)options
+               lastSequence: (SequenceNumber*)outLastSequence
+                     status: (CBLStatus*)outStatus
+{
+    CBLStatus status;
+    NSArray* rows;
+    SequenceNumber lastSequence;
+    do {
+        if (viewName) {
+            CBLView* view = [self viewNamed: viewName];
+            if (!view) {
+                status = kCBLStatusNotFound;
+                break;
+            }
+            lastSequence = view.lastSequenceIndexed;
+            if (options.stale == kCBLStaleNever || lastSequence <= 0) {
+                status = [view updateIndex];
+                if (CBLStatusIsError(status)) {
+                    Warn(@"Failed to update view index: %d", status);
+                    break;
+                }
+                lastSequence = view.lastSequenceIndexed;
+            } else if (options.stale == kCBLStaleUpdateAfter &&
+                       lastSequence < self.lastSequenceNumber) {
+                [view performSelector: @selector(updateIndex) withObject: nil afterDelay: 0];
+            }
+            rows = [view _queryWithOptions: &options status: &status];
+        } else {
+            // nil view means query _all_docs
+            rows = [self getAllDocs: &options];
+            status = rows ? kCBLStatusOK :kCBLStatusDBError; //FIX: getALlDocs should return status
+            lastSequence = self.lastSequenceNumber;
+        }
+    } while(false); // just to allow 'break' within the block
+
+    if (outLastSequence)
+        *outLastSequence = lastSequence;
+    if (*outStatus)
+        *outStatus = status;
+    return rows;
 }
 
 

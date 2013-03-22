@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLDatabase+Internal.h"
 #import "CBLView.h"
+#import "CBLQuery.h"
 
 
 /** Standard query options for views. */
@@ -28,6 +29,7 @@ typedef struct CBLQueryOptions {
     BOOL reduce;
     BOOL group;
     BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
+    CBLStaleness stale;
 } CBLQueryOptions;
 
 extern const CBLQueryOptions kDefaultCBLQueryOptions;

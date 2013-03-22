@@ -88,11 +88,10 @@
 
 
 @interface CBLQueryRow ()
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                            docID: (NSString*)docID
-                              key: (id)key
-                            value: (id)value
-                    docProperties: (NSDictionary*)docProperties;
+- (instancetype) initWithDocID: (NSString*)docID
+                           key: (id)key
+                         value: (id)value
+                 docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @end
 

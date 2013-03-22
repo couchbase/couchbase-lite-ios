@@ -78,12 +78,20 @@ typedef enum {
     If nil, the last execution of the query was successful. */
 @property (readonly) NSError* error;
 
-/** Sends the query to the server and returns an enumerator over the result rows (Synchronous). */
+/** Sends the query to the server and returns an enumerator over the result rows (Synchronous).
+    If the query fails, this method returns nil and sets the query's .error property. */
 - (CBLQueryEnumerator*) rows;
 
-/** Same as -rows, except returns nil if the query results have not changed since the last time it was evaluated (Synchronous). */
+/** Same as -rows, except returns nil if the query results have not changed since the last time it
+    was evaluated (Synchronous). */
 - (CBLQueryEnumerator*) rowsIfChanged;
 
+/** Starts an asynchronous query. Returns immediately, then calls the onComplete block when the
+    query completes, passing it the row enumerator.
+    If the query fails, the block will receive a non-nil enumerator but its .error property will
+    be set to a value reflecting the error. The originating CBLQuery's .error property will NOT
+    change. */
+- (void) runAsync: (void (^)(CBLQueryEnumerator*))onComplete;
 
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;
@@ -94,6 +102,14 @@ typedef enum {
 /** A CBLQuery subclass that automatically refreshes the result rows every time the database changes.
     All you need to do is use KVO to observe changes to the .rows property. */
 @interface CBLLiveQuery : CBLQuery
+
+/** Starts observing database changes. The .rows property will now update automatically. (You 
+    usually don't need to call this yourself, since accessing or observing the .rows property will
+    call -start for you.) */
+- (void) start;
+
+/** Stops observing database changes. Calling -start or .rows will restart it. */
+- (void) stop;
 
 /** In CBLLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
 @property (readonly, retain) CBLQueryEnumerator* rows;
@@ -109,13 +125,17 @@ typedef enum {
 @property (readonly) NSUInteger count;
 
 /** The database's current sequenceNumber at the time the view was generated. */
-@property (readonly) NSUInteger sequenceNumber;
+@property (readonly) UInt64 sequenceNumber;
 
 /** The next result row. This is the same as -nextObject but with a checked return type. */
 - (CBLQueryRow*) nextRow;
 
 /** Random access to a row in the result */
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
+
+/** Error, if the query failed.
+    NOTE: This will only ever be set in an enumerator returned from an _asynchronous_ query. The CBLQuery.rows method returns nil on error.) */
+@property (readonly) NSError* error;
 
 @end
 

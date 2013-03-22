@@ -199,8 +199,14 @@ static NSCharacterSet* kIllegalNameChars;
             _server = [[CBL_Server alloc] initWithManager: newManager];
             LogTo(CBLDatabase, @"%@ created %@", self, _server);
         }
+        Assert(_server, @"Failed to create backgroundServer!");
     }
     return _server;
+}
+
+
+- (void) asyncTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
+    [self.backgroundServer tellDatabaseNamed: dbName to: block];
 }
 
 
