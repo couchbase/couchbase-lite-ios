@@ -72,6 +72,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     NSMutableDictionary* _pendingAttachmentsByDigest;
     NSMutableArray* _activeReplicators;
     NSMutableArray* _changesToNotify;
+    bool _postingChangeNotifications;
 #if DEBUG
     CBL_Shared* _debug_shared;
 #endif

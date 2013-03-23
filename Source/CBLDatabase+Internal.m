@@ -405,12 +405,14 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 /** Posts a local NSNotification of a new revision of a document. */
 - (void) notifyChange: (CBL_DatabaseChange*)change {
+    LogTo(CBLDatabase, @"Added: %@ (seq=%lld)", change.addedRevision, change.addedRevision.sequence);
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
     [_changesToNotify addObject: change];
     [self postChangeNotifications];
 }
 
+/** Posts a local NSNotification of multiple new revisions. */
 - (void) notifyChanges: (NSArray*)changes {
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
@@ -420,22 +422,37 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (void) postChangeNotifications {
-    if (_transactionLevel == 0 && _isOpen && _changesToNotify.count > 0) {
-        if (WillLogTo(CBLDatabase)) {
-            unsigned nEchoed = 0;
-            for (CBL_DatabaseChange* change in _changesToNotify)
-                if (change.echoed)
-                    ++nEchoed;
-            LogTo(CBLDatabase, @"%@: Posting %u change notifications (%u echoed)",
-                  self, (unsigned)_changesToNotify.count, nEchoed);
-        }
+    // This is a 'while' instead of an 'if' because when we finish posting notifications, there
+    // might be new ones that have arrived as a result of notification handlers making document
+    // changes of their own (the replicator manager will do this.) So we need to check again.
+    while (_transactionLevel == 0 && _isOpen && !_postingChangeNotifications
+            && _changesToNotify.count > 0)
+    {
+        _postingChangeNotifications = true; // Disallow re-entrant calls
         NSArray* changes = _changesToNotify;
         _changesToNotify = nil;
+
+        if (WillLogTo(CBLDatabase)) {
+            NSMutableString* seqs = [NSMutableString string];
+            for (CBL_DatabaseChange* change in changes) {
+                if (seqs.length > 0)
+                    [seqs appendString: @", "];
+                SequenceNumber seq = change.addedRevision.sequence;
+                if (change.echoed)
+                    [seqs appendFormat: @"(%lld)", seq];
+                else
+                    [seqs appendFormat: @"%lld", seq];
+            }
+            LogTo(CBLDatabase, @"%@: Posting change notifications: seq %@", self, seqs);
+        }
+        
+        for (CBL_DatabaseChange* change in changes)
+            [self postPublicChangeNotification: change];
         [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseChangesNotification
                                                             object: self
                                                           userInfo: $dict({@"changes", changes})];
-        for (CBL_DatabaseChange* change in changes)
-            [self postPublicChangeNotification: change];
+
+        _postingChangeNotifications = false;
     }
 }
 
