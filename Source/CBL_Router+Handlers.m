@@ -855,7 +855,13 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             if (!$equal(rev.docID, docID) || !rev.revID)
                 return kCBLStatusBadID;
             NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: body.properties];
-            return [_db forceInsert: rev revisionHistory: history source: nil];
+            CBLStatus status = [_db forceInsert: rev revisionHistory: history source: nil];
+            if (!CBLStatusIsError(status)) {
+                _response.bodyObject = $dict({@"ok", $true},
+                                             {@"id", rev.docID},
+                                             {@"rev", rev.revID});
+            }
+            return status;
         }
     }];
 }
