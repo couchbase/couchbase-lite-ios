@@ -384,6 +384,22 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 // CAREFUL: This is called on the server's background thread!
+- (void) bg_setReplicator: (CBL_Replicator*)repl {
+    if (_bg_replicator) {
+        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil
+                                                      object: _bg_replicator];
+    }
+    _bg_replicator = repl;
+    if (_bg_replicator) {
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector: @selector(bg_replicationProgressChanged:)
+                                                     name: CBL_ReplicatorProgressChangedNotification
+                                                   object: _bg_replicator];
+    }
+}
+
+
+// CAREFUL: This is called on the server's background thread!
 - (void) bg_startReplicator: (CBLManager*)server_dbmgr
                  properties: (NSDictionary*)properties
 {
@@ -398,13 +414,8 @@ static inline BOOL isLocalDBName(NSString* url) {
         });
         return;
     }
-    _bg_replicator = repl;
+    [self bg_setReplicator: repl];
     [repl start];
-
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(bg_replicationProgressChanged:)
-                                                 name: CBL_ReplicatorProgressChangedNotification
-                                               object: _bg_replicator];
     [self bg_updateProgress: _bg_replicator];
 }
 
@@ -450,8 +461,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     });
     
     if (_bg_replicator && mode == kCBLReplicationStopped) {
-        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: _bg_replicator];
-        _bg_replicator = nil;
+        [self bg_setReplicator: nil];
     }
 }
 
