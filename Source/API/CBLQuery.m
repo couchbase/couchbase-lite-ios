@@ -547,8 +547,8 @@ static id fromJSON( NSData* json ) {
                      status: (CBLStatus*)outStatus
 {
     CBLStatus status;
-    NSArray* rows;
-    SequenceNumber lastSequence;
+    NSArray* rows = nil;
+    SequenceNumber lastSequence = 0;
     do {
         if (viewName) {
             CBLView* view = [self viewNamed: viewName];
@@ -579,7 +579,7 @@ static id fromJSON( NSData* json ) {
 
     if (outLastSequence)
         *outLastSequence = lastSequence;
-    if (*outStatus)
+    if (outStatus)
         *outStatus = status;
     return rows;
 }
