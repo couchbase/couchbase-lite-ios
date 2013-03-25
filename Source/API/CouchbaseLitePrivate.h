@@ -105,4 +105,5 @@
 
 @interface CBLModel ()
 @property (readonly) NSDictionary* currentProperties;
+- (void) willSave: (NSSet*)changedProperties;   // overridable
 @end

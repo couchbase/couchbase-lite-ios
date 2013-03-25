@@ -219,6 +219,20 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 - (void) setHeaders: (NSDictionary*)headers {
     [self setRemoteDictionaryValue: headers forKey: @"headers"];
+    [self restart];
+}
+
+
+- (void) willSave: (NSSet*)changedProperties {
+    // If any properties change that require the replication to restart, clear the
+    // _replication_state property too, which will cause the CBL_ReplicatorManager to restart it.
+    static NSSet* sRestartProperties;
+    if (!sRestartProperties)
+        sRestartProperties = [NSSet setWithObjects: @"filter", @"query_params", @"continuous",
+                                                    @"doc_ids", nil];
+    if ([changedProperties intersectsSet: sRestartProperties])
+        [self setValue: nil ofProperty: @"_replication_state"];
+    [super willSave: changedProperties];
 }
 
 

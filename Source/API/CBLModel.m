@@ -242,6 +242,11 @@
 }
 
 
+- (void) willSave: (NSSet*)changedProperties {
+    // Subclasses can override
+}
+
+
 - (void) didSave {
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return;
@@ -257,6 +262,7 @@
 - (BOOL) justSave: (NSError**)outError {
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return YES;
+    [self willSave: _changedNames];
     NSDictionary* properties = self.propertiesToSave;
     LogTo(CBLModel, @"%@ Saving <- %@", self, properties);
     NSError* error;
