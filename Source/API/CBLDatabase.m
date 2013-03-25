@@ -9,6 +9,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+LocalDocs.h"
 #import "CBL_DatabaseChange.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
@@ -205,6 +206,48 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 // Appease the compiler; these are actually implemented in CBLDatabase.m
 @dynamic documentCount, lastSequenceNumber;
+
+
+static NSString* makeLocalDocID(NSString* docID) {
+    return [@"_local/" stringByAppendingString: docID];
+}
+
+
+- (NSDictionary*) getLocalDocumentWithID: (NSString*)localDocID {
+    return [self getLocalDocumentWithID: makeLocalDocID(localDocID) revisionID: nil].properties;
+}
+
+- (BOOL) putLocalDocument: (NSDictionary*)properties
+                   withID: (NSString*)localDocID
+                    error: (NSError**)outError
+{
+    localDocID = makeLocalDocID(localDocID);
+    __block CBLStatus status;
+    BOOL ok = [self inTransaction: ^BOOL {
+        // The lower-level local docs API has MVCC and requires the matching prior revision ID.
+        // So first get the document to look up its current rev ID:
+        CBL_Revision* prevRev = [self getLocalDocumentWithID: localDocID revisionID: nil];
+        if (!prevRev && !properties) {
+            status = kCBLStatusNotFound;
+            return NO;
+        }
+        CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: localDocID
+                                                          revID: nil
+                                                        deleted: (properties == nil)];
+        if (properties)
+            rev.properties = properties;
+        // Now update the doc (or delete it, if properties is nil):
+        return [self putLocalRevision: rev prevRevisionID: prevRev.revID status: &status] != nil;
+    }];
+    
+    if (!ok && outError)
+        *outError = CBLStatusToNSError(status, nil);
+    return ok;
+}
+
+- (BOOL) deleteLocalDocumentWithID: (NSString*)localDocID error: (NSError**)outError {
+    return [self putLocalDocument: nil withID: localDocID error: outError];
+}
 
 
 #pragma mark - VIEWS:

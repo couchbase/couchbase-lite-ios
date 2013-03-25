@@ -89,6 +89,25 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 - (void) clearDocumentCache;
 
 
+#pragma mark - LOCAL DOCUMENTS:
+
+
+/** Returns the contents of the local document with the given ID, or nil if none exists. */
+- (NSDictionary*) getLocalDocumentWithID: (NSString*)localDocID         __attribute__((nonnull));
+
+/** Sets the contents of the local document with the given ID. Unlike CouchDB, no revision-ID
+    checking is done; the put always succeeds. If the properties dictionary is nil, the document
+    will be deleted. */
+- (BOOL) putLocalDocument: (NSDictionary*)properties
+                   withID: (NSString*)localDocID
+                    error: (NSError**)outError                      __attribute__((nonnull(2)));
+
+/** Deletes the local document with the given ID. */
+- (BOOL) deleteLocalDocumentWithID: (NSString*)localDocID
+                             error: (NSError**)outError             __attribute__((nonnull(1)));
+
+
+
 #pragma mark - VIEWS AND OTHER CALLBACKS:
 
 /** Returns a query that matches all documents in the database.

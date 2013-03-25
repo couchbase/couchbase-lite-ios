@@ -318,6 +318,32 @@ TestCase(API_RowsIfChanged) {
     CAssertEq(rows.count, kNDocs);
 }
 
+TestCase(API_LocalDocs) {
+    CBLDatabase* db = createEmptyDB();
+    NSDictionary* props = [db getLocalDocumentWithID: @"dock"];
+    CAssertNil(props);
+    NSError* error;
+    CAssert([db putLocalDocument: @{@"foo": @"bar"} withID: @"dock" error: &error],
+            @"Couldn't put new local doc: %@", error);
+    props = [db getLocalDocumentWithID: @"dock"];
+    CAssertEqual(props[@"foo"], @"bar");
+    
+    CAssert([db putLocalDocument: @{@"FOOO": @"BARRR"} withID: @"dock" error: &error],
+            @"Couldn't update local doc: %@", error);
+    props = [db getLocalDocumentWithID: @"dock"];
+    CAssertNil(props[@"foo"]);
+    CAssertEqual(props[@"FOOO"], @"BARRR");
+
+    CAssert([db deleteLocalDocumentWithID: @"dock" error: &error],
+            @"Couldn't delete local doc: %@", error);
+    props = [db getLocalDocumentWithID: @"dock"];
+    CAssertNil(props);
+
+    CAssert(![db deleteLocalDocumentWithID: @"dock" error: &error],
+            @"Second delete should have failed");
+    CAssertEq(error.code, kCBLStatusNotFound);
+}
+
 #pragma mark - HISTORY
 
 TestCase(API_History) {
@@ -757,6 +783,7 @@ TestCase(API) {
     RequireTestCase(API_DeleteDocument);
     RequireTestCase(API_PurgeDocument);
     RequireTestCase(API_AllDocuments);
+    RequireTestCase(API_LocalDocs);
     RequireTestCase(API_RowsIfChanged);
     RequireTestCase(API_History);
     RequireTestCase(API_Attachments);
