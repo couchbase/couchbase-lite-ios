@@ -46,7 +46,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSError* _error;
 
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
-    CBLDatabase* _bg_serverDatabase;    // ONLY used on the server thread
     NSString* _bg_documentID;           // ONLY used on the server thread
 }
 
@@ -294,14 +293,6 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (void) observeReplicatorManager {
     _bg_documentID = self.document.documentID;
     _mainThread = [NSThread currentThread];
-#if RUN_IN_BACKGROUND
-    [self.database.manager.tdServer tellDatabaseNamed: self.localDatabase.name
-                                                   to: ^(CBLDatabase* tddb) {
-                                                       _bg_serverDatabase = tddb;
-                                                   }];
-#else
-    _bg_serverDatabase = self.localDatabase;
-#endif
     // Observe *all* replication changes:
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(bg_replicationProgressChanged:)
@@ -408,7 +399,6 @@ static inline BOOL isLocalDBName(NSString* url) {
         return;
     }
     _bg_replicator = repl;
-    _bg_serverDatabase = repl.db;
     [repl start];
 
     [[NSNotificationCenter defaultCenter] addObserver: self
@@ -422,8 +412,6 @@ static inline BOOL isLocalDBName(NSString* url) {
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_stopReplicator {
     [_bg_replicator stop];
-    _bg_replicator = nil;
-    _bg_serverDatabase = nil;
 }
 
 
