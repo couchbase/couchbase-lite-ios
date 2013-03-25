@@ -24,6 +24,20 @@ typedef enum {
     CBLReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
 @interface CBLReplication : CBLModel
 
+/** Creates a new pull replication. It is non-persistent, unless you immediately set its
+    .persistent property.
+    It's more common to call -[CBLDatabase pullFromURL:] instead, as that will return an existing
+    replication if possible. But if you intentionally want to create multiple replications
+    from the same source database (e.g. with different filters), use this. */
+- (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database;
+
+/** Creates a new push replication. It is non-persistent, unless you immediately set its
+    .persistent property.
+    It's more common to call -[CBLDatabase pushToURL:] instead, as that will return an existing
+    replication if possible. But if you intentionally want to create multiple replications
+    to the same source database (e.g. with different filters), use this. */
+- (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target;
+
 /** The local database being replicated to/from. */
 @property (nonatomic, readonly) CBLDatabase* localDatabase;
 

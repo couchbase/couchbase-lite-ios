@@ -50,6 +50,14 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
+- (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database {
+    return [self initWithDatabase: database remote: source pull: YES];
+}
+
+- (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target {
+    return [self initWithDatabase: database remote: target pull: NO];
+}
+
 // Instantiate a new replication; it is not persistent yet
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
