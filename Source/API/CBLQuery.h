@@ -91,7 +91,7 @@ typedef enum {
     If the query fails, the block will receive a non-nil enumerator but its .error property will
     be set to a value reflecting the error. The originating CBLQuery's .error property will NOT
     change. */
-- (void) runAsync: (void (^)(CBLQueryEnumerator*))onComplete;
+- (void) runAsync: (void (^)(CBLQueryEnumerator*))onComplete            __attribute__((nonnull));
 
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;

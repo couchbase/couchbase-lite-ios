@@ -43,8 +43,7 @@ typedef struct CBLManagerOptions {
     @param outError  On return, the error if any. */
 - (instancetype) initWithDirectory: (NSString*)directory
                            options: (const CBLManagerOptions*)options
-                             error: (NSError**)outError
-    __attribute__((nonnull(1)));
+                             error: (NSError**)outError                 __attribute__((nonnull(1)));
 
 
 /** Releases all resources used by the CBLManager instance and closes all its databases. */

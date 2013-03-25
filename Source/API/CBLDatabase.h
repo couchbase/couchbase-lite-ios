@@ -124,7 +124,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the CBLView is assigned a map function.) */
 - (CBLView*) viewNamed: (NSString*)name                                  __attribute__((nonnull));
 
-- (CBLView*) existingViewNamed: (NSString*)name;
+- (CBLView*) existingViewNamed: (NSString*)name                         __attribute__((nonnull));
 
 /** Defines or clears a named document validation function.
     Before any change to the database, all registered validation functions are called and given a
@@ -139,7 +139,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock
                                                                      __attribute__((nonnull(1)));
 
-- (CBLFilterBlock) filterNamed: (NSString*)filterName;
+- (CBLFilterBlock) filterNamed: (NSString*)filterName                   __attribute__((nonnull));
 
 /** Registers an object that can compile source code into executable filter blocks. */
 + (void) setFilterCompiler: (id<CBLFilterCompiler>)compiler;

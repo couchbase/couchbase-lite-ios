@@ -29,14 +29,16 @@ typedef enum {
     It's more common to call -[CBLDatabase pullFromURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
     from the same source database (e.g. with different filters), use this. */
-- (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database;
+- (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database
+                                                                        __attribute__((nonnull));
 
 /** Creates a new push replication. It is non-persistent, unless you immediately set its
     .persistent property.
     It's more common to call -[CBLDatabase pushToURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
     to the same source database (e.g. with different filters), use this. */
-- (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target;
+- (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target
+                                                                        __attribute__((nonnull));
 
 /** The local database being replicated to/from. */
 @property (nonatomic, readonly) CBLDatabase* localDatabase;
