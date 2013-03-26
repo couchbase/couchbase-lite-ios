@@ -70,6 +70,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     }
     if (!_pendingSequences) {
         _pendingSequences = [[CBLSequenceMap alloc] init];
+        if (_lastSequence != nil) {
+            // Prime _pendingSequences so its checkpointedValue will reflect the last known seq:
+            SequenceNumber seq = [_pendingSequences addValue: _lastSequence];
+            [_pendingSequences removeSequence: seq];
+            AssertEqual(_pendingSequences.checkpointedValue, _lastSequence);
+        }
     }
     
     _caughtUp = NO;
