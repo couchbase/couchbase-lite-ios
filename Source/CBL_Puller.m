@@ -192,6 +192,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                     rev.remoteSequenceID = remoteSequenceID;
                     if (changes.count > 1)
                         rev.conflicted = true;
+                    LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
                     [self addToInbox: rev];
 
                     changeCount++;

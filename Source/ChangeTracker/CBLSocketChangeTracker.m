@@ -92,6 +92,7 @@
     }
 
     // Now open the connection:
+    LogTo(SyncVerbose, @"%@: GET %@", self, url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)

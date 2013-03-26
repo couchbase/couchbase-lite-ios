@@ -165,6 +165,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                 if (!filter || ![_db runFilter: filter params: _filterParameters onRevision: rev])
                     continue;
             }
+            LogTo(SyncVerbose, @"%@: Queuing #%lld %@", self, rev.sequence, rev);
             [self addToInbox: rev];
         }
     }
