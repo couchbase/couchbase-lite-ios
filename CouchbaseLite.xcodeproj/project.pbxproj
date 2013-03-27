@@ -387,6 +387,9 @@
 		27F1E4A61697995C00F0E50F /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4A51697995C00F0E50F /* CBLJSViewCompiler.m */; };
 		27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		27F1E4AB16979A0B00F0E50F /* CBLJSViewCompiler_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4AA16979A0B00F0E50F /* CBLJSViewCompiler_Test.m */; };
+		27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */; };
+		27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
+		27F273C417039F3700CD2B85 /* README.md in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27F273C317039F3600CD2B85 /* README.md */; };
 		27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
 		27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -562,6 +565,18 @@
 			files = (
 				270B3E27148939C500E0A926 /* CouchbaseLite.framework in CopyFiles */,
 				2711CDDE14C6584A00505D55 /* CouchbaseLiteListener.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27F273C017039D4B00CD2B85 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Extras;
+			dstSubfolderSpec = 16;
+			files = (
+				27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in CopyFiles */,
+				27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in CopyFiles */,
+				27F273C417039F3700CD2B85 /* README.md in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -761,8 +776,8 @@
 		27C706D01488679500F0F099 /* ShoppingDemo.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ShoppingDemo.xib; sourceTree = "<group>"; };
 		27C706D11488679500F0F099 /* ShoppingItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShoppingItem.h; sourceTree = "<group>"; };
 		27C706D21488679500F0F099 /* ShoppingItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShoppingItem.m; sourceTree = "<group>"; };
-		27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLUICollectionSource.m; sourceTree = "<group>"; };
-		27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLUICollectionSource.h; sourceTree = "<group>"; };
+		27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLUICollectionSource.m; path = Extras/CBLUICollectionSource.m; sourceTree = "<group>"; };
+		27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLUICollectionSource.h; path = Extras/CBLUICollectionSource.h; sourceTree = "<group>"; };
 		27CF5D2C152F514A0015D7A9 /* CBLStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLStatus.m; sourceTree = "<group>"; };
 		27D90B1615601C2F0000735E /* MYErrorUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
 		27D90B1715601C2F0000735E /* MYErrorUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYErrorUtils.m; sourceTree = "<group>"; };
@@ -848,6 +863,7 @@
 		27F1E4A51697995C00F0E50F /* CBLJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSViewCompiler.m; path = ../Source/CBLJSViewCompiler.m; sourceTree = "<group>"; };
 		27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		27F1E4AA16979A0B00F0E50F /* CBLJSViewCompiler_Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSViewCompiler_Test.m; path = ../Source/CBLJSViewCompiler_Test.m; sourceTree = "<group>"; };
+		27F273C317039F3600CD2B85 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.md; path = Extras/README.md; sourceTree = "<group>"; };
 		27F5B175164D74EA00126D0D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		27F6D02916B72885006E1576 /* CBLJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLJSFunction.h; path = Source/CBLJSFunction.h; sourceTree = SOURCE_ROOT; };
 		27F6D02A16B72885006E1576 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSFunction.m; path = Source/CBLJSFunction.m; sourceTree = SOURCE_ROOT; };
@@ -1448,6 +1464,7 @@
 				27DA4318158FD9B400F9E7B5 /* CBLUITableSource.m */,
 				27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */,
 				27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */,
+				27F273C317039F3600CD2B85 /* README.md */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -1840,6 +1857,7 @@
 				27B0B7E41492BB6B00A817AD /* Frameworks */,
 				27B0B7FA1492BC9600A817AD /* Headers */,
 				27B0B8061492BE2100A817AD /* Copy Library */,
+				27F273C017039D4B00CD2B85 /* CopyFiles */,
 			);
 			buildRules = (
 			);
