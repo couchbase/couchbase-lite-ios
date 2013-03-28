@@ -111,7 +111,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     This is only an estimate and its value will change during replication. It starts at zero and returns to zero when replication stops. */
 @property (readonly, nonatomic) NSUInteger changesTotal;
 
-/** JSON-compatible array of status info about active remote HTTP requests. */
-@property (readonly) NSArray* activeRequestsStatus;
+/** JSON-compatible dictionary of task info, as seen in _active_tasks REST API */
+@property (readonly) NSDictionary* activeTaskInfo;
 
 @end

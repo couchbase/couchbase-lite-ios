@@ -76,7 +76,7 @@ If you are looking for a stable release suitable for use in shipping apps, pleas
 
 ## Downloading Couchbase Lite ##
 
-* [Latest build][20]. (May not be stable; use at your own risk.)
+* [Latest 'stable' build][20]. (May not be stable by objective standards, considering the project is pre-alpha. But stable-er than the hourly builds.)
 * [Recent builds][19] (built hourly after any commits. Each archive is timestamped.)
 
 ## Building Couchbase Lite ##

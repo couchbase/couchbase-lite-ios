@@ -176,6 +176,51 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+- (NSDictionary*) activeTaskInfo {
+    // For schema, see http://wiki.apache.org/couchdb/HttpGetActiveTasks
+    NSString* source = self.remote.absoluteString;
+    NSString* target = _db.name;
+    if (self.isPush) {
+        NSString* temp = source;
+        source = target;
+        target = temp;
+    }
+    NSString* status;
+    id progress = nil;
+    if (!self.running) {
+        status = @"Stopped";
+    } else if (!self.online) {
+        status = @"Offline";        // nonstandard
+    } else if (!self.active) {
+        status = @"Idle";           // nonstandard
+    } else {
+        NSUInteger processed = self.changesProcessed;
+        NSUInteger total = self.changesTotal;
+        status = $sprintf(@"Processed %u / %u changes",
+                          (unsigned)processed, (unsigned)total);
+        progress = (total>0) ? @(lroundf(100*(processed / (float)total))) : nil;
+    }
+    NSArray* error = nil;
+    NSError* errorObj = self.error;
+    if (errorObj)
+        error = @[@(errorObj.code), errorObj.localizedDescription];
+
+    NSArray* activeRequests = [_remoteRequests my_map: ^id(CBLRemoteRequest* request) {
+        return request.statusInfo;
+    }];
+    
+    return $dict({@"type", @"Replication"},
+                 {@"task", self.sessionID},
+                 {@"source", source},
+                 {@"target", target},
+                 {@"continuous", (self.continuous ? $true : nil)},
+                 {@"status", status},
+                 {@"progress", progress},
+                 {@"x_active_requests", activeRequests},
+                 {@"error", error});
+}
+
+
 - (void) setChangesProcessed: (NSUInteger)processed {
     _changesProcessed = processed;
     [self postProgressChanged];
@@ -550,13 +595,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     NSArray* requests = _remoteRequests;
     _remoteRequests = nil;
     [requests makeObjectsPerformSelector: @selector(stop)];
-}
-
-
-- (NSArray*) activeRequestsStatus {
-    return [_remoteRequests my_map: ^id(CBLRemoteRequest* request) {
-        return request.statusInfo;
-    }];
 }
 
 

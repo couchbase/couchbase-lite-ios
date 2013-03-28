@@ -108,54 +108,6 @@
 }
 
 
-- (CBLStatus) do_GET_active_tasks {
-    // http://wiki.apache.org/couchdb/HttpGetActiveTasks
-    NSMutableArray* activity = $marray();
-    for (CBLDatabase* db in _dbManager.allOpenDatabases) {
-        for (CBL_Replicator* repl in db.activeReplicators) {
-            NSString* source = repl.remote.absoluteString;
-            NSString* target = db.name;
-            if (repl.isPush) {
-                NSString* temp = source;
-                source = target;
-                target = temp;
-            }
-            NSString* status;
-            id progress = nil;
-            if (!repl.running) {
-                status = @"Stopped";
-            } else if (!repl.online) {
-                status = @"Offline";        // nonstandard
-            } else if (!repl.active) {
-                status = @"Idle";           // nonstandard
-            } else {
-                NSUInteger processed = repl.changesProcessed;
-                NSUInteger total = repl.changesTotal;
-                status = $sprintf(@"Processed %u / %u changes",
-                                  (unsigned)processed, (unsigned)total);
-                progress = (total>0) ? @(lroundf(100*(processed / (float)total))) : nil;
-            }
-            NSArray* error = nil;
-            NSError* errorObj = repl.error;
-            if (errorObj)
-                error = @[@(errorObj.code), errorObj.localizedDescription];
-
-            [activity addObject: $dict({@"type", @"Replication"},
-                                       {@"task", repl.sessionID},
-                                       {@"source", source},
-                                       {@"target", target},
-                                       {@"continuous", (repl.continuous ? $true : nil)},
-                                       {@"status", status},
-                                       {@"progress", progress},
-                                       {@"x_active_requests", repl.activeRequestsStatus},
-                                       {@"error", error})];
-        }
-    }
-    _response.body = [[CBL_Body alloc] initWithArray: activity];
-    return kCBLStatusOK;
-}
-
-
 - (CBLStatus) do_GET_session {
     // Even though CouchbaseLite doesn't support user logins, it implements a generic response to the
     // CouchDB _session API, so that apps that call it (such as Futon!) won't barf.
@@ -387,6 +339,53 @@
 }
 
 
+#pragma mark - ACTIVE TASKS
+
+
+- (CBLStatus) do_GET_active_tasks {
+    // http://wiki.apache.org/couchdb/HttpGetActiveTasks
+
+    // Get the current task info of all replicators:
+    NSMutableArray* activity = $marray();
+    for (CBLDatabase* db in _dbManager.allOpenDatabases) {
+        for (CBL_Replicator* repl in db.activeReplicators) {
+            [activity addObject: repl.activeTaskInfo];
+        }
+    }
+
+    if ([[self query: @"feed"] isEqualToString: @"continuous"]) {
+        // Continuous activity feed (this is a CBL-specific API):
+        [self sendResponseHeaders];
+        for (NSDictionary* item in activity)
+            [self sendContinuousLine: item];
+
+        // Listen for activity changes:
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector: @selector(replicationChanged:)
+                                                     name: CBL_ReplicatorProgressChangedNotification
+                                                   object: nil];
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector: @selector(replicationChanged:)
+                                                     name: CBL_ReplicatorStoppedNotification
+                                                   object: nil];
+        // Don't close connection; more data to come
+        return 0;
+        
+    } else {
+        // Normal (CouchDB-style) snapshot of activity:
+        _response.body = [[CBL_Body alloc] initWithArray: activity];
+        return kCBLStatusOK;
+    }
+}
+
+
+- (void) replicationChanged: (NSNotification*)n {
+    CBL_Replicator* repl = n.object;
+    if (repl.db.manager == _dbManager)
+        [self sendContinuousLine: repl.activeTaskInfo];
+}
+
+
 #pragma mark - CHANGES:
 
 
@@ -436,10 +435,11 @@
 }
 
 
-- (void) sendContinuousChange: (CBL_Revision*)rev {
-    NSDictionary* changeDict = [self changeDictForRev: rev];
+// Send a JSON object followed by a newline without closing the connection.
+// Used by the continuous mode of _changes and _active_tasks.
+- (void) sendContinuousLine: (NSDictionary*)changeDict {
     NSMutableData* json = [[CBLJSON dataWithJSONObject: changeDict
-                                              options: 0 error: NULL] mutableCopy];
+                                               options: 0 error: NULL] mutableCopy];
     [json appendBytes: "\n" length: 1];
     if (_onDataAvailable)
         _onDataAvailable(json, NO);
@@ -476,7 +476,7 @@
             [changes addObject: rev];
         } else {
             Log(@"CBL_Router: Sending continous change chunk");
-            [self sendContinuousChange: rev];
+            [self sendContinuousLine: [self changeDictForRev: rev]];
         }
     }
 
@@ -534,7 +534,7 @@
         if (continuous) {
             [self sendResponseHeaders];
             for (CBL_Revision* rev in changes) 
-                [self sendContinuousChange: rev];
+                [self sendContinuousLine: [self changeDictForRev: rev]];
         }
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(dbChanged:)
