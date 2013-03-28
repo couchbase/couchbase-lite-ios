@@ -68,7 +68,8 @@
             // .hasPassword when setting _credential earlier. (See #195.) Keychain bug??
             // If this happens, try looking up the credential again:
             LogTo(ChangeTracker, @"Huh, couldn't get password of %@; trying again", _credential);
-            _credential = [self credentialForResponse: _unauthResponse];
+            _credential = [self credentialForAuthHeader:
+                                                [self authHeaderForResponse: _unauthResponse]];
             password = _credential.password;
         }
         if (password) {
@@ -171,13 +172,17 @@
 }
 
 
-- (NSURLCredential*) credentialForResponse: (CFHTTPMessageRef)response {
+- (NSString*) authHeaderForResponse: (CFHTTPMessageRef)response {
+    return CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
+                                                               CFSTR("WWW-Authenticate")));
+}
+
+
+- (NSURLCredential*) credentialForAuthHeader: (NSString*)authHeader {
     NSString* realm;
     NSString* authenticationMethod;
     
     // Basic & digest auth: http://www.ietf.org/rfc/rfc2617.txt
-    NSString* authHeader = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
-                                                                       CFSTR("WWW-Authenticate")));
     if (!authHeader)
         return nil;
     
@@ -214,25 +219,33 @@
                                                            kCFStreamPropertyHTTPResponseHeader);
     Assert(response);
     _gotResponseHeaders = true;
+    NSDictionary* errorInfo = nil;
 
     // Handle authentication failure (401 or 407 status):
     CFIndex status = CFHTTPMessageGetResponseStatusCode(response);
     LogTo(ChangeTracker, @"%@ got status %ld", self, status);
-    if ((status == 401 || status == 407) && !_credential
-                                         && ![_requestHeaders objectForKey: @"Authorization"]) {
-        _credential = [self credentialForResponse: response];
-        LogTo(ChangeTracker, @"%@: Auth challenge; credential = %@", self, _credential);
-        if (_credential) {
-            // Recoverable auth failure -- try again with _credential:
-            _unauthResponse = response;
-            [self errorOccurred: CBLStatusToNSError((CBLStatus)status, self.changesFeedURL)];
-            return NO;
+    if (status == 401 || status == 407) {
+        NSString* authorization = [_requestHeaders objectForKey: @"Authorization"];
+        NSString* authResponse = [self authHeaderForResponse: response];
+        if (!_credential && !authorization) {
+            _credential = [self credentialForAuthHeader: authResponse];
+            LogTo(ChangeTracker, @"%@: Auth challenge; credential = %@", self, _credential);
+            if (_credential) {
+                // Recoverable auth failure -- close socket but try again with _credential:
+                _unauthResponse = response;
+                [self errorOccurred: CBLStatusToNSError((CBLStatus)status, self.changesFeedURL)];
+                return NO;
+            }
         }
+        Log(@"%@: HTTP auth failed; sent Authorization: %@  ;  got WWW-Authenticate: %@",
+            self, authorization, authResponse);
+        errorInfo = $dict({@"HTTPAuthorization", authorization},
+                          {@"HTTPAuthenticateHeader", authResponse});
     }
 
     CFRelease(response);
     if (status >= 300) {
-        self.error = CBLStatusToNSError(status, self.changesFeedURL);
+        self.error = CBLStatusToNSErrorWithInfo(status, self.changesFeedURL, errorInfo);
         [self stop];
         return NO;
     }
