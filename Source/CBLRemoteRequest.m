@@ -111,7 +111,8 @@
 
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@ %@]", [self class], _request.HTTPMethod, _request.URL);
+    return $sprintf(@"%@[%@ %@]",
+                    [self class], _request.HTTPMethod, _request.URL.my_sanitizedString);
 }
 
 

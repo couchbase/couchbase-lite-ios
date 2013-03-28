@@ -119,7 +119,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], _remote.absoluteString);
+    return $sprintf(@"%@[%@]", [self class], _remote.my_sanitizedString);
 }
 
 

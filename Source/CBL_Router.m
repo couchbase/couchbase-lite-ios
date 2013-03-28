@@ -28,6 +28,7 @@
 #import "CollectionUtils.h"
 #import "Test.h"
 #import "MYRegexUtils.h"
+#import "MYURLUtils.h"
 
 #ifdef GNUSTEP
 #import <GNUstepBase/NSURL+GNUstepBase.h>
@@ -387,7 +388,7 @@ static NSArray* splitPath( NSURL* url ) {
 - (void) run {
     if (WillLogTo(CBL_Router)) {
         NSMutableString* output = [NSMutableString stringWithFormat: @"%@ %@",
-                                   _request.HTTPMethod, _request.URL];
+                                   _request.HTTPMethod, _request.URL.my_sanitizedString];
         if (_request.HTTPBodyStream)
             [output appendString: @" + body stream"];
         else if (_request.HTTPBody.length > 0)

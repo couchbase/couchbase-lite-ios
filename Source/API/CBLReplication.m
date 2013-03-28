@@ -120,7 +120,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%@ %@]",
-                self.class, (self.pull ? @"from" : @"to"), self.remoteURL];
+                self.class, (self.pull ? @"from" : @"to"), self.remoteURL.my_sanitizedString];
 }
 
 
