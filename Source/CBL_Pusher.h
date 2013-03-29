@@ -19,6 +19,8 @@
     BOOL _uploading;
     NSMutableArray* _uploaderQueue;
     BOOL _dontSendMultipart;
+    NSMutableIndexSet* _pendingSequences;
+    SequenceNumber _maxPendingSequence;
 }
 
 @property BOOL createTarget;
