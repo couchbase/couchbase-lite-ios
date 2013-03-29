@@ -253,11 +253,8 @@
                     return status;  // all_or_nothing backs out if there's any error
                 } else {
                     NSString* error = nil;
-                    if (status == kCBLStatusForbidden)
-                        error = @"validation failed";
-                    else
-                        CBLStatusToHTTPStatus(status, &error);
-                    result = $dict({@"id", docID}, {@"error", error});
+                    status = CBLStatusToHTTPStatus(status, &error);
+                    result = $dict({@"id", docID}, {@"error", error}, {@"status", @(status)});
                 }
                 if (result)
                     [results addObject: result];

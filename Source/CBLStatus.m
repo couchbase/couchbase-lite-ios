@@ -26,10 +26,17 @@ struct StatusMapEntry {
 };
 
 static const struct StatusMapEntry kStatusMap[] = {
-    {kCBLStatusNotFound,             404, "not_found"},           // for compatibility with CouchDB
+    // For compatibility with CouchDB, return the same strings it does (see couch_httpd.erl)
+    {kCBLStatusBadRequest,           400, "bad_request"},
+    {kCBLStatusUnauthorized,         401, "unauthorized"},
+    {kCBLStatusNotFound,             404, "not_found"},
+    {kCBLStatusForbidden,            403, "forbidden"},
+    {kCBLStatusNotAcceptable,        406, "not_acceptable"},
     {kCBLStatusConflict,             409, "conflict"},
-    {kCBLStatusDuplicate,            412, "Already exists"},      // really 'Precondition Failed'
+    {kCBLStatusDuplicate,            412, "file_exists"},      // really 'Precondition Failed'
+    {kCBLStatusUnsupportedType,      415, "bad_content_type"},
 
+    // These are nonstandard status codes; map them to closest HTTP equivalents:
     {kCBLStatusBadEncoding,          400, "Bad data encoding"},
     {kCBLStatusBadAttachment,        400, "Invalid attachment"},
     {kCBLStatusAttachmentNotFound,   404, "Attachment not found"},

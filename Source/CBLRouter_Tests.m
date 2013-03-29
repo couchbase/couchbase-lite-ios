@@ -120,7 +120,7 @@ TestCase(CBL_Router_Server) {
     NSDictionary* response = Send(server, @"POST", @"/", kCBLStatusBadRequest, nil);
     
     CAssertEqual(response[@"status"], @(400));
-    CAssertEqual(response[@"error"], @"bad request");
+    CAssertEqual(response[@"error"], @"bad_request");
     
     NSDictionary* session = Send(server, @"GET", @"/_session", kCBLStatusOK, nil);
     CAssert(session[@"ok"]);
