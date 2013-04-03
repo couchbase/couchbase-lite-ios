@@ -105,12 +105,24 @@
 }
 
 
-// This function is not thread-safe, nor is the NSDateFormatter instance it returns.
+// These functions are not thread-safe, nor are the NSDateFormatter instances they return.
 // Make sure that this function and the formatter are called on only one thread at a time.
 static NSDateFormatter* getISO8601Formatter() {
     static NSDateFormatter* sFormatter;
     if (!sFormatter) {
         // Thanks to DenNukem's answer in http://stackoverflow.com/questions/399527/
+        sFormatter = [[NSDateFormatter alloc] init];
+        sFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+        sFormatter.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:0];
+        sFormatter.calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+        sFormatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
+    }
+    return sFormatter;
+}
+
+static NSDateFormatter* getCoarseISO8601Formatter() {
+    static NSDateFormatter* sFormatter;
+    if (!sFormatter) {
         sFormatter = [[NSDateFormatter alloc] init];
         sFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'Z'";
         sFormatter.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:0];
@@ -134,7 +146,8 @@ static NSDateFormatter* getISO8601Formatter() {
     if (!string)
         return nil;
     @synchronized(self) {
-        return [getISO8601Formatter() dateFromString: string];
+        return [getISO8601Formatter() dateFromString: string] ?:
+                    [getCoarseISO8601Formatter() dateFromString: string];
     }
 }
 
@@ -167,3 +180,12 @@ static NSDateFormatter* getISO8601Formatter() {
 }
 
 @end
+
+
+TestCase(CBLJSON_Date) {
+    NSDate* date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33Z"];
+    CAssertEq(date.timeIntervalSinceReferenceDate, 386541753.000);
+    date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33.388Z"];
+    CAssertEq(date.timeIntervalSinceReferenceDate, 386541753.388);
+    CAssertEqual([CBLJSON JSONObjectWithDate: date], @"2013-04-01T20:42:33.388Z");
+}
