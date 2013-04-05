@@ -11,6 +11,9 @@
 @class CBLDatabase, CBL_Replicator, CBL_Shared;
 
 
+extern const CBLManagerOptions kCBLManagerDefaultOptions;
+
+
 @interface CBLManager (Internal)
 
 - (CBLDatabase*) _databaseNamed: (NSString*)name

@@ -271,8 +271,11 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                 ];
 
     // If client didn't set an authorizer, use basic auth if credential is available:
-    if (!_authorizer)
+    if (!_authorizer) {
         _authorizer = [[CBLBasicAuthorizer alloc] initWithURL: _remote];
+        if (_authorizer)
+            LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
+    }
 
     self.running = YES;
     _startTime = CFAbsoluteTimeGetCurrent();
@@ -573,6 +576,11 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                                          onCompletion: ^(id result, NSError* error) {
         CBL_Replicator *strongSelf = weakSelf;
         [strongSelf removeRemoteRequest: req];
+        id<CBLAuthorizer> auth = req.authorizer;
+        if (auth && auth != _authorizer && error.code != 401) {
+            LogTo(SyncVerbose, @"%@: Updated to %@", self, auth);
+            _authorizer = auth;
+        }
         onCompletion(result, error);
     }];
     req.authorizer = _authorizer;
