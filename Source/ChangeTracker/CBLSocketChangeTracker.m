@@ -27,7 +27,7 @@
 
 #define kMaxRetries 6
 #define kInitialRetryDelay 0.2
-#define kReadLength 8192u
+#define kReadLength 4096u
 
 
 @implementation CBLSocketChangeTracker
@@ -126,6 +126,7 @@
 
 - (void) clearConnection {
     [_trackingInput close];
+    [_trackingInput removeFromRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     _trackingInput = nil;
     _inputBuffer = nil;
     _changeBuffer = nil;
@@ -185,7 +186,7 @@
     // Basic & digest auth: http://www.ietf.org/rfc/rfc2617.txt
     if (!authHeader)
         return nil;
-    
+
     // Get the auth type:
     if ([authHeader hasPrefix: @"Basic"])
         authenticationMethod = NSURLAuthenticationMethodHTTPBasic;
@@ -391,18 +392,12 @@
     Assert(_inputAvailable);
     _inputAvailable = false;
     
-    uint8_t* buffer;
-    NSUInteger bufferLength;
-    NSInteger bytesRead;
-    if ([_trackingInput getBuffer: &buffer length: &bufferLength]) {
-        [_inputBuffer appendBytes: buffer length: bufferLength];
-        bytesRead = bufferLength;
-    } else {
-        uint8_t buffer[kReadLength];
-        bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
-        if (bytesRead > 0)
-            [_inputBuffer appendBytes: buffer length: bytesRead];
-    }
+    uint8_t buffer[kReadLength];
+    NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
+    if (bytesRead > 0)
+        [_inputBuffer appendBytes: buffer length: bytesRead];
+    else
+        Warn(@"%@: input stream read returned %ld", self, (long)bytesRead); // should never happen
     LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
 
     if (_mode == kContinuous)
