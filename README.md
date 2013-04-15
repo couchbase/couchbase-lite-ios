@@ -22,7 +22,7 @@ Think of it this way: If [Apache CouchDB](http://couchdb.apache.org) is MySQL, a
 
 **Syncable** means:
 
-* Any two copies of a database can be brought into sync via an efficient, reliable, proven REST-based [[protocol|Replication-Algorithm]] pioneered by Apache CouchDB.
+* Any two copies of a database can be brought into sync via an efficient, reliable, proven REST-based [protocol][23] pioneered by Apache CouchDB.
 * Interoperates with CouchDB, BigCouch and PouchDB, and with hosted services like [Cloudant](http://cloudant.com) and [IrisCouch](http://iriscouch.com).
 * Sync can be on-demand or continuous (with a latency of a few seconds).
 * The sync engine supports intermittent and unreliable network connections.
@@ -46,7 +46,7 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 
  * **Mac OS X** -- 10.7.2 or higher.
  * **iOS** -- 5.0 or higher.
- * **Android / Java** -- Has its own source base and [repository][11].
+ * **Android / Java** -- coming up. (An incomplete [Android version of TouchDB][11] is available.)
 
 ## Requirements ##
 
@@ -100,7 +100,7 @@ For full details see the [wiki page][7]. The basic steps are:
 [8]: https://github.com/ccgus/
 [9]: https://github.com/robbiehanson/CocoaHTTPServer
 [10]: http://code.google.com/p/google-toolbox-for-mac/
-[11]: https://github.com/couchbase/CouchbaseLite-Android
+[11]: https://github.com/couchbaselabs/TouchDB-Android
 [12]: http://www.gnustep.org/
 [13]: http://wiki.gnustep.org/index.php/Platform_compatibility
 [14]: https://github.com/couchbase/CouchbaseLite-iOS/blob/master/GNUstep/BUILDING.txt
@@ -111,3 +111,4 @@ For full details see the [wiki page][7]. The basic steps are:
 [20]: http://files.couchbase.com/developer-previews/mobile/ios/CouchbaseLite/CouchbaseLite.zip
 [21]: https://github.com/couchbaselabs/TouchDB-iOS
 [22]: https://github.com/couchbase/couchbase-lite-ios/wiki/Why-Couchbase-Lite%3F#history
+[23]: https://github.com/couchbase/couchbase-lite-ios/wiki/Replication-Algorithm
