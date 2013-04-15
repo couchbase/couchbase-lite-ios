@@ -484,14 +484,22 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         [self fetchRemoteCheckpointDoc];
         return;
     }
+    [self checkSessionAtPath: @"/_session"];
+}
 
+- (void) checkSessionAtPath: (NSString*)sessionPath {
     // First check whether a session exists
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"GET"
-                      path: @"/_session"
+                      path: sessionPath
                       body: nil
               onCompletion: ^(id result, NSError *error) {
                   if (error) {
+                      // CouchDB has /_session, but the Sync Gateway uses /db/_session
+                      if (error.code == kCBLStatusNotFound && $equal(sessionPath, @"/_session")) {
+                          [self checkSessionAtPath: @"_session"];
+                          return;
+                      }
                       LogTo(Sync, @"%@: Session check failed: %@", self, error);
                       self.error = error;
                   } else {
