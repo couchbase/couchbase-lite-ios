@@ -321,6 +321,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return NO;
     
     LogTo(CBLDatabase, @"Close %@", _path);
+    Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
+            _transactionLevel);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
                                                         object: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self
@@ -364,8 +366,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (BOOL) beginTransaction {
-    if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)])
+    if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)]) {
+        Warn(@"Failed to create savepoint transaction!");
         return NO;
+    }
     ++_transactionLevel;
     LogTo(CBLDatabase, @"Begin transaction (level %d)...", _transactionLevel);
     return YES;
@@ -373,19 +377,24 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 - (BOOL) endTransaction: (BOOL)commit {
     Assert(_transactionLevel > 0);
+    BOOL ok = YES;
     if (commit) {
         LogTo(CBLDatabase, @"Commit transaction (level %d)", _transactionLevel);
     } else {
         LogTo(CBLDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
-        if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)])
-            return NO;
+        if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)]) {
+            Warn(@"Failed to rollback transaction!");
+            ok = NO;
+        }
         [_changesToNotify removeAllObjects];
     }
-    if (![_fmdb executeUpdate: $sprintf(@"RELEASE tdb%d", _transactionLevel)])
-        return NO;
+    if (![_fmdb executeUpdate: $sprintf(@"RELEASE tdb%d", _transactionLevel)]) {
+        Warn(@"Failed to release transaction!");
+        ok = NO;
+    }
     --_transactionLevel;
     [self postChangeNotifications];
-    return YES;
+    return ok;
 }
 
 - (CBLStatus) _inTransaction: (CBLStatus(^)())block {

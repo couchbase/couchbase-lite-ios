@@ -185,6 +185,7 @@ TestCase(CBL_View_MapConflicts) {
     CAssertEqual(dump, $array($dict({@"key", @"\"44444\""},
                                     {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)},
                                     {@"seq", @6}) ));
+    [db close];
 }
 
 
@@ -225,6 +226,7 @@ TestCase(CBL_View_ConflictWinner) {
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
+    [db close];
 }
 
 
@@ -265,6 +267,7 @@ TestCase(CBL_View_ConflictLoser) {
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
+    [db close];
 }
 
 
@@ -327,6 +330,7 @@ TestCase(CBL_View_Query) {
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
     CAssertEqual(rows, expectedRows);
+    [db close];
 }
 
 
@@ -393,6 +397,7 @@ TestCase(CBL_View_AllDocsQuery) {
                                             {@"key", del.docID},
                                             {@"value", $dict({@"rev", del.revID},
                                                              {@"deleted", $true})}) ]));
+    [db close];
 }
 
 
@@ -429,6 +434,7 @@ TestCase(CBL_View_Reduce) {
     CAssertEq(reduced.count, 1u);
     double result = [reduced[0][@"value"] doubleValue];
     CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
+    [db close];
 }
 
 
@@ -499,6 +505,7 @@ TestCase(CBL_View_Grouped) {
                                     {@"value", @(248)}),
                               $dict({@"key", @[@"PiL", @"Metal Box"]}, 
                                     {@"value", @(309)})));
+    [db close];
 }
 
 
@@ -530,6 +537,7 @@ TestCase(CBL_View_GroupedStrings) {
     CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
                               $dict({@"key", @"J"}, {@"value", @2}),
                               $dict({@"key", @"N"}, {@"value", @1})));
+    [db close];
 }
 
 
@@ -573,6 +581,7 @@ TestCase(CBL_View_Collation) {
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
+    [db close];
 }
 
 
@@ -618,6 +627,7 @@ TestCase(CBL_View_CollationRaw) {
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
+    [db close];
 }
 
 
@@ -664,6 +674,7 @@ TestCase(CBL_View_LinkedDocs) {
                                          {@"value", $dict({@"_id", @"11111"})},
                                          {@"doc", docs[2]}));
     CAssertEqual(rows, expectedRows);
+    [db close];
 }
 
 

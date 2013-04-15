@@ -34,6 +34,12 @@ static CBLDatabase* createEmptyDB(void) {
 }
 
 
+static void closeTestDB(CBLDatabase* db) {
+    CAssert(db != nil);
+    CAssert([db close]);
+}
+
+
 static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
                                                    NSDictionary* properties) {
     CBLDocument* doc = [db untitledDocument];
@@ -87,6 +93,7 @@ TestCase(API_CreateDocument) {
     CAssert(currentRevisionID.length > 10, @"Invalid doc revision: '%@'", currentRevisionID);
 
     CAssertEqual(doc.userProperties, properties);
+    closeTestDB(db);
 }
 
 
@@ -112,6 +119,7 @@ TestCase(API_CreateRevisions) {
     CAssert(rev2.propertiesAreLoaded);
     CAssertEqual(rev2.userProperties, properties2);
     CAssertEq(rev2.document, doc);
+    closeTestDB(db);
 }
 
 TestCase(API_CreateNewRevisions) {
@@ -156,6 +164,7 @@ TestCase(API_CreateNewRevisions) {
 
     CAssert([doc.currentRevisionID hasPrefix: @"2-"],
             @"Document revision ID is still %@", doc.currentRevisionID);
+    closeTestDB(db);
 }
 
 #if 0
@@ -192,6 +201,7 @@ TestCase(API_SaveMultipleDocuments) {
         CAssertEqual([doc.currentRevision.properties objectForKey: @"misc"],
                              @"updated!");
     }
+    closeTestDB(db);
 }
 
 
@@ -216,6 +226,7 @@ TestCase(API_SaveMultipleUnsavedDocuments) {
         CAssertEqual([doc.currentRevision.properties objectForKey: @"order"],
                              [NSNumber numberWithInt: i]);
     }
+    closeTestDB(db);
 }
 
 
@@ -239,6 +250,7 @@ TestCase(API_DeleteMultipleDocuments) {
     }
     
     CAssertEq([db getDocumentCount], (NSInteger)0);
+    closeTestDB(db);
 }
 #endif
 
@@ -252,6 +264,7 @@ TestCase(API_DeleteDocument) {
     CAssert([doc deleteDocument: &error]);
     CAssert(doc.isDeleted);
     CAssert(doc.currentRevision.isDeleted);
+    closeTestDB(db);
 }
 
 
@@ -266,6 +279,7 @@ TestCase(API_PurgeDocument) {
     
     CBLDocument* redoc = [db cachedDocumentWithID:doc.documentID];
     CAssert(!redoc);
+    closeTestDB(db);
 }
 
 TestCase(API_AllDocuments) {
@@ -295,6 +309,7 @@ TestCase(API_AllDocuments) {
         n++;
     }
     CAssertEq(n, kNDocs);
+    closeTestDB(db);
 }
 
 
@@ -316,6 +331,7 @@ TestCase(API_RowsIfChanged) {
     // Get the rows again to make sure caching isn't messing up:
     rows = query.rows;
     CAssertEq(rows.count, kNDocs);
+    closeTestDB(db);
 }
 
 TestCase(API_LocalDocs) {
@@ -342,6 +358,7 @@ TestCase(API_LocalDocs) {
     CAssert(![db deleteLocalDocumentWithID: @"dock" error: &error],
             @"Second delete should have failed");
     CAssertEq(error.code, kCBLStatusNotFound);
+    closeTestDB(db);
 }
 
 #pragma mark - HISTORY
@@ -382,6 +399,7 @@ TestCase(API_History) {
     CAssertEqual(gotProperties[@"tag"], @2);
     
     CAssertEqual([doc getConflictingRevisions: &error], @[rev2]);
+    closeTestDB(db);
 }
 
 
@@ -426,6 +444,7 @@ TestCase(API_Attachments) {
     CAssert(!error);
     CAssert(rev4);
     CAssertEq([rev4.attachmentNames count], (NSUInteger)0);
+    closeTestDB(db);
 }
 
 #pragma mark - CHANGE TRACKING
@@ -449,6 +468,7 @@ TestCase(API_ChangeTracking) {
     CAssertEq(changeCount, 1);
     
     CAssertEq(db.lastSequenceNumber, 5);
+    closeTestDB(db);
 }
 
 
@@ -487,6 +507,7 @@ TestCase(API_CreateView) {
         CAssertEq([row.key intValue], expectedKey);
         ++expectedKey;
     }
+    closeTestDB(db);
 }
 
 
@@ -509,6 +530,7 @@ TestCase(API_RunSlowView) {
         CAssertEq([row.key intValue], expectedKey);
         ++expectedKey;
     }
+    closeTestDB(db);
 }
 #endif
 
@@ -535,6 +557,7 @@ TestCase(API_Validation) {
     CAssert(![doc putProperties: properties error: &error]);
     CAssertEq(error.code, 403);
     //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
+    closeTestDB(db);
 }
 
 
@@ -571,6 +594,7 @@ TestCase(API_ViewWithLinkedDocs) {
         CAssertEq(row.document, prevDoc);
         ++rowNumber;
     }
+    closeTestDB(db);
 }
 
 
@@ -613,6 +637,7 @@ TestCase(API_LiveQuery) {
         }
     }
     CAssert(finished, @"Live query timed out!");
+    closeTestDB(db);
 }
 
 
@@ -656,6 +681,7 @@ TestCase(API_AsyncViewQuery) {
             break;
     }
     CAssert(finished, @"Async query timed out!");
+    closeTestDB(db);
 }
 
 
@@ -694,6 +720,7 @@ TestCase(API_SharedMapBlocks) {
         return @"ok";
     }];
     CAssertEqual(result, @"ok");
+    closeTestDB(db);
 }
 
 
@@ -744,6 +771,7 @@ TestCase(API_SharedMapBlocks) {
     CAssertEq(op.httpStatus, 200, @"GET failed");
     
     CAssertEqual(doc.userProperties, expectedProperties, @"Couldn't get doc properties after GET");
+    closeTestDB(db);
 }
 
 
@@ -769,6 +797,7 @@ TestCase(API_ViewOptions) {
         CAssert([row.value isKindOfClass: [NSNumber class]], @"Unexpected value: %@", row.value);
         Log(@"row _id = %@, local_seq = %@", row.key, row.value);
     }
+    closeTestDB(db);
 }
 #endif
 
