@@ -23,6 +23,7 @@
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
+#import "ExceptionUtils.h"
 
 
 #define kReduceBatchSize 100
@@ -264,7 +265,12 @@ static id fromJSON( NSData* json ) {
                 
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 LogTo(View, @"  call map for sequence=%lld...", sequence);
-                mapBlock(properties, emit);
+                @try {
+                    mapBlock(properties, emit);
+                } @catch (NSException* x) {
+                    MYReportException(x, @"map block of view '%@'", _name);
+                    emitStatus = kCBLStatusCallbackError;
+                }
                 if (CBLStatusIsError(emitStatus)) {
                     [r close];
                     return emitStatus;
@@ -468,8 +474,14 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         return nil;
     CBLLazyArrayOfJSON* lazyKeys = [[CBLLazyArrayOfJSON alloc] initWithArray: keys];
     CBLLazyArrayOfJSON* lazyVals = [[CBLLazyArrayOfJSON alloc] initWithArray: values];
-    id result = reduceBlock(lazyKeys, lazyVals, NO);
-    return result ?: $null;
+    @try {
+        id result = reduceBlock(lazyKeys, lazyVals, NO);
+        if (result)
+            return result;
+    } @catch (NSException *x) {
+        MYReportException(x, @"reduce block");
+    }
+    return $null;
 }
 
 

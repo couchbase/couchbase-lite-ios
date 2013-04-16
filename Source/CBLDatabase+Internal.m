@@ -30,6 +30,7 @@
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "MYBlockUtils.h"
+#import "ExceptionUtils.h"
 
 
 NSString* const CBL_DatabaseChangesNotification = @"CBL_DatabaseChanges";
@@ -1002,7 +1003,12 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     if (!filter)
         return YES;
     CBLRevision* publicRev = [[CBLRevision alloc] initWithDatabase: self revision: rev];
-    return filter(publicRev, filterParams);
+    @try {
+        return filter(publicRev, filterParams);
+    } @catch (NSException* x) {
+        MYReportException(x, @"filter block");
+        return NO;
+    }
 }
 
 

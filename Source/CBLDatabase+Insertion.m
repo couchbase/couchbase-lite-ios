@@ -26,6 +26,7 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "Test.h"
+#import "ExceptionUtils.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -731,8 +732,14 @@
     CBLStatus status = kCBLStatusOK;
     for (NSString* validationName in validations) {
         CBLValidationBlock validation = [self validationNamed: validationName];
-        if (!validation(publicRev, context)) {
-            status = context.errorType;
+        @try {
+            if (!validation(publicRev, context)) {
+                status = context.errorType;
+                break;
+            }
+        } @catch (NSException* x) {
+            MYReportException(x, @"validation block '%@'", validationName);
+            status = kCBLStatusCallbackError;
             break;
         }
     }
