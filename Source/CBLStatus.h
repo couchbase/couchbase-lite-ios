@@ -41,6 +41,7 @@ typedef enum {
     kCBLStatusAttachmentError= 592,      // problem with attachment store
     kCBLStatusCallbackError  = 593,      // app callback (emit fn, etc.) failed
     kCBLStatusException      = 594,      // Exception raised/caught
+    kCBLStatusDBBusy         = 595,      // SQLite DB is busy (this is recoverable!)
 } CBLStatus;
 
 

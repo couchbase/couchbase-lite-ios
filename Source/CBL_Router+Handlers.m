@@ -129,7 +129,7 @@
     NSUInteger num_docs = db.documentCount;
     SequenceNumber update_seq = db.lastSequenceNumber;
     if (num_docs == NSNotFound || update_seq == NSNotFound)
-        return kCBLStatusDBError;
+        return db.lastDbError;
     _response.bodyObject = $dict({@"db_name", db.name},
                                  {@"db_uuid", db.publicUUID},
                                  {@"doc_count", @(num_docs)},
@@ -144,7 +144,7 @@
         return kCBLStatusDuplicate;
     NSError* error;
     if (![db open: &error])
-        return CBLStatusFromNSError(error, kCBLStatusDBError);
+        return CBLStatusFromNSError(error, db.lastDbError);
     [self setResponseLocation: _request.URL];
     return kCBLStatusCreated;
 }
@@ -200,7 +200,7 @@
 - (CBLStatus) doAllDocs: (const CBLQueryOptions*)options {
     NSArray* result = [_db getAllDocs: options];
     if (!result)
-        return kCBLStatusDBError;
+        return _db.lastDbError;
     result = [result my_map: ^id(CBLQueryRow* row) {return row.asJSONDictionary;}];
     _response.bodyObject = $dict({@"rows", result},
                                  {@"total_rows", @(result.count)},
@@ -220,10 +220,8 @@
     BOOL allOrNothing = (allObj && allObj != $false);
     BOOL noNewEdits = (body[@"new_edits"] == $false);
 
-    BOOL ok = NO;
-    NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
-    [_db beginTransaction];
-    @try{
+    return [_db _inTransaction: ^CBLStatus {
+        NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
         for (NSDictionary* doc in docs) {
             @autoreleasepool {
                 NSString* docID = doc[@"_id"];
@@ -233,7 +231,8 @@
                 if (noNewEdits) {
                     rev = [[CBL_Revision alloc] initWithBody: docBody];
                     NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: doc];
-                    status = rev ? [db forceInsert: rev revisionHistory: history source: nil] : kCBLStatusBadParam;
+                    status = rev ? [db forceInsert: rev revisionHistory: history source: nil]
+                                 : kCBLStatusBadParam;
                 } else {
                     status = [self update: db
                                     docID: docID
@@ -260,13 +259,9 @@
                     [results addObject: result];
             }
         }
-        ok = YES;
-    } @finally {
-        [_db endTransaction: ok];
-    }
-    
-    _response.bodyObject = results;
-    return kCBLStatusCreated;
+        _response.bodyObject = results;
+        return kCBLStatusCreated;
+    }];
 }
 
 
@@ -289,7 +284,7 @@
     
     // Look them up, removing the existing ones from revs:
     if (![db findMissingRevisions: revs])
-        return kCBLStatusDBError;
+        return db.lastDbError;
     
     // Return the missing revs in a somewhat different format:
     NSMutableDictionary* diffs = $mdict();
@@ -523,7 +518,7 @@
                                                 filter: _changesFilter
                                                 params: _changesFilterParams];
     if (!changes)
-        return kCBLStatusDBError;
+        return db.lastDbError;
     
     
     if (continuous || (_longpoll && changes.count==0)) {

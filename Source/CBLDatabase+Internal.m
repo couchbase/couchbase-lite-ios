@@ -36,6 +36,9 @@ NSString* const CBL_DatabaseChangesNotification = @"CBL_DatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
+#define kTransactionMaxRetries 10
+#define kTransactionRetryDelay 0.050
+
 
 @implementation CBLDatabase (Internal)
 
@@ -345,6 +348,27 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
+- (CBLStatus) lastDbStatus {
+    switch (_fmdb.lastErrorCode) {
+        case SQLITE_OK:
+        case SQLITE_ROW:
+        case SQLITE_DONE:
+            return kCBLStatusOK;
+        case SQLITE_BUSY:
+            return kCBLStatusDBBusy;
+        case SQLITE_CORRUPT:
+            return kCBLStatusCorruptError;
+        default:
+            return kCBLStatusDBError;
+    }
+}
+
+- (CBLStatus) lastDbError {
+    CBLStatus status = self.lastDbStatus;
+    return (status == kCBLStatusOK) ? kCBLStatusDBError : status;
+}
+
+
 - (UInt64) totalDataSize {
     NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: NULL];
     if (!attrs)
@@ -399,15 +423,27 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 - (CBLStatus) _inTransaction: (CBLStatus(^)())block {
     CBLStatus status;
-    [self beginTransaction];
-    @try {
-        status = block();
-    } @catch (NSException* x) {
-        Warn(@"Exception raised during -inTransaction: %@", x);
-        status = kCBLStatusException;
-    } @finally {
-        [self endTransaction: !CBLStatusIsError(status)];
-    }
+    int retries = 0;
+    do {
+        [self beginTransaction];
+        @try {
+            status = block();
+        } @catch (NSException* x) {
+            Warn(@"Exception raised during -inTransaction: %@", x);
+            status = kCBLStatusException;
+        } @finally {
+            [self endTransaction: !CBLStatusIsError(status)];
+        }
+        if (status == kCBLStatusDBBusy) {
+           // retry if locked out:
+            if (++retries > kTransactionMaxRetries) {
+                Warn(@"%@: Db busy, too many retries, giving up", self);
+                break;
+            }
+            Log(@"%@: Db busy, retrying transaction (#%d)...", self, retries);
+            [NSThread sleepForTimeInterval: kTransactionRetryDelay];
+        }
+    } while (status == kCBLStatusDBBusy);
     return status;
 }
 
@@ -625,7 +661,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                "ORDER BY revid DESC LIMIT 1"];
     FMResultSet *r = [_fmdb executeQuery: sql, docID, revID];
     if (!r) {
-        status = kCBLStatusDBError;
+        status = self.lastDbError;
     } else if (![r next]) {
         if (!revID && [self getDocNumericID: docID] > 0)
             status = kCBLStatusDeleted;
@@ -677,7 +713,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                             "WHERE revid=? AND docs.docid=? AND revs.doc_id=docs.doc_id LIMIT 1",
                             rev.revID, rev.docID];
     if (!r)
-        return kCBLStatusDBError;
+        return self.lastDbError;
     CBLStatus status = kCBLStatusNotFound;
     if ([r next]) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
@@ -1036,7 +1072,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 - (CBLStatus) deleteViewNamed: (NSString*)name {
     if (![_fmdb executeUpdate: @"DELETE FROM views WHERE name=?", name])
-        return kCBLStatusDBError;
+        return self.lastDbError;
     [_views removeObjectForKey: name];
     return _fmdb.changes ? kCBLStatusOK : kCBLStatusNotFound;
 }

@@ -51,6 +51,7 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kCBLStatusAttachmentError,      500, "Attachment store error"},
     {kCBLStatusCallbackError,        500, "Application callback block failed"},
     {kCBLStatusException,            500, "Internal error"},
+    {kCBLStatusDBBusy,               500, "Database locked"},
 };
 
 

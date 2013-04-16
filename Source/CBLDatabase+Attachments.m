@@ -151,7 +151,7 @@
                                  attachment.contentType, @(attachment->encoding),
                                  @(attachment->length), encodedLengthObj,
                                  @(attachment->revpos)]) {
-        return kCBLStatusDBError;
+        return self.lastDbError;
     }
     return kCBLStatusCreated;
 }
@@ -172,7 +172,7 @@
                         "FROM attachments WHERE sequence=? AND filename=?",
                     @(toSequence), name,
                     @(fromSequence), name]) {
-        return kCBLStatusDBError;
+        return self.lastDbError;
     }
     if (_fmdb.changes == 0) {
         // Oops. This means a glitch in our attachment-management or pull code,
@@ -212,7 +212,7 @@
                       @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
                       @(sequence), filename];
     if (!r) {
-        *outStatus = kCBLStatusDBError;
+        *outStatus = self.lastDbError;
         return nil;
     }
     @try {
@@ -652,7 +652,7 @@
     // Now collect all remaining attachment IDs and tell the store to delete all but these:
     FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
     if (!r)
-        return kCBLStatusDBError;
+        return self.lastDbError;
     NSMutableSet* allKeys = [NSMutableSet set];
     while ([r next]) {
         [allKeys addObject: [r dataForColumnIndex: 0]];

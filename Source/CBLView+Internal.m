@@ -116,26 +116,22 @@ static id fromJSON( NSData* json ) {
     if (viewID <= 0)
         return kCBLStatusNotFound;
     
-    [_db beginTransaction];
-    FMResultSet* r = nil;
-    CBLStatus status = kCBLStatusDBError;
-    @try {
+    CBLStatus status = [_db _inTransaction: ^CBLStatus {
         // Check whether we need to update at all:
         const SequenceNumber lastSequence = self.lastSequenceIndexed;
         const SequenceNumber dbMaxSequence = _db.lastSequenceNumber;
         if (lastSequence == dbMaxSequence) {
-            status = kCBLStatusNotModified;
-            return status;
+            return kCBLStatusNotModified;
         }
 
-        __block BOOL emitFailed = NO;
+        __block CBLStatus emitStatus = kCBLStatusOK;
         __block unsigned inserted = 0;
         FMDatabase* fmdb = _db.fmdb;
         
         // First remove obsolete emitted results from the 'maps' table:
         __block SequenceNumber sequence = lastSequence;
         if (lastSequence < 0)
-            return kCBLStatusDBError;
+            return _db.lastDbError;
         BOOL ok;
         if (lastSequence == 0) {
             // If the lastSequence has been reset to 0, make sure to remove all map results:
@@ -148,7 +144,7 @@ static id fromJSON( NSData* json ) {
                                       @(_viewID), @(lastSequence), @(lastSequence)];
         }
         if (!ok)
-            return kCBLStatusDBError;
+            return _db.lastDbError;
 #ifndef MY_DISABLE_LOGGING
         unsigned deleted = fmdb.changes;
 #endif
@@ -166,17 +162,18 @@ static id fromJSON( NSData* json ) {
                                         @(viewID), @(sequence), keyJSON, valueJSON])
                 ++inserted;
             else
-                emitFailed = YES;
+                emitStatus = _db.lastDbError;
         };
         
         // Now scan every revision added since the last time the view was indexed:
+        FMResultSet* r;
         r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json FROM revs, docs "
                                  "WHERE sequence>? AND current!=0 AND deleted=0 "
                                  "AND revs.doc_id = docs.doc_id "
                                  "ORDER BY revs.doc_id, revid DESC",
                                  @(lastSequence)];
         if (!r)
-            return kCBLStatusDBError;
+            return _db.lastDbError;
 
         BOOL keepGoing = [r next]; // Go to first result row
         while (keepGoing) {
@@ -209,6 +206,10 @@ static id fromJSON( NSData* json ) {
                                      "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
                                      "ORDER BY revID DESC",
                                     @(doc_id), @(lastSequence)];
+                    if (!r2) {
+                        [r close];
+                        return _db.lastDbError;
+                    }
                     while ([r2 next]) {
                         NSString* oldRevID = [r2 stringForColumnIndex:0];
                         if (!conflicts)
@@ -264,26 +265,26 @@ static id fromJSON( NSData* json ) {
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 LogTo(View, @"  call map for sequence=%lld...", sequence);
                 mapBlock(properties, emit);
-                if (emitFailed)
-                    return kCBLStatusCallbackError;
+                if (CBLStatusIsError(emitStatus)) {
+                    [r close];
+                    return emitStatus;
+                }
             }
         }
+        [r close];
         
         // Finally, record the last revision sequence number that was indexed:
         if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
                                    @(dbMaxSequence), @(viewID)])
-            return kCBLStatusDBError;
+            return _db.lastDbError;
         
         LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
               _name, dbMaxSequence, deleted, inserted);
-        status = kCBLStatusOK;
-        
-    } @finally {
-        [r close];
-        if (status >= kCBLStatusBadRequest)
-            Warn(@"CouchbaseLite: Failed to rebuild view '%@': %d", _name, status);
-        [_db endTransaction: (status < kCBLStatusBadRequest)];
-    }
+        return kCBLStatusOK;
+    }];
+    
+    if (status >= kCBLStatusBadRequest)
+        Warn(@"CouchbaseLite: Failed to rebuild view '%@': %d", _name, status);
     return status;
 }
 
@@ -359,7 +360,7 @@ static id fromJSON( NSData* json ) {
     
     FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r)
-        *outStatus = kCBLStatusDBError;
+        *outStatus = _db.lastDbError;
     return r;
 }
 

@@ -77,7 +77,7 @@
             if (![_fmdb executeUpdate: @"UPDATE localdocs SET revid=?, json=? "
                                         "WHERE docid=? AND revid=?", 
                                        newRevID, json, docID, prevRevID]) {
-                *outStatus = kCBLStatusDBError;
+                *outStatus = self.lastDbError;
                 return nil;
             }
         } else {
@@ -87,7 +87,7 @@
             if (![_fmdb executeUpdate: @"INSERT OR IGNORE INTO localdocs (docid, revid, json) "
                                         "VALUES (?, ?, ?)",
                                    docID, newRevID, json]) {
-                *outStatus = kCBLStatusDBError;
+                *outStatus = self.lastDbError;
                 return nil;
             }
         }
@@ -114,7 +114,7 @@
         return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
     }
     if (![_fmdb executeUpdate: @"DELETE FROM localdocs WHERE docid=? AND revid=?", docID, revID])
-        return kCBLStatusDBError;
+        return self.lastDbError;
     if (_fmdb.changes == 0)
         return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
     return kCBLStatusOK;

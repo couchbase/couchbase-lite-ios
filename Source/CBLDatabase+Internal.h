@@ -112,18 +112,18 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readonly) BOOL exists;
 @property (nonatomic, readonly) UInt64 totalDataSize;
 
+/** The error status of the last SQLite call: Generally kCBLStatusDBBusy or kCBLStatusDBError.
+    Always returns some error code, never kCBLStatusOK! It's assumed that you're calling this
+    because a CBLDatabase method failed, so you should be returning _some_ error to the caller. */
+@property (readonly) CBLStatus lastDbError;
+
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
 
-/** Begins a database transaction. Transactions can nest. Every -beginTransaction must be balanced by a later -endTransaction:. */
-- (BOOL) beginTransaction;
-
-/** Commits or aborts (rolls back) a transaction.
-    @param commit  If YES, commits; if NO, aborts and rolls back, undoing all changes made since the matching -beginTransaction call, *including* any committed nested transactions. */
-- (BOOL) endTransaction: (BOOL)commit;
-
 /** Executes the block within a database transaction.
     If the block returns a non-OK status, the transaction is aborted/rolled back.
+    If the block returns kCBLStatusDBBusy, the block will also be retried after a short delay;
+    if 10 retries all fail, the kCBLStatusDBBusy will be returned to the caller.
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
 - (CBLStatus) _inTransaction: (CBLStatus(^)())block;
 

@@ -465,10 +465,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     LogTo(SyncVerbose, @"%@ inserting %u revisions...", self, (unsigned)downloads.count);
     CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         
-    [_db beginTransaction];
-    BOOL success = NO;
-    @try{
-        downloads = [downloads sortedArrayUsingSelector: @selector(compareSequences:)];
+    downloads = [downloads sortedArrayUsingSelector: @selector(compareSequences:)];
+    [_db _inTransaction: ^CBLStatus {
         for (CBL_Revision* rev in downloads) {
             @autoreleasepool {
                 SequenceNumber fakeSequence = rev.sequence;
@@ -485,9 +483,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 // Insert the revision:
                 int status = [_db forceInsert: rev revisionHistory: history source: _remote];
                 if (CBLStatusIsError(status)) {
-                    if (status == kCBLStatusForbidden)
+                    if (status == kCBLStatusForbidden) {
+                        // Considered a success, since the doc was delivered to the app.
                         LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
-                    else {
+                    } else if (status == kCBLStatusDBBusy) {
+                        return status;  // abort transaction; _inTransaction will retry
+                    } else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
                         [self revisionFailed];
                         self.error = CBLStatusToNSError(status, nil);
@@ -502,17 +503,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         
         LogTo(SyncVerbose, @"%@ finished inserting %u revisions",
               self, (unsigned)downloads.count);
-        
-        // Checkpoint:
-        self.lastSequence = _pendingSequences.checkpointedValue;
-        
-        success = YES;
-    } @catch (NSException *x) {
-        MYReportException(x, @"%@: Exception inserting revisions", self);
-    } @finally {
-        [_db endTransaction: success];
-    }
-    
+        return kCBLStatusOK;
+    }];
+
+    // Checkpoint:
+    self.lastSequence = _pendingSequences.checkpointedValue;
+
     time = CFAbsoluteTimeGetCurrent() - time;
     LogTo(Sync, @"%@ inserted %u revs in %.3f sec (%.1f/sec)",
           self, (unsigned)downloads.count, time, downloads.count/time);
