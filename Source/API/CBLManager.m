@@ -27,7 +27,7 @@
 #define kDBExtension @"touchdb" // For backward compatibility reasons we're not changing this
 
 
-const CBLManagerOptions kCBLManagerDefaultOptions;
+static const CBLManagerOptions kCBLManagerDefaultOptions;
 
 
 @implementation CBLManager
