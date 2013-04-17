@@ -141,7 +141,7 @@ int main (int argc, const char * argv[])
         EnableLogTo(CBLListener, YES);
 #endif
 
-        CBLManagerOptions options = kCBLManagerDefaultOptions
+        CBLManagerOptions options = kCBLManagerDefaultOptions;
         const char* replArg = NULL, *user = NULL, *password = NULL, *realm = NULL;
         BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
         
