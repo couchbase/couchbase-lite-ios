@@ -426,7 +426,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     CBLStatus status;
     int retries = 0;
     do {
-        [self beginTransaction];
+        if (![self beginTransaction])
+            return self.lastDbError;
         @try {
             status = block();
         } @catch (NSException* x) {
@@ -436,7 +437,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             [self endTransaction: !CBLStatusIsError(status)];
         }
         if (status == kCBLStatusDBBusy) {
-           // retry if locked out:
+            // retry if locked out:
+            if (_transactionLevel > 1)
+                break;
             if (++retries > kTransactionMaxRetries) {
                 Warn(@"%@: Db busy, too many retries, giving up", self);
                 break;
