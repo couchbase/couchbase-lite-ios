@@ -226,8 +226,9 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 + (BOOL) isValidDatabaseName: (NSString*)name {
-    if (name.length > 0 && [name rangeOfCharacterFromSet: kIllegalNameChars].length == 0
-        && islower([name characterAtIndex: 0]))
+    if (name.length > 0 && name.length < 240        // leave room for filename suffixes
+            && [name rangeOfCharacterFromSet: kIllegalNameChars].length == 0
+            && islower([name characterAtIndex: 0]))
         return YES;
     return $equal(name, kCBL_ReplicatorDatabaseName);
 }
@@ -564,6 +565,15 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 TestCase(CBLManager) {
     RequireTestCase(CBLDatabase);
+
+    for (NSString* name in @[@"f", @"foo123", @"foo/($12)", @"f+-_00/" @"_replicator"])
+        CAssert([CBLManager isValidDatabaseName: name]);
+    NSMutableString* longName = [@"long" mutableCopy];
+    while (longName.length < 240)
+        [longName appendString: @"!"];
+    for (NSString* name in @[@"", @"0", @"123foo", @"Foo", @"/etc/passwd", @"foo " @"_foo", longName])
+        CAssert(![CBLManager isValidDatabaseName: name], @"Db name '%@' should not be valid", name);
+
     CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
     CAssertEqual(dbm.allDatabaseNames, @[]);
     CBLDatabase* db = [dbm databaseNamed: @"foo" error: NULL];
