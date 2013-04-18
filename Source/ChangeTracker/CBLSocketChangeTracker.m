@@ -266,10 +266,11 @@
     NSString* errorMessage = nil;
     NSInteger numChanges = [self receivedPollResponse: input errorMessage: &errorMessage];
     if (numChanges < 0) {
-        // Oops, unparseable response:
-        restart = [self checkInvalidResponse: input];
-        if (!restart)
-            [self setUpstreamError: errorMessage];
+        // Oops, unparseable response. See if it gets special handling:
+        if ([self handleInvalidResponse: input])
+            return;
+        // Otherwise report an upstream unparseable-response error
+        [self setUpstreamError: errorMessage];
     } else {
         // Poll again if there was no error, and either we're in longpoll mode or it looks like we
         // ran out of changes due to a _limit rather than because we hit the end.
@@ -285,25 +286,38 @@
 }
 
 
-- (BOOL) checkInvalidResponse: (NSData*)body {
-    NSString* bodyStr = [[body my_UTF8ToString] stringByTrimmingCharactersInSet:
-                                              [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    if (_mode == kLongPoll && $equal(bodyStr, @"{\"results\":[")) {
-        // Looks like the connection got closed by a proxy (like AWS' load balancer) before
-        // the server had an actual change to send.
-        NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
-        Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
-        if (elapsed >= 30.0) {
-            self.heartbeat = MIN(_heartbeat, elapsed * 0.75);
-            return YES;  // should restart connection
-        }
-    } else if (bodyStr) {
+- (BOOL) handleInvalidResponse: (NSData*)body {
+    // Convert to string:
+    NSString* bodyStr = [body my_UTF8ToString];
+    if (!bodyStr) // (in case it was truncated in the middle of a UTF-8 character sequence)
+        bodyStr = [[NSString alloc] initWithData: body encoding: NSWindowsCP1252StringEncoding];
+    bodyStr = [bodyStr  stringByTrimmingCharactersInSet:
+               [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
+    if (_mode != kLongPoll || ![bodyStr hasPrefix: @"{\"results\":["] ) {
         Warn(@"%@: Unparseable response:\n%@", self, bodyStr);
-    } else {
-        Warn(@"%@: Response is invalid UTF-8; as CP1252:\n%@", self,
-             [[NSString alloc] initWithData: body encoding: NSWindowsCP1252StringEncoding]);
+        return NO;
     }
-    return NO;
+    
+    // The response at least starts out as what we'd expect, so it looks like the connection was
+    // closed unexpectedly before the full response was sent.
+    NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
+    Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
+    if (elapsed >= 30.0 && $equal(bodyStr, @"{\"results\":[")) {
+        // Looks like the connection got closed by a proxy (like AWS' load balancer) while the
+        // server was waiting for a change to send, due to lack of activity.
+        // Lower the heartbeat time to work around this, and reconnect:
+        self.heartbeat = MIN(_heartbeat, elapsed * 0.75);
+        [self clearConnection];
+        [self start];       // Next poll...
+    } else {
+        // Response data was truncated. This has been reported as an intermittent error
+        // (see TouchDB issue #241). Treat it as if it were a socket error -- i.e. pause/retry.
+        [self errorOccurred: [NSError errorWithDomain: NSURLErrorDomain
+                                                 code: NSURLErrorNetworkConnectionLost
+                                             userInfo: nil]];
+    }
+    return YES;
 }
 
 
