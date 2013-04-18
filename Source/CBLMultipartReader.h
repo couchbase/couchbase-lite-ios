@@ -14,7 +14,7 @@
 @interface CBLMultipartReader : NSObject
 {
     @private
-    id<CBLMultipartReaderDelegate> _delegate;
+    __weak id<CBLMultipartReaderDelegate> _delegate;
     NSData* _boundary;
     NSMutableData* _buffer;
     NSMutableDictionary* _headers;

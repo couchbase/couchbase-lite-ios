@@ -124,6 +124,7 @@
 - (void) respondWithResult: (id)result error: (NSError*)error {
     Assert(result || error);
     _onCompletion(result, error);
+    _onCompletion = nil;  // break cycles
 }
 
 
@@ -144,8 +145,7 @@
         NSError* error = [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCancelled
                                          userInfo: nil];
         [self respondWithResult: nil error: error];
-           // break cycles
-        _onCompletion = nil;
+        _onCompletion = nil;  // break cycles
     }
 }
 

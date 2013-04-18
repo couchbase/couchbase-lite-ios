@@ -364,12 +364,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...
     // results in compiler error (could be undefined variable)
     __weak CBL_Puller *weakSelf = self;
-    __block CBLMultipartDownloader *dl = nil;
+    CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
                                            database: _db
                                      requestHeaders: self.requestHeaders
                                        onCompletion:
-        ^(CBLMultipartDownloader* download, NSError *error) {
+        ^(CBLMultipartDownloader* dl, NSError *error) {
             __strong CBL_Puller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
             if (error) {
@@ -377,7 +377,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 [strongSelf revisionFailed];
                 strongSelf.changesProcessed++;
             } else {
-                CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: download.document];
+                CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: dl.document];
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [_downloadsToInsert queueObject: gotRev];

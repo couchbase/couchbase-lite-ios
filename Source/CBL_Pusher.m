@@ -396,11 +396,11 @@ static CBLStatus statusFromBulkDocsResponseItem(NSDictionary* item) {
     [self asyncTaskStarted];
 
     NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeID(rev.docID));
-    __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
+    CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
                                   initWithURL: CBLAppendToURL(_remote, path)
                                      streamer: bodyStream
                                requestHeaders: self.requestHeaders
-                                 onCompletion: ^(id response, NSError *error) {
+                                 onCompletion: ^(CBLMultipartUploader* uploader, NSError *error) {
                   if (error) {
                       if ($equal(error.domain, CBLHTTPErrorDomain)
                                 && error.code == kCBLStatusUnsupportedType) {
@@ -412,7 +412,7 @@ static CBLStatus statusFromBulkDocsResponseItem(NSDictionary* item) {
                           [self revisionFailed];
                       }
                   } else {
-                      LogTo(SyncVerbose, @"%@: Sent %@, response=%@", self, rev, response);
+                      LogTo(SyncVerbose, @"%@: Sent multipart %@", self, rev);
                       [self removePending: rev];
                   }
                   self.changesProcessed++;
