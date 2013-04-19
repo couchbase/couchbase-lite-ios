@@ -53,7 +53,6 @@ static bool parseAssertion(NSString* assertion,
         if (port.intValue != defaultPort)
             [str appendFormat: @":%@", port];
     }
-    [str appendString: @"/"];
     return [NSURL URLWithString: str];
 }
 
@@ -73,8 +72,7 @@ static bool parseAssertion(NSString* assertion,
 }
 
 
-+ (NSString*) takeAssertionForEmailAddress: (NSString*)email
-                                      site: (NSURL*)site
++ (NSString*) assertionForEmailAddress: (NSString*)email site: (NSURL*)site
 {
     id key = @[email, [[self originForSite: site] absoluteString]];
     @synchronized(self) {
@@ -98,13 +96,17 @@ static bool parseAssertion(NSString* assertion,
 
 
 - (NSString*) assertionForSite: (NSURL*)site {
-    NSString* assertion = [[self class] takeAssertionForEmailAddress: _emailAddress site: site];
-    if (!assertion)
+    NSString* assertion = [[self class] assertionForEmailAddress: _emailAddress site: site];
+    if (!assertion) {
+        Warn(@"CBLPersonaAuthorizer<%@>: no assertion found for <%@>", _emailAddress, site);
         return nil;
+    }
     NSString* email, *origin;
     NSDate* exp;
-    if (!parseAssertion(assertion, &email, &origin, &exp) || exp.timeIntervalSinceNow < 0)
+    if (!parseAssertion(assertion, &email, &origin, &exp) || exp.timeIntervalSinceNow < 0) {
+        Warn(@"CBLPersonaAuthorizer<%@>: assertion invalid or expired: %@", _emailAddress, assertion);
         return nil;
+    }
     return assertion;
 }
 
@@ -155,7 +157,7 @@ TestCase(TEPersonaAuthorizer) {
     // Register and retrieve the sample assertion:
     NSURL* originURL = [NSURL URLWithString: origin];
     CAssertEqual([CBLPersonaAuthorizer registerAssertion: sampleAssertion], email);
-    NSString* gotAssertion = [CBLPersonaAuthorizer takeAssertionForEmailAddress: email
+    NSString* gotAssertion = [CBLPersonaAuthorizer assertionForEmailAddress: email
                                                                             site: originURL];
     CAssertEqual(gotAssertion, sampleAssertion);
     

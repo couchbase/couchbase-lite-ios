@@ -524,7 +524,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) login {
     NSDictionary* loginParameters = [_authorizer loginParametersForSite: _remote];
     if (loginParameters == nil) {
-        LogTo(Sync, @"%@: Authorizer has no login parameters, so skipping login", self);
+        LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _authorizer);
         [self fetchRemoteCheckpointDoc];
         return;
     }
