@@ -109,7 +109,7 @@
 
 
 - (NSString*) query: (NSString*)param {
-    return [(self.queries)[param]
+    return [[(self.queries)[param] stringByReplacingOccurrencesOfString:@"+" withString:@" "]
                     stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
 }
 
