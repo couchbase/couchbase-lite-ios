@@ -62,6 +62,13 @@ static bool parseAssertion(NSString* assertion,
     NSDate* exp;
     if (!parseAssertion(assertion, &email, &origin, &exp))
         return nil;
+
+    // Normalize the origin URL string:
+    NSURL* originURL = [NSURL URLWithString:origin];
+    if (!originURL)
+        return nil;
+    origin = [[self originForSite: originURL] absoluteString];
+
     id key = @[email, origin];
     @synchronized(self) {
         if (!sAssertions)
@@ -142,7 +149,7 @@ static bool parseAssertion(NSString* assertion,
 
 
 
-TestCase(TEPersonaAuthorizer) {
+TestCase(CBLPersonaAuthorizer) {
     NSString* email, *origin;
     NSDate* exp;
     CAssert(!parseAssertion(@"", &email, &origin, &exp));
@@ -158,9 +165,15 @@ TestCase(TEPersonaAuthorizer) {
     NSURL* originURL = [NSURL URLWithString: origin];
     CAssertEqual([CBLPersonaAuthorizer registerAssertion: sampleAssertion], email);
     NSString* gotAssertion = [CBLPersonaAuthorizer assertionForEmailAddress: email
-                                                                            site: originURL];
+                                                                       site: originURL];
     CAssertEqual(gotAssertion, sampleAssertion);
-    
+
+    // Try a variant form of the URL:
+    originURL = [NSURL URLWithString: @"Http://LocalHost:4984"];
+    gotAssertion = [CBLPersonaAuthorizer assertionForEmailAddress: email
+                                                             site: originURL];
+    CAssertEqual(gotAssertion, sampleAssertion);
+
     // -assertionForSite: should return nil because the assertion has expired by now:
     CBLPersonaAuthorizer* auth = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
     CAssertEqual(auth.emailAddress, email);
