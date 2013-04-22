@@ -66,7 +66,8 @@ typedef enum {
 
 /** If set to YES, the results will include the entire document contents of the associated rows.
     These can be accessed via CBLQueryRow's -documentProperties property.
-    This can be a good optimization if you know you'll need the entire contents of each document.
+    This slows down the query, but can be a good optimization if you know you'll need the entire
+    contents of each document.
     (This property is equivalent to "include_docs" in the CouchDB API.) */
 @property BOOL prefetch;
 
@@ -134,7 +135,7 @@ typedef enum {
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
 
 /** Error, if the query failed.
-    NOTE: This will only ever be set in an enumerator returned from an _asynchronous_ query. The CBLQuery.rows method returns nil on error.) */
+    NOTE: This will only ever be set in an enumerator returned from an _asynchronous_ query. The CBLQuery.rows method returns a nil enumerator on error.) */
 @property (readonly) NSError* error;
 
 @end
@@ -150,12 +151,14 @@ typedef enum {
 @property (readonly) id value;
 
 /** The ID of the document described by this view row.
-    (This is not necessarily the same as the document that caused this row to be emitted; see the discussion of the .sourceDocumentID property for details.) */
+    This is not necessarily the same as the document that caused this row to be emitted; see the discussion of the .sourceDocumentID property for details. */
 @property (readonly) NSString* documentID;
 
 /** The ID of the document that caused this view row to be emitted.
     This is the value of the "id" property of the JSON view row.
-    It will be the same as the .documentID property, unless the map function caused a related document to be linked by adding an "_id" key to the emitted value; in this case .documentID will refer to the linked document, while sourceDocumentID always refers to the original document. */
+    It will be the same as the .documentID property, unless the map function caused a related document to be linked by adding an "_id" key to the emitted value; in this case .documentID will refer to the linked document, while sourceDocumentID always refers to the original document.
+    In a reduced or grouped query the value will be nil, since the rows don't correspond to
+    individual documents. */
 @property (readonly) NSString* sourceDocumentID;
 
 /** The revision ID of the document this row was mapped from. */
@@ -180,4 +183,5 @@ typedef enum {
 /** The local sequence number of the associated doc/revision.
     Valid only if the 'sequences' and 'prefetch' properties were set in the query; otherwise returns 0. */
 @property (readonly) UInt64 localSequence;
+
 @end

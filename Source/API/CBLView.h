@@ -95,6 +95,7 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 /** Registers an object that can compile map/reduce functions from source code. */
 + (void) setCompiler: (id<CBLViewCompiler>)compiler;
 
+/** The registered object, if any, that can compile map/reduce functions from source code. */
 + (id<CBLViewCompiler>) compiler;
 
 @end

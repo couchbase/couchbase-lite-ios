@@ -124,6 +124,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the CBLView is assigned a map function.) */
 - (CBLView*) viewNamed: (NSString*)name                                  __attribute__((nonnull));
 
+/** Returns the existing CBLView with the given name, or nil if none. */
 - (CBLView*) existingViewNamed: (NSString*)name                         __attribute__((nonnull));
 
 /** Defines or clears a named document validation function.
@@ -132,6 +133,8 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 - (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock
                                                                      __attribute__((nonnull(1)));
 
+/** Returns the existing document validation function (block) registered with the given name.
+    Note that validations are not persistent -- you have to re-register them on every launch. */
 - (CBLValidationBlock) validationNamed: (NSString*)validationName    __attribute__((nonnull));
 
 /** Defines or clears a named filter function.
@@ -139,6 +142,8 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock
                                                                      __attribute__((nonnull(1)));
 
+/** Returns the existing filter function (block) registered with the given name.
+    Note that filters are not persistent -- you have to re-register them on every launch. */
 - (CBLFilterBlock) filterNamed: (NSString*)filterName                   __attribute__((nonnull));
 
 /** Registers an object that can compile source code into executable filter blocks. */
@@ -149,7 +154,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
-    Use this when performing bulk operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits. */
+    Use this when performing bulk write operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits, greatly improving performance. */
 - (BOOL) inTransaction: (BOOL(^)(void))bloc                         __attribute__((nonnull(1)));
 
 
@@ -164,7 +169,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 - (CBLReplication*) pushToURL: (NSURL*)url                              __attribute__((nonnull));
 
 /** Creates a replication that will 'pull' from a database at the given URL, or returns an existing
-    such replication if there already is one..
+    such replication if there already is one.
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */
 - (CBLReplication*) pullFromURL: (NSURL*)url                            __attribute__((nonnull));
 
@@ -191,7 +196,9 @@ extern NSString* const kCBLDatabaseChangeNotification;
 
 
 
+/** The type of callback block passed to -[CBLValidationContext enumerateChanges:]. */
 typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue);
+
 
 
 /** Context passed into a CBLValidationBlock. */

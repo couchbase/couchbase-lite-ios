@@ -11,7 +11,7 @@
 
 
 /** A revision of a CBLDocument.
-    Common base class of CBLRevision (existing revisions) and CBLNewRevision (revisions yet to be saved). */
+    This is the abstract base class of CBLRevision (existing revisions) and CBLNewRevision (revisions yet to be saved). */
 @interface CBLRevisionBase : NSObject
 
 /** The document this is a revision of. */
