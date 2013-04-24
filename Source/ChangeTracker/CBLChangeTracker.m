@@ -17,10 +17,12 @@
 
 #import "CBLChangeTracker.h"
 #import "CBLSocketChangeTracker.h"
+#import "CBLLocalChangeTracker.h"
 #import "CBLAuthorizer.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 
+#import <objc/message.h>
 
 #define kDefaultHeartbeat (5 * 60.0)
 
@@ -52,11 +54,21 @@
     if (self) {
         if([self class] == [CBLChangeTracker class]) {
             // CBLChangeTracker is abstract; instantiate a concrete subclass instead.
-            return [[CBLSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                 mode: mode
-                                                            conflicts: includeConflicts
-                                                         lastSequence: lastSequenceID
-                                                               client: client];
+            Class cblURLProtocol = NSClassFromString(@"CBL_URLProtocol");
+            if (cblURLProtocol && (BOOL) objc_msgSend(cblURLProtocol, sel_getUid("handlesURL:"), databaseURL)) {
+                return [[CBLLocalChangeTracker alloc] initWithDatabaseURL: databaseURL
+                                                                      mode: mode
+                                                                 conflicts: includeConflicts
+                                                              lastSequence: lastSequenceID
+                                                                    client: client];
+            }
+            else {
+                return [[CBLSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
+                                                                      mode: mode
+                                                                 conflicts: includeConflicts
+                                                              lastSequence: lastSequenceID
+                                                                    client: client];
+            }
         }
         _databaseURL = databaseURL;
         _client = client;
