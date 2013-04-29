@@ -410,6 +410,22 @@
     return value;
 }
 
+- (NSDecimalNumber*) getDecimalNumberProperty: (NSString*)property {
+    NSString *value = _properties[property];
+    if (!value) {
+        id rawValue = [_document propertyForKey: property];
+        if ([rawValue isKindOfClass: [NSString class]])
+            value = rawValue;
+        if (value)
+            [self cacheValue: value ofProperty: property changed: NO];
+        else if (rawValue)
+            Warn(@"Unable to decode date from property %@ of %@", property, _document);
+    }
+    
+    NSDecimalNumber *decimalValue = [NSDecimalNumber decimalNumberWithString: value];
+    return decimalValue;
+}
+
 - (CBLDatabase*) databaseForModelProperty: (NSString*)property {
     // This is a hook for subclasses to override if they need to, i.e. if the property
     // refers to a document in a different database.
@@ -460,6 +476,11 @@
     [self setValue: docID ofProperty: property];
 }
 
+- (void) setDecimalNumber: (NSDecimalNumber*)decimalNumber forProperty: (NSString*)property {
+    NSString* stringValue = decimalNumber.stringValue;
+    [self setValue: stringValue ofProperty: property];
+}
+
 + (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     if (propertyClass == Nil || propertyClass == [NSString class]
              || propertyClass == [NSNumber class] || propertyClass == [NSArray class]
@@ -472,6 +493,10 @@
     } else if (propertyClass == [NSDate class]) {
         return imp_implementationWithBlock(^id(CBLModel* receiver) {
             return [receiver getDateProperty: property];
+        });
+    } else if (propertyClass == [NSDecimalNumber class]) {
+        return imp_implementationWithBlock(^id(CBLModel* receiver) {
+            return [receiver getDecimalNumberProperty: property];
         });
     } else if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
         return imp_implementationWithBlock(^id(CBLModel* receiver) {
@@ -486,6 +511,10 @@
     if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
         return imp_implementationWithBlock(^(CBLModel* receiver, CBLModel* value) {
             [receiver setModel: value forProperty: property];
+        });
+    } else if (propertyClass == [NSDecimalNumber class]) {
+        return imp_implementationWithBlock(^(CBLModel* receiver, NSDecimalNumber* value) {
+            [receiver setDecimalNumber: value forProperty: property];
         });
     } else {
         return [super impForSetterOfProperty: property ofClass: propertyClass];
