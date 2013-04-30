@@ -1,9 +1,13 @@
 # Couchbase Lite #
 ## (aka TouchDB 1.5)
 
-**Couchbase Lite** is a lightweight, document-oriented (NoSQL), syncable database engine suitable for embedding into mobile or desktop apps.
+**Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine, a continuation of the TouchDB development process. 
 
-Think of it this way: If [Apache CouchDB](http://couchdb.apache.org) is MySQL, and [Couchbase Server](http://www.couchbase.com/couchbase-server/overview) is Oracle, then Couchbase Lite is SQLite.
+Latency matters a lot to users so a local database takes frustration out of the equation. It’s got the same map reduce as Couchbase Server, in a pint-sized edition.
+
+Native code for iOS and Android. Less than 1 MB optimized for quick launch and snappy user experience on occasionally connected devices when data matters.
+
+Think of it this way: If [Apache CouchDB](http://couchdb.apache.org) is MySQL, and [Couchbase Server](http://www.couchbase.com/couchbase-server/overview) is Oracle, then Couchbase Lite is [SQLite]().
 
 **Lightweight** means:
 
@@ -31,7 +35,7 @@ Think of it this way: If [Apache CouchDB](http://couchdb.apache.org) is MySQL, a
 
 The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional internal REST API adapter allows it to be called from other languages like JavaScript and C#, for use in apps built with PhoneGap, Titanium or MonoTouch.
 
-**Couchbase Lite is still in development.** It's not finished or production-quality yet! If you are looking for a stable release suitable for use in shipping apps, please use [TouchDB][21], the earlier 1.0 version. The API is slightly different, but upgrading to Couchbase Lite will be fairly easy. (Why the name change? The [project history][22] explains it.)
+**Couchbase Lite is still in development, first alpha release soon.** It's not finished or production-quality yet! If you are looking for a stable release suitable for use in shipping apps, please use [TouchDB][21], the earlier 1.0 version. The API is slightly different, but upgrading to Couchbase Lite will be fairly easy. (Why the name change? The [project history][22] explains it.)
 
 ## More Information
 
