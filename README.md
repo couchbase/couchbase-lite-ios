@@ -3,7 +3,7 @@
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine, a continuation of the TouchDB development process. 
 
-Latency matters a lot to users so a local database takes frustration out of the equation. It’s got the same map reduce as Couchbase Server, in a pint-sized edition.
+Latency matters a lot to users so a local database takes frustration out of the equation. It’s got JSON documents, and the same map reduce as Couchbase Server, in a pint-sized edition.
 
 Native code for iOS and Android. Less than 1 MB optimized for quick launch and snappy user experience on occasionally connected devices when data matters.
 
