@@ -96,19 +96,19 @@ For full details see the [wiki page][7]. The basic steps are:
  3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
 
 [1]: http://couchdb.apache.org
-[2]: https://github.com/couchbase/CouchbaseLite-iOS/wiki
+[2]: https://github.com/couchbase/couchbase-lite-ios/wiki
 [3]: http://couchbase.com
 [5]: https://github.com/couchbaselabs/fmdb
 [6]: https://bitbucket.org/snej/myutilities/overview
-[7]: https://github.com/couchbase/CouchbaseLite-iOS/wiki/Building-CouchbaseLite
+[7]: https://github.com/couchbase/couchbase-lite-ios/wiki/Building-Couchbase-Lite
 [8]: https://github.com/ccgus/
 [9]: https://github.com/robbiehanson/CocoaHTTPServer
 [10]: http://code.google.com/p/google-toolbox-for-mac/
 [11]: https://github.com/couchbaselabs/TouchDB-Android
 [12]: http://www.gnustep.org/
 [13]: http://wiki.gnustep.org/index.php/Platform_compatibility
-[14]: https://github.com/couchbase/CouchbaseLite-iOS/blob/master/GNUstep/BUILDING.txt
-[15]: https://github.com/couchbase/CouchbaseLite-iOS/blob/master/GNUstep/SETUP.txt
+[14]: https://github.com/couchbase/couchbase-lite-ios/blob/master/GNUstep/BUILDING.txt
+[15]: https://github.com/couchbase/couchbase-lite-ios/blob/master/GNUstep/SETUP.txt
 [17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
 [18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo
 [19]: http://files.couchbase.com/developer-previews/mobile/ios/CouchbaseLite/
