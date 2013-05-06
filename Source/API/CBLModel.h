@@ -136,6 +136,10 @@
     Defaults to the same database as the receiver's document. You should override this if a document property contains the ID of a document in a different database. */
 - (CBLDatabase*) databaseForModelProperty: (NSString*)propertyName      __attribute__((nonnull));
 
+/** Marks the model as having unsaved content, ensuring that it will get saved after a short interval (if .autosaves is YES) or when -save or -[CBLDatabase saveAllModels] are called.
+    You don't normally need to call this, since property setters call it for you. One case where you'd need to call it is if you want to manage mutable state in your own properties and not store the changes into dynamic properties until it's time to save. In that case you should also override -propertiesToSave and update the dynamic properties accordingly before chaining to the superclass method. */
+- (void) markNeedsSave;
+
 @end
 
 
