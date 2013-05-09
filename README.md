@@ -93,7 +93,8 @@ For full details see the [wiki page][7]. The basic steps are:
 
  1. Clone the Couchbase Lite repository to your local disk.
  2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the dependent library repos (such as [FMDB][5] and [MYUtilities][6]) into the vendor/ subdirectory.
- 3. Open the Xcode project and build the "Mac Framework" and/or "iOS Framework" schemes.
+ 3. Open the Xcode project and build the "CBL Mac" and/or "CBL iOS" schemes (whether it targets a device or simulator shouldn't matter).  
+ 4. (optional) Find resulting framework.  After it builds it should create a `CouchbaseLite.framework` folder in the `/Users/you/Library/Developer/Xcode/DerivedData` directory, which can be copied into other projects.
 
 [1]: http://couchdb.apache.org
 [2]: https://github.com/couchbase/couchbase-lite-ios/wiki
