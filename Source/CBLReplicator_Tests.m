@@ -29,7 +29,7 @@
 
 #if DEBUG
 
-// Change port to 59840 to test against TouchServ :)
+// Change port to 59840 to test against LiteServ :)
 #if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 #define kRemoteDBURLStr @"http://jens.local:5984/tdreplicator_test"
 #else

@@ -1,6 +1,6 @@
 //
-//  TouchServ.m
-//  TouchServ
+//  LiteServ.m
+//  LiteServ
 //
 //  Created by Jens Alfke on 1/16/12.
 //  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
@@ -37,8 +37,8 @@
 static NSString* GetServerPath() {
     NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
     if (!bundleID)
-        bundleID = @"com.couchbase.TouchServ";
-    
+        bundleID = @"com.couchbase.LiteServ";
+
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
                                                          NSUserDomainMask, YES);
     NSString* path = paths[0];
@@ -93,7 +93,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         [[NSURLCredentialStorage sharedCredentialStorage] setDefaultCredential: cred
                                                             forProtectionSpace: space];
     }
-    
+
     if (pull)
         Log(@"Pulling from <%@> --> %@ ...", remote, dbName);
     else
@@ -144,7 +144,7 @@ int main (int argc, const char * argv[])
         CBLManagerOptions options = {};
         const char* replArg = NULL, *user = NULL, *password = NULL, *realm = NULL;
         BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
-        
+
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--readonly") == 0) {
                 options.readOnly = YES;
@@ -189,25 +189,25 @@ int main (int argc, const char * argv[])
         }
 
         // Advertise via Bonjour, and set a TXT record just as an example:
-        [listener setBonjourName: @"TouchServ" type: @"_cbl._tcp."];
+        [listener setBonjourName: @"LiteServ" type: @"_cbl._tcp."];
         NSData* value = [@"value" dataUsingEncoding: NSUTF8StringEncoding];
         listener.TXTRecordDictionary = @{@"Key": value};
-        
+
         [listener start];
-        
+
         if (replArg) {
             if (!doReplicate(server, replArg, pull, createTarget, continuous, user, password, realm))
                 return 1;
         } else {
-            Log(@"TouchServ %@ is listening%@ on port %d ... relax!",
+            Log(@"LiteServ %@ is listening%@ on port %d ... relax!",
                 CBLVersionString(),
                 (listener.readOnly ? @" in read-only mode" : @""),
                 listener.port);
         }
-        
+
         [[NSRunLoop currentRunLoop] run];
-        
-        Log(@"TouchServ quitting");
+
+        Log(@"LiteServ quitting");
     }
     return 0;
 }

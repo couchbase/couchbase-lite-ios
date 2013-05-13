@@ -367,7 +367,7 @@
 		27ED8630157D0FC600712B33 /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 27ED862E157D0FC600712B33 /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
 		27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
-		27ED9A971639D8D2000C844A /* TouchServ.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED9A961639D8D2000C844A /* TouchServ.m */; };
+		27ED9A971639D8D2000C844A /* LiteServ.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED9A961639D8D2000C844A /* LiteServ.m */; };
 		27F08C8B15A7A31B003C3E2B /* CBL_Attachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* CBL_Attachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27F12887156ABE24008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -521,7 +521,7 @@
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 270FE0C714C5008C005FF647;
-			remoteInfo = TouchServ;
+			remoteInfo = LiteServ;
 		};
 		27B0B7F41492BC5B00A817AD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -609,7 +609,7 @@
 		270D6FC0164484190081812D /* CBLSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSocketChangeTracker.m; sourceTree = "<group>"; };
 		270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAuthorizer.h; sourceTree = "<group>"; };
 		270F5704156AE0BF000FEB8F /* CBLAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthorizer.m; sourceTree = "<group>"; };
-		270FE0C814C5008C005FF647 /* TouchServ */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TouchServ; sourceTree = BUILT_PRODUCTS_DIR; };
+		270FE0C814C5008C005FF647 /* LiteServ */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LiteServ; sourceTree = BUILT_PRODUCTS_DIR; };
 		27103F8114E9CE4400DF7209 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27103F8214E9CE4400DF7209 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
 		27103F8714EA076600DF7209 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -829,7 +829,7 @@
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27ED862E157D0FC600712B33 /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		27ED862F157D0FC600712B33 /* CBLDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocument.m; sourceTree = "<group>"; };
-		27ED9A961639D8D2000C844A /* TouchServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TouchServ.m; sourceTree = "<group>"; };
+		27ED9A961639D8D2000C844A /* LiteServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LiteServ.m; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* CBLDatabase+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Internal.h"; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Internal.m"; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -1059,7 +1059,7 @@
 				275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */,
 				DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */,
 				DA147C3614BCAC3B0052DA4D /* CouchbaseLiteListener.framework */,
-				270FE0C814C5008C005FF647 /* TouchServ */,
+				270FE0C814C5008C005FF647 /* LiteServ */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1223,7 +1223,7 @@
 				2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */,
 				27E11F0E14AD15940006B340 /* CBLHTTPResponse.h */,
 				27E11F0F14AD15940006B340 /* CBLHTTPResponse.m */,
-				27ED9A961639D8D2000C844A /* TouchServ.m */,
+				27ED9A961639D8D2000C844A /* LiteServ.m */,
 				275315D814ACF0A20065964D /* Supporting Files */,
 			);
 			path = Listener;
@@ -1786,9 +1786,9 @@
 			productReference = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		270FE0C714C5008C005FF647 /* TouchServ */ = {
+		270FE0C714C5008C005FF647 /* LiteServ */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 270FE0D414C5008C005FF647 /* Build configuration list for PBXNativeTarget "TouchServ" */;
+			buildConfigurationList = 270FE0D414C5008C005FF647 /* Build configuration list for PBXNativeTarget "LiteServ" */;
 			buildPhases = (
 				270FE0C414C5008C005FF647 /* Sources */,
 				270FE0C514C5008C005FF647 /* Frameworks */,
@@ -1799,9 +1799,9 @@
 				270BDD6F15645127007D52F6 /* PBXTargetDependency */,
 				270BDD711564512A007D52F6 /* PBXTargetDependency */,
 			);
-			name = TouchServ;
-			productName = TouchServ;
-			productReference = 270FE0C814C5008C005FF647 /* TouchServ */;
+			name = LiteServ;
+			productName = LiteServ;
+			productReference = 270FE0C814C5008C005FF647 /* LiteServ */;
 			productType = "com.apple.product-type.tool";
 		};
 		275315D414ACF0A10065964D /* CBL Listener Mac */ = {
@@ -1980,7 +1980,7 @@
 				275315D414ACF0A10065964D /* CBL Listener Mac */,
 				DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */,
 				DA023B2614BCA94C008184BB /* Listener iOS Library */,
-				270FE0C714C5008C005FF647 /* TouchServ */,
+				270FE0C714C5008C005FF647 /* LiteServ */,
 				275A29061649A54000B0D8EE /* All */,
 			);
 		};
@@ -2202,7 +2202,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27ED9A971639D8D2000C844A /* TouchServ.m in Sources */,
+				27ED9A971639D8D2000C844A /* LiteServ.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2452,7 +2452,7 @@
 		};
 		275A29171649A55500B0D8EE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 270FE0C714C5008C005FF647 /* TouchServ */;
+			target = 270FE0C714C5008C005FF647 /* LiteServ */;
 			targetProxy = 275A29161649A55500B0D8EE /* PBXContainerItemProxy */;
 		};
 		27B0B7F51492BC5B00A817AD /* PBXTargetDependency */ = {
@@ -3096,7 +3096,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		270FE0D414C5008C005FF647 /* Build configuration list for PBXNativeTarget "TouchServ" */ = {
+		270FE0D414C5008C005FF647 /* Build configuration list for PBXNativeTarget "LiteServ" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				270FE0D214C5008C005FF647 /* Debug */,
