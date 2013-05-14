@@ -50,7 +50,7 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 
  * **Mac OS X** -- 10.7.2 or higher.
  * **iOS** -- 5.0 or higher.
- * **Android / Java** -- coming up. (An incomplete [Android version of TouchDB][11] is available.)
+ * **Android / Java** -- coming up. (An incomplete [Android version of Couchbase Lite][11] is available.)
 
 ## Requirements ##
 
