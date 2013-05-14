@@ -105,7 +105,7 @@ For full details see the [wiki page][7]. The basic steps are:
 [8]: https://github.com/ccgus/
 [9]: https://github.com/robbiehanson/CocoaHTTPServer
 [10]: http://code.google.com/p/google-toolbox-for-mac/
-[11]: https://github.com/couchbaselabs/TouchDB-Android
+[11]: https://github.com/couchbase/couchbase-lite-android
 [12]: http://www.gnustep.org/
 [13]: http://wiki.gnustep.org/index.php/Platform_compatibility
 [14]: https://github.com/couchbase/couchbase-lite-ios/blob/master/GNUstep/BUILDING.txt
