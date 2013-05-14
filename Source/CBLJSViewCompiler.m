@@ -14,7 +14,7 @@
 
 #import "CBLJSViewCompiler.h"
 #import "CBLJSFunction.h"
-#import "CBLRevision.h"
+#import <CouchbaseLite/CBLRevision.h>
 #import <JavaScriptCore/JavaScript.h>
 #import <JavaScriptCore/JSStringRefCF.h>
 
