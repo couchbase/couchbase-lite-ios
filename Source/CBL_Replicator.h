@@ -29,6 +29,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     BOOL _continuous;
     NSString* _filterName;
     NSDictionary* _filterParameters;
+    NSArray* _docIDs;
     NSString* _lastSequence;
     BOOL _lastSequenceChanged;
     NSDictionary* _remoteCheckpoint;
@@ -64,6 +65,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 @property (readonly) BOOL continuous;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
+@property (copy) NSArray *docIDs;
 @property (copy) NSDictionary* options;
 
 /** Optional dictionary of headers to be added to all requests to remote servers. */

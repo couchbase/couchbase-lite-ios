@@ -123,7 +123,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-@synthesize db=_db, remote=_remote, filterName=_filterName, filterParameters=_filterParameters;
+@synthesize db=_db, remote=_remote, filterName=_filterName, filterParameters=_filterParameters, docIDs = _docIDs;
 @synthesize running=_running, online=_online, active=_active, continuous=_continuous;
 @synthesize error=_error, sessionID=_sessionID, documentID=_documentID, options=_options;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
@@ -140,7 +140,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (bool) hasSameSettingsAs: (CBL_Replicator*)other {
     return _db == other->_db && $equal(_remote, other->_remote) && self.isPush == other.isPush
         && _continuous == other->_continuous && $equal(_filterName, other->_filterName)
-        && $equal(_filterParameters, other->_filterParameters) && $equal(_options, other->_options)
+        && $equal(_filterParameters, other->_filterParameters) && $equal(_options, other->_options) && $equal(_docIDs, other->_docIDs)
         && $equal(_requestHeaders, other->_requestHeaders);
 }
 

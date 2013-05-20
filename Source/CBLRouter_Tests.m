@@ -358,6 +358,7 @@ TestCase(CBL_Router_Views) {
                            $dict({@"If-None-Match", etag}), nil);
     CAssertEq(response.status, kCBLStatusOK);
     CAssertEqual(ParseJSONResponse(response)[@"total_rows"], @4);
+
     [server close];
 }
 

@@ -39,6 +39,7 @@
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
+@synthesize docIDs = _docIDs;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -107,7 +108,22 @@
                                            CBLEscapeURLParam(value)];
         }
     }
-
+    
+    if (_docIDs) {
+        
+        if (_filterName) {
+            Warn(@"You can't set both a replication filter and doc_ids, since doc_ids uses the internal _doc_ids filter.");
+        } else {        
+            NSError *error;
+            NSString *docIDsParam = [CBLJSON stringWithJSONObject: _docIDs options: CBLJSONWritingAllowFragments
+                                                           error: &error];
+            if (!docIDsParam || error) {
+                Warn(@"Illegal doc IDs %@, %@", [_docIDs description], [error localizedDescription]);
+            }
+            [path appendFormat:@"&filter=_doc_ids&doc_ids=%@", CBLEscapeURLParam(docIDsParam)];
+        }
+    }
+    
     return path;
 }
 

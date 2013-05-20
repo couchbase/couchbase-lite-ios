@@ -72,6 +72,7 @@ typedef enum CBLChangeTrackerMode {
 @property (copy) NSDictionary* filterParameters;
 @property (nonatomic) unsigned limit;
 @property (nonatomic) NSTimeInterval heartbeat;
+@property (nonatomic) NSArray *docIDs;
 
 - (BOOL) start;
 - (void) stop;

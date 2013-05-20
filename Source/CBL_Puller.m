@@ -98,6 +98,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.limit = kChangesFeedLimit;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
+    _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
     unsigned heartbeat = $castIf(NSNumber, _options[@"heartbeat"]).unsignedIntValue;
     if (heartbeat >= 15000)
