@@ -179,6 +179,17 @@
 }
 
 
+// Kludge that makes sure a query parameter doesn't get prematurely dealloced.
+- (id) retainQuery: (id)query {
+    if (query) {
+        if (!_queryRetainer)
+            _queryRetainer = [[NSMutableArray alloc] init];
+        [_queryRetainer addObject: query];
+    }
+    return query;
+}
+
+
 - (BOOL) getQueryOptions: (CBLQueryOptions*)options {
     // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
     *options = kDefaultCBLQueryOptions;
@@ -194,18 +205,29 @@
     options->reduce = [self boolQuery: @"reduce"];
     options->group = [self boolQuery: @"group"];
     options->content = [self contentOptions];
+    
     NSError* error = nil;
-    options->startKey = [self jsonQuery: @"startkey" error: &error];
-    if (error)
+    id keys = [self jsonQuery: @"keys" error: &error];
+    if (error || (keys && ![keys isKindOfClass: [NSArray class]]))
         return NO;
-    options->endKey = [self jsonQuery: @"endkey" error: &error];
-    if (error)
-        return NO;
-    id key = [self jsonQuery: @"key" error: &error];
-    if (error)
-        return NO;
-    if (key)
-        options->keys = @[key];
+    if (!keys) {
+        id key = [self jsonQuery: @"key" error: &error];
+        if (error)
+            return NO;
+        if (key)
+            keys = @[key];
+    }
+    
+    if (keys) {
+        options->keys = [self retainQuery: keys];
+    } else {
+        options->startKey = [self retainQuery: [self jsonQuery: @"startkey" error: &error]];
+        if (error)
+            return NO;
+        options->endKey = [self retainQuery: [self jsonQuery: @"endkey" error: &error]];
+        if (error)
+            return NO;
+    }
     return YES;
 }
 
