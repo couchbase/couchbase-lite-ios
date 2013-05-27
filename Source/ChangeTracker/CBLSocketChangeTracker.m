@@ -98,7 +98,23 @@
     CFRelease(request);
     if (!cfInputStream)
         return NO;
+    
     CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+
+    // Configure HTTP proxy -- CFNetwork makes us do this manually, unlike NSURLConnection :-p
+    CFDictionaryRef proxySettings = CFNetworkCopySystemProxySettings();
+    if (proxySettings) {
+        CFArrayRef proxies = CFNetworkCopyProxiesForURL((__bridge CFURLRef)url, proxySettings);
+        if (CFArrayGetCount(proxies) > 0) {
+            CFTypeRef proxy = CFArrayGetValueAtIndex(proxies, 0);
+            LogTo(ChangeTracker, @"Changes feed using proxy %@", proxy);
+            bool ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxy);
+            Assert(ok);
+            CFRelease(proxies);
+        }
+        CFRelease(proxySettings);
+    }
+
     if (_databaseURL.my_isHTTPS) {
         // Enable SSL for this connection.
         // Disable TLS 1.2 support because it breaks compatibility with some SSL servers;
