@@ -421,7 +421,7 @@
         if (value)
             [self cacheValue: value ofProperty: property changed: NO];
         else if (rawValue)
-            Warn(@"Unable to decode date from property %@ of %@", property, _document);
+            Warn(@"Unable to decode decimal number from property %@ of %@", property, _document);
     }
     return value;
 }
