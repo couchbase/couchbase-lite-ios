@@ -541,8 +541,11 @@
             // implicit, but a rev being pulled in replication will have it set already.
             if (attachment->revpos == 0)
                 attachment->revpos = generation;
-            else if (attachment->revpos > generation)
-                return kCBLStatusBadAttachment;
+            else if (attachment->revpos > generation) {
+                Warn(@"Attachment %@ . '%@' has weird revpos %u; setting to %u",
+                     rev, name, attachment->revpos, generation);
+                attachment->revpos = generation;
+            }
 
             // Finally insert the attachment:
             status = [self insertAttachment: attachment forSequence: newSequence];
