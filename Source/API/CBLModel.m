@@ -329,6 +329,8 @@
         value = [CBLBase64 encode: value];
     else if ([value isKindOfClass: [NSDate class]])
         value = [CBLJSON JSONObjectWithDate: value];
+    else if ([value isKindOfClass: [NSDecimalNumber class]])
+        value = [value stringValue];
     return value;
 }
 
@@ -410,6 +412,20 @@
     return value;
 }
 
+- (NSDecimalNumber*) getDecimalNumberProperty: (NSString*)property {
+    NSDecimalNumber* value = _properties[property];
+    if (!value) {
+        id rawValue = [_document propertyForKey: property];
+        if ([rawValue isKindOfClass: [NSString class]])
+            value = [NSDecimalNumber decimalNumberWithString: rawValue];
+        if (value)
+            [self cacheValue: value ofProperty: property changed: NO];
+        else if (rawValue)
+            Warn(@"Unable to decode date from property %@ of %@", property, _document);
+    }
+    return value;
+}
+
 - (CBLDatabase*) databaseForModelProperty: (NSString*)property {
     // This is a hook for subclasses to override if they need to, i.e. if the property
     // refers to a document in a different database.
@@ -472,6 +488,10 @@
     } else if (propertyClass == [NSDate class]) {
         return imp_implementationWithBlock(^id(CBLModel* receiver) {
             return [receiver getDateProperty: property];
+        });
+    } else if (propertyClass == [NSDecimalNumber class]) {
+        return imp_implementationWithBlock(^id(CBLModel* receiver) {
+            return [receiver getDecimalNumberProperty: property];
         });
     } else if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
         return imp_implementationWithBlock(^id(CBLModel* receiver) {
