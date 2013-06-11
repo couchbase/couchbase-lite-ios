@@ -272,6 +272,8 @@
 		27B0B8551492D0A000A817AD /* CBL_View_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* CBL_View_Tests.m */; };
 		27B0B8571492D0AA00A817AD /* CBLReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* CBLReplicator_Tests.m */; };
 		27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B15516164A118100DF5E2C /* CBL_Database_Tests.m */; };
+		27B945A51767E06B00B2DF2D /* ModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945A41767E06B00B2DF2D /* ModelTests.m */; };
+		27B945A61767E06B00B2DF2D /* ModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945A41767E06B00B2DF2D /* ModelTests.m */; };
 		27C40C7914EC58BC00994283 /* CBL_ReplicatorManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */; };
 		27C40C7A14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */; };
 		27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */; };
@@ -760,6 +762,7 @@
 		27B0B81A1492C16300A817AD /* DemoAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DemoAppDelegate.h; sourceTree = "<group>"; };
 		27B0B81B1492C16300A817AD /* DemoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DemoAppDelegate.m; sourceTree = "<group>"; };
 		27B15516164A118100DF5E2C /* CBL_Database_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Database_Tests.m; sourceTree = "<group>"; };
+		27B945A41767E06B00B2DF2D /* ModelTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelTests.m; sourceTree = "<group>"; };
 		27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_ReplicatorManager.h; sourceTree = "<group>"; };
 		27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_ReplicatorManager.m; sourceTree = "<group>"; };
 		27C5305214DF3A050078F886 /* CBLMultipartUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartUploader.h; sourceTree = "<group>"; };
@@ -1278,6 +1281,7 @@
 			isa = PBXGroup;
 			children = (
 				27846FF015D5C8250030122F /* APITests.m */,
+				27B945A41767E06B00B2DF2D /* ModelTests.m */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -2187,6 +2191,7 @@
 				27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */,
 				27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */,
 				270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */,
+				27B945A51767E06B00B2DF2D /* ModelTests.m in Sources */,
 				27DA435115918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
@@ -2324,6 +2329,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27B945A61767E06B00B2DF2D /* ModelTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

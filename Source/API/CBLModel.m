@@ -27,6 +27,7 @@
     bool _autosaves :1;
     bool _isNew     :1;
     bool _needsSave :1;
+    bool _saving    :1;
 
     NSMutableDictionary* _properties;   // Cached property values, including changed values
     NSMutableSet* _changedNames;        // Names of properties that have been changed but not saved
@@ -166,6 +167,9 @@
 // Respond to an external change (likely from sync). This is called by my CBLDocument.
 - (void) tdDocumentChanged: (CBLDocument*)doc {
     NSAssert(doc == _document, @"Notified for wrong document");
+    if (_saving)
+        return;  // this is just an echo from my -justSave: method, below, so ignore it
+    
     LogTo(CBLModel, @"%@ External change (rev=%@)", self, _document.currentRevisionID);
     [self markExternallyChanged];
     
@@ -266,13 +270,23 @@
     NSDictionary* properties = self.propertiesToSave;
     LogTo(CBLModel, @"%@ Saving <- %@", self, properties);
     NSError* error;
-    if (![_document putProperties: properties error: &error]) {
+    bool ok;
+
+    _saving = true;
+    @try {
+        ok = [_document putProperties: properties error: &error];
+    }@finally {
+        _saving = false;
+    }
+    
+    if (!ok) {
         if (outError)
             *outError = error;
         else
             Warn(@"%@: Save failed: %@", self, error);
         return NO;
     }
+    LogTo(CBLModel, @"%@ Saved as rev %@", self, _document.currentRevisionID);
     return YES;
 }
 
