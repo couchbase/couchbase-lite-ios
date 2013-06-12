@@ -146,6 +146,7 @@
     _trackingInput = nil;
     _inputBuffer = nil;
     _changeBuffer = nil;
+    _inputAvailable = false;
 }
 
 
