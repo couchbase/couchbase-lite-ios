@@ -15,8 +15,9 @@
     There's a 1::1 mapping between these and CBLDocuments; call +modelForDocument: to get (or create) a model object for a document, and .document to get the document of a model.
     You should subclass this and declare properties in the subclass's @@interface. As with NSManagedObject, you don't need to implement their accessor methods or declare instance variables; simply note them as '@@dynamic' in the class @@implementation. The property value will automatically be fetched from or stored to the document, using the same name.
     Supported scalar types are bool, char, short, int, double. These map to JSON numbers, except 'bool' which maps to JSON 'true' and 'false'. (Use bool instead of BOOL.)
-    Supported object types are NSString, NSNumber, NSData, NSDate, NSArray, NSDictionary, NSDecimalNumber. (NSData and NSDate are not native JSON; they will be automatically converted to/from strings in base64 and ISO date formats, respectively. NSDecimalNumber is not native JSON as well; it will be converted to/from string)
-    Additionally, a property's type can be a pointer to a CBLModel subclass. This provides references between model objects. The raw property value in the document must be a string whose value is interpreted as a document ID. */
+    Supported object types are NSString, NSNumber, NSData, NSDate, NSArray, NSDictionary, NSDecimalNumber. (NSData and NSDate are not native JSON; they will be automatically converted to/from strings in base64 and ISO date formats, respectively. NSDecimalNumber is not native JSON as well; it will be converted to/from string.)
+    Additionally, a property's type can be a pointer to a CBLModel subclass. This provides references between model objects. The raw property value in the document must be a string whose value is interpreted as a document ID.
+    NSArray-valued properties may be restricted to a specific item class. See the documentation of +itemClassForArrayProperty: for details. */
 @interface CBLModel : MYDynamicObject <CBLDocumentModel>
 
 /** Returns the CBLModel associated with a CBLDocument, or creates & assigns one if necessary.
@@ -139,6 +140,20 @@
 /** Marks the model as having unsaved content, ensuring that it will get saved after a short interval (if .autosaves is YES) or when -save or -[CBLDatabase saveAllModels] are called.
     You don't normally need to call this, since property setters call it for you. One case where you'd need to call it is if you want to manage mutable state in your own properties and not store the changes into dynamic properties until it's time to save. In that case you should also override -propertiesToSave and update the dynamic properties accordingly before chaining to the superclass method. */
 - (void) markNeedsSave;
+
+/** General method for declaring the class of items in a property of type NSArray*.
+    Given the property name, the override should return a class that all items must inherit from,
+    or nil if the property is untyped. Supported classes are CBLModel (or any subclass),
+    NSData, NSDate, NSDecimalNumber, and any JSON-compatible class (NSNumber, NSString, etc.)
+    If you don't recognize the property name you should call the superclass method.
+ 
+    The default implementation of this method checks for the existence of a class method with
+    selector of the form +propertyItemClass where 'property' is replaced by the actual property
+    name. If such a method exists it is called, and must return a class.
+ 
+    In general you'll find it easier to implement the '+propertyItemClass' method(s) rather
+    than overriding this one. */
++ (Class) itemClassForArrayProperty: (NSString*)property;
 
 @end
 

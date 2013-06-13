@@ -3,36 +3,28 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/26/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011 Couchbase, Inc.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
-#import "CBLModel.h"
+#import "CBLModel_Internal.h"
 #import "CBLModelFactory.h"
+#import "CBLModelArray.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
 #import "CBLBase64.h"
+
+#import <objc/message.h>
 #import <objc/runtime.h>
 
 
-@interface CBLModel ()
-@property (readwrite, retain) CBLDocument* document;
-@property (readwrite) bool needsSave;
-@end
-
-
 @implementation CBLModel
-{
-    CBLDocument* _document;
-    CFAbsoluteTime _changedTime;
-    bool _autosaves :1;
-    bool _isNew     :1;
-    bool _needsSave :1;
-    bool _saving    :1;
-
-    NSMutableDictionary* _properties;   // Cached property values, including changed values
-    NSMutableSet* _changedNames;        // Names of properties that have been changed but not saved
-    NSMutableDictionary* _changedAttachments;
-}
 
 
 - (instancetype) init {
@@ -171,6 +163,7 @@
         return;  // this is just an echo from my -justSave: method, below, so ignore it
     
     LogTo(CBLModel, @"%@ External change (rev=%@)", self, _document.currentRevisionID);
+    _isNew = false;
     [self markExternallyChanged];
     
     // Send KVO notifications about all my properties in case they changed:
@@ -345,6 +338,10 @@
         value = [CBLJSON JSONObjectWithDate: value];
     else if ([value isKindOfClass: [NSDecimalNumber class]])
         value = [value stringValue];
+    else if ([value isKindOfClass: [CBLModel class]])
+        value = ((CBLModel*)value).document.documentID;
+    else if ([value isKindOfClass: [NSArray class]])
+        value = [value my_map:^id(id obj) { return [self externalizePropertyValue: obj]; }];
     return value;
 }
 
@@ -395,50 +392,14 @@
 }
 
 
-#pragma mark - PROPERTY TRANSFORMATIONS:
-
-
-- (NSData*) getDataProperty: (NSString*)property {
-    NSData* value = _properties[property];
-    if (!value) {
-        id rawValue = [_document propertyForKey: property];
-        if ([rawValue isKindOfClass: [NSString class]])
-            value = [CBLBase64 decode: rawValue];
-        if (value) 
-            [self cacheValue: value ofProperty: property changed: NO];
-        else if (rawValue)
-            Warn(@"Unable to decode Base64 data from property %@ of %@", property, _document);
++ (Class) itemClassForArrayProperty: (NSString*)property {
+    SEL sel = NSSelectorFromString([property stringByAppendingString: @"ItemClass"]);
+    if ([self respondsToSelector: sel]) {
+        return (Class)objc_msgSend(self, sel);
     }
-    return value;
+    return Nil;
 }
 
-- (NSDate*) getDateProperty: (NSString*)property {
-    NSDate* value = _properties[property];
-    if (!value) {
-        id rawValue = [_document propertyForKey: property];
-        if ([rawValue isKindOfClass: [NSString class]])
-            value = [CBLJSON dateWithJSONObject: rawValue];
-        if (value) 
-            [self cacheValue: value ofProperty: property changed: NO];
-        else if (rawValue)
-            Warn(@"Unable to decode date from property %@ of %@", property, _document);
-    }
-    return value;
-}
-
-- (NSDecimalNumber*) getDecimalNumberProperty: (NSString*)property {
-    NSDecimalNumber* value = _properties[property];
-    if (!value) {
-        id rawValue = [_document propertyForKey: property];
-        if ([rawValue isKindOfClass: [NSString class]])
-            value = [NSDecimalNumber decimalNumberWithString: rawValue];
-        if (value)
-            [self cacheValue: value ofProperty: property changed: NO];
-        else if (rawValue)
-            Warn(@"Unable to decode decimal number from property %@ of %@", property, _document);
-    }
-    return value;
-}
 
 - (CBLDatabase*) databaseForModelProperty: (NSString*)property {
     // This is a hook for subclasses to override if they need to, i.e. if the property
@@ -446,24 +407,11 @@
     return _document.database;
 }
 
-- (CBLModel*) getModelProperty: (NSString*)property {
-    // Model-valued properties are kept in raw form as document IDs, not mapped to CBLModel
-    // references, to avoid reference loops.
-    
-    // First get the target document ID:
-    NSString* rawValue = [self getValueOfProperty: property];
-    if (!rawValue)
-        return nil;
-    
-    // Look up the CBLDocument:
-    if (![rawValue isKindOfClass: [NSString class]]) {
-        Warn(@"Model-valued property %@ of %@ is not a string", property, _document);
-        return nil;
-    }
-    CBLDocument* doc = [[self databaseForModelProperty: property] documentWithID: rawValue];
+- (CBLModel*) modelWithDocID: (NSString*)docID forProperty: (NSString*)property {
+    CBLDocument* doc = [[self databaseForModelProperty: property] documentWithID: docID];
     if (!doc) {
         Warn(@"Unable to get document from property %@ of %@ (value='%@')",
-             property, _document, rawValue);
+             property, _document, docID);
         return nil;
     }
     
@@ -477,53 +425,6 @@
                  declaredClass, doc, property, self, _document);
     }
     return value;
-}
-
-- (void) setModel: (CBLModel*)model forProperty: (NSString*)property {
-    // Don't store the target CBLModel in the _properties dictionary, because this could create
-    // a reference loop. Instead, just store the raw document ID. getModelProperty will map to the
-    // model object when called.
-    NSString* docID = model.document.documentID;
-    NSAssert(docID || !model, 
-             @"Cannot assign untitled %@ as the value of model property %@.%@ -- save it first",
-             model.document, [self class], property);
-    [self setValue: docID ofProperty: property];
-}
-
-+ (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-    if (propertyClass == Nil || propertyClass == [NSString class]
-             || propertyClass == [NSNumber class] || propertyClass == [NSArray class]
-             || propertyClass == [NSDictionary class])
-        return [super impForGetterOfProperty: property ofClass: propertyClass];  // Basic classes (including 'id')
-    else if (propertyClass == [NSData class]) {
-        return imp_implementationWithBlock(^id(CBLModel* receiver) {
-            return [receiver getDataProperty: property];
-        });
-    } else if (propertyClass == [NSDate class]) {
-        return imp_implementationWithBlock(^id(CBLModel* receiver) {
-            return [receiver getDateProperty: property];
-        });
-    } else if (propertyClass == [NSDecimalNumber class]) {
-        return imp_implementationWithBlock(^id(CBLModel* receiver) {
-            return [receiver getDecimalNumberProperty: property];
-        });
-    } else if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
-        return imp_implementationWithBlock(^id(CBLModel* receiver) {
-            return [receiver getModelProperty: property];
-        });
-    } else {
-        return NULL;  // Unsupported
-    }
-}
-
-+ (IMP) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-    if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
-        return imp_implementationWithBlock(^(CBLModel* receiver, CBLModel* value) {
-            [receiver setModel: value forProperty: property];
-        });
-    } else {
-        return [super impForSetterOfProperty: property ofClass: propertyClass];
-    }
 }
 
 

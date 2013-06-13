@@ -12,6 +12,7 @@
 #import "CBL_Pusher.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
+#import "CBLModel_Internal.h"
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
 #import "MYBlockUtils.h"

@@ -101,9 +101,3 @@
                            remote: (NSURL*)remote
                              pull: (BOOL)pull                       __attribute__((nonnull));
 @end
-
-
-@interface CBLModel ()
-@property (readonly) NSDictionary* currentProperties;
-- (void) willSave: (NSSet*)changedProperties;   // overridable
-@end
