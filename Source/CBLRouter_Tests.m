@@ -86,6 +86,7 @@ static id SendBody(CBLManager* server, NSString* method, NSString* path, id body
     sLastResponse = SendRequest(server, method, path, nil, bodyObj);
     id result = ParseJSONResponse(sLastResponse);
     Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
+    CAssert(result != nil);
     
     CAssertEq(sLastResponse.internalStatus, expectedStatus);
 

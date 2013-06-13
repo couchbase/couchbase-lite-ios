@@ -105,11 +105,13 @@
     CFDictionaryRef proxySettings = CFNetworkCopySystemProxySettings();
     if (proxySettings) {
         CFArrayRef proxies = CFNetworkCopyProxiesForURL((__bridge CFURLRef)url, proxySettings);
-        if (CFArrayGetCount(proxies) > 0) {
-            CFTypeRef proxy = CFArrayGetValueAtIndex(proxies, 0);
-            LogTo(ChangeTracker, @"Changes feed using proxy %@", proxy);
-            bool ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxy);
-            Assert(ok);
+        if (proxies) {
+            if (CFArrayGetCount(proxies) > 0) {
+                CFTypeRef proxy = CFArrayGetValueAtIndex(proxies, 0);
+                LogTo(ChangeTracker, @"Changes feed using proxy %@", proxy);
+                bool ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxy);
+                Assert(ok);
+            }
             CFRelease(proxies);
         }
         CFRelease(proxySettings);
