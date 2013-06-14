@@ -1,5 +1,5 @@
 //
-//  CBLJSONValidator.m
+//  CBLJSONValidator.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/13/13.
@@ -17,14 +17,21 @@
 /** Convenience method that loads a schema from a URL (file or HTTP), creates a validator on it, and validates the given object.
     The validator instance is cached, so subsequent calls with the same URL will be fast. */
 + (bool) validateJSONObject: (id)object
-             forSchemaAtURL: (NSURL*)schemaURL
+            withSchemaAtURL: (NSURL*)schemaURL
                       error: (NSError**)error;
 
 
-/** Loads a validator from the JSON schema at a URL (file or HTTP).
-    Validators loaded this way are cached, so subsequent calls with the same URL will immediately return the cached instance, until memory pressure invalidates the cache. */
+/** Convenience method that loads a schema from a URL (file or HTTP), creates a validator on it, and validates the given object.
+    The validator instance is cached, so subsequent calls with the same URL will be fast. */
++ (bool) validateJSONObject: (id)object
+            withSchemaNamed: (NSString*)resourceName
+                      error: (NSError**)error;
+
+/** Loads a schema from a URL (file or HTTP) and creates a validator on it.
+    The validator instance is cached, so subsequent calls with the same URL will be fast. */
 + (CBLJSONValidator*) validatorForSchemaAtURL: (NSURL*)schemaURL
                                         error: (NSError**)error;
+
 
 /** Initializes a new CBLJSONSchema object from a schema dictionary. */
 - (id) initWithSchema: (NSDictionary*)schema;

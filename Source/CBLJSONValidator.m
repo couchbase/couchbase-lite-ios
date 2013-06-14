@@ -48,7 +48,7 @@ NSString* const CBJLSONValidatorErrorDomain = @"CBLJSONValidator";
 
 - (bool) selfValidate: (NSError**)outError {
     return [[self class] validateJSONObject: _rootSchema
-                             forSchemaAtURL: [NSURL URLWithString: kJSONSchemaSchemaURLStr]
+                            withSchemaAtURL: [NSURL URLWithString: kJSONSchemaSchemaURLStr]
                                       error: outError];
 }
 
@@ -85,14 +85,24 @@ static bool PROPAGATE(NSError** outError, id pathItem) {
 }
 
 
-+ (bool) validateJSONObject: (id)object forSchemaAtURL: (NSURL*)schemaURL error: (NSError**)error {
++ (bool) validateJSONObject: (id)object withSchemaAtURL: (NSURL*)schemaURL error: (NSError**)error {
 	CBLJSONValidator* validator = [self validatorForSchemaAtURL: schemaURL error: error];
 	return [validator validateJSONObject: object error: error];
 }
 
 
++ (bool) validateJSONObject: (id)object
+            withSchemaNamed: (NSString*)resourceName
+                      error: (NSError**)error
+{
+    NSURL* url = [[NSBundle mainBundle] URLForResource: resourceName withExtension: @"json"];
+    NSAssert(url != nil, @"No such JSON schema resource '%@.json'", resourceName);
+    return [self validateJSONObject: object withSchemaAtURL: url error: error];
+}
+
+
 - (bool) validateJSONObject: (id)object error: (NSError**)error {
-	return [self validateJSONObject: object forSchema: _rootSchema error: error];
+	return [self validateJSONObject: object withSchema: _rootSchema error: error];
 }
 
 
@@ -143,12 +153,12 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
             return FAIL(outError, @"Schema error: Invalid JSON pointer '%@'", pointer);
     }
     
-    return [validator validateJSONObject: object forSchema: refSchema error: outError];
+    return [validator validateJSONObject: object withSchema: refSchema error: outError];
 }
 
 
 - (bool) validateJSONObject: (id)object
-                  forSchema: (NSDictionary*)schema
+                 withSchema: (NSDictionary*)schema
                       error: (NSError**)outError
 {
 	if (![schema isKindOfClass: [NSDictionary class]])
@@ -168,7 +178,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
 
 	// 'extends'
     bool ok = validateForAll(schema[@"extends"], ^bool(id extendsSchema) {
-        return [self validateJSONObject: object forSchema: extendsSchema error: outError];
+        return [self validateJSONObject: object withSchema: extendsSchema error: outError];
     });
     if (!ok)
         return false;
@@ -213,8 +223,8 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
             validatedPropertyKeys = [NSMutableSet setWithArray: [properties allKeys]];
             for (NSString *property in properties) {
                 if (![self validateJSONObject: object[property]
-                                                    forSchema: properties[property]
-                                                        error: outError])
+                                                    withSchema: properties[property]
+                                                         error: outError])
                     return PROPAGATE(outError, property);
             }
         }
@@ -242,7 +252,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
                     else
                         [validatedPropertyKeys addObject: objectProperty];
                     if (![self validateJSONObject: object[objectProperty]
-                                        forSchema: patternProperties[propertyPattern]
+                                       withSchema: patternProperties[propertyPattern]
                                             error: outError])
                         return PROPAGATE(outError, objectProperty);
                 }
@@ -260,7 +270,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
             for (NSString *property in object) {
                 if (![validatedPropertyKeys containsObject: property]) {
                     if (![self validateJSONObject: object[property]
-                                        forSchema: additionalProperties
+                                       withSchema: additionalProperties
                                             error: outError])
                         return PROPAGATE(outError, property);
                 }
@@ -283,7 +293,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
                     }
                 } else if (dependency) {
                     if (![self validateJSONObject: object
-                                        forSchema: dependency
+                                       withSchema: dependency
                                             error: outError])
                         return false;
                 }
@@ -383,7 +393,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
             NSUInteger index = 0;
             for (NSDictionary *tupleSchema in items) {
                 id item = (index < [object count] ? object[index] : nil);
-                if (![self validateJSONObject: item forSchema: tupleSchema error: outError])
+                if (![self validateJSONObject: item withSchema: tupleSchema error: outError])
                     return PROPAGATE(outError, @(index));
                 index++;
             }
@@ -397,7 +407,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
             } else if (additionalItems) {
                 for (NSUInteger index = [items count]; index < [object count]; index++) {
                     if (![self validateJSONObject: object[index]
-                                        forSchema: additionalItems
+                                       withSchema: additionalItems
                                             error: outError])
                         return PROPAGATE(outError, @(index));
                 }
@@ -406,7 +416,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
         } else if (items) {
             __block NSUInteger index = 0;
             return validateForAll(object, ^bool(id item) {
-                if (![self validateJSONObject: item forSchema: items error: outError])
+                if (![self validateJSONObject: item withSchema: items error: outError])
                     return PROPAGATE(outError, @(index));
                 index++;
                 return true;
@@ -423,7 +433,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
 
 - (bool) validateJSONObject: (id)object forType: (id)type error: (NSError**)outError {
 	if (![type isKindOfClass: [NSString class]])
-		return [self validateJSONObject: object forSchema: type error: outError];
+		return [self validateJSONObject: object withSchema: type error: outError];
     else if (![self isValue: object ofType: type]) {
         return FAIL(outError, @"expected %@, got %@",
                         type,
@@ -447,7 +457,7 @@ static inline bool numberIsInteger(NSNumber* n) {
 
 - (bool) isValue: (id)object ofType: (NSString*)type {
 	if (![type isKindOfClass: [NSString class]]) {
-		return [self validateJSONObject: object forSchema: (NSDictionary*)type error: NULL];
+		return [self validateJSONObject: object withSchema: (NSDictionary*)type error: NULL];
 	} else if ([type isEqualToString: @"any"]) {
         return true;
     } else if ([type isEqualToString: @"string"]) {
