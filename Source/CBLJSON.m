@@ -105,6 +105,9 @@
 }
 
 
+#pragma mark - DATE CONVERSION:
+
+
 // These functions are not thread-safe, nor are the NSDateFormatter instances they return.
 // Make sure that this function and the formatter are called on only one thread at a time.
 static NSDateFormatter* getISO8601Formatter() {
@@ -152,7 +155,43 @@ static NSDateFormatter* getCoarseISO8601Formatter() {
 }
 
 
+#pragma mark - JSON POINTER:
+
+
+// Resolves a JSON-Pointer string, returning the pointed-to value:
+// http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-04
++ (id) valueAtPointer: (NSString*)pointer inObject: (id)object {
+    NSScanner* scanner = [NSScanner scannerWithString: pointer];
+    scanner.charactersToBeSkipped = [NSCharacterSet characterSetWithCharactersInString: @"/"];
+
+    while (!scanner.isAtEnd) {
+        if ([object isKindOfClass: [NSDictionary class]]) {
+            NSString* key;
+            if (![scanner scanUpToString: @"/" intoString: &key])
+                return nil;
+            key = [key stringByReplacingOccurrencesOfString: @"~1" withString: @"/"];
+            key = [key stringByReplacingOccurrencesOfString: @"~0" withString: @"~"];
+            object = [object objectForKey: key];
+            if (!object)
+                return nil;
+        } else if ([object isKindOfClass: [NSArray class]]) {
+            int index;
+            if (![scanner scanInt: &index] || index < 0 || index >= (int)[object count])
+                return nil;
+            object = [object objectAtIndex: index];
+        } else {
+            return nil;
+        }
+    }
+    return object;
+}
+
+
 @end
+
+
+
+#pragma mark - LAZY ARRAY:
 
 
 @implementation CBLLazyArrayOfJSON

@@ -10,3 +10,6 @@
 [submodule "vendor/oauthconsumer"]
 	path = vendor/oauthconsumer
 	url = git://github.com/couchbaselabs/ios-oauthconsumer.git
+[submodule "vendor/JSON-Schema-Test-Suite"]
+	path = vendor/JSON-Schema-Test-Suite
+	url = git://github.com/json-schema/JSON-Schema-Test-Suite.git

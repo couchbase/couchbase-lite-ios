@@ -409,6 +409,13 @@
 		27F9411B176A5FB4007BAEBE /* ModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945A41767E06B00B2DF2D /* ModelTests.m */; };
 		27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945B117692E2000B2DF2D /* CBLModel+Properties.m */; };
 		27F9411D176A5FC2007BAEBE /* CBLModelArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945A81768E63200B2DF2D /* CBLModelArray.m */; };
+		27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */; };
+		27F94123176F7443007BAEBE /* CBLJSONValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */; };
+		27F94124176F7448007BAEBE /* CBLJSONValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */; };
+		27F94126176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */; };
+		27F94127176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */; };
+		27F94128176F8235007BAEBE /* CBLJSONValidator.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */; };
+		27F94129176F823A007BAEBE /* CBLJSONValidator.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */; };
 		27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
 		27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
 		27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */; };
@@ -594,6 +601,8 @@
 				27F273C61704EB2900CD2B85 /* CBLJSFunction.m in Copy Extras */,
 				27F273C71704EB2C00CD2B85 /* CBLJSViewCompiler.h in Copy Extras */,
 				27F273C81704EB3000CD2B85 /* CBLJSViewCompiler.m in Copy Extras */,
+				27F94128176F8235007BAEBE /* CBLJSONValidator.h in Copy Extras */,
+				27F94129176F823A007BAEBE /* CBLJSONValidator.m in Copy Extras */,
 				27F273C417039F3700CD2B85 /* README.md in Copy Extras */,
 			);
 			name = "Copy Extras";
@@ -893,6 +902,9 @@
 		27F6D02A16B72885006E1576 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSFunction.m; path = Source/CBLJSFunction.m; sourceTree = SOURCE_ROOT; };
 		27F87BE61558890600F0A416 /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLGNUstep.m; sourceTree = "<group>"; };
+		27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONValidator.h; sourceTree = "<group>"; };
+		27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSONValidator.m; sourceTree = "<group>"; };
+		27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSONValidatorTests.m; sourceTree = "<group>"; };
 		27FAEEDA164C8A3E00A3C0C2 /* background.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = background.jpg; sourceTree = "<group>"; };
 		27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "background~ipad.jpg"; sourceTree = "<group>"; };
 		27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "couchbase-mobile-icon-nameless.png"; sourceTree = "<group>"; };
@@ -1320,6 +1332,9 @@
 				272B85131523691700A90CB2 /* CBLJSON.m */,
 				278B0C9E152A8B1900577747 /* CBLCanonicalJSON.h */,
 				278B0C9F152A8B1900577747 /* CBLCanonicalJSON.m */,
+				27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */,
+				27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */,
+				27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */,
 				27B0B79C1492932700A817AD /* CBLBase64.h */,
 				27B0B79D1492932700A817AD /* CBLBase64.m */,
 				279EB2D91491C34300E74185 /* CBLCollateJSON.h */,
@@ -1685,6 +1700,7 @@
 				275315C014ACF0330065964D /* DDASLLogger.h in Headers */,
 				275315C414ACF0330065964D /* DDFileLogger.h in Headers */,
 				275315C814ACF0330065964D /* DDLog.h in Headers */,
+				27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */,
 				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
@@ -2363,6 +2379,8 @@
 			files = (
 				27B0B8181492C16300A817AD /* main.m in Sources */,
 				27B0B81C1492C16300A817AD /* DemoAppDelegate.m in Sources */,
+				27F94127176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */,
+				27F94124176F7448007BAEBE /* CBLJSONValidator.m in Sources */,
 				27731F3714967A5F00815D67 /* RootViewController.m in Sources */,
 				27731F3814967A5F00815D67 /* ConfigViewController.m in Sources */,
 				27B0B8551492D0A000A817AD /* CBL_View_Tests.m in Sources */,
@@ -2381,9 +2399,11 @@
 			files = (
 				27C706D31488679500F0F099 /* DemoAppController.m in Sources */,
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
+				27F94126176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
 				27F1E4A61697995C00F0E50F /* CBLJSViewCompiler.m in Sources */,
+				27F94123176F7443007BAEBE /* CBLJSONValidator.m in Sources */,
 				27F1E4AB16979A0B00F0E50F /* CBLJSViewCompiler_Test.m in Sources */,
 				27F6D02B16B72885006E1576 /* CBLJSFunction.m in Sources */,
 				27CB056916CEBD010040C9F8 /* CBLRouter_Tests.m in Sources */,

@@ -78,6 +78,10 @@ typedef NSUInteger CBLJSONWritingOptions;
     If the object is not a string, or not valid ISO-8601, it returns nil. */
 + (NSDate*) dateWithJSONObject: (id)jsonObject;
 
+/** Follows a JSON-Pointer, returning the value pointed to, or nil if nothing.
+    See spec at: http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-04 */
++ (id) valueAtPointer: (NSString*)pointer inObject: (id)object;
+
 @end
 
 
