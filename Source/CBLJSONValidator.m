@@ -20,7 +20,7 @@
 #import "CBLJSON.h"
 
 
-#define kJSONSchemaSchemaURLStr @"http://json-schema.org/draft-03/schema"
+#define kJSONSchemaSchemaURLStr @"http://json-schema.org/draft-04/schema"
 
 
 NSString* const CBJLSONValidatorErrorDomain = @"CBLJSONValidator";
@@ -169,44 +169,78 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
 	if (ref)
         return [self validateJSONObject: object forReference: ref error: outError];
 
-	// Missing object is invalid if 'required' option is set:
+	// If we got a nil value, something's missing:
 	if (!object) {
-		if ([schema[@"required"] boolValue])
-            return FAIL(outError, @"Missing required value");
-        return true;
+		return FAIL(outError, @"Missing required value");
 	}
 
-	// 'extends'
-    bool ok = validateForAll(schema[@"extends"], ^bool(id extendsSchema) {
-        return [self validateJSONObject: object withSchema: extendsSchema error: outError];
-    });
-    if (!ok)
+    // allOf
+    NSArray* allOf = schema[@"allOf"];
+    if (allOf && !validateForAll(allOf, ^bool(NSDictionary* schema) {
+                return [self validateJSONObject: object withSchema: schema error: outError];
+            })) {
         return false;
+    }
+
+    // anyOf
+    NSArray* anyOf = schema[@"anyOf"];
+    if (anyOf) {
+        bool foundOne = false;
+        for (NSDictionary* option in anyOf) {
+            if ([self validateJSONObject: object withSchema: option error: outError]) {
+                foundOne = true;
+                break;
+            }
+        }
+        if (!foundOne)
+            return FAIL(outError, @"value is not of any allowed schema");
+    }
+
+    // oneOf
+    NSArray* oneOf = schema[@"oneOf"];
+    if (oneOf) {
+        bool foundOne = false;
+        for (NSDictionary* option in oneOf) {
+            if ([self validateJSONObject: object withSchema: option error: outError]) {
+                if (foundOne)
+                    return FAIL(outError, @"Value matches mutually exclusive options");
+                foundOne = true;
+            }
+        }
+        if (!foundOne)
+            return FAIL(outError, @"value is not of any allowed schema");
+    }
+
+    // not
+    NSDictionary* not = schema[@"not"];
+    if (not) {
+        if ([self validateJSONObject: object withSchema: not error: nil])
+            return FAIL(outError, @"value matched a schema it shouldn't have"); //FIX: Better message
+    }
 
 	// type
     id type = schema[@"type"];
-    if ([type isKindOfClass: [NSArray class]]) {
+    if (type) {
         bool valid = false;
-        for (id allowedType in type) {
-            valid = [self isValue: object ofType: allowedType];
-            if (valid)
-                break;
+        if ([type isKindOfClass: [NSArray class]]) {
+            for (id allowedType in type) {
+                valid = [self isValue: object ofType: allowedType];
+                if (valid)
+                    break;
+            }
+            if (!valid && outError)
+                type = [type componentsJoinedByString: @", "];
+        } else {
+            valid = [self isValue: object ofType: type];
         }
-        if (!valid)
-            return FAIL(outError, @"value is not of any allowed type");
-    } else if ([type isKindOfClass: [NSString class]]) {
-        if (![self validateJSONObject: object forType: type error: outError])
-            return false;
+        if (!valid) {
+            NSString* desc = nil;
+            if (outError) // don't bother generating JSON if it's not going into an NSError
+                desc = [CBLJSON stringWithJSONObject: object
+                                             options: CBLJSONWritingAllowFragments error: nil];
+            return FAIL(outError, @"expected %@; got %@", type, desc);
+        }
     }
-
-    // disallow:
-    ok = validateForAll(schema[@"disallow"], ^bool(id disallowedType) {
-        if ([self isValue: object ofType: disallowedType])
-            return FAIL(outError, @"%@ is disallowed", disallowedType);
-        return true;
-    });
-    if (!ok)
-        return false;
 
 	// enum
     NSArray *enumArray = schema[@"enum"];
@@ -216,15 +250,39 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
     // Now type-specific tests:
     
 	if ([object isKindOfClass: [NSDictionary class]]) {
+        // minProperties
+        NSUInteger count = [object count];
+        NSNumber* minProperties = schema[@"minProperties"];
+        if (minProperties) {
+            if (count < minProperties.unsignedIntegerValue)
+                return FAIL(outError, @"Object must have at least %@ properties",
+                            minProperties);
+        }
+
+        // maxProperties
+        NSNumber* maxProperties = schema[@"maxProperties"];
+        if (maxProperties) {
+            if (count > maxProperties.unsignedIntegerValue)
+                return FAIL(outError, @"Object must have no more than %@ properties",
+                            maxProperties);
+        }
+
+        // required
+        for (NSString* property in schema[@"required"]) {
+            if (!object[property])
+                return FAIL(outError, @"Missing required property '%@'", property);
+        }
+
         // properties
         NSMutableSet *validatedPropertyKeys = nil;
         NSDictionary* properties = schema[@"properties"];
         if (properties) {
             validatedPropertyKeys = [NSMutableSet setWithArray: [properties allKeys]];
             for (NSString *property in properties) {
-                if (![self validateJSONObject: object[property]
-                                                    withSchema: properties[property]
-                                                         error: outError])
+                id value = object[property];
+                if (value && ![self validateJSONObject: value
+                                            withSchema: properties[property]
+                                                 error: outError])
                     return PROPAGATE(outError, property);
             }
         }
@@ -282,10 +340,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
         for (NSString *dependendingProperty in dependencies) {
             if (object[dependendingProperty]) {
                 id dependency = dependencies[dependendingProperty];
-                if ([dependency isKindOfClass: [NSString class]]) {
-                    if (object[dependency] == nil)
-                        return FAIL(outError, @"missing dependent property '%@'", dependency);
-                } else if ([dependency isKindOfClass: [NSArray class]]) {
+                if ([dependency isKindOfClass: [NSArray class]]) {
                     for (NSString *dependencySubkey in dependency) {
                         if (object[dependencySubkey] == nil)
                             return FAIL(outError, @"missing dependent property '%@'",
@@ -327,13 +382,13 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
             if (!valid)
                 return FAIL(outError, @"numeric value below minimum");
         }
-        // divisibleBy
-        NSNumber *divisibleBy = schema[@"divisibleBy"];
-        if (divisibleBy) {
+        // multipleOf
+        NSNumber *multipleOf = schema[@"multipleOf"];
+        if (multipleOf) {
             // You'd think fmod would be the right tool for this, but it has more roundoff error
-            double result = objectValue / divisibleBy.doubleValue;
+            double result = objectValue / multipleOf.doubleValue;
             if (result != floor(result))
-                return FAIL(outError, @"numeric value is not divisible by %@", divisibleBy);
+                return FAIL(outError, @"numeric value is not divisible by %@", multipleOf);
         }
         
 	} else if ([object isKindOfClass: [NSString class]]) {
@@ -431,20 +486,6 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
 #pragma mark - TYPE-CHECKING:
 
 
-- (bool) validateJSONObject: (id)object forType: (id)type error: (NSError**)outError {
-	if (![type isKindOfClass: [NSString class]])
-		return [self validateJSONObject: object withSchema: type error: outError];
-    else if (![self isValue: object ofType: type]) {
-        return FAIL(outError, @"expected %@, got %@",
-                        type,
-                        [CBLJSON stringWithJSONObject: object
-                                              options: CBLJSONWritingAllowFragments error: nil]);
-    } else {
-        return true;
-    }
-}
-
-
 static inline bool numberIsBoolean(NSNumber* n) {
     return n.objCType[0] == @encode(BOOL)[0];
 }
@@ -456,11 +497,7 @@ static inline bool numberIsInteger(NSNumber* n) {
 
 
 - (bool) isValue: (id)object ofType: (NSString*)type {
-	if (![type isKindOfClass: [NSString class]]) {
-		return [self validateJSONObject: object withSchema: (NSDictionary*)type error: NULL];
-	} else if ([type isEqualToString: @"any"]) {
-        return true;
-    } else if ([type isEqualToString: @"string"]) {
+	if ([type isEqualToString: @"string"]) {
         return [object isKindOfClass: [NSString class]];
     } else if ([type isEqualToString: @"object"]) {
         return [object isKindOfClass: [NSDictionary class]];

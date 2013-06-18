@@ -85,7 +85,7 @@ TestCase(CBLJSONValidator) {
     }
 
     // Now load and run each test file:
-    NSString* testsDir = [suiteDir stringByAppendingPathComponent: @"tests/draft3"];
+    NSString* testsDir = [suiteDir stringByAppendingPathComponent: @"tests/draft4"];
     NSArray* tests = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: testsDir error: nil];
     for (NSString* testName in tests) {
         if ([testName hasSuffix: @".json"])

@@ -9,8 +9,8 @@
 #import <Foundation/Foundation.h>
 
 
-/** Validates JSON objects against JSON-Schema specs. Follows draft 3 of the standard:
-    http://tools.ietf.org/html/draft-zyp-json-schema-03 
+/** Validates JSON objects against JSON-Schema specs. Follows draft 4 of the standard:
+    http://json-schema.org/documentation.html
     This class is thread-safe. */
 @interface CBLJSONValidator : NSObject
 
