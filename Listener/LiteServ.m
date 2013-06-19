@@ -133,6 +133,23 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
 }
 
 
+static void usage(void) {
+    fprintf(stderr, "USAGE: LiteServ\n"
+            "\t[--dir <databaseDir>]    Alternate directory to store databases in\n"
+            "\t[--port <listeningPort>] Port to listen on (defaults to 59840)\n"
+            "\t[--<readonly>]           Enables read-only mode\n"
+            "\t[--auth]                 REST API requires HTTP auth\n"
+            "\t[--pull <URL>]           Pull from remote database\n"
+            "\t[--push <URL>]           Push to remote database\n"
+            "\t[--create-target]        Create replication target database\n"
+            "\t[--continuous]           Continuous replication\n"
+            "\t[--user <username>]      Username for connecting to remote database\n"
+            "\t[--password <password>]  Password for connecting to remote database\n"
+            "\t[--realm <realm>]        HTTP realm for connecting to remote database\n"
+            "Runs Couchbase Lite as a faceless server.\n");
+}
+
+
 int main (int argc, const char * argv[])
 {
     @autoreleasepool {
@@ -141,12 +158,25 @@ int main (int argc, const char * argv[])
         EnableLogTo(CBLListener, YES);
 #endif
 
+        NSString* dataPath = nil;
+        UInt16 port = kPortNumber;
         CBLManagerOptions options = {};
         const char* replArg = NULL, *user = NULL, *password = NULL, *realm = NULL;
         BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
 
         for (int i = 1; i < argc; ++i) {
-            if (strcmp(argv[i], "--readonly") == 0) {
+            if (strcmp(argv[i], "--help") == 0) {
+                usage();
+                return 1;
+            } else if (strcmp(argv[i], "--dir") == 0) {
+                const char *path = argv[++i];
+                dataPath = [[NSFileManager defaultManager] stringWithFileSystemRepresentation: path
+                                                                           length: strlen(path)];
+            } else if (strcmp(argv[i], "--port") == 0) {
+                const char *str = argv[++i];
+                char *end;
+                port = (UInt16)strtol(str, &end, 10);
+            } else if (strcmp(argv[i], "--readonly") == 0) {
                 options.readOnly = YES;
             } else if (strcmp(argv[i], "--auth") == 0) {
                 auth = YES;
@@ -165,20 +195,29 @@ int main (int argc, const char * argv[])
                 password = argv[++i];
             } else if (strcmp(argv[i], "--realm") == 0) {
                 realm = argv[++i];
+            } else if (strncmp(argv[i], "-Log", 4) == 0) {
+                ++i; // Ignore MYUtilities logging flags
+            } else {
+                fprintf(stderr, "Unknown option '%s'\n", argv[i]);
+                usage();
+                return 1;
             }
         }
 
+        if (dataPath == nil)
+            dataPath = GetServerPath();
+
         NSError* error;
-        CBLManager* server = [[CBLManager alloc] initWithDirectory: GetServerPath()
-                                                       options: &options
-                                                         error: &error];
+        CBLManager* server = [[CBLManager alloc] initWithDirectory: dataPath
+                                                           options: &options
+                                                             error: &error];
         if (error) {
             Warn(@"FATAL: Error initializing CouchbaseLite: %@", error);
             exit(1);
         }
 
         // Start a listener socket:
-        CBLListener* listener = [[CBLListener alloc] initWithManager: server port: kPortNumber];
+        CBLListener* listener = [[CBLListener alloc] initWithManager: server port: port];
         listener.readOnly = options.readOnly;
 
         if (auth) {
