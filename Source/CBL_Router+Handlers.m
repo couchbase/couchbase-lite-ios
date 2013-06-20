@@ -58,32 +58,13 @@
     return kCBLStatusOK;
 }
 
+
 - (CBLStatus) do_GET_all_dbs {
     NSArray* dbs = _dbManager.allDatabaseNames ?: @[];
     _response.body = [[CBL_Body alloc] initWithArray: dbs];
     return kCBLStatusOK;
 }
 
-- (CBLStatus) do_POST_replicate {
-    NSDictionary* body = self.bodyAsDictionary;
-    CBLStatus status;
-    CBL_Replicator* repl = [_dbManager replicatorWithProperties: body status: &status];
-    if (!repl)
-        return status;
-
-    if ([$castIf(NSNumber, body[@"cancel"]) boolValue]) {
-        // Cancel replication:
-        CBL_Replicator* activeRepl = [repl.db activeReplicatorLike: repl];
-        if (!activeRepl)
-            return kCBLStatusNotFound;
-        [activeRepl stop];
-    } else {
-        // Start replication:
-        [repl start];
-        _response.bodyObject = $dict({@"session_id", repl.sessionID});
-    }
-    return kCBLStatusOK;
-}
 
 - (CBLStatus) do_POST_persona_assertion {
     NSDictionary* body = self.bodyAsDictionary;
@@ -331,7 +312,74 @@
 }
 
 
-#pragma mark - ACTIVE TASKS
+#pragma mark - REPLICATION & ACTIVE TASKS
+
+
+- (CBLStatus) do_POST_replicate {
+    NSDictionary* body = self.bodyAsDictionary;
+    CBLStatus status;
+    CBL_Replicator* repl = [_dbManager replicatorWithProperties: body status: &status];
+    if (!repl)
+        return status;
+
+    if ([$castIf(NSNumber, body[@"cancel"]) boolValue]) {
+        // Cancel replication:
+        CBL_Replicator* activeRepl = [repl.db activeReplicatorLike: repl];
+        if (!activeRepl)
+            return kCBLStatusNotFound;
+        [activeRepl stop];
+        return kCBLStatusOK;
+    } else {
+        // Start replication:
+        [repl start];
+        if (repl.continuous || [$castIf(NSNumber, body[@"async"]) boolValue]) {
+            _response.bodyObject = $dict({@"session_id", repl.sessionID});
+            return kCBLStatusOK;
+        } else {
+            // Non-continuous replication: don't send any response till it completes
+            [[NSNotificationCenter defaultCenter] addObserver: self
+                                                     selector: @selector(replicationStopped:)
+                                                         name: CBL_ReplicatorStoppedNotification
+                                                       object: repl];
+            return 0;
+        }
+    }
+}
+
+// subroutine of -do_POST_replicate
+- (void) replicationStopped: (NSNotification*)n {
+    CBL_Replicator* repl = n.object;
+    _response.status = CBLStatusFromNSError(repl.error, kCBLStatusServerError);
+    [self sendResponseHeaders];
+    [self.response setBodyObject: $dict({@"ok", (repl.error ?nil :$true)},
+                                        {@"session_id", repl.sessionID})];
+    [self sendResponseBodyAndFinish: YES];
+}
+
+
+/* CouchDB 1.2's _replicate response looks like this:
+ {
+    "history": [
+        {
+            "doc_write_failures": 0, 
+            "docs_read": 18, 
+            "docs_written": 18, 
+            "end_last_seq": 19, 
+            "end_time": "Thu, 20 Jun 2013 16:58:13 GMT", 
+            "missing_checked": 18, 
+            "missing_found": 18, 
+            "recorded_seq": 19, 
+            "session_id": "1cef7405d0e61fb0decc89323669a012", 
+            "start_last_seq": 0, 
+            "start_time": "Thu, 20 Jun 2013 16:58:13 GMT"
+        }
+    ], 
+    "ok": true, 
+    "replication_id_version": 2, 
+    "session_id": "1cef7405d0e61fb0decc89323669a012", 
+    "source_last_seq": 19
+}
+*/
 
 
 - (CBLStatus) do_GET_active_tasks {
@@ -370,7 +418,7 @@
     }
 }
 
-
+// subroutine of do_GET_active_tasks
 - (void) replicationChanged: (NSNotification*)n {
     CBL_Replicator* repl = n.object;
     if (repl.db.manager == _dbManager)
