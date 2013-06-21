@@ -674,6 +674,35 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+// Variant of -fetchRemoveCheckpointDoc that's used while replication is running, to reload the
+// checkpoint to get its current revision number, if there was an error saving it.
+- (void) refreshRemoteCheckpointDoc {
+    LogTo(Sync, @"%@Refreshing remote checkpoint to get its _rev...", self);
+    _savingCheckpoint = YES; // Disable any other save attempts till we finish reloading
+    [self asyncTaskStarted];
+    CBLRemoteJSONRequest* request =
+    [self sendAsyncRequest: @"GET"
+                      path: [@"_local/" stringByAppendingString: self.remoteCheckpointDocID]
+                      body: nil
+              onCompletion: ^(id response, NSError* error) {
+                  if (!_db)
+                      return;
+                  _savingCheckpoint = NO;
+                  if (error && error.code != kCBLStatusNotFound) {
+                      LogTo(Sync, @"%@: Error refreshing remote checkpoint: %@",
+                            self, error.localizedDescription);
+                  } else {
+                      LogTo(Sync, @"%@ Refreshed remote checkpoint: %@", self, response);
+                      self.remoteCheckpoint = $castIf(NSDictionary, response);
+                      _lastSequenceChanged = YES;
+                      [self saveLastSequence]; // try saving again
+                  }
+              }
+     ];
+    [request dontLog404];
+}
+
+
 #if DEBUG
 @synthesize savingCheckpoint=_savingCheckpoint;  // for unit tests
 #endif
@@ -703,17 +732,35 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                       body: body
               onCompletion: ^(id response, NSError* error) {
                   _savingCheckpoint = NO;
-                  if (error) {
+                  if (error)
                       Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
-                      // TODO: If error is 401 or 403, and this is a pull, remember that remote is read-only and don't attempt to read its checkpoint next time.
-                  } else if (_db) {
+                  if (!_db)
+                      return;
+                  if (error) {
+                      // Failed to save checkpoint:
+                      Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
+                      switch(CBLStatusFromNSError(error, 0)) {
+                          case kCBLStatusNotFound:
+                              self.remoteCheckpoint = nil; // doc deleted or db reset
+                              _overdueForSave = YES; // try saving again
+                              break;
+                          case kCBLStatusConflict:
+                              [self refreshRemoteCheckpointDoc];
+                              break;
+                          default:
+                              break;
+                              // TODO: On 401 or 403, and this is a pull, remember that remote
+                              // is read-only & don't attempt to read its checkpoint next time.
+                      }
+                  } else {
+                      // Saved checkpoint:
                       id rev = response[@"rev"];
                       if (rev)
                           body[@"_rev"] = rev;
                       self.remoteCheckpoint = body;
                       [_db setLastSequence: _lastSequence withCheckpointID: checkpointID];
                   }
-                  if (_db && _overdueForSave)
+                  if (_overdueForSave)
                       [self saveLastSequence];      // start a save that was waiting on me
               }
      ];
