@@ -24,7 +24,7 @@ Think of it this way: If [Apache CouchDB](http://couchdb.apache.org) is MySQL, a
 * Your application's data format can evolve over time without any need for explicit migrations.
 * Map/reduce indexing allows fast lookups without needing to use special query languages.
 
-**Syncable** means:
+**[Syncable](http://syncable.org/)** means:
 
 * Any two copies of a database can be brought into sync via an efficient, reliable, proven REST-based [protocol][23] pioneered by Apache CouchDB.
 * Interoperates with CouchDB, BigCouch and PouchDB, and with hosted services like [Cloudant](http://cloudant.com) and [IrisCouch](http://iriscouch.com).
