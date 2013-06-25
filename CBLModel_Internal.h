@@ -26,5 +26,8 @@
 @property (readonly) NSDictionary* currentProperties;
 - (void) cacheValue: (id)value ofProperty: (NSString*)property changed: (BOOL)changed;
 - (void) willSave: (NSSet*)changedProperties;   // overridable
-- (CBLModel*) modelWithDocID: (NSString*)docID forProperty: (NSString*)property;
+- (CBLModel*) modelWithDocID: (NSString*)docID
+                 forProperty: (NSString*)property
+                     ofClass: (Class)declaredClass;
+;
 @end

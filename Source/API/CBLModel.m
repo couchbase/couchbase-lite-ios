@@ -340,8 +340,12 @@
         value = [value stringValue];
     else if ([value isKindOfClass: [CBLModel class]])
         value = ((CBLModel*)value).document.documentID;
-    else if ([value isKindOfClass: [NSArray class]])
-        value = [value my_map:^id(id obj) { return [self externalizePropertyValue: obj]; }];
+    else if ([value isKindOfClass: [NSArray class]]) {
+        if ([value isKindOfClass: [CBLModelArray class]])
+            value = [value docIDs];
+        else
+            value = [value my_map:^id(id obj) { return [self externalizePropertyValue: obj]; }];
+    }
     return value;
 }
 
@@ -407,7 +411,10 @@
     return _document.database;
 }
 
-- (CBLModel*) modelWithDocID: (NSString*)docID forProperty: (NSString*)property {
+- (CBLModel*) modelWithDocID: (NSString*)docID
+                 forProperty: (NSString*)property
+                     ofClass: (Class)declaredClass
+{
     CBLDocument* doc = [[self databaseForModelProperty: property] documentWithID: docID];
     if (!doc) {
         Warn(@"Unable to get document from property %@ of %@ (value='%@')",
@@ -418,9 +425,10 @@
     // Ask factory to get/create model; if it doesn't know, use the declared class:
     CBLModel* value = [doc.database.modelFactory modelForDocument: doc];
     if (!value) {
-        Class declaredClass = [[self class] classOfProperty: property];
+        if (!declaredClass)
+            declaredClass = [[self class] classOfProperty: property];
         value = [declaredClass modelForDocument: doc];
-        if (!value) 
+        if (!value)
             Warn(@"Unable to instantiate %@ from %@ -- property %@ of %@ (%@)",
                  declaredClass, doc, property, self, _document);
     }

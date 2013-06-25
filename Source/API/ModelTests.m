@@ -41,6 +41,17 @@ static void closeTestDB(CBLDatabase* db) {
 }
 
 
+static CBLDatabase* reopenTestDB(CBLDatabase* db) {
+    closeTestDB(db);
+    [[CBLManager sharedInstance] _forgetDatabase: db];
+    NSError* error;
+    CBLDatabase* db2 = [[CBLManager sharedInstance] createDatabaseNamed: @"test_db" error: &error];
+    CAssert(db2, @"Couldn't reopen db: %@", error);
+    CAssert(db2 != db, @"reopenTestDB couldn't make a new instance");
+    return db2;
+}
+
+
 #pragma mark - TEST MODEL:
 
 
@@ -84,100 +95,124 @@ static void closeTestDB(CBLDatabase* db) {
 
 
 TestCase(API_SaveModel) {
-    CBLDatabase* db = createEmptyDB();
-    TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
-    CAssert(model != nil);
-    CAssert(model.isNew);
-    CAssert(!model.needsSave);
-    CAssertEq(model.propertiesToSave.count, 0u);
-
     NSDate* date = [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252];
     NSArray* dates = @[date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392837521]];
     NSDecimalNumber* decimal = [NSDecimalNumber decimalNumberWithString: @"12345.6789"];
 
-    // Create and populate a TestModel:
-    model.number = 1337;
-    model.str = @"LEET";
-    model.strings = @[@"fee", @"fie", @"foe", @"fum"];
-    model.data = [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding];
-    model.date = date;
-    model.dates = dates;
-    model.decimal = decimal;
+    CBLDatabase* db = createEmptyDB();
+    NSString* modelID, *model2ID, *model3ID;
+    {
+        TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+        CAssert(model != nil);
+        CAssert(model.isNew);
+        CAssert(!model.needsSave);
+        CAssertEq(model.propertiesToSave.count, 0u);
+        modelID = model.document.documentID;
 
-    CAssert(model.isNew);
-    CAssert(model.needsSave);
-    CAssertEqual(model.propertiesToSave, (@{@"number": @(1337),
-                                            @"str": @"LEET",
-                                            @"strings": @[@"fee", @"fie", @"foe", @"fum"],
-                                            @"data": @"QVNDSUk=",
-                                            @"date": @"2013-06-12T23:40:52.000Z",
-                                            @"dates": @[@"2013-06-12T23:40:52.000Z",
-                                                        @"2013-06-13T17:32:01.000Z"],
-                                            @"decimal": @"12345.6789"}));
+        // Create and populate a TestModel:
+        model.number = 1337;
+        model.str = @"LEET";
+        model.strings = @[@"fee", @"fie", @"foe", @"fum"];
+        model.data = [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding];
+        model.date = date;
+        model.dates = dates;
+        model.decimal = decimal;
 
-    TestModel* model2 = [[TestModel alloc] initWithNewDocumentInDatabase: db];
-    TestModel* model3 = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+        CAssert(model.isNew);
+        CAssert(model.needsSave);
+        CAssertEqual(model.propertiesToSave, (@{@"number": @(1337),
+                                                @"str": @"LEET",
+                                                @"strings": @[@"fee", @"fie", @"foe", @"fum"],
+                                                @"data": @"QVNDSUk=",
+                                                @"date": @"2013-06-12T23:40:52.000Z",
+                                                @"dates": @[@"2013-06-12T23:40:52.000Z",
+                                                            @"2013-06-13T17:32:01.000Z"],
+                                                @"decimal": @"12345.6789"}));
 
-    model.other = model3;
-    model.others = @[model2, model3];
+        TestModel* model2 = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+        model2ID = model2.document.documentID;
+        TestModel* model3 = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+        model3ID = model3.document.documentID;
 
-    // Verify the property getters:
-    CAssertEq(model.number, 1337);
-    CAssertEqual(model.str, @"LEET");
-    CAssertEqual(model.strings, (@[@"fee", @"fie", @"foe", @"fum"]));
-    CAssertEqual(model.data, [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding]);
-    CAssertEqual(model.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
-    CAssertEqual(model.dates, dates);
-    CAssertEqual(model.decimal, decimal);
-    CAssertEq(model.other, model3);
-    CAssertEqual(model.others, (@[model2, model3]));
+        model.other = model3;
+        model.others = @[model2, model3];
 
-    // Save it and make sure the save didn't trigger a reload:
-    NSError* error;
-    CAssert([model save: &error]);
-    CAssertEq(model.reloadCount, 0u);
+        // Verify the property getters:
+        CAssertEq(model.number, 1337);
+        CAssertEqual(model.str, @"LEET");
+        CAssertEqual(model.strings, (@[@"fee", @"fie", @"foe", @"fum"]));
+        CAssertEqual(model.data, [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding]);
+        CAssertEqual(model.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
+        CAssertEqual(model.dates, dates);
+        CAssertEqual(model.decimal, decimal);
+        CAssertEq(model.other, model3);
+        CAssertEqual(model.others, (@[model2, model3]));
 
-    // Verify that the document got updated correctly:
-    NSMutableDictionary* props = [model.document.properties mutableCopy];
-    CAssertEqual(props, (@{@"number": @(1337),
-                           @"str": @"LEET",
-                           @"strings": @[@"fee", @"fie", @"foe", @"fum"],
-                           @"data": @"QVNDSUk=",
-                           @"date": @"2013-06-12T23:40:52.000Z",
-                           @"dates": @[@"2013-06-12T23:40:52.000Z", @"2013-06-13T17:32:01.000Z"],
-                           @"decimal": @"12345.6789",
-                           @"other": model3.document.documentID,
-                           @"others": @[model2.document.documentID, model3.document.documentID],
-                           @"_id": props[@"_id"],
-                           @"_rev": props[@"_rev"]}));
+        // Save it and make sure the save didn't trigger a reload:
+        NSError* error;
+        CAssert([model save: &error]);
+        CAssertEq(model.reloadCount, 0u);
 
-    // Update the document directly and make sure the model updates:
-    props[@"number"] = @4321;
-    CAssert([model.document putProperties: props error: &error]);
-    CAssertEq(model.reloadCount, 1u);
-    CAssertEq(model.number, 4321);
+        // Verify that the document got updated correctly:
+        NSMutableDictionary* props = [model.document.properties mutableCopy];
+        CAssertEqual(props, (@{@"number": @(1337),
+                               @"str": @"LEET",
+                               @"strings": @[@"fee", @"fie", @"foe", @"fum"],
+                               @"data": @"QVNDSUk=",
+                               @"date": @"2013-06-12T23:40:52.000Z",
+                               @"dates": @[@"2013-06-12T23:40:52.000Z", @"2013-06-13T17:32:01.000Z"],
+                               @"decimal": @"12345.6789",
+                               @"other": model3.document.documentID,
+                               @"others": @[model2.document.documentID, model3.document.documentID],
+                               @"_id": props[@"_id"],
+                               @"_rev": props[@"_rev"]}));
 
-    // Store the same properties in a different model's document:
-    [props removeObjectForKey: @"_id"];
-    [props removeObjectForKey: @"_rev"];
-    CAssert([model2.document putProperties: props error: &error]);
-    // ...and verify its properties:
-    CAssertEq(model2.reloadCount, 1u);
-    CAssertEq(model2.number, 4321);
-    CAssertEqual(model2.str, @"LEET");
-    CAssertEqual(model2.strings, (@[@"fee", @"fie", @"foe", @"fum"]));
-    CAssertEqual(model2.data, [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding]);
-    CAssertEqual(model2.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
-    CAssertEqual(model2.dates, dates);
-    CAssertEqual(model2.decimal, decimal);
-    CAssertEq(model2.other, model3);
-    CAssertEqual(model2.others, (@[model2, model3]));
-    CAssertEqual(model2.others, model.others);
+        // Update the document directly and make sure the model updates:
+        props[@"number"] = @4321;
+        CAssert([model.document putProperties: props error: &error]);
+        CAssertEq(model.reloadCount, 1u);
+        CAssertEq(model.number, 4321);
 
-    CAssertEqual($cast(CBLModelArray, model2.others).docIDs, (@[model2.document.documentID,
-                                                                model3.document.documentID]));
+        // Store the same properties in a different model's document:
+        [props removeObjectForKey: @"_id"];
+        [props removeObjectForKey: @"_rev"];
+        CAssert([model2.document putProperties: props error: &error]);
+        // ...and verify its properties:
+        CAssertEq(model2.reloadCount, 1u);
+        CAssertEq(model2.number, 4321);
+        CAssertEqual(model2.str, @"LEET");
+        CAssertEqual(model2.strings, (@[@"fee", @"fie", @"foe", @"fum"]));
+        CAssertEqual(model2.data, [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding]);
+        CAssertEqual(model2.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
+        CAssertEqual(model2.dates, dates);
+        CAssertEqual(model2.decimal, decimal);
+        CAssertEq(model2.other, model3);
+        CAssertEqual(model2.others, (@[model2, model3]));
+        CAssertEqual(model2.others, model.others);
 
-    closeTestDB(db);
+        CAssertEqual($cast(CBLModelArray, model2.others).docIDs, (@[model2.document.documentID,
+                                                                    model3.document.documentID]));
+    }
+    {
+        // Close/reopen the database and verify again:
+        db = reopenTestDB(db);
+        CBLDocument* doc = [db documentWithID: modelID];
+        TestModel* modelAgain = [TestModel modelForDocument: doc];
+        CAssertEq(modelAgain.number, 4321);
+        CAssertEqual(modelAgain.str, @"LEET");
+        CAssertEqual(modelAgain.strings, (@[@"fee", @"fie", @"foe", @"fum"]));
+        CAssertEqual(modelAgain.data, [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding]);
+        CAssertEqual(modelAgain.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
+        CAssertEqual(modelAgain.dates, dates);
+        CAssertEqual(modelAgain.decimal, decimal);
+
+        TestModel *other = modelAgain.other;
+        CAssertEqual(modelAgain.other.document.documentID, model3ID);
+        NSArray* others = modelAgain.others;
+        CAssertEq(others.count, 2u);
+        CAssertEq(others[1], other);
+        CAssertEqual(((TestModel*)others[0]).document.documentID, model2ID);
+    }
 }
 
 

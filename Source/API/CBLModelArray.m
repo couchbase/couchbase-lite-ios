@@ -23,6 +23,7 @@
 {
     CBLModel* _owner;
     NSString* _property;
+    Class _itemClass;
     NSArray* _docIDs;
 }
 
@@ -30,6 +31,7 @@
 
 - (instancetype) initWithOwner: (CBLModel*)owner
                       property: (NSString*)property
+                     itemClass: (Class)itemClass
                         docIDs: (NSArray*)docIDs
 {
     self = [super init];
@@ -41,6 +43,7 @@
         }
         _owner = owner;
         _property = property;
+        _itemClass = itemClass;
         _docIDs = [docIDs copy];
     }
     return self;
@@ -48,12 +51,13 @@
 
 - (instancetype) initWithOwner: (CBLModel*)owner
                       property: (NSString*)property
+                     itemClass: (Class)itemClass
                         models: (NSArray*)models
 {
     NSArray* docIDs = [models my_map:^id(id obj) {
         return $cast(CBLModel, obj).document.documentID;
     }];
-    return [self initWithOwner: owner property: property docIDs: docIDs];
+    return [self initWithOwner: owner property: property itemClass: itemClass docIDs: docIDs];
 }
 
 - (NSUInteger)count {
@@ -63,7 +67,7 @@
 - (id)objectAtIndex:(NSUInteger)index {
     NSString* docID = $cast(NSString, [_docIDs objectAtIndex: index]);
     //Log(@"%@<%p> objectAtIndex: %u = %@", self.class, self, (unsigned)index, docID);
-    return [_owner modelWithDocID: docID forProperty: _property];
+    return [_owner modelWithDocID: docID forProperty: _property ofClass: _itemClass];
 }
 
 - (BOOL) isEqual:(id)object {
@@ -73,6 +77,15 @@
     CBLModelArray* other = object;
     return other->_owner.database == _owner.database
         && [other->_docIDs isEqual: _docIDs];
+}
+
+- (NSString*) description {
+    return $sprintf(@"%@<%@>{%@}",
+                    [self class], _itemClass, [_docIDs componentsJoinedByString: @", "]);
+}
+
+- (NSString*) debugDescription {
+    return self.description;
 }
 
 @end

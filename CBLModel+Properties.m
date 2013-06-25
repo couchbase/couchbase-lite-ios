@@ -95,7 +95,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
         return nil;
     }
 
-    return [self modelWithDocID: rawValue forProperty: property];
+    return [self modelWithDocID: rawValue forProperty: property ofClass: Nil];
 }
 
 
@@ -127,6 +127,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
         if ([rawValue isKindOfClass: [NSArray class]]) {
             value = [[CBLModelArray alloc] initWithOwner: self
                                                 property: property
+                                               itemClass: modelClass
                                                   docIDs: rawValue];
             if (!value) {
                 Warn(@"To-many relation property %@ of %@ contains invalid doc IDs: %@",
@@ -151,7 +152,10 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
     if ([array isKindOfClass: [CBLModelArray class]])
         docIDs = (CBLModelArray*)array;
     else if (array != nil)
-        docIDs = [[CBLModelArray alloc] initWithOwner: self property: property models: array];
+        docIDs = [[CBLModelArray alloc] initWithOwner: self
+                                             property: property
+                                            itemClass: relClass
+                                               models: array];
     [self setValue: docIDs ofProperty: property];
 }
 
