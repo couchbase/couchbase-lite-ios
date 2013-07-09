@@ -47,7 +47,7 @@
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
     CBLStaleness _stale;
-    BOOL _descending, _prefetch, _sequences, _mapOnly;
+    BOOL _descending, _prefetch, _sequences, _mapOnly, _includeDeleted;
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
@@ -109,7 +109,7 @@
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, stale=_stale, sequences=_sequences, mapOnly=_mapOnly,
-            database=_database;
+            database=_database, includeDeleted=_includeDeleted;
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -130,6 +130,7 @@
         .updateSeq = YES,
         .localSeq = _sequences,
         .inclusiveEnd = YES,
+        .includeDeletedDocs = _includeDeleted,
         .stale = _stale
     };
 }

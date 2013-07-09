@@ -75,6 +75,10 @@ typedef enum {
     sequence ID of the revision it's from. */
 @property BOOL sequences;
 
+/** If set to YES, queries created by -queryAllDocuments will include deleted documents.
+    This property has no effect in other types of queries. */
+@property BOOL includeDeleted;
+
 /** If non-nil, the error of the last execution of the query.
     If nil, the last execution of the query was successful. */
 @property (readonly) NSError* error;
