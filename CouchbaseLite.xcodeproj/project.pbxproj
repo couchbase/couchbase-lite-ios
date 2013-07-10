@@ -397,10 +397,6 @@
 		27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */; };
 		27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
 		27F273C417039F3700CD2B85 /* README.md in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F273C317039F3600CD2B85 /* README.md */; };
-		27F273C51704EB2500CD2B85 /* CBLJSFunction.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F6D02916B72885006E1576 /* CBLJSFunction.h */; };
-		27F273C61704EB2900CD2B85 /* CBLJSFunction.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F6D02A16B72885006E1576 /* CBLJSFunction.m */; };
-		27F273C71704EB2C00CD2B85 /* CBLJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F1E4A41697995C00F0E50F /* CBLJSViewCompiler.h */; };
-		27F273C81704EB3000CD2B85 /* CBLJSViewCompiler.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F1E4A51697995C00F0E50F /* CBLJSViewCompiler.m */; };
 		27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
 		27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -439,6 +435,7 @@
 		792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		792867D4178DE33E00248AF0 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 792867D3178DE33E00248AF0 /* JavaScriptCore.framework */; };
 		792867DB178E021F00248AF0 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
+		792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		DA147C0C14BCA98A0052DA4D /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
 		DA147C0D14BCA98A0052DA4D /* CBLHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */; };
@@ -601,12 +598,9 @@
 			dstPath = Extras;
 			dstSubfolderSpec = 16;
 			files = (
+				792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */,
 				27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */,
 				27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */,
-				27F273C51704EB2500CD2B85 /* CBLJSFunction.h in Copy Extras */,
-				27F273C61704EB2900CD2B85 /* CBLJSFunction.m in Copy Extras */,
-				27F273C71704EB2C00CD2B85 /* CBLJSViewCompiler.h in Copy Extras */,
-				27F273C81704EB3000CD2B85 /* CBLJSViewCompiler.m in Copy Extras */,
 				27F94128176F8235007BAEBE /* CBLJSONValidator.h in Copy Extras */,
 				27F94129176F823A007BAEBE /* CBLJSONValidator.m in Copy Extras */,
 				27F273C417039F3700CD2B85 /* README.md in Copy Extras */,
