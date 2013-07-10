@@ -216,4 +216,46 @@ TestCase(API_SaveModel) {
 }
 
 
+TestCase(API_ModelAttachments) {
+    // Attempting to reproduce https://github.com/couchbase/couchbase-lite-ios/issues/63
+    CBLDatabase* db = createEmptyDB();
+    NSError* error;
+
+    NSData* attData = [@"Ceci n'est pas une pipe." dataUsingEncoding: NSUTF8StringEncoding];
+    CBLDocument* doc;
+    {
+        TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+        doc = model.document;
+        model.number = 1337;
+        CAssert([model save: &error], @"Initial failed: %@", error);
+
+        CBLAttachment* attachment = [[CBLAttachment alloc] initWithContentType: @"text/plain"
+                                                                          body: attData];
+
+        [model addAttachment: attachment named: @"Caption.txt"];
+        CAssert([model save: &error], @"Save after adding attachment failed: %@", error);
+
+        model.number = 23;
+        CAssert([model save: &error], @"Save after updating number failed: %@", error);
+    }
+    {
+        TestModel* model = [TestModel modelForDocument: doc];
+        CAssertEq(model.number, 23);
+        CBLAttachment* attachment = [model attachmentNamed: @"Caption.txt"];
+        CAssertEqual(attachment.body, attData);
+
+        model.number = -1;
+        CAssert([model save: &error], @"Save of new model object failed: %@", error);
+
+        // Now update the attachment:
+        [model removeAttachmentNamed: @"caption.txt"];
+        NSData* newAttData = [@"sluggo" dataUsingEncoding: NSUTF8StringEncoding];
+        attachment = [[CBLAttachment alloc] initWithContentType: @"text/plain"
+                                                                          body: newAttData];
+        [model addAttachment: attachment named: @"Caption.txt"];
+        CAssert([model save: &error], @"Final save failed: %@", error);
+    }
+}
+
+
 #endif // DEBUG
