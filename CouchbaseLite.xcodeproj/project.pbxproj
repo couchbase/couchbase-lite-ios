@@ -433,6 +433,12 @@
 		27FAEF0F164C8ADB00A3C0C2 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0C164C8ADB00A3C0C2 /* icon.png */; };
 		27FAEF10164C8ADB00A3C0C2 /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */; };
 		27FAEF11164C8ADB00A3C0C2 /* icon~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */; };
+		792867C0178DE01900248AF0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
+		792867D0178DE03E00248AF0 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
+		792867D1178DE03E00248AF0 /* CBLJSViewCompiler_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CD178DE03E00248AF0 /* CBLJSViewCompiler_Test.m */; };
+		792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
+		792867D4178DE33E00248AF0 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 792867D3178DE33E00248AF0 /* JavaScriptCore.framework */; };
+		792867DB178E021F00248AF0 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		DA147C0C14BCA98A0052DA4D /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
 		DA147C0D14BCA98A0052DA4D /* CBLHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */; };
@@ -606,6 +612,15 @@
 				27F273C417039F3700CD2B85 /* README.md in Copy Extras */,
 			);
 			name = "Copy Extras";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		792867BD178DE01900248AF0 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/${PRODUCT_NAME}";
+			dstSubfolderSpec = 16;
+			files = (
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -922,6 +937,16 @@
 		27FAEF0C164C8ADB00A3C0C2 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
 		27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon~ipad.png"; sourceTree = "<group>"; };
+		792867BF178DE01900248AF0 /* libCBLJSViewCompiler.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLJSViewCompiler.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		792867C3178DE01900248AF0 /* CBLJSViewCompiler-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLJSViewCompiler-Prefix.pch"; sourceTree = "<group>"; };
+		792867CB178DE03E00248AF0 /* CBLJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLJSFunction.h; path = Source/CBLJSFunction.h; sourceTree = SOURCE_ROOT; };
+		792867CC178DE03E00248AF0 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSFunction.m; path = Source/CBLJSFunction.m; sourceTree = SOURCE_ROOT; };
+		792867CD178DE03E00248AF0 /* CBLJSViewCompiler_Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSViewCompiler_Test.m; path = Source/CBLJSViewCompiler_Test.m; sourceTree = SOURCE_ROOT; };
+		792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLJSViewCompiler.h; path = Source/CBLJSViewCompiler.h; sourceTree = SOURCE_ROOT; };
+		792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSViewCompiler.m; path = Source/CBLJSViewCompiler.m; sourceTree = SOURCE_ROOT; };
+		792867D3178DE33E00248AF0 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = vendor/JavaScriptCore.framework; sourceTree = "<group>"; };
+		792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRegisterJSViewCompiler.h; sourceTree = "<group>"; };
+		792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRegisterJSViewCompiler.m; sourceTree = "<group>"; };
 		DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteListener.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3614BCAC3B0052DA4D /* CouchbaseLiteListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
@@ -1023,6 +1048,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		792867BC178DE01900248AF0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				792867C0178DE01900248AF0 /* Foundation.framework in Frameworks */,
+				792867D4178DE33E00248AF0 /* JavaScriptCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DA023B4514BCA94C008184BB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1054,6 +1088,7 @@
 				27C706CA1488679500F0F099 /* Demo-Mac */,
 				27B0B8111492C16300A817AD /* Demo-iOS */,
 				2753154D14ACEF350065964D /* vendor */,
+				792867C1178DE01900248AF0 /* CBLJSViewCompiler */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -1087,6 +1122,7 @@
 				DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */,
 				DA147C3614BCAC3B0052DA4D /* CouchbaseLiteListener.framework */,
 				270FE0C814C5008C005FF647 /* LiteServ */,
+				792867BF178DE01900248AF0 /* libCBLJSViewCompiler.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1410,6 +1446,7 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				792867D3178DE33E00248AF0 /* JavaScriptCore.framework */,
 				27C7066F1488634300F0F099 /* AppKit.framework */,
 				27F0745C11CD50A600E9A2AB /* Foundation.framework */,
 				27C70697148864BA00F0F099 /* Cocoa.framework */,
@@ -1642,6 +1679,29 @@
 				27FAEEE5164C8A3E00A3C0C2 /* textfield___inactive~ipad.png */,
 			);
 			path = Elements;
+			sourceTree = "<group>";
+		};
+		792867C1178DE01900248AF0 /* CBLJSViewCompiler */ = {
+			isa = PBXGroup;
+			children = (
+				792867CB178DE03E00248AF0 /* CBLJSFunction.h */,
+				792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */,
+				792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */,
+				792867CC178DE03E00248AF0 /* CBLJSFunction.m */,
+				792867CD178DE03E00248AF0 /* CBLJSViewCompiler_Test.m */,
+				792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */,
+				792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */,
+				792867C2178DE01900248AF0 /* Supporting Files */,
+			);
+			path = CBLJSViewCompiler;
+			sourceTree = "<group>";
+		};
+		792867C2178DE01900248AF0 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				792867C3178DE01900248AF0 /* CBLJSViewCompiler-Prefix.pch */,
+			);
+			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1956,6 +2016,25 @@
 			productReference = 27C70694148864BA00F0F099 /* Couchbase Lite Demo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		792867BE178DE01900248AF0 /* CBLJSViewCompiler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 792867CA178DE01900248AF0 /* Build configuration list for PBXNativeTarget "CBLJSViewCompiler" */;
+			buildPhases = (
+				792867DD178E03C000248AF0 /* Ensure JavaScriptCore.framework is in vendor/ */,
+				792867BB178DE01900248AF0 /* Sources */,
+				792867BC178DE01900248AF0 /* Frameworks */,
+				792867BD178DE01900248AF0 /* CopyFiles */,
+				792867D5178DF10400248AF0 /* Make a Fat Binary */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CBLJSViewCompiler;
+			productName = CBLJSViewCompiler;
+			productReference = 792867BF178DE01900248AF0 /* libCBLJSViewCompiler.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		DA023B2614BCA94C008184BB /* Listener iOS Library */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DA023B6114BCA94C008184BB /* Build configuration list for PBXNativeTarget "Listener iOS Library" */;
@@ -2022,6 +2101,7 @@
 				DA023B2614BCA94C008184BB /* Listener iOS Library */,
 				270FE0C714C5008C005FF647 /* LiteServ */,
 				275A29061649A54000B0D8EE /* All */,
+				792867BE178DE01900248AF0 /* CBLJSViewCompiler */,
 			);
 		};
 /* End PBXProject section */
@@ -2121,6 +2201,35 @@
 			shellPath = /bin/sh;
 			shellScript = "CREATING_UNIVERSAL_DIR=${SYMROOT}/${CONFIGURATION}-${PRODUCT_NAME}-ios-universal\ncp \"${CREATING_UNIVERSAL_DIR}/libCouchbaseLite.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
 			showEnvVarsInLog = 0;
+		};
+		792867D5178DF10400248AF0 /* Make a Fat Binary */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+			);
+			name = "Make a Fat Binary";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+		};
+		792867DD178E03C000248AF0 /* Ensure JavaScriptCore.framework is in vendor/ */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Ensure JavaScriptCore.framework is in vendor/";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ ! -f ${SRCROOT}/vendor/JavaScriptCore.framework/JavaScriptCore ]; then\n    echo \"error: Please download and extract this url into ${SRCROOT}/vendor/  https://dl.dropboxusercontent.com/u/14074521/JavaScriptCore.framework.zip\" >&2\n    exit 1\nfi";
 		};
 		DA023B6014BCA94C008184BB /* Build Fat Library */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2407,6 +2516,17 @@
 				27F1E4AB16979A0B00F0E50F /* CBLJSViewCompiler_Test.m in Sources */,
 				27F6D02B16B72885006E1576 /* CBLJSFunction.m in Sources */,
 				27CB056916CEBD010040C9F8 /* CBLRouter_Tests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		792867BB178DE01900248AF0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				792867D0178DE03E00248AF0 /* CBLJSFunction.m in Sources */,
+				792867D1178DE03E00248AF0 /* CBLJSViewCompiler_Test.m in Sources */,
+				792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */,
+				792867DB178E021F00248AF0 /* CBLRegisterJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3029,6 +3149,66 @@
 			};
 			name = Release;
 		};
+		792867C8178DE01900248AF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = /tmp/CBLJSViewCompiler.dst;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/vendor\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CBLJSViewCompiler/CBLJSViewCompiler-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		792867C9178DE01900248AF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				COPY_PHASE_STRIP = YES;
+				DSTROOT = /tmp/CBLJSViewCompiler.dst;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/vendor\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CBLJSViewCompiler/CBLJSViewCompiler-Prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		DA023B6214BCA94C008184BB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3216,6 +3396,15 @@
 			buildConfigurations = (
 				27C706B0148864BA00F0F099 /* Debug */,
 				27C706B1148864BA00F0F099 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		792867CA178DE01900248AF0 /* Build configuration list for PBXNativeTarget "CBLJSViewCompiler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				792867C8178DE01900248AF0 /* Debug */,
+				792867C9178DE01900248AF0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
