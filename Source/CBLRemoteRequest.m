@@ -200,7 +200,8 @@
     NSURLProtectionSpace* space = challenge.protectionSpace;
     NSString* authMethod = space.authenticationMethod;
     LogTo(RemoteRequest, @"Got challenge for %@: method=%@, proposed=%@, err=%@", self, authMethod, challenge.proposedCredential, challenge.error);
-    if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic)) {
+    if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic) ||
+            $equal(authMethod, NSURLAuthenticationMethodHTTPDigest)) {
         _challenged = true;
         _authorizer = nil;
         if (challenge.previousFailureCount <= 1) {
