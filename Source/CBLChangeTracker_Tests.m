@@ -47,16 +47,17 @@ TestCase(DictOf) {
 @interface CBLChangeTrackerTester : NSObject <CBLChangeTrackerClient>
 {
     NSMutableArray* _changes;
-    BOOL _running;
+    BOOL _running, _finished;
 }
 @property (readonly) NSArray* changes;
 @property BOOL checkedAnSSLCert;
+@property (readonly) BOOL finished;
 @end
 
 
 @implementation CBLChangeTrackerTester
 
-@synthesize changes=_changes, checkedAnSSLCert=_checkedAnSSLCert;
+@synthesize changes=_changes, checkedAnSSLCert=_checkedAnSSLCert, finished=_finished;
 
 - (void) run: (CBLChangeTracker*)tracker expectingChanges: (NSArray*)expectedChanges {
     [tracker start];
@@ -85,14 +86,26 @@ TestCase(DictOf) {
                                        beforeDate: timeout])
         ;
     Assert(!_running, @"-changeTrackerStoped: wasn't called");
+    Assert(_finished, @"-changeTrackerFinished wasn't called");
     CAssertEqual(tracker.error.domain, error.domain);
     CAssertEq(tracker.error.code, error.code);
 }
 
-- (void) changeTrackerReceivedChange: (NSDictionary*)change {
+- (void) changeTrackerReceivedSequence:(id)sequence
+                                 docID:(NSString *)docID
+                                revIDs:(NSArray *)revIDs
+                               deleted:(BOOL)deleted
+{
     if (!_changes)
         _changes = [[NSMutableArray alloc] init];
-    [_changes addObject: change];
+    [_changes addObject: $dict({@"seq", sequence},
+                               {@"id", docID},
+                               {@"revs", revIDs},
+                               {@"deleted", (deleted ? $true : nil)})];
+}
+
+- (void) changeTrackerFinished {
+    _finished = YES;
 }
 
 - (void) changeTrackerStopped:(CBLChangeTracker *)tracker {
@@ -110,24 +123,24 @@ TestCase(DictOf) {
 
 
 TestCase(CBLChangeTracker_Simple) {
-    for (CBLChangeTrackerMode mode = kOneShot; mode <= kContinuous; ++mode) {
+    for (CBLChangeTrackerMode mode = kOneShot; mode <= kLongPoll; ++mode) {
         Log(@"Mode = %d ...", mode);
         CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
         NSURL* url = [NSURL URLWithString: @"http://snej.iriscouch.com/tdpuller_test1"];
         CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: mode conflicts: NO lastSequence: nil client: tester];
         NSArray* expected = $array($dict({@"seq", @1},
                                          {@"id", @"foo"},
-                                         {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
+                                         {@"revs", $array(@"5-ca289aa53cbbf35a5f5c799b64b1f16f")}),
                                    $dict({@"seq", @2},
                                          {@"id", @"attach"},
-                                         {@"changes", $array($dict({@"rev", @"1-a7e2aad2bc8084b9041433182e292d8e"}))}),
+                                         {@"revs", $array(@"1-a7e2aad2bc8084b9041433182e292d8e")}),
                                    $dict({@"seq", @5},
                                          {@"id", @"bar"},
-                                         {@"changes", $array($dict({@"rev", @"1-16f4304cd5ad8779fb40cb6bbbed60f5"}))}),
+                                         {@"revs", $array(@"1-16f4304cd5ad8779fb40cb6bbbed60f5")}),
                                    $dict({@"seq", @6},
                                          {@"id", @"08a5cb4cc83156401c85bbe40e0007de"},
                                          {@"deleted", $true},
-                                         {@"changes", $array($dict({@"rev", @"3-cbdb323dec78588cfea63bf7bb5a246f"}))}) );
+                                         {@"revs", $array(@"3-cbdb323dec78588cfea63bf7bb5a246f")}) );
         [tester run: tracker expectingChanges: expected];
     }
 }
@@ -140,17 +153,17 @@ TestCase(CBLChangeTracker_SSL) {
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"foo"},
-                                     {@"changes", $array($dict({@"rev", @"5-ca289aa53cbbf35a5f5c799b64b1f16f"}))}),
+                                     {@"revs", $array(@"5-ca289aa53cbbf35a5f5c799b64b1f16f")}),
                                $dict({@"seq", @2},
                                      {@"id", @"attach"},
-                                     {@"changes", $array($dict({@"rev", @"1-a7e2aad2bc8084b9041433182e292d8e"}))}),
+                                     {@"revs", $array(@"1-a7e2aad2bc8084b9041433182e292d8e")}),
                                $dict({@"seq", @5},
                                      {@"id", @"bar"},
-                                     {@"changes", $array($dict({@"rev", @"1-16f4304cd5ad8779fb40cb6bbbed60f5"}))}),
+                                     {@"revs", $array(@"1-16f4304cd5ad8779fb40cb6bbbed60f5")}),
                                $dict({@"seq", @6},
                                      {@"id", @"08a5cb4cc83156401c85bbe40e0007de"},
                                      {@"deleted", $true},
-                                     {@"changes", $array($dict({@"rev", @"3-cbdb323dec78588cfea63bf7bb5a246f"}))}) );
+                                     {@"revs", $array(@"3-cbdb323dec78588cfea63bf7bb5a246f")}) );
     [tester run: tracker expectingChanges: expected];
     CAssert(tester.checkedAnSSLCert);
 }
@@ -169,7 +182,7 @@ TestCase(CBLChangeTracker_Auth) {
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"something"},
-                                     {@"changes", $array($dict({@"rev", @"1-31e4c2faf5cfcd56f4518c29367f9124"}))}) );
+                                     {@"revs", $array(@"1-31e4c2faf5cfcd56f4518c29367f9124")}) );
     [tester run: tracker expectingChanges: expected];
 }
 

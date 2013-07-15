@@ -46,6 +46,8 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kCBLStatusDeleted,              404, "deleted"},
 
     {kCBLStatusUpstreamError,        502, "Invalid response from remote replication server"},
+    {kCBLStatusBadChangesFeed,       502, "Server changes feed parse error"},
+    {kCBLStatusChangesFeedTruncated, 502, "Server changes feed truncated"},
     {kCBLStatusDBError,              500, "Database error!"},
     {kCBLStatusCorruptError,         500, "Invalid data in database"},
     {kCBLStatusAttachmentError,      500, "Attachment store error"},

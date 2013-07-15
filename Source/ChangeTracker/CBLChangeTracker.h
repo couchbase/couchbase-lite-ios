@@ -22,9 +22,12 @@
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host
                                  port: (UInt16)port;
+- (void) changeTrackerReceivedSequence: (id)sequence
+                                 docID: (NSString*)docID
+                                revIDs: (NSArray*)revIDs
+                               deleted: (BOOL)deleted;
+- (void) changeTrackerFinished;
 @optional
-- (void) changeTrackerReceivedChange: (NSDictionary*)change;
-- (void) changeTrackerReceivedChanges: (NSArray*)changes;
 - (void) changeTrackerStopped: (CBLChangeTracker*)tracker;
 @end
 
@@ -91,9 +94,8 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly) NSString* changesFeedPath;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
-- (NSInteger) receivedPollResponse: (NSData*)body errorMessage: (NSString**)errorMessage;
-- (BOOL) receivedChanges: (NSArray*)changes errorMessage: (NSString**)errorMessage;
-- (BOOL) receivedChange: (NSDictionary*)change;
 - (void) stopped; // override this
+- (BOOL) parseBytes: (const void*)bytes length: (size_t)length;
+- (BOOL) endParsingData;
 
 @end

@@ -126,7 +126,7 @@
                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
     }
     
-    _gotResponseHeaders = _atEOF = _inputAvailable = _parsing = false;
+    _gotResponseHeaders = _atEOF = _inputAvailable = false;
     
     _inputBuffer = [[NSMutableData alloc] initWithCapacity: kReadLength];
     
@@ -275,165 +275,62 @@
 }
 
 
-#pragma mark - REGULAR-MDOE PARSING:
-
-
-- (void) readEntireInput {
-    // After one-shot or longpoll response is complete, parse it as a single JSON document:
-    NSData* input = _inputBuffer;
-    LogTo(ChangeTracker, @"%@: Got entire body, %u bytes", self, (unsigned)input.length);
-    BOOL restart = NO;
-    NSString* errorMessage = nil;
-    NSInteger numChanges = [self receivedPollResponse: input errorMessage: &errorMessage];
-    if (numChanges < 0) {
-        // Oops, unparseable response. See if it gets special handling:
-        if ([self handleInvalidResponse: input])
-            return;
-        // Otherwise report an upstream unparseable-response error
-        [self setUpstreamError: errorMessage];
-    } else {
-        // Poll again if there was no error, and either we're in longpoll mode or it looks like we
-        // ran out of changes due to a _limit rather than because we hit the end.
-        restart = _mode == kLongPoll || numChanges >= (NSInteger)_limit;
-    }
-    
-    [self clearConnection];
-
-    if (restart)
-        [self start];       // Next poll...
-    else
-        [self stopped];
-}
-
-
-- (BOOL) handleInvalidResponse: (NSData*)body {
-    // Convert to string:
-    NSString* bodyStr = [body my_UTF8ToString];
-    if (!bodyStr) // (in case it was truncated in the middle of a UTF-8 character sequence)
-        bodyStr = [[NSString alloc] initWithData: body encoding: NSWindowsCP1252StringEncoding];
-    bodyStr = [bodyStr  stringByTrimmingCharactersInSet:
-               [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-
-    if (_mode != kLongPoll || (bodyStr.length > 0 && ![bodyStr hasPrefix: @"{\"results\":["]) ) {
-        Warn(@"%@: Unparseable response:\n%@", self, bodyStr);
-        return NO;
-    }
-    
-    // The response at least starts out as what we'd expect, so it looks like the connection was
-    // closed unexpectedly before the full response was sent.
-    NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
-    Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
-    if (elapsed >= 30.0 && (bodyStr.length == 0 || $equal(bodyStr, @"{\"results\":["))) {
-        // Looks like the connection got closed by a proxy (like AWS' load balancer) while the
-        // server was waiting for a change to send, due to lack of activity.
-        // Lower the heartbeat time to work around this, and reconnect:
-        self.heartbeat = MIN(_heartbeat, elapsed * 0.75);
-        [self clearConnection];
-        [self start];       // Next poll...
-    } else {
-        // Response data was truncated. This has been reported as an intermittent error
-        // (see TouchDB issue #241). Treat it as if it were a socket error -- i.e. pause/retry.
-        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                   code: NSURLErrorNetworkConnectionLost
-                                               userInfo: nil]];
-    }
-    return YES;
-}
-
-
-#pragma mark - CONTINUOUS-MODE PARSING:
-
-
-- (void) readLines {
-    Assert(_gotResponseHeaders && _mode==kContinuous);
-    NSMutableArray* changes = $marray();
-    const char* pos = _inputBuffer.bytes;
-    const char* end = pos + _inputBuffer.length;
-    while (pos < end && _inputBuffer) {
-        const char* eol = memchr(pos, '\n', end-pos);
-        if (!eol)
-            break;  // Wait till we have a complete line
-        ptrdiff_t lineLength = eol - pos;
-        if (lineLength > 0)
-            [changes addObject: [NSData dataWithBytes: pos length: lineLength]];
-        pos = eol + 1;
-    }
-    
-    // Remove the parsed lines:
-    [_inputBuffer replaceBytesInRange: NSMakeRange(0, pos - (const char*)_inputBuffer.bytes)
-                            withBytes: NULL length: 0];
-    
-    if (changes.count > 0)
-        [self asyncParseChangeLines: changes];
-}
-
-
-- (void) asyncParseChangeLines: (NSArray*)lines {
-    static NSOperationQueue* sParseQueue;
-    if (!sParseQueue)
-        sParseQueue = [[NSOperationQueue alloc] init];
-    
-    LogTo(ChangeTracker, @"%@: Async parsing %u changes...", self, (unsigned)lines.count);
-    Assert(!_parsing);
-    _parsing = true;
-    NSThread* resultThread = [NSThread currentThread];
-    [sParseQueue addOperationWithBlock: ^{
-        // Parse on background thread:
-        NSMutableArray* parsedChanges = [NSMutableArray arrayWithCapacity: lines.count];
-        for (NSData* line in lines) {
-            id change = [CBLJSON JSONObjectWithData: line options: 0 error: NULL];
-            if (!change) {
-                Warn(@"CBLSocketChangeTracker received unparseable change line from server: %@", [line my_UTF8ToString]);
-                break;
-            }
-            [parsedChanges addObject: change];
-        }
-        MYOnThread(resultThread, ^{
-            // Process change lines on original thread:
-            Assert(_parsing);
-            _parsing = false;
-            if (!_trackingInput)
-                return;
-            LogTo(ChangeTracker, @"%@: Notifying %u changes...", self, (unsigned)parsedChanges.count);
-            if (![self receivedChanges: parsedChanges errorMessage: NULL]) {
-                [self setUpstreamError: @"Unparseable change line"];
-                [self stop];
-            }
-            
-            // Read more data if there is any, or stop if stream's at EOF:
-            if (_inputAvailable)
-                [self readFromInput];
-            else if (_atEOF)
-                [self stop];
-        });
-    }];
-}
-
-
-- (BOOL) failUnparseable: (NSString*)line {
-    Warn(@"Couldn't parse line from _changes: %@", line);
-    [self setUpstreamError: @"Unparseable change line"];
-    [self stop];
-    return NO;
-}
-
-
 #pragma mark - STREAM HANDLING:
 
 
 - (void) readFromInput {
-    Assert(!_parsing);
     Assert(_inputAvailable);
     _inputAvailable = false;
     
     uint8_t buffer[kReadLength];
     NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
-    if (bytesRead > 0) {
-        [_inputBuffer appendBytes: buffer length: bytesRead];
-        LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
+    if (bytesRead > 0)
+        [self parseBytes: buffer length: bytesRead];
+}
 
-        if (_mode == kContinuous)
-            [self readLines];
+
+- (void) handleEOF {
+    _atEOF = true;
+    if (!_gotResponseHeaders || (_mode == kContinuous && _inputBuffer.length > 0)) {
+        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                   code: NSURLErrorNetworkConnectionLost
+                                               userInfo: nil]];
+        return;
+    }
+    if (_mode == kContinuous) {
+        [self stop];
+    } else if ([self endParsingData]) {
+        // Successfully reached end.
+        [_client changeTrackerFinished];
+        [self clearConnection];
+        if (_mode == kLongPoll)
+            [self start];       // Next poll...
+        else
+            [self stopped];
+    } else {
+        // JSON must have been truncated, probably due to socket being closed early.
+        if (_mode == kOneShot) {
+            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                       code: NSURLErrorNetworkConnectionLost
+                                                   userInfo: nil]];
+            return;
+        }
+        NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
+        Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
+        if (elapsed >= 30.0) {
+            // Looks like the connection got closed by a proxy (like AWS' load balancer) while the
+            // server was waiting for a change to send, due to lack of activity.
+            // Lower the heartbeat time to work around this, and reconnect:
+            self.heartbeat = MIN(_heartbeat, elapsed * 0.75);
+            [self clearConnection];
+            [self start];       // Next poll...
+        } else {
+            // Response data was truncated. This has been reported as an intermittent error
+            // (see TouchDB issue #241). Treat it as if it were a socket error -- i.e. pause/retry.
+            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                       code: NSURLErrorNetworkConnectionLost
+                                                   userInfo: nil]];
+        }
     }
 }
 
@@ -461,27 +358,13 @@
                     return;
             }
             _inputAvailable = true;
-            // If still chewing on last bytes, don't eat any more yet
-            if (!_parsing)
-                [self readFromInput];
+            [self readFromInput];
             break;
         }
             
         case NSStreamEventEndEncountered:
             LogTo(ChangeTracker, @"%@: EndEncountered %@", self, stream);
-            _atEOF = true;
-            if (!_gotResponseHeaders || (_mode == kContinuous && _inputBuffer.length > 0)) {
-                [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                           code: NSURLErrorNetworkConnectionLost
-                                                       userInfo: nil]];
-                break;
-            }
-            if (_mode == kContinuous) {
-                if (!_parsing)
-                    [self stop];
-            } else {
-                [self readEntireInput];
-            }
+            [self handleEOF];
             break;
             
         case NSStreamEventErrorOccurred:

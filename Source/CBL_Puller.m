@@ -35,11 +35,6 @@
 // run out, even if the CBL thread doesn't always have time to run.)
 #define kMaxOpenHTTPConnections 12
 
-// ?limit= param for _changes feed: max # of revs to get in one batch. Smaller values reduce
-// latency since we can't parse till the entire result arrives in longpoll mode. But larger
-// values are more efficient because they use fewer HTTP requests.
-#define kChangesFeedLimit 100u
-
 // Maximum number of revs to fetch in a single bulk request
 #define kMaxRevsToGetInBulk 50u
 
@@ -95,7 +90,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                      lastSequence: _lastSequence
                                                            client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
-    _changeTracker.limit = kChangesFeedLimit;
     _changeTracker.continuous = _continuous;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
@@ -180,46 +174,38 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-// Got a _changes feed response from the CBLChangeTracker.
-- (void) changeTrackerReceivedChanges: (NSArray*)changes {
-    LogTo(Sync, @"%@: Received %u changes", self, (unsigned)changes.count);
+- (void) changeTrackerReceivedSequence: (id)remoteSequenceID
+                                 docID: (NSString*)docID
+                                revIDs: (NSArray*)revIDs
+                               deleted: (BOOL)deleted
+{
     NSUInteger changeCount = 0;
-    for (NSDictionary* change in changes) {
-        @autoreleasepool {
-            // Process each change from the feed:
-            id remoteSequenceID = change[@"seq"];
-            NSString* docID = change[@"id"];
-            if (!docID || ![CBLDatabase isValidDocumentID: docID])
-                continue;
-            
-            BOOL deleted = [change[@"deleted"] isEqual: (id)kCFBooleanTrue];
-            NSArray* changes = $castIf(NSArray, change[@"changes"]);
-            for (NSDictionary* changeDict in changes) {
-                @autoreleasepool {
-                    // Push each revision info to the inbox
-                    NSString* revID = $castIf(NSString, changeDict[@"rev"]);
-                    if (!revID)
-                        continue;
-                    CBLPulledRevision* rev = [[CBLPulledRevision alloc] initWithDocID: docID
-                                                                              revID: revID
-                                                                            deleted: deleted];
-                    // Remember its remote sequence ID (opaque), and make up a numeric sequence
-                    // based on the order in which it appeared in the _changes feed:
-                    rev.remoteSequenceID = remoteSequenceID;
-                    if (changes.count > 1)
-                        rev.conflicted = true;
-                    LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
-                    [self addToInbox: rev];
 
-                    changeCount++;
-                }
-            }
-        }
+    // Process each change from the feed:
+    if (![CBLDatabase isValidDocumentID: docID])
+        return;
+    
+    for (NSString* revID in revIDs) {
+        // Push each revision info to the inbox
+        CBLPulledRevision* rev = [[CBLPulledRevision alloc] initWithDocID: docID
+                                                                  revID: revID
+                                                                deleted: deleted];
+        // Remember its remote sequence ID (opaque), and make up a numeric sequence
+        // based on the order in which it appeared in the _changes feed:
+        rev.remoteSequenceID = remoteSequenceID;
+        if (revIDs.count > 1)
+            rev.conflicted = true;
+        LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
+        [self addToInbox: rev];
+
+        changeCount++;
     }
     self.changesTotal += changeCount;
+}
 
-    // We can tell we've caught up when the _changes feed returns less than we asked for:
-    if (!_caughtUp && changes.count < kChangesFeedLimit) {
+
+- (void) changeTrackerFinished {
+    if (!_caughtUp) {
         LogTo(Sync, @"%@: Caught up with changes!", self);
         _caughtUp = YES;
         if (_continuous)

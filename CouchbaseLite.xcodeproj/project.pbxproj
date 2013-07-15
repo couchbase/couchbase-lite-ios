@@ -195,6 +195,36 @@
 		2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */; };
 		2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
 		2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
+		277B5D291821A8380088881E /* yajl.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C7D1821A8370088881E /* yajl.c */; };
+		277B5D2A1821A8380088881E /* yajl.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C7D1821A8370088881E /* yajl.c */; };
+		277B5D2D1821A8380088881E /* yajl_alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C801821A8370088881E /* yajl_alloc.c */; };
+		277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C801821A8370088881E /* yajl_alloc.c */; };
+		277B5D2F1821A8380088881E /* yajl_alloc.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5C811821A8370088881E /* yajl_alloc.h */; };
+		277B5D301821A8380088881E /* yajl_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C821821A8370088881E /* yajl_buf.c */; };
+		277B5D311821A8380088881E /* yajl_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C821821A8370088881E /* yajl_buf.c */; };
+		277B5D321821A8380088881E /* yajl_buf.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5C831821A8370088881E /* yajl_buf.h */; };
+		277B5D331821A8380088881E /* yajl_bytestack.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5C841821A8370088881E /* yajl_bytestack.h */; };
+		277B5D341821A8380088881E /* yajl_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C851821A8370088881E /* yajl_encode.c */; };
+		277B5D351821A8380088881E /* yajl_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C851821A8370088881E /* yajl_encode.c */; };
+		277B5D361821A8380088881E /* yajl_encode.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5C861821A8370088881E /* yajl_encode.h */; };
+		277B5D371821A8380088881E /* yajl_gen.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C871821A8370088881E /* yajl_gen.c */; };
+		277B5D381821A8380088881E /* yajl_gen.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C871821A8370088881E /* yajl_gen.c */; };
+		277B5D391821A8380088881E /* yajl_lex.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C881821A8370088881E /* yajl_lex.c */; };
+		277B5D3A1821A8380088881E /* yajl_lex.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C881821A8370088881E /* yajl_lex.c */; };
+		277B5D3B1821A8380088881E /* yajl_lex.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5C891821A8370088881E /* yajl_lex.h */; };
+		277B5D3C1821A8380088881E /* yajl_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C8A1821A8370088881E /* yajl_parser.c */; };
+		277B5D3D1821A8380088881E /* yajl_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C8A1821A8370088881E /* yajl_parser.c */; };
+		277B5D3E1821A8380088881E /* yajl_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5C8B1821A8370088881E /* yajl_parser.h */; };
+		277B5D411821A8380088881E /* yajl_version.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C8D1821A8370088881E /* yajl_version.c */; };
+		277B5D421821A8380088881E /* yajl_version.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C8D1821A8370088881E /* yajl_version.c */; };
+		277B5DC71821A8B60088881E /* yajl_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DC21821A8B60088881E /* yajl_common.h */; };
+		277B5DC81821A8B60088881E /* yajl_gen.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DC31821A8B60088881E /* yajl_gen.h */; };
+		277B5DC91821A8B60088881E /* yajl_parse.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DC41821A8B60088881E /* yajl_parse.h */; };
+		277B5DCA1821A8B60088881E /* yajl_tree.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DC51821A8B60088881E /* yajl_tree.h */; };
+		277B5DCB1821A8B60088881E /* yajl_version.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DC61821A8B60088881E /* yajl_version.h */; };
+		277B5DCE1821AE990088881E /* CBLJSONReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DCC1821AE990088881E /* CBLJSONReader.h */; };
+		277B5DCF1821AE990088881E /* CBLJSONReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 277B5DCD1821AE990088881E /* CBLJSONReader.m */; };
+		277B5DD01821AE990088881E /* CBLJSONReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 277B5DCD1821AE990088881E /* CBLJSONReader.m */; };
 		277EF39D17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		277EF39E17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */; };
 		277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */; };
@@ -934,6 +964,28 @@
 		2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLPersonaAuthorizer.m; sourceTree = "<group>"; };
 		2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_DatabaseChange.h; sourceTree = "<group>"; };
 		2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_DatabaseChange.m; sourceTree = "<group>"; };
+		277B5C701821A8370088881E /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		277B5C7D1821A8370088881E /* yajl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl.c; sourceTree = "<group>"; };
+		277B5C801821A8370088881E /* yajl_alloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_alloc.c; sourceTree = "<group>"; };
+		277B5C811821A8370088881E /* yajl_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_alloc.h; sourceTree = "<group>"; };
+		277B5C821821A8370088881E /* yajl_buf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_buf.c; sourceTree = "<group>"; };
+		277B5C831821A8370088881E /* yajl_buf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_buf.h; sourceTree = "<group>"; };
+		277B5C841821A8370088881E /* yajl_bytestack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_bytestack.h; sourceTree = "<group>"; };
+		277B5C851821A8370088881E /* yajl_encode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_encode.c; sourceTree = "<group>"; };
+		277B5C861821A8370088881E /* yajl_encode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_encode.h; sourceTree = "<group>"; };
+		277B5C871821A8370088881E /* yajl_gen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_gen.c; sourceTree = "<group>"; };
+		277B5C881821A8370088881E /* yajl_lex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_lex.c; sourceTree = "<group>"; };
+		277B5C891821A8370088881E /* yajl_lex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_lex.h; sourceTree = "<group>"; };
+		277B5C8A1821A8370088881E /* yajl_parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_parser.c; sourceTree = "<group>"; };
+		277B5C8B1821A8370088881E /* yajl_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_parser.h; sourceTree = "<group>"; };
+		277B5C8D1821A8370088881E /* yajl_version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_version.c; sourceTree = "<group>"; };
+		277B5DC21821A8B60088881E /* yajl_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_common.h; sourceTree = "<group>"; };
+		277B5DC31821A8B60088881E /* yajl_gen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_gen.h; sourceTree = "<group>"; };
+		277B5DC41821A8B60088881E /* yajl_parse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_parse.h; sourceTree = "<group>"; };
+		277B5DC51821A8B60088881E /* yajl_tree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_tree.h; sourceTree = "<group>"; };
+		277B5DC61821A8B60088881E /* yajl_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yajl_version.h; sourceTree = "<group>"; };
+		277B5DCC1821AE990088881E /* CBLJSONReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONReader.h; sourceTree = "<group>"; };
+		277B5DCD1821AE990088881E /* CBLJSONReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSONReader.m; sourceTree = "<group>"; };
 		277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+FullTextSearch.h"; sourceTree = "<group>"; };
 		277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLQuery+FullTextSearch.m"; sourceTree = "<group>"; };
 		277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Geo.h"; sourceTree = "<group>"; };
@@ -1494,6 +1546,7 @@
 		2753154D14ACEF350065964D /* vendor */ = {
 			isa = PBXGroup;
 			children = (
+				277B5C5E1821A8370088881E /* yajl */,
 				27F0746C11CD51A200E9A2AB /* FMDB */,
 				27F0749A11CD5B1200E9A2AB /* MYUtilities */,
 				2753154E14ACEF5C0065964D /* CocoaHTTPServer */,
@@ -1666,6 +1719,58 @@
 				2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */,
 			);
 			name = Auth;
+			sourceTree = "<group>";
+		};
+		277B5C5E1821A8370088881E /* yajl */ = {
+			isa = PBXGroup;
+			children = (
+				277B5DC01821A8B60088881E /* include */,
+				277B5C701821A8370088881E /* README */,
+				277B5C741821A8370088881E /* src */,
+			);
+			path = yajl;
+			sourceTree = "<group>";
+		};
+		277B5C741821A8370088881E /* src */ = {
+			isa = PBXGroup;
+			children = (
+				277B5C7D1821A8370088881E /* yajl.c */,
+				277B5C801821A8370088881E /* yajl_alloc.c */,
+				277B5C811821A8370088881E /* yajl_alloc.h */,
+				277B5C821821A8370088881E /* yajl_buf.c */,
+				277B5C831821A8370088881E /* yajl_buf.h */,
+				277B5C841821A8370088881E /* yajl_bytestack.h */,
+				277B5C851821A8370088881E /* yajl_encode.c */,
+				277B5C861821A8370088881E /* yajl_encode.h */,
+				277B5C871821A8370088881E /* yajl_gen.c */,
+				277B5C881821A8370088881E /* yajl_lex.c */,
+				277B5C891821A8370088881E /* yajl_lex.h */,
+				277B5C8A1821A8370088881E /* yajl_parser.c */,
+				277B5C8B1821A8370088881E /* yajl_parser.h */,
+				277B5C8D1821A8370088881E /* yajl_version.c */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		277B5DC01821A8B60088881E /* include */ = {
+			isa = PBXGroup;
+			children = (
+				277B5DC11821A8B60088881E /* yajl */,
+			);
+			name = include;
+			path = "build/yajl-2.0.5/include";
+			sourceTree = "<group>";
+		};
+		277B5DC11821A8B60088881E /* yajl */ = {
+			isa = PBXGroup;
+			children = (
+				277B5DC21821A8B60088881E /* yajl_common.h */,
+				277B5DC31821A8B60088881E /* yajl_gen.h */,
+				277B5DC41821A8B60088881E /* yajl_parse.h */,
+				277B5DC51821A8B60088881E /* yajl_tree.h */,
+				277B5DC61821A8B60088881E /* yajl_version.h */,
+			);
+			path = yajl;
 			sourceTree = "<group>";
 		};
 		277EF3A817F4DF3700F7B7F7 /* sqlite3-unicodesn */ = {
@@ -1855,6 +1960,8 @@
 				27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */,
 				27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */,
 				27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */,
+				277B5DCC1821AE990088881E /* CBLJSONReader.h */,
+				277B5DCD1821AE990088881E /* CBLJSONReader.m */,
 				27B0B79C1492932700A817AD /* CBLBase64.h */,
 				27B0B79D1492932700A817AD /* CBLBase64.m */,
 				277EF3A317F4DF0600F7B7F7 /* CBLGeometry.h */,
@@ -2217,9 +2324,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				270B3E201489390000E0A926 /* CouchbaseLite.h in Headers */,
+				277B5D331821A8380088881E /* yajl_bytestack.h in Headers */,
 				27821BBE14906FB60099B373 /* CouchbaseLitePrefix.h in Headers */,
 				279EB2D11491442500E74185 /* CBLInternal.h in Headers */,
 				272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */,
+				277B5DCB1821A8B60088881E /* yajl_version.h in Headers */,
 				279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */,
 				27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */,
 				27B0B79E1492932800A817AD /* CBLBase64.h in Headers */,
@@ -2228,7 +2337,9 @@
 				27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */,
 				279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */,
 				279906EE149ABFC2003D4338 /* CBLBatcher.h in Headers */,
+				277B5D3E1821A8380088881E /* yajl_parser.h in Headers */,
 				277EF3A517F4DF0600F7B7F7 /* CBLGeometry.h in Headers */,
+				277B5DCA1821A8B60088881E /* yajl_tree.h in Headers */,
 				27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
 				2753156E14ACEFC90065964D /* DDData.h in Headers */,
 				2753157214ACEFC90065964D /* DDNumber.h in Headers */,
@@ -2242,6 +2353,7 @@
 				2711CDFD14C7590A00505D55 /* CBLDatabase+Attachments.h in Headers */,
 				2711CE0014C7595900505D55 /* CBLDatabase+Insertion.h in Headers */,
 				2773ADC714BD1EB80027A292 /* CBLDatabase+LocalDocs.h in Headers */,
+				277B5D321821A8380088881E /* yajl_buf.h in Headers */,
 				2711CE0314C759BD00505D55 /* CBLDatabase+Replication.h in Headers */,
 				277EF41017F4DF3700F7B7F7 /* fts3_unicodesn.h in Headers */,
 				270B3E2B1489581E00E0A926 /* CBL_Puller.h in Headers */,
@@ -2249,6 +2361,7 @@
 				27821BB7148E7D6F0099B373 /* CBL_Replicator.h in Headers */,
 				270B3E3914898DF200E0A926 /* CBL_Revision.h in Headers */,
 				270B3E251489392C00E0A926 /* CBL_Router.h in Headers */,
+				277B5D2F1821A8380088881E /* yajl_alloc.h in Headers */,
 				270B3E241489392600E0A926 /* CBL_Server.h in Headers */,
 				270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */,
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
@@ -2266,6 +2379,7 @@
 				2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */,
 				2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */,
 				275315A214ACEFC90065964D /* WebSocket.h in Headers */,
+				277B5D3B1821A8380088881E /* yajl_lex.h in Headers */,
 				275315AB14ACF00B0065964D /* GCDAsyncSocket.h in Headers */,
 				275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */,
 				275315C014ACF0330065964D /* DDASLLogger.h in Headers */,
@@ -2275,6 +2389,7 @@
 				27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */,
 				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
+				277B5DC91821A8B60088881E /* yajl_parse.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
 				279CE40014D749A7009F3FA6 /* CBLMultipartReader.h in Headers */,
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
@@ -2289,6 +2404,7 @@
 				279C7E2E14F424090004A1E8 /* CBLSequenceMap.h in Headers */,
 				272B85141523691700A90CB2 /* CBLJSON.h in Headers */,
 				27ADC079152502EE001ABC1D /* CBLMultipartDocumentReader.h in Headers */,
+				277B5DC71821A8B60088881E /* yajl_common.h in Headers */,
 				278B0CA0152A8B1900577747 /* CBLCanonicalJSON.h in Headers */,
 				278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */,
 				277EF41117F4DF3700F7B7F7 /* fts3Int.h in Headers */,
@@ -2296,7 +2412,9 @@
 				27F128B1156AC1CA008465C2 /* CBLOAuth1Authorizer.h in Headers */,
 				270F5705156AE0BF000FEB8F /* CBLAuthorizer.h in Headers */,
 				27ED8630157D0FC600712B33 /* CBLDocument.h in Headers */,
+				277B5D361821A8380088881E /* yajl_encode.h in Headers */,
 				27DA42F8158E66DD00F9E7B5 /* CBLRevision.h in Headers */,
+				277B5DC81821A8B60088881E /* yajl_gen.h in Headers */,
 				27DA42FD158E7D3500F9E7B5 /* CBLDatabase.h in Headers */,
 				27DA4308158FA35600F9E7B5 /* CBLCache.h in Headers */,
 				27DA4312158FB79F00F9E7B5 /* CBLQuery.h in Headers */,
@@ -2311,6 +2429,7 @@
 				270D6FC1164484190081812D /* CBLSocketChangeTracker.h in Headers */,
 				275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */,
 				2776A59116A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
+				277B5DCE1821AE990088881E /* CBLJSONReader.h in Headers */,
 				2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */,
 				271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */,
 			);
@@ -2863,6 +2982,7 @@
 				270B3E2C1489581E00E0A926 /* CBL_Puller.m in Sources */,
 				270B3E3A14898DF200E0A926 /* CBL_Revision.m in Sources */,
 				272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
+				277B5D371821A8380088881E /* yajl_gen.c in Sources */,
 				270B3E3F148D7F0000E0A926 /* CBL_Pusher.m in Sources */,
 				277EF45917F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */,
 				277EF45317F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
@@ -2915,16 +3035,21 @@
 				27E7FAED155D78DA0025F93A /* CBLChangeTracker_Tests.m in Sources */,
 				27FFE20A17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
+				277B5D301821A8380088881E /* yajl_buf.c in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
+				277B5D291821A8380088881E /* yajl.c in Sources */,
 				277EF47717F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
 				27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */,
+				277B5D411821A8380088881E /* yajl_version.c in Sources */,
 				27DA42F9158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				277EF44D17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
 				27DA42FE158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
+				277B5D341821A8380088881E /* yajl_encode.c in Sources */,
 				27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */,
 				277EF44A17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
+				277B5DCF1821AE990088881E /* CBLJSONReader.m in Sources */,
 				277EF43817F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
@@ -2935,6 +3060,7 @@
 				277EF47D17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
 				277EF48617F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
 				277EF41817F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
+				277B5D391821A8380088881E /* yajl_lex.c in Sources */,
 				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
 				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
 				277EF43517F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
@@ -2943,7 +3069,9 @@
 				2753160014ACF9330065964D /* Logging.m in Sources */,
 				277EF39E17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
 				277EF44117F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
+				277B5D3C1821A8380088881E /* yajl_parser.c in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
+				277B5D2D1821A8380088881E /* yajl_alloc.c in Sources */,
 				277EF46B17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
 				277EF46217F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
@@ -3056,6 +3184,7 @@
 				27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */,
 				27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */,
 				27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */,
+				277B5DD01821AE990088881E /* CBLJSONReader.m in Sources */,
 				277EF48117F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
 				277EF48717F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
@@ -3065,6 +3194,7 @@
 				277EF43C17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
 				27B0B7D51492B88F00A817AD /* CBL_Replicator.m in Sources */,
 				27B0B7D61492B8A200A817AD /* CBL_Puller.m in Sources */,
+				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
 				27B0B7D71492B8A200A817AD /* CBL_Pusher.m in Sources */,
 				27B0B7D81492B8A200A817AD /* CBLChangeTracker.m in Sources */,
 				277EF47517F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
@@ -3073,6 +3203,8 @@
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
 				277EF44217F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
 				279906F1149ABFC2003D4338 /* CBLBatcher.m in Sources */,
+				277B5D2A1821A8380088881E /* yajl.c in Sources */,
+				277B5D351821A8380088881E /* yajl_encode.c in Sources */,
 				277EF45417F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
 				274C391F149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
 				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
@@ -3103,8 +3235,10 @@
 				277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
 				277EF43617F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
 				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
+				277B5D311821A8380088881E /* yajl_buf.c in Sources */,
 				277EF45117F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
+				277B5D3A1821A8380088881E /* yajl_lex.c in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				277EF44517F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */,
 				270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
@@ -3117,11 +3251,13 @@
 				277EF47B17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */,
 				277EF43F17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */,
 				277EF43017F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
+				277B5D381821A8380088881E /* yajl_gen.c in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				277EF40D17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
 				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
+				277B5D421821A8380088881E /* yajl_version.c in Sources */,
 				27DA434C15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27DA435915918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435C15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
@@ -3153,6 +3289,7 @@
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				277EF46C17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
+				277B5D3D1821A8380088881E /* yajl_parser.c in Sources */,
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
@@ -3483,6 +3620,11 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
@@ -3506,6 +3648,11 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
@@ -3772,6 +3919,11 @@
 				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
@@ -3791,6 +3943,11 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;

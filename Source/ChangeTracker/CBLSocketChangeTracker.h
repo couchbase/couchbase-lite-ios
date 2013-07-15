@@ -21,7 +21,6 @@
     NSURLCredential* _credential;
     CFAbsoluteTime _startTime;
     bool _gotResponseHeaders;
-    bool _parsing;
     bool _inputAvailable;
     bool _atEOF;
 }
