@@ -22,6 +22,7 @@
 #import "CBLManager+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
+#import "CBLJSViewCompiler.h"
 
 #if DEBUG
 #import "Logging.h"
@@ -157,6 +158,8 @@ int main (int argc, const char * argv[])
         EnableLog(YES);
         EnableLogTo(CBLListener, YES);
 #endif
+
+        [CBLView setCompiler: [[CBLJSViewCompiler alloc] init]];
 
         NSString* dataPath = nil;
         UInt16 port = kPortNumber;
