@@ -39,6 +39,8 @@
 
 #define kRetryDelay 60.0
 
+#define kDefaultRequestTimeout 60.0
+
 
 NSString* CBL_ReplicatorProgressChangedNotification = @"CBL_ReplicatorProgressChanged";
 NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
@@ -552,6 +554,15 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #pragma mark - HTTP REQUESTS:
 
 
+- (NSTimeInterval) requestTimeout {
+    id timeoutObj = _options[@"connection_timeout"];    // CouchDB specifies this name
+    if (!timeoutObj)
+        return kDefaultRequestTimeout;
+    NSTimeInterval timeout = [timeoutObj doubleValue] / 1000.0;
+    return timeout > 0.0 ? timeout : kDefaultRequestTimeout;
+}
+
+
 - (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)path
                                      body: (id)body
@@ -583,6 +594,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         }
         onCompletion(result, error);
     }];
+    req.timeoutInterval = self.requestTimeout;
     req.authorizer = _authorizer;
     [self addRemoteRequest: req];
     [req start];

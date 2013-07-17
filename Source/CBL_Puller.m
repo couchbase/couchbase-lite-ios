@@ -394,6 +394,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         }
      ];
     [self addRemoteRequest: dl];
+    dl.timeoutInterval = self.requestTimeout;
     dl.authorizer = _authorizer;
     [dl start];
 }

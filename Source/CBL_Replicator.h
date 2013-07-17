@@ -116,4 +116,8 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** JSON-compatible dictionary of task info, as seen in _active_tasks REST API */
 @property (readonly) NSDictionary* activeTaskInfo;
 
+/** Timeout interval for HTTP requests sent by this replicator.
+    (Derived from options key "connection_timeout", in milliseconds.) */
+@property (readonly) NSTimeInterval requestTimeout;
+
 @end
