@@ -512,6 +512,9 @@ static NSArray* splitPath( NSURL* url ) {
         return;
     }
 
+    if (from == 0 && to == bodyLength - 1)
+        return; // No-op; entire body still causes a 200 response
+
     body = [body subdataWithRange: NSMakeRange(from, to - from + 1)];
     _response.body = [CBL_Body bodyWithJSON: body];  // not actually JSON
 
@@ -536,9 +539,10 @@ static NSArray* splitPath( NSURL* url ) {
     if (accept && [accept rangeOfString: @"*/*"].length == 0) {
         NSString* responseType = _response.baseContentType;
         if (responseType && [accept rangeOfString: responseType].length == 0) {
-            LogTo(CBL_Router, @"Error kCBLStatusNotAcceptable: Can't satisfy request Accept: %@", accept);
-            _response.internalStatus = kCBLStatusNotAcceptable;
+            LogTo(CBL_Router, @"Error kCBLStatusNotAcceptable: Can't satisfy request Accept: %@"
+                               " (actual type is %@)", accept, responseType);
             [_response reset];
+            _response.internalStatus = kCBLStatusNotAcceptable;
         }
     }
 

@@ -178,11 +178,6 @@
         range.length = MIN(length, bytesAvailable);
         NSData* result = [_data subdataWithRange: range];
         _offset += range.length;
-        if (range.length == bytesAvailable) {
-            // Client has read all of the available data, so we can discard it
-            _dataOffset += _data.length;
-            _data = nil;
-        }
         LogTo(CBLListenerVerbose, @"%@ sending %u bytes", self, (unsigned)result.length);
         return result;
     }

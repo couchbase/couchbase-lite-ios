@@ -814,11 +814,34 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                body: (CBL_Body*)body
            deleting: (BOOL)deleting
 {
+    if (docID) {
+        // On PUT/DELETE, get revision ID from either ?rev= query, If-Match: header, or doc body:
+        NSString* revParam = [self query: @"rev"];
+        NSString* ifMatch = [_request valueForHTTPHeaderField: @"If-Match"];
+        if (ifMatch) {
+            if (!revParam)
+                revParam = ifMatch;
+            else if (!$equal(revParam, ifMatch))
+                return 400;
+        }
+        if (revParam) {
+            id revProp = body[@"_rev"];
+            if (!revProp) {
+                // No _rev property in body, so use ?rev= query param instead:
+                NSMutableDictionary* props = body.properties.mutableCopy;
+                props[@"_rev"] = revParam;
+                body = [CBL_Body bodyWithProperties: props];
+            } else if (!$equal(revProp, revParam)) {
+                return 400; // mismatch between _rev and rev
+            }
+        }
+    }
+
     CBL_Revision* rev;
     CBLStatus status = [self update: db docID: docID body: body
-                          deleting: deleting
-                     allowConflict: NO
-                        createdRev: &rev];
+                           deleting: deleting
+                      allowConflict: NO
+                         createdRev: &rev];
     if (status < 300) {
         [self cacheWithEtag: rev.revID];        // set ETag
         if (!deleting) {
