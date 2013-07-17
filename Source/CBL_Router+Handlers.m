@@ -824,7 +824,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             else if (!$equal(revParam, ifMatch))
                 return 400;
         }
-        if (revParam) {
+        if (revParam && body) {
             id revProp = body[@"_rev"];
             if (!revProp) {
                 // No _rev property in body, so use ?rev= query param instead:
