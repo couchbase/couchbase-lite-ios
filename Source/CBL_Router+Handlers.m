@@ -1010,6 +1010,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return kCBLStatusBadRequest;
     if (keys)
         options.keys = keys;
+    if (!view.reduceBlock)
+        options.reduce = false;
     
     status = [view updateIndex];
     if (status >= kCBLStatusBadRequest)

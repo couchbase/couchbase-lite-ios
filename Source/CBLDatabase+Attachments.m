@@ -447,6 +447,8 @@
 }
 
 
+/** Given a revision, read its _attachments dictionary (if any), convert each attachment to a
+    CBL_Attachment object, and return a dictionary mapping names->CBL_Attachments. */
 - (NSDictionary*) attachmentsFromRevision: (CBL_Revision*)rev
                                    status: (CBLStatus*)outStatus
 {
@@ -489,7 +491,19 @@
             if (CBLStatusIsError(status))
                 break;
         } else {
-            // This item is just a stub; skip it
+            // This item is just a stub; validate and skip it
+            if (![attachInfo[@"stub"] isEqual: $true]) {
+                *outStatus = kCBLStatusBadAttachment;
+                return nil;
+            }
+            id revPosObj = attachInfo[@"revpos"];
+            if (revPosObj) {
+                int revPos = [$castIf(NSNumber, revPosObj) intValue];
+                if (revPos == 0 || (unsigned)revPos > rev.generation) {
+                    *outStatus = kCBLStatusBadAttachment;
+                    return nil;
+                }
+            }
             continue;
         }
         
@@ -583,6 +597,8 @@
 }
 
 
+/** Replaces or removes a single attachment in a document, by saving a new revision whose only
+    change is the value of the attachment. */
 - (CBL_Revision*) updateAttachment: (NSString*)filename
                             body: (CBL_BlobStoreWriter*)body
                             type: (NSString*)contentType
@@ -627,7 +643,7 @@
                                       {@"content_type", contentType},
                                       {@"encoding", encodingName});
     } else {
-        if (!attachments[filename]) {
+        if (oldRevID && !attachments[filename]) {
             *outStatus = kCBLStatusAttachmentNotFound;
             return nil;
         }

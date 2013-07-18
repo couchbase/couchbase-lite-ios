@@ -11,7 +11,7 @@
 typedef enum {
     kCBLStatusOK             = 200,
     kCBLStatusCreated        = 201,
-    kCBLStatusAccepted       = 206,
+    kCBLStatusAccepted       = 202,
     
     kCBLStatusNotModified    = 304,
     

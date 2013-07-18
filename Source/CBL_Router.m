@@ -202,7 +202,7 @@
     options->updateSeq = [self boolQuery: @"update_seq"];
     if ([self query: @"inclusive_end"])
         options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
-    options->reduce = [self boolQuery: @"reduce"];
+    options->reduce = [self query: @"reduce"] ? [self boolQuery: @"reduce"] : true;
     options->group = [self boolQuery: @"group"];
     options->content = [self contentOptions];
     

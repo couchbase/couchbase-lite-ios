@@ -42,7 +42,7 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kCBLStatusAttachmentNotFound,   404, "Attachment not found"},
     {kCBLStatusBadJSON,              400, "Invalid JSON"},
     {kCBLStatusBadID,                400, "Invalid database/document/revision ID"},
-    {kCBLStatusBadParam,             400, "Invalid parameter in JSON body"},
+    {kCBLStatusBadParam,             400, "Invalid parameter in HTTP query or JSON body"},
     {kCBLStatusDeleted,              404, "deleted"},
 
     {kCBLStatusUpstreamError,        502, "Invalid response from remote replication server"},
