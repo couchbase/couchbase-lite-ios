@@ -393,6 +393,7 @@
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
         Assert(docID);
         newRev = [oldRev copyWithDocID: docID revID: newRevID];
+        [CBLDatabase stubOutAttachments: attachments inRevision: newRev];
         
         // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
         // is missing due to compaction or replication.
@@ -563,11 +564,13 @@
                     // the latest local revision (this is to copy attachments from):
                     CBLStatus status;
                     NSDictionary* attachments = [self attachmentsFromRevision: rev status: &status];
-                    if (attachments)
+                    if (attachments) {
                         status = [self processAttachments: attachments
                                               forRevision: rev
                                        withParentSequence: localParentSequence];
-                    if (CBLStatusIsError(status)) 
+                        [CBLDatabase stubOutAttachments: attachments inRevision: rev];
+                    }
+                    if (CBLStatusIsError(status))
                         return status;
                 }
             }

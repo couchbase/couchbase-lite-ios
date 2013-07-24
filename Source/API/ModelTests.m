@@ -235,6 +235,12 @@ TestCase(API_ModelAttachments) {
         [model addAttachment: attachment named: @"Caption.txt"];
         CAssert([model save: &error], @"Save after adding attachment failed: %@", error);
 
+        // Ensure that document's attachment metadata doesn't have the "follows" property set [#63]
+        NSDictionary* meta = model.document[@"_attachments"][@"Caption.txt"];
+        CAssertEqual(meta[@"content_type"], @"text/plain");
+        CAssertEqual(meta[@"length"], @24);
+        CAssertNil(meta[@"follows"]);
+
         model.number = 23;
         CAssert([model save: &error], @"Save after updating number failed: %@", error);
     }

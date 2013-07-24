@@ -45,6 +45,20 @@
 #define kBigAttachmentLength (16*1024)
 
 
+static NSString* blobKeyToDigest(CBLBlobKey key) {
+    return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key length: sizeof(key)]];
+}
+
+static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
+    if (![digest hasPrefix: @"sha1-"])
+        return false;
+    NSData* keyData = [CBLBase64 decode: [digest substringFromIndex: 5]];
+    if (!keyData || keyData.length != sizeof(CBLBlobKey))
+        return nil;
+    *key = *(CBLBlobKey*)keyData.bytes;
+    return true;
+}
+
 
 @implementation CBLDatabase (Attachments)
 
@@ -290,7 +304,7 @@
     NSMutableDictionary* attachments = $mdict();
     do {
         NSData* keyData = [r dataNoCopyForColumnIndex: 1];
-        NSString* digestStr = [@"sha1-" stringByAppendingString: [CBLBase64 encode: keyData]];
+        NSString* digestStr = blobKeyToDigest(*(CBLBlobKey*)keyData.bytes);
         CBLAttachmentEncoding encoding = [r intForColumnIndex: 3];
         UInt64 length = [r longLongIntForColumnIndex: 4];
         UInt64 encodedLength = [r longLongIntForColumnIndex: 5];
@@ -338,13 +352,10 @@
 
 - (NSURL*) fileForAttachmentDict: (NSDictionary*)attachmentDict
 {
-    NSString* digest = attachmentDict[@"digest"];
-    if (![digest hasPrefix: @"sha1-"])
+    CBLBlobKey key;
+    if (!digestToBlobKey(attachmentDict[@"digest"], &key))
         return nil;
-    NSData* keyData = [CBLBase64 decode: [digest substringFromIndex: 5]];
-    if (!keyData)
-        return nil;
-    return [NSURL fileURLWithPath: [_attachments pathForKey: *(CBLBlobKey*)keyData.bytes]];
+    return [NSURL fileURLWithPath: [_attachments pathForKey: key]];
 }
 
 
@@ -381,6 +392,31 @@
         return YES;
     }
     return NO;
+}
+
+
++ (void) stubOutAttachments: (NSDictionary*)attachments
+                 inRevision: (CBL_Revision*)rev
+{
+    [self mutateAttachmentsIn: rev
+                    withBlock: ^NSDictionary *(NSString *name, NSDictionary *attachment) {
+        if (attachment[@"follows"] || attachment[@"data"]) {
+            NSMutableDictionary* editedAttachment = [attachment mutableCopy];
+            [editedAttachment removeObjectForKey: @"follows"];
+            [editedAttachment removeObjectForKey: @"data"];
+            editedAttachment[@"stub"] = $true;
+            if (!editedAttachment[@"revpos"])
+                editedAttachment[@"revpos"] = @(rev.generation);
+
+            CBL_Attachment* attachmentObject = attachments[name];
+            if (attachmentObject) {
+                editedAttachment[@"length"] = @(attachmentObject->length);
+                editedAttachment[@"digest"] = blobKeyToDigest(attachmentObject->blobKey);
+            }
+            attachment = editedAttachment;
+        }
+        return attachment;
+    }];
 }
 
 
@@ -499,7 +535,7 @@
             id revPosObj = attachInfo[@"revpos"];
             if (revPosObj) {
                 int revPos = [$castIf(NSNumber, revPosObj) intValue];
-                if (revPos == 0 || (unsigned)revPos > rev.generation) {
+                if (revPos <= 0) {
                     *outStatus = kCBLStatusBadAttachment;
                     return nil;
                 }
@@ -633,8 +669,7 @@
         attachments = $mdict();
     if (body) {
         CBLBlobKey key = body.blobKey;
-        NSString* digest = [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key
-                                                                        length: sizeof(key)]];
+        NSString* digest = blobKeyToDigest(key);
         [self rememberAttachmentWriter: body forDigest: digest];
         NSString* encodingName = (encoding == kCBLAttachmentEncodingGZIP) ? @"gzip" : nil;
         attachments[filename] = $dict({@"digest", digest},

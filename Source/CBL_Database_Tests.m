@@ -637,6 +637,12 @@ TestCase(CBL_Database_PutAttachment) {
             prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
 
+    CAssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                                {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
+                                                                {@"length", @(27)},
+                                                                {@"stub", $true},
+                                                                {@"revpos", @1})}));
+
     // Examine the attachment store:
     CAssertEq(db.attachmentStore.count, 1u);
     
