@@ -295,6 +295,16 @@
     NSUInteger nAttachmentsInDoc = 0;
     for (NSString* attachmentName in attachments) {
         NSMutableDictionary* attachment = attachments[attachmentName];
+
+        // Get the length:
+        NSNumber* lengthObj = attachment[@"encoded_length"] ?: attachment[@"length"];
+        if (![lengthObj isKindOfClass: [NSNumber class]]) {
+            Warn(@"%@: Attachment '%@' has invalid length property %@",
+                 self, attachmentName, lengthObj);
+            return NO;
+        }
+        UInt64 length = lengthObj.unsignedLongLongValue;
+
         if ([attachment[@"follows"] isEqual: $true]) {
             // Check that each attachment in the JSON corresponds to an attachment MIME body.
             // Look up the attachment by either its MIME Content-Disposition header or MD5 digest:
@@ -330,15 +340,16 @@
             }
             
             // Check that the length matches:
-            NSNumber* lengthObj = attachment[@"encoded_length"]
-                               ?: attachment[@"length"];
-            if (!lengthObj || writer.length != [$castIf(NSNumber, lengthObj) unsignedLongLongValue]) {
-                Warn(@"%@: Attachment '%@' has invalid length %@ (should be %llu)",
+            if (writer.length != length) {
+                Warn(@"%@: Attachment '%@' has incorrect length field %@ (should be %llu)",
                     self, attachmentName, lengthObj, writer.length);
                 return NO;
             }
             
             ++nAttachmentsInDoc;
+        } else if (attachment[@"data"] != nil && length > 1000) {
+            // This isn't harmful but it's quite inefficient of the server
+            Warn(@"%@: Attachment '%@' sent inline (length=%llu)", self, attachmentName, length);
         }
     }
     if (nAttachmentsInDoc < _attachmentsByDigest.count) {
