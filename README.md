@@ -1,13 +1,10 @@
-# Couchbase Lite #
-## (aka TouchDB 1.5)
+# Couchbase Lite 
 
-**Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine, a continuation of the TouchDB development process. 
+**Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine. 
 
 Latency matters a lot to users so a local database takes frustration out of the equation. It’s got JSON documents, and the same map reduce as Couchbase Server, in a pint-sized edition.
 
 Native code for iOS and Android. Less than 1 MB optimized for quick launch and snappy user experience on occasionally connected devices when data matters.
-
-Think of it this way: If [Apache CouchDB](http://couchdb.apache.org) is MySQL, and [Couchbase Server](http://www.couchbase.com/couchbase-server/overview) is Oracle, then Couchbase Lite is [SQLite]().
 
 **Lightweight** means:
 
@@ -19,23 +16,20 @@ Think of it this way: If [Apache CouchDB](http://couchdb.apache.org) is MySQL, a
 
 **Document-oriented** means:
 
-* Like other modern databases (Couchbase, CouchDB, MongoDB...) it stores records in flexible [JSON](http://json.org) format instead of requiring predefined schemas or normalization.
+* Like Couchbase Server, it stores records in flexible [JSON](http://json.org) format instead of requiring predefined schemas or normalization.
 * Records/documents can have arbitrary-sized binary attachments, like multimedia content.
 * Your application's data format can evolve over time without any need for explicit migrations.
 * Map/reduce indexing allows fast lookups without needing to use special query languages.
 
 **[Syncable](http://syncable.org/)** means:
 
-* Any two copies of a database can be brought into sync via an efficient, reliable, proven REST-based [protocol][23] pioneered by Apache CouchDB.
-* Interoperates with CouchDB, BigCouch and PouchDB, and with hosted services like [Cloudant](http://cloudant.com) and [IrisCouch](http://iriscouch.com).
+* Any two copies of a database can be brought into sync via an efficient, reliable, proven REST-based [protocol][23].
 * Sync can be on-demand or continuous (with a latency of a few seconds).
 * The sync engine supports intermittent and unreliable network connections.
 * Conflicts can be detected and resolved, with app logic in full control of merging.
 * Revision trees allow for complex replication topologies, including server-to-server (for multiple data centers) and peer-to-peer, without data loss or false conflicts.
 
 The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional internal REST API adapter allows it to be called from other languages like JavaScript and C#, for use in apps built with PhoneGap, Titanium or MonoTouch.
-
-**Couchbase Lite is still in development, first alpha release soon.** It's not finished or production-quality yet! If you are looking for a stable release suitable for use in shipping apps, please use [TouchDB][21], the earlier 1.0 version. The API is slightly different, but upgrading to Couchbase Lite will be fairly easy. (Why the name change? The [project history][22] explains it.)
 
 ## More Information
 
@@ -50,7 +44,7 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 
  * **Mac OS X** -- 10.7.2 or higher.
  * **iOS** -- 5.0 or higher.
- * **Android / Java** -- coming up. (An incomplete [Android version of Couchbase Lite][11] is available.)
+ * **Android / Java** -- The [Android version of Couchbase Lite][11] is here.
 
 ## Requirements ##
 
