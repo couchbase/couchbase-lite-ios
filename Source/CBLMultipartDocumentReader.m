@@ -312,14 +312,14 @@
             CBL_BlobStoreWriter* writer = _attachmentsByName[attachmentName];
             if (writer) {
                 // Identified the MIME body by the filename in its Disposition header:
-                NSString* actualDigest = writer.MD5DigestString;
-                if (digest && !$equal(digest, actualDigest) 
-                           && !$equal(digest, writer.SHA1DigestString)) {
-                    Warn(@"%@: Attachment '%@' has incorrect MD5 digest (%@; should be %@)",
-                         self, attachmentName, digest, actualDigest);
+                NSString* actualMD5Digest = writer.MD5DigestString;
+                NSString* actualSHADigest = writer.SHA1DigestString;
+                if (digest && !$equal(digest, actualMD5Digest) && !$equal(digest, actualSHADigest)) {
+                    Warn(@"%@: Attachment '%@' has incorrect digest property (%@; should be %@ or %@)",
+                         self, attachmentName, digest, actualMD5Digest, actualSHADigest);
                     return NO;
                 }
-                attachment[@"digest"] = actualDigest;
+                attachment[@"digest"] = actualMD5Digest;
             } else if (digest) {
                 // Else look up the MIME body by its computed digest:
                 writer = _attachmentsByDigest[digest];
