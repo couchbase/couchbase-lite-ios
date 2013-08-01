@@ -64,6 +64,12 @@
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[_id=\"%@\"]", self.class, _document[@"_id"]];
+}
+
+
+
 @synthesize status=_status, document=_document;
 
 
