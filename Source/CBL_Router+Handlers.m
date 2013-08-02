@@ -111,11 +111,16 @@
     SequenceNumber update_seq = db.lastSequenceNumber;
     if (num_docs == NSNotFound || update_seq == NSNotFound)
         return db.lastDbError;
+    UInt64 startTime = round(db.startTime.timeIntervalSince1970 * 1.0e6); // it's in microseconds
     _response.bodyObject = $dict({@"db_name", db.name},
                                  {@"db_uuid", db.publicUUID},
                                  {@"doc_count", @(num_docs)},
                                  {@"update_seq", @(update_seq)},
-                                 {@"disk_size", @(db.totalDataSize)});
+                                 {@"committed_update_seq", @(update_seq)},
+                                 {@"purge_seq", @(0)}, // TODO: Implement
+                                 {@"disk_size", @(db.totalDataSize)},
+                                 {@"instance_start_time", @(startTime)},
+                                 {@"disk_format_version", @(db.schemaVersion)});
     return kCBLStatusOK;
 }
 

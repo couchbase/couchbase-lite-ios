@@ -52,6 +52,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return _attachments;
 }
 
+- (NSDate*) startTime {
+    return _startTime;
+}
+
+
 - (CBL_Shared*)shared {
 #if DEBUG
     if (_manager)
@@ -101,6 +106,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #endif
         _fmdb.traceExecution = WillLogTo(CBL_DatabaseVerbose);
         _thread = [NSThread currentThread];
+        _startTime = [NSDate date];
 
         if (0) {
             // Appease the static analyzer by using these category ivars in this source file:
@@ -135,6 +141,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         }
     }
     return YES;
+}
+
+
+- (int) schemaVersion {
+    return [_fmdb intForQuery: @"PRAGMA user_version"];
 }
 
 
@@ -175,7 +186,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return NO;
     
     // Check the user_version number we last stored in the database:
-    int dbVersion = [_fmdb intForQuery: @"PRAGMA user_version"];
+    int dbVersion = self.schemaVersion;
     
     // Incompatible version changes increment the hundreds' place:
     if (dbVersion >= 100) {

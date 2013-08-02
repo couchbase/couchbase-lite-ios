@@ -73,6 +73,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     NSMutableArray* _activeReplicators;
     NSMutableArray* _changesToNotify;
     bool _postingChangeNotifications;
+    NSDate* _startTime;
 #if DEBUG
     CBL_Shared* _debug_shared;
 #endif
@@ -111,6 +112,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 @property (nonatomic, readonly) BOOL exists;
 @property (nonatomic, readonly) UInt64 totalDataSize;
+@property (nonatomic, readonly) int schemaVersion;
+@property (nonatomic, readonly) NSDate* startTime;
 
 /** The error status of the last SQLite call: Generally kCBLStatusDBBusy or kCBLStatusDBError.
     Always returns some error code, never kCBLStatusOK! It's assumed that you're calling this
