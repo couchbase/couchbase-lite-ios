@@ -396,6 +396,33 @@ TestCase(ParseReplicatorProperties) {
     CAssertEq(isPush, NO);
     CAssertEq(createTarget, NO);
     CAssertEqual(headers, nil);
+
+    // Local-to-local replication:
+    props = $dict({@"source", @"foo"},
+                  {@"target", @"bar"});
+    CAssertEq([dbManager parseReplicatorProperties: props
+                                        toDatabase: &db
+                                            remote: &remote
+                                            isPush: &isPush
+                                      createTarget: &createTarget
+                                           headers: &headers
+                                        authorizer: NULL],
+              404);
+    props = $dict({@"source", @"foo"},
+                  {@"target", @"bar"}, {@"create_target", $true});
+    CAssertEq([dbManager parseReplicatorProperties: props
+                                        toDatabase: &db
+                                            remote: &remote
+                                            isPush: &isPush
+                                      createTarget: &createTarget
+                                           headers: &headers
+                                        authorizer: NULL],
+              200);
+    CAssertEq(db, localDB);
+    CAssertEqual(remote, $url(@"http://lite.couchbase./bar/"));
+    CAssertEq(isPush, YES);
+    CAssertEq(createTarget, YES);
+    CAssertEqual(headers, nil);
     
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
                                     {@"consumer_key", @"consumer_key"},

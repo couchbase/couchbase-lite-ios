@@ -428,14 +428,33 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     *outIsPush = NO;
     CBLDatabase* db = nil;
     NSDictionary* remoteDict = nil;
+    BOOL targetIsLocal = [CBLManager isValidDatabaseName: target];
     if ([CBLManager isValidDatabaseName: source]) {
+        // Push replication:
+        if (targetIsLocal) {
+            // This is a local-to-local replication. Turn the remote into a full URL to keep the
+            // replicator happy:
+            NSError* error;
+            CBLDatabase* targetDb;
+            if (*outCreateTarget)
+                targetDb = [self createDatabaseNamed: target error: &error];
+            else
+                targetDb = [self databaseNamed: target error: &error];
+            if (!targetDb)
+                return CBLStatusFromNSError(error, kCBLStatusBadRequest);
+            NSURL* targetURL = targetDb.internalURL;
+            if (!targetURL)
+                return kCBLStatusServerError;   // Listener/router framework not installed
+            NSMutableDictionary* nuTarget = [targetDict mutableCopy];
+            nuTarget[@"url"] = targetURL.absoluteString;
+            targetDict = nuTarget;
+        }
+        remoteDict = targetDict;
         if (outDatabase)
             db = self[source];
-        remoteDict = targetDict;
         *outIsPush = YES;
-    } else {
-        if (![CBLManager isValidDatabaseName: target])
-            return kCBLStatusBadID;
+    } else if (targetIsLocal) {
+        // Pull replication:
         remoteDict = sourceDict;
         if (outDatabase) {
             if (*outCreateTarget) {
@@ -446,7 +465,10 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                 db = self[target];
             }
         }
+    } else {
+        return kCBLStatusBadID;
     }
+
     NSURL* remote = [NSURL URLWithString: remoteDict[@"url"]];
     if (![@[@"http", @"https", @"cbl"] containsObject: remote.scheme.lowercaseString])
         return kCBLStatusBadRequest;
