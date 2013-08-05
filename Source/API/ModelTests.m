@@ -94,6 +94,34 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 #pragma mark - MODELS:
 
 
+TestCase(API_ModelDeleteProperty) {
+    NSArray* strings = @[@"fee", @"fie", @"foe", @"fum"];
+    NSData* data = [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding];
+
+    CBLDatabase* db = createEmptyDB();
+    TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+    model.number = 1337;
+    model.str = @"LEET";
+    model.strings = strings;
+    model.data = data;
+
+    CAssertEqual(model.str, @"LEET");
+    CAssertEqual(model.strings, strings);
+    CAssertEqual(model.data, data);
+
+    model.data = nil;
+    CAssertEqual(model.data, nil);
+    model.data = data;
+
+    NSError* error;
+    CAssert([model save: &error], @"Failed to save: %@", error);
+
+    CAssertEqual(model.data, data);
+    model.data = nil;
+    CAssertEqual(model.data, nil);      // Tests issue CouchCocoa #73
+}
+
+
 TestCase(API_SaveModel) {
     NSDate* date = [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252];
     NSArray* dates = @[date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392837521]];

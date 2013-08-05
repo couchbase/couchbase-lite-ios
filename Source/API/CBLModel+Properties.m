@@ -64,7 +64,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
 // Generic getter for a value-converted property.
 - (NSData*) getProperty: (NSString*)property withConverter: (ValueConverter)converter {
     NSData* value = _properties[property];
-    if (!value) {
+    if (!value && !_isNew && ![_changedNames containsObject: property]) { // see -getValueOfProperty:
         id rawValue = [_document propertyForKey: property];
         value = converter(rawValue);
         if (value)
