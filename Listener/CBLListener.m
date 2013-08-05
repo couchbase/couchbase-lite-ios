@@ -18,8 +18,14 @@
 #import "CBLHTTPConnection.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
+#import "Logging.h"
 
 #import "HTTPServer.h"
+#import "HTTPLogging.h"
+
+
+@interface CBLDDLogger : DDAbstractLogger
+@end
 
 
 @implementation CBLListener
@@ -32,6 +38,15 @@
     NSDictionary* _passwords;
     SecIdentityRef _SSLIdentity;
     NSArray* _SSLExtraCertificates;
+}
+
+
++ (void) initialize {
+    if (self == [CBLListener class]) {
+        if (WillLogTo(CBLListener)) {
+            [DDLog addLogger:[[CBLDDLogger alloc] init]];
+        }
+    }
 }
 
 
@@ -117,5 +132,16 @@
 @implementation CBLHTTPServer
 
 @synthesize listener=_listener, tdServer=_tdServer;
+
+@end
+
+
+
+// Adapter to output DDLog messages (from CocoaHTTPServer) via MYUtilities logging.
+@implementation CBLDDLogger
+
+- (void) logMessage:(DDLogMessage *)logMessage {
+    Log(@"%@", logMessage->logMsg);
+}
 
 @end

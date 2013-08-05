@@ -23,6 +23,7 @@
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
 #import "CBLJSViewCompiler.h"
+#import <Security/Security.h>
 
 #if DEBUG
 #import "Logging.h"
@@ -147,6 +148,7 @@ static void usage(void) {
             "\t[--user <username>]      Username for connecting to remote database\n"
             "\t[--password <password>]  Password for connecting to remote database\n"
             "\t[--realm <realm>]        HTTP realm for connecting to remote database\n"
+            "\t[--ssl <identityname>]   Identity pref name to use for SSL serving\n"
             "Runs Couchbase Lite as a faceless server.\n");
 }
 
@@ -165,6 +167,7 @@ int main (int argc, const char * argv[])
         UInt16 port = kPortNumber;
         CBLManagerOptions options = {};
         const char* replArg = NULL, *user = NULL, *password = NULL, *realm = NULL;
+        const char* identityName = NULL;
         BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
 
         for (int i = 1; i < argc; ++i) {
@@ -198,6 +201,8 @@ int main (int argc, const char * argv[])
                 password = argv[++i];
             } else if (strcmp(argv[i], "--realm") == 0) {
                 realm = argv[++i];
+            } else if (strcmp(argv[i], "--ssl") == 0) {
+                identityName = argv[++i];
             } else if (strncmp(argv[i], "-Log", 4) == 0) {
                 ++i; // Ignore MYUtilities logging flags
             } else {
@@ -228,6 +233,18 @@ int main (int argc, const char * argv[])
             NSString* password = [NSString stringWithFormat: @"%lx", random()];
             listener.passwords = @{@"cbl": password};
             Log(@"Auth required: user='cbl', password='%@'", password);
+        }
+
+        if (identityName) {
+            NSString* name = [NSString stringWithUTF8String: identityName];
+            SecIdentityRef identity = SecIdentityCopyPreferred((__bridge CFStringRef)name, NULL, NULL);
+            if (!identity) {
+                Warn(@"FATAL: Couldn't find identity pref named '%@'", name);
+                exit(1);
+            }
+            Log(@"Serving SSL with %@", identity);
+            listener.SSLIdentity = identity;
+            CFRelease(identity);
         }
 
         // Advertise via Bonjour, and set a TXT record just as an example:
