@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <Security/SecBase.h>
 @class CBLHTTPServer, CBLManager;
 
 
@@ -49,6 +50,15 @@
 
 /** Returns the password assigned to a user name, or nil if the name is not recognized. */
 - (NSString*) passwordForUser: (NSString*)username;
+
+
+/** Private key and certificate to use for incoming SSL connections.
+    If nil (the default) SSL connections are not accepted. */
+@property (nonatomic) SecIdentityRef SSLIdentity;
+
+/** Supporting certificates to use along with the SSLIdentity. Necessary if the SSL certificate
+    is not directly signed by a CA cert known to the OS. */
+@property (strong, nonatomic) NSArray* SSLExtraCertificates;
 
 
 /** Starts the listener. */

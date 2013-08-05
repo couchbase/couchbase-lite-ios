@@ -10,6 +10,7 @@
 @class CBLListener;
 
 
+/** Custom CouchbaseLite subclass of CocoaHTTPServer's HTTPConnection class. */
 @interface CBLHTTPConnection : HTTPConnection
 
 @property (readonly) CBLListener* listener;

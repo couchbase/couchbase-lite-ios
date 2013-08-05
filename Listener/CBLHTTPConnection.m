@@ -49,6 +49,19 @@
     return [self.listener passwordForUser: username];
 }
 
+- (BOOL)isSecureServer {
+    return self.listener.SSLIdentity != nil;
+}
+
+- (NSArray *)sslIdentityAndCertificates {
+    NSMutableArray* result = [NSMutableArray arrayWithObject: (__bridge id)self.listener.SSLIdentity];
+    NSArray* certs = self.listener.SSLExtraCertificates;
+    if (certs.count)
+        [result addObjectsFromArray: certs];
+    return result;
+}
+
+
 
 - (BOOL)supportsMethod:(NSString *)method atPath:(NSString *)path {
     return $equal(method, @"POST") || $equal(method, @"PUT") || $equal(method,  @"DELETE")

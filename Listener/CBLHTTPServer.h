@@ -10,6 +10,8 @@
 @class CBLListener, CBL_Server;
 
 
+/** Trivial subclass of HTTPServer that just adds synthesized `listener` and `tdServer` properties.
+    (Implementation is at the end of CBLListener.m.) */
 @interface CBLHTTPServer : HTTPServer {
 @private
     CBLListener* _listener;

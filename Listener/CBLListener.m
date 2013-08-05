@@ -30,10 +30,13 @@
     BOOL _readOnly;
     BOOL _requiresAuth;
     NSDictionary* _passwords;
+    SecIdentityRef _SSLIdentity;
+    NSArray* _SSLExtraCertificates;
 }
 
 
-@synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm;
+@synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm,
+            SSLExtraCertificates=_SSLExtraCertificates;
 
 
 - (instancetype) initWithManager: (CBLManager*)manager port: (UInt16)port {
@@ -54,6 +57,8 @@
 - (void)dealloc
 {
     [self stop];
+    if (_SSLIdentity)
+        CFRelease(_SSLIdentity);
 }
 
 
@@ -89,6 +94,19 @@
 
 - (NSString*) passwordForUser:(NSString *)username {
     return _passwords[username];
+}
+
+
+- (SecIdentityRef) SSLIdentity {
+    return _SSLIdentity;
+}
+
+- (void) setSSLIdentity:(SecIdentityRef)identity {
+    if (identity)
+        CFRetain(identity);
+    if (_SSLIdentity)
+        CFRelease(_SSLIdentity);
+    _SSLIdentity = identity;
 }
 
 
