@@ -93,6 +93,7 @@
 - (void) reachabilityChanged: (CBLReachability*)host;
 - (BOOL) goOffline;
 - (BOOL) goOnline;
+- (BOOL) checkSSLServerTrust: (SecTrustRef)trust forHost: (NSString*)host port: (UInt16)port;
 #if DEBUG
 @property (readonly) BOOL savingCheckpoint;
 #endif

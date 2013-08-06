@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@protocol CBLAuthorizer;
+@protocol CBLAuthorizer, CBLRemoteRequestDelegate;
 
 
 /** The signature of the completion block called by a CBLRemoteRequest.
@@ -26,6 +26,7 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
     @protected
     NSMutableURLRequest* _request;
     id<CBLAuthorizer> _authorizer;
+    id<CBLRemoteRequestDelegate> _delegate;
     CBLRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
     int _status;
@@ -42,7 +43,8 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
                    onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @property NSTimeInterval timeoutInterval;
-@property (strong, nonatomic) id<CBLAuthorizer>authorizer;
+@property (strong, nonatomic) id<CBLAuthorizer> authorizer;
+@property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
 
 /** In some cases a kCBLStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;
@@ -65,9 +67,6 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
 // The value to use for the User-Agent HTTP header.
 + (NSString*) userAgentHeader;
 
-// Shared subroutines to handle NSURLAuthenticationMethodServerTrust challenges
-+ (BOOL) checkTrust: (SecTrustRef)trust forHost: (NSString*)host;
-
 @end
 
 
@@ -78,4 +77,11 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
     @private
     NSMutableData* _jsonBuffer;
 }
+@end
+
+
+@protocol CBLRemoteRequestDelegate <NSObject>
+
+- (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace;
+
 @end

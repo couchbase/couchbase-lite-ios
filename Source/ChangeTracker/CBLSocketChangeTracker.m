@@ -178,7 +178,9 @@
     if (sslTrust) {
         NSURL* url = CFBridgingRelease(CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
                                                                 kCFStreamPropertyHTTPFinalURL));
-        BOOL trusted = [CBLRemoteRequest checkTrust: sslTrust forHost: url.host];
+        BOOL trusted = [_client changeTrackerApproveSSLTrust: sslTrust
+                                                     forHost: url.host
+                                                        port: (UInt16)url.port.intValue];
         CFRelease(sslTrust);
         if (!trusted) {
             //TODO: This error could be made more precise

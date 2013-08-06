@@ -32,7 +32,6 @@
 
 
 - (instancetype) initWithURL: (NSURL*)url {
-    Log(@"CBLBasicAuthorizer initWith <%@>", url);//TEMP
     NSURLCredential *cred = [url my_credentialForRealm: nil
                                   authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
     if (!cred)

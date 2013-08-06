@@ -34,6 +34,9 @@
 @implementation CBLRemoteRequest
 
 
+@synthesize delegate=_delegate;
+
+
 + (NSString*) userAgentHeader {
     return $sprintf(@"CouchbaseLite/%@", CBLVersionString());
 }
@@ -202,6 +205,30 @@
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 
+static void WarnUntrustedCert(NSString* host, SecTrustRef trust) {
+    Warn(@"CouchbaseLite: SSL server <%@> not trusted; cert chain follows:", host);
+#if TARGET_OS_IPHONE
+    for (CFIndex i = 0; i < SecTrustGetCertificateCount(trust); ++i) {
+        SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, i);
+        CFStringRef subject = SecCertificateCopySubjectSummary(cert);
+        Warn(@"    %@", subject);
+        CFRelease(subject);
+    }
+#else
+#ifdef __OBJC_GC__
+    NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
+#else
+    NSArray* trustProperties = (__bridge_transfer NSArray *)SecTrustCopyProperties(trust);
+#endif
+    for (NSDictionary* property in trustProperties) {
+        Warn(@"    %@: error = %@",
+             property[(__bridge id)kSecPropertyTypeTitle],
+             property[(__bridge id)kSecPropertyTypeError]);
+    }
+#endif
+}
+
+
 - (void)connection:(NSURLConnection *)connection
         willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
@@ -233,11 +260,20 @@
         [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
         SecTrustRef trust = space.serverTrust;
-        if ([[self class] checkTrust: trust forHost: space.host]) {
+        BOOL ok;
+        if (_delegate)
+            ok = [_delegate checkSSLServerTrust: space];
+        else {
+            SecTrustResultType result;
+            ok = (SecTrustEvaluate(trust, &result) == noErr) &&
+                    (result==kSecTrustResultProceed || result==kSecTrustResultUnspecified);
+        }
+        if (trust) {
             LogTo(RemoteRequest, @"    useCredential for trust: %@", trust);
             [sender useCredential: [NSURLCredential credentialForTrust: trust]
                     forAuthenticationChallenge: challenge];
         } else {
+            WarnUntrustedCert(space.host, trust);
             LogTo(RemoteRequest, @"    challenge: cancel");
             [sender cancelAuthenticationChallenge: challenge];
         }
@@ -245,40 +281,6 @@
         LogTo(RemoteRequest, @"    challenge: performDefaultHandling");
         [sender performDefaultHandlingForAuthenticationChallenge: challenge];
     }
-}
-
-
-+ (BOOL) checkTrust: (SecTrustRef)trust forHost: (NSString*)host {
-    SecTrustResultType trustResult;
-    OSStatus err = SecTrustEvaluate(trust, &trustResult);
-    if (err == noErr && (trustResult == kSecTrustResultProceed ||
-                         trustResult == kSecTrustResultUnspecified)) {
-        return YES;
-    } else {
-        Warn(@"CouchbaseLite: SSL server <%@> not trusted (err=%d, trustResult=%u); cert chain follows:",
-             host, (int)err, (unsigned)trustResult);
-#if TARGET_OS_IPHONE
-        for (CFIndex i = 0; i < SecTrustGetCertificateCount(trust); ++i) {
-            SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, i);
-            CFStringRef subject = SecCertificateCopySubjectSummary(cert);
-            Warn(@"    %@", subject);
-            CFRelease(subject);
-        }
-#else
-#ifdef __OBJC_GC__
-        NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
-#else
-        NSArray* trustProperties = (__bridge_transfer NSArray *)SecTrustCopyProperties(trust);
-#endif
-        for (NSDictionary* property in trustProperties) {
-            Warn(@"    %@: error = %@",
-                 property[(__bridge id)kSecPropertyTypeTitle],
-                 property[(__bridge id)kSecPropertyTypeError]);
-        }
-#endif
-        return NO;
-    }
-
 }
 
 

@@ -301,6 +301,11 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
++ (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
+    [CBL_Replicator setAnchorCerts: certs onlyThese: onlyThese];
+}
+
+
 #pragma mark - START/STOP:
 
 

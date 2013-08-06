@@ -171,6 +171,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
+- (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
+                              forHost: (NSString*)host
+                                 port: (UInt16)port
+{
+    return [self checkSSLServerTrust: serverTrust forHost: host port: port];
+}
+
+
 // Got a _changes feed response from the CBLChangeTracker.
 - (void) changeTrackerReceivedChanges: (NSArray*)changes {
     LogTo(Sync, @"%@: Received %u changes", self, (unsigned)changes.count);

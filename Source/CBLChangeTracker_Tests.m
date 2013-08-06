@@ -50,12 +50,13 @@ TestCase(DictOf) {
     BOOL _running;
 }
 @property (readonly) NSArray* changes;
+@property BOOL checkedAnSSLCert;
 @end
 
 
 @implementation CBLChangeTrackerTester
 
-@synthesize changes=_changes;
+@synthesize changes=_changes, checkedAnSSLCert=_checkedAnSSLCert;
 
 - (void) run: (CBLChangeTracker*)tracker expectingChanges: (NSArray*)expectedChanges {
     [tracker start];
@@ -98,6 +99,12 @@ TestCase(DictOf) {
     _running = NO;
 }
 
+- (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)trust
+                              forHost: (NSString*)host port: (UInt16)port
+{
+    self.checkedAnSSLCert = YES;
+    return YES;
+}
 
 @end
 
@@ -156,6 +163,7 @@ TestCase(CBLChangeTracker_SSL) {
                                      {@"deleted", $true},
                                      {@"changes", $array($dict({@"rev", @"3-cbdb323dec78588cfea63bf7bb5a246f"}))}) );
     [tester run: tracker expectingChanges: expected];
+    CAssert(tester.checkedAnSSLCert);
 }
 
 

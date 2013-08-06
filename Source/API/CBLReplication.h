@@ -110,6 +110,13 @@ typedef enum {
     that should last significantly longer before needing to be renewed. */
 - (bool) registerPersonaAssertion: (NSString*)assertion               __attribute__((nonnull));
 
+/** Adds additional root certificates to be trusted by the replicator, or entirely replaces the
+    OS's default list of trusted root certs.
+    @param certs  An array of SecCertificateRefs of root certs that should be trusted. Most often
+        these will be self-signed certs, but they might also be the roots of nonstandard CAs.
+    @param onlyThese  If NO, the given certs are appended to the system's built-in list of trusted
+        root certs; if YES, it replaces them (so *only* the given certs will be trusted.) */
++ (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
 
 #pragma mark - STATUS:
 

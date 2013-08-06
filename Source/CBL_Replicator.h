@@ -54,6 +54,9 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 + (NSString *)progressChangedNotification;
 + (NSString *)stoppedNotification;
 
+/** Adds to (or replaces) the system list of trusted root certs. */
++ (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
+
 - (instancetype) initWithDB: (CBLDatabase*)db
                      remote: (NSURL*)remote
                        push: (BOOL)push

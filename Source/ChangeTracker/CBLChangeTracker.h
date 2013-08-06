@@ -19,6 +19,9 @@
 
 
 @protocol CBLChangeTrackerClient <NSObject>
+- (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
+                              forHost: (NSString*)host
+                                 port: (UInt16)port;
 @optional
 - (void) changeTrackerReceivedChange: (NSDictionary*)change;
 - (void) changeTrackerReceivedChanges: (NSArray*)changes;
