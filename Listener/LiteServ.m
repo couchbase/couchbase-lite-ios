@@ -226,6 +226,7 @@ int main (int argc, const char * argv[])
 
         // Start a listener socket:
         CBLListener* listener = [[CBLListener alloc] initWithManager: server port: port];
+        NSCAssert(listener!=nil, @"Coudln't create CBLListener");
         listener.readOnly = options.readOnly;
 
         if (auth) {
@@ -252,7 +253,10 @@ int main (int argc, const char * argv[])
         NSData* value = [@"value" dataUsingEncoding: NSUTF8StringEncoding];
         listener.TXTRecordDictionary = @{@"Key": value};
 
-        [listener start];
+        if (![listener start: &error]) {
+            Warn(@"Failed to start HTTP listener: %@", error.localizedDescription);
+            exit(1);
+        }
 
         if (replArg) {
             if (!doReplicate(server, replArg, pull, createTarget, continuous, user, password, realm))

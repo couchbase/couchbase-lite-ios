@@ -87,9 +87,8 @@
 
 
 
-- (BOOL) start {
-    NSError* error;
-    return [_httpServer start: &error];
+- (BOOL) start: (NSError**)outError {
+    return [_httpServer start: outError];
 }
 
 - (void) stop {

@@ -62,7 +62,7 @@
 
 
 /** Starts the listener. */
-- (BOOL) start;
+- (BOOL) start: (NSError**)outError;
 
 /** Stops the listener. */
 - (void) stop;
