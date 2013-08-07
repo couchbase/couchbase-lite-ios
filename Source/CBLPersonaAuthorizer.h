@@ -11,8 +11,6 @@
 /** Authorizer for the Persona decentralized-identity system. See http://persona.org */
 @interface CBLPersonaAuthorizer: NSObject <CBLAuthorizer>
 
-+ (NSURL*) originForSite: (NSURL*)url;
-
 + (NSString*) registerAssertion: (NSString*)assertion;
 
 - (instancetype) initWithEmailAddress: (NSString*)emailAddress;

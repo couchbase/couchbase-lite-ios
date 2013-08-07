@@ -17,6 +17,7 @@
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
 #import "CBLPersonaAuthorizer.h"
+#import "CBLFacebookAuthorizer.h"
 #import "CBLOAuth1Authorizer.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
@@ -487,6 +488,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         NSDictionary* auth = $castIf(NSDictionary, remoteDict[@"auth"]);
         if (auth) {
             NSDictionary* oauth = $castIf(NSDictionary, auth[@"oauth"]);
+            NSDictionary* persona = $castIf(NSDictionary, auth[@"persona"]);
+            NSDictionary* facebook = $castIf(NSDictionary, auth[@"facebook"]);
             if (oauth) {
                 NSString* consumerKey = $castIf(NSString, oauth[@"consumer_key"]);
                 NSString* consumerSec = $castIf(NSString, oauth[@"consumer_secret"]);
@@ -498,12 +501,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                                                                             token: token
                                                                       tokenSecret: tokenSec
                                                                   signatureMethod: sigMethod];
-            } else {
-                NSDictionary* persona = $castIf(NSDictionary, auth[@"persona"]);
-                if (persona) {
-                    NSString* email = $castIf(NSString, persona[@"email"]);
-                    *outAuthorizer = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
-                }
+            } else if (persona) {
+                NSString* email = $castIf(NSString, persona[@"email"]);
+                *outAuthorizer = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
+            } else if (facebook) {
+                NSString* email = $castIf(NSString, facebook[@"email"]);
+                *outAuthorizer = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
             }
             if (!*outAuthorizer)
                 Warn(@"Invalid authorizer settings: %@", auth);

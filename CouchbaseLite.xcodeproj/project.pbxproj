@@ -76,6 +76,9 @@
 		271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 271C2AD216FA176300B8C9DB /* CBL_Shared.h */; };
 		271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
 		271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
+		272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */; };
+		272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
+		272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
 		272B85141523691700A90CB2 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		272B85151523691700A90CB2 /* CBLJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 272B85131523691700A90CB2 /* CBLJSON.m */; };
 		272B85161523691700A90CB2 /* CBLJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 272B85131523691700A90CB2 /* CBLJSON.m */; };
@@ -651,6 +654,8 @@
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		271C2AD216FA176300B8C9DB /* CBL_Shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Shared.h; sourceTree = "<group>"; };
 		271C2AD316FA176300B8C9DB /* CBL_Shared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Shared.m; sourceTree = "<group>"; };
+		272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFacebookAuthorizer.h; sourceTree = "<group>"; };
+		272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFacebookAuthorizer.m; sourceTree = "<group>"; };
 		272B85121523691700A90CB2 /* CBLJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSON.h; sourceTree = "<group>"; };
 		272B85131523691700A90CB2 /* CBLJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSON.m; sourceTree = "<group>"; };
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
@@ -1313,6 +1318,8 @@
 				270F5704156AE0BF000FEB8F /* CBLAuthorizer.m */,
 				27F128AF156AC1C8008465C2 /* CBLOAuth1Authorizer.h */,
 				27F128B0156AC1C9008465C2 /* CBLOAuth1Authorizer.m */,
+				272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */,
+				272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */,
 				2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */,
 				2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */,
 			);
@@ -1729,6 +1736,7 @@
 				270B3E201489390000E0A926 /* CouchbaseLite.h in Headers */,
 				27821BBE14906FB60099B373 /* CouchbaseLitePrefix.h in Headers */,
 				279EB2D11491442500E74185 /* CBLInternal.h in Headers */,
+				272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */,
 				279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */,
 				27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */,
 				27B0B79E1492932800A817AD /* CBLBase64.h in Headers */,
@@ -2307,6 +2315,7 @@
 				270B3E131489382F00E0A926 /* CBL_Server.m in Sources */,
 				270B3E2C1489581E00E0A926 /* CBL_Puller.m in Sources */,
 				270B3E3A14898DF200E0A926 /* CBL_Revision.m in Sources */,
+				272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
 				270B3E3F148D7F0000E0A926 /* CBL_Pusher.m in Sources */,
 				27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */,
 				27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */,
@@ -2468,6 +2477,7 @@
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				278B0CA2152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
+				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,

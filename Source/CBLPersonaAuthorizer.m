@@ -8,6 +8,8 @@
 
 #import "CBLPersonaAuthorizer.h"
 #import "CBLBase64.h"
+#import "MYURLUtils.h"
+
 
 static NSMutableDictionary* sAssertions;
 
@@ -43,20 +45,6 @@ static bool parseAssertion(NSString* assertion,
 }
 
 
-+ (NSURL*) originForSite: (NSURL*)url {
-    NSString* scheme = url.scheme.lowercaseString;
-    NSMutableString* str = [NSMutableString stringWithFormat: @"%@://%@",
-                            scheme, url.host.lowercaseString];
-    NSNumber* port = url.port;
-    if (port) {
-        int defaultPort = [scheme isEqualToString: @"https"] ? 443 : 80;
-        if (port.intValue != defaultPort)
-            [str appendFormat: @":%@", port];
-    }
-    return [NSURL URLWithString: str];
-}
-
-
 + (NSString*) registerAssertion: (NSString*)assertion {
     NSString* email, *origin;
     NSDate* exp;
@@ -67,7 +55,7 @@ static bool parseAssertion(NSString* assertion,
     NSURL* originURL = [NSURL URLWithString:origin];
     if (!originURL)
         return nil;
-    origin = [[self originForSite: originURL] absoluteString];
+    origin = originURL.my_baseURL.absoluteString;
 
     id key = @[email, origin];
     @synchronized(self) {
@@ -81,7 +69,7 @@ static bool parseAssertion(NSString* assertion,
 
 + (NSString*) assertionForEmailAddress: (NSString*)email site: (NSURL*)site
 {
-    id key = @[email, [[self originForSite: site] absoluteString]];
+    id key = @[email, site.my_baseURL.absoluteString];
     @synchronized(self) {
         return sAssertions[key];
     }

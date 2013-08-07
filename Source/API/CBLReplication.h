@@ -92,7 +92,18 @@ typedef enum {
     and optionally "signature_method". */
 @property (nonatomic, copy) NSDictionary* OAuth;
 
-/** The base URL of the remote server, for use as the "origin" parameter when requesting Persona authentication. */
+/** Email address for login with Facebook credentials. This is stored persistently in
+    the replication document, but it's not sufficient for login (you also need to get a
+    token from Facebook's servers, which you then pass to -registerPersonaAssertion:.)*/
+@property (nonatomic, copy) NSString* facebookEmailAddress;
+
+/** Registers a Facebook login token that will be used on the next login to the remote server.
+    This also sets facebookEmailAddress. */
+- (bool) registerFacebookToken: (NSString*)token
+               forEmailAddress: (NSString*)email                        __attribute__((nonnull));
+
+/** The base URL of the remote server, for use as the "origin" parameter when requesting Persona or
+    Facebook authentication. */
 @property (readonly) NSURL* personaOrigin;
 
 /** Email address for remote login with Persona (aka BrowserID). This is stored persistently in
@@ -110,7 +121,7 @@ typedef enum {
     that should last significantly longer before needing to be renewed. */
 - (bool) registerPersonaAssertion: (NSString*)assertion               __attribute__((nonnull));
 
-/** Adds additional root certificates to be trusted by the replicator, or entirely replaces the
+/** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.
     @param certs  An array of SecCertificateRefs of root certs that should be trusted. Most often
         these will be self-signed certs, but they might also be the roots of nonstandard CAs.

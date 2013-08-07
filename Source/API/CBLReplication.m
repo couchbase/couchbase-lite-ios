@@ -15,6 +15,7 @@
 #import "CBLModel_Internal.h"
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
+#import "CBLFacebookAuthorizer.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
 
@@ -273,8 +274,30 @@ static inline BOOL isLocalDBName(NSString* url) {
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
+
+- (NSString*) facebookEmailAddress {
+    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
+    return auth[@"facebook"][@"email"];
+}
+
+- (void) setFacebookEmailAddress:(NSString *)email {
+    NSDictionary* auth = nil;
+    if (email)
+        auth = @{@"facebook": @{@"email": email}};
+    [self setRemoteDictionaryValue: auth forKey: @"auth"];
+}
+
+- (bool) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
+    if (![CBLFacebookAuthorizer registerToken: token forEmailAddress: email forSite: self.remoteURL])
+        return false;
+    self.facebookEmailAddress = email;
+    [self restart];
+    return true;
+}
+
+
 - (NSURL*) personaOrigin {
-    return [CBLPersonaAuthorizer originForSite: self.remoteURL];
+    return self.remoteURL.my_baseURL;
 }
 
 - (NSString*) personaEmailAddress {
