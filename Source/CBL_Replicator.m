@@ -140,10 +140,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (bool) hasSameSettingsAs: (CBL_Replicator*)other {
+    // Needs to be consistent with -remoteCheckpointDocID:
+    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
     return _db == other->_db && $equal(_remote, other->_remote) && self.isPush == other.isPush
-        && _continuous == other->_continuous && $equal(_filterName, other->_filterName)
-        && $equal(_filterParameters, other->_filterParameters) && $equal(_options, other->_options) && $equal(_docIDs, other->_docIDs)
-        && $equal(_requestHeaders, other->_requestHeaders);
+        && $equal(self.remoteCheckpointDocID, other.remoteCheckpointDocID);
 }
 
 
@@ -682,11 +682,16 @@ static BOOL sOnlyTrustAnchorCerts;
     It's based on the local database UUID (the private one, to make the result unguessable),
     the remote database's URL, and the filter name and parameters (if any). */
 - (NSString*) remoteCheckpointDocID {
+    // Needs to be consistent with -hasSameSettingsAs: --
+    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
     NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
                                        {@"remoteURL", _remote.absoluteString},
                                        {@"push", @(self.isPush)},
+                                       {@"continuous", (self.continuous ? nil : $false)},
                                        {@"filter", _filterName},
-                                       {@"filterParams", _filterParameters});
+                                       {@"filterParams", _filterParameters},
+                                       {@"headers", _requestHeaders},
+                                       {@"docids", _docIDs});
     return CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
 }
 

@@ -329,10 +329,9 @@
 
     if ([$castIf(NSNumber, body[@"cancel"]) boolValue]) {
         // Cancel replication:
-        CBL_Replicator* activeRepl = [repl.db activeReplicatorLike: repl];
-        if (!activeRepl)
+        if (!repl.running)
             return kCBLStatusNotFound;
-        [activeRepl stop];
+        [repl stop];
         return kCBLStatusOK;
     } else {
         // Start replication:

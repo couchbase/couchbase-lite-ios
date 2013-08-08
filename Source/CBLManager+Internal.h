@@ -24,6 +24,8 @@
 @property (readonly) CBL_Shared* shared;
 
 - (CBLStatus) validateReplicatorProperties: (NSDictionary*)properties;
+
+/** Creates a new CBL_Replicator, or returns an existing active one if it has the same properties. */
 - (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)body
                                     status: (CBLStatus*)outStatus;
 

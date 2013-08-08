@@ -11,6 +11,7 @@
 
 #import "CBLDatabase.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Pusher.h"
 #import "CBL_ReplicatorManager.h"
@@ -568,6 +569,11 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     repl.authorizer = authorizer;
     if (push)
         ((CBL_Pusher*)repl).createTarget = createTarget;
+
+    // If this is a duplicate, reuse an existing replicator:
+    CBL_Replicator* existing = [db activeReplicatorLike: repl];
+    if (existing)
+        repl = existing;
 
     if (outStatus)
         *outStatus = kCBLStatusOK;

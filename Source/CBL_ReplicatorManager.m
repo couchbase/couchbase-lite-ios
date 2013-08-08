@@ -93,11 +93,6 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 }
 
 
-- (NSString*) docIDForReplicator: (CBL_Replicator*)repl {
-    return [[_replicatorsByDocID allKeysForObject: repl] lastObject];
-}
-
-
 #pragma mark - CRUD:
 
 
@@ -341,17 +336,17 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 - (void) replicatorChanged: (NSNotification*)n {
     CBL_Replicator* repl = n.object;
     LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, repl);
-    NSString* docID = [self docIDForReplicator: repl];
-    if (!docID)
-        return;  // If it's not a persistent replicator
-    CBL_Revision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
-    
-    [self updateDoc: rev forReplicator: repl];
-    
-    if ($equal(n.name, CBL_ReplicatorStoppedNotification)) {
-        // Replicator has stopped:
-        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: repl];
-        [_replicatorsByDocID removeObjectForKey: docID];
+
+    for (NSString* docID in [_replicatorsByDocID allKeysForObject: repl]) {
+        CBL_Revision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
+        
+        [self updateDoc: rev forReplicator: repl];
+        
+        if ($equal(n.name, CBL_ReplicatorStoppedNotification)) {
+            // Replicator has stopped:
+            [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: repl];
+            [_replicatorsByDocID removeObjectForKey: docID];
+        }
     }
 }
 
