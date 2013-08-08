@@ -94,3 +94,7 @@ typedef struct CBLManagerOptions {
 @property (readonly) NSURL* internalURL;
 
 @end
+
+
+/** Returns the version of Couchbase Lite */
+extern NSString* CBLVersionString( void );
