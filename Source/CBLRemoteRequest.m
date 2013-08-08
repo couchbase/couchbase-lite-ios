@@ -264,8 +264,12 @@ static void WarnUntrustedCert(NSString* host, SecTrustRef trust) {
         if (_delegate)
             ok = [_delegate checkSSLServerTrust: space];
         else {
+            // Default evaluation if there is no delegate to do it:
             SecTrustResultType result;
-            ok = (SecTrustEvaluate(trust, &result) == noErr) &&
+            OSStatus err = SecTrustGetTrustResult(trust, &result);
+            if (err || result == kSecTrustResultInvalid)
+                err = SecTrustEvaluate(trust, &result);
+            ok = (err == noErr) &&
                     (result==kSecTrustResultProceed || result==kSecTrustResultUnspecified);
         }
         if (trust) {
