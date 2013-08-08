@@ -650,7 +650,7 @@ static BOOL sOnlyTrustAnchorCerts;
     SecTrustResultType result;
     OSStatus err = SecTrustEvaluate(trust, &result);
     if (err) {
-        Warn(@"SecTrustEvaluate failed with err %d for host %@:%d", err, host, port);
+        Warn(@"SecTrustEvaluate failed with err %d for host %@:%d", (int)err, host, port);
         return NO;
     }
     return result == kSecTrustResultProceed || result == kSecTrustResultUnspecified;
