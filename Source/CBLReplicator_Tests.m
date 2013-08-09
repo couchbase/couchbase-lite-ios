@@ -93,8 +93,39 @@ static NSString* replic8(CBLDatabase* db, NSString* urlStr, BOOL push, NSString*
     CAssert(!repl.running);
     CAssert(!repl.savingCheckpoint);
     CAssertNil(repl.error);
+    CAssert(!repl.active);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     return repl.lastSequence;
+}
+
+
+static NSString* replic8Continuous(CBLDatabase* db, NSString* urlStr,
+                                   BOOL push, NSString* filter)
+{
+    NSURL* remote = [NSURL URLWithString: urlStr];
+    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
+                                                         push: push continuous: YES];
+    if (push)
+        ((CBL_Pusher*)repl).createTarget = YES;
+    repl.filterName = filter;
+    repl.authorizer = authorizer();
+    [repl start];
+
+    CAssert(repl.running);
+    Log(@"Waiting for replicator to go idle...");
+    while (repl.active || repl.savingCheckpoint) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+    }
+    CAssert(!repl.active);
+    CAssert(!repl.savingCheckpoint);
+    CAssert(repl.running);
+    CAssertNil(repl.error);
+    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+    NSString* result = repl.lastSequence;
+    [repl stop];
+    return result;
 }
 
 
@@ -168,6 +199,37 @@ TestCase(CBL_Puller) {
     CAssert([doc.revID hasPrefix: @"2-"]);
     CAssertEqual(doc[@"foo"], @1);
     
+    doc = [db getDocumentWithID: @"doc2" revisionID: nil];
+    CAssert(doc);
+    CAssert([doc.revID hasPrefix: @"1-"]);
+    CAssertEqual(doc[@"fnord"], $true);
+
+    [db close];
+    [server close];
+}
+
+TestCase(CBL_Puller_Continuous) {
+    RequireTestCase(CBL_Puller);
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    id lastSeq = replic8Continuous(db, kRemoteDBURLStr, NO, nil);
+    CAssertEqual(lastSeq, @2);
+
+    CAssertEq(db.documentCount, 2u);
+    CAssertEq(db.lastSequenceNumber, 3);
+
+    // Replicate again; should complete but add no revisions:
+    Log(@"Second replication, should get no more revs:");
+    replic8Continuous(db, kRemoteDBURLStr, NO, nil);
+    CAssertEq(db.lastSequenceNumber, 3);
+
+    CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
+    CAssert(doc);
+    CAssert([doc.revID hasPrefix: @"2-"]);
+    CAssertEqual(doc[@"foo"], @1);
+
     doc = [db getDocumentWithID: @"doc2" revisionID: nil];
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"1-"]);
