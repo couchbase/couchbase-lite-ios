@@ -107,19 +107,17 @@
 
 
 #if DEBUG
+// Another hardcoded DB that needs to exist on the remote test server.
+#define kAttachTestDBName @"attach-test"
+
 TestCase(CBLMultipartDownloader) {
-    //These URLs only work for me!
-    if (!$equal(NSUserName(), @"snej"))
-        return;
-    
     RequireTestCase(CBL_BlobStore);
     RequireTestCase(CBLMultipartReader_Simple);
     RequireTestCase(CBLMultipartReader_Types);
     
     CBLDatabase* db = [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CBLMultipartDownloader"]];
-    //NSString* urlStr = @"http://127.0.0.1:5984/demo-shopping-attachments/2F9078DF-3C72-44C2-8332-B07B3A29FFE4"
-    NSString* urlStr = @"http://127.0.0.1:5984/attach-test/oneBigAttachment";
-    urlStr = [urlStr stringByAppendingString: @"?revs=true&attachments=true"];
+    NSString* urlStr = RemoteTestDBURL(kAttachTestDBName).absoluteString;
+    urlStr = [urlStr stringByAppendingString: @"/oneBigAttachment?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;
     [[[CBLMultipartDownloader alloc] initWithURL: url

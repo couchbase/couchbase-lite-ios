@@ -29,12 +29,22 @@
 
 #if DEBUG
 
-// Change port to 59840 to test against LiteServ :)
-#if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
-#define kRemoteDBURLStr @"http://jens.local:5984/tdreplicator_test"
-#else
-#define kRemoteDBURLStr @"http://127.0.0.1:5984/tdreplicator_test"
-#endif
+// The default remote server URL used by RemoteTestDBURL().
+#define kDefaultRemoteTestServer @"http://127.0.0.1:5984/"
+
+// This db will get deleted and overwritten during every test.
+#define kScratchDBName @"cbl_replicator_scratch"
+
+// This is a read-only db whose contents should be a default CouchApp.
+#define kCouchAppDBName @"couchapp_helloworld"
+
+NSURL* RemoteTestDBURL(NSString* dbName) {
+    NSString* urlStr = [[NSProcessInfo processInfo] environment][@"CBL_TEST_SERVER"];
+    if (!urlStr)
+        urlStr = kDefaultRemoteTestServer;
+    NSURL* server = [NSURL URLWithString: urlStr];
+    return [server URLByAppendingPathComponent: dbName];
+}
 
 
 static id<CBLAuthorizer> authorizer(void) {
@@ -48,16 +58,15 @@ static id<CBLAuthorizer> authorizer(void) {
 }
 
 
-static void deleteRemoteDB(void) {
-    Log(@"Deleting %@", kRemoteDBURLStr);
-    NSURL* url = [NSURL URLWithString: kRemoteDBURLStr];
+static void deleteRemoteDB(NSURL* dbURL) {
+    Log(@"Deleting %@", dbURL);
     __block NSError* error = nil;
     __block BOOL finished = NO;
     CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"DELETE"
-                                                                   URL: url
-                                                                  body: nil
-                                                        requestHeaders: nil
-                                                          onCompletion:
+                                                                     URL: dbURL
+                                                                    body: nil
+                                                          requestHeaders: nil
+                                                            onCompletion:
         ^(id result, NSError *err) {
             finished = YES;
             error = err;
@@ -73,8 +82,7 @@ static void deleteRemoteDB(void) {
 }
 
 
-static NSString* replic8(CBLDatabase* db, NSString* urlStr, BOOL push, NSString* filter) {
-    NSURL* remote = [NSURL URLWithString: urlStr];
+static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push, NSString* filter) {
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO];
     if (push)
@@ -99,10 +107,9 @@ static NSString* replic8(CBLDatabase* db, NSString* urlStr, BOOL push, NSString*
 }
 
 
-static NSString* replic8Continuous(CBLDatabase* db, NSString* urlStr,
+static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
                                    BOOL push, NSString* filter)
 {
-    NSURL* remote = [NSURL URLWithString: urlStr];
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                          push: push continuous: YES];
     if (push)
@@ -143,8 +150,6 @@ TestCase(CBL_Pusher) {
         ++filterCalls;
         return YES;
     }];
-    
-    deleteRemoteDB();
 
     // Create some documents:
     NSMutableDictionary* props = $mdict({@"_id", @"doc1"},
@@ -168,7 +173,9 @@ TestCase(CBL_Pusher) {
 #pragma unused(rev2)
     
     // Push them to the remote:
-    id lastSeq = replic8(db, kRemoteDBURLStr, YES, @"filter");
+    NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
+    deleteRemoteDB(remoteDB);
+    id lastSeq = replic8(db, remoteDB, YES, @"filter");
     CAssertEqual(lastSeq, @"3");
     CAssertEq(filterCalls, 2);
     
@@ -183,7 +190,7 @@ TestCase(CBL_Puller) {
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
     
-    id lastSeq = replic8(db, kRemoteDBURLStr, NO, nil);
+    id lastSeq = replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
     CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
@@ -191,7 +198,7 @@ TestCase(CBL_Puller) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, kRemoteDBURLStr, NO, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -214,7 +221,7 @@ TestCase(CBL_Puller_Continuous) {
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
 
-    id lastSeq = replic8Continuous(db, kRemoteDBURLStr, NO, nil);
+    id lastSeq = replic8Continuous(db, RemoteTestDBURL(kScratchDBName), NO, nil);
     CAssertEqual(lastSeq, @2);
 
     CAssertEq(db.documentCount, 2u);
@@ -222,7 +229,7 @@ TestCase(CBL_Puller_Continuous) {
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8Continuous(db, kRemoteDBURLStr, NO, nil);
+    replic8Continuous(db, RemoteTestDBURL(kScratchDBName), NO, nil);
     CAssertEq(db.lastSequenceNumber, 3);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -247,7 +254,7 @@ TestCase(CBLPuller_DocIDs) {
     CAssert(db);
 
     // Start a named document pull replication.
-    NSURL* remote = [NSURL URLWithString: kRemoteDBURLStr];
+    NSURL* remote = RemoteTestDBURL(kScratchDBName);
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                      push: NO continuous: NO];
     repl.docIDs = @[@"doc1"];
@@ -277,7 +284,7 @@ TestCase(CBLPuller_DocIDs) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, kRemoteDBURLStr, NO, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -291,18 +298,12 @@ TestCase(CBLPuller_DocIDs) {
 
 
 TestCase(CBL_Puller_FromCouchApp) {
-    /** This test case requires that there be an empty CouchApp installed on a local CouchDB server, in a database named "couchapp_helloworld". To keep the test from breaking for most people, I've disabled it unless you're me :) If you want to run this test, just delete the lines below. */
-    if (!$equal(NSUserName(), @"snej")) {
-        Log(@"Skipping CBL_Puller_FromCouchApp test");
-        return;
-    }
-    
     RequireTestCase(CBL_Puller);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
-    CBLDatabase* db = [server createDatabaseNamed: @"couchapp_helloworld" error: NULL];
+    CBLDatabase* db = [server createDatabaseNamed: kCouchAppDBName error: NULL];
     CAssert(db);
     
-    replic8(db, @"http://127.0.0.1:5984/couchapp_helloworld", NO, nil);
+    replic8(db, RemoteTestDBURL(kCouchAppDBName), NO, nil);
 
     CBLStatus status;
     CBL_Revision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kCBLIncludeAttachments status: &status];
@@ -355,7 +356,7 @@ TestCase(CBL_ReplicatorManager) {
     CAssert(sourceDB);
 
     // Now try a valid replication document:
-    NSURL* remote = [NSURL URLWithString: @"http://localhost:5984/tdreplicator_test"];
+    NSURL* remote = [NSURL URLWithString: @"http://localhost:9999/tdreplicator_test"];
     rev = [CBL_Revision revisionWithProperties: $dict({@"source", @"foo"},
                                                     {@"target", remote.absoluteString})];
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
@@ -511,5 +512,17 @@ TestCase(ParseReplicatorProperties) {
     
     [dbManager close];
 }
+
+
+TestCase(CBLReplicator) {
+    RequireTestCase(CBL_Pusher);
+    RequireTestCase(CBL_Puller);
+    RequireTestCase(CBL_Puller_Continuous);
+    RequireTestCase(CBL_Puller_FromCouchApp);
+    RequireTestCase(CBLPuller_DocIDs);
+    RequireTestCase(CBL_ReplicatorManager);
+    RequireTestCase(ParseReplicatorProperties);
+}
+
 
 #endif
