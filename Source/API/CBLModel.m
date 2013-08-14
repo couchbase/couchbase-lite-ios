@@ -301,12 +301,15 @@
             NSAssert(model.database == db, @"Models must share a common db");
             if (![model justSave: outError])
                 return NO;
+            model->_saving = true; // Leave _saving set till after transaction ends
         }
         return YES;
     }];
-    if (saved)
-        for (CBLModel* model in models)
+    for (CBLModel* model in models) {
+        model->_saving = false; // Reset _saving now that docs are saved
+        if (saved)
             [model didSave];
+    }
     return saved;
 }
 
