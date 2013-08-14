@@ -1140,9 +1140,9 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         options = &kDefaultCBLQueryOptions;
     
     // Generate the SELECT statement, based on the options:
-    NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid" mutableCopy];
+    NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid, sequence" mutableCopy];
     if (options->includeDocs)
-        [sql appendString: @", json, sequence"];
+        [sql appendString: @", json"];
     if (options->includeDeletedDocs)
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
@@ -1196,12 +1196,12 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             
             NSString* docID = [r stringForColumnIndex: 1];
             NSString* revID = [r stringForColumnIndex: 2];
+            SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
             BOOL deleted = options->includeDeletedDocs && [r boolForColumn: @"deleted"];
             NSDictionary* docContents = nil;
             if (options->includeDocs) {
                 // Fill in the document contents:
-                NSData* json = [r dataNoCopyForColumnIndex: 3];
-                SequenceNumber sequence = [r longLongIntForColumnIndex: 4];
+                NSData* json = [r dataNoCopyForColumnIndex: 4];
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID
                                                          revID: revID
@@ -1213,6 +1213,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             NSDictionary* value = $dict({@"rev", revID},
                                         {@"deleted", (deleted ?$true : nil)});
             CBLQueryRow* change = [[CBLQueryRow alloc] initWithDocID: docID
+                                                            sequence: sequence
                                                                  key: docID
                                                                value: value
                                                        docProperties: docContents];
@@ -1240,6 +1241,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                         value = $dict({@"rev", revID}, {@"deleted", $true});
                 }
                 change = [[CBLQueryRow alloc] initWithDocID: (value ?docID :nil)
+                                                   sequence: 0
                                                         key: docID
                                                       value: value
                                               docProperties: nil];

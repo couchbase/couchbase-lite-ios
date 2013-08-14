@@ -47,7 +47,7 @@
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
     CBLStaleness _stale;
-    BOOL _descending, _prefetch, _sequences, _mapOnly, _includeDeleted;
+    BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
@@ -108,7 +108,7 @@
 
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
-            endKeyDocID=_endKeyDocID, stale=_stale, sequences=_sequences, mapOnly=_mapOnly,
+            endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly,
             database=_database, includeDeleted=_includeDeleted;
 
 
@@ -128,7 +128,6 @@
         .descending = _descending,
         .includeDocs = _prefetch,
         .updateSeq = YES,
-        .localSeq = _sequences,
         .inclusiveEnd = YES,
         .includeDeletedDocs = _includeDeleted,
         .stale = _stale
@@ -394,16 +393,18 @@ static id fromJSON( NSData* json ) {
     CBLDatabase* _database;
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
     __weak id _parsedKey, _parsedValue;
+    UInt64 _sequence;
     NSString* _sourceDocID;
     NSDictionary* _documentProperties;
 }
 
 
 @synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID,
-            database=_database;
+            database=_database, localSequence=_sequence;
 
 
 - (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties
@@ -414,6 +415,7 @@ static id fromJSON( NSData* json ) {
         // query is async) which has a different CBLDatabase instance than the original caller.
         // Instead, the database property will be filled in when I'm added to a CBLQueryEnumerator.
         _sourceDocID = [docID copy];
+        _sequence = sequence;
         _key = [key copy];
         _value = [value copy];
         _documentProperties = [docProperties copy];
@@ -506,12 +508,6 @@ static id fromJSON( NSData* json ) {
     CBLDocument* doc = [_database documentWithID: docID];
     [doc loadCurrentRevisionFrom: self];
     return doc;
-}
-
-
-- (UInt64) localSequence {
-    id seq = (self.documentProperties)[@"_local_seq"];
-    return $castIf(NSNumber, seq).unsignedLongLongValue;
 }
 
 

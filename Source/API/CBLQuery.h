@@ -71,10 +71,6 @@ typedef enum {
     (This property is equivalent to "include_docs" in the CouchDB API.) */
 @property BOOL prefetch;
 
-/** If set to YES, every row in the result will have a "_local_seq" property containing the
-    sequence ID of the revision it's from. */
-@property BOOL sequences;
-
 /** If set to YES, queries created by -queryAllDocuments will include deleted documents.
     This property has no effect in other types of queries. */
 @property BOOL includeDeleted;
@@ -184,8 +180,7 @@ typedef enum {
 /** Convenience for use in keypaths. Returns the key at the given index. */
 @property (readonly) id key0, key1, key2, key3;
 
-/** The local sequence number of the associated doc/revision.
-    Valid only if the 'sequences' and 'prefetch' properties were set in the query; otherwise returns 0. */
+/** The local sequence number of the associated doc/revision. */
 @property (readonly) UInt64 localSequence;
 
 @end

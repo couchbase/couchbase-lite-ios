@@ -312,9 +312,9 @@ static id fromJSON( NSData* json ) {
     else if (_collation == kCBLViewCollationRaw)
         collationStr = @" COLLATE JSON_RAW";
 
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid"];
+    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
     if (options->includeDocs)
-        [sql appendString: @", revid, json, revs.sequence"];
+        [sql appendString: @", revid, json"];
     [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
     NSMutableArray* args = $marray(@(_viewID));
 
@@ -403,6 +403,7 @@ static id fromJSON( NSData* json ) {
                 NSData* valueData = [r dataForColumnIndex: 1];
                 Assert(keyData);
                 NSString* docID = [r stringForColumnIndex: 2];
+                SequenceNumber sequence = [r longLongIntForColumnIndex:3];
                 id docContents = nil;
                 if (options->includeDocs) {
                     id value = fromJSON(valueData);
@@ -412,16 +413,17 @@ static id fromJSON( NSData* json ) {
                         NSString* linkedRev = value[@"_rev"]; // usually nil
                         CBLStatus linkedStatus;
                         CBL_Revision* linked = [_db getDocumentWithID: linkedID
-                                                         revisionID: linkedRev
-                                                            options: options->content
-                                                             status: &linkedStatus];
+                                                           revisionID: linkedRev
+                                                              options: options->content
+                                                               status: &linkedStatus];
                         docContents = linked ? linked.properties : $null;
+                        sequence = linked.sequence;
                     } else {
-                        docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 4]
+                        docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 5]
                                                                 docID: docID
-                                                                revID: [r stringForColumnIndex: 3]
+                                                                revID: [r stringForColumnIndex: 4]
                                                               deleted: NO
-                                                             sequence: [r longLongIntForColumnIndex:5]
+                                                             sequence: sequence
                                                               options: options->content];
                     }
                 }
@@ -429,6 +431,7 @@ static id fromJSON( NSData* json ) {
                       _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
                       toJSONString(docID));
                 [rows addObject: [[CBLQueryRow alloc] initWithDocID: docID
+                                                           sequence: sequence
                                                                 key: keyData
                                                               value: valueData
                                                       docProperties: docContents]];
@@ -507,6 +510,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                     id key = groupKey(lastKeyData, groupLevel);
                     id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
                     [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
+                                                               sequence: 0
                                                                     key: key
                                                                   value: reduced
                                                           docProperties: nil]];
@@ -529,6 +533,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
         [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
+                                                   sequence: 0
                                                         key: key
                                                       value: reduced
                                               docProperties: nil]];

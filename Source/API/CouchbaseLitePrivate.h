@@ -89,6 +89,7 @@
 
 @interface CBLQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;

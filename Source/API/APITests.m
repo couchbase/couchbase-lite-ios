@@ -505,6 +505,7 @@ TestCase(API_CreateView) {
     int expectedKey = 23;
     for (CBLQueryRow* row in rows) {
         CAssertEq([row.key intValue], expectedKey);
+        CAssertEq(row.localSequence, (UInt64)expectedKey+1);
         ++expectedKey;
     }
     closeTestDB(db);
