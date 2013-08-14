@@ -154,6 +154,7 @@
         }
     }];
     [lock lockWhenCondition: 1];  // wait till block finishes
+    [lock unlock];
     return result;
 }
 
