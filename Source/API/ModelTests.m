@@ -177,8 +177,9 @@ TestCase(API_SaveModel) {
         CAssertEqual(model.others, (@[model2, model3]));
 
         // Save it and make sure the save didn't trigger a reload:
+        CAssertEqual(db.unsavedModels, @[model]);
         NSError* error;
-        CAssert([model save: &error]);
+        CAssert([db saveAllModels: &error]);
         CAssertEq(model.reloadCount, 0u);
 
         // Verify that the document got updated correctly:

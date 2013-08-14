@@ -175,7 +175,8 @@ TestCase(CBL_Database_CRUD) {
     CAssertEqual(history, (@[revD, rev2, rev1]));
 
     // Compact the database:
-    CAssert([db compact] == kCBLStatusOK);
+    NSError* error;
+    CAssert([db compact: &error]);
 
     // Make sure old rev is missing:
     CAssertNil([db getDocumentWithID: rev1.docID revisionID: rev1.revID]);

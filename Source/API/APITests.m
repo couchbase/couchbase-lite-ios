@@ -54,7 +54,7 @@ static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
     CAssert(doc.documentID);
     CAssert(doc.currentRevisionID);
     CAssertEqual(doc.userProperties, properties);
-    CAssertEq([db documentWithID: doc.documentID], doc);
+    CAssertEq(db[doc.documentID], doc);
     Log(@"Created %p = %@", doc, doc);
     return doc;
 }
@@ -71,13 +71,27 @@ static void createDocuments(CBLDatabase* db, unsigned n) {
 #pragma mark - SERVER & DOCUMENTS:
 
 
-TestCase(API_Server) {
+TestCase(API_Manager) {
     CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
     for (NSString* name in dbmgr.allDatabaseNames) {
         CBLDatabase* db = dbmgr[name];
         Log(@"Database '%@': %u documents", db.name, (unsigned)db.documentCount);
     }
+
+    CBLManagerOptions options = {.readOnly= true, .noReplicator= false};
+    NSError* error;
+    CBLManager* ro = [[CBLManager alloc] initWithDirectory: dbmgr.directory options: &options
+                                                     error: &error];
+    CAssert(ro);
+
+    CBLDatabase* db = [ro createDatabaseNamed: @"foo" error: &error];
+    CAssertNil(db);
+
+    db = [ro databaseNamed: @"test_db" error: &error];
+    CAssert(db);
+    CBLDocument* doc = [db untitledDocument];
+    CAssert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
 }
 
 
@@ -105,6 +119,8 @@ TestCase(API_CreateRevisions) {
     CBLDocument* doc = createDocumentWithProperties(db, properties);
     CBLRevision* rev1 = doc.currentRevision;
     CAssert([rev1.revisionID hasPrefix: @"1-"]);
+    CAssertEq(rev1.sequence, 1);
+    CAssertNil(rev1.attachments);
 
     NSMutableDictionary* properties2 = [properties mutableCopy];
     properties2[@"tag"] = @4567;
@@ -136,6 +152,7 @@ TestCase(API_CreateNewRevisions) {
     CAssertNil(newRev.parentRevision);
     CAssertEqual(newRev.properties, $mdict({@"_id", doc.documentID}));
     CAssert(!newRev.isDeleted);
+    CAssertEq(newRev.sequence, 0);
 
     newRev[@"testName"] = @"testCreateRevisions";
     newRev[@"tag"] = @1337;
@@ -146,6 +163,7 @@ TestCase(API_CreateNewRevisions) {
     CAssert(rev1, @"Save 1 failed: %@", error);
     CAssertEqual(rev1, doc.currentRevision);
     CAssert([rev1.revisionID hasPrefix: @"1-"]);
+    CAssertEq(rev1.sequence, 1);
 
     newRev = [rev1 newRevision];
     CAssertEq(newRev.document, doc);
@@ -161,9 +179,27 @@ TestCase(API_CreateNewRevisions) {
     CAssert(rev2, @"Save 2 failed: %@", error);
     CAssertEqual(rev2, doc.currentRevision);
     CAssert([rev2.revisionID hasPrefix: @"2-"]);
+    CAssertEq(rev2.sequence, 2);
 
     CAssert([doc.currentRevisionID hasPrefix: @"2-"],
             @"Document revision ID is still %@", doc.currentRevisionID);
+
+    // Add a deletion/tombstone revision:
+    newRev = doc.newRevision;
+    CAssertEq(newRev.parentRevisionID, rev2.revisionID);
+    CAssertEqual(newRev.parentRevision, rev2);
+    newRev.isDeleted = true;
+    CBLRevision* rev3 = [newRev save: &error];
+    CAssert(rev3, @"Save 2 failed: %@", error);
+    CAssertEqual(rev3, doc.currentRevision);
+    CAssert([rev3.revisionID hasPrefix: @"3-"], @"Unexpected revID '%@'", rev3.revisionID);
+    CAssertEq(rev3.sequence, 3);
+    CAssert(rev3.isDeleted);
+
+    CAssert(doc.isDeleted);
+    CBLDocument* doc2 = db[doc.documentID];
+    CAssertEq(doc2, doc);
+
     closeTestDB(db);
 }
 
@@ -399,6 +435,7 @@ TestCase(API_History) {
     CAssertEqual(gotProperties[@"tag"], @2);
     
     CAssertEqual([doc getConflictingRevisions: &error], @[rev2]);
+    CAssertEqual([doc getLeafRevisions: &error], @[rev2]);
     closeTestDB(db);
 }
 
@@ -413,6 +450,7 @@ TestCase(API_Attachments) {
     CBLDocument* doc = createDocumentWithProperties(db, properties);
     CBLRevision* rev = doc.currentRevision;
     
+    CAssertEq(rev.attachments.count, (NSUInteger)0);
     CAssertEq(rev.attachmentNames.count, (NSUInteger)0);
     CAssertNil([rev attachmentNamed: @"index.html"]);
     
@@ -428,17 +466,22 @@ TestCase(API_Attachments) {
     
     CAssertNil(error);
     CAssert(rev3);
+    CAssertEq(rev3.attachments.count, (NSUInteger)1);
     CAssertEq(rev3.attachmentNames.count, (NSUInteger)1);
-    
+
     attach = [rev3 attachmentNamed:@"index.html"];
     CAssert(attach);
     CAssertEq(attach.document, doc);
     CAssertEqual(attach.name, @"index.html");
     CAssertEqual(rev3.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
-    
+
     CAssertEqual(attach.contentType, @"text/plain; charset=utf-8");
     CAssertEqual(attach.body, body);
     CAssertEq(attach.length, (UInt64)body.length);
+
+    NSURL* bodyURL = attach.bodyURL;
+    CAssert(bodyURL.isFileURL);
+    CAssertEqual([NSData dataWithContentsOfURL: bodyURL], body);
 
     CBLRevision *rev4 = [attach updateBody:nil contentType:nil error:&error];
     CAssert(!error);
@@ -637,6 +680,7 @@ TestCase(API_LiveQuery) {
             finished = true;
         }
     }
+    [query stop];
     CAssert(finished, @"Live query timed out!");
     closeTestDB(db);
 }
@@ -725,86 +769,8 @@ TestCase(API_SharedMapBlocks) {
 }
 
 
-#if 0
-#pragma mark - Custom Path Maps
-
-- (void) test_GetDocument_using_a_custom_path_map {
-    NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
-                                @"testCreateDocument", @"testName",
-                                [NSNumber numberWithInt:1337], @"tag",
-                                nil];
-    CBLDocument* doc = createDocumentWithProperties(properties);
-    
-    NSString* docID = doc.documentID;
-    CAssert(docID.length > 10, @"Invalid doc ID: '%@'", docID);
-    NSString* currentRevisionID = doc.currentRevisionID;
-    CAssert(currentRevisionID.length > 10, @"Invalid doc revision: '%@'", currentRevisionID);
-    
-    CAssertEqual(doc.userProperties, properties, @"Couldn't get doc properties");
-
-    // Use a show function for testing the GET. A show function would not normally work well because it is read-only.
-    NSString *showFunction = @"function(doc, req) { doc.showValue = 'show'; return JSON.stringify(doc);}";
-    NSString *showFunctionName = @"myshow";
-    NSDictionary *showsJson = [NSDictionary dictionaryWithObject:showFunction forKey:showFunctionName];
-    NSString *designDocumentId = @"_design/testPathMap";
-    NSDictionary *designDocumentProperties = [NSDictionary dictionaryWithObject:showsJson forKey:@"shows"];
-    CBLDocument *designDocument = [self.db documentWithID:designDocumentId];
-    [[designDocument putProperties:designDocumentProperties] wait];
-    
-    self.db.documentPathMap = ^(NSString *docId) {
-        return [NSString stringWithFormat:@"%@/_show/%@/%@", designDocumentId, showFunctionName, docId];
-    };
-    
-    NSMutableDictionary *expectedProperties = [properties mutableCopy];
-    [expectedProperties setObject:@"show" forKey:@"showValue"];
-
-    doc = [self.db documentWithID:docID];
-    
-    RESTOperation* op = CAssertWait([doc GET]);
-    CAssertEq(op.httpStatus, 200, @"GET failed");
-    
-    CAssertEqual(doc.userProperties, expectedProperties, @"Couldn't get doc properties after GET");
-
-    // Try it again
-    doc = [self.db documentWithID:docID];
-    
-    op = CAssertWait([doc GET]);
-    CAssertEq(op.httpStatus, 200, @"GET failed");
-    
-    CAssertEqual(doc.userProperties, expectedProperties, @"Couldn't get doc properties after GET");
-    closeTestDB(db);
-}
-
-
-TestCase(API_ViewOptions) {
-    CBLDatabase* db = createEmptyDB();
-    createDocuments(db, 5);
-
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: ^(NSDictionary *doc, CBLMapEmitBlock emit) {
-        emit(doc[@"_id"], doc[@"_local_seq"]);
-    } version: @"1"];
-        
-    CBLQuery* query = [view query];
-    CBLQueryEnumerator* rows = query.rows;
-    for (CBLQueryRow* row in rows) {
-        CAssertEqual(row.value, nil);
-        Log(@"row _id = %@, local_seq = %@", row.key, row.value);
-    }
-    
-    query.sequences = YES;
-    rows = query.rows;
-    for (CBLQueryRow* row in rows) {
-        CAssert([row.value isKindOfClass: [NSNumber class]], @"Unexpected value: %@", row.value);
-        Log(@"row _id = %@, local_seq = %@", row.key, row.value);
-    }
-    closeTestDB(db);
-}
-#endif
-
-
 TestCase(API) {
-    RequireTestCase(API_Server);
+    RequireTestCase(API_Manager);
     RequireTestCase(API_CreateDocument);
     RequireTestCase(API_CreateRevisions);
     RequireTestCase(API_SaveMultipleDocuments);
@@ -822,7 +788,8 @@ TestCase(API) {
     RequireTestCase(API_Validation);
     RequireTestCase(API_ViewWithLinkedDocs);
     RequireTestCase(API_SharedMapBlocks);
-//    RequireTestCase(API_ViewOptions);
+    RequireTestCase(API_LiveQuery);
+    RequireTestCase(API_ViewOptions);
 }
 
 #endif // DEBUG
