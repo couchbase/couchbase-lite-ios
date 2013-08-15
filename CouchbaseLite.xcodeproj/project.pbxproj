@@ -437,6 +437,8 @@
 		27FAEF11164C8ADB00A3C0C2 /* icon~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */; };
 		27FFE20517BBF17C0040AE60 /* CBLRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* CBLRouter_Tests.m */; };
 		27FFE20617BBF20D0040AE60 /* CBLReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* CBLReplicator_Tests.m */; };
+		27FFE20A17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27FFE20817BD28080040AE60 /* CBL_Replicator+Backgrounding.m */; };
+		27FFE20B17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27FFE20817BD28080040AE60 /* CBL_Replicator+Backgrounding.m */; };
 		792867C0178DE01900248AF0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		792867D0178DE03E00248AF0 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		792867D1178DE03E00248AF0 /* CBLJSViewCompiler_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CD178DE03E00248AF0 /* CBLJSViewCompiler_Test.m */; };
@@ -943,6 +945,7 @@
 		27FAEF0C164C8ADB00A3C0C2 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
 		27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon~ipad.png"; sourceTree = "<group>"; };
+		27FFE20817BD28080040AE60 /* CBL_Replicator+Backgrounding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBL_Replicator+Backgrounding.m"; sourceTree = "<group>"; };
 		792867BF178DE01900248AF0 /* libCBLJSViewCompiler.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLJSViewCompiler.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		792867C3178DE01900248AF0 /* CBLJSViewCompiler-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLJSViewCompiler-Prefix.pch"; path = "../Source/CBLJSViewCompiler-Prefix.pch"; sourceTree = "<group>"; };
 		792867CB178DE03E00248AF0 /* CBLJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSFunction.h; sourceTree = "<group>"; };
@@ -1331,6 +1334,7 @@
 			children = (
 				27821BB5148E7D6F0099B373 /* CBL_Replicator.h */,
 				27821BB6148E7D6F0099B373 /* CBL_Replicator.m */,
+				27FFE20817BD28080040AE60 /* CBL_Replicator+Backgrounding.m */,
 				270B3E291489581E00E0A926 /* CBL_Puller.h */,
 				270B3E2A1489581E00E0A926 /* CBL_Puller.m */,
 				270B3E3C148D7F0000E0A926 /* CBL_Pusher.h */,
@@ -2349,6 +2353,7 @@
 				27A720A1152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27E7FAED155D78DA0025F93A /* CBLChangeTracker_Tests.m in Sources */,
+				27FFE20A17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
 				27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */,
@@ -2514,6 +2519,7 @@
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
+				27FFE20B17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,
 				2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,

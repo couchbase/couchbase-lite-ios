@@ -278,6 +278,8 @@
     if (repls) {
         _pull = [repls objectAtIndex: 0];
         _push = [repls objectAtIndex: 1];
+        _pull.continuous = _push.continuous = YES;
+        _pull.persistent = _push.persistent = YES;
         NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
         [nctr addObserver: self selector: @selector(replicationProgress:)
                      name: kCBLReplicationChangeNotification object: _pull];

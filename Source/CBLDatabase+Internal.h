@@ -84,8 +84,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 @property (nonatomic, readwrite, copy) NSString* name;  // make it settable
 @property (nonatomic, readonly) NSString* path;
-@property (nonatomic, readonly) NSThread* thread;
 @property (nonatomic, readonly) BOOL isOpen;
+@property (readonly) NSThread* thread;  // actually needs to be atomic (called from other threads)
 
 - (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
 @end
