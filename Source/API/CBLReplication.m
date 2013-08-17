@@ -11,6 +11,7 @@
 
 #import "CBL_Pusher.h"
 #import "CBLDatabase+Replication.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
 #import "CBLModel_Internal.h"
 #import "CBL_Server.h"
@@ -353,6 +354,9 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (void) start {
+    if (!self.database.isOpen)  // Race condition: db closed before replication starts
+        return;
+
     if (self.persistent) {
         // Removing the _replication_state property triggers the replicator manager to start it.
         [self setValue: nil ofProperty: @"_replication_state"];
