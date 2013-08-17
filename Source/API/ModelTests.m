@@ -293,4 +293,11 @@ TestCase(API_ModelAttachments) {
 }
 
 
+TestCase(API_Model) {
+    RequireTestCase(API_SaveModel);
+    RequireTestCase(API_ModelDeleteProperty);
+    RequireTestCase(API_ModelAttachments);
+}
+
+
 #endif // DEBUG

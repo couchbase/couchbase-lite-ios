@@ -375,7 +375,7 @@ TestCase(CBL_View_AllDocsQuery) {
     
     // Get specific documents:
     options = kDefaultCBLQueryOptions;
-    NSArray* keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
+    __unused NSArray* keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
     options.keys = keys;
     query = [db getAllDocs: &options];
     CAssertEqual(rowsToDicts(query), (@[expectedRow[2], expectedRow[3]]));

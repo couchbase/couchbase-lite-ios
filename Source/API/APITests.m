@@ -790,6 +790,9 @@ TestCase(API) {
     RequireTestCase(API_SharedMapBlocks);
     RequireTestCase(API_LiveQuery);
     RequireTestCase(API_ViewOptions);
+    RequireTestCase(API_Model);
+
+    RequireTestCase(API_Replicator);
 }
 
 #endif // DEBUG

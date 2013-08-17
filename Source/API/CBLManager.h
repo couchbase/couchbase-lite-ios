@@ -98,3 +98,7 @@ typedef struct CBLManagerOptions {
 
 /** Returns the version of Couchbase Lite */
 extern NSString* CBLVersionString( void );
+
+/** NSError domain used for HTTP status codes returned by a lot of Couchbase Lite APIs --
+    for example code 404 is "not found", 403 is "forbidden", etc. */
+extern NSString* const CBLHTTPErrorDomain;
