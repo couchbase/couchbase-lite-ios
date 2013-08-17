@@ -565,9 +565,10 @@ static NSCache* sCache;
 		NSDate *startDate = [NSDate date];
 
         if (offline && ![schemaURL isFileURL]) {
-            *error = [NSError errorWithDomain: CBJLSONValidatorErrorDomain code: 3
-                                     userInfo: @{NSLocalizedDescriptionKey:
-                                                     @"Cannot load remote schema in offline mode"}];
+            if (error)
+                *error = [NSError errorWithDomain: CBJLSONValidatorErrorDomain code: 3
+                                         userInfo: @{NSLocalizedDescriptionKey:
+                                                         @"Cannot load remote schema in offline mode"}];
             return nil;
         }
 
@@ -582,9 +583,10 @@ static NSCache* sCache;
         if (!schema)
             return nil;
         if (![schema isKindOfClass: [NSDictionary class]]) {
-            *error = [NSError errorWithDomain: CBJLSONValidatorErrorDomain code: 2
-                                   userInfo: @{NSLocalizedDescriptionKey:
-                                                                @"Schema is not a JSON object"}];
+            if (error)
+                *error = [NSError errorWithDomain: CBJLSONValidatorErrorDomain code: 2
+                                         userInfo: @{NSLocalizedDescriptionKey:
+                                                         @"Schema is not a JSON object"}];
             return nil;
         }
         validator = [[self alloc] initWithSchema: schema];

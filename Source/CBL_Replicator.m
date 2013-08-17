@@ -96,6 +96,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
         static int sLastSessionID = 0;
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
+#if TARGET_OS_IPHONE
+        // Keeps static analyzer from complaining this ivar is unused:
+        _bgTask = 0;
+#endif
     }
     return self;
 }

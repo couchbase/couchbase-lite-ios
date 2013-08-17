@@ -492,7 +492,7 @@
 
 - (void) dbChanged: (NSNotification*)n {
     // Prevent myself from being dealloced if my client finishes during the call (see issue #266)
-    id retainSelf = self;
+    __unused id retainSelf = self;
 
     NSMutableArray* changes = $marray();
     for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
