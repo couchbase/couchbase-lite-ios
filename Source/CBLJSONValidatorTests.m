@@ -22,6 +22,7 @@
 // https://github.com/json-schema/JSON-Schema-Test-Suite
 
 #if DEBUG
+#if !TARGET_OS_IPHONE  // Test suite files are on desktop filesystem, not device
 
 static NSArray* kIgnoredTests;
 
@@ -91,7 +92,7 @@ TestCase(CBLJSONValidator) {
         if ([testName hasSuffix: @".json"])
             RunJSONSchemaTestFile(testName, loadJSONFile(testsDir, testName));
     }
-
 }
 
+#endif
 #endif //DEBUG

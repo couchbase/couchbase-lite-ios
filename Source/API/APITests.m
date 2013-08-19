@@ -773,9 +773,6 @@ TestCase(API) {
     RequireTestCase(API_Manager);
     RequireTestCase(API_CreateDocument);
     RequireTestCase(API_CreateRevisions);
-    RequireTestCase(API_SaveMultipleDocuments);
-    RequireTestCase(API_SaveMultipleUnsavedDocuments);
-    RequireTestCase(API_DeleteMultipleDocuments);
     RequireTestCase(API_DeleteDocument);
     RequireTestCase(API_PurgeDocument);
     RequireTestCase(API_AllDocuments);
@@ -789,7 +786,6 @@ TestCase(API) {
     RequireTestCase(API_ViewWithLinkedDocs);
     RequireTestCase(API_SharedMapBlocks);
     RequireTestCase(API_LiveQuery);
-    RequireTestCase(API_ViewOptions);
     RequireTestCase(API_Model);
 
     RequireTestCase(API_Replicator);

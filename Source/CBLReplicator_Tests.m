@@ -118,14 +118,20 @@ static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
     repl.authorizer = authorizer();
     [repl start];
 
+    // Start the replicator and wait for it to go active, then inactive:
     CAssert(repl.running);
     Log(@"Waiting for replicator to go idle...");
-    while (repl.active || repl.savingCheckpoint) {
+    bool wasActive = repl.active;
+    while (repl.running || repl.savingCheckpoint) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
+        if (!wasActive)
+            wasActive = repl.active;
+        else if (!repl.active)
+            break;  // Went inactive, so it's done
     }
-    CAssert(!repl.active);
+    CAssert(wasActive && !repl.active);
     CAssert(!repl.savingCheckpoint);
     CAssert(repl.running);
     CAssertNil(repl.error);
@@ -486,7 +492,7 @@ TestCase(ParseReplicatorProperties) {
     CAssertEq(isPush, YES);
     CAssertEq(createTarget, YES);
     CAssertEqual(headers, nil);
-    
+
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
                                     {@"consumer_key", @"consumer_key"},
                                     {@"token_secret", @"token_secret"},

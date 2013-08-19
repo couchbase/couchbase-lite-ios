@@ -226,11 +226,13 @@
 		27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; };
 		27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A98EA317BEDC9900943528 /* ReplicationAPITests.m */; };
-		27A98EA617BEDC9900943528 /* ReplicationAPITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A98EA317BEDC9900943528 /* ReplicationAPITests.m */; };
 		27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */; };
 		27AA409E14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */; };
 		27AA40A314AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA40A014AA8A6600E2A5FF /* CBLDatabase+Replication.m */; };
 		27AA40A414AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA40A014AA8A6600E2A5FF /* CBLDatabase+Replication.m */; };
+		27AD1F8817C29CB00063108F /* libCouchbaseLiteListener.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */; };
+		27AD1F8917C2A08B0063108F /* ReplicationAPITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A98EA317BEDC9900943528 /* ReplicationAPITests.m */; };
+		27AD1F8A17C2A1A40063108F /* CBLRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* CBLRouter_Tests.m */; };
 		27ADC079152502EE001ABC1D /* CBLMultipartDocumentReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27ADC077152502EE001ABC1D /* CBLMultipartDocumentReader.h */; };
 		27ADC07A152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ADC078152502EE001ABC1D /* CBLMultipartDocumentReader.m */; };
 		27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ADC078152502EE001ABC1D /* CBLMultipartDocumentReader.m */; };
@@ -553,6 +555,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 270FE0C714C5008C005FF647;
 			remoteInfo = LiteServ;
+		};
+		27AD1F8617C29BE80063108F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA147C1F14BCAC3B0052DA4D;
+			remoteInfo = "CBL Listener iOS";
 		};
 		27B0B7F41492BC5B00A817AD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1044,6 +1053,7 @@
 				27E00C8E14EC2C74004BCBA9 /* SystemConfiguration.framework in Frameworks */,
 				27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */,
 				27B0B8531492CBE400A817AD /* libCouchbaseLite.a in Frameworks */,
+				27AD1F8817C29CB00063108F /* libCouchbaseLiteListener.a in Frameworks */,
 				27B0B82D1492C4DB00A817AD /* libsqlite3.dylib in Frameworks */,
 				27B0B80D1492C16300A817AD /* UIKit.framework in Frameworks */,
 				27B0B80E1492C16300A817AD /* Foundation.framework in Frameworks */,
@@ -2037,6 +2047,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				27AD1F8717C29BE80063108F /* PBXTargetDependency */,
 				270BDD7315645147007D52F6 /* PBXTargetDependency */,
 			);
 			name = "Grocery Sync iOS Demo";
@@ -2126,6 +2137,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0500;
+				TargetAttributes = {
+					27B0B80A1492C16300A817AD = {
+						DevelopmentTeam = KAZWMGZL2X;
+					};
+				};
 			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "CouchbaseLite" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2481,7 +2497,6 @@
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
-				27A98EA617BEDC9900943528 /* ReplicationAPITests.m in Sources */,
 				27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				272B85161523691700A90CB2 /* CBLJSON.m in Sources */,
@@ -2546,8 +2561,10 @@
 			files = (
 				27B0B8181492C16300A817AD /* main.m in Sources */,
 				27B0B81C1492C16300A817AD /* DemoAppDelegate.m in Sources */,
+				27AD1F8A17C2A1A40063108F /* CBLRouter_Tests.m in Sources */,
 				27F94127176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */,
 				27F94124176F7448007BAEBE /* CBLJSONValidator.m in Sources */,
+				27AD1F8917C2A08B0063108F /* ReplicationAPITests.m in Sources */,
 				27731F3714967A5F00815D67 /* RootViewController.m in Sources */,
 				27731F3814967A5F00815D67 /* ConfigViewController.m in Sources */,
 				27B0B8551492D0A000A817AD /* CBL_View_Tests.m in Sources */,
@@ -2681,6 +2698,11 @@
 			isa = PBXTargetDependency;
 			target = 270FE0C714C5008C005FF647 /* LiteServ */;
 			targetProxy = 275A29161649A55500B0D8EE /* PBXContainerItemProxy */;
+		};
+		27AD1F8717C29BE80063108F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */;
+			targetProxy = 27AD1F8617C29BE80063108F /* PBXContainerItemProxy */;
 		};
 		27B0B7F51492BC5B00A817AD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -3105,7 +3127,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3125,6 +3147,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Grocery Sync";
+				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -3138,8 +3161,8 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
