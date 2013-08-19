@@ -517,8 +517,6 @@
         if (![_db runFilter: _changesFilter params: _changesFilterParams onRevision:rev])
             continue;
 
-        [changes addObject: rev];
-
         if (_longpoll) {
             [changes addObject: rev];
         } else {
