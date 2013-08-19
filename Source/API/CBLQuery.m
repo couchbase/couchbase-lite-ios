@@ -63,6 +63,7 @@
         _database = database;
         _view = view;
         _limit = kDefaultCBLQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
+        _mapOnly = (view.reduceBlock == nil);
     }
     return self;
 }
@@ -123,7 +124,8 @@
         .keys = _keys,
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
-        .reduce = !_mapOnly && _view.reduceBlock != nil,
+        .reduce = !_mapOnly,
+        .reduceSpecified = YES,
         .groupLevel = (unsigned)_groupLevel,
         .descending = _descending,
         .includeDocs = _prefetch,

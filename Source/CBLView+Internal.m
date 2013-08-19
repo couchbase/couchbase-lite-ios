@@ -382,16 +382,24 @@ static id fromJSON( NSData* json ) {
         return nil;
     
     NSMutableArray* rows;
-    
+
     unsigned groupLevel = options->groupLevel;
     bool group = options->group || groupLevel > 0;
-    if (options->reduce || group) {
-        // Reduced or grouped query:
-        if (!self.reduceBlock && !group) {
-            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined", _name);
+    bool reduce;
+    if (options->reduceSpecified) {
+        reduce = options->reduce;
+        if (reduce && !self.reduceBlock) {
+            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined",
+                 _name);
             *outStatus = kCBLStatusBadParam;
             return nil;
         }
+    } else {
+        reduce = (self.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
+    }
+
+    if (reduce || group) {
+        // Reduced or grouped query:
         rows = [self reducedQuery: r group: group groupLevel: groupLevel];
 
     } else {

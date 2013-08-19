@@ -427,7 +427,6 @@ TestCase(CBL_View_Reduce) {
                               $dict({@"key", @"\"Dessert\""}, {@"value", @"6.5"}, {@"seq", @3}) ));
 
     CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.reduce = YES;
     CBLStatus status;
     NSArray* reduced = rowsToDicts([view _queryWithOptions: &options status: &status]);
     CAssertEq(status, kCBLStatusOK);
@@ -465,7 +464,6 @@ TestCase(CBL_View_Grouped) {
     CAssertEq([view updateIndex], kCBLStatusOK);
 
     CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.reduce = YES;
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
     CAssertEq(status, kCBLStatusOK);

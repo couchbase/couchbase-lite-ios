@@ -1014,9 +1014,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return kCBLStatusBadRequest;
     if (keys)
         options.keys = keys;
-    if (!view.reduceBlock)
-        options.reduce = false;
-    
+
     status = [view updateIndex];
     if (status >= kCBLStatusBadRequest)
         return status;
@@ -1084,8 +1082,6 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         CBLStatus status = [view updateIndex];
         if (status >= kCBLStatusBadRequest)
             return status;
-        if (view.reduceBlock)
-            options.reduce = YES;
         return [self queryView: view withOptions: &options];
     } @finally {
         [view deleteView];

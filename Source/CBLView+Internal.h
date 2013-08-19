@@ -26,7 +26,8 @@ typedef struct CBLQueryOptions {
     BOOL updateSeq;
     BOOL localSeq;
     BOOL inclusiveEnd;
-    BOOL reduce;
+    BOOL reduceSpecified;
+    BOOL reduce;                   // Ignore if !reduceSpecified
     BOOL group;
     BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
     CBLStaleness stale;
