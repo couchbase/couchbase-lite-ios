@@ -23,6 +23,10 @@
 - (NSArray*) createReplicationsBetween: (CBLDatabase*)database
                                    and: (NSURL*)otherDbURL
                            exclusively: (bool)exclusively           __attribute__((nonnull(1)));
+#if DEBUG // for unit tests only
+- (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;
+#endif
+
 @end
 
 

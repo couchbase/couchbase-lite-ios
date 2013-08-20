@@ -13,6 +13,8 @@
 
 @interface CBLManager (Internal)
 
+- (NSString*) pathForDatabaseNamed: (NSString*)name;
+
 - (CBLDatabase*) _databaseNamed: (NSString*)name
                       mustExist: (BOOL)mustExist
                           error: (NSError**)outError;

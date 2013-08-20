@@ -25,11 +25,8 @@ static CBLDatabase* createEmptyDB(void) {
     CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
     NSError* error;
-    CBLDatabase* db = dbmgr[@"test_db"];
-    if (db)
-        CAssert([db deleteDatabase: &error], @"Couldn't delete old test_db: %@", error);
-    db = [dbmgr createDatabaseNamed: @"test_db" error: &error];
-    CAssert(db, @"Couldn't create db: %@", error);
+    CBLDatabase* db = [dbmgr createEmptyDatabaseNamed: @"test_db" error: &error];
+    CAssert(db, @"Couldn't create test_db: %@", error);
     return db;
 }
 

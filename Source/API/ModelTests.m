@@ -26,10 +26,7 @@ static CBLDatabase* createEmptyDB(void) {
     CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
     NSError* error;
-    CBLDatabase* db = dbmgr[@"test_db"];
-    if (db)
-        CAssert([db deleteDatabase: &error], @"Couldn't delete old test_db: %@", error);
-    db = [dbmgr createDatabaseNamed: @"test_db" error: &error];
+    CBLDatabase* db = [dbmgr createEmptyDatabaseNamed: @"test_db" error: &error];
     CAssert(db, @"Couldn't create db: %@", error);
     return db;
 }
@@ -119,6 +116,8 @@ TestCase(API_ModelDeleteProperty) {
     CAssertEqual(model.data, data);
     model.data = nil;
     CAssertEqual(model.data, nil);      // Tests issue CouchCocoa #73
+
+    [db close];
 }
 
 
@@ -242,6 +241,7 @@ TestCase(API_SaveModel) {
         CAssertEq(others[1], other);
         CAssertEqual(((TestModel*)others[0]).document.documentID, model2ID);
     }
+    [db close];
 }
 
 
@@ -290,6 +290,7 @@ TestCase(API_ModelAttachments) {
         [model addAttachment: attachment named: @"Caption.txt"];
         CAssert([model save: &error], @"Final save failed: %@", error);
     }
+    [db close];
 }
 
 

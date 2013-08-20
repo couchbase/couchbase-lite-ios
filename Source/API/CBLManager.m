@@ -271,6 +271,22 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+#if DEBUG
+- (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError {
+    CBLDatabase* db = _databases[name];
+    if (db) {
+        if (![db deleteDatabase: outError])
+            return nil;
+    } else {
+        if (![CBLDatabase deleteDatabaseFilesAtPath: [self pathForDatabaseNamed: name]
+                                              error: outError])
+            return nil;
+    }
+    return [self createDatabaseNamed: name error: outError];
+}
+#endif
+
+
 - (BOOL) replaceDatabaseNamed: (NSString*)databaseName
              withDatabaseFile: (NSString*)databasePath
               withAttachments: (NSString*)attachmentsPath
@@ -357,6 +373,13 @@ static NSCharacterSet* kIllegalNameChars;
 @implementation CBLManager (Internal)
 
 
+- (NSString*) pathForDatabaseNamed: (NSString*)name {
+    name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
+                    stringByAppendingPathExtension: kDBExtension];
+    return [_dir stringByAppendingPathComponent: name];
+}
+
+
 // Instantiates a database but doesn't open the file yet.
 - (CBLDatabase*) _databaseNamed: (NSString*)name
                       mustExist: (BOOL)mustExist
@@ -371,9 +394,7 @@ static NSCharacterSet* kIllegalNameChars;
                 *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
             return nil;
         }
-        NSString* filename = [name stringByReplacingOccurrencesOfString: @"/" withString: @":"];
-        filename = [filename stringByAppendingPathExtension: kDBExtension];
-        db = [[CBLDatabase alloc] initWithPath: [_dir stringByAppendingPathComponent: filename]
+        db = [[CBLDatabase alloc] initWithPath: [self pathForDatabaseNamed: name]
                                           name: name
                                        manager: self
                                       readOnly: _options.readOnly];
