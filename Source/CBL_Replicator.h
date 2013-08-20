@@ -47,8 +47,8 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     id<CBLAuthorizer> _authorizer;
     NSDictionary* _options;
     NSDictionary* _requestHeaders;
-    @private
     NSString* _serverType;
+    @private
     CBLReachability* _host;
 #if TARGET_OS_IPHONE
     NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;

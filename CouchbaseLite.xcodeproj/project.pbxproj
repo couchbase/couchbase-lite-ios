@@ -406,6 +406,9 @@
 		27B945B217692E2000B2DF2D /* CBLModel_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945B017692E2000B2DF2D /* CBLModel_Internal.h */; };
 		27B945B317692E2000B2DF2D /* CBLModel_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945B017692E2000B2DF2D /* CBLModel_Internal.h */; };
 		27B945B417692E2000B2DF2D /* CBLModel+Properties.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945B117692E2000B2DF2D /* CBLModel+Properties.m */; };
+		27BDA81E181973EF00F27A11 /* CBLBulkDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */; };
+		27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */; };
+		27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */; };
 		27C40C7914EC58BC00994283 /* CBL_ReplicatorManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */; };
 		27C40C7A14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */; };
 		27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */; };
@@ -1087,6 +1090,8 @@
 		27B945A81768E63200B2DF2D /* CBLModelArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLModelArray.m; sourceTree = "<group>"; };
 		27B945B017692E2000B2DF2D /* CBLModel_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLModel_Internal.h; sourceTree = "<group>"; };
 		27B945B117692E2000B2DF2D /* CBLModel+Properties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLModel+Properties.m"; sourceTree = "<group>"; };
+		27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBulkDownloader.h; sourceTree = "<group>"; };
+		27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBulkDownloader.m; sourceTree = "<group>"; };
 		27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_ReplicatorManager.h; sourceTree = "<group>"; };
 		27C40C7814EC58BC00994283 /* CBL_ReplicatorManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_ReplicatorManager.m; sourceTree = "<group>"; };
 		27C5305214DF3A050078F886 /* CBLMultipartUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartUploader.h; sourceTree = "<group>"; };
@@ -2069,6 +2074,8 @@
 				2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */,
 				2766EFF614DB7F9F009ECCA8 /* CBLMultipartWriter.h */,
 				2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */,
+				27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */,
+				27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */,
 				27103F8114E9CE4400DF7209 /* CBLReachability.h */,
 				27103F8214E9CE4400DF7209 /* CBLReachability.m */,
 			);
@@ -2263,6 +2270,7 @@
 				275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */,
 				275315C014ACF0330065964D /* DDASLLogger.h in Headers */,
 				275315C414ACF0330065964D /* DDFileLogger.h in Headers */,
+				27BDA81E181973EF00F27A11 /* CBLBulkDownloader.h in Headers */,
 				275315C814ACF0330065964D /* DDLog.h in Headers */,
 				27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */,
 				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
@@ -2919,6 +2927,7 @@
 				277EF44A17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
 				277EF43817F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
+				27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
 				27DA435815918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435B15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
 				27E2E5A4159383E9005B9234 /* CBLAttachment.m in Sources */,
@@ -3146,6 +3155,7 @@
 				277EF46C17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
+				27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
 				277EF3A217F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */,
 				277EF47817F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
 				277EF46617F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */,

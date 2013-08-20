@@ -14,7 +14,7 @@
 typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentReader*);
 
 
-@interface CBLMultipartDocumentReader : NSObject <CBLMultipartReaderDelegate, NSStreamDelegate>
+@interface CBLMultipartDocumentReader : NSObject
 {
     @private
     CBLDatabase* _database;

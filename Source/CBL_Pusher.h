@@ -8,6 +8,7 @@
 
 #import "CBL_Puller.h"
 #import "CBLDatabase.h"
+#import "CBLStatus.h"
 
 
 /** Replicator that pushes to a remote CouchDB. */
@@ -26,3 +27,6 @@
 @property BOOL createTarget;
 
 @end
+
+
+CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item);

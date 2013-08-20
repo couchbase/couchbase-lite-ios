@@ -314,7 +314,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                       NSMutableSet* failedIDs = [NSMutableSet set];
                       // _bulk_docs response is really an array, not a dictionary!
                       for (NSDictionary* item in $castIf(NSArray, response)) {
-                          CBLStatus status = statusFromBulkDocsResponseItem(item);
+                          CBLStatus status = CBLStatusFromBulkDocsResponseItem(item);
                           if (CBLStatusIsError(status)) {
                               // One of the docs failed to save.
                               Warn(@"%@: _bulk_docs got an error: %@", self, item);
@@ -350,7 +350,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 }
 
 
-static CBLStatus statusFromBulkDocsResponseItem(NSDictionary* item) {
+CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     NSString* errorStr = item[@"error"];
     if (!errorStr)
         return kCBLStatusOK;

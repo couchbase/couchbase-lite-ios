@@ -23,6 +23,10 @@
 #import "MYStreamUtils.h"
 
 
+@interface CBLMultipartDocumentReader () <CBLMultipartReaderDelegate, NSStreamDelegate>
+@end
+
+
 @implementation CBLMultipartDocumentReader
 
 
