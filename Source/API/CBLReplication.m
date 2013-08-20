@@ -27,6 +27,10 @@
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
+#define kByChannelFilterName @"sync_gateway/bychannel"
+#define kChannelsQueryParam  @"channels"
+
+
 @interface CBLReplication ()
 @property (copy) id source, target;  // document properties
 
@@ -223,6 +227,25 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (void) setHeaders: (NSDictionary*)headers {
     [self setRemoteDictionaryValue: headers forKey: @"headers"];
     [self restart];
+}
+
+
+- (NSArray*) channels {
+    NSString* params = self.query_params[kChannelsQueryParam];
+    if (!self.pull || !$equal(self.filter, kByChannelFilterName) || params.length == 0)
+        return nil;
+    return [params componentsSeparatedByString: @","];
+}
+
+- (void) setChannels:(NSArray *)channels {
+    if (channels) {
+        Assert(self.pull, @"filterChannels can only be set in pull replications");
+        self.filter = kByChannelFilterName;
+        self.query_params = @{kChannelsQueryParam: [channels componentsJoinedByString: @","]};
+    } else if ($equal(self.filter, kByChannelFilterName)) {
+        self.filter = nil;
+        self.query_params = nil;
+    }
 }
 
 

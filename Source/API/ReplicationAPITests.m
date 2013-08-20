@@ -14,6 +14,15 @@
 #if DEBUG
 
 
+static CBLDatabase* createEmptyManagerAndDb(void) {
+    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
+    NSError* error;
+    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: &error];
+    CAssert(db);
+    return db;
+}
+
+
 static void runReplication(CBLReplication* repl) {
     Log(@"Waiting for %@ to finish...", repl);
     bool started = false, done = false;
@@ -35,10 +44,7 @@ static void runReplication(CBLReplication* repl) {
 
 TestCase(CreateReplicators) {
     NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://fake.fake/fakedb"];
-    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
-    NSError* error;
-    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: &error];
-    CAssert(db);
+    CBLDatabase* db = createEmptyManagerAndDb();
 
     // Create a replication:
     CAssertEqual(db.allReplications, @[]);
@@ -78,17 +84,14 @@ TestCase(CreateReplicators) {
     CAssertEqual(r2.remoteURL, fakeRemoteURL);
     CAssert(r2.pull);
 
-    [mgr close];
+    [db.manager close];
 }
 
 
 TestCase(RunReplicatorWithError) {
     RequireTestCase(CreateReplicators);
     NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://couchbase.com/no_such_db"];
-    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
-    NSError* error;
-    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: &error];
-    CAssert(db);
+    CBLDatabase* db = createEmptyManagerAndDb();
 
     // Create a replication:
     CBLReplication* r1 = [db pullFromURL: fakeRemoteURL];
@@ -101,12 +104,43 @@ TestCase(RunReplicatorWithError) {
     CAssertEq(r1.total, 0u);
     CAssertEqual(r1.error.domain, CBLHTTPErrorDomain);
     CAssertEq(r1.error.code, 404);
+
+    [db.manager close];
+}
+
+
+TestCase(ReplicationChannelsProperty) {
+    CBLDatabase* db = createEmptyManagerAndDb();
+    NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://couchbase.com/no_such_db"];
+    CBLReplication* r1 = [db pullFromURL: fakeRemoteURL];
+
+    CAssertNil(r1.channels);
+    r1.filter = @"foo/bar";
+    CAssertNil(r1.channels);
+    r1.query_params = @{@"a": @"b"};
+    CAssertNil(r1.channels);
+
+    r1.channels = nil;
+    CAssertEqual(r1.filter, @"foo/bar");
+    CAssertEqual(r1.query_params, @{@"a": @"b"});
+
+    r1.channels = @[@"NBC", @"MTV"];
+    CAssertEqual(r1.channels, (@[@"NBC", @"MTV"]));
+    CAssertEqual(r1.filter, @"sync_gateway/bychannel");
+    CAssertEqual(r1.query_params, @{@"channels": @"NBC,MTV"});
+
+    r1.channels = nil;
+    CAssertEqual(r1.filter, nil);
+    CAssertEqual(r1.query_params, nil);
+
+    [db.manager close];
 }
 
 
 TestCase(API_Replicator) {
     RequireTestCase(CreateReplicators);
     RequireTestCase(RunReplicatorWithError);
+    RequireTestCase(ReplicationChannelsProperty);
 }
 
 

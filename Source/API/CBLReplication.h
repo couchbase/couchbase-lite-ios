@@ -63,14 +63,21 @@ typedef enum {
 /** Should the replication operate continuously, copying changes as soon as the source database is modified? (Defaults to NO). */
 @property (nonatomic) bool continuous;
 
-/** Path of an optional filter function to run on the source server.
+/** Name of an optional filter function to run on the source server.
     Only documents for which the function returns true are replicated.
-    The path looks like "designdocname/filtername". */
+    * For a pull replication, the name looks like "designdocname/filtername".
+    * For a push replication, use the name under which you registered the filter with the CBLDatabase. */
 @property (nonatomic, copy) NSString* filter;
 
 /** Parameters to pass to the filter function.
     Should map strings to strings. */
 @property (nonatomic, copy) NSDictionary* query_params;
+
+/** List of Sync Gateway channel names to filter by; a nil value means no filtering, i.e. all
+    available channels will be synced.
+    Only valid for pull replications whose source database is on a Couchbase Sync Gateway server.
+    (This is a convenience that just reads or changes the values of .filter and .query_params.) */
+@property (nonatomic, copy) NSArray* channels;
 
 /** Sets the documents to specify as part of the replication. */
 @property (copy) NSArray *doc_ids;
