@@ -146,11 +146,12 @@ NSString* CBLEscapeURLParam( NSString* param ) {
 #ifdef GNUSTEP
     param = [param stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
     param = [param stringByReplacingOccurrencesOfString: @"&" withString: @"%26"];
+    param = [param stringByReplacingOccurrencesOfString: @"+" withString: @"%2B"];
     return param;
 #else
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)param,
-                                                                  NULL, (CFStringRef)@"&",
+                                                                  NULL, (CFStringRef)@"&+",
                                                                   kCFStringEncodingUTF8);
     #ifdef __OBJC_GC__
     return NSMakeCollectable(escaped);
