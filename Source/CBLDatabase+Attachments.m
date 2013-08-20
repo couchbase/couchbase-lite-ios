@@ -63,8 +63,14 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 @implementation CBLDatabase (Attachments)
 
 
++ (NSString*) attachmentStorePath: (NSString*)dbPath {
+    return [[dbPath stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
+
+}
+
+
 - (NSString*) attachmentStorePath {
-    return [[_path stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
+    return [[self class] attachmentStorePath: _path];
 }
 
 

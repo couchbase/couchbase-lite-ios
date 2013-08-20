@@ -99,6 +99,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
                           name: (NSString*)name
                        manager: (CBLManager*)manager
                       readOnly: (BOOL)readOnly;
++ (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbPath error: (NSError**)outError;
 #if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)path;
 #endif

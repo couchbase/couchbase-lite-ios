@@ -72,9 +72,18 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
++ (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbPath error: (NSError**)outError {
+    // Make sure to delete the SQLite side-files as well as the main db file!
+    return CBLRemoveFileIfExists(dbPath, outError)
+        && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-wal"], outError)
+        && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-shm"], outError)
+        && CBLRemoveFileIfExists([self attachmentStorePath: dbPath], outError);
+}
+
+
 #if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)path {
-    if (!CBLRemoveFileIfExists(path, NULL))
+    if (![self deleteDatabaseFilesAtPath: path error: NULL])
         return nil;
     CBLDatabase *db = [[self alloc] initWithPath: path name: nil manager: nil readOnly: NO];
     if (!CBLRemoveFileIfExists(db.attachmentStorePath, NULL))

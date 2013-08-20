@@ -144,8 +144,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     if (!self.exists) {
         return YES;
     }
-    return CBLRemoveFileIfExists(_path, outError)
-        && CBLRemoveFileIfExists(self.attachmentStorePath, outError);
+    return [[self class] deleteDatabaseFilesAtPath: _path error: outError];
 }
 
 
