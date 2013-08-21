@@ -27,6 +27,7 @@
 #import "CBL_DatabaseChange.h"
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
+#import "CBLFacebookAuthorizer.h"
 #import "CBL_Replicator.h"
 #import "CBL_ReplicatorManager.h"
 #import "CBL_Pusher.h"
@@ -78,6 +79,16 @@
     }
 }
 
+- (CBLStatus) do_POST_facebook_token {
+    NSDictionary* body = self.bodyAsDictionary;
+    if (![CBLFacebookAuthorizer registerToken: body[@"access_token"] forEmailAddress: body[@"email"] forSite: body[@"remote_url"]]) {
+        _response.bodyObject = $dict({@"error", @"invalid access_token"});
+        return kCBLStatusBadParam;
+    } else {
+        _response.bodyObject = $dict({@"ok", @"registered"}, {@"email", body[@"email"]});
+        return kCBLStatusOK;
+    }
+}
 
 - (CBLStatus) do_GET_uuids {
     int count = MIN(1000, [self intQuery: @"count" defaultValue: 1]);
