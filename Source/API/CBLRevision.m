@@ -115,7 +115,7 @@
     Assert(rev != nil);
     self = [super initWithDocument: doc];
     if (self) {
-        _rev = rev;
+        _rev = rev.copy;
     }
     return self;
 }
