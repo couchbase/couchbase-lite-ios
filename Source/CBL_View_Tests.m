@@ -119,7 +119,7 @@ TestCase(CBL_View_Index) {
     CAssertEq([view updateIndex], kCBLStatusNotModified);
     
     // Now add a doc and update a doc:
-    CBL_Revision* threeUpdated = [[CBL_Revision alloc] initWithDocID: rev3.docID revID: nil deleted:NO];
+    CBL_MutableRevision* threeUpdated = [[CBL_MutableRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO];
     threeUpdated.properties = $dict({@"key", @"3hree"});
     CBLStatus status;
     rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];

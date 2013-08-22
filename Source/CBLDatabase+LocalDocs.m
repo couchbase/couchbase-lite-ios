@@ -25,9 +25,9 @@
 
 
 - (CBL_Revision*) getLocalDocumentWithID: (NSString*)docID 
-                            revisionID: (NSString*)revID
+                              revisionID: (NSString*)revID
 {
-    CBL_Revision* result = nil;
+    CBL_MutableRevision* result = nil;
     FMResultSet *r = [_fmdb executeQuery: @"SELECT revid, json FROM localdocs WHERE docid=?",docID];
     if ([r next]) {
         NSString* gotRevID = [r stringForColumnIndex: 0];
@@ -46,7 +46,7 @@
         }
         properties[@"_id"] = docID;
         properties[@"_rev"] = gotRevID;
-        result = [[CBL_Revision alloc] initWithDocID: docID revID: gotRevID deleted:NO];
+        result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO];
         result.properties = properties;
     }
     [r close];
@@ -96,7 +96,7 @@
             return nil;
         }
         *outStatus = kCBLStatusCreated;
-        return [revision copyWithDocID: docID revID: newRevID];
+        return [revision mutableCopyWithDocID: docID revID: newRevID];
         
     } else {
         // DELETE:

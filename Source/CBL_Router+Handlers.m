@@ -518,10 +518,11 @@
                 // We need to emit the current sequence # in the feed, so put it in the rev.
                 // This isn't correct internally (this is an old rev so it has an older sequence)
                 // but consumers of the _changes feed don't care about the internal state.
+                CBL_MutableRevision* mRev = winningRev.mutableCopy;
                 if (_changesIncludeDocs)
-                    [_db loadRevisionBody: winningRev options: 0];
-                winningRev.sequence = rev.sequence;
-                rev = winningRev;
+                    [_db loadRevisionBody: mRev options: 0];
+                mRev.sequence = rev.sequence;
+                rev = mRev;
             }
         }
         
@@ -666,8 +667,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             NSString* ancestorID = [_db findCommonAncestorOf: rev withRevIDs: attsSince];
             if (ancestorID)
                 minRevPos = [CBL_Revision generationFromRevID: ancestorID] + 1;
-            [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos
-                           attachmentsFollow: (acceptMultipart != nil)];
+            CBL_MutableRevision* stubbedRev = rev.mutableCopy;
+            [CBLDatabase stubOutAttachmentsIn: stubbedRev beforeRevPos: minRevPos
+                            attachmentsFollow: (acceptMultipart != nil)];
+            rev = stubbedRev;
         }
 
         if (acceptMultipart)
@@ -687,9 +690,11 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             for (CBL_Revision* rev in allRevs.allRevisions) {
                 if (!includeDeleted && rev.deleted)
                     continue;
-                CBLStatus status = [_db loadRevisionBody: rev options: options];
-                if (status < 300)
-                    [result addObject: $dict({@"ok", rev.properties})];
+                CBLStatus status;
+                CBL_Revision* loadedRev = [_db revisionByLoadingBody: rev options: options
+                                                              status: &status];
+                if (loadedRev)
+                    [result addObject: $dict({@"ok", loadedRev.properties})];
                 else if (status < kCBLStatusServerError)
                     [result addObject: $dict({@"missing", rev.revID})];
                 else
@@ -806,7 +811,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (!prevRevID)
         prevRevID = self.ifMatch;
 
-    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: nil deleted: deleting];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: nil
+                                                                  deleted: deleting];
     if (!rev)
         return kCBLStatusBadID;
     rev.body = body;

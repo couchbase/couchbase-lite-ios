@@ -407,7 +407,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-#pragma mark - TRANSACTIONS:
+#pragma mark - TRANSACTIONS & NOTIFICATIONS:
 
 
 - (BOOL) beginTransaction {
@@ -533,10 +533,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         // Careful: I am being called on senderDB's thread, not my own!
         NSMutableArray* echoedChanges = $marray();
         for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
-            if (!change.echoed) {
-                // CBL_Revision objects have mutable state inside, so copy it first:
-                [echoedChanges addObject: [change copy]];
-            }
+            if (!change.echoed)
+                [echoedChanges addObject: change.copy]; // copied change is marked as echoed
         }
         if (echoedChanges.count > 0) {
             LogTo(CBLDatabase, @"%@: Notified of %u changes by %@",
@@ -627,7 +625,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
  Rev must already have its revID and sequence properties set. */
 - (void) expandStoredJSON: (NSData*)json
-             intoRevision: (CBL_Revision*)rev
+             intoRevision: (CBL_MutableRevision*)rev
                   options: (CBLContentOptions)options
 {
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
@@ -648,7 +646,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                     sequence: (SequenceNumber)sequence
                                      options: (CBLContentOptions)options
 {
-    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: deleted];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
+                                                                  deleted: deleted];
     rev.sequence = sequence;
     rev.missing = (json == nil);
     NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
@@ -671,7 +670,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                           options: (CBLContentOptions)options
                            status: (CBLStatus*)outStatus
 {
-    CBL_Revision* result = nil;
+    CBL_MutableRevision* result = nil;
     CBLStatus status;
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence"];
     if (!(options & kCBLNoBody))
@@ -695,7 +694,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (!revID)
             revID = [r stringForColumnIndex: 0];
         BOOL deleted = [r boolForColumnIndex: 1];
-        result = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: deleted];
+        result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
         result.sequence = [r longLongIntForColumnIndex: 2];
         
         if (options != kCBLNoBody) {
@@ -727,11 +726,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (CBLStatus) loadRevisionBody: (CBL_Revision*)rev
-                      options: (CBLContentOptions)options
+- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
+                       options: (CBLContentOptions)options
 {
     if (rev.body && options==0 && rev.sequence)
-        return kCBLStatusOK;
+        return kCBLStatusOK;  // no-op
     Assert(rev.docID && rev.revID);
     FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs, docs "
                             "WHERE revid=? AND docs.docid=? AND revs.doc_id=docs.doc_id LIMIT 1",
@@ -747,6 +746,20 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     }
     [r close];
     return status;
+}
+
+
+- (CBL_Revision*) revisionByLoadingBody: (CBL_Revision*)rev
+                                options: (CBLContentOptions)options
+                                 status: (CBLStatus*)outStatus
+{
+    if (rev.body && options==0 && rev.sequence)
+        return rev;  // no-op
+    CBL_MutableRevision* nuRev = rev.mutableCopy;
+    CBLStatus status = [self loadRevisionBody: nuRev options: options];
+    if (outStatus)
+        *outStatus = status;
+    return nuRev;
 }
 
 
@@ -770,8 +783,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                      numericID: (SInt64)docNumericID
-                                    onlyCurrent: (BOOL)onlyCurrent
+                                        numericID: (SInt64)docNumericID
+                                      onlyCurrent: (BOOL)onlyCurrent
 {
     NSString* sql;
     if (onlyCurrent)
@@ -880,7 +893,9 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
         if (matches) {
             NSString* revID = [r stringForColumnIndex: 2];
             BOOL deleted = [r boolForColumnIndex: 3];
-            CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: deleted];
+            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                            revID: revID
+                                                                          deleted: deleted];
             rev.sequence = sequence;
             rev.missing = [r boolForColumnIndex: 4];
             [history addObject: rev];
@@ -996,7 +1011,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 lastDocID = docNumericID;
             }
             
-            CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: [r stringForColumnIndex: 2]
+            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
                                                           revID: [r stringForColumnIndex: 3]
                                                         deleted: [r boolForColumnIndex: 4]];
             rev.sequence = [r longLongIntForColumnIndex: 0];

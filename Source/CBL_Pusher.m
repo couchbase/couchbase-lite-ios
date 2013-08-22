@@ -243,7 +243,9 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                     CBLContentOptions options = kCBLIncludeAttachments | kCBLIncludeRevs;
                     if (!_dontSendMultipart)
                         options |= kCBLBigAttachmentsFollow;
-                    if ([_db loadRevisionBody: rev options: options] >= 300) {
+                    CBLStatus status;
+                    rev = [_db revisionByLoadingBody: rev options: options status: &status];
+                    if (status >= 300) {
                         Warn(@"%@: Couldn't get local contents of %@", self, rev);
                         [self revisionFailed];
                         return nil;
@@ -256,8 +258,10 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                         // Look for the latest common ancestor and stub out older attachments:
                         NSArray* possible = revResults[@"possible_ancestors"];
                         int minRevPos = findCommonAncestor(rev, possible);
-                        [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: minRevPos + 1
+                        CBL_MutableRevision* stubbedRev = rev.mutableCopy;
+                        [CBLDatabase stubOutAttachmentsIn: stubbedRev beforeRevPos: minRevPos + 1
                                        attachmentsFollow: NO];
+                        rev = stubbedRev;
                         properties = rev.properties;
                         // If the rev has huge attachments, send it under separate cover:
                         if (!_dontSendMultipart && [self uploadMultipartRevision: rev])

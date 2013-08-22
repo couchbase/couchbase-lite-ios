@@ -22,6 +22,7 @@ _kCBLDocumentChangeNotification
 .objc_class_name_CBL_BlobStore
 .objc_class_name_CBL_BlobStoreWriter
 .objc_class_name_CBL_Body
+.objc_class_name_CBL_MutableRevision
 .objc_class_name_CBL_Revision
 .objc_class_name_CBL_RevisionList
 

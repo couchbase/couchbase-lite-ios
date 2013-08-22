@@ -19,6 +19,14 @@
 
 
 @implementation CBL_Revision
+{
+@protected
+    CBL_Body* _body;
+    NSString* _docID, *_revID;
+    SequenceNumber _sequence;
+    bool _deleted;
+    bool _missing;
+}
 
 - (instancetype) initWithDocID: (NSString*)docID
                          revID: (NSString*)revID
@@ -43,7 +51,7 @@
                          revID: body[@"_rev"]
                        deleted: body[@"_deleted"] == $true];
     if (self) {
-        self.body = body;
+        _body = body;
     }
     return self;
 }
@@ -62,15 +70,30 @@
 
 
 - (id) copyWithZone: (NSZone*)zone {
-    CBL_Revision* rev = [[[self class] alloc] initWithDocID: _docID revID: _revID deleted: _deleted];
-    rev->_body = [_body copy];
-    rev->_sequence = _sequence;
-    rev->_missing = _missing;
+    return self; // I am immutable
+}
+
+- (id) mutableCopyWithZone: (NSZone*)zone {
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID revID: _revID
+                                                                  deleted: _deleted];
+    rev.body = _body;
+    rev.sequence = _sequence;
+    rev.missing = _missing;
     return rev;
 }
 
-@synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing,
-            body=_body, sequence=_sequence;
+@synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing, body=_body;
+
+- (SequenceNumber) sequence {
+    return _sequence;
+}
+
+- (void) setSequence:(SequenceNumber)sequence {
+    if (sequence != _sequence) {
+        Assert(_sequence == 0, @"Sequence has already been set");
+        _sequence = sequence;
+    }
+}
 
 - (unsigned) generation {
     return [[self class] generationFromRevID: _revID];
@@ -107,20 +130,12 @@
     return _body.properties;
 }
 
-- (void) setProperties:(NSDictionary *)properties {
-    self.body = [CBL_Body bodyWithProperties: properties];
-}
-
 - (id)objectForKeyedSubscript:(id)key {
     return [_body objectForKeyedSubscript: key];
 }
 
 - (NSData*) asJSON {
     return _body.asJSON;
-}
-
-- (void) setAsJSON:(NSData *)asJSON {
-    self.body = [CBL_Body bodyWithJSON: asJSON];
 }
 
 - (NSString*) description {
@@ -140,10 +155,11 @@
     return CBLSequenceCompare(_sequence, rev->_sequence);
 }
 
-- (CBL_Revision*) copyWithDocID: (NSString*)docID revID: (NSString*)revID {
+- (CBL_MutableRevision*) mutableCopyWithDocID: (NSString*)docID revID: (NSString*)revID {
     Assert(docID && revID);
     Assert(!_docID || $equal(_docID, docID));
-    CBL_Revision* rev = [[[self class] alloc] initWithDocID: docID revID: revID deleted: _deleted];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
+                                                                  deleted: _deleted];
 
     // Update the _id and _rev in the new object's JSON:
     NSDictionary* properties = self.properties;
@@ -152,10 +168,43 @@
     [nuProperties setValue: docID forKey: @"_id"];
     [nuProperties setValue: revID forKey: @"_rev"];
     rev.properties = nuProperties;
-
     return rev;
 }
 
+
+@end
+
+
+
+@implementation CBL_MutableRevision
+
+- (void) setBody:(CBL_Body *)body {
+    _body = body;
+}
+
+- (void) setProperties:(NSDictionary *)properties {
+    self.body = [CBL_Body bodyWithProperties: properties];
+}
+
+- (void) setAsJSON:(NSData *)asJSON {
+    self.body = [CBL_Body bodyWithJSON: asJSON];
+}
+
+- (void) setSequence:(SequenceNumber)sequence {
+    _sequence = sequence;
+}
+
+- (void) setMissing:(bool)missing {
+    _missing = missing;
+}
+
+- (id) copyWithZone: (NSZone*)zone {
+    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: _docID revID: _revID deleted: _deleted];
+    rev->_body = _body;
+    rev->_sequence = _sequence;
+    rev->_missing = _missing;
+    return rev;
+}
 
 @end
 

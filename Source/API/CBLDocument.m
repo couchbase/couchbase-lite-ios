@@ -218,8 +218,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties
-                       prevRevID: (NSString*)prevID
-                           error: (NSError**)outError
+                     prevRevID: (NSString*)prevID
+                         error: (NSError**)outError
 {
     id idProp = [properties objectForKey: @"_id"];
     if (idProp && ![idProp isEqual: self.documentID])
@@ -238,18 +238,19 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     }
     
     BOOL deleted = !properties || [properties[@"_deleted"] boolValue];
-    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: _docID
-                                                  revID: nil
-                                                deleted: deleted];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID
+                                                                    revID: nil
+                                                                  deleted: deleted];
     if (properties)
         rev.properties = properties;
     CBLStatus status = 0;
-    rev = [_database putRevision: rev prevRevisionID: prevID allowConflict: NO status: &status];
-    if (!rev) {
+    CBL_Revision* newRev = [_database putRevision: rev prevRevisionID: prevID
+                                    allowConflict: NO status: &status];
+    if (!newRev) {
         if (outError) *outError = CBLStatusToNSError(status, nil);
         return nil;
     }
-    return [[CBLRevision alloc] initWithDocument: self revision: rev];
+    return [[CBLRevision alloc] initWithDocument: self revision: newRev];
 }
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {

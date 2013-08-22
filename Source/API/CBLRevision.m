@@ -115,7 +115,7 @@
     Assert(rev != nil);
     self = [super initWithDocument: doc];
     if (self) {
-        _rev = rev.copy;
+        _rev = rev.copy; // copy it in case original is mutable!
     }
     return self;
 }
@@ -142,14 +142,22 @@
 - (BOOL) isDeleted          {return _rev.deleted;}
 
 
+- (bool) loadProperties {
+    CBLStatus status;
+    CBL_Revision* rev = [self.database revisionByLoadingBody: _rev options: 0 status: &status];
+    if (!rev) {
+        Warn(@"Couldn't load body/sequence of %@: %d", self, status);
+        return false;
+    }
+    _rev = rev;
+    return true;
+}
+
+
 - (SequenceNumber) sequence {
     SequenceNumber sequence = _rev.sequence;
-    if (sequence == 0) {
-        CBLStatus status = [self.database loadRevisionBody: _rev options: 0];
-        if (CBLStatusIsError(status))
-            Warn(@"Couldn't get sequence of %@: %d", self, status);
-        sequence = _rev.sequence;
-    }
+    if (sequence == 0 && [self loadProperties])
+            sequence = _rev.sequence;
     return sequence;
 }
 
@@ -157,10 +165,8 @@
 - (NSDictionary*) properties {
     NSDictionary* properties = _rev.properties;
     if (!properties && !_checkedProperties) {
-        CBLStatus status = [self.database loadRevisionBody: _rev options: 0];
-        if (CBLStatusIsError(status))
-            Warn(@"Couldn't load properties of %@: %d", self, status);
-        properties = _rev.properties;
+        if ([self loadProperties])
+            properties = _rev.properties;
         _checkedProperties = YES;
     }
     return properties;

@@ -232,9 +232,9 @@ static NSString* makeLocalDocID(NSString* docID) {
             status = kCBLStatusNotFound;
             return NO;
         }
-        CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: localDocID
-                                                          revID: nil
-                                                        deleted: (properties == nil)];
+        CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: localDocID
+                                                                        revID: nil
+                                                                      deleted: (properties == nil)];
         if (properties)
             rev.properties = properties;
         // Now update the doc (or delete it, if properties is nil):

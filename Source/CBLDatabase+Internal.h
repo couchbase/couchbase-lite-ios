@@ -145,8 +145,11 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;
 
-- (CBLStatus) loadRevisionBody: (CBL_Revision*)rev
-                      options: (CBLContentOptions)options;
+- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
+                       options: (CBLContentOptions)options;
+- (CBL_Revision*) revisionByLoadingBody: (CBL_Revision*)rev
+                                options: (CBLContentOptions)options
+                                 status: (CBLStatus*)outStatus;
 
 - (SInt64) getDocNumericID: (NSString*)docID;
 - (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID

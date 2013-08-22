@@ -323,10 +323,12 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
             if (repl)
                 [self processDeletion: rev ofReplicator: repl];
         } else {
-            if ([_replicatorDB loadRevisionBody: rev options: 0])
+            CBLStatus status;
+            rev = [_replicatorDB revisionByLoadingBody: rev options: 0 status: &status];
+            if (rev)
                 [self processRevision: rev];
             else
-                Warn(@"Unable to load body of %@", rev);
+                Warn(@"Unable to load body of %@: %d", rev, status);
         }
     }
 }

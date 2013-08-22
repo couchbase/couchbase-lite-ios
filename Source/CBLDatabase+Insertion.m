@@ -272,7 +272,7 @@
         return nil;
     }
 
-    __block CBL_Revision* newRev = nil;
+    __block CBL_MutableRevision* newRev = nil;
     __block CBL_Revision* winningRev = nil;
     __block BOOL maybeConflict = NO;
 
@@ -392,7 +392,7 @@
         if (!newRevID)
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
         Assert(docID);
-        newRev = [oldRev copyWithDocID: docID revID: newRevID];
+        newRev = [oldRev mutableCopyWithDocID: docID revID: newRevID];
         [CBLDatabase stubOutAttachments: attachments inRevision: newRev];
         
         // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
@@ -455,10 +455,11 @@
 
 
 /** Add an existing revision of a document (probably being pulled) plus its ancestors. */
-- (CBLStatus) forceInsert: (CBL_Revision*)rev
+- (CBLStatus) forceInsert: (CBL_Revision*)inRev
           revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
                    source: (NSURL*)source
 {
+    CBL_MutableRevision* rev = inRev.mutableCopy;
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     if (![CBLDatabase isValidDocumentID: docID] || !revID)
@@ -534,7 +535,7 @@
                     maybeConflict = maybeConflict || (!rev.deleted && !$equal(localParentRevID, revID));
                 }
 
-                CBL_Revision* newRev;
+                CBL_MutableRevision* newRev;
                 NSData* json = nil;
                 BOOL current = NO;
                 if (i==0) {
@@ -546,7 +547,8 @@
                     current = YES;
                 } else {
                     // It's an intermediate parent, so insert a stub:
-                    newRev = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: NO];
+                    newRev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
+                                                                deleted: NO];
                 }
 
                 // Insert it:
@@ -557,8 +559,7 @@
                                            JSON: json];
                 if (sequence <= 0)
                     return self.lastDbError;
-                newRev.sequence = sequence;
-                
+
                 if (i==0) {
                     // Write any changed attachments for the new revision. As the parent sequence use
                     // the latest local revision (this is to copy attachments from):
@@ -780,7 +781,7 @@
 
 - (CBL_Revision*) current_Revision {
     if (_currentRevision)
-        [_db loadRevisionBody: _currentRevision options: 0];
+        _currentRevision = [_db revisionByLoadingBody: _currentRevision options: 0 status: NULL];
     return _currentRevision;
 }
 

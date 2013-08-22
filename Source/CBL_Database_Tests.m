@@ -240,6 +240,13 @@ TestCase(CBL_Database_DeleteAndRecreate) {
 }
 
 
+static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* properties) {
+    CBL_MutableRevision* nuRev = rev.mutableCopy;
+    nuRev.properties = properties;
+    return nuRev;
+}
+
+
 TestCase(CBL_Database_Validation) {
     CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
@@ -268,7 +275,7 @@ TestCase(CBL_Database_Validation) {
     
     // PUT a valid update:
     props[@"head_count"] = @3;
-    rev.properties = props;
+    rev = revBySettingProperties(rev, props);
     validationCalled = NO;
     rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(validationCalled);
@@ -276,7 +283,7 @@ TestCase(CBL_Database_Validation) {
     
     // PUT an invalid update:
     [props removeObjectForKey: @"towel"];
-    rev.properties = props;
+    rev = revBySettingProperties(rev, props);
     validationCalled = NO;
 #pragma unused (rev)  // tell analyzer to ignore dead stores below
     rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
@@ -360,7 +367,7 @@ TestCase(CBL_Database_RevTree) {
                        change = changes[0];
                    }];
 
-    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     NSArray* history = @[rev.revID, @"3-thrice", @"2-too", @"1-won"];
     change = nil;
@@ -371,7 +378,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertEqual(change, announcement(rev, rev));
 
 
-    CBL_Revision* conflict = [[CBL_Revision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO];
+    CBL_MutableRevision* conflict = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO];
     conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
                                 {@"message", @"yo"});
     NSArray* conflictHistory = @[conflict.revID, @"4-delta", @"3-gamma", @"2-too", @"1-won"];
@@ -383,7 +390,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertEqual(change, announcement(conflict, conflict));
 
     // Add an unrelated document:
-    CBL_Revision* other = [[CBL_Revision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO];
+    CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO];
     other.properties = $dict({@"language", @"jp"});
     change = nil;
     status = [db forceInsert: other revisionHistory: @[other.revID] source: nil];
@@ -797,32 +804,32 @@ TestCase(CBL_Database_StubOutAttachmentsBeforeRevPos) {
     NSDictionary* goodbye = $dict({@"revpos", @2}, {@"data", @"squeeee"});
     NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
     
-    CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
+    CBL_MutableRevision* rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
     [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"stub", $true})})}));
     
-    rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
+    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
     [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", goodbye})}));
     
-    rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
+    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
     [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: NO];
     CAssertEqual(rev.properties, $dict({@"_attachments", attachments}));
     
     // Now test the "follows" mode:
-    rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
+    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
     [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: YES];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"stub", $true})})}));
 
-    rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
+    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
     [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: YES];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"follows", $true})})}));
     
-    rev = [CBL_Revision revisionWithProperties: $dict({@"_attachments", attachments})];
+    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
     [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: YES];
     CAssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"follows", $true})},
                                                                {@"goodbye", $dict({@"revpos", @2}, {@"follows", $true})})}));

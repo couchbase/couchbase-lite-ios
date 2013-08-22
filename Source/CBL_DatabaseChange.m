@@ -22,20 +22,20 @@
 {
     self = [super init];
     if (self) {
-        _addedRevision = addedRevision;
-        _winningRevision = winningRevision;
+        // Input CBL_Revisions need to be copied in case they are mutable:
+        _addedRevision = addedRevision.copy;
+        _winningRevision = winningRevision.copy;
     }
     return self;
 }
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    // CBL_Revisions need to be copied because they contain mutable state:
-    CBL_DatabaseChange* change =  [[[self class] alloc] initWithAddedRevision: [_addedRevision copy]
-                                                         winningRevision: [_winningRevision copy]];
+    CBL_DatabaseChange* change =  [[[self class] alloc] initWithAddedRevision: _addedRevision
+                                                              winningRevision: _winningRevision];
     change->_maybeConflict = _maybeConflict;
     change->_source = _source;
-    change->_echoed = true;
+    change->_echoed = true; // Copied changes are echoes
     return change;
 }
 

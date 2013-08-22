@@ -368,7 +368,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 // Calls the block on every attachment dictionary. The block can return a different dictionary,
 // which will be replaced in the rev's properties. If it returns nil, the operation aborts.
 // Returns YES if any changes were made.
-+ (BOOL) mutateAttachmentsIn: (CBL_Revision*)rev
++ (BOOL) mutateAttachmentsIn: (CBL_MutableRevision*)rev
                    withBlock: (NSDictionary*(^)(NSString*, NSDictionary*))block
 {
     NSDictionary* properties = rev.properties;
@@ -402,7 +402,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 
 + (void) stubOutAttachments: (NSDictionary*)attachments
-                 inRevision: (CBL_Revision*)rev
+                 inRevision: (CBL_MutableRevision*)rev
 {
     [self mutateAttachmentsIn: rev
                     withBlock: ^NSDictionary *(NSString *name, NSDictionary *attachment) {
@@ -428,7 +428,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 // Replaces attachment data whose revpos is < minRevPos with stubs.
 // If attachmentsFollow==YES, replaces data with "follows" key.
-+ (void) stubOutAttachmentsIn: (CBL_Revision*)rev
++ (void) stubOutAttachmentsIn: (CBL_MutableRevision*)rev
                  beforeRevPos: (int)minRevPos
             attachmentsFollow: (BOOL)attachmentsFollow
 {
@@ -464,7 +464,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 
 // Replaces the "follows" key with the real attachment data in all attachments to 'doc'.
-- (BOOL) inlineFollowingAttachmentsIn: (CBL_Revision*)rev error: (NSError**)outError {
+- (BOOL) inlineFollowingAttachmentsIn: (CBL_MutableRevision*)rev error: (NSError**)outError {
     __block NSError *error = nil;
     [[self class] mutateAttachmentsIn: rev
                             withBlock:
@@ -653,9 +653,9 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID))
         return nil;
 
-    CBL_Revision* oldRev = [[CBL_Revision alloc] initWithDocID: docID
-                                                      revID: oldRevID
-                                                    deleted: NO];
+    CBL_MutableRevision* oldRev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                       revID: oldRevID
+                                                                     deleted: NO];
     if (oldRevID) {
         // Load existing revision if this is a replacement:
         *outStatus = [self loadRevisionBody: oldRev options: 0];

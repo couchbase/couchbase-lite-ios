@@ -41,10 +41,10 @@ typedef enum {
 /** Modifies a CBL_Revision's _attachments dictionary by changing all attachments into stubs.
     Attachments without a "revpos" property will be assigned one with rev's generation. */
 + (void) stubOutAttachments: (NSDictionary*)attachments
-                 inRevision: (CBL_Revision*)rev;
+                 inRevision: (CBL_MutableRevision*)rev;
 
 /** Modifies a CBL_Revision's _attachments dictionary by changing all attachments with revpos < minRevPos into stubs; and if 'attachmentsFollow' is true, the remaining attachments will be modified to _not_ be stubs but include a "follows" key instead of a body. */
-+ (void) stubOutAttachmentsIn: (CBL_Revision*)rev
++ (void) stubOutAttachmentsIn: (CBL_MutableRevision*)rev
                  beforeRevPos: (int)minRevPos
             attachmentsFollow: (BOOL)attachmentsFollow;
 

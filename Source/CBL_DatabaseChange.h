@@ -16,10 +16,11 @@
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
                        winningRevision: (CBL_Revision*)winningRevision;
 
-/** The revision just added. */
+/** The revision just added. Guaranteed immutable. */
 @property (nonatomic, readonly) CBL_Revision* addedRevision;
 
-/** The revision that is now the default "winning" revision of the document. */
+/** The revision that is now the default "winning" revision of the document.
+    Guaranteed immutable.*/
 @property (nonatomic, readonly) CBL_Revision* winningRevision;
 
 /** True if the document might be in conflict. */
