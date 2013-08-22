@@ -26,7 +26,8 @@
 #import "CBLStatus.h"
 
 
-#define kDBExtension @"touchdb" // For backward compatibility reasons we're not changing this
+#define kOldDBExtension @"touchdb" // Used before CBL beta 1
+#define kDBExtension @"cblite"
 
 
 static const CBLManagerOptions kCBLManagerDefaultOptions;
@@ -111,6 +112,7 @@ static NSCharacterSet* kIllegalNameChars;
                 return nil;
             }
         }
+        [self upgradeOldDatabaseFiles];
 
         _replications = [[NSMutableArray alloc] init];
 
@@ -176,6 +178,28 @@ static NSCharacterSet* kIllegalNameChars;
 - (void)dealloc
 {
     [self close];
+}
+
+
+// Scan my dir for older ".touchdb" databases & rename them to ".cblite"
+- (void) upgradeOldDatabaseFiles {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSArray* files = [fmgr contentsOfDirectoryAtPath: _dir error: NULL];
+    for (NSString* filename in [files pathsMatchingExtensions: @[kOldDBExtension]]) {
+        NSString* oldPath = [_dir stringByAppendingPathComponent: filename];
+        NSString* newPath = [oldPath.stringByDeletingPathExtension
+                                            stringByAppendingPathExtension: kDBExtension];
+        Log(@"Renaming old database file %@", oldPath);
+        for (NSString* suffix in @[@"", @"-wal", @"-shm"]) {
+            NSError* error;
+            BOOL ok = [[NSFileManager defaultManager]
+                    moveItemAtPath: [oldPath stringByAppendingString: suffix]
+                            toPath: [newPath stringByAppendingString: suffix]
+                             error: &error];
+            if (!ok)
+                Warn(@"Couldn't move %@: %@", oldPath, error);
+        }
+    }
 }
 
 
