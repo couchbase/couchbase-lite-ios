@@ -81,7 +81,7 @@
 
 - (CBLStatus) do_POST_facebook_token {
     NSDictionary* body = self.bodyAsDictionary;
-    if (![CBLFacebookAuthorizer registerToken: body[@"access_token"] forEmailAddress: body[@"email"] forSite: body[@"remote_url"]]) {
+    if (![CBLFacebookAuthorizer registerToken: body[@"access_token"] forEmailAddress: body[@"email"] forSite: [NSURL URLWithString: body[@"remote_url"]]]) {
         _response.bodyObject = $dict({@"error", @"invalid access_token"});
         return kCBLStatusBadParam;
     } else {
