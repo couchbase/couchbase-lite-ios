@@ -322,6 +322,29 @@ TestCase(CBL_View_Query) {
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
     
+    // Limit:
+    options = kDefaultCBLQueryOptions;
+    options.limit = 2;
+    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                          $dict({@"id",  @"44444"}, {@"key", @"four"}));
+    CAssertEqual(rows, expectedRows);
+
+    // Skip rows:
+    options = kDefaultCBLQueryOptions;
+    options.skip = 2;
+    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}),
+                          $dict({@"id",  @"33333"}, {@"key", @"three"}),
+                          $dict({@"id",  @"22222"}, {@"key", @"two"}));
+    CAssertEqual(rows, expectedRows);
+
+    // Skip + limit:
+    options.limit = 1;
+    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
+    CAssertEqual(rows, expectedRows);
+
     // Specific keys:
     options = kDefaultCBLQueryOptions;
     NSArray* keys = @[@"two", @"four"];
@@ -330,6 +353,7 @@ TestCase(CBL_View_Query) {
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
     CAssertEqual(rows, expectedRows);
+
     [db close];
 }
 

@@ -353,15 +353,12 @@ static id fromJSON( NSData* json ) {
     [sql appendString: collationStr];
     if (options->descending)
         [sql appendString: @" DESC"];
-    if (options->limit != kDefaultCBLQueryOptions.limit) {
-        [sql appendString: @" LIMIT ?"];
-        [args addObject: @(options->limit)];
-    }
-    if (options->skip > 0) {
-        [sql appendString: @" OFFSET ?"];
-        [args addObject: @(options->skip)];
-    }
-    
+
+    [sql appendString: @" LIMIT ? OFFSET ?"];
+    int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
+    [args addObject: @(limit)];
+    [args addObject: @(options->skip)];
+
     LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
     
     FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
