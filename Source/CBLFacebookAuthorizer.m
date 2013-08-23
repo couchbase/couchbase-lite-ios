@@ -56,7 +56,7 @@ static NSMutableDictionary* sRegisteredTokens;
 
 
 - (NSString*) loginPathForSite: (NSURL*)site {
-    return @"/_facebook";
+    return [site.path stringByAppendingPathComponent: @"_facebook"];
 }
 
 
