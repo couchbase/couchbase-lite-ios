@@ -85,7 +85,12 @@
     NSString* remote_url = $castIf(NSString, body[@"remote_url"]);
     NSString* access_token = $castIf(NSString, body[@"access_token"]);
     if (email && access_token && remote_url) {
-        if (![CBLFacebookAuthorizer registerToken: access_token forEmailAddress: email forSite: [NSURL URLWithString: remote_url]]) {
+        NSURL* site_url = [NSURL URLWithString: remote_url];
+        if (!site_url) {
+            _response.bodyObject = $dict({@"error", @"invalid remote_url"});
+            return kCBLStatusBadParam;
+        }
+        if (![CBLFacebookAuthorizer registerToken: access_token forEmailAddress: email forSite: site_url]) {
             _response.bodyObject = $dict({@"error", @"invalid access_token"});
             return kCBLStatusBadParam;
         } else {
