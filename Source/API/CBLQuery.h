@@ -115,6 +115,9 @@ typedef enum {
 /** In CBLLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
 @property (readonly, retain) CBLQueryEnumerator* rows;
 
+/** Blocks until the intial async query finishes. After this call either .rows or .error will be non-nil. */
+- (BOOL) waitForRows;
+
 @end
 
 

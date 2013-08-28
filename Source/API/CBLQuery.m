@@ -276,6 +276,19 @@
 }
 
 
+- (BOOL) waitForRows {
+    [self start];
+    while (!_rows && !CBLStatusIsError(_status)) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate distantFuture]]) {
+            Warn(@"CBLQuery waitForRows: Runloop stopped");
+            break;
+        }
+    }
+    return _rows != nil;
+}
+
+
 @end
 
 
