@@ -258,5 +258,21 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     return [self putProperties: properties prevRevID: prevID error: outError];
 }
 
+- (CBLRevision*) update: (BOOL(^)(CBLNewRevision*))block error: (NSError**)outError {
+    NSError* error;
+    do {
+        CBLNewRevision* newRev = self.newRevision;
+        if (!block(newRev)) {
+            error = nil;
+            break; // cancel
+        }
+        CBLRevision* savedRev = [newRev save: &error];
+        if (savedRev)
+            return savedRev; // success
+    } while (CBLStatusFromNSError(error, 500) == kCBLStatusConflict);
+    if (outError)
+        *outError = error;
+    return nil;
+}
 
 @end

@@ -83,6 +83,20 @@
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties property.) */
 - (CBLRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
 
+/** Saves a new revision by letting the caller update the existing properties.
+    This method handles conflicts by retrying (calling the block again).
+    The block body should modify the properties of the new revision and return YES to save or
+    NO to cancel. Be careful: the block can be called multiple times if there is a conflict!
+    @param block  Will be called on each attempt to save. Should update the given revision's
+            properties and then return YES, or just return NO to cancel.
+    @param outError  Will point to the error, if the method returns nil. (If the callback block
+            cancels by returning nil, the error will be nil.) If this parameter is NULL, no
+            error will be stored.
+    @return  The new saved revision, or nil on error or cancellation.
+ */
+- (CBLRevision*) update: (BOOL(^)(CBLNewRevision*))block
+                  error: (NSError**)outError                            __attribute__((nonnull(1)));
+
 
 #pragma mark MODEL:
 
