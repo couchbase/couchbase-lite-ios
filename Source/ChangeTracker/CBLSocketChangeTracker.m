@@ -25,8 +25,6 @@
 #import <string.h>
 
 
-#define kMaxRetries 6
-#define kInitialRetryDelay 0.2
 #define kReadLength 4096u
 
 
@@ -255,7 +253,7 @@
             if (_credential) {
                 // Recoverable auth failure -- close socket but try again with _credential:
                 _unauthResponse = response;
-                [self errorOccurred: CBLStatusToNSError((CBLStatus)status, self.changesFeedURL)];
+                [self failedWithError: CBLStatusToNSError((CBLStatus)status, self.changesFeedURL)];
                 return NO;
             }
         }
@@ -334,9 +332,9 @@
     } else {
         // Response data was truncated. This has been reported as an intermittent error
         // (see TouchDB issue #241). Treat it as if it were a socket error -- i.e. pause/retry.
-        [self errorOccurred: [NSError errorWithDomain: NSURLErrorDomain
-                                                 code: NSURLErrorNetworkConnectionLost
-                                             userInfo: nil]];
+        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                   code: NSURLErrorNetworkConnectionLost
+                                               userInfo: nil]];
     }
     return YES;
 }
@@ -440,26 +438,16 @@
 }
 
 
-- (void) errorOccurred: (NSError*)error {
-    LogTo(ChangeTracker, @"%@: ErrorOccurred: %@", self, error);
-    if (++_retryCount <= kMaxRetries) {
-        [self clearConnection];
-        NSTimeInterval retryDelay = kInitialRetryDelay * (1 << (_retryCount-1));
-        [self performSelector: @selector(start) withObject: nil afterDelay: retryDelay];
-    } else {
-        Warn(@"%@: Can't connect, giving up: %@", self, error);
-
-        // Map lower-level errors from CFStream to higher-level NSURLError ones:
-        if ($equal(error.domain, NSPOSIXErrorDomain)) {
-            if (error.code == ECONNREFUSED)
-                error = [NSError errorWithDomain: NSURLErrorDomain
-                                            code: NSURLErrorCannotConnectToHost
-                                        userInfo: error.userInfo];
-        }
-
-        self.error = error;
-        [self stop];
+- (void) failedWithError:(NSError*) error {
+    // Map lower-level errors from CFStream to higher-level NSURLError ones:
+    if ($equal(error.domain, NSPOSIXErrorDomain)) {
+        if (error.code == ECONNREFUSED)
+            error = [NSError errorWithDomain: NSURLErrorDomain
+                                        code: NSURLErrorCannotConnectToHost
+                                    userInfo: error.userInfo];
     }
+    [self clearConnection];
+    [super failedWithError: error];
 }
 
 
@@ -483,9 +471,9 @@
             LogTo(ChangeTracker, @"%@: EndEncountered %@", self, stream);
             _atEOF = true;
             if (!_gotResponseHeaders || (_mode == kContinuous && _inputBuffer.length > 0)) {
-                [self errorOccurred: [NSError errorWithDomain: NSURLErrorDomain
-                                                         code: NSURLErrorNetworkConnectionLost
-                                                     userInfo: nil]];
+                [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                           code: NSURLErrorNetworkConnectionLost
+                                                       userInfo: nil]];
                 break;
             }
             if (_mode == kContinuous) {
@@ -497,7 +485,7 @@
             break;
             
         case NSStreamEventErrorOccurred:
-            [self errorOccurred: stream.streamError];
+            [self failedWithError: stream.streamError];
             break;
             
         default:

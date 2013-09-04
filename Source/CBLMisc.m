@@ -249,6 +249,19 @@ BOOL CBLMayBeTransientError( NSError* error ) {
 }
 
 
+BOOL CBLIsPermanentError( NSError* error ) {
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    if ($equal(domain, NSURLErrorDomain)) {
+        return code == NSURLErrorBadURL || code == NSURLErrorUnsupportedURL;
+    } else if ($equal(domain, CBLHTTPErrorDomain)) {
+        return code >= 400 && code <= 499;
+    } else {
+        return NO;
+    }
+}
+
+
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     return [fmgr removeItemAtPath: path error: outError] || ![fmgr fileExistsAtPath: path];

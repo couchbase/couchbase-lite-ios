@@ -46,6 +46,7 @@ typedef enum CBLChangeTrackerMode {
     id _lastSequenceID;
     unsigned _limit;
     NSError* _error;
+    BOOL _continuous;
     BOOL _includeConflicts;
     NSString* _filterName;
     NSDictionary* _filterParameters;
@@ -65,6 +66,7 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly, nonatomic) NSString* databaseName;
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly, copy, nonatomic) id lastSequenceID;
+@property (nonatomic) BOOL continuous;  // If true, never give up due to errors
 @property (strong, nonatomic) NSError* error;
 @property (weak, nonatomic) id<CBLChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;

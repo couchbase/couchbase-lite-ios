@@ -25,7 +25,7 @@
 #define kDefaultHeartbeat (5 * 60.0)
 
 #define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
-#define kMaxRetryDelay 300.0        // ...but will never get longer than this
+#define kMaxRetryDelay (10*60.0)    // ...but will never get longer than this
 
 
 @interface CBLChangeTracker ()
@@ -36,7 +36,7 @@
 @implementation CBLChangeTracker
 
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
-@synthesize limit=_limit, heartbeat=_heartbeat, error=_error;
+@synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
 @synthesize docIDs = _docIDs;
@@ -167,17 +167,17 @@
 
 - (void) failedWithError: (NSError*)error {
     // If the error may be transient (flaky network, server glitch), retry:
-    if (CBLMayBeTransientError(error)) {
+    if (!CBLIsPermanentError(error) && (_continuous || CBLMayBeTransientError(error))) {
         NSTimeInterval retryDelay = kInitialRetryDelay * (1 << MIN(_retryCount, 16U));
         retryDelay = MIN(retryDelay, kMaxRetryDelay);
         ++_retryCount;
-        Log(@"%@: Connection error, retrying in %.1f sec: %@",
-            self, retryDelay, error.localizedDescription);
+        Log(@"%@: Connection error #%d, retrying in %.1f sec: %@",
+            self, _retryCount, retryDelay, error.localizedDescription);
         [self performSelector: @selector(retry) withObject: nil afterDelay: retryDelay];
     } else {
         Warn(@"%@: Can't connect, giving up: %@", self, error);
         self.error = error;
-        [self stopped];
+        [self stop];
     }
 }
 

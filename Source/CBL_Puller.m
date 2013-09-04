@@ -96,6 +96,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                            client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
     _changeTracker.limit = kChangesFeedLimit;
+    _changeTracker.continuous = _continuous;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.docIDs = _docIDs;
