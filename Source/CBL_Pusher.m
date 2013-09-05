@@ -240,31 +240,34 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                     }
                     
                     // Get the revision's properties:
-                    CBLContentOptions options = kCBLIncludeAttachments | kCBLIncludeRevs;
+                    CBLContentOptions options = kCBLIncludeAttachments;
                     if (!_dontSendMultipart)
                         options |= kCBLBigAttachmentsFollow;
                     CBLStatus status;
                     rev = [_db revisionByLoadingBody: rev options: options status: &status];
+                    CBL_MutableRevision* nuRev = [rev mutableCopy];
+                    rev = nuRev;
                     if (status >= 300) {
-                        Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                        Warn(@"%@: Couldn't get local contents of %@", self, nuRev);
                         [self revisionFailed];
                         return nil;
                     }
-                    properties = rev.properties;
-                    Assert(properties[@"_revisions"]);
-                    
+
+                    // Add the revision history:
+                    NSArray* possibleAncestors = revResults[@"possible_ancestors"];
+                    nuRev[@"_revisions"] = [_db getRevisionHistoryDict: nuRev
+                                                     startingFromAnyOf: possibleAncestors];
+                    properties = nuRev.properties;
+
                     // Strip any attachments already known to the target db:
                     if (properties[@"_attachments"]) {
                         // Look for the latest common ancestor and stub out older attachments:
-                        NSArray* possible = revResults[@"possible_ancestors"];
-                        int minRevPos = findCommonAncestor(rev, possible);
-                        CBL_MutableRevision* stubbedRev = rev.mutableCopy;
-                        [CBLDatabase stubOutAttachmentsIn: stubbedRev beforeRevPos: minRevPos + 1
-                                       attachmentsFollow: NO];
-                        rev = stubbedRev;
-                        properties = rev.properties;
+                        int minRevPos = findCommonAncestor(rev, possibleAncestors);
+                        [CBLDatabase stubOutAttachmentsIn: nuRev beforeRevPos: minRevPos + 1
+                                        attachmentsFollow: NO];
+                        properties = nuRev.properties;
                         // If the rev has huge attachments, send it under separate cover:
-                        if (!_dontSendMultipart && [self uploadMultipartRevision: rev])
+                        if (!_dontSendMultipart && [self uploadMultipartRevision: nuRev])
                             return nil;
                     }
                 }
