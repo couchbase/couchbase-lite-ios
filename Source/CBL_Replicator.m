@@ -356,6 +356,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 // Called after a continuous replication has gone idle, but it failed to transfer some revisions
 // and so wants to try again in a minute. Should be overridden by subclasses.
 - (void) retry {
+    self.error = nil;
 }
 
 - (void) retryIfReady {
@@ -424,7 +425,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
             if (!_continuous) {
                 [self stopped];
-            } else if (_revisionsFailed > 0) {
+            } else if (_error) /*(_revisionsFailed > 0)*/ {
                 LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
                       self, _revisionsFailed, kRetryDelay);
                 [NSObject cancelPreviousPerformRequestsWithTarget: self

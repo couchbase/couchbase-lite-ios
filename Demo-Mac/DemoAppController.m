@@ -243,6 +243,7 @@ int main (int argc, const char * argv[]) {
     NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
     _pull = repls[0];
     _push = repls[1];
+    _pull.continuous = _push.continuous = YES;
     [self observeReplication: _pull];
     [self observeReplication: _push];
     
