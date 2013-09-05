@@ -190,6 +190,12 @@
     self.body = [CBL_Body bodyWithJSON: asJSON];
 }
 
+- (void) setObject: (id)object forKeyedSubscript: (NSString*)key {
+    NSMutableDictionary* nuProps = self.properties.mutableCopy;
+    [nuProps setValue: object forKey: key];
+    self.properties = nuProps;
+}
+
 - (void) setSequence:(SequenceNumber)sequence {
     _sequence = sequence;
 }

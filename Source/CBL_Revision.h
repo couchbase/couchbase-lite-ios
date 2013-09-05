@@ -67,6 +67,8 @@ typedef SInt64 SequenceNumber;
 @property (readwrite, copy) NSData* asJSON;
 @property (readwrite) bool missing;
 
+- (void) setObject: (id)object forKeyedSubscript: (NSString*)key;  // subscript access in Xcode 4.4+
+
 @end
 
 

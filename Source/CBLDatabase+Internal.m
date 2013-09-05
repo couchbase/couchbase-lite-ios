@@ -588,7 +588,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         localSeq = @(sequence);
 
     if (options & kCBLIncludeRevs) {
-        revs = [self getRevisionHistoryDict: rev];
+        revs = [self getRevisionHistoryDict: rev startingFromAnyOf: nil];
     }
     
     if (options & kCBLIncludeRevsInfo) {
@@ -939,8 +939,21 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
     return $dict({@"ids", revIDs}, {@"start", start});
 }
 
-- (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev {
-    return makeRevisionHistoryDict([self getRevisionHistory: rev]);
+
+- (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
+                       startingFromAnyOf: (NSArray*)ancestorRevIDs
+{
+    NSArray* history = [self getRevisionHistory: rev]; // (this is in reverse order, newest..oldest
+    if (ancestorRevIDs.count > 0) {
+        NSUInteger n = history.count;
+        for (NSUInteger i = 0; i < n; ++i) {
+            if ([ancestorRevIDs containsObject: [history[i] revID]]) {
+                history = [history subarrayWithRange: NSMakeRange(0, i+1)];
+                break;
+            }
+        }
+    }
+    return makeRevisionHistoryDict(history);
 }
 
 

@@ -172,8 +172,9 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
 
-/** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. */
-- (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev;
+/** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as far as any of the revision ID strings in that array. */
+- (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
+                       startingFromAnyOf: (NSArray*)ancestorRevIDs;
 
 /** Returns all the known revisions (or all current/conflicting revisions) of a document. */
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID

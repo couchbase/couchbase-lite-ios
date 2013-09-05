@@ -174,6 +174,17 @@ TestCase(CBL_Database_CRUD) {
     Log(@"History = %@", history);
     CAssertEqual(history, (@[revD, rev2, rev1]));
 
+    // Check the revision-history object (_revisions property):
+    NSString* revDSuffix = [revD.revID substringFromIndex: 2];
+    NSString* rev2Suffix = [rev2.revID substringFromIndex: 2];
+    NSString* rev1Suffix = [rev1.revID substringFromIndex: 2];
+    CAssertEqual(([db getRevisionHistoryDict: revD startingFromAnyOf: @[@"??", rev2.revID]]),
+                 (@{@"ids": @[revDSuffix, rev2Suffix],
+                    @"start": @3}));
+    CAssertEqual(([db getRevisionHistoryDict: revD startingFromAnyOf: nil]),
+                 (@{@"ids": @[revDSuffix, rev2Suffix, rev1Suffix],
+                    @"start": @3}));
+
     // Compact the database:
     NSError* error;
     CAssert([db compact: &error]);
