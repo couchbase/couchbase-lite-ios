@@ -15,15 +15,8 @@
 
 #import "CBLJSON.h"
 
-#if !USE_NSJSON
-#import "JSONKit.h"
-#endif
-
 
 @implementation CBLJSON
-
-
-#if USE_NSJSON
 
 
 + (NSData *)dataWithJSONObject:(id)object
@@ -43,32 +36,6 @@
         return [super dataWithJSONObject: object options: options error: error];
     }
 }
-
-
-#else // not USE_NSJSON
-
-+ (NSData *)dataWithJSONObject:(id)obj
-                       options:(CBLJSONWritingOptions)opt
-                         error:(NSError **)error
-{
-    Assert(obj);
-    return [obj JSONDataWithOptions: 0 error: error];
-}
-
-
-+ (id)JSONObjectWithData:(NSData *)data
-                 options:(CBLJSONReadingOptions)opt
-                   error:(NSError **)error
-{
-    Assert(data);
-    if (opt & (CBLJSONReadingMutableContainers | CBLJSONReadingMutableLeaves))
-        return [data mutableObjectFromJSONDataWithParseOptions: 0 error: error];
-    else
-        return [data objectFromJSONDataWithParseOptions: 0 error: error];
-}
-
-
-#endif // USE_NSJSON
 
 
 + (NSString*) stringWithJSONObject:(id)obj

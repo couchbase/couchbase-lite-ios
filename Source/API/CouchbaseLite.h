@@ -23,3 +23,8 @@
 #import "CBLReplication.h"
 #import "CBLModel.h"
 #import "CBLModelFactory.h"
+#import "CBLJSON.h"
+
+#if TARGET_OS_IPHONE
+#import "CBLUITableSource.h"
+#endif

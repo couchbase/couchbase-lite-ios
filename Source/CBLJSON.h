@@ -9,19 +9,6 @@
 #import <Foundation/Foundation.h>
 
 
-// Conditional compilation for JSONKit and/or NSJSONSerialization.
-// If the app supports OS versions prior to NSJSONSerialization, we'll use JSONKit.
-#ifdef __IPHONE_OS_VERSION_MIN_REQUIRED
-#define USE_NSJSON (__IPHONE_OS_VERSION_MIN_REQUIRED >= 50000)
-#elif defined(TARGET_OS_MAC)
-#define USE_NSJSON (MAC_OS_X_VERSION_MIN_REQUIRED >= 1070)
-#elif defined(GNUSTEP)
-#define USE_NSJSON 1
-#else
-#define USE_NSJSON 0
-#endif
-
-
 /** Identical to the corresponding NSJSON option flags. */
 enum {
     CBLJSONReadingMutableContainers = (1UL << 0),
@@ -39,27 +26,9 @@ enum {
 typedef NSUInteger CBLJSONWritingOptions;
 
 
-#if USE_NSJSON
-
 /** Useful extensions for JSON serialization/parsing. */
 @interface CBLJSON : NSJSONSerialization
-@end
 
-#else
-
-@interface CBLJSON : NSObject
-+ (NSData *)dataWithJSONObject:(id)obj
-                       options:(CBLJSONWritingOptions)opt
-                         error:(NSError **)error;
-+ (id)JSONObjectWithData:(NSData *)data
-                 options:(CBLJSONReadingOptions)opt
-                   error:(NSError **)error;
-@end
-
-#endif // USE_NSJSON
-
-
-@interface CBLJSON (Extensions)
 /** Same as -dataWithJSONObject... but returns an NSString. */
 + (NSString*) stringWithJSONObject:(id)obj
                            options:(CBLJSONWritingOptions)opt
