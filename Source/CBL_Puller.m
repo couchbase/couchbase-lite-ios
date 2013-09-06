@@ -360,14 +360,19 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     
-    // Construct a query. We want the revision history, and the bodies of attachments that have
-    // been added since the latest revisions we have locally.
+    // Construct a query. We want the revision history, and the bodies of attachments.
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"%@?rev=%@&revs=true&attachments=true",
                               CBLEscapeID(rev.docID), CBLEscapeID(rev.revID));
-    NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev limit: kMaxNumberOfAttsSince];
-    if (knownRevs.count > 0)
+    // If the document has attachments, add an 'atts_since' param with a list of
+    // already-known revisions, so the server can skip sending the bodies of any
+    // attachments we already have locally:
+    BOOL hasAttachment;
+    NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev
+                                                       limit: kMaxNumberOfAttsSince
+                                               hasAttachment: &hasAttachment];
+    if (hasAttachment && knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
     

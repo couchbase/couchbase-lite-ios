@@ -183,7 +183,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
     Does not return revisions whose bodies have been compacted away, or deletion markers. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
-                                      limit: (unsigned)limit;
+                                      limit: (unsigned)limit
+                              hasAttachment: (BOOL*)outHasAttachment;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
 - (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs;

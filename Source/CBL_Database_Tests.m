@@ -531,6 +531,7 @@ TestCase(CBL_Database_Attachments) {
                                                                      {@"bar", $false})]
             prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
+    CAssert(![db sequenceHasAttachments: rev1.sequence]);
     
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     insertAttachment(db, attach1,
@@ -548,7 +549,8 @@ TestCase(CBL_Database_Attachments) {
     CAssertEq(status, kCBLStatusOK);
     CAssertEqual(type, @"text/plain");
     CAssertEq(encoding, kCBLAttachmentEncodingNone);
-    
+    CAssert([db sequenceHasAttachments: rev1.sequence]);
+
     // Check the attachment dict:
     NSMutableDictionary* itemDict = $mdict({@"content_type", @"text/plain"},
                                            {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
@@ -953,12 +955,16 @@ TestCase(CBL_Database_FindMissingRevisions) {
     CAssertEqual(revs.allRevisions, (@[revToFind1, revToFind3]));
     
     // Check the possible ancestors:
-    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 0],
+    BOOL hasAtt;
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 0 hasAttachment: &hasAtt],
                  (@[doc1r2.revID, doc1r1.revID]));
-    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 1],
+    CAssertEq(hasAtt, NO);
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 1 hasAttachment: &hasAtt],
                  (@[doc1r2.revID]));
-    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind3 limit: 0], nil);
-    
+    CAssertEq(hasAtt, NO);
+    CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind3 limit: 0 hasAttachment: &hasAtt],
+                 nil);
+    CAssertEq(hasAtt, NO);
 }
 
 

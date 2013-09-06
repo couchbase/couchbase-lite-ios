@@ -34,6 +34,9 @@ typedef enum {
                     forRevision: (CBL_Revision*)rev
              withParentSequence: (SequenceNumber)parentSequence;
 
+/** Returns whether the revision with this sequence has any attachments. */
+- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence;
+
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
                                        options: (CBLContentOptions)options;

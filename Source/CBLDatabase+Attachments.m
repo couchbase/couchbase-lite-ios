@@ -291,6 +291,11 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
+- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence {
+    return [_fmdb boolForQuery: @"SELECT 1 FROM attachments WHERE sequence=? LIMIT 1", @(sequence)];
+}
+
+
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
                                        options: (CBLContentOptions)options

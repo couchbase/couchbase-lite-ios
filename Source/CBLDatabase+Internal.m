@@ -823,18 +823,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-static NSArray* revIDsFromResultSet(FMResultSet* r) {
-    if (!r)
-        return nil;
-    NSMutableArray* revIDs = $marray();
-    while ([r next])
-        [revIDs addObject: [r stringForColumnIndex: 0]];
-    [r close];
-    return revIDs;
-}
-
-
-- (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev limit: (unsigned)limit {
+- (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
+                                      limit: (unsigned)limit
+                              hasAttachment: (BOOL*)outHasAttachment
+{
+    if (outHasAttachment)
+        *outHasAttachment = NO;
     int generation = rev.generation;
     if (generation <= 1)
         return nil;
@@ -843,11 +837,20 @@ static NSArray* revIDsFromResultSet(FMResultSet* r) {
         return nil;
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
     FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT revid FROM revs WHERE doc_id=? and revid < ?"
+                      @"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
                        " and deleted=0 and json not null"
                        " ORDER BY sequence DESC LIMIT ?",
                       @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
-    return revIDsFromResultSet(r);
+    if (!r)
+        return nil;
+    NSMutableArray* revIDs = $marray();
+    while ([r next]) {
+        if (outHasAttachment && revIDs.count == 0)
+            *outHasAttachment = [self sequenceHasAttachments: [r longLongIntForColumnIndex: 1]];
+        [revIDs addObject: [r stringForColumnIndex: 0]];
+    }
+    [r close];
+    return revIDs;
 }
 
 
