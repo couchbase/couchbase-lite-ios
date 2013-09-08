@@ -14,9 +14,21 @@
 //  and limitations under the License.
 
 #import "CBLJSON.h"
+#import "CBLParseDate.h"
 
 
 @implementation CBLJSON
+
+
+static NSTimeInterval k1970ToReferenceDate;
+
+
++ (void) initialize {
+    if (self == [CBLJSON class]) {
+        k1970ToReferenceDate = [[NSDate dateWithTimeIntervalSince1970: 0.0]
+                                                    timeIntervalSinceReferenceDate];
+    }
+}
 
 
 + (NSData *)dataWithJSONObject:(id)object
@@ -90,19 +102,6 @@ static NSDateFormatter* getISO8601Formatter() {
     return sFormatter;
 }
 
-static NSDateFormatter* getCoarseISO8601Formatter() {
-    static NSDateFormatter* sFormatter;
-    if (!sFormatter) {
-        sFormatter = [[NSDateFormatter alloc] init];
-        sFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'Z'";
-        sFormatter.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:0];
-        sFormatter.calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
-        sFormatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-    }
-    return sFormatter;
-}
-
-
 + (NSString*) JSONObjectWithDate: (NSDate*)date {
     if (!date)
         return nil;
@@ -111,14 +110,16 @@ static NSDateFormatter* getCoarseISO8601Formatter() {
     }
 }
 
-+ (NSDate*) dateWithJSONObject: (id)jsonObject {
++ (CFAbsoluteTime) absoluteTimeWithJSONObject: (id)jsonObject {
     NSString* string = $castIf(NSString, jsonObject);
     if (!string)
-        return nil;
-    @synchronized(self) {
-        return [getISO8601Formatter() dateFromString: string] ?:
-                    [getCoarseISO8601Formatter() dateFromString: string];
-    }
+        return NAN;
+    return CBLParseISO8601Date(string.UTF8String) + k1970ToReferenceDate;
+}
+
++ (NSDate*) dateWithJSONObject: (id)jsonObject {
+    NSTimeInterval t = [self absoluteTimeWithJSONObject: jsonObject];
+    return isnan(t) ? nil : [NSDate dateWithTimeIntervalSinceReferenceDate: t];
 }
 
 
@@ -188,10 +189,163 @@ static NSDateFormatter* getCoarseISO8601Formatter() {
 @end
 
 
+
+#if DEBUG
+
 TestCase(CBLJSON_Date) {
+    CAssertAlmostEq([CBLJSON absoluteTimeWithJSONObject: @"2013-04-01T20:42:33Z"], 386541753.000, 1e-6);
     NSDate* date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33Z"];
     CAssertEq(date.timeIntervalSinceReferenceDate, 386541753.000);
     date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33.388Z"];
-    CAssertEq(date.timeIntervalSinceReferenceDate, 386541753.388);
+    CAssertAlmostEq(date.timeIntervalSinceReferenceDate, 386541753.388, 1e-6);
+    CAssertNil([CBLJSON dateWithJSONObject: @""]);
+    CAssertNil([CBLJSON dateWithJSONObject: @"1347554643"]);
+    CAssertNil([CBLJSON dateWithJSONObject: @"20:42:33Z"]);
+
+    CAssert(isnan([CBLJSON absoluteTimeWithJSONObject: @""]));
+
     CAssertEqual([CBLJSON JSONObjectWithDate: date], @"2013-04-01T20:42:33.388Z");
 }
+
+
+// Benchmark code adapted from https://gist.github.com/AnuragMishra/6474321
+
+#import "sqlite3.h"
+
+static NSUInteger randomNumberInRange(NSUInteger start, NSUInteger end);
+static NSString* generateSampleDate();
+static NSArray* generateSampleDates(NSUInteger count);
+static NSTimeInterval parseDatesUsingCBLParseDate(NSArray* dates);
+static NSTimeInterval parseTimesUsingCBLParseDate(NSArray* dates);
+static NSTimeInterval parseDatesUsingSQLite(NSArray *dates);
+static NSTimeInterval parseDatesUsingNSDateFormatter(NSArray *dates);
+
+TestCase(CBLJSON_Date_Performance) {
+    RequireTestCase(CBLJSON_Date);
+    const NSUInteger count = 100000;
+    NSArray* dates;
+    @autoreleasepool {
+        dates = generateSampleDates(count);
+    }
+
+    NSTimeInterval baselineTime = parseDatesUsingNSDateFormatter(dates);
+    Log(@"NSDateFormatter     took %6.2f µsec", baselineTime*1e6);
+
+    NSTimeInterval time = parseDatesUsingSQLite(dates);
+    Log(@"sqlite3 strftime    took %6.2f µsec (%.0fx)", time*1e6, baselineTime/time);
+
+    time = parseDatesUsingCBLParseDate(dates);
+    Log(@"-dateWithJSONObject took %6.2f µsec (%.0fx)", time*1e6, baselineTime/time);
+
+    time = parseTimesUsingCBLParseDate(dates);
+    Log(@"CBLParseDate        took %6.2f µsec (%.0fx)", time*1e6, baselineTime/time);
+}
+
+NSArray* generateSampleDates(NSUInteger count)
+{
+    NSMutableArray *dates = [NSMutableArray array];
+
+    for (NSUInteger i = 0; i < count; i++)
+    {
+        [dates addObject:generateSampleDate()];
+    }
+
+    return dates;
+}
+
+NSString* generateSampleDate()
+{
+    NSUInteger year = randomNumberInRange(1980, 2013);
+    NSUInteger month = randomNumberInRange(1, 12);
+    NSUInteger date = randomNumberInRange(1, 28);
+    NSUInteger hour = randomNumberInRange(0, 23);
+    NSUInteger minute = randomNumberInRange(0, 59);
+    NSUInteger second = randomNumberInRange(0, 59);
+    return [NSString stringWithFormat:@"%lu-%02lu-%02luT%02lu:%02lu:%02luZ",
+                            year, month, date, hour, minute, second];
+}
+
+static NSTimeInterval parseDatesUsingCBLParseDate(NSArray* dates) {
+    static const int iterations = 60;
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+    for (int i = 0; i < iterations; i++) {
+        for (NSString *dateString in dates) {
+            @autoreleasepool {
+                (void) [CBLJSON dateWithJSONObject: dateString];
+            }
+        }
+    }
+    return (CFAbsoluteTimeGetCurrent() - start)/dates.count/iterations;
+}
+
+static NSTimeInterval parseTimesUsingCBLParseDate(NSArray* dates) {
+    static const int iterations = 40;
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+    for (int i = 0; i < iterations; i++) {
+        for (NSString *dateString in dates) {
+            @autoreleasepool {
+                (void) [CBLJSON absoluteTimeWithJSONObject: dateString];
+            }
+        }
+    }
+    return (CFAbsoluteTimeGetCurrent() - start)/iterations/dates.count;
+}
+
+static NSTimeInterval parseDatesUsingSQLite(NSArray *dates)
+{
+    static const int iterations = 25;
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+    sqlite3 *db = NULL;
+    sqlite3_open(":memory:", &db);
+
+    sqlite3_stmt *statement = NULL;
+    sqlite3_prepare_v2(db, "SELECT strftime('%s', ?);", -1, &statement, NULL);
+
+    for (int i = 0; i < iterations; i++) {
+        for (NSString *dateString in dates)
+        {
+            @autoreleasepool {
+                sqlite3_bind_text(statement, 1, [dateString UTF8String], -1, SQLITE_STATIC);
+                sqlite3_step(statement);
+                int64_t value = sqlite3_column_int64(statement, 0);
+                (void) [NSDate dateWithTimeIntervalSince1970:value];
+
+                sqlite3_clear_bindings(statement);
+                sqlite3_reset(statement);
+            }
+        }
+    }
+    return (CFAbsoluteTimeGetCurrent() - start)/dates.count/iterations;
+}
+
+static NSTimeInterval parseDatesUsingNSDateFormatter(NSArray *dates)
+{
+    static const int iterations = 1;
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+    static NSDateFormatter *dateFormatter = nil;
+    if (dateFormatter == nil)
+    {
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
+        [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    }
+
+    for (int i = 0; i < iterations; i++) {
+        for (NSString *dateString in dates)
+        {
+            @autoreleasepool {
+                (void) [dateFormatter dateFromString:dateString];
+            }
+        }
+    }
+    return (CFAbsoluteTimeGetCurrent() - start)/dates.count/iterations;
+}
+
+NSUInteger randomNumberInRange(NSUInteger start, NSUInteger end)
+{
+    NSUInteger span = end - start;
+    return start + (NSUInteger)arc4random_uniform((UInt32)span);
+}
+
+
+#endif // DEBUG

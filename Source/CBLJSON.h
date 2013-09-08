@@ -43,9 +43,13 @@ typedef NSUInteger CBLJSONWritingOptions;
 /** Encodes an NSDate as a string in ISO-8601 format. */
 + (NSString*) JSONObjectWithDate: (NSDate*)date;
 
-/** Parses an ISO-8601 formatted date string.
+/** Parses an ISO-8601 formatted date string to an NSDate object.
     If the object is not a string, or not valid ISO-8601, it returns nil. */
 + (NSDate*) dateWithJSONObject: (id)jsonObject;
+
+/** Parses an ISO-8601 formatted date string to an absolute time (timeSinceReferenceDate).
+    If the object is not a string, or not valid ISO-8601, it returns a NAN value. */
++ (CFAbsoluteTime) absoluteTimeWithJSONObject: (id)jsonObject;
 
 /** Follows a JSON-Pointer, returning the value pointed to, or nil if nothing.
     See spec at: http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-04 */

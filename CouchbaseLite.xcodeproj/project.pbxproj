@@ -147,6 +147,8 @@
 		2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */; };
 		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
+		276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; };
 		27731F001493FA3100815D67 /* CBL_BlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* CBL_BlobStore.m */; };
 		27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* CBL_BlobStore.m */; };
@@ -731,6 +733,8 @@
 		2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartWriter.m; sourceTree = "<group>"; };
 		2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultiStreamWriter.h; sourceTree = "<group>"; };
 		2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultiStreamWriter.m; sourceTree = "<group>"; };
+		276BA0AC17DD13FA00D367CB /* CBLParseDate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CBLParseDate.c; sourceTree = "<group>"; };
+		276BA0AF17DD222400D367CB /* CBLParseDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLParseDate.h; sourceTree = "<group>"; };
 		27731EFD1493FA3100815D67 /* CBL_BlobStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_BlobStore.h; sourceTree = "<group>"; };
 		27731EFE1493FA3100815D67 /* CBL_BlobStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_BlobStore.m; sourceTree = "<group>"; };
 		27731F2A1495CFEF00815D67 /* Couchbase Lite Empty App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Couchbase Lite Empty App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1395,6 +1399,8 @@
 				279EB2D01491442500E74185 /* CBLInternal.h */,
 				272B85121523691700A90CB2 /* CBLJSON.h */,
 				272B85131523691700A90CB2 /* CBLJSON.m */,
+				276BA0AC17DD13FA00D367CB /* CBLParseDate.c */,
+				276BA0AF17DD222400D367CB /* CBLParseDate.h */,
 				278B0C9E152A8B1900577747 /* CBLCanonicalJSON.h */,
 				278B0C9F152A8B1900577747 /* CBLCanonicalJSON.m */,
 				27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */,
@@ -2364,6 +2370,7 @@
 				2766EFF914DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFE14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305514DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
+				276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27103F8414E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				27C40C7A14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */,
 				279C7E2F14F424090004A1E8 /* CBLSequenceMap.m in Sources */,
@@ -2512,6 +2519,7 @@
 				27DA42FF158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
+				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
 				27DA434C15912AFD00F9E7B5 /* CBLView.m in Sources */,
