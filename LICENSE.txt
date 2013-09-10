@@ -19,7 +19,7 @@ whom the Software is furnished to do so, subject to Licensee including
 the following copyright notice in all copies or substantial portions of
 the Software:
 
-Couchbase (r) http://www.Couchbase.com Copyright 2012 Couchbase, Inc.
+Couchbase (r) http://www.Couchbase.com Copyright 2013 Couchbase, Inc.
 
 As used in this Agreement, "Software" means the object code version of
 the applicable elastic data management server software provided by
