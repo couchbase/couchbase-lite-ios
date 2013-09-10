@@ -212,7 +212,7 @@ TestCase(CBLJSON_Date) {
 
 #import "sqlite3.h"
 
-static NSUInteger randomNumberInRange(NSUInteger start, NSUInteger end);
+static unsigned randomNumberInRange(unsigned start, unsigned end);
 static NSString* generateSampleDate();
 static NSArray* generateSampleDates(NSUInteger count);
 static NSTimeInterval parseDatesUsingCBLParseDate(NSArray* dates);
@@ -255,13 +255,13 @@ NSArray* generateSampleDates(NSUInteger count)
 
 NSString* generateSampleDate()
 {
-    NSUInteger year = randomNumberInRange(1980, 2013);
-    NSUInteger month = randomNumberInRange(1, 12);
-    NSUInteger date = randomNumberInRange(1, 28);
-    NSUInteger hour = randomNumberInRange(0, 23);
-    NSUInteger minute = randomNumberInRange(0, 59);
-    NSUInteger second = randomNumberInRange(0, 59);
-    return [NSString stringWithFormat:@"%lu-%02lu-%02luT%02lu:%02lu:%02luZ",
+    unsigned year = randomNumberInRange(1980, 2013);
+    unsigned month = randomNumberInRange(1, 12);
+    unsigned date = randomNumberInRange(1, 28);
+    unsigned hour = randomNumberInRange(0, 23);
+    unsigned minute = randomNumberInRange(0, 59);
+    unsigned second = randomNumberInRange(0, 59);
+    return [NSString stringWithFormat:@"%u-%02u-%02uT%02u:%02u:%02uZ",
                             year, month, date, hour, minute, second];
 }
 
@@ -341,10 +341,10 @@ static NSTimeInterval parseDatesUsingNSDateFormatter(NSArray *dates)
     return (CFAbsoluteTimeGetCurrent() - start)/dates.count/iterations;
 }
 
-NSUInteger randomNumberInRange(NSUInteger start, NSUInteger end)
+unsigned randomNumberInRange(unsigned start, unsigned end)
 {
-    NSUInteger span = end - start;
-    return start + (NSUInteger)arc4random_uniform((UInt32)span);
+    unsigned span = end - start;
+    return start + (unsigned)arc4random_uniform(span);
 }
 
 
