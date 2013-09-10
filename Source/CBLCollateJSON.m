@@ -18,6 +18,13 @@
 #import "CBLCollateJSON.h"
 
 
+#if 0 // Set to 1 for code-coverage testing
+#define ifc(TEST) if (Cover(TEST))
+#else
+#define ifc if
+#endif
+
+
 static int cmp(int n1, int n2) {
     int diff = n1 - n2;
     return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
@@ -99,29 +106,30 @@ static char convertEscape(const char **in) {
 
 
 static int compareStringsASCII(const char** in1, const char** in2) {
+    TestedBy(CBLCollateASCII);
     const char* str1 = *in1, *str2 = *in2;
     while(true) {
         char c1 = *++str1;
         char c2 = *++str2;
 
         // If one string ends, the other is greater; if both end, they're equal:
-        if (c1 == '"') {
-            if (c2 == '"')
+        ifc (c1 == '"') {
+            ifc (c2 == '"')
                 break;
             else
                 return -1;
-        } else if (c2 == '"')
+        } else ifc (c2 == '"')
             return 1;
         
         // Handle escape sequences:
-        if (c1 == '\\')
+        ifc (c1 == '\\')
             c1 = convertEscape(&str1);
-        if (c2 == '\\')
+        ifc (c2 == '\\')
             c2 = convertEscape(&str2);
         
         // Compare the next characters:
         int s = cmp(c1, c2);
-        if (s)
+        ifc (s)
             return s;
     }
     
@@ -134,13 +142,14 @@ static int compareStringsASCII(const char** in1, const char** in2) {
 
 static NSString* createStringFromJSON(const char** in) {
     // Scan the JSON string to find its end and whether it contains escapes:
+    TestedBy(CBLCollateJSON);
     const char* start = ++*in;
     unsigned escapes = 0;
     const char* str;
     for (str = start; *str != '"'; ++str) {
-        if (*str == '\\') {
+        ifc (*str == '\\') {
             ++str;
-            if (*str == 'u') {
+            ifc (*str == 'u') {
                 escapes += 5;  // \uxxxx adds 5 bytes
                 str += 4;
             } else
@@ -151,13 +160,13 @@ static NSString* createStringFromJSON(const char** in) {
     size_t length = str - start;
     
     BOOL freeWhenDone = NO;
-    if (escapes > 0) {
+    ifc (escapes > 0) {
         length -= escapes;
         char* buf = malloc(length);
         char* dst = buf;
         char c;
         for (str = start; (c = *str) != '"'; ++str) {
-            if (c == '\\')
+            ifc (c == '\\')
                 c = convertEscape(&str);
             *dst++ = c;
         }
@@ -184,11 +193,12 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
 
 
 static double readNumber(const char* start, const char* end, char** endOfNumber) {
+    TestedBy(CBLCollateScalars);
     CAssert(end > start);
     // First copy the string into a zero-terminated buffer so we can safely call strtod:
     size_t len = end - start;
     char buf[50];
-    char* str = (len < sizeof(buf)) ? buf : malloc(len + 1);
+    char* str = Cover(len < sizeof(buf)) ? buf : malloc(len + 1);
     if (!str)
         return 0.0;
     memcpy(str, start, len);
@@ -197,7 +207,7 @@ static double readNumber(const char* start, const char* end, char** endOfNumber)
     char* endInStr;
     double result = strtod(str, &endInStr);
     *endOfNumber = (char*)start + (endInStr - str);
-    if (len >= sizeof(buf))
+    ifc (len >= sizeof(buf))
         free(str);
     return result;
 }
@@ -208,6 +218,7 @@ int CBLCollateJSONLimited(void *context,
                          int len2, const void * chars2,
                          unsigned arrayLimit)
 {
+    TestedBy(CBLCollateJSON);
     const char* str1 = chars1;
     const char* str2 = chars2;
     int depth = 0;
@@ -219,11 +230,11 @@ int CBLCollateJSONLimited(void *context,
         ValueType type2 = valueTypeOf(*str2);
         // If types don't match, stop and return their relative ordering:
         if (type1 != type2) {
-            if (depth == 1 && (type1 == kComma || type2 == kComma)) {
-                if (++arrayIndex >= arrayLimit)
+            ifc (depth == 1 && (type1 == kComma || type2 == kComma)) {
+                ifc (++arrayIndex >= arrayLimit)
                     return 0;
             }
-            if (context != kCBLCollateJSON_Raw)
+            ifc (context != kCBLCollateJSON_Raw)
                 return cmp(type1, type2);
             else
                 return cmp(kRawOrderOfValueType[type1], kRawOrderOfValueType[type2]);
@@ -242,7 +253,7 @@ int CBLCollateJSONLimited(void *context,
             case kNumber: {
                 char* next1, *next2;
                 int diff;
-                if (depth == 0) {
+                ifc (depth == 0) {
                     // At depth 0, be careful not to fall off the end of the input, because there
                     // won't be any delimiters (']' or '}') after the number!
                     diff = dcmp( readNumber(str1, chars1 + len1, &next1),
@@ -258,7 +269,7 @@ int CBLCollateJSONLimited(void *context,
             }
             case kString: {
                 int diff;
-                if (context == kCBLCollateJSON_Unicode)
+                ifc (context == kCBLCollateJSON_Unicode)
                     diff = compareStringsUnicode(&str1, &str2);
                 else
                     diff = compareStringsASCII(&str1, &str2);
@@ -276,12 +287,10 @@ int CBLCollateJSONLimited(void *context,
             case kEndObject:
                 ++str1;
                 ++str2;
-                if (depth == 1 && (++arrayIndex >= arrayLimit))
-                    return 0;
                 --depth;
                 break;
             case kComma:
-                if (depth == 1 && (++arrayIndex >= arrayLimit))
+                ifc (depth == 1 && (++arrayIndex >= arrayLimit))
                     return 0;
                 // else fall through:
             case kColon:
@@ -336,8 +345,8 @@ static int collateLimited(void *mode, const void * str1, const void * str2, unsi
     char buf1[len1 + 3], buf2[len2 + 3];
     strlcpy(buf1, str1, sizeof(buf1));
     strlcat(buf1, "99", sizeof(buf1));
-    strlcpy(buf2, str2, sizeof(buf1));
-    strlcat(buf2, "88", sizeof(buf1));
+    strlcpy(buf2, str2, sizeof(buf2));
+    strlcat(buf2, "88", sizeof(buf2));
     return CBLCollateJSONLimited(mode, (int)len1, buf1, (int)len2, buf2, arrayLimit);
 }
 
@@ -356,11 +365,14 @@ TestCase(CBLCollateScalars) {
     CAssertEq(collate(mode, "123", "0123.0"), 0);
     CAssertEq(collate(mode, "123", "\"123\""), -1);
     CAssertEq(collate(mode, "\"1234\"", "\"123\""), 1);
+    CAssertEq(collate(mode, "\"123\"", "\"1234\""), -1);
     CAssertEq(collate(mode, "\"1234\"", "\"1235\""), -1);
     CAssertEq(collate(mode, "\"1234\"", "\"1234\""), 0);
     CAssertEq(collate(mode, "\"12\\/34\"", "\"12/34\""), 0);
     CAssertEq(collate(mode, "\"\\/1234\"", "\"/1234\""), 0);
     CAssertEq(collate(mode, "\"1234\\/\"", "\"1234/\""), 0);
+    // Test long numbers, case where readNumber has to malloc a buffer:
+    CAssertEq(collate(mode, "123", "00000000000000000000000000000000000000000000000000123"), 0);
 #ifndef GNUSTEP     // FIXME: GNUstep doesn't support Unicode collation yet
     CAssertEq(collate(mode, "\"a\"", "\"A\""), -1);
     CAssertEq(collate(mode, "\"A\"", "\"aa\""), -1);
@@ -378,9 +390,11 @@ TestCase(CBLCollateASCII) {
     CAssertEq(collate(mode, "123", "0123.0"), 0);
     CAssertEq(collate(mode, "123", "\"123\""), -1);
     CAssertEq(collate(mode, "\"1234\"", "\"123\""), 1);
+    CAssertEq(collate(mode, "\"123\"", "\"1234\""), -1);
     CAssertEq(collate(mode, "\"1234\"", "\"1235\""), -1);
     CAssertEq(collate(mode, "\"1234\"", "\"1234\""), 0);
     CAssertEq(collate(mode, "\"12\\/34\"", "\"12/34\""), 0);
+    CAssertEq(collate(mode, "\"12/34\"", "\"12\\/34\""), 0);
     CAssertEq(collate(mode, "\"\\/1234\"", "\"/1234\""), 0);
     CAssertEq(collate(mode, "\"1234\\/\"", "\"1234/\""), 0);
     CAssertEq(collate(mode, "\"A\"", "\"a\""), -1);
@@ -436,5 +450,15 @@ TestCase(CBLCollateLimited) {
     CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"MOM\"]", 1), 0);
     CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5]", 1), 0);
     CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"MOM\"]", 2), 1);
+}
+
+TestCase(CBLCollateJSON) {
+    RequireTestCase(CBLCollateScalars);
+    RequireTestCase(CBLCollateASCII);
+    RequireTestCase(CBLCollateRaw);
+    RequireTestCase(CBLCollateArrays);
+    RequireTestCase(CBLCollateNestedArrays);
+    RequireTestCase(CBLCollateUnicodeStrings);
+    RequireTestCase(CBLCollateLimited);
 }
 #endif
