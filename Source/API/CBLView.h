@@ -15,7 +15,7 @@ typedef void (^CBLMapEmitBlock)(id key, id value);
 /** A "map" function called when a document is to be added to a view.
     @param doc  The contents of the document being analyzed.
     @param emit  A block to be called to add a key/value pair to the view. Your block can call it zero, one or multiple times. */
-typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit);
+typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit, CBLMapEmitBlock geoemit);
 
 /** A "reduce" function called to summarize the results of a view.
 	@param keys  An array of keys to be reduced (or nil if this is a rereduce).
@@ -25,7 +25,7 @@ typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit);
 typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 
 
-#define MAPBLOCK(BLOCK) ^(NSDictionary* doc, void (^emit)(id key, id value)){BLOCK}
+#define MAPBLOCK(BLOCK) ^(NSDictionary* doc, void (^emit)(id key, id value), void (^geoemit)(id key, id value)){BLOCK}
 #define REDUCEBLOCK(BLOCK) ^id(NSArray* keys, NSArray* values, BOOL rereduce){BLOCK}
 
 

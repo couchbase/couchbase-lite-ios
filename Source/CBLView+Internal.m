@@ -201,6 +201,33 @@ static id fromJSON( NSData* json ) {
             else
                 emitStatus = _db.lastDbError;
         };
+
+        // This is the geo() block, which gets called from within the user-defined map() block
+        // that's called down below.
+        CBLMapEmitBlock geoemit = ^(NSDictionary* geoJSONPoint, id value) {
+            NSString* type = $castIf(NSString, geoJSONPoint[@"type"]);
+            NSArray* position = $castIf(NSArray, geoJSONPoint[@"coordinates"]);
+            if (![type isEqual: @"Point"]) {
+                Warn(@"geoemit key must be a geojson point, like: { \"type\": \"Point\", \"coordinates\": [100.0, 0.0] }");
+                return;
+            }
+            if (position[0] && position[1]) {
+                Warn(@"geoemit key must be a geojson point, like: { \"type\": \"Point\", \"coordinates\": [100.0, 0.0] }");
+                return;
+            }
+            
+            NSString* valueJSON = toJSONString(value);
+            NSString* geoJSONString = toJSONString(geoJSONPoint);
+            LogTo(View, @"    geoemit(%@, %@)", geoJSONString, valueJSON);
+            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, value, ax, ay) VALUES "
+                 "(?, ?, ?, ?, ?)",
+                 @(viewID), @(sequence), valueJSON, position[0], position[1]])
+                ++inserted;
+            else
+                emitStatus = _db.lastDbError;
+        };
+
+        
         
         // Now scan every revision added since the last time the view was indexed:
         FMResultSet* r;
@@ -302,7 +329,7 @@ static id fromJSON( NSData* json ) {
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 LogTo(View, @"  call map for sequence=%lld...", sequence);
                 @try {
-                    mapBlock(properties, emit);
+                    mapBlock(properties, emit, geoemit);
                 } @catch (NSException* x) {
                     MYReportException(x, @"map block of view '%@'", _name);
                     emitStatus = kCBLStatusCallbackError;

@@ -39,17 +39,17 @@ TestCase(CBL_View_Create) {
     CAssertEq([db existingViewNamed: @"aview"], view);
 
     
-    BOOL changed = [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) { }
+    BOOL changed = [view setMapBlock: MAPBLOCK({})
                          reduceBlock: NULL version: @"1"];
     CAssert(changed);
     
     CAssertEqual(db.allViews, @[view]);
 
-    changed = [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) { }
+    changed = [view setMapBlock: MAPBLOCK({})
                     reduceBlock: NULL version: @"1"];
     CAssert(!changed);
     
-    changed = [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) { }
+    changed = [view setMapBlock: MAPBLOCK({})
                     reduceBlock: NULL version: @"2"];
     CAssert(changed);
     
@@ -79,12 +79,12 @@ static NSArray* putDocs(CBLDatabase* db) {
 
 static CBLView* createView(CBLDatabase* db) {
     CBLView* view = [db viewNamed: @"aview"];
-    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
         if (doc[@"key"])
             emit(doc[@"key"], doc[@"_conflicts"]);
-    } reduceBlock: NULL version: @"1"];
+    }) reduceBlock: NULL version: @"1"];
     return view;
 }
 
@@ -170,14 +170,14 @@ TestCase(CBL_View_MapConflicts) {
     CAssertEqual(leaf1.docID, leaf2.docID);
     
     CBLView* view = [db viewNamed: @"conflicts"];
-    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         NSString* docID = doc[@"_id"];
         NSArray* conflicts = $cast(NSArray, doc[@"_conflicts"]);
         if (conflicts) {
             Log(@"Doc %@, _conflicts = %@", docID, conflicts);
             emit(docID, conflicts);
         }
-    } reduceBlock: NULL version: @"1"];
+    }) reduceBlock: NULL version: @"1"];
     
     CAssertEq([view updateIndex], kCBLStatusOK);
     NSArray* dump = [view dump];
@@ -433,13 +433,13 @@ TestCase(CBL_View_Reduce) {
     putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", @(6.50)}));
     
     CBLView* view = [db viewNamed: @"totaler"];
-    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
         id cost = doc[@"cost"];
         if (cost)
             emit(doc[@"_id"], cost);
-    } reduceBlock: ^(NSArray* keys, NSArray* values, BOOL rereduce) {
+    }) reduceBlock: ^(NSArray* keys, NSArray* values, BOOL rereduce) {
         return [CBLView totalValues: values];
     } version: @"1"];
 
@@ -476,7 +476,7 @@ TestCase(CBL_View_Grouped) {
                      {@"track", @"Not Great Men"}, {@"time", @(187)}));
     
     CBLView* view = [db viewNamed: @"grouper"];
-    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         emit($array(doc[@"artist"],
                     doc[@"album"], 
                     doc[@"track"]),
