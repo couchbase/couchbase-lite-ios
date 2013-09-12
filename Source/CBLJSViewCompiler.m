@@ -53,7 +53,7 @@ __thread
 #endif
 __unsafe_unretained CBLMapEmitBlock sCurrentEmitBlock;
 
-
+// TODO create parallel thing for
 // This is the body of the JavaScript "emit(key,value)" function.
 static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
                                size_t argumentCount, const JSValueRef arguments[],
@@ -99,7 +99,7 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
         return nil;
 
     // Return the CBLMapBlock; the code inside will be called when CouchbaseLite wants to run the map fn:
-    CBLMapBlock mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    CBLMapBlock mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit, CBLMapEmitBlock geoemit) {
         sCurrentEmitBlock = emit;
         [fn call: doc];
         sCurrentEmitBlock = nil;
