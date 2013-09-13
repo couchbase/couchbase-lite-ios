@@ -52,12 +52,6 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
  * Xcode 4.5+ is required to build it (Clang 3.1+, with GNUstep).
  * Runtime system requirements for Apple platforms are iOS 5+, or Mac OS X 10.7.2+.
 
-## Development Status ##
-
-Couchbase Lite is still in **pre-alpha** development status, as of March 2013. We expect it to go beta this summer.
-
-If you are looking for a stable release suitable for use in shipping apps, please use [TouchDB][21], the earlier 1.0 version. The API is slightly different, but upgrading to Couchbase Lite will be fairly easy.
-
 ## Credits ##
 
 **Design, coding:** Jens Alfke (jens@couchbase.com)  
@@ -74,10 +68,11 @@ If you are looking for a stable release suitable for use in shipping apps, pleas
 
 ## Downloading Couchbase Lite ##
 
-* [Latest 'stable' build][20]. (May not be stable by objective standards, considering the project is pre-alpha. But stable-er than the hourly builds.)
-* [Recent builds][19] (built hourly after any commits. Each archive is timestamped.)
+Get Couchbase Lite via [the Couchbase mobile portal](http://mobile.couchbase.com)
 
 ## Building Couchbase Lite ##
+
+You shouldn't need to do this unless you plan to contribute patches.
 
 ### On a Mac ###
 
