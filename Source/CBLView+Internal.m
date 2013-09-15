@@ -168,7 +168,7 @@ static id fromJSON( NSData* json ) {
 
         // This is the geo() block, which gets called from within the user-defined map() block
         // that's called down below.
-        CBLMapEmitBlock geoemit = ^(NSDictionary* geoJSONPoint, id value) {
+        CBLMapGeoEmitBlock geoemit = ^(NSDictionary* geoJSONPoint, id value) {
             NSString* type = $castIf(NSString, geoJSONPoint[@"type"]);
             NSArray* position = $castIf(NSArray, geoJSONPoint[@"coordinates"]);
             if (![type isEqual: @"Point"]) {
@@ -179,7 +179,6 @@ static id fromJSON( NSData* json ) {
                 Warn(@"geoemit key must be a geojson point, like: { \"type\": \"Point\", \"coordinates\": [100.0, 0.0] }");
                 return;
             }
-            
             NSString* valueJSON = toJSONString(value);
             NSString* geoJSONString = toJSONString(geoJSONPoint);
             LogTo(View, @"    geoemit(%@, %@)", geoJSONString, valueJSON);

@@ -312,10 +312,10 @@ TestCase(CBL_Router_Views) {
     
     CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CBLView* view = [db viewNamed: @"design/view"];
-    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    [view setMapBlock:  MAPBLOCK({
         if (doc[@"message"])
             emit(doc[@"message"], nil);
-    } reduceBlock: NULL version: @"1"];
+    }) reduceBlock: NULL version: @"1"];
 
     // Query the view and check the result:
     Send(server, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,

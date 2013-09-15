@@ -344,15 +344,15 @@ int main (int argc, const char * argv[]) {
         return NULL;
     CBLMapBlock mapBlock = NULL;
     if ([mapSource isEqualToString: @"(function (doc) {if (doc.a == 4) {emit(null, doc.b);}})"]) {
-        mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+        mapBlock = MAPBLOCK({
             if ([doc[@"a"] isEqual: @4])
                 emit(nil, doc[@"b"]);
-        };
+        });
     } else if ([mapSource isEqualToString: @"(function (doc) {emit(doc.foo, null);})"] ||
                [mapSource isEqualToString: @"function(doc) { emit(doc.foo, null); }"]) {
-        mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+        mapBlock =  MAPBLOCK({
             emit(doc[@"foo"], nil);
-        };
+        });
     }
     return [mapBlock copy];
 }

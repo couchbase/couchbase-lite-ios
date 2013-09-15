@@ -12,6 +12,9 @@
 
 typedef void (^CBLMapEmitBlock)(id key, id value);
 
+typedef void (^CBLMapGeoEmitBlock)(NSDictionary* geoJSON, id value);
+
+
 /** A "map" function called when a document is to be added to a view.
     @param doc  The contents of the document being analyzed.
     @param emit  A block to be called to add a key/value pair to the view. Your block can call it zero, one or multiple times. */
