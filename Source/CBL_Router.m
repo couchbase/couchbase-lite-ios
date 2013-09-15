@@ -349,6 +349,9 @@ static NSArray* splitPath( NSURL* url ) {
         } else if ([name hasPrefix: @"_design/"] || [name hasPrefix: @"_local/"]) {
             // This is also a document, just with a URL-encoded "/"
             docID = name;
+        } else if ([name isEqualToString: @"_session"]) {
+            // This fall through should not be reached
+            return kCBLStatusNotFound;
         } else {
             // Special document name like "_all_docs":
             [message insertString: name atIndex: message.length-1]; // add to 1st component of msg

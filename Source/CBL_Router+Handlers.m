@@ -122,6 +122,27 @@
     return kCBLStatusOK;
 }
 
+- (CBLStatus) do_POST_session {
+    // Initially, we will just echo back the credential
+    NSDictionary* body = self.bodyAsDictionary;
+    NSString* user = $castIf(NSString, body[@"user"]);
+    NSString* password = $castIf(NSString, body[@"password"]);
+    if (user && password) {
+        _response.bodyObject = $dict({@"ok", $true},
+                                     {@"userCtx", $dict({@"name", $null},
+                                                        {@"roles", @[@"_admin"]})});
+        return kCBLStatusOK;
+    } else {
+        _response.bodyObject = $dict({@"error", @"required fields: user, password"});
+        return kCBLStatusUnauthorized;
+    }
+    
+}
+
+- (CBLStatus) do_DELETE_session {
+    return kCBLStatusOK;
+}
+
 
 #pragma mark - DATABASE REQUESTS:
 
