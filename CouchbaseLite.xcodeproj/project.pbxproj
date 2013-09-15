@@ -2300,7 +2300,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -f ${SRCROOT}/vendor/JavaScriptCore.framework/JavaScriptCore ]; then\n    echo \"error: Please download and extract this url into ${SRCROOT}/vendor/  https://dl.dropboxusercontent.com/u/14074521/JavaScriptCore.framework.zip\" >&2\n    exit 1\nfi";
+			shellScript = "#if [ ! -f ${SRCROOT}/vendor/JavaScriptCore.framework/JavaScriptCore ]; then\n#    echo \"error: Please download and extract this url into ${SRCROOT}/vendor/  https://dl.dropboxusercontent.com/u/14074521/JavaScriptCore.framework.zip\" >&2\n#    exit 1\n#fi";
 		};
 		DA023B6014BCA94C008184BB /* Build Fat Library */ = {
 			isa = PBXShellScriptBuildPhase;
