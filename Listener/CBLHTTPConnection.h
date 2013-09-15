@@ -15,4 +15,7 @@
 
 @property (readonly) CBLListener* listener;
 
+- (NSString *)authUsername;
+-(void)handleCookieAuthentication;
+    
 @end

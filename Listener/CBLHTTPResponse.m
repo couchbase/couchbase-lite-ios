@@ -40,6 +40,9 @@
         //EnableLogTo(CBLListenerVerbose, YES);
         _router = router;
         _connection = connection;
+        
+        [_connection handleCookieAuthentication];
+
         router.onResponseReady = ^(CBLResponse* r) {
             [self onResponseReady: r];
         };

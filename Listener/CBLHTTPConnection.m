@@ -22,8 +22,11 @@
 #import "CBL_Server.h"
 #import "CBL_Router.h"
 
+#import "HTTPAuthenticationRequest.h"
 #import "HTTPMessage.h"
 #import "HTTPDataResponse.h"
+#import "DDData.h"
+
 
 #import "Test.h"
 
@@ -35,7 +38,53 @@
     return ((CBLHTTPServer*)config.server).listener;
 }
 
-
+/*
+ * This method assumes that the user has already been authenticated with isAuthenticated, otherwise 
+ * the response should not proceed to this level
+ */
+- (NSString *)authUsername
+{
+    NSString *username;
+    
+    // Extract the authentication information from the Authorization header
+    HTTPAuthenticationRequest *auth = [[HTTPAuthenticationRequest alloc] initWithRequest:request];
+    
+    if ([self useDigestAccessAuthentication])
+    {
+        username = [auth username];
+    }
+    else
+    {
+        // Decode the base 64 encoded credentials
+        NSString *base64Credentials = [auth base64Credentials];
+        
+        NSData *decodedCredentials = [[base64Credentials dataUsingEncoding:NSUTF8StringEncoding] base64Decoded];
+        
+        NSString *credentials = [[NSString alloc] initWithData:decodedCredentials encoding:NSUTF8StringEncoding];
+        
+        // The credentials should be of the form "username:password"
+        // The username is not allowed to contain a colon
+        
+        NSRange colonRange = [credentials rangeOfString:@":"];
+        
+        username = [credentials substringToIndex:colonRange.location];
+    }
+    
+    // If the username is _ then this should logout
+    
+    if ([@"_" isEqualToString:username])
+    {
+        username = NULL;
+    }
+    
+    return username;
+}
+    
+- (NSString*) cookieUsername {
+    return NULL;
+}
+    
+    
 - (BOOL)isPasswordProtected:(NSString *)path {
     return self.listener.requiresAuth;
 }
@@ -117,5 +166,38 @@
 		Warn(@"CBLHTTPConnection: couldn't append data chunk");
 }
 
+-(void)handleCookieAuthentication
+{
+    // Check to see if there is an AuthSession cookie
+    // if there is and it is valid write the cookie
+    NSLog(@"Value for i18next: %@", [self getCookieValue:@"i18next"]);
+    
+}
+    
+// Rudimentary cookie parsing, not according to spec
+-(NSString *)getCookieValue:(NSString *)name
+{
+    NSDictionary *fields = [request allHeaderFields];
+    NSString *cookieHeader = [fields valueForKey:@"Cookie"];
+    NSArray *cookies = [cookieHeader componentsSeparatedByString:@";"];
+    for (NSString* cookie in cookies) {
+        // This may not handle some Facebook cookies, but those should not be submitted to this server
+        NSArray *cookieParts = [cookie componentsSeparatedByString:@"="];
+        if (cookieParts.count == 0) continue;
+
+        
+        NSString *cookieName = [cookieParts[0] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        if ([name isEqualToString:cookieName])
+        {
+            if (cookieParts.count > 1) {
+                NSString *cookieValue = [cookieParts[1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                return cookieValue;
+            } else {
+                return NULL;
+            }
+        }
+    }
+    return NULL;
+}
 
 @end
