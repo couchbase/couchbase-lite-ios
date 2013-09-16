@@ -25,7 +25,7 @@ TestCase(JSMapFunction) {
         [emitted addObject: key];
         [emitted addObject: value];
     };
-    mapBlock(doc, emit, emit);
+    mapBlock(doc, emit, NULL);
 
     CAssertEqual(emitted, (@[@"value", doc]));
 }

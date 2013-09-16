@@ -332,7 +332,19 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                           PRAGMA user_version = 7";
         if (![self initialize: sql error: outError])
             return NO;
-        //dbVersion = 7;
+        dbVersion = 7;
+    }
+
+    if (dbVersion < 8) {
+        // Version 8: add geo index
+        NSString* sql = @"ALTER TABLE maps ADD COLUMN ax FLOAT; \
+                        ALTER TABLE maps ADD COLUMN ay FLOAT; \
+                        CREATE INDEX IF NOT EXISTS geo_ax on maps(view_id, ax); \
+                        CREATE INDEX IF NOT EXISTS geo_ay on maps(view_id, ay); \
+                        PRAGMA user_version = 8";
+        if (![self initialize: sql error: outError])
+            return NO;
+        //dbVersion = 8;
     }
 
 #if DEBUG
@@ -399,6 +411,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         case SQLITE_CORRUPT:
             return kCBLStatusCorruptError;
         default:
+            LogTo(CBLDatabase, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
             return kCBLStatusDBError;
     }
 }
@@ -1282,6 +1295,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                             sequence: sequence
                                                                  key: docID
                                                                value: value
+                                                                 geo: nil
                                                        docProperties: docContents];
             if (options->keys)
                 docs[docID] = change;
@@ -1310,6 +1324,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                    sequence: 0
                                                         key: docID
                                                       value: value
+                                                        geo: nil
                                               docProperties: nil];
             }
             [rows addObject: change];

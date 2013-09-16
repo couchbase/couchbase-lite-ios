@@ -415,6 +415,7 @@ static id fromJSON( NSData* json ) {
 @implementation CBLQueryRow
 {
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
+    id _geo;                    // Constructed from the result data, never parsed.
     __weak id _parsedKey, _parsedValue;
     UInt64 _sequence;
     NSString* _sourceDocID;
@@ -432,6 +433,7 @@ static id fromJSON( NSData* json ) {
                       sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
+                         geo: (id)geo
                  docProperties: (NSDictionary*)docProperties
 {
     self = [super init];
@@ -443,6 +445,7 @@ static id fromJSON( NSData* json ) {
         _sequence = sequence;
         _key = [key copy];
         _value = [value copy];
+        _geo = [geo copy];
         _documentProperties = [docProperties copy];
     }
     return self;
@@ -457,6 +460,7 @@ static id fromJSON( NSData* json ) {
     CBLQueryRow* other = object;
     return _database == other->_database
         && $equal(_key, other->_key) && $equal(_value, other->_value)
+        && $equal(_geo, other->_geo)
         && $equal(_sourceDocID, other->_sourceDocID)
         && $equal(_documentProperties, other->_documentProperties);
 }
@@ -484,6 +488,10 @@ static id fromJSON( NSData* json ) {
         }
     }
     return value;
+}
+
+- (id) geo {
+    return _geo;
 }
 
 
@@ -538,9 +546,13 @@ static id fromJSON( NSData* json ) {
 
 // This is used by the router
 - (NSDictionary*) asJSONDictionary {
-    if (_value || _sourceDocID)
+    if (_value || _sourceDocID) {
+        if (_geo)
+            return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _sourceDocID}, {@"geo", self.geo},
+                         {@"doc", _documentProperties});
         return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _sourceDocID},
                      {@"doc", _documentProperties});
+    }
     else
         return $dict({@"key", self.key}, {@"error", @"not_found"});
 
