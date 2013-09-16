@@ -146,7 +146,6 @@
 		2766EFFE14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */; };
 		2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */; };
 		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; };
@@ -451,6 +450,7 @@
 		792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		792867D4178DE33E00248AF0 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 792867D3178DE33E00248AF0 /* JavaScriptCore.framework */; };
 		792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */; };
+		7BE2945B17E69E0D004C60EA /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0749B11CD5B4F00E9A2AB /* CollectionUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		DA147C0C14BCA98A0052DA4D /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
 		DA147C0D14BCA98A0052DA4D /* CBLHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */; };
@@ -578,13 +578,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 27731F131495CFEF00815D67;
 			remoteInfo = "TouchDB iOS Empty App";
-		};
-		27E11F1A14AD251C0006B340 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 270B3DE91489359000E0A926;
-			remoteInfo = TouchDB;
 		};
 		27E11F1C14AD25570006B340 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1764,6 +1757,7 @@
 				279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */,
 				27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */,
 				27B0B79E1492932800A817AD /* CBLBase64.h in Headers */,
+				7BE2945B17E69E0D004C60EA /* CollectionUtils.h in Headers */,
 				27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */,
 				279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */,
 				279906EE149ABFC2003D4338 /* CBLBatcher.h in Headers */,
@@ -2074,7 +2068,6 @@
 			);
 			dependencies = (
 				27E11F1D14AD25570006B340 /* PBXTargetDependency */,
-				27E11F1B14AD251C0006B340 /* PBXTargetDependency */,
 			);
 			name = "CBL Mac Demo";
 			productName = "ToyCouch Demo";
@@ -2458,7 +2451,6 @@
 				27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */,
 				275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */,
 				2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */,
-				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
 				279CE39014D1EDA0009F3FA6 /* Test.m in Sources */,
 				27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */,
 			);
@@ -2722,11 +2714,6 @@
 			target = 27731F131495CFEF00815D67 /* CBL iOS Empty App */;
 			targetProxy = 27B15521164AD14E00DF5E2C /* PBXContainerItemProxy */;
 		};
-		27E11F1B14AD251C0006B340 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 270B3DE91489359000E0A926 /* CBL Mac */;
-			targetProxy = 27E11F1A14AD251C0006B340 /* PBXContainerItemProxy */;
-		};
 		27E11F1D14AD25570006B340 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 275315D414ACF0A10065964D /* CBL Listener Mac */;
@@ -2923,6 +2910,10 @@
 				INFOPLIST_FILE = "Listener/CouchbaseLiteListener-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = (
+					"-sub_umbrella",
+					CouchbaseLite,
+				);
 				PRODUCT_NAME = CouchbaseLiteListener;
 				WRAPPER_EXTENSION = framework;
 			};
@@ -2951,6 +2942,10 @@
 				INFOPLIST_FILE = "Listener/CouchbaseLiteListener-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = (
+					"-sub_umbrella",
+					CouchbaseLite,
+				);
 				PRODUCT_NAME = CouchbaseLiteListener;
 				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = framework;
