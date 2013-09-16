@@ -99,7 +99,7 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
         return nil;
 
     // Return the CBLMapBlock; the code inside will be called when CouchbaseLite wants to run the map fn:
-    CBLMapBlock mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit, CBLMapEmitBlock geoemit) {
+    CBLMapBlock mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit, CBLMapGeoEmitBlock geoemit) {
         sCurrentEmitBlock = emit;
         [fn call: doc];
         sCurrentEmitBlock = nil;
