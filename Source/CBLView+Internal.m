@@ -165,6 +165,35 @@ static id fromJSON( NSData* json ) {
             else
                 emitStatus = _db.lastDbError;
         };
+
+        // This is the geo() block, which gets called from within the user-defined map() block
+        // that's called down below.
+        CBLMapGeoEmitBlock geoemit = ^(NSDictionary* geoJSONPoint, id key, id value) {
+            if (!key)
+                key = $null;
+            NSString* keyJSON = toJSONString(key);
+            NSString* type = $castIf(NSString, geoJSONPoint[@"type"]);
+            NSArray* coordinates = $castIf(NSArray, geoJSONPoint[@"coordinates"]);
+            if (![type isEqualToString: @"Point"]) {
+                Warn(@"geoemit key must be a geojson point, like: { \"type\": \"Point\", \"coordinates\": [100.0, 0.0] } Yours: %@", toJSONString(geoJSONPoint));
+                return;
+            }
+            if (!(coordinates[0] && coordinates[1])) {
+                Warn(@"geoemit key must be a geojson point with coordinates, like: { \"type\": \"Point\", \"coordinates\": [100.0, 0.0] } Yours: %@", toJSONString(geoJSONPoint));
+                return;
+            }
+            NSString* valueJSON = toJSONString(value);
+            NSString* geoJSONString = toJSONString(geoJSONPoint);
+            LogTo(View, @"    geoemit(%@, %@)", geoJSONString, valueJSON);
+            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, ax, ay) VALUES "
+                 "(?, ?, ?, ?, ?, ?)",
+                 @(viewID), @(sequence), keyJSON, valueJSON, coordinates[0], coordinates[1]])
+                ++inserted;
+            else
+                emitStatus = _db.lastDbError;
+        };
+
+        
         
         // Now scan every revision added since the last time the view was indexed:
         FMResultSet* r;
@@ -266,7 +295,7 @@ static id fromJSON( NSData* json ) {
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 LogTo(View, @"  call map for sequence=%lld...", sequence);
                 @try {
-                    mapBlock(properties, emit);
+                    mapBlock(properties, emit, geoemit);
                 } @catch (NSException* x) {
                     MYReportException(x, @"map block of view '%@'", _name);
                     emitStatus = kCBLStatusCallbackError;
@@ -311,8 +340,13 @@ static id fromJSON( NSData* json ) {
         collationStr = @" COLLATE JSON_ASCII";
     else if (_collation == kCBLViewCollationRaw)
         collationStr = @" COLLATE JSON_RAW";
-
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
+    NSMutableString* sql;
+    if (options->bbox) {
+        sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence, ax, ay"];
+    } else {
+        sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
+    }
+    
     if (options->includeDocs)
         [sql appendString: @", revid, json"];
     [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
@@ -346,6 +380,14 @@ static id fromJSON( NSData* json ) {
         [sql appendString: (inclusiveMax ? @" AND key <= ?" :  @" AND key < ?")];
         [sql appendString: collationStr];
         [args addObject: toJSONString(maxKey)];
+    }
+    
+    if (options->bbox) {
+        [sql appendString:@" AND (maps.ax >= ? AND maps.ay >= ?  AND maps.ax <= ? AND  maps.ay <= ?)"];
+        [args addObject:toJSONString(options->bbox[0])];
+        [args addObject:toJSONString(options->bbox[1])];
+        [args addObject:toJSONString(options->bbox[2])];
+        [args addObject:toJSONString(options->bbox[3])];
     }
     
     [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
@@ -406,6 +448,12 @@ static id fromJSON( NSData* json ) {
             @autoreleasepool {
                 NSData* keyData = [r dataForColumnIndex: 0];
                 NSData* valueData = [r dataForColumnIndex: 1];
+                NSDictionary* geoData;
+                if (options->bbox) {
+                    geoData = $dict({@"type", @"Point"}, {@"coordinates", $array(
+                                                                                 [NSNumber numberWithDouble:[r doubleForColumnIndex:4]],
+                                                                                 [NSNumber numberWithDouble:[r doubleForColumnIndex:5]])});
+                }
                 Assert(keyData);
                 NSString* docID = [r stringForColumnIndex: 2];
                 SequenceNumber sequence = [r longLongIntForColumnIndex:3];
@@ -439,6 +487,7 @@ static id fromJSON( NSData* json ) {
                                                            sequence: sequence
                                                                 key: keyData
                                                               value: valueData
+                                                                geo: geoData
                                                       docProperties: docContents]];
             }
         }
@@ -518,6 +567,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                                sequence: 0
                                                                     key: key
                                                                   value: reduced
+                                                                    geo: nil
                                                           docProperties: nil]];
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
@@ -541,11 +591,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                    sequence: 0
                                                         key: key
                                                       value: reduced
+                                                        geo: nil
                                               docProperties: nil]];
     }
     return rows;
 }
-
 
 #pragma mark - OTHER:
 

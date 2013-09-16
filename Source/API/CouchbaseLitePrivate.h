@@ -96,6 +96,7 @@
                       sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
+                           geo: (id)geo
                  docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @end
