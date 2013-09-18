@@ -196,9 +196,10 @@
     NSUInteger numChecked = self.checkedDocuments.count;
     if (numChecked == 0)
         return;
-    NSString* message = [NSString stringWithFormat: @"Are you sure you want to remove the %u"
+    NSString* message = [NSString stringWithFormat: @"Are you sure you want to remove the %lu"
                                                      " checked-off item%@?",
-                                                     numChecked, (numChecked==1 ? @"" : @"s")];
+                                                     (unsigned long)numChecked,
+                                                     (numChecked==1 ? @"" : @"s")];
     UIAlertView* alert = [[UIAlertView alloc] initWithTitle: @"Remove Completed Items?"
                                                     message: message
                                                    delegate: self

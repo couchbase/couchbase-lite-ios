@@ -275,7 +275,6 @@
                                              inView:(UIView *)view
 {
     CBLQueryRow* row = [self rowAtIndexPath: idx];
-    Log(@"ModelIdentifier = %@", row.key);//TEMP
     return row.key;
 }
 
@@ -283,12 +282,10 @@
 - (NSIndexPath *) indexPathForElementWithModelIdentifier:(NSString *)identifier
                                                   inView:(UIView *)view
 {
-    Log(@"Restoring modelIdentifier %@", identifier);//TEMP
     if (identifier) {
         NSUInteger i = 0;
         for (CBLQueryRow* row in _rows) {
             if ($equal(row.key, identifier)) {
-                Log(@"\t...restored to index %u", i);//TEMP
                 return [NSIndexPath indexPathForItem: i inSection: 0];
             }
             ++i;
