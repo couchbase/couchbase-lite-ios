@@ -750,6 +750,7 @@ static BOOL sOnlyTrustAnchorCerts;
                       _lastSequenceChanged = YES;
                       [self saveLastSequence]; // try saving again
                   }
+                  [self asyncTasksFinished: 1];
               }
      ];
     [request dontLog404];
