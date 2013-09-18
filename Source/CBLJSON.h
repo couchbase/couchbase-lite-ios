@@ -55,6 +55,13 @@ typedef NSUInteger CBLJSONWritingOptions;
     See spec at: http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-04 */
 + (id) valueAtPointer: (NSString*)pointer inObject: (id)object;
 
+/** Encodes an NSData as a string in Base64 format. */
++ (NSString*) base64StringWithData: (NSData*)data;
+
+/** Parses a Base64-encoded string into an NSData object.
+    If the object is not a string, or not valid Base64, it returns nil. */
++ (NSData*) dataWithBase64String: (id)jsonObject;
+
 @end
 
 

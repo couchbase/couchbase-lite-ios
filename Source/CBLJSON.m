@@ -15,6 +15,7 @@
 
 #import "CBLJSON.h"
 #import "CBLParseDate.h"
+#import "CBLBase64.h"
 
 
 @implementation CBLJSON
@@ -120,6 +121,20 @@ static NSDateFormatter* getISO8601Formatter() {
 + (NSDate*) dateWithJSONObject: (id)jsonObject {
     NSTimeInterval t = [self absoluteTimeWithJSONObject: jsonObject];
     return isnan(t) ? nil : [NSDate dateWithTimeIntervalSinceReferenceDate: t];
+}
+
+
+#pragma mark - BASE64:
+
+
++ (NSString*) base64StringWithData: (NSData*)data {
+    return data ? [CBLBase64 encode: data] : nil;
+}
+
++ (NSData*) dataWithBase64String: (id)jsonObject {
+    if (![jsonObject isKindOfClass: [NSString class]])
+        return nil;
+    return [CBLBase64 decode: jsonObject];
 }
 
 
