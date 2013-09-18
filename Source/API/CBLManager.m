@@ -377,6 +377,7 @@ static NSCharacterSet* kIllegalNameChars;
                                                           pull: NO create: YES];
         if (!pull || !push)
             return nil;
+        pull.continuous = push.continuous = YES;
     }
     if (exclusively) {
         for (CBLReplication* repl in self.allReplications) {
