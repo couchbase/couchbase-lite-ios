@@ -19,6 +19,9 @@
 #import "CBL_Router.h"
 #import "CBL_Body.h"
 
+#import "CBLBase64.h"
+#import "CBLMisc.h"
+
 #import "Logging.h"
 
 
@@ -142,18 +145,18 @@
             NSData *sessionHash = [_connection sessionHashFor:sessionUserProps[@"name"]
                                                          salt:sessionUserProps[@"salt"]
                                                     timeStamp:sessionTimeStamp];
-            NSString *session = [[NSString alloc] initWithData:sessionHash encoding:NSUTF8StringEncoding];
-            NSString *authSessionCookie = [NSString stringWithFormat:@"AuthSession=%@:%i:%@",
+            NSString *authSessionHeader = [NSString stringWithFormat:@"%@:%i:",
                                            sessionUserProps[@"name"],
-                                           sessionTimeStamp,
-                                           session];
+                                           sessionTimeStamp];
+            NSMutableData *authSessionData = [[NSMutableData alloc] init];
+            [authSessionData appendData:[authSessionHeader dataUsingEncoding:NSUTF8StringEncoding]];
+            [authSessionData appendData:sessionHash];
+            NSString *encodedAuthSession = [CBLBase64 encode:authSessionData];
             
-            NSString *cookie = _response.headers[@"Cookie"];
-            if (!cookie) cookie = @"";
-            if ([cookie length] > 0) cookie = [cookie stringByAppendingString:@"; "];
-            cookie = [cookie stringByAppendingString:authSessionCookie];
-        
-            _response.headers[@"Cookie"] = cookie;
+            NSString *cookie = [NSString stringWithFormat:@"AuthSession=%@; Max-Age=3600; Version=1",
+                                           encodedAuthSession];
+            
+            _response.headers[@"Set-Cookie"] = cookie;
         }
     }
     return _response.headers;

@@ -132,8 +132,14 @@ NSString * const kcouch_httpd_auth_authentication_redirect = @"/_utils/session.h
 }
 
 - (NSDictionary *)getUserCreds:(NSString *)username {
-    // Currently this does not check the config for users, it only
-    // looks up info in the kcouch_httpd_auth_authentication_db
+    // TODO, this is not checking hashed values as it would in
+    // the couchdb local.ini
+    if (_passwords && _passwords[username]) {
+        return $dict({@"name", username},
+                     {@"salt", nil},
+                     {@"roles", @[@"admin"]});
+    }
+    
     NSArray *cachedUser = [self getFromCache:username];
     if (!cachedUser || !cachedUser[1])
     {

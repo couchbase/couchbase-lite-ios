@@ -118,6 +118,16 @@
     // Even though CouchbaseLite doesn't support user logins, it implements a generic response to the
     // CouchDB _session API, so that apps that call it (such as Futon!) won't barf.
     NSLog(@"GET _session");
+    if (_connection) {
+        NSDictionary *userProps = _connection.sessionUserProps;
+        if (userProps) {
+            _response.bodyObject = $dict({@"ok", $true},
+                                         {@"userCtx", $dict({@"name", userProps[@"name"]},
+                                                            {@"roles", userProps[@"roles"]})});
+            return kCBLStatusOK;
+        }
+    }    
+    
     _response.bodyObject = $dict({@"ok", $true},
                                  {@"userCtx", $dict({@"name", $null},
                                                     {@"roles", @[@"_admin"]})});
@@ -136,16 +146,17 @@
     
     if (name && password) {
         if (_connection) {
-            if (![_connection authenticate:name password:password]) {
-                _response.bodyObject = $dict({@"error", @"Invalid user name or password"});
-                return kCBLStatusUnauthorized;
+            NSDictionary *userProps = [_connection authenticate:name password:password];
+            if (userProps) {
+                _response.bodyObject = $dict({@"ok", $true},
+                                             {@"userCtx", $dict({@"name", userProps[@"name"]},
+                                                                {@"roles", userProps[@"roles"]})});
+                return kCBLStatusOK;
             }
         }
-        // TODO: handle the lookup of roles
-        _response.bodyObject = $dict({@"ok", $true},
-                                     {@"userCtx", $dict({@"name", name},
-                                                        {@"roles", @[]})});
-        return kCBLStatusOK;
+
+        _response.bodyObject = $dict({@"error", @"Invalid user name or password"});
+        return kCBLStatusUnauthorized;
     } else {
         _response.bodyObject = $dict({@"error", @"required fields: name, password"});
         return kCBLStatusUnauthorized;

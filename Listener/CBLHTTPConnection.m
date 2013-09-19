@@ -84,7 +84,7 @@ int const kcouch_httpd_auth_timeout = 600;
     
     if ([@"_" isEqualToString:username])
     {
-        username = NULL;
+        username = nil;
     }
     
     return username;
@@ -92,15 +92,15 @@ int const kcouch_httpd_auth_timeout = 600;
 
 -(void) clearSession
 {
-    _sessionUserProps = NULL;
-    _sessionTimeStamp = NULL;
+    _sessionUserProps = nil;
+    _sessionTimeStamp = nil;
 }
 
--(BOOL) authenticate:(NSString *)name password:(NSString *)password {
+-(NSDictionary *) authenticate:(NSString *)name password:(NSString *)password {
     
     NSDictionary *userProps = [self.listener getUserCreds:name];
     if (!userProps) {
-        return NO;
+        return nil;
     }
     
     // TODO, figure out how to authenticate this name/password combination
@@ -109,7 +109,7 @@ int const kcouch_httpd_auth_timeout = 600;
     _sessionTimeStamp = [self makeCookieTime];
     _sessionUserProps = userProps;
     
-    return YES;
+    return _sessionUserProps;
 }
 
 - (BOOL)isPasswordProtected:(NSString *)path {
@@ -209,27 +209,37 @@ int const kcouch_httpd_auth_timeout = 600;
     }
     
     NSData *decodedAuthSession = [CBLBase64 decode:authSessionCookie];
-    NSString *authSession = [[NSString alloc] initWithData:decodedAuthSession encoding:NSUTF8StringEncoding];
-    NSLog(@"AuthSession: %@", authSession);
+    NSMutableArray *authSessionParts = [[NSMutableArray alloc] init];
+    const char * decodedBytes = (const char *)decodedAuthSession.bytes;
+
+    int start = 0;
+    for (int i = 0; i < decodedAuthSession.length; i++) {
+        if (decodedBytes[i] == ':') {
+            NSData * part = [decodedAuthSession subdataWithRange:NSMakeRange(start, i - start)];
+            [authSessionParts addObject:part];
+            start = i + 1;
+        }
+    }
+    // Grab the final part
+    NSData * part = [decodedAuthSession subdataWithRange:NSMakeRange(start, decodedAuthSession.length - start)];
+    [authSessionParts addObject:part];
     
-    NSArray *authSessionParts = [authSession componentsSeparatedByString:@":"];
     if ([authSessionParts count] != 3)
     {
         LogTo(CBLListener, @"Malformed AuthSession cookie. Please clear your cookies.");
-
+        
         [self handleInvalidRequest:nil];
         return;
     }
-    
-    NSString *userPart = authSessionParts[0];
-    NSString *timePart = authSessionParts[1];
-    NSString *hashPart = authSessionParts[2];
+
+    NSString *userPart = [[NSString alloc] initWithData:authSessionParts[0] encoding:NSUTF8StringEncoding];
+    NSString *timePart = [[NSString alloc] initWithData:authSessionParts[1] encoding:NSUTF8StringEncoding];
+    NSData *hashPart = authSessionParts[2];
     
     // Verify expiry and hash
     
     int currentTime = [self makeCookieTime];
-    int timeStamp = 0;
-    strtol([timePart cStringUsingEncoding:NSUTF8StringEncoding], NULL, timeStamp);
+    int timeStamp = strtol([timePart cStringUsingEncoding:NSUTF8StringEncoding], NULL, 10);
     if (timeStamp + kcouch_httpd_auth_timeout < currentTime) {
         return;
     }
@@ -238,7 +248,7 @@ int const kcouch_httpd_auth_timeout = 600;
     
     // Get the user props
     NSDictionary *userProps = [self.listener getUserCreds:userPart];
-    if (!userPart) {
+    if (!userProps) {
         return;
     }
     
@@ -249,11 +259,11 @@ int const kcouch_httpd_auth_timeout = 600;
         return;
     }
     
-    if (CBLSafeCompare(expectedHash, [hashPart dataUsingEncoding:NSUTF8StringEncoding])) {
+    if (CBLSafeCompare(expectedHash, hashPart)) {
         _sessionUserProps = userProps;
         _sessionTimeStamp = currentTime;
         
-        NSLog(@"Successfull session authentication for %@", userPart);
+        NSLog(@"Successful session authentication for %@", userPart);
     }
     
     return;
@@ -268,7 +278,7 @@ int const kcouch_httpd_auth_timeout = 600;
     {
         LogTo(CBLListener, @"You have not set the CBLListener authSecret.");
         
-        return NULL;
+        return nil;
     }
     NSMutableData *fullSecret = [[NSMutableData alloc] init];
     [fullSecret appendData:[secret dataUsingEncoding:NSUTF8StringEncoding]];
@@ -285,23 +295,23 @@ int const kcouch_httpd_auth_timeout = 600;
     NSString *cookieHeader = [fields valueForKey:@"Cookie"];
     NSArray *cookies = [cookieHeader componentsSeparatedByString:@";"];
     for (NSString* cookie in cookies) {
-        // This may not handle some Facebook cookies, but those should not be submitted to this server
-        NSArray *cookieParts = [cookie componentsSeparatedByString:@"="];
-        if (cookieParts.count == 0) continue;
 
+        NSScanner *scanner = [NSScanner scannerWithString:cookie];
+        NSString *cookieName;
+        [scanner scanUpToString:@"=" intoString:&cookieName];
+        NSString *cookieValue = [cookie substringFromIndex:scanner.scanLocation + 1];
+        if (!cookieValue || cookieValue.length == 0) continue;
+        cookieName = [cookieName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        cookieValue = [cookieValue stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         
-        NSString *cookieName = [cookieParts[0] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         if ([name isEqualToString:cookieName])
         {
-            if (cookieParts.count > 1) {
-                NSString *cookieValue = [cookieParts[1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-                return cookieValue;
-            } else {
-                return NULL;
-            }
+            return cookieValue;
+        } else {
+            return nil;
         }
     }
-    return NULL;
+    return nil;
 }
     
 -(int)makeCookieTime
