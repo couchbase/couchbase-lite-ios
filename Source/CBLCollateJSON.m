@@ -207,7 +207,7 @@ static double readNumber(const char* start, const char* end, char** endOfNumber)
     char* endInStr;
     double result = strtod(str, &endInStr);
     *endOfNumber = (char*)start + (endInStr - str);
-    ifc (len >= sizeof(buf))
+    ifc (str != buf)
         free(str);
     return result;
 }
