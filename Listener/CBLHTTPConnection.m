@@ -22,6 +22,9 @@
 #import "CBL_Server.h"
 #import "CBL_Router.h"
 
+#import "CBLBase64.h"
+#import "CBLMisc.h"
+
 #import "HTTPAuthenticationRequest.h"
 #import "HTTPMessage.h"
 #import "HTTPDataResponse.h"
@@ -32,7 +35,14 @@
 
 
 @implementation CBLHTTPConnection
+{
+    NSDictionary *_sessionUserProps;
+    int _sessionTimeStamp;
+}
 
+@synthesize sessionUserProps=_sessionUserProps, sessionTimeStamp=_sessionTimeStamp;
+
+int const kcouch_httpd_auth_timeout = 600;
 
 - (CBLListener*) listener {
     return ((CBLHTTPServer*)config.server).listener;
@@ -79,12 +89,29 @@
     
     return username;
 }
-    
-- (NSString*) cookieUsername {
-    return NULL;
+
+-(void) clearSession
+{
+    _sessionUserProps = NULL;
+    _sessionTimeStamp = NULL;
 }
+
+-(BOOL) authenticate:(NSString *)name password:(NSString *)password {
     
+    NSDictionary *userProps = [self.listener getUserCreds:name];
+    if (!userProps) {
+        return NO;
+    }
     
+    // TODO, figure out how to authenticate this name/password combination
+    // probably checking salt + password_sha
+
+    _sessionTimeStamp = [self makeCookieTime];
+    _sessionUserProps = userProps;
+    
+    return YES;
+}
+
 - (BOOL)isPasswordProtected:(NSString *)path {
     return self.listener.requiresAuth;
 }
@@ -111,7 +138,6 @@
 }
 
 
-
 - (BOOL)supportsMethod:(NSString *)method atPath:(NSString *)path {
     return $equal(method, @"POST") || $equal(method, @"PUT") || $equal(method,  @"DELETE")
         || [super supportsMethod: method atPath: path];
@@ -134,8 +160,9 @@
     
     // Create a CBL_Router:
     CBL_Router* router = [[CBL_Router alloc] initWithServer: ((CBLHTTPServer*)config.server).tdServer
-                                                request: urlRequest
-                                                isLocal: NO];
+                                                 connection: self
+                                                    request: urlRequest
+                                                    isLocal: NO];
     router.processRanges = NO;  // The HTTP server framework does this already
     CBLHTTPResponse* response = [[CBLHTTPResponse alloc] initWithRouter: router
                                                          forConnection: self];
@@ -166,12 +193,89 @@
 		Warn(@"CBLHTTPConnection: couldn't append data chunk");
 }
 
--(void)handleCookieAuthentication
+-(void)writeAuthSession
 {
-    // Check to see if there is an AuthSession cookie
-    // if there is and it is valid write the cookie
-    NSLog(@"Value for i18next: %@", [self getCookieValue:@"i18next"]);
+    NSLog(@"writing auth session %@", request.url);
+}
     
+-(void)readAuthSession
+{
+    NSLog(@"reading auth session %@", request.url);
+    
+    NSString *authSessionCookie = [self getCookieValue:@"AuthSession"];
+    if (!authSessionCookie || [authSessionCookie isEqualToString:@""])
+    {
+        return;
+    }
+    
+    NSData *decodedAuthSession = [CBLBase64 decode:authSessionCookie];
+    NSString *authSession = [[NSString alloc] initWithData:decodedAuthSession encoding:NSUTF8StringEncoding];
+    NSLog(@"AuthSession: %@", authSession);
+    
+    NSArray *authSessionParts = [authSession componentsSeparatedByString:@":"];
+    if ([authSessionParts count] != 3)
+    {
+        LogTo(CBLListener, @"Malformed AuthSession cookie. Please clear your cookies.");
+
+        [self handleInvalidRequest:nil];
+        return;
+    }
+    
+    NSString *userPart = authSessionParts[0];
+    NSString *timePart = authSessionParts[1];
+    NSString *hashPart = authSessionParts[2];
+    
+    // Verify expiry and hash
+    
+    int currentTime = [self makeCookieTime];
+    int timeStamp = 0;
+    strtol([timePart cStringUsingEncoding:NSUTF8StringEncoding], NULL, timeStamp);
+    if (timeStamp + kcouch_httpd_auth_timeout < currentTime) {
+        return;
+    }
+
+    // Check the timeout, if not timed out, continue
+    
+    // Get the user props
+    NSDictionary *userProps = [self.listener getUserCreds:userPart];
+    if (!userPart) {
+        return;
+    }
+    
+    NSData *expectedHash = [self sessionHashFor:userPart salt:userProps[@"salt"] timeStamp:timeStamp];
+    if (!expectedHash)
+    {
+        [self handleInvalidRequest:nil];
+        return;
+    }
+    
+    if (CBLSafeCompare(expectedHash, [hashPart dataUsingEncoding:NSUTF8StringEncoding])) {
+        _sessionUserProps = userProps;
+        _sessionTimeStamp = currentTime;
+        
+        NSLog(@"Successfull session authentication for %@", userPart);
+    }
+    
+    return;
+}
+
+-(NSData *)sessionHashFor:(NSString *)name salt:(NSString *)salt timeStamp:(int)timeStamp
+{
+    if (!salt) salt = @"";
+
+    NSString *secret = self.listener.authSecret;
+    if (!secret)
+    {
+        LogTo(CBLListener, @"You have not set the CBLListener authSecret.");
+        
+        return NULL;
+    }
+    NSMutableData *fullSecret = [[NSMutableData alloc] init];
+    [fullSecret appendData:[secret dataUsingEncoding:NSUTF8StringEncoding]];
+    [fullSecret appendData:[salt dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    NSString *userTimeValue = [NSString stringWithFormat:@"%@+%i", name, timeStamp];
+    return CBLHMACSHA1(fullSecret, [userTimeValue dataUsingEncoding:NSUTF8StringEncoding]);
 }
     
 // Rudimentary cookie parsing, not according to spec
@@ -199,5 +303,12 @@
     }
     return NULL;
 }
+    
+-(int)makeCookieTime
+{
+   return floor([[NSDate date]  timeIntervalSince1970]);
+}
+    
+
 
 @end

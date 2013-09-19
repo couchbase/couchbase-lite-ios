@@ -69,3 +69,6 @@ NSURL* CBLURLWithoutQuery( NSURL* url ) __attribute__((nonnull));
 
 /** Appends path components to a URL. These will NOT be URL-escaped, so you can include queries. */
 NSURL* CBLAppendToURL(NSURL* baseURL, NSString* toAppend) __attribute__((nonnull));
+
+/** Need a constant time comparison for two sets of NSData to avoid timing attacks */
+BOOL CBLSafeCompare(NSData *data1, NSData *data2);

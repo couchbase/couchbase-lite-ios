@@ -14,8 +14,15 @@
 @interface CBLHTTPConnection : HTTPConnection
 
 @property (readonly) CBLListener* listener;
+@property (readonly) NSDictionary* sessionUserProps;
+@property (readonly) int sessionTimeStamp;
 
 - (NSString *)authUsername;
--(void)handleCookieAuthentication;
+
+-(void)readAuthSession;
+-(void)writeAuthSession;
+-(void)clearSession;
+-(BOOL)authenticate:(NSString *)name password:(NSString *)password;
+-(NSData *)sessionHashFor:(NSString *)name salt:(NSString *)salt timeStamp:(int)timeStamp;
     
 @end

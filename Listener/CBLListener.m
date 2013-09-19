@@ -18,6 +18,9 @@
 #import "CBLHTTPConnection.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
+#import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLManager+Internal.h"
 #import "Logging.h"
 
 #import "HTTPServer.h"
@@ -32,7 +35,9 @@
 {
     CBLHTTPServer* _httpServer;
     CBL_Server* _tdServer;
+    CBLDatabase* _authDb;
     NSString* _realm;
+    NSString* _authSecret;
     BOOL _readOnly;
     BOOL _requiresAuth;
     NSDictionary* _passwords;
@@ -40,6 +45,8 @@
     NSArray* _SSLExtraCertificates;
 }
 
+NSString * const kcouch_httpd_auth_authentication_db = @"_users";
+NSString * const kcouch_httpd_auth_authentication_redirect = @"/_utils/session.html";
 
 + (void) initialize {
     if (self == [CBLListener class]) {
@@ -50,14 +57,15 @@
 }
 
 
-@synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm,
-            SSLExtraCertificates=_SSLExtraCertificates;
+@synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm, authSecret=_authSecret,
+     SSLExtraCertificates=_SSLExtraCertificates;
 
 
 - (instancetype) initWithManager: (CBLManager*)manager port: (UInt16)port {
     self = [super init];
     if (self) {
         _tdServer = manager.backgroundServer;
+        _authDb = [manager _databaseNamed: kcouch_httpd_auth_authentication_db mustExist: NO error: NULL];
         _httpServer = [[CBLHTTPServer alloc] init];
         _httpServer.listener = self;
         _httpServer.tdServer = _tdServer;
@@ -123,7 +131,59 @@
     _SSLIdentity = identity;
 }
 
+- (NSDictionary *)getUserCreds:(NSString *)username {
+    // Currently this does not check the config for users, it only
+    // looks up info in the kcouch_httpd_auth_authentication_db
+    NSArray *cachedUser = [self getFromCache:username];
+    if (!cachedUser || !cachedUser[1])
+    {
+        return NULL;
+    }
+    
+    return $dict({@"name", cachedUser[1][@"name"]},
+                 {@"salt", cachedUser[1][@"salt"]},
+                 {@"roles", cachedUser[1][@"roles"]});
+}
 
+    
+- (NSArray *)getFromCache:(NSString *)username {
+    // TODO, actually cache this, use time for expiry
+    return @[username, [self getUserFromDb:username], [NSDate date]];
+}
+    
+- (NSDictionary *)getUserFromDb:(NSString *)username {
+    if (!_authDb)
+      return NULL;
+
+    NSError* error;
+    if (![_authDb open: &error]) {
+        CBLStatus status = CBLStatusFromNSError(error, kCBLStatusDBError);
+        LogTo(CBLListener, @"Authentication database (%@) cannot be opened '%d'", username, status);
+        return NULL;
+    }
+    
+    CBLView* view = [_authDb viewNamed: @"byName"];
+    [view setMapBlock: MAPBLOCK({
+        id name = [doc objectForKey: @"name"];
+        if (name) emit(name, doc);
+    }) version: @"1.0"];
+    
+    CBLQuery* query = [[_authDb viewNamed: @"byName"] query];
+    query.keys = @[ username ];
+    query.limit = 1;
+    
+    for (CBLQueryRow* row in query.rows) {
+        if ([[row.document getConflictingRevisions:NULL] count] > 1)
+        {
+            LogTo(CBLListener, @"User cannot be used for authentication as the document is currently in conflict '%@'", username);
+            continue;
+        }
+        return row.documentProperties;
+    }
+    
+    return NULL;
+}
+    
 @end
 
 

@@ -26,6 +26,7 @@
 #import "CBL_Revision.h"
 #import "CBL_DatabaseChange.h"
 #import "CBL_Server.h"
+#import "CBLHTTPConnection.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
 #import "CBL_Replicator.h"
@@ -116,6 +117,7 @@
 - (CBLStatus) do_GET_session {
     // Even though CouchbaseLite doesn't support user logins, it implements a generic response to the
     // CouchDB _session API, so that apps that call it (such as Futon!) won't barf.
+    NSLog(@"GET _session");
     _response.bodyObject = $dict({@"ok", $true},
                                  {@"userCtx", $dict({@"name", $null},
                                                     {@"roles", @[@"_admin"]})});
@@ -123,23 +125,37 @@
 }
 
 - (CBLStatus) do_POST_session {
-    // Initially, we will just echo back the credential
+    NSLog(@"POST _session");
+    
+    // If we are starting a new session, we need to clear
+    if (_connection) [_connection clearSession];
+    
     NSDictionary* body = self.bodyAsDictionary;
-    NSString* user = $castIf(NSString, body[@"user"]);
+    NSString* name = $castIf(NSString, body[@"name"]);
     NSString* password = $castIf(NSString, body[@"password"]);
-    if (user && password) {
+    
+    if (name && password) {
+        if (_connection) {
+            if (![_connection authenticate:name password:password]) {
+                _response.bodyObject = $dict({@"error", @"Invalid user name or password"});
+                return kCBLStatusUnauthorized;
+            }
+        }
+        // TODO: handle the lookup of roles
         _response.bodyObject = $dict({@"ok", $true},
-                                     {@"userCtx", $dict({@"name", $null},
-                                                        {@"roles", @[@"_admin"]})});
+                                     {@"userCtx", $dict({@"name", name},
+                                                        {@"roles", @[]})});
         return kCBLStatusOK;
     } else {
-        _response.bodyObject = $dict({@"error", @"required fields: user, password"});
+        _response.bodyObject = $dict({@"error", @"required fields: name, password"});
         return kCBLStatusUnauthorized;
     }
     
 }
 
 - (CBLStatus) do_DELETE_session {
+    if (_connection) [_connection clearSession];
+
     return kCBLStatusOK;
 }
 
