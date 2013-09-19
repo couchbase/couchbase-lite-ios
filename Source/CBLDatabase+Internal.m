@@ -1295,7 +1295,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                             sequence: sequence
                                                                  key: docID
                                                                value: value
-                                                                 geo: nil
                                                        docProperties: docContents];
             if (options->keys)
                 docs[docID] = change;
@@ -1324,7 +1323,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                    sequence: 0
                                                         key: docID
                                                       value: value
-                                                        geo: nil
                                               docProperties: nil];
             }
             [rows addObject: change];

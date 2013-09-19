@@ -129,6 +129,17 @@ static id fromJSON( NSData* json ) {
 }
 
 
+static bool parseGeoJSONPoint(NSDictionary*geoJSONPoint, NSNumber** outX, NSNumber** outY) {
+    NSString* type = $castIf(NSString, geoJSONPoint[@"type"]);
+    NSArray* coordinates = $castIf(NSArray, geoJSONPoint[@"coordinates"]);
+    if (![type isEqualToString: @"Point"] || coordinates.count != 2)
+        return false;
+    *outX = $castIf(NSNumber, coordinates[0]);
+    *outY = $castIf(NSNumber, coordinates[1]);
+    return (*outX != nil && *outY != nil);
+}
+
+
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
@@ -205,25 +216,21 @@ static id fromJSON( NSData* json ) {
         // This is the geo() block, which gets called from within the user-defined map() block
         // that's called down below.
         CBLMapGeoEmitBlock geoemit = ^(NSDictionary* geoJSONPoint, id key, id value) {
+            NSNumber *x, *y;
+            if (!parseGeoJSONPoint(geoJSONPoint, &x, &y)) {
+                Warn(@"Invalid GeoJSON point passed to geoemit: %@", geoJSONPoint);
+                emitStatus = kCBLStatusServerError;
+                return;
+            }
             if (!key)
                 key = $null;
-            NSString* keyJSON = toJSONString(key);
-            NSString* type = $castIf(NSString, geoJSONPoint[@"type"]);
-            NSArray* coordinates = $castIf(NSArray, geoJSONPoint[@"coordinates"]);
-            if (![type isEqualToString: @"Point"]) {
-                Warn(@"geoemit key must be a geojson point, like: { \"type\": \"Point\", \"coordinates\": [100.0, 0.0] } Yours: %@", toJSONString(geoJSONPoint));
-                return;
-            }
-            if (!(coordinates[0] && coordinates[1])) {
-                Warn(@"geoemit key must be a geojson point with coordinates, like: { \"type\": \"Point\", \"coordinates\": [100.0, 0.0] } Yours: %@", toJSONString(geoJSONPoint));
-                return;
-            }
-            NSString* valueJSON = toJSONString(value);
             NSString* geoJSONString = toJSONString(geoJSONPoint);
+            NSString* keyJSON = toJSONString(key);
+            NSString* valueJSON = toJSONString(value);
             LogTo(View, @"    geoemit(%@, %@)", geoJSONString, valueJSON);
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, ax, ay) VALUES "
-                 "(?, ?, ?, ?, ?, ?)",
-                 @(viewID), @(sequence), keyJSON, valueJSON, coordinates[0], coordinates[1]])
+            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, ax, ay) "
+                                        "VALUES (?, ?, ?, ?, ?, ?)",
+                                        @(viewID), @(sequence), keyJSON, valueJSON, x, y])
                 ++inserted;
             else
                 emitStatus = _db.lastDbError;
@@ -377,15 +384,12 @@ static id fromJSON( NSData* json ) {
         collationStr = @" COLLATE JSON_ASCII";
     else if (_collation == kCBLViewCollationRaw)
         collationStr = @" COLLATE JSON_RAW";
-    NSMutableString* sql;
-    if (options->bbox) {
-        sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence, ax, ay"];
-    } else {
-        sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
-    }
-    
+
+    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
     if (options->includeDocs)
         [sql appendString: @", revid, json"];
+    if (options->bbox)
+        [sql appendString: @", ax, ay"];
     [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
     NSMutableArray* args = $marray(@(_viewID));
 
@@ -420,11 +424,12 @@ static id fromJSON( NSData* json ) {
     }
     
     if (options->bbox) {
-        [sql appendString:@" AND (maps.ax >= ? AND maps.ay >= ?  AND maps.ax <= ? AND  maps.ay <= ?)"];
-        [args addObject:toJSONString(options->bbox[0])];
-        [args addObject:toJSONString(options->bbox[1])];
-        [args addObject:toJSONString(options->bbox[2])];
-        [args addObject:toJSONString(options->bbox[3])];
+        [sql appendString: @" AND (maps.ax >= ? AND maps.ax < ?)"
+                            " AND (maps.ay >= ? AND maps.ay < ?)"];
+        [args addObject: @(options->bbox->min.x)];
+        [args addObject: @(options->bbox->max.x)];
+        [args addObject: @(options->bbox->min.y)];
+        [args addObject: @(options->bbox->max.y)];
     }
     
     [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
@@ -489,12 +494,6 @@ static id fromJSON( NSData* json ) {
             @autoreleasepool {
                 NSData* keyData = [r dataForColumnIndex: 0];
                 NSData* valueData = [r dataForColumnIndex: 1];
-                NSDictionary* geoData;
-                if (options->bbox) {
-                    geoData = $dict({@"type", @"Point"}, {@"coordinates", $array(
-                                                                                 [NSNumber numberWithDouble:[r doubleForColumnIndex:4]],
-                                                                                 [NSNumber numberWithDouble:[r doubleForColumnIndex:5]])});
-                }
                 Assert(keyData);
                 NSString* docID = [r stringForColumnIndex: 2];
                 SequenceNumber sequence = [r longLongIntForColumnIndex:3];
@@ -524,12 +523,14 @@ static id fromJSON( NSData* json ) {
                 LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
                       toJSONString(docID));
-                [rows addObject: [[CBLQueryRow alloc] initWithDocID: docID
-                                                           sequence: sequence
-                                                                key: keyData
-                                                              value: valueData
-                                                                geo: geoData
-                                                      docProperties: docContents]];
+                CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                             sequence: sequence
+                                                                  key: keyData
+                                                                value: valueData
+                                                        docProperties: docContents];
+                if (options->bbox)
+                    row.geoPoint = (CBLGeoPoint){[r doubleForColumn: @"ax"],[r doubleForColumn: @"ay"]};
+                [rows addObject: row];
             }
         }
     }
@@ -660,7 +661,6 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                                sequence: 0
                                                                     key: key
                                                                   value: reduced
-                                                                    geo: nil
                                                           docProperties: nil]];
                     [keysToReduce removeAllObjects];
                     [valuesToReduce removeAllObjects];
@@ -684,11 +684,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                    sequence: 0
                                                         key: key
                                                       value: reduced
-                                                        geo: nil
                                               docProperties: nil]];
     }
     return rows;
 }
+
 
 #pragma mark - OTHER:
 

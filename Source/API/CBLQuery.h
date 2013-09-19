@@ -153,9 +153,13 @@ typedef enum {
 /** The row's value: this is the second parameter passed to the emit() call that generated the row. */
 @property (readonly) id value;
 
-/** The row's geo data: this is based on the data passed to the geoemit() call that generated the row. */
-@property (readonly) id geo;
+/** The row's geo data: this is based on the data passed to the geoemit() call that generated the row.
+    The value is a parsed GeoJSON point, with a "coordinates" property containing a two-element array [x, y]. */
+@property (readonly) NSDictionary* geo;
 
+/** The row's geo point in native form.
+    If the row has no geo data, the coordinates will be (0.0, 0.0). */
+@property (readonly, nonatomic) CBLGeoPoint geoPoint;
 
 /** The ID of the document described by this view row.
     This is not necessarily the same as the document that caused this row to be emitted; see the discussion of the .sourceDocumentID property for details. */

@@ -44,7 +44,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
                   matchOffsets: (NSString*)matchOffsets
                          value: (id)value
 {
-    self = [super initWithDocID: docID sequence: sequence key: $null value: value geo: nil docProperties: nil];
+    self = [super initWithDocID: docID sequence: sequence key: $null value: value docProperties: nil];
     if (self) {
         _fullTextID = fullTextID;
         // Parse the offsets as a space-delimited list of numbers, into an NSArray.

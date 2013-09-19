@@ -10,6 +10,14 @@
 @class CBLDatabase, CBLQuery, CBLDatabase;
 
 
+typedef struct CBLGeoPoint {
+    double x, y;
+} CBLGeoPoint;
+
+typedef struct CBLGeoRect {
+    CBLGeoPoint min, max;
+} CBLGeoRect;
+
 typedef void (^CBLMapEmitBlock)(id key, id value);
 
 typedef void (^CBLMapGeoEmitBlock)(NSDictionary* geoJSON, id key, id value);
