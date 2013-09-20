@@ -389,7 +389,7 @@ TestCase(CBL_View_GeoQuery) {
     CBLView* view = createView(db);
     CAssertEq([view updateIndex], kCBLStatusOK);
     
-    // Query all geo rows:
+    // Bounding-box query:
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     CBLGeoRect bbox = {{-100, 0}, {180, 90}};
     options.bbox = &bbox;
@@ -399,6 +399,12 @@ TestCase(CBL_View_GeoQuery) {
                                     {@"geometry", mkGeoPoint(-97.75, 30.25)}),
                                $dict({@"id", @"diy"},
                                      {@"geometry", mkGeoPoint(40.12, 37.53)})];
+    CAssertEqual(rowsToDicts(rows), expectedRows);
+
+    // Now try again using the public API:
+    CBLQuery* query = [view query];
+    query.boundingBox = bbox;
+    rows = [[query rows] allObjects];
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
     CBLQueryRow* row = rows[0];

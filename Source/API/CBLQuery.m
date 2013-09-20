@@ -48,8 +48,9 @@
     id _startKey, _endKey;
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
+    CBLGeoRect _boundingBox;
     CBLStaleness _stale;
-    BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
+    BOOL _descending, _prefetch, _mapOnly, _includeDeleted, _isGeoQuery;
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
@@ -92,6 +93,10 @@
         _descending = query.descending;
         _prefetch = query.prefetch;
         self.keys = query.keys;
+        if (query->_isGeoQuery) {
+            _isGeoQuery = YES;
+            _boundingBox = query->_boundingBox;
+        }
         _groupLevel = query.groupLevel;
         _mapOnly = query.mapOnly;
         self.startKeyDocID = query.startKeyDocID;
@@ -119,6 +124,16 @@
             database=_database, includeDeleted=_includeDeleted;
 
 
+- (CBLGeoRect) boundingBox {
+    return _boundingBox;
+}
+
+- (void) setBoundingBox:(CBLGeoRect)boundingBox {
+    _boundingBox = boundingBox;
+    _isGeoQuery = YES;
+}
+
+
 - (CBLLiveQuery*) asLiveQuery {
     return [[CBLLiveQuery alloc] initWithQuery: self];
 }
@@ -131,6 +146,7 @@
         .fullTextQuery = _fullTextQuery,
         .fullTextSnippets = _fullTextSnippets,
         .fullTextRanking = _fullTextRanking,
+        .bbox = (_isGeoQuery ? &_boundingBox : NULL),
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
         .reduce = !_mapOnly,

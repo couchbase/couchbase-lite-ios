@@ -50,6 +50,10 @@ typedef enum {
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
 @property (copy) NSString* endKeyDocID;
 
+/** The geometric bounding box to search. Setting this property causes the query to
+    search geometries rather than keys. */
+@property CBLGeoRect boundingBox;
+
 /** If set, the view will not be updated for this query, even if the database has changed.
     This allows faster results at the expense of returning possibly out-of-date data. */
 @property CBLStaleness stale;
