@@ -45,7 +45,7 @@
         _connection = connection;
         
         // Check to see if there is an AuthSession cookie and authenticate the user if not timed out
-        [_connection readAuthSession];
+        [_connection processAuthSession];
 
         router.onResponseReady = ^(CBLResponse* r) {
             [self onResponseReady: r];
@@ -137,28 +137,7 @@
     LogTo(CBLListenerVerbose, @"%@ answers httpHeaders={%u headers}", self, (unsigned)_response.headers.count);
     
     // If the session has been authenticated, write the AuthSession header
-    if (_connection) {
-        NSDictionary *sessionUserProps = _connection.sessionUserProps;
-        int sessionTimeStamp = _connection.sessionTimeStamp;
-        
-        if (sessionUserProps) {
-            NSData *sessionHash = [_connection sessionHashFor:sessionUserProps[@"name"]
-                                                         salt:sessionUserProps[@"salt"]
-                                                    timeStamp:sessionTimeStamp];
-            NSString *authSessionHeader = [NSString stringWithFormat:@"%@:%i:",
-                                           sessionUserProps[@"name"],
-                                           sessionTimeStamp];
-            NSMutableData *authSessionData = [[NSMutableData alloc] init];
-            [authSessionData appendData:[authSessionHeader dataUsingEncoding:NSUTF8StringEncoding]];
-            [authSessionData appendData:sessionHash];
-            NSString *encodedAuthSession = [CBLBase64 encode:authSessionData];
-            
-            NSString *cookie = [NSString stringWithFormat:@"AuthSession=%@; Max-Age=3600; Version=1",
-                                           encodedAuthSession];
-            
-            _response.headers[@"Set-Cookie"] = cookie;
-        }
-    }
+    [_connection writeAuthSession:_response];
     return _response.headers;
 }
 

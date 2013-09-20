@@ -113,13 +113,11 @@
     return kCBLStatusOK;
 }
 
+#pragma mark - SESSION REQUESTS:
 
 - (CBLStatus) do_GET_session {
-    // Even though CouchbaseLite doesn't support user logins, it implements a generic response to the
-    // CouchDB _session API, so that apps that call it (such as Futon!) won't barf.
-    NSLog(@"GET _session");
     if (_connection) {
-        NSDictionary *userProps = _connection.sessionUserProps;
+        NSDictionary *userProps = _connection.authSession;
         if (userProps) {
             _response.bodyObject = $dict({@"ok", $true},
                                          {@"userCtx", $dict({@"name", userProps[@"name"]},
@@ -135,10 +133,8 @@
 }
 
 - (CBLStatus) do_POST_session {
-    NSLog(@"POST _session");
-    
     // If we are starting a new session, we need to clear
-    if (_connection) [_connection clearSession];
+    if (_connection) [_connection clearAuthSession];
     
     NSDictionary* body = self.bodyAsDictionary;
     NSString* name = $castIf(NSString, body[@"name"]);
@@ -154,7 +150,6 @@
                 return kCBLStatusOK;
             }
         }
-
         _response.bodyObject = $dict({@"error", @"Invalid user name or password"});
         return kCBLStatusUnauthorized;
     } else {
@@ -165,7 +160,7 @@
 }
 
 - (CBLStatus) do_DELETE_session {
-    if (_connection) [_connection clearSession];
+    if (_connection) [_connection clearAuthSession];
 
     return kCBLStatusOK;
 }

@@ -7,22 +7,19 @@
 //
 
 #import "HTTPConnection.h"
-@class CBLListener;
+@class CBLListener, CBLResponse;
 
 
 /** Custom CouchbaseLite subclass of CocoaHTTPServer's HTTPConnection class. */
 @interface CBLHTTPConnection : HTTPConnection
 
 @property (readonly) CBLListener* listener;
-@property (readonly) NSDictionary* sessionUserProps;
-@property (readonly) int sessionTimeStamp;
+@property (readonly) NSDictionary* authSession;
 
-- (NSString *)authUsername;
-
--(void)readAuthSession;
--(void)writeAuthSession;
--(void)clearSession;
+-(void)processAuthSession;
+-(void)clearAuthSession;
+-(void)writeAuthSession:(CBLResponse *)response;
 -(NSDictionary *)authenticate:(NSString *)name password:(NSString *)password;
--(NSData *)sessionHashFor:(NSString *)name salt:(NSString *)salt timeStamp:(int)timeStamp;
+-(NSData *)getSessionHash:(NSString *)name salt:(NSString *)salt timeStamp:(int)timeStamp;
     
 @end

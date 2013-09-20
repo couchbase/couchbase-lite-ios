@@ -46,7 +46,6 @@
 }
 
 NSString * const kcouch_httpd_auth_authentication_db = @"_users";
-NSString * const kcouch_httpd_auth_authentication_redirect = @"/_utils/session.html";
 
 + (void) initialize {
     if (self == [CBLListener class]) {
@@ -132,40 +131,46 @@ NSString * const kcouch_httpd_auth_authentication_redirect = @"/_utils/session.h
 }
 
 - (NSDictionary *)getUserCreds:(NSString *)username {
-    // TODO, this is not checking hashed values as it would in
-    // the couchdb local.ini
+    // We assume that the .passwords property takes the place of the
+    // admin setup in local.ini, however these are not hashed
     if (_passwords && _passwords[username]) {
         return $dict({@"name", username},
                      {@"salt", nil},
+                     {@"password", _passwords[username]},
                      {@"roles", @[@"admin"]});
     }
     
     NSArray *cachedUser = [self getFromCache:username];
-    if (!cachedUser || !cachedUser[1])
-    {
-        return NULL;
+    if (!cachedUser || !cachedUser[1]) {
+        return nil;
     }
     
     return $dict({@"name", cachedUser[1][@"name"]},
                  {@"salt", cachedUser[1][@"salt"]},
+                 {@"password_sha", cachedUser[1][@"password_sha"]},
                  {@"roles", cachedUser[1][@"roles"]});
 }
 
     
 - (NSArray *)getFromCache:(NSString *)username {
-    // TODO, actually cache this, use time for expiry
-    return @[username, [self getUserFromDb:username], [NSDate date]];
+    // TODO: actually cache this, use time for expiry
+    NSDictionary *dbUser = [self getUserFromDb:username];
+    if (!dbUser) {
+        return nil;
+    } else {
+        return @[username, dbUser, [NSDate date]];
+    }
 }
-    
+
 - (NSDictionary *)getUserFromDb:(NSString *)username {
     if (!_authDb)
-      return NULL;
+      return nil;
 
     NSError* error;
     if (![_authDb open: &error]) {
         CBLStatus status = CBLStatusFromNSError(error, kCBLStatusDBError);
         LogTo(CBLListener, @"Authentication database (%@) cannot be opened '%d'", username, status);
-        return NULL;
+        return nil;
     }
     
     CBLView* view = [_authDb viewNamed: @"byName"];
@@ -187,11 +192,10 @@ NSString * const kcouch_httpd_auth_authentication_redirect = @"/_utils/session.h
         return row.documentProperties;
     }
     
-    return NULL;
+    return nil;
 }
     
 @end
-
 
 
 @implementation CBLHTTPServer
