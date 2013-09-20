@@ -205,7 +205,7 @@ int const kcouch_httpd_auth_timeout = 600;
         NSString *encodedAuthSession = [CBLBase64 encode:authSessionData];
         
         // TODO: handle cookie scheme (set secure based on SSL)
-        NSString *cookie = [NSString stringWithFormat:@"AuthSession=%@; Max-Age=%i; Version=1",
+        NSString *cookie = [NSString stringWithFormat:@"AuthSession=%@; Max-Age=%i; Path=/; Version=1",
                             encodedAuthSession,
                             kcouch_httpd_auth_timeout];
      
