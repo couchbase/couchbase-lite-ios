@@ -87,11 +87,11 @@ static NSArray* putGeoDocs(CBLDatabase* db) {
     [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"key", @"one"}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"key", @"three"}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"key", @"five"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"pdx"}, {@"key", @"Portland"},
+    [docs addObject: putDoc(db, $dict({@"_id", @"pdx"},   {@"key", @"Portland"},
                                       {@"geoJSON", mkGeoPoint(-122.68, 45.52)}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"aus"}, {@"key", @"Austin"},
+    [docs addObject: putDoc(db, $dict({@"_id", @"aus"},   {@"key", @"Austin"},
                                       {@"geoJSON", mkGeoPoint(-97.75, 30.25)}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"mv"}, {@"key", @"Mountain View"},
+    [docs addObject: putDoc(db, $dict({@"_id", @"mv"},    {@"key", @"Mountain View"},
                                       {@"geoJSON", mkGeoPoint(-122.08, 37.39)}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"hkg"}, {@"geoJSON", mkGeoPoint(-113.91, 45.52)}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"diy"}, {@"geoJSON", mkGeoPoint(40.12, 37.53)}))];
@@ -107,9 +107,8 @@ static CBLView* createView(CBLDatabase* db) {
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
         if (doc[@"key"])
             emit(doc[@"key"], doc[@"_conflicts"]);
-        if (doc[@"geoJSON"]) {
-            geoemit(doc[@"geoJSON"], doc[@"key"], doc[@"_conflicts"]);
-        }
+        if (doc[@"geoJSON"])
+            emit(CBLGeoJSONKey(doc[@"geoJSON"]), doc[@"_conflicts"]);
     }) reduceBlock: NULL version: @"1"];
     return view;
 }
@@ -315,8 +314,6 @@ TestCase(CBL_View_Query) {
                                    $dict({@"id",  @"22222"}, {@"key", @"two"}));
     CAssertEqual(rows, expectedRows);
 
-    return;
-    
     // Start/end key query:
     options = kDefaultCBLQueryOptions;
     options.startKey = @"a";
@@ -394,26 +391,20 @@ TestCase(CBL_View_GeoQuery) {
     
     // Query all geo rows:
     CBLQueryOptions options = kDefaultCBLQueryOptions;
-    CBLGeoRect bbox = {{0, 0}, {180, 90}};
+    CBLGeoRect bbox = {{-100, 0}, {180, 90}};
     options.bbox = &bbox;
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
-    NSArray* expectedRows = @[$dict({@"id", @"diy"},
-                                    {@"key", $null},
-                                    {@"geo", mkGeoPoint(40.12, 37.53)})];
-    CAssertEqual(rows, expectedRows);
-    
-    // Combine with a key range:
-    options = kDefaultCBLQueryOptions;
-    options.startKey = @"a";
-    options.endKey = @"one";
-    bbox = (CBLGeoRect){{-100, -100}, {50, 50}};
-    options.bbox = &bbox;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
-    expectedRows = $array($dict({@"id", @"aus"},
-                                {@"key", @"Austin"},
-                                {@"geo", mkGeoPoint(-97.75, 30.25)}));
-    CAssertEqual(rows, expectedRows);
+    NSArray* rows = [view _queryWithOptions: &options status: &status];
+    NSArray* expectedRows = @[$dict({@"id", @"aus"},
+                                    {@"geometry", mkGeoPoint(-97.75, 30.25)}),
+                               $dict({@"id", @"diy"},
+                                     {@"geometry", mkGeoPoint(40.12, 37.53)})];
+    CAssertEqual(rowsToDicts(rows), expectedRows);
+
+    CBLQueryRow* row = rows[0];
+    AssertEq(row.geoPoint.x, -97.75);
+    AssertEq(row.geoPoint.y, 30.25);
+    AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
 
     [db close];
 }
@@ -861,6 +852,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_LinkedDocs);
     RequireTestCase(CBL_View_Collation);
     RequireTestCase(CBL_View_CollationRaw);
+    RequireTestCase(CBL_View_GeoQuery);
     RequireTestCase(CBL_View_FullTextQuery);
 }
 

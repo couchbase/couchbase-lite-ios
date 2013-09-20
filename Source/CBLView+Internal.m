@@ -46,6 +46,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 @interface CBLSpecialKey : NSObject
 - (instancetype) initWithText: (NSString*)text;
 @property (readonly, nonatomic) NSString* text;
+- (instancetype) initWithPoint: (CBLGeoPoint)point;
+- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON;
+@property (readonly, nonatomic) CBLGeoPoint point;
 @end
 
 
@@ -129,17 +132,6 @@ static id fromJSON( NSData* json ) {
 }
 
 
-static bool parseGeoJSONPoint(NSDictionary*geoJSONPoint, NSNumber** outX, NSNumber** outY) {
-    NSString* type = $castIf(NSString, geoJSONPoint[@"type"]);
-    NSArray* coordinates = $castIf(NSArray, geoJSONPoint[@"coordinates"]);
-    if (![type isEqualToString: @"Point"] || coordinates.count != 2)
-        return false;
-    *outX = $castIf(NSNumber, coordinates[0]);
-    *outY = $castIf(NSNumber, coordinates[1]);
-    return (*outX != nil && *outY != nil);
-}
-
-
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
@@ -188,16 +180,24 @@ static bool parseGeoJSONPoint(NSDictionary*geoJSONPoint, NSNumber** outX, NSNumb
         CBLMapEmitBlock emit = ^(id key, id value) {
             NSString* valueJSON = toJSONString(value);
             NSNumber* fullTextID = nil;
+            id geoX = nil, geoY = nil;
             if ([key isKindOfClass: [CBLSpecialKey class]]) {
                 NSString* text = [key text];
-                if (![fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)",
-                      text]) {
-                    emitStatus = _db.lastDbError;
-                    return;
+                if (text) {
+                    if (![fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)",
+                          text]) {
+                        emitStatus = _db.lastDbError;
+                        return;
+                    }
+                    fullTextID = @(_db.fmdb.lastInsertRowId);
+                    LogTo(View, @"    emit( CBLTextKey(\"%@\"), %@)", text, valueJSON);
+                } else {
+                    CBLGeoPoint point = [key point];
+                    geoX = @(point.x);
+                    geoY = @(point.y);
+                    LogTo(View, @"    emit( CBLGeoPointKey(%g, %g), %@)", point.x, point.y, valueJSON);
                 }
-                fullTextID = @(_db.fmdb.lastInsertRowId);
                 key = nil;
-                LogTo(View, @"    emit( CBLTextKey(\"%@\"), %@) --> row %@", text, valueJSON, fullTextID);
             }
             if (!key)
                 key = $null;
@@ -205,39 +205,14 @@ static bool parseGeoJSONPoint(NSDictionary*geoJSONPoint, NSNumber** outX, NSNumb
 
             if (!fullTextID)
                 LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, fulltext_id) VALUES "
-                                        "(?, ?, ?, ?, ?)",
-                                        @(viewID), @(sequence), keyJSON, valueJSON, fullTextID])
+            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, fulltext_id, ax, ay) VALUES "
+                                        "(?, ?, ?, ?, ?, ?, ?)",
+                                        @(viewID), @(sequence), keyJSON, valueJSON, fullTextID, geoX, geoY])
                 ++inserted;
             else
                 emitStatus = _db.lastDbError;
         };
 
-        // This is the geo() block, which gets called from within the user-defined map() block
-        // that's called down below.
-        CBLMapGeoEmitBlock geoemit = ^(NSDictionary* geoJSONPoint, id key, id value) {
-            NSNumber *x, *y;
-            if (!parseGeoJSONPoint(geoJSONPoint, &x, &y)) {
-                Warn(@"Invalid GeoJSON point passed to geoemit: %@", geoJSONPoint);
-                emitStatus = kCBLStatusServerError;
-                return;
-            }
-            if (!key)
-                key = $null;
-            NSString* geoJSONString = toJSONString(geoJSONPoint);
-            NSString* keyJSON = toJSONString(key);
-            NSString* valueJSON = toJSONString(value);
-            LogTo(View, @"    geoemit(%@, %@)", geoJSONString, valueJSON);
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, ax, ay) "
-                                        "VALUES (?, ?, ?, ?, ?, ?)",
-                                        @(viewID), @(sequence), keyJSON, valueJSON, x, y])
-                ++inserted;
-            else
-                emitStatus = _db.lastDbError;
-        };
-
-        
-        
         // Now scan every revision added since the last time the view was indexed:
         FMResultSet* r;
         r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json FROM revs, docs "
@@ -338,7 +313,7 @@ static bool parseGeoJSONPoint(NSDictionary*geoJSONPoint, NSNumber** outX, NSNumb
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 LogTo(View, @"  call map for sequence=%lld...", sequence);
                 @try {
-                    mapBlock(properties, emit, geoemit);
+                    mapBlock(properties, emit);
                 } @catch (NSException* x) {
                     MYReportException(x, @"map block of view '%@'", _name);
                     emitStatus = kCBLStatusCallbackError;
@@ -528,7 +503,7 @@ static bool parseGeoJSONPoint(NSDictionary*geoJSONPoint, NSNumber** outX, NSNumb
                                                                   key: keyData
                                                                 value: valueData
                                                         docProperties: docContents];
-                if (options->bbox)
+                if (options->bbox && [r objectForColumnName: @"ax"] != nil)
                     row.geoPoint = (CBLGeoPoint){[r doubleForColumn: @"ax"],[r doubleForColumn: @"ay"]};
                 [rows addObject: row];
             }
@@ -544,6 +519,14 @@ static bool parseGeoJSONPoint(NSDictionary*geoJSONPoint, NSNumber** outX, NSNumb
 
 id CBLTextKey(NSString* text) {
     return [[CBLSpecialKey alloc] initWithText: text];
+}
+
+id CBLGeoPointKey(double x, double y) {
+    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
+}
+
+id CBLGeoJSONKey(NSDictionary* geoJSON) {
+    return [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
 }
 
 
@@ -723,6 +706,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 @implementation CBLSpecialKey
 {
     NSString* _text;
+    CBLGeoPoint _point;
 }
 
 - (instancetype) initWithText: (NSString*)text {
@@ -734,7 +718,36 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     return self;
 }
 
-@synthesize text=_text;
+- (instancetype) initWithPoint: (CBLGeoPoint)point {
+    self = [super init];
+    if (self) {
+        _point = point;
+    }
+    return self;
+}
+
+- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON {
+    self = [super init];
+    if (self) {
+        NSNumber* xobj = nil, *yobj = nil;
+        NSString* type = $castIf(NSString, geoJSON[@"type"]);
+        NSArray* coordinates = $castIf(NSArray, geoJSON[@"coordinates"]);
+        if ([type isEqualToString: @"Point"] && coordinates.count == 2) {
+            xobj = $castIf(NSNumber, coordinates[0]);
+            yobj = $castIf(NSNumber, coordinates[1]);
+        }
+        if (!xobj || !yobj) {
+            Warn(@"CBLGeoJSONKey doesn't recognize %@",
+                 [CBLJSON dataWithJSONObject: geoJSON options:0 error: NULL]);
+            return nil;
+        }
+        _point.x = xobj.doubleValue;
+        _point.y = yobj.doubleValue;
+    }
+    return self;
+}
+
+@synthesize text=_text, point=_point;
 
 @end
 

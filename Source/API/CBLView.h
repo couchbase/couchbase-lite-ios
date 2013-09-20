@@ -20,13 +20,11 @@ typedef struct CBLGeoRect {
 
 typedef void (^CBLMapEmitBlock)(id key, id value);
 
-typedef void (^CBLMapGeoEmitBlock)(NSDictionary* geoJSON, id key, id value);
-
 
 /** A "map" function called when a document is to be added to a view.
     @param doc  The contents of the document being analyzed.
     @param emit  A block to be called to add a key/value pair to the view. Your block can call it zero, one or multiple times. */
-typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit, CBLMapGeoEmitBlock geoemit);
+typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit);
 
 /** A "reduce" function called to summarize the results of a view.
 	@param keys  An array of keys to be reduced (or nil if this is a rereduce).
@@ -36,13 +34,19 @@ typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit, CBLMapGeoEm
 typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 
 
-#define MAPBLOCK(BLOCK) ^(NSDictionary* doc, void (^emit)(id key, id value), void (^geoemit)(NSDictionary* geoJSON, id key, id value)){BLOCK}
+#define MAPBLOCK(BLOCK) ^(NSDictionary* doc, void (^emit)(id key, id value)){BLOCK}
 #define REDUCEBLOCK(BLOCK) ^id(NSArray* keys, NSArray* values, BOOL rereduce){BLOCK}
 
 
 /** Returns a special value that, when emitted as a key, causes the given text to be indexed with
     the full-text indexer. Used inside a map block, like so: `emit(CBLTextKey(longText), value);` */
 id CBLTextKey(NSString* text);
+
+/** Returns a special value that, when emitted as a key, is indexed as a geometric point.
+    Used inside a map block, like so: `emit(CBLPointKey(3.0, 4.0), value);` */
+id CBLGeoPointKey(double x, double y);
+
+id CBLGeoJSONKey(NSDictionary* geoJSON);
 
 
 /** An external object that knows how to map source code of some sort into executable functions. */

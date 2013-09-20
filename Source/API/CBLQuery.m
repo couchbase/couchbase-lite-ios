@@ -495,7 +495,7 @@ static id fromJSON( NSData* json ) {
     _hasGeo = YES;
 }
 
-- (NSDictionary*) geo {
+- (NSDictionary*) geometry {
     if (!_hasGeo)
         return nil;
     return  @{@"type": @"Point", @"coordinates": @[@(_geoPoint.x), @(_geoPoint.y)]};
@@ -554,12 +554,15 @@ static id fromJSON( NSData* json ) {
 // This is used by the router
 - (NSDictionary*) asJSONDictionary {
     if (_value || _sourceDocID) {
-        return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _sourceDocID},
-                     {@"geo", self.geo},
+        id geo = self.geometry;
+        return $dict({@"key", (geo ? nil :self.key)},
+                     {@"value", self.value},
+                     {@"id", _sourceDocID},
+                     {@"geometry", geo},
                      {@"doc", _documentProperties});
-    }
-    else
+    } else {
         return $dict({@"key", self.key}, {@"error", @"not_found"});
+    }
 
 }
 
