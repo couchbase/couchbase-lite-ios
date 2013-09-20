@@ -239,7 +239,7 @@ int const kcouch_httpd_auth_timeout = 600;
     // Verify expiry and hash
     
     int currentTime = [self makeCookieTime];
-    int timeStamp = strtol([timePart cStringUsingEncoding:NSUTF8StringEncoding], NULL, 10);
+    int timeStamp = [timePart intValue];
     if (timeStamp + kcouch_httpd_auth_timeout < currentTime) {
         return;
     }
