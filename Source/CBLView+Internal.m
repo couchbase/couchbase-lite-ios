@@ -153,14 +153,32 @@ static id fromJSON( NSData* json ) {
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.
         CBLMapEmitBlock emit = ^(id key, id value) {
+            NSString* valueJSON = toJSONString(value);
+            NSNumber* fullTextID = nil;
+            if ([key isKindOfClass: [NSDictionary class]]) {
+                if ([[key objectForKey: @"type"] isEqualToString: @"Text"]) {
+                    NSString* text = $castIf(NSString, [key objectForKey: @"text"]);
+                    if (text) {
+                        if (![fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)",
+                              text]) {
+                            emitStatus = _db.lastDbError;
+                            return;
+                        }
+                        fullTextID = @(_db.fmdb.lastInsertRowId);
+                        key = nil;
+                        LogTo(View, @"    emit( fulltext(\"%@\"), %@) --> row %@", text, valueJSON, fullTextID);
+                    }
+                }
+            }
             if (!key)
                 key = $null;
             NSString* keyJSON = toJSONString(key);
-            NSString* valueJSON = toJSONString(value);
-            LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
-                                        "(?, ?, ?, ?)",
-                                        @(viewID), @(sequence), keyJSON, valueJSON])
+
+            if (!fullTextID)
+                LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
+            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, fulltext_id) VALUES "
+                                        "(?, ?, ?, ?, ?)",
+                                        @(viewID), @(sequence), keyJSON, valueJSON, fullTextID])
                 ++inserted;
             else
                 emitStatus = _db.lastDbError;
@@ -373,6 +391,9 @@ static id fromJSON( NSData* json ) {
 {
     if (!options)
         options = &kDefaultCBLQueryOptions;
+
+    if (options->fullTextQuery)
+        return [self _queryFullText: options->fullTextQuery status: outStatus];
     
     FMResultSet* r = [self resultSetWithOptions: options status: outStatus];
     if (!r)
@@ -447,6 +468,34 @@ static id fromJSON( NSData* json ) {
     [r close];
     *outStatus = kCBLStatusOK;
     LogTo(View, @"Query %@: Returning %u rows", _name, (unsigned)rows.count);
+    return rows;
+}
+
+
+- (NSArray*) _queryFullText: (NSString*)ftsQuery
+                     status: (CBLStatus*)outStatus
+{
+    NSString* sql = @"SELECT content, value, docs.docid, maps.sequence "
+                     "FROM maps, fulltext, revs, docs "
+                     "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
+                     "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id ";
+    FMResultSet* r = [_db.fmdb executeQuery: sql, ftsQuery];
+    if (!r) {
+        *outStatus = _db.lastDbError;
+        return nil;
+    }
+    NSMutableArray* rows = [[NSMutableArray alloc] init];
+    while ([r next]) {
+        NSString* text = [r stringForColumnIndex: 0];
+        NSData* valueData = [r dataForColumnIndex: 1];
+        NSString* docID = [r stringForColumnIndex: 2];
+        SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
+        [rows addObject: [[CBLQueryRow alloc] initWithDocID: docID
+                                                   sequence: sequence
+                                                        key: text
+                                                      value: valueData
+                                              docProperties: nil]];
+    }
     return rows;
 }
 

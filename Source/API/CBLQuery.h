@@ -57,6 +57,14 @@ typedef enum {
 /** If non-nil, the query will fetch only the rows with the given keys. */
 @property (copy) NSArray* keys;
 
+/** Query string for a full-text search; works only if the view's map function has used full-text
+    mapping.
+    The query string syntax is described in http://sqlite.org/fts3.html#section_3 .
+    The indexed text will appear as the key of each query row.
+    NOTE: This option is currently incompatible with all other CBLQuery options: if it's set,
+    all the other options will be ignored. */
+@property (copy) NSString* fullTextQuery;
+
 /** If set to YES, disables use of the reduce function.
     (Equivalent to setting "?reduce=false" in the REST API.) */
 @property BOOL mapOnly;

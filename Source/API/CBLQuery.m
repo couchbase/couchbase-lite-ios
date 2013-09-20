@@ -49,6 +49,7 @@
     CBLStaleness _stale;
     BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
     NSArray *_keys;
+    NSString* _fullTextQuery;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
     @protected
@@ -109,7 +110,7 @@
 
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
-            endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly,
+            endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly, fullTextQuery=_fullTextQuery,
             database=_database, includeDeleted=_includeDeleted;
 
 
@@ -122,6 +123,7 @@
         .startKey = _startKey,
         .endKey = _endKey,
         .keys = _keys,
+        .fullTextQuery = _fullTextQuery,
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
         .reduce = !_mapOnly,

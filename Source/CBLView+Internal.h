@@ -17,6 +17,7 @@ typedef struct CBLQueryOptions {
     __unsafe_unretained id startKey;
     __unsafe_unretained id endKey;
     __unsafe_unretained NSArray* keys;
+    __unsafe_unretained NSString* fullTextQuery;
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
@@ -74,5 +75,8 @@ typedef enum {
     @return  An array of CBLQueryRow. */
 - (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus;
+
+- (NSArray*) _queryFullText: (NSString*)ftsQuery
+                     status: (CBLStatus*)outStatus;
 
 @end

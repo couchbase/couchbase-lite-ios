@@ -700,6 +700,66 @@ TestCase(CBL_View_LinkedDocs) {
 }
 
 
+TestCase(CBL_View_FullTextQuery) {
+    RequireTestCase(CBL_View_Query);
+    CBLDatabase *db = createDB();
+
+    NSMutableArray* docs = $marray();
+    [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"text", @"it was a dark"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"text", @"and stormy night."}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"text", @"outside somewhere"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"text", @"a dog"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
+
+    CBLView* view = [db viewNamed: @"fts"];
+    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+        if (doc[@"text"])
+            emit(@{@"type": @"Text", @"text": doc[@"text"]},
+                 doc[@"_id"]);
+    } reduceBlock: NULL version: @"1"];
+
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    CBLStatus status;
+    NSArray* rows = [view _queryFullText: @"stormy OR dog" status: &status];
+    CAssert(rows, @"_queryFullText failed: %d", status);
+    Log(@"rows = %@", rows);
+    NSArray* expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"and stormy night."},
+                                         {@"value", @"44444"}),
+                                   $dict({@"id",  @"33333"}, {@"key", @"a dog"},
+                                         {@"value", @"33333"}));
+    CAssertEqual(rowsToDicts(rows), expectedRows);
+
+    // Try a query with the public API:
+    CBLQuery* query = [view query];
+    query.fullTextQuery = @"(was NOT barking) OR dog";
+    rows = [[query rows] allObjects];
+    CAssertEq(rows.count, 2u);
+    CBLQueryRow* row = rows[0];
+    CAssertEqual(row.key, @"it was a dark");
+    CAssertEqual(row.documentID, @"22222");
+    row = rows[1];
+    CAssertEqual(row.key, @"a dog");
+    CAssertEqual(row.documentID, @"33333");
+
+    // Now delete a document:
+    CBL_Revision* rev = docs[3];
+    CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
+    del = [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusOK);
+
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    // Make sure the deleted doc doesn't still show up in the query results:
+    rows = [view _queryFullText: @"stormy OR dog" status: &status];
+    CAssert(rows, @"_queryFullText failed: %d", status);
+    Log(@"after deletion, rows = %@", rows);
+
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"and stormy night."},
+                                {@"value", @"44444"}));
+    CAssertEqual(rowsToDicts(rows), expectedRows);
+}
+
 TestCase(CBLView) {
     RequireTestCase(CBL_View_MapConflicts);
     RequireTestCase(CBL_View_ConflictWinner);
@@ -707,6 +767,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_LinkedDocs);
     RequireTestCase(CBL_View_Collation);
     RequireTestCase(CBL_View_CollationRaw);
+    RequireTestCase(CBL_View_FullTextQuery);
 }
 
 

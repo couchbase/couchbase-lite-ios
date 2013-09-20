@@ -140,7 +140,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 - (BOOL) initialize: (NSString*)statements error: (NSError**)outError {
-    for (NSString* statement in [statements componentsSeparatedByString: @";"]) {
+    for (NSString* quotedStatement in [statements componentsSeparatedByString: @";"]) {
+        NSString* statement = [quotedStatement stringByReplacingOccurrencesOfString: @"|"
+                                                                         withString: @";"];
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             if (outError) *outError = self.fmdbError;
             Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
@@ -306,14 +308,27 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             return NO;
         dbVersion = 5;
     }
-    
+
     if (dbVersion < 6) {
         // Version 6: enable Write-Ahead Log (WAL) <http://sqlite.org/wal.html>
         NSString* sql = @"PRAGMA journal_mode=WAL; \
-                          PRAGMA user_version = 6";
+        PRAGMA user_version = 6";
         if (![self initialize: sql error: outError])
             return NO;
-        //dbVersion = 6;
+        dbVersion = 6;
+    }
+
+    if (dbVersion < 7) {
+        // Version 7: enable full-text search
+        NSString* sql = @"CREATE VIRTUAL TABLE fulltext USING fts4(content); \
+                          ALTER TABLE maps ADD COLUMN fulltext_id INTEGER; \
+                          CREATE INDEX IF NOT EXISTS maps_by_fulltext ON maps(fulltext_id); \
+                          CREATE TRIGGER del_fulltext DELETE ON maps WHEN old.fulltext_id not null \
+                                BEGIN DELETE FROM fulltext WHERE rowid=old.fulltext_id| END;\
+                          PRAGMA user_version = 7";
+        if (![self initialize: sql error: outError])
+            return NO;
+        //dbVersion = 7;
     }
 
 #if DEBUG
