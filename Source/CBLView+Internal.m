@@ -479,13 +479,15 @@ static id fromJSON( NSData* json ) {
 - (NSArray*) _queryFullText: (const CBLQueryOptions*)options
                      status: (CBLStatus*)outStatus
 {
-    NSMutableString* sql = [@"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value, offsets(fulltext)" mutableCopy];
+    NSMutableString* sql = [@"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value, "
+                             "offsets(fulltext)" mutableCopy];
     if (options->fullTextSnippets)
         [sql appendString: @", snippet(fulltext, '\001','\002','…')"];
     [sql appendString: @" FROM maps, fulltext, revs, docs "
                         "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
+                        "AND maps.view_id = ? "
                         "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id"];
-    FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery];
+    FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID)];
     if (!r) {
         *outStatus = _db.lastDbError;
         return nil;

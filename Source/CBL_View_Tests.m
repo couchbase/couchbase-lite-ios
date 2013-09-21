@@ -720,6 +720,16 @@ TestCase(CBL_View_FullTextQuery) {
 
     CAssertEq([view updateIndex], kCBLStatusOK);
 
+    // Create another view that outputs similar-but-different text, to make sure the results
+    // don't get mixed up
+    CBLView* otherView = [db viewNamed: @"fts_other"];
+    [otherView setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+        if (doc[@"text"])
+            emit(@{@"type": @"Text", @"text": @"dog stormy"},
+                 doc[@"_id"]);
+    } reduceBlock: NULL version: @"1"];
+    CAssertEq([otherView updateIndex], kCBLStatusOK);
+    
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     __unused NSString* fullTextQuery = @"stormy OR dog";
     options.fullTextQuery = fullTextQuery;
