@@ -794,6 +794,13 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
+- (NSString*) _indexedTextWithID: (UInt64)fullTextID {
+    if (fullTextID == 0)
+        return nil;
+    return [_fmdb stringForQuery: @"SELECT content FROM fulltext WHERE rowid=?", @(fullTextID)];
+}
+
+
 #pragma mark - HISTORY:
 
 

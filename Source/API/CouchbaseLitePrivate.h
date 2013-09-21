@@ -98,6 +98,7 @@
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
+- (void) setFullTextID: (UInt64)fullTextID;
 @end
 
 

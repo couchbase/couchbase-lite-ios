@@ -61,7 +61,7 @@ typedef enum {
     mapping.
     The query string syntax is described in http://sqlite.org/fts3.html#section_3 .
     The indexed text will appear as the key of each query row.
-    NOTE: This option is currently incompatible with all other CBLQuery options: if it's set,
+    **NOTE:** This option is currently incompatible with all other CBLQuery options: if it's set,
     all the other options will be ignored. */
 @property (copy) NSString* fullTextQuery;
 
@@ -193,5 +193,10 @@ typedef enum {
 
 /** The local sequence number of the associated doc/revision. */
 @property (readonly) UInt64 localSequence;
+
+/** If this row is the result of a full-text search, this property contains the text that was
+    matched (which was emitted when the view was indexed.) */
+@property (readonly) NSString* fullText;
+
 
 @end

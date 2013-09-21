@@ -413,6 +413,7 @@ static id fromJSON( NSData* json ) {
     UInt64 _sequence;
     NSString* _sourceDocID;
     NSDictionary* _documentProperties;
+    UInt64 _fullTextID;
 }
 
 
@@ -525,6 +526,15 @@ static id fromJSON( NSData* json ) {
     CBLDocument* doc = [_database documentWithID: docID];
     [doc loadCurrentRevisionFrom: self];
     return doc;
+}
+
+
+- (void) setFullTextID: (UInt64)fullTextID {
+    _fullTextID = fullTextID;
+}
+
+- (NSString*) fullText {
+    return [_database _indexedTextWithID: _fullTextID];
 }
 
 

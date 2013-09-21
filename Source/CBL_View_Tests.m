@@ -724,9 +724,9 @@ TestCase(CBL_View_FullTextQuery) {
     NSArray* rows = [view _queryFullText: @"stormy OR dog" status: &status];
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rows);
-    NSArray* expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"and stormy night."},
+    NSArray* expectedRows = $array($dict({@"id",  @"44444"}, {@"key", $null},
                                          {@"value", @"44444"}),
-                                   $dict({@"id",  @"33333"}, {@"key", @"a dog"},
+                                   $dict({@"id",  @"33333"}, {@"key", $null},
                                          {@"value", @"33333"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
@@ -736,10 +736,10 @@ TestCase(CBL_View_FullTextQuery) {
     rows = [[query rows] allObjects];
     CAssertEq(rows.count, 2u);
     CBLQueryRow* row = rows[0];
-    CAssertEqual(row.key, @"it was a dark");
+    CAssertEqual(row.fullText, @"it was a dark");
     CAssertEqual(row.documentID, @"22222");
     row = rows[1];
-    CAssertEqual(row.key, @"a dog");
+    CAssertEqual(row.fullText, @"a dog");
     CAssertEqual(row.documentID, @"33333");
 
     // Now delete a document:
@@ -755,8 +755,7 @@ TestCase(CBL_View_FullTextQuery) {
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"after deletion, rows = %@", rows);
 
-    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"and stormy night."},
-                                {@"value", @"44444"}));
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", $null}, {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
 }
 

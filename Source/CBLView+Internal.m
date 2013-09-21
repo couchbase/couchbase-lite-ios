@@ -108,6 +108,7 @@ static id fromJSON( NSData* json ) {
 }
 
 
+/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
     CBLMapBlock mapBlock = self.mapBlock;
@@ -316,6 +317,7 @@ static id fromJSON( NSData* json ) {
 #pragma mark - QUERYING:
 
 
+/** Generates and runs the SQL SELECT statement for a view query, and returns its iterator. */
 - (FMResultSet*) resultSetWithOptions: (const CBLQueryOptions*)options
                                status: (CBLStatus*)outStatus
 {
@@ -386,6 +388,7 @@ static id fromJSON( NSData* json ) {
 }
 
 
+/** Main internal call to query a view. */
 - (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus
 {
@@ -472,10 +475,11 @@ static id fromJSON( NSData* json ) {
 }
 
 
+/** Runs a full-text query of a view, using the FTS4 table. */
 - (NSArray*) _queryFullText: (NSString*)ftsQuery
                      status: (CBLStatus*)outStatus
 {
-    NSString* sql = @"SELECT content, value, docs.docid, maps.sequence "
+    NSString* sql = @"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value "
                      "FROM maps, fulltext, revs, docs "
                      "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
                      "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id ";
@@ -486,15 +490,17 @@ static id fromJSON( NSData* json ) {
     }
     NSMutableArray* rows = [[NSMutableArray alloc] init];
     while ([r next]) {
-        NSString* text = [r stringForColumnIndex: 0];
-        NSData* valueData = [r dataForColumnIndex: 1];
-        NSString* docID = [r stringForColumnIndex: 2];
-        SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
-        [rows addObject: [[CBLQueryRow alloc] initWithDocID: docID
-                                                   sequence: sequence
-                                                        key: text
-                                                      value: valueData
-                                              docProperties: nil]];
+        NSString* docID = [r stringForColumnIndex: 0];
+        SequenceNumber sequence = [r longLongIntForColumnIndex: 1];
+        UInt64 fulltextID = [r longLongIntForColumnIndex: 2];
+        NSData* valueData = [r dataForColumnIndex: 3];
+        CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                     sequence: sequence
+                                                          key: [NSNull null]
+                                                        value: valueData
+                                                docProperties: nil];
+        row.fullTextID = fulltextID;
+        [rows addObject: row];
     }
     return rows;
 }

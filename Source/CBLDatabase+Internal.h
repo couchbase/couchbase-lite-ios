@@ -206,6 +206,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     design document and compile them with the CBLViewCompiler. */
 - (CBLView*) compileViewNamed: (NSString*)name status: (CBLStatus*)outStatus;
 
+- (NSString*) _indexedTextWithID: (UInt64)fullTextID;
+
 //@property (readonly) NSArray* allViews;
 
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
