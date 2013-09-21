@@ -37,6 +37,10 @@
 @end
 
 
+static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUInteger byteEnd);
+
+
+
 @implementation CBLQuery
 {
     CBLDatabase* _database;
@@ -407,13 +411,13 @@ static id fromJSON( NSData* json ) {
 
 @implementation CBLQueryRow
 {
-    CBLDatabase* _database;
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
     __weak id _parsedKey, _parsedValue;
     UInt64 _sequence;
     NSString* _sourceDocID;
     NSDictionary* _documentProperties;
-    UInt64 _fullTextID;
+    @protected
+    CBLDatabase* _database;
 }
 
 
@@ -529,15 +533,6 @@ static id fromJSON( NSData* json ) {
 }
 
 
-- (void) setFullTextID: (UInt64)fullTextID {
-    _fullTextID = fullTextID;
-}
-
-- (NSString*) fullText {
-    return [_database _indexedTextWithID: _fullTextID];
-}
-
-
 // This is used by the router
 - (NSDictionary*) asJSONDictionary {
     if (_value || _sourceDocID)
@@ -555,6 +550,60 @@ static id fromJSON( NSData* json ) {
             [CBLJSON stringWithJSONObject: self.key options: CBLJSONWritingAllowFragments error: nil],
             [CBLJSON stringWithJSONObject: self.value options: CBLJSONWritingAllowFragments error: nil],
             self.documentID];
+}
+
+
+@end
+
+
+
+
+@implementation CBLFullTextQueryRow
+{
+    UInt64 _fullTextID;
+    __weak NSString* _fullText;
+    NSArray* _matchOffsets;
+}
+
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                    fullTextID: (UInt64)fullTextID
+                  matchOffsets: (NSString*)matchOffsets
+                         value: (id)value
+{
+    self = [super initWithDocID: docID sequence: sequence key: $null value: value docProperties: nil];
+    if (self) {
+        _fullTextID = fullTextID;
+        // Parse the offsets as a space-delimited list of numbers, into an NSArray.
+        // (See http://sqlite.org/fts3.html#section_4_1 )
+        _matchOffsets = [[matchOffsets componentsSeparatedByString: @" "] my_map:^id(NSString* str) {
+            return @([str integerValue]);
+        }];
+    }
+    return self;
+}
+
+- (NSString*) fullText {
+    if (!_fullText) {
+        _fullText = [_database _indexedTextWithID: _fullTextID];
+    }
+    return _fullText;
+}
+
+- (NSUInteger) matchCount {
+    return _matchOffsets.count / 4;
+}
+
+- (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber {
+    return [_matchOffsets[4*matchNumber + 1] unsignedIntegerValue];
+}
+
+- (NSRange) textRangeOfMatch: (NSUInteger)matchNumber {
+    NSUInteger byteStart  = [_matchOffsets[4*matchNumber + 2] unsignedIntegerValue];
+    NSUInteger byteLength = [_matchOffsets[4*matchNumber + 3] unsignedIntegerValue];
+    NSData* rawText = [self.fullText dataUsingEncoding: NSUTF8StringEncoding];
+    return NSMakeRange(utf8BytesToChars(rawText.bytes, 0, byteStart),
+                       utf8BytesToChars(rawText.bytes, byteStart, byteStart + byteLength));
 }
 
 
@@ -610,3 +659,17 @@ static id fromJSON( NSData* json ) {
 
 
 @end
+
+
+
+
+// Determine the number of characters in a range of UTF-8 bytes. */
+static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUInteger byteEnd) {
+    if (byteStart == byteEnd)
+        return 0;
+    NSString* prefix = [[NSString alloc] initWithBytesNoCopy: (UInt8*)bytes + byteStart
+                                                      length: byteEnd - byteStart
+                                                    encoding: NSUTF8StringEncoding
+                                                freeWhenDone: NO];
+    return prefix.length;
+}

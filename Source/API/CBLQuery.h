@@ -60,7 +60,7 @@ typedef enum {
 /** Query string for a full-text search; works only if the view's map function has used full-text
     mapping.
     The query string syntax is described in http://sqlite.org/fts3.html#section_3 .
-    The indexed text will appear as the key of each query row.
+    The query rows produced by this search will be instances of CBLFullTextQueryRow.
     **NOTE:** This option is currently incompatible with all other CBLQuery options: if it's set,
     all the other options will be ignored. */
 @property (copy) NSString* fullTextQuery;
@@ -194,9 +194,25 @@ typedef enum {
 /** The local sequence number of the associated doc/revision. */
 @property (readonly) UInt64 localSequence;
 
-/** If this row is the result of a full-text search, this property contains the text that was
-    matched (which was emitted when the view was indexed.) */
+@end
+
+
+/** A result row from a full-text query.
+    A CBLQuery with its .fullTextQuery property set will produce CBLFullTextQueryRows. */
+@interface CBLFullTextQueryRow : CBLQueryRow
+
+/** The text emitted when the view was indexed, which contains the match. */
 @property (readonly) NSString* fullText;
 
+/** The number of text matches found in the fullText. */
+@property (readonly) NSUInteger matchCount;
+
+/** The character range in the fullText of a particular text match. */
+- (NSRange) textRangeOfMatch: (NSUInteger)matchNumber;
+
+/** The search term matched by a particular text match. Search terms are the individual words (or
+    quoted phrases) in the full-text search expression. They're numbered starting from 0, except
+    terms prefixed with "NOT" are skipped. (Details at http://sqlite.org/fts3.html#matchable ) */
+- (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber;
 
 @end

@@ -98,7 +98,14 @@
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
-- (void) setFullTextID: (UInt64)fullTextID;
+@end
+
+@interface CBLFullTextQueryRow ()
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                    fullTextID: (UInt64)fullTextID
+                  matchOffsets: (NSString*)matchOffsets
+                         value: (id)value;
 @end
 
 

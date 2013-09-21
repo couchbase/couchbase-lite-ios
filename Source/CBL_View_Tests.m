@@ -708,7 +708,7 @@ TestCase(CBL_View_FullTextQuery) {
     [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"text", @"it was a dark"}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"text", @"and stormy night."}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"text", @"outside somewhere"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"text", @"a dog"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"text", @"a dog whøse ñame was “ Dog ”"}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
 
     CBLView* view = [db viewNamed: @"fts"];
@@ -735,12 +735,28 @@ TestCase(CBL_View_FullTextQuery) {
     query.fullTextQuery = @"(was NOT barking) OR dog";
     rows = [[query rows] allObjects];
     CAssertEq(rows.count, 2u);
-    CBLQueryRow* row = rows[0];
+
+    CBLFullTextQueryRow* row = rows[0];
     CAssertEqual(row.fullText, @"it was a dark");
     CAssertEqual(row.documentID, @"22222");
+    CAssertEq(row.matchCount, 1u);
+    CAssertEq([row termIndexOfMatch: 0], 0u);
+    CAssertEq([row textRangeOfMatch: 0].location, 3u);
+    CAssertEq([row textRangeOfMatch: 0].length, 3u);
+
     row = rows[1];
-    CAssertEqual(row.fullText, @"a dog");
+    CAssertEqual(row.fullText, @"a dog whøse ñame was “ Dog ”");
     CAssertEqual(row.documentID, @"33333");
+    CAssertEq(row.matchCount, 3u);
+    CAssertEq([row termIndexOfMatch: 0], 1u);
+    CAssertEq([row textRangeOfMatch: 0].location, 2u);
+    CAssertEq([row textRangeOfMatch: 0].length, 3u);
+    CAssertEq([row termIndexOfMatch: 1], 0u);
+    CAssertEq([row textRangeOfMatch: 1].location, 17u);
+    CAssertEq([row textRangeOfMatch: 1].length, 3u);
+    CAssertEq([row termIndexOfMatch: 2], 1u);
+    CAssertEq([row textRangeOfMatch: 2].location, 23u);
+    CAssertEq([row textRangeOfMatch: 2].length, 3u);
 
     // Now delete a document:
     CBL_Revision* rev = docs[3];

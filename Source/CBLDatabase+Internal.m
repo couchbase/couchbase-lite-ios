@@ -320,6 +320,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     if (dbVersion < 7) {
         // Version 7: enable full-text search
+        // Note: Apple's SQLite build does not support the icu or unicode61 tokenizers :(
+        // OPT: Could add compress/decompress functions to make stored content smaller
         NSString* sql = @"CREATE VIRTUAL TABLE fulltext USING fts4(content); \
                           ALTER TABLE maps ADD COLUMN fulltext_id INTEGER; \
                           CREATE INDEX IF NOT EXISTS maps_by_fulltext ON maps(fulltext_id); \

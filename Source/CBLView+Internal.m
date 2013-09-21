@@ -479,7 +479,7 @@ static id fromJSON( NSData* json ) {
 - (NSArray*) _queryFullText: (NSString*)ftsQuery
                      status: (CBLStatus*)outStatus
 {
-    NSString* sql = @"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value "
+    NSString* sql = @"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value, offsets(fulltext) "
                      "FROM maps, fulltext, revs, docs "
                      "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
                      "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id ";
@@ -494,13 +494,12 @@ static id fromJSON( NSData* json ) {
         SequenceNumber sequence = [r longLongIntForColumnIndex: 1];
         UInt64 fulltextID = [r longLongIntForColumnIndex: 2];
         NSData* valueData = [r dataForColumnIndex: 3];
-        CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                     sequence: sequence
-                                                          key: [NSNull null]
-                                                        value: valueData
-                                                docProperties: nil];
-        row.fullTextID = fulltextID;
-        [rows addObject: row];
+        NSString* offsets = [r stringForColumnIndex: 4];
+        [rows addObject: [[CBLFullTextQueryRow alloc] initWithDocID: docID
+                                                           sequence: sequence
+                                                         fullTextID: fulltextID
+                                                       matchOffsets: offsets
+                                                              value: valueData]];
     }
     return rows;
 }
