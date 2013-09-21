@@ -396,7 +396,7 @@ static id fromJSON( NSData* json ) {
         options = &kDefaultCBLQueryOptions;
 
     if (options->fullTextQuery)
-        return [self _queryFullText: options->fullTextQuery status: outStatus];
+        return [self _queryFullText: options status: outStatus];
     
     FMResultSet* r = [self resultSetWithOptions: options status: outStatus];
     if (!r)
@@ -476,14 +476,16 @@ static id fromJSON( NSData* json ) {
 
 
 /** Runs a full-text query of a view, using the FTS4 table. */
-- (NSArray*) _queryFullText: (NSString*)ftsQuery
+- (NSArray*) _queryFullText: (const CBLQueryOptions*)options
                      status: (CBLStatus*)outStatus
 {
-    NSString* sql = @"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value, offsets(fulltext) "
-                     "FROM maps, fulltext, revs, docs "
-                     "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
-                     "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id ";
-    FMResultSet* r = [_db.fmdb executeQuery: sql, ftsQuery];
+    NSMutableString* sql = [@"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value, offsets(fulltext)" mutableCopy];
+    if (options->fullTextSnippets)
+        [sql appendString: @", snippet(fulltext, '\001','\002','…')"];
+    [sql appendString: @" FROM maps, fulltext, revs, docs "
+                        "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
+                        "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id"];
+    FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery];
     if (!r) {
         *outStatus = _db.lastDbError;
         return nil;
@@ -495,11 +497,14 @@ static id fromJSON( NSData* json ) {
         UInt64 fulltextID = [r longLongIntForColumnIndex: 2];
         NSData* valueData = [r dataForColumnIndex: 3];
         NSString* offsets = [r stringForColumnIndex: 4];
-        [rows addObject: [[CBLFullTextQueryRow alloc] initWithDocID: docID
-                                                           sequence: sequence
-                                                         fullTextID: fulltextID
-                                                       matchOffsets: offsets
-                                                              value: valueData]];
+        CBLFullTextQueryRow* row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
+                                                                     sequence: sequence
+                                                                   fullTextID: fulltextID
+                                                                 matchOffsets: offsets
+                                                                        value: valueData];
+        if (options->fullTextSnippets)
+            row.snippet = [r stringForColumnIndex: 5];
+        [rows addObject: row];
     }
     return rows;
 }

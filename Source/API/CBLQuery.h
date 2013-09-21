@@ -65,6 +65,10 @@ typedef enum {
     all the other options will be ignored. */
 @property (copy) NSString* fullTextQuery;
 
+/** In a full-text search, setting the .snippet property of CBLFullTextQueryRow, which contains a
+    short excerpt from the full text containing the matched term(s). */
+@property BOOL fullTextSnippets;
+
 /** If set to YES, disables use of the reduce function.
     (Equivalent to setting "?reduce=false" in the REST API.) */
 @property BOOL mapOnly;
@@ -203,6 +207,15 @@ typedef enum {
 
 /** The text emitted when the view was indexed, which contains the match. */
 @property (readonly) NSString* fullText;
+
+/** Returns a short substring of the full text containing at least some of the matched words.
+    This is useful to display in search results.
+    NOTE: The "fullTextSnippets" property of the CBLQuery must be set to YES to enable this;
+    otherwise the result will be nil.
+    @param wordStart  A delimiter that will be inserted before every instance of a match.
+    @param wordEnd  A delimiter that will be inserted after every instance of a match. */
+- (NSString*) snippetWithWordStart: (NSString*)wordStart
+                           wordEnd: (NSString*)wordEnd;
 
 /** The number of text matches found in the fullText. */
 @property (readonly) NSUInteger matchCount;

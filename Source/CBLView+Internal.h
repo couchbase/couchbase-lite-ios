@@ -31,6 +31,7 @@ typedef struct CBLQueryOptions {
     BOOL reduce;                   // Ignore if !reduceSpecified
     BOOL group;
     BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
+    BOOL fullTextSnippets;
     CBLStaleness stale;
 } CBLQueryOptions;
 
@@ -75,8 +76,5 @@ typedef enum {
     @return  An array of CBLQueryRow. */
 - (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus;
-
-- (NSArray*) _queryFullText: (NSString*)ftsQuery
-                     status: (CBLStatus*)outStatus;
 
 @end

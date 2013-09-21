@@ -106,6 +106,7 @@
                     fullTextID: (UInt64)fullTextID
                   matchOffsets: (NSString*)matchOffsets
                          value: (id)value;
+@property (nonatomic) NSString* snippet;
 @end
 
 

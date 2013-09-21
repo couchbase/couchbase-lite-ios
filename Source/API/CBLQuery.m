@@ -54,6 +54,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
     BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
     NSArray *_keys;
     NSString* _fullTextQuery;
+    BOOL _fullTextSnippets;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
     @protected
@@ -114,7 +115,8 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
-            endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly, fullTextQuery=_fullTextQuery,
+            endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly,
+            fullTextQuery=_fullTextQuery, fullTextSnippets=_fullTextSnippets,
             database=_database, includeDeleted=_includeDeleted;
 
 
@@ -128,6 +130,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
         .endKey = _endKey,
         .keys = _keys,
         .fullTextQuery = _fullTextQuery,
+        .fullTextSnippets = _fullTextSnippets,
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
         .reduce = !_mapOnly,
@@ -563,7 +566,10 @@ static id fromJSON( NSData* json ) {
     UInt64 _fullTextID;
     __weak NSString* _fullText;
     NSArray* _matchOffsets;
+    NSString* _snippet;
 }
+
+@synthesize snippet=_snippet;
 
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
@@ -604,6 +610,20 @@ static id fromJSON( NSData* json ) {
     NSData* rawText = [self.fullText dataUsingEncoding: NSUTF8StringEncoding];
     return NSMakeRange(utf8BytesToChars(rawText.bytes, 0, byteStart),
                        utf8BytesToChars(rawText.bytes, byteStart, byteStart + byteLength));
+}
+
+
+- (NSString*) snippetWithWordStart: (NSString*)wordStart
+                           wordEnd: (NSString*)wordEnd
+{
+    if (!_snippet)
+        return nil;
+    NSMutableString* snippet = [_snippet mutableCopy];
+    [snippet replaceOccurrencesOfString: @"\001" withString: wordStart
+                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
+    [snippet replaceOccurrencesOfString: @"\002" withString: wordEnd
+                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
+    return snippet;
 }
 
 

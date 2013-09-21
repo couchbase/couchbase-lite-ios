@@ -720,8 +720,11 @@ TestCase(CBL_View_FullTextQuery) {
 
     CAssertEq([view updateIndex], kCBLStatusOK);
 
+    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    __unused NSString* fullTextQuery = @"stormy OR dog";
+    options.fullTextQuery = fullTextQuery;
     CBLStatus status;
-    NSArray* rows = [view _queryFullText: @"stormy OR dog" status: &status];
+    NSArray* rows = [view _queryWithOptions: &options status: &status];
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rows);
     NSArray* expectedRows = $array($dict({@"id",  @"44444"}, {@"key", $null},
@@ -733,12 +736,14 @@ TestCase(CBL_View_FullTextQuery) {
     // Try a query with the public API:
     CBLQuery* query = [view query];
     query.fullTextQuery = @"(was NOT barking) OR dog";
+    query.fullTextSnippets = YES;
     rows = [[query rows] allObjects];
     CAssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
     CAssertEqual(row.fullText, @"it was a dark");
     CAssertEqual(row.documentID, @"22222");
+    CAssertEqual(row.snippet, @"it \001was\002 a dark");
     CAssertEq(row.matchCount, 1u);
     CAssertEq([row termIndexOfMatch: 0], 0u);
     CAssertEq([row textRangeOfMatch: 0].location, 3u);
@@ -747,6 +752,7 @@ TestCase(CBL_View_FullTextQuery) {
     row = rows[1];
     CAssertEqual(row.fullText, @"a dog whøse ñame was “ Dog ”");
     CAssertEqual(row.documentID, @"33333");
+    CAssertEqual(row.snippet, @"a \001dog\002 whøse ñame \001was\002 “ \001Dog\002 ”");
     CAssertEq(row.matchCount, 3u);
     CAssertEq([row termIndexOfMatch: 0], 1u);
     CAssertEq([row textRangeOfMatch: 0].location, 2u);
@@ -757,6 +763,8 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEq([row termIndexOfMatch: 2], 1u);
     CAssertEq([row textRangeOfMatch: 2].location, 23u);
     CAssertEq([row textRangeOfMatch: 2].length, 3u);
+    NSString* snippet = [row snippetWithWordStart: @"[" wordEnd: @"]"];
+    CAssertEqual(snippet, @"a [dog] whøse ñame [was] “ [Dog] ”");
 
     // Now delete a document:
     CBL_Revision* rev = docs[3];
@@ -767,7 +775,9 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEq([view updateIndex], kCBLStatusOK);
 
     // Make sure the deleted doc doesn't still show up in the query results:
-    rows = [view _queryFullText: @"stormy OR dog" status: &status];
+    fullTextQuery = @"stormy OR dog";
+    options.fullTextQuery = fullTextQuery;
+    rows = [view _queryWithOptions: &options status: &status];
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"after deletion, rows = %@", rows);
 
