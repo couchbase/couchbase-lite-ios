@@ -20,6 +20,7 @@
 #import "CBLAttachment.h"
 #import "CBLView.h"
 #import "CBLQuery.h"
+#import "CBLQuery+FullTextSearch.h"
 #import "CBLReplication.h"
 #import "CBLModel.h"
 #import "CBLModelFactory.h"

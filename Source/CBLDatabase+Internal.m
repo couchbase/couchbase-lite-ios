@@ -182,6 +182,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     sqlite3_create_collation(_fmdb.sqliteHandle, "REVID", SQLITE_UTF8,
                              NULL, CBLCollateRevIDs);
 
+    [CBLView registerFunctions: self];
+    
     // Stuff we need to initialize every time the database opens:
     if (![self initialize: @"PRAGMA foreign_keys = ON;" error: outError])
         return NO;

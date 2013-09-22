@@ -57,18 +57,6 @@ typedef enum {
 /** If non-nil, the query will fetch only the rows with the given keys. */
 @property (copy) NSArray* keys;
 
-/** Query string for a full-text search; works only if the view's map function has used full-text
-    mapping.
-    The query string syntax is described in http://sqlite.org/fts3.html#section_3 .
-    The query rows produced by this search will be instances of CBLFullTextQueryRow.
-    **NOTE:** This option is currently incompatible with all other CBLQuery options: if it's set,
-    all the other options will be ignored. */
-@property (copy) NSString* fullTextQuery;
-
-/** In a full-text search, setting the .snippet property of CBLFullTextQueryRow, which contains a
-    short excerpt from the full text containing the matched term(s). */
-@property BOOL fullTextSnippets;
-
 /** If set to YES, disables use of the reduce function.
     (Equivalent to setting "?reduce=false" in the REST API.) */
 @property BOOL mapOnly;
@@ -179,6 +167,8 @@ typedef enum {
 /** The revision ID of the document this row was mapped from. */
 @property (readonly) NSString* documentRevision;
 
+@property (readonly) CBLDatabase* database;
+
 /** The document this row was mapped from.
     This will be nil if a grouping was enabled in the query, because then the result rows don't correspond to individual documents. */
 @property (readonly) CBLDocument* document;
@@ -197,35 +187,5 @@ typedef enum {
 
 /** The local sequence number of the associated doc/revision. */
 @property (readonly) UInt64 localSequence;
-
-@end
-
-
-/** A result row from a full-text query.
-    A CBLQuery with its .fullTextQuery property set will produce CBLFullTextQueryRows. */
-@interface CBLFullTextQueryRow : CBLQueryRow
-
-/** The text emitted when the view was indexed, which contains the match. */
-@property (readonly) NSString* fullText;
-
-/** Returns a short substring of the full text containing at least some of the matched words.
-    This is useful to display in search results.
-    NOTE: The "fullTextSnippets" property of the CBLQuery must be set to YES to enable this;
-    otherwise the result will be nil.
-    @param wordStart  A delimiter that will be inserted before every instance of a match.
-    @param wordEnd  A delimiter that will be inserted after every instance of a match. */
-- (NSString*) snippetWithWordStart: (NSString*)wordStart
-                           wordEnd: (NSString*)wordEnd;
-
-/** The number of text matches found in the fullText. */
-@property (readonly) NSUInteger matchCount;
-
-/** The character range in the fullText of a particular text match. */
-- (NSRange) textRangeOfMatch: (NSUInteger)matchNumber;
-
-/** The search term matched by a particular text match. Search terms are the individual words (or
-    quoted phrases) in the full-text search expression. They're numbered starting from 0, except
-    terms prefixed with "NOT" are skipped. (Details at http://sqlite.org/fts3.html#matchable ) */
-- (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber;
 
 @end

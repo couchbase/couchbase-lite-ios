@@ -32,6 +32,7 @@ typedef struct CBLQueryOptions {
     BOOL group;
     BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
     BOOL fullTextSnippets;
+    BOOL fullTextRanking;
     CBLStaleness stale;
 } CBLQueryOptions;
 
@@ -55,6 +56,8 @@ typedef enum {
 
 
 @interface CBLView (Internal)
+
++ (void) registerFunctions: (CBLDatabase*)db;
 
 #if DEBUG  // for unit tests only
 - (void) setCollation: (CBLViewCollation)collation;

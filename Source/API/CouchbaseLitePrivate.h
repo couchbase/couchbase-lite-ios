@@ -84,6 +84,10 @@
 
 
 @interface CBLQuery ()
+{
+    NSString* _fullTextQuery;
+    BOOL _fullTextSnippets, _fullTextRanking;
+}
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view                  __attribute__((nonnull(1)));
 - (instancetype) initWithDatabase: (CBLDatabase*)database

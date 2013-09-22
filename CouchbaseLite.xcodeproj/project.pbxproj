@@ -30,6 +30,9 @@
 /* Begin PBXBuildFile section */
 		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
 		270489B017A0968E001E0FB9 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
+		2706EC8017EE703F00125C8D /* CBLQuery+FullTextSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC7E17EE703F00125C8D /* CBLQuery+FullTextSearch.h */; };
+		2706EC8117EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */; };
+		2706EC8217EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */; };
 		270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */; };
 		270B3E121489382F00E0A926 /* CBL_Body.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */; };
 		270B3E131489382F00E0A926 /* CBL_Server.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* CBL_Server.m */; };
@@ -643,6 +646,8 @@
 
 /* Begin PBXFileReference section */
 		2700BC5B14B64AA600B5B297 /* CBL_Router+Handlers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBL_Router+Handlers.m"; sourceTree = "<group>"; };
+		2706EC7E17EE703F00125C8D /* CBLQuery+FullTextSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+FullTextSearch.h"; sourceTree = "<group>"; };
+		2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLQuery+FullTextSearch.m"; sourceTree = "<group>"; };
 		270B3DEA1489359000E0A926 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CouchbaseLite-Info.plist"; sourceTree = "<group>"; };
 		270B3DFC1489359000E0A926 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -1559,6 +1564,8 @@
 				27DA434915912AFD00F9E7B5 /* CBLView.m */,
 				27DA4310158FB79E00F9E7B5 /* CBLQuery.h */,
 				27DA4311158FB79E00F9E7B5 /* CBLQuery.m */,
+				2706EC7E17EE703F00125C8D /* CBLQuery+FullTextSearch.h */,
+				2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */,
 				27E2E5CB159533A5005B9234 /* CBLReplication.h */,
 				27E2E5CC159533A5005B9234 /* CBLReplication.m */,
 				27846FEE15D5C7DE0030122F /* Tests */,
@@ -1789,6 +1796,7 @@
 				270B3E241489392600E0A926 /* CBL_Server.h in Headers */,
 				270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */,
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
+				2706EC8017EE703F00125C8D /* CBLQuery+FullTextSearch.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
 				2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
 				2753157E14ACEFC90065964D /* HTTPConnection.h in Headers */,
@@ -2399,6 +2407,7 @@
 				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
 				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
 				2753160014ACF9330065964D /* Logging.m in Sources */,
+				2706EC8117EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
 				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
@@ -2510,6 +2519,7 @@
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				278B0CA2152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
+				2706EC8217EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */,
 				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,

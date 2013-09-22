@@ -31,12 +31,22 @@
 
 const CBLQueryOptions kDefaultCBLQueryOptions = {
     .limit = UINT_MAX,
-    .inclusiveEnd = YES
+    .inclusiveEnd = YES,
+    .fullTextRanking = YES
     // everything else will default to nil/0/NO
 };
 
 
+static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
+
+
 @implementation CBLView (Internal)
+
+
++ (void) registerFunctions:(CBLDatabase *)db {
+    sqlite3_create_function(db.fmdb.sqliteHandle, "ftsrank", 1, SQLITE_ANY, NULL,
+                            CBLComputeFTSRank, NULL, NULL);
+}
 
 
 #if DEBUG
@@ -486,8 +496,18 @@ static id fromJSON( NSData* json ) {
     [sql appendString: @" FROM maps, fulltext, revs, docs "
                         "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
                         "AND maps.view_id = ? "
-                        "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id"];
-    FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID)];
+                        "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "];
+    if (options->fullTextRanking)
+        [sql appendString: @"ORDER BY - ftsrank(matchinfo(fulltext)) "];
+    else
+        [sql appendString: @"ORDER BY maps.sequence "];
+    if (options->descending)
+        [sql appendString: @" DESC"];
+    [sql appendString: @" LIMIT ? OFFSET ?"];
+    int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
+
+    FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID),
+                                              @(limit), @(options->skip)];
     if (!r) {
         *outStatus = _db.lastDbError;
         return nil;
@@ -634,3 +654,68 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
 
 @end
+
+
+
+
+/*    Adapted from http://sqlite.org/fts3.html#appendix_a (public domain)
+ *    removing the column-weights feature (because we only have one column)
+ **
+ ** SQLite user defined function to use with matchinfo() to calculate the
+ ** relevancy of an FTS match. The value returned is the relevancy score
+ ** (a real value greater than or equal to zero). A larger value indicates
+ ** a more relevant document.
+ **
+ ** The overall relevancy returned is the sum of the relevancies of each
+ ** column value in the FTS table. The relevancy of a column value is the
+ ** sum of the following for each reportable phrase in the FTS query:
+ **
+ **   (<hit count> / <global hit count>)
+ **
+ ** where <hit count> is the number of instances of the phrase in the
+ ** column value of the current row and <global hit count> is the number
+ ** of instances of the phrase in the same column of all rows in the FTS
+ ** table.
+ */
+static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal) {
+    const uint32_t *aMatchinfo;                /* Return value of matchinfo() */
+    uint32_t nCol;
+    uint32_t nPhrase;                    /* Number of phrases in the query */
+    uint32_t iPhrase;                    /* Current phrase */
+    double score = 0.0;             /* Value to return */
+
+    /*  Set aMatchinfo to point to the array
+     ** of unsigned integer values returned by FTS function matchinfo. Set
+     ** nPhrase to contain the number of reportable phrases in the users full-text
+     ** query, and nCol to the number of columns in the table.
+     */
+    aMatchinfo = (const uint32_t*)sqlite3_value_blob(apVal[0]);
+    nPhrase = aMatchinfo[0];
+    nCol = aMatchinfo[1];
+
+    /* Iterate through each phrase in the users query. */
+    for(iPhrase=0; iPhrase<nPhrase; iPhrase++){
+        uint32_t iCol;                     /* Current column */
+
+        /* Now iterate through each column in the users query. For each column,
+         ** increment the relevancy score by:
+         **
+         **   (<hit count> / <global hit count>)
+         **
+         ** aPhraseinfo[] points to the start of the data for phrase iPhrase. So
+         ** the hit count and global hit counts for each column are found in
+         ** aPhraseinfo[iCol*3] and aPhraseinfo[iCol*3+1], respectively.
+         */
+        const uint32_t *aPhraseinfo = &aMatchinfo[2 + iPhrase*nCol*3];
+        for(iCol=0; iCol<nCol; iCol++){
+            uint32_t nHitCount = aPhraseinfo[3*iCol];
+            uint32_t nGlobalHitCount = aPhraseinfo[3*iCol+1];
+            if( nHitCount>0 ){
+                score += ((double)nHitCount / (double)nGlobalHitCount);
+            }
+        }
+    }
+
+    sqlite3_result_double(pCtx, score);
+    return;
+}

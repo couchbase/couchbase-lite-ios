@@ -7,6 +7,7 @@
 //
 
 #import "CouchbaseLitePrivate.h"
+#import "CBLQuery+FullTextSearch.h"
 #import "CBLView+Internal.h"
 #import "CBLDatabase.h"
 #import "CBL_Server.h"
@@ -37,9 +38,6 @@
 @end
 
 
-static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUInteger byteEnd);
-
-
 
 @implementation CBLQuery
 {
@@ -53,8 +51,6 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
     CBLStaleness _stale;
     BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
     NSArray *_keys;
-    NSString* _fullTextQuery;
-    BOOL _fullTextSnippets;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
     @protected
@@ -69,6 +65,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
         _database = database;
         _view = view;
         _limit = kDefaultCBLQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
+        _fullTextRanking = kDefaultCBLQueryOptions.fullTextRanking; // defaults to YES
         _mapOnly = (view.reduceBlock == nil);
     }
     return self;
@@ -100,6 +97,9 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
         self.startKeyDocID = query.startKeyDocID;
         self.endKeyDocID = query.endKeyDocID;
         _stale = query.stale;
+        _fullTextQuery = query.fullTextQuery;
+        _fullTextRanking = query.fullTextRanking;
+        _fullTextSnippets = query.fullTextSnippets;
         
     }
     return self;
@@ -116,7 +116,6 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly,
-            fullTextQuery=_fullTextQuery, fullTextSnippets=_fullTextSnippets,
             database=_database, includeDeleted=_includeDeleted;
 
 
@@ -131,6 +130,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
         .keys = _keys,
         .fullTextQuery = _fullTextQuery,
         .fullTextSnippets = _fullTextSnippets,
+        .fullTextRanking = _fullTextRanking,
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
         .reduce = !_mapOnly,
@@ -561,77 +561,6 @@ static id fromJSON( NSData* json ) {
 
 
 
-@implementation CBLFullTextQueryRow
-{
-    UInt64 _fullTextID;
-    __weak NSString* _fullText;
-    NSArray* _matchOffsets;
-    NSString* _snippet;
-}
-
-@synthesize snippet=_snippet;
-
-- (instancetype) initWithDocID: (NSString*)docID
-                      sequence: (SequenceNumber)sequence
-                    fullTextID: (UInt64)fullTextID
-                  matchOffsets: (NSString*)matchOffsets
-                         value: (id)value
-{
-    self = [super initWithDocID: docID sequence: sequence key: $null value: value docProperties: nil];
-    if (self) {
-        _fullTextID = fullTextID;
-        // Parse the offsets as a space-delimited list of numbers, into an NSArray.
-        // (See http://sqlite.org/fts3.html#section_4_1 )
-        _matchOffsets = [[matchOffsets componentsSeparatedByString: @" "] my_map:^id(NSString* str) {
-            return @([str integerValue]);
-        }];
-    }
-    return self;
-}
-
-- (NSString*) fullText {
-    if (!_fullText) {
-        _fullText = [_database _indexedTextWithID: _fullTextID];
-    }
-    return _fullText;
-}
-
-- (NSUInteger) matchCount {
-    return _matchOffsets.count / 4;
-}
-
-- (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber {
-    return [_matchOffsets[4*matchNumber + 1] unsignedIntegerValue];
-}
-
-- (NSRange) textRangeOfMatch: (NSUInteger)matchNumber {
-    NSUInteger byteStart  = [_matchOffsets[4*matchNumber + 2] unsignedIntegerValue];
-    NSUInteger byteLength = [_matchOffsets[4*matchNumber + 3] unsignedIntegerValue];
-    NSData* rawText = [self.fullText dataUsingEncoding: NSUTF8StringEncoding];
-    return NSMakeRange(utf8BytesToChars(rawText.bytes, 0, byteStart),
-                       utf8BytesToChars(rawText.bytes, byteStart, byteStart + byteLength));
-}
-
-
-- (NSString*) snippetWithWordStart: (NSString*)wordStart
-                           wordEnd: (NSString*)wordEnd
-{
-    if (!_snippet)
-        return nil;
-    NSMutableString* snippet = [_snippet mutableCopy];
-    [snippet replaceOccurrencesOfString: @"\001" withString: wordStart
-                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
-    [snippet replaceOccurrencesOfString: @"\002" withString: wordEnd
-                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
-    return snippet;
-}
-
-
-@end
-
-
-
-
 @implementation CBLDatabase (Views)
 
 - (NSArray*) queryViewNamed: (NSString*)viewName
@@ -679,17 +608,3 @@ static id fromJSON( NSData* json ) {
 
 
 @end
-
-
-
-
-// Determine the number of characters in a range of UTF-8 bytes. */
-static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUInteger byteEnd) {
-    if (byteStart == byteEnd)
-        return 0;
-    NSString* prefix = [[NSString alloc] initWithBytesNoCopy: (UInt8*)bytes + byteStart
-                                                      length: byteEnd - byteStart
-                                                    encoding: NSUTF8StringEncoding
-                                                freeWhenDone: NO];
-    return prefix.length;
-}
