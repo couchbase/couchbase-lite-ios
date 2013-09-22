@@ -40,6 +40,13 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
 
 
+// Special key object returned by CBLMapKey.
+@interface CBLSpecialKey : NSObject
+- (instancetype) initWithText: (NSString*)text;
+@property (readonly, nonatomic) NSString* text;
+@end
+
+
 @implementation CBLView (Internal)
 
 
@@ -166,20 +173,16 @@ static id fromJSON( NSData* json ) {
         CBLMapEmitBlock emit = ^(id key, id value) {
             NSString* valueJSON = toJSONString(value);
             NSNumber* fullTextID = nil;
-            if ([key isKindOfClass: [NSDictionary class]]) {
-                if ([[key objectForKey: @"type"] isEqualToString: @"Text"]) {
-                    NSString* text = $castIf(NSString, [key objectForKey: @"text"]);
-                    if (text) {
-                        if (![fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)",
-                              text]) {
-                            emitStatus = _db.lastDbError;
-                            return;
-                        }
-                        fullTextID = @(_db.fmdb.lastInsertRowId);
-                        key = nil;
-                        LogTo(View, @"    emit( fulltext(\"%@\"), %@) --> row %@", text, valueJSON, fullTextID);
-                    }
+            if ([key isKindOfClass: [CBLSpecialKey class]]) {
+                NSString* text = [key text];
+                if (![fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)",
+                      text]) {
+                    emitStatus = _db.lastDbError;
+                    return;
                 }
+                fullTextID = @(_db.fmdb.lastInsertRowId);
+                key = nil;
+                LogTo(View, @"    emit( CBLTextKey(\"%@\"), %@) --> row %@", text, valueJSON, fullTextID);
             }
             if (!key)
                 key = $null;
@@ -485,6 +488,11 @@ static id fromJSON( NSData* json ) {
 }
 
 
+id CBLTextKey(NSString* text) {
+    return [[CBLSpecialKey alloc] initWithText: text];
+}
+
+
 /** Runs a full-text query of a view, using the FTS4 table. */
 - (NSArray*) _queryFullText: (const CBLQueryOptions*)options
                      status: (CBLStatus*)outStatus
@@ -652,6 +660,27 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 #endif
 
+
+@end
+
+
+
+
+@implementation CBLSpecialKey
+{
+    NSString* _text;
+}
+
+- (instancetype) initWithText: (NSString*)text {
+    Assert(text != nil);
+    self = [super init];
+    if (self) {
+        _text = text;
+    }
+    return self;
+}
+
+@synthesize text=_text;
 
 @end
 

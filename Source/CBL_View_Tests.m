@@ -712,11 +712,10 @@ TestCase(CBL_View_FullTextQuery) {
     [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
 
     CBLView* view = [db viewNamed: @"fts"];
-    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         if (doc[@"text"])
-            emit(@{@"type": @"Text", @"text": doc[@"text"]},
-                 doc[@"_id"]);
-    } reduceBlock: NULL version: @"1"];
+            emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
+    }) reduceBlock: NULL version: @"1"];
 
     CAssertEq([view updateIndex], kCBLStatusOK);
 
@@ -725,8 +724,7 @@ TestCase(CBL_View_FullTextQuery) {
     CBLView* otherView = [db viewNamed: @"fts_other"];
     [otherView setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         if (doc[@"text"])
-            emit(@{@"type": @"Text", @"text": @"dog stormy"},
-                 doc[@"_id"]);
+            emit(CBLTextKey(@"dog stormy"), doc[@"_id"]);
     } reduceBlock: NULL version: @"1"];
     CAssertEq([otherView updateIndex], kCBLStatusOK);
     

@@ -11,8 +11,8 @@
 
 @interface CBLQuery (FullTextSearch)
 
-/** Query string for a full-text search; works only if the view's map function has used full-text
-    mapping.
+/** Query string for a full-text search; works only if the view's map function has triggered full-
+    text indexing by emitting strings wrapped by CBLTextKey().
     The query string syntax is described in http://sqlite.org/fts3.html#section_3 .
     The query rows produced by this search will be instances of CBLFullTextQueryRow.
     **NOTE:** Full-text views have no keys, so the key-related query properties will be ignored.

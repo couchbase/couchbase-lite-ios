@@ -29,6 +29,11 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 #define REDUCEBLOCK(BLOCK) ^id(NSArray* keys, NSArray* values, BOOL rereduce){BLOCK}
 
 
+/** Returns a special value that, when emitted as a key, causes the given text to be indexed with
+    the full-text indexer. Used inside a map block, like so: `emit(CBLTextKey(longText), value);` */
+id CBLTextKey(NSString* text);
+
+
 /** An external object that knows how to map source code of some sort into executable functions. */
 @protocol CBLViewCompiler <NSObject>
 - (CBLMapBlock) compileMapFunction: (NSString*)mapSource language: (NSString*)language;
