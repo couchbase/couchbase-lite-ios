@@ -33,6 +33,73 @@
 		2706EC8017EE703F00125C8D /* CBLQuery+FullTextSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC7E17EE703F00125C8D /* CBLQuery+FullTextSearch.h */; };
 		2706EC8117EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */; };
 		2706EC8217EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */; };
+		2706ECE417EEBAA000125C8D /* fts3_tokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC8517EEBAA000125C8D /* fts3_tokenizer.h */; };
+		2706ECE517EEBAA000125C8D /* fts3_unicode2.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8617EEBAA000125C8D /* fts3_unicode2.c */; };
+		2706ECE617EEBAA000125C8D /* fts3_unicode2.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8617EEBAA000125C8D /* fts3_unicode2.c */; };
+		2706ECE717EEBAA000125C8D /* fts3_unicodesn.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8717EEBAA000125C8D /* fts3_unicodesn.c */; };
+		2706ECE817EEBAA000125C8D /* fts3_unicodesn.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8717EEBAA000125C8D /* fts3_unicodesn.c */; };
+		2706ECE917EEBAA000125C8D /* fts3_unicodesn.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC8817EEBAA000125C8D /* fts3_unicodesn.h */; };
+		2706ECEA17EEBAA000125C8D /* fts3Int.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC8917EEBAA000125C8D /* fts3Int.h */; };
+		2706ECED17EEBAA000125C8D /* libstemmer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC8E17EEBAA000125C8D /* libstemmer.h */; };
+		2706ECF117EEBAA000125C8D /* libstemmer_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC9217EEBAA000125C8D /* libstemmer_utf8.c */; };
+		2706ECF217EEBAA000125C8D /* libstemmer_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC9217EEBAA000125C8D /* libstemmer_utf8.c */; };
+		2706ECF517EEBAA000125C8D /* modules_utf8.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC9517EEBAA000125C8D /* modules_utf8.h */; };
+		2706ECFF17EEBAA000125C8D /* api.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC9D17EEBAA000125C8D /* api.h */; };
+		2706ED0017EEBAA000125C8D /* api_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC9E17EEBAA000125C8D /* api_sq3.c */; };
+		2706ED0117EEBAA000125C8D /* api_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC9E17EEBAA000125C8D /* api_sq3.c */; };
+		2706ED0217EEBAA000125C8D /* header.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EC9F17EEBAA000125C8D /* header.h */; };
+		2706ED0317EEBAA000125C8D /* utilities_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECA017EEBAA000125C8D /* utilities_sq3.c */; };
+		2706ED0417EEBAA000125C8D /* utilities_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECA017EEBAA000125C8D /* utilities_sq3.c */; };
+		2706ED3217EEBAA000125C8D /* stem_UTF_8_danish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC017EEBAA000125C8D /* stem_UTF_8_danish.c */; };
+		2706ED3317EEBAA000125C8D /* stem_UTF_8_danish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC017EEBAA000125C8D /* stem_UTF_8_danish.c */; };
+		2706ED3417EEBAA000125C8D /* stem_UTF_8_danish.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECC117EEBAA000125C8D /* stem_UTF_8_danish.h */; };
+		2706ED3517EEBAA000125C8D /* stem_UTF_8_dutch.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC217EEBAA000125C8D /* stem_UTF_8_dutch.c */; };
+		2706ED3617EEBAA000125C8D /* stem_UTF_8_dutch.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC217EEBAA000125C8D /* stem_UTF_8_dutch.c */; };
+		2706ED3717EEBAA000125C8D /* stem_UTF_8_dutch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECC317EEBAA000125C8D /* stem_UTF_8_dutch.h */; };
+		2706ED3817EEBAA000125C8D /* stem_UTF_8_english.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC417EEBAA000125C8D /* stem_UTF_8_english.c */; };
+		2706ED3917EEBAA000125C8D /* stem_UTF_8_english.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC417EEBAA000125C8D /* stem_UTF_8_english.c */; };
+		2706ED3A17EEBAA000125C8D /* stem_UTF_8_english.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECC517EEBAA000125C8D /* stem_UTF_8_english.h */; };
+		2706ED3B17EEBAA000125C8D /* stem_UTF_8_finnish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC617EEBAA000125C8D /* stem_UTF_8_finnish.c */; };
+		2706ED3C17EEBAA000125C8D /* stem_UTF_8_finnish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC617EEBAA000125C8D /* stem_UTF_8_finnish.c */; };
+		2706ED3D17EEBAA000125C8D /* stem_UTF_8_finnish.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECC717EEBAA000125C8D /* stem_UTF_8_finnish.h */; };
+		2706ED3E17EEBAA000125C8D /* stem_UTF_8_french.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC817EEBAA000125C8D /* stem_UTF_8_french.c */; };
+		2706ED3F17EEBAA000125C8D /* stem_UTF_8_french.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECC817EEBAA000125C8D /* stem_UTF_8_french.c */; };
+		2706ED4017EEBAA000125C8D /* stem_UTF_8_french.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECC917EEBAA000125C8D /* stem_UTF_8_french.h */; };
+		2706ED4117EEBAA000125C8D /* stem_UTF_8_german.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECCA17EEBAA000125C8D /* stem_UTF_8_german.c */; };
+		2706ED4217EEBAA000125C8D /* stem_UTF_8_german.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECCA17EEBAA000125C8D /* stem_UTF_8_german.c */; };
+		2706ED4317EEBAA000125C8D /* stem_UTF_8_german.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECCB17EEBAA000125C8D /* stem_UTF_8_german.h */; };
+		2706ED4417EEBAA000125C8D /* stem_UTF_8_hungarian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECCC17EEBAA000125C8D /* stem_UTF_8_hungarian.c */; };
+		2706ED4517EEBAA000125C8D /* stem_UTF_8_hungarian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECCC17EEBAA000125C8D /* stem_UTF_8_hungarian.c */; };
+		2706ED4617EEBAA000125C8D /* stem_UTF_8_hungarian.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECCD17EEBAA000125C8D /* stem_UTF_8_hungarian.h */; };
+		2706ED4717EEBAA000125C8D /* stem_UTF_8_italian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECCE17EEBAA000125C8D /* stem_UTF_8_italian.c */; };
+		2706ED4817EEBAA000125C8D /* stem_UTF_8_italian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECCE17EEBAA000125C8D /* stem_UTF_8_italian.c */; };
+		2706ED4917EEBAA000125C8D /* stem_UTF_8_italian.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECCF17EEBAA000125C8D /* stem_UTF_8_italian.h */; };
+		2706ED4A17EEBAA000125C8D /* stem_UTF_8_norwegian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD017EEBAA000125C8D /* stem_UTF_8_norwegian.c */; };
+		2706ED4B17EEBAA000125C8D /* stem_UTF_8_norwegian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD017EEBAA000125C8D /* stem_UTF_8_norwegian.c */; };
+		2706ED4C17EEBAA000125C8D /* stem_UTF_8_norwegian.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECD117EEBAA000125C8D /* stem_UTF_8_norwegian.h */; };
+		2706ED4D17EEBAA000125C8D /* stem_UTF_8_porter.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD217EEBAA000125C8D /* stem_UTF_8_porter.c */; };
+		2706ED4E17EEBAA000125C8D /* stem_UTF_8_porter.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD217EEBAA000125C8D /* stem_UTF_8_porter.c */; };
+		2706ED4F17EEBAA000125C8D /* stem_UTF_8_porter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECD317EEBAA000125C8D /* stem_UTF_8_porter.h */; };
+		2706ED5017EEBAA000125C8D /* stem_UTF_8_portuguese.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD417EEBAA000125C8D /* stem_UTF_8_portuguese.c */; };
+		2706ED5117EEBAA000125C8D /* stem_UTF_8_portuguese.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD417EEBAA000125C8D /* stem_UTF_8_portuguese.c */; };
+		2706ED5217EEBAA000125C8D /* stem_UTF_8_portuguese.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECD517EEBAA000125C8D /* stem_UTF_8_portuguese.h */; };
+		2706ED5317EEBAA000125C8D /* stem_UTF_8_romanian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD617EEBAA000125C8D /* stem_UTF_8_romanian.c */; };
+		2706ED5417EEBAA000125C8D /* stem_UTF_8_romanian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD617EEBAA000125C8D /* stem_UTF_8_romanian.c */; };
+		2706ED5517EEBAA000125C8D /* stem_UTF_8_romanian.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECD717EEBAA000125C8D /* stem_UTF_8_romanian.h */; };
+		2706ED5617EEBAA000125C8D /* stem_UTF_8_russian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD817EEBAA000125C8D /* stem_UTF_8_russian.c */; };
+		2706ED5717EEBAA000125C8D /* stem_UTF_8_russian.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECD817EEBAA000125C8D /* stem_UTF_8_russian.c */; };
+		2706ED5817EEBAA000125C8D /* stem_UTF_8_russian.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECD917EEBAA000125C8D /* stem_UTF_8_russian.h */; };
+		2706ED5917EEBAA000125C8D /* stem_UTF_8_spanish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECDA17EEBAA000125C8D /* stem_UTF_8_spanish.c */; };
+		2706ED5A17EEBAA000125C8D /* stem_UTF_8_spanish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECDA17EEBAA000125C8D /* stem_UTF_8_spanish.c */; };
+		2706ED5B17EEBAA000125C8D /* stem_UTF_8_spanish.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECDB17EEBAA000125C8D /* stem_UTF_8_spanish.h */; };
+		2706ED5C17EEBAA000125C8D /* stem_UTF_8_swedish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECDC17EEBAA000125C8D /* stem_UTF_8_swedish.c */; };
+		2706ED5D17EEBAA000125C8D /* stem_UTF_8_swedish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECDC17EEBAA000125C8D /* stem_UTF_8_swedish.c */; };
+		2706ED5E17EEBAA000125C8D /* stem_UTF_8_swedish.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECDD17EEBAA000125C8D /* stem_UTF_8_swedish.h */; };
+		2706ED5F17EEBAA000125C8D /* stem_UTF_8_turkish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECDE17EEBAA000125C8D /* stem_UTF_8_turkish.c */; };
+		2706ED6017EEBAA000125C8D /* stem_UTF_8_turkish.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706ECDE17EEBAA000125C8D /* stem_UTF_8_turkish.c */; };
+		2706ED6117EEBAA000125C8D /* stem_UTF_8_turkish.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECDF17EEBAA000125C8D /* stem_UTF_8_turkish.h */; };
+		2706ED6517EEBC4400125C8D /* sqlite3_unicodesn_tokenizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8417EEBAA000125C8D /* sqlite3_unicodesn_tokenizer.c */; };
+		2706ED6617EEBC4500125C8D /* sqlite3_unicodesn_tokenizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8417EEBAA000125C8D /* sqlite3_unicodesn_tokenizer.c */; };
 		270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */; };
 		270B3E121489382F00E0A926 /* CBL_Body.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */; };
 		270B3E131489382F00E0A926 /* CBL_Server.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* CBL_Server.m */; };
@@ -648,6 +715,55 @@
 		2700BC5B14B64AA600B5B297 /* CBL_Router+Handlers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBL_Router+Handlers.m"; sourceTree = "<group>"; };
 		2706EC7E17EE703F00125C8D /* CBLQuery+FullTextSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+FullTextSearch.h"; sourceTree = "<group>"; };
 		2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLQuery+FullTextSearch.m"; sourceTree = "<group>"; };
+		2706EC8417EEBAA000125C8D /* sqlite3_unicodesn_tokenizer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sqlite3_unicodesn_tokenizer.c; sourceTree = "<group>"; };
+		2706EC8517EEBAA000125C8D /* fts3_tokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fts3_tokenizer.h; sourceTree = "<group>"; };
+		2706EC8617EEBAA000125C8D /* fts3_unicode2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fts3_unicode2.c; sourceTree = "<group>"; };
+		2706EC8717EEBAA000125C8D /* fts3_unicodesn.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fts3_unicodesn.c; sourceTree = "<group>"; };
+		2706EC8817EEBAA000125C8D /* fts3_unicodesn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fts3_unicodesn.h; sourceTree = "<group>"; };
+		2706EC8917EEBAA000125C8D /* fts3Int.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fts3Int.h; sourceTree = "<group>"; };
+		2706EC8E17EEBAA000125C8D /* libstemmer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libstemmer.h; sourceTree = "<group>"; };
+		2706EC9217EEBAA000125C8D /* libstemmer_utf8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libstemmer_utf8.c; sourceTree = "<group>"; };
+		2706EC9517EEBAA000125C8D /* modules_utf8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = modules_utf8.h; sourceTree = "<group>"; };
+		2706EC9617EEBAA000125C8D /* modules_utf8.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = modules_utf8.txt; sourceTree = "<group>"; };
+		2706EC9B17EEBAA000125C8D /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		2706EC9D17EEBAA000125C8D /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = api.h; sourceTree = "<group>"; };
+		2706EC9E17EEBAA000125C8D /* api_sq3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = api_sq3.c; sourceTree = "<group>"; };
+		2706EC9F17EEBAA000125C8D /* header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = header.h; sourceTree = "<group>"; };
+		2706ECA017EEBAA000125C8D /* utilities_sq3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utilities_sq3.c; sourceTree = "<group>"; };
+		2706ECC017EEBAA000125C8D /* stem_UTF_8_danish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_danish.c; sourceTree = "<group>"; };
+		2706ECC117EEBAA000125C8D /* stem_UTF_8_danish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_danish.h; sourceTree = "<group>"; };
+		2706ECC217EEBAA000125C8D /* stem_UTF_8_dutch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_dutch.c; sourceTree = "<group>"; };
+		2706ECC317EEBAA000125C8D /* stem_UTF_8_dutch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_dutch.h; sourceTree = "<group>"; };
+		2706ECC417EEBAA000125C8D /* stem_UTF_8_english.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_english.c; sourceTree = "<group>"; };
+		2706ECC517EEBAA000125C8D /* stem_UTF_8_english.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_english.h; sourceTree = "<group>"; };
+		2706ECC617EEBAA000125C8D /* stem_UTF_8_finnish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_finnish.c; sourceTree = "<group>"; };
+		2706ECC717EEBAA000125C8D /* stem_UTF_8_finnish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_finnish.h; sourceTree = "<group>"; };
+		2706ECC817EEBAA000125C8D /* stem_UTF_8_french.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_french.c; sourceTree = "<group>"; };
+		2706ECC917EEBAA000125C8D /* stem_UTF_8_french.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_french.h; sourceTree = "<group>"; };
+		2706ECCA17EEBAA000125C8D /* stem_UTF_8_german.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_german.c; sourceTree = "<group>"; };
+		2706ECCB17EEBAA000125C8D /* stem_UTF_8_german.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_german.h; sourceTree = "<group>"; };
+		2706ECCC17EEBAA000125C8D /* stem_UTF_8_hungarian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_hungarian.c; sourceTree = "<group>"; };
+		2706ECCD17EEBAA000125C8D /* stem_UTF_8_hungarian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_hungarian.h; sourceTree = "<group>"; };
+		2706ECCE17EEBAA000125C8D /* stem_UTF_8_italian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_italian.c; sourceTree = "<group>"; };
+		2706ECCF17EEBAA000125C8D /* stem_UTF_8_italian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_italian.h; sourceTree = "<group>"; };
+		2706ECD017EEBAA000125C8D /* stem_UTF_8_norwegian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_norwegian.c; sourceTree = "<group>"; };
+		2706ECD117EEBAA000125C8D /* stem_UTF_8_norwegian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_norwegian.h; sourceTree = "<group>"; };
+		2706ECD217EEBAA000125C8D /* stem_UTF_8_porter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_porter.c; sourceTree = "<group>"; };
+		2706ECD317EEBAA000125C8D /* stem_UTF_8_porter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_porter.h; sourceTree = "<group>"; };
+		2706ECD417EEBAA000125C8D /* stem_UTF_8_portuguese.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_portuguese.c; sourceTree = "<group>"; };
+		2706ECD517EEBAA000125C8D /* stem_UTF_8_portuguese.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_portuguese.h; sourceTree = "<group>"; };
+		2706ECD617EEBAA000125C8D /* stem_UTF_8_romanian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_romanian.c; sourceTree = "<group>"; };
+		2706ECD717EEBAA000125C8D /* stem_UTF_8_romanian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_romanian.h; sourceTree = "<group>"; };
+		2706ECD817EEBAA000125C8D /* stem_UTF_8_russian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_russian.c; sourceTree = "<group>"; };
+		2706ECD917EEBAA000125C8D /* stem_UTF_8_russian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_russian.h; sourceTree = "<group>"; };
+		2706ECDA17EEBAA000125C8D /* stem_UTF_8_spanish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_spanish.c; sourceTree = "<group>"; };
+		2706ECDB17EEBAA000125C8D /* stem_UTF_8_spanish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_spanish.h; sourceTree = "<group>"; };
+		2706ECDC17EEBAA000125C8D /* stem_UTF_8_swedish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_swedish.c; sourceTree = "<group>"; };
+		2706ECDD17EEBAA000125C8D /* stem_UTF_8_swedish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_swedish.h; sourceTree = "<group>"; };
+		2706ECDE17EEBAA000125C8D /* stem_UTF_8_turkish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_turkish.c; sourceTree = "<group>"; };
+		2706ECDF17EEBAA000125C8D /* stem_UTF_8_turkish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_turkish.h; sourceTree = "<group>"; };
+		2706ECE117EEBAA000125C8D /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		2706ED6717EEC07B00125C8D /* sqlite3_unicodesn_tokenizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sqlite3_unicodesn_tokenizer.h; sourceTree = "<group>"; };
 		270B3DEA1489359000E0A926 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CouchbaseLite-Info.plist"; sourceTree = "<group>"; };
 		270B3DFC1489359000E0A926 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -1161,6 +1277,102 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		2706EC8317EEBAA000125C8D /* sqlite3-unicodesn */ = {
+			isa = PBXGroup;
+			children = (
+				2706EC8417EEBAA000125C8D /* sqlite3_unicodesn_tokenizer.c */,
+				2706ED6717EEC07B00125C8D /* sqlite3_unicodesn_tokenizer.h */,
+				2706EC8517EEBAA000125C8D /* fts3_tokenizer.h */,
+				2706EC8617EEBAA000125C8D /* fts3_unicode2.c */,
+				2706EC8717EEBAA000125C8D /* fts3_unicodesn.c */,
+				2706EC8817EEBAA000125C8D /* fts3_unicodesn.h */,
+				2706EC8917EEBAA000125C8D /* fts3Int.h */,
+				2706EC8A17EEBAA000125C8D /* libstemmer_c */,
+				2706ECE117EEBAA000125C8D /* README */,
+			);
+			path = "sqlite3-unicodesn";
+			sourceTree = "<group>";
+		};
+		2706EC8A17EEBAA000125C8D /* libstemmer_c */ = {
+			isa = PBXGroup;
+			children = (
+				2706EC8D17EEBAA000125C8D /* include */,
+				2706EC8F17EEBAA000125C8D /* libstemmer */,
+				2706EC9B17EEBAA000125C8D /* README */,
+				2706EC9C17EEBAA000125C8D /* runtime */,
+				2706ECA117EEBAA000125C8D /* src_c */,
+			);
+			path = libstemmer_c;
+			sourceTree = "<group>";
+		};
+		2706EC8D17EEBAA000125C8D /* include */ = {
+			isa = PBXGroup;
+			children = (
+				2706EC8E17EEBAA000125C8D /* libstemmer.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		2706EC8F17EEBAA000125C8D /* libstemmer */ = {
+			isa = PBXGroup;
+			children = (
+				2706EC9217EEBAA000125C8D /* libstemmer_utf8.c */,
+				2706EC9517EEBAA000125C8D /* modules_utf8.h */,
+				2706EC9617EEBAA000125C8D /* modules_utf8.txt */,
+			);
+			path = libstemmer;
+			sourceTree = "<group>";
+		};
+		2706EC9C17EEBAA000125C8D /* runtime */ = {
+			isa = PBXGroup;
+			children = (
+				2706EC9D17EEBAA000125C8D /* api.h */,
+				2706EC9E17EEBAA000125C8D /* api_sq3.c */,
+				2706EC9F17EEBAA000125C8D /* header.h */,
+				2706ECA017EEBAA000125C8D /* utilities_sq3.c */,
+			);
+			path = runtime;
+			sourceTree = "<group>";
+		};
+		2706ECA117EEBAA000125C8D /* src_c */ = {
+			isa = PBXGroup;
+			children = (
+				2706ECC017EEBAA000125C8D /* stem_UTF_8_danish.c */,
+				2706ECC117EEBAA000125C8D /* stem_UTF_8_danish.h */,
+				2706ECC217EEBAA000125C8D /* stem_UTF_8_dutch.c */,
+				2706ECC317EEBAA000125C8D /* stem_UTF_8_dutch.h */,
+				2706ECC417EEBAA000125C8D /* stem_UTF_8_english.c */,
+				2706ECC517EEBAA000125C8D /* stem_UTF_8_english.h */,
+				2706ECC617EEBAA000125C8D /* stem_UTF_8_finnish.c */,
+				2706ECC717EEBAA000125C8D /* stem_UTF_8_finnish.h */,
+				2706ECC817EEBAA000125C8D /* stem_UTF_8_french.c */,
+				2706ECC917EEBAA000125C8D /* stem_UTF_8_french.h */,
+				2706ECCA17EEBAA000125C8D /* stem_UTF_8_german.c */,
+				2706ECCB17EEBAA000125C8D /* stem_UTF_8_german.h */,
+				2706ECCC17EEBAA000125C8D /* stem_UTF_8_hungarian.c */,
+				2706ECCD17EEBAA000125C8D /* stem_UTF_8_hungarian.h */,
+				2706ECCE17EEBAA000125C8D /* stem_UTF_8_italian.c */,
+				2706ECCF17EEBAA000125C8D /* stem_UTF_8_italian.h */,
+				2706ECD017EEBAA000125C8D /* stem_UTF_8_norwegian.c */,
+				2706ECD117EEBAA000125C8D /* stem_UTF_8_norwegian.h */,
+				2706ECD217EEBAA000125C8D /* stem_UTF_8_porter.c */,
+				2706ECD317EEBAA000125C8D /* stem_UTF_8_porter.h */,
+				2706ECD417EEBAA000125C8D /* stem_UTF_8_portuguese.c */,
+				2706ECD517EEBAA000125C8D /* stem_UTF_8_portuguese.h */,
+				2706ECD617EEBAA000125C8D /* stem_UTF_8_romanian.c */,
+				2706ECD717EEBAA000125C8D /* stem_UTF_8_romanian.h */,
+				2706ECD817EEBAA000125C8D /* stem_UTF_8_russian.c */,
+				2706ECD917EEBAA000125C8D /* stem_UTF_8_russian.h */,
+				2706ECDA17EEBAA000125C8D /* stem_UTF_8_spanish.c */,
+				2706ECDB17EEBAA000125C8D /* stem_UTF_8_spanish.h */,
+				2706ECDC17EEBAA000125C8D /* stem_UTF_8_swedish.c */,
+				2706ECDD17EEBAA000125C8D /* stem_UTF_8_swedish.h */,
+				2706ECDE17EEBAA000125C8D /* stem_UTF_8_turkish.c */,
+				2706ECDF17EEBAA000125C8D /* stem_UTF_8_turkish.h */,
+			);
+			path = src_c;
+			sourceTree = "<group>";
+		};
 		270DC1A415ADE195002A2AF4 /* Database */ = {
 			isa = PBXGroup;
 			children = (
@@ -1216,6 +1428,7 @@
 				2753154E14ACEF5C0065964D /* CocoaHTTPServer */,
 				27DB90D414DB249700FC7118 /* google-toolbox-for-mac */,
 				27F12842156ABE23008465C2 /* oauthconsumer */,
+				2706EC8317EEBAA000125C8D /* sqlite3-unicodesn */,
 			);
 			path = vendor;
 			sourceTree = "<group>";
@@ -1765,6 +1978,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				270B3E201489390000E0A926 /* CouchbaseLite.h in Headers */,
+				2706ED5517EEBAA000125C8D /* stem_UTF_8_romanian.h in Headers */,
 				27821BBE14906FB60099B373 /* CouchbaseLitePrefix.h in Headers */,
 				279EB2D11491442500E74185 /* CBLInternal.h in Headers */,
 				272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */,
@@ -1772,24 +1986,33 @@
 				27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */,
 				27B0B79E1492932800A817AD /* CBLBase64.h in Headers */,
 				27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */,
+				2706ECED17EEBAA000125C8D /* libstemmer.h in Headers */,
 				279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */,
 				279906EE149ABFC2003D4338 /* CBLBatcher.h in Headers */,
+				2706ECE917EEBAA000125C8D /* fts3_unicodesn.h in Headers */,
 				27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
 				2753156E14ACEFC90065964D /* DDData.h in Headers */,
 				2753157214ACEFC90065964D /* DDNumber.h in Headers */,
+				2706ED6117EEBAA000125C8D /* stem_UTF_8_turkish.h in Headers */,
 				27E2E5A3159383E9005B9234 /* CBLAttachment.h in Headers */,
 				27E4152F154F6E8500771FC5 /* CBLStatus.h in Headers */,
 				27E2E5CD159533A5005B9234 /* CBLReplication.h in Headers */,
 				270B3E231489392100E0A926 /* CBL_Body.h in Headers */,
 				27A720A0152B959100C0A0E8 /* CBL_Attachment.h in Headers */,
+				2706ED4C17EEBAA000125C8D /* stem_UTF_8_norwegian.h in Headers */,
+				2706ED5217EEBAA000125C8D /* stem_UTF_8_portuguese.h in Headers */,
 				270B3E221489391E00E0A926 /* CBLDatabase+Internal.h in Headers */,
 				2751D4E4151BAE7000F7FD57 /* CBLManager+Internal.h in Headers */,
+				2706ED5B17EEBAA000125C8D /* stem_UTF_8_spanish.h in Headers */,
 				2711CDFD14C7590A00505D55 /* CBLDatabase+Attachments.h in Headers */,
 				2711CE0014C7595900505D55 /* CBLDatabase+Insertion.h in Headers */,
 				2773ADC714BD1EB80027A292 /* CBLDatabase+LocalDocs.h in Headers */,
+				2706ED4F17EEBAA000125C8D /* stem_UTF_8_porter.h in Headers */,
 				2711CE0314C759BD00505D55 /* CBLDatabase+Replication.h in Headers */,
+				2706ECE417EEBAA000125C8D /* fts3_tokenizer.h in Headers */,
 				270B3E2B1489581E00E0A926 /* CBL_Puller.h in Headers */,
 				270B3E3E148D7F0000E0A926 /* CBL_Pusher.h in Headers */,
+				2706ED5817EEBAA000125C8D /* stem_UTF_8_russian.h in Headers */,
 				27821BB7148E7D6F0099B373 /* CBL_Replicator.h in Headers */,
 				270B3E3914898DF200E0A926 /* CBL_Revision.h in Headers */,
 				270B3E251489392C00E0A926 /* CBL_Router.h in Headers */,
@@ -1803,9 +2026,11 @@
 				2753158214ACEFC90065964D /* HTTPLogging.h in Headers */,
 				2753158414ACEFC90065964D /* HTTPMessage.h in Headers */,
 				2753158814ACEFC90065964D /* HTTPResponse.h in Headers */,
+				2706ED4017EEBAA000125C8D /* stem_UTF_8_french.h in Headers */,
 				2753158A14ACEFC90065964D /* HTTPServer.h in Headers */,
 				27B945B217692E2000B2DF2D /* CBLModel_Internal.h in Headers */,
 				2753158E14ACEFC90065964D /* HTTPAsyncFileResponse.h in Headers */,
+				2706ECFF17EEBAA000125C8D /* api.h in Headers */,
 				2753159214ACEFC90065964D /* HTTPDataResponse.h in Headers */,
 				2753159614ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */,
 				2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */,
@@ -1816,21 +2041,30 @@
 				275315C014ACF0330065964D /* DDASLLogger.h in Headers */,
 				275315C414ACF0330065964D /* DDFileLogger.h in Headers */,
 				275315C814ACF0330065964D /* DDLog.h in Headers */,
+				2706ED4317EEBAA000125C8D /* stem_UTF_8_german.h in Headers */,
+				2706ED0217EEBAA000125C8D /* header.h in Headers */,
+				2706ED3717EEBAA000125C8D /* stem_UTF_8_dutch.h in Headers */,
 				27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */,
 				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
+				2706ED4617EEBAA000125C8D /* stem_UTF_8_hungarian.h in Headers */,
+				2706ED4917EEBAA000125C8D /* stem_UTF_8_italian.h in Headers */,
+				2706ED3417EEBAA000125C8D /* stem_UTF_8_danish.h in Headers */,
 				279CE40014D749A7009F3FA6 /* CBLMultipartReader.h in Headers */,
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */,
 				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
 				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
 				2766EFF814DB7F9F009ECCA8 /* CBLMultipartWriter.h in Headers */,
+				2706ECF517EEBAA000125C8D /* modules_utf8.h in Headers */,
 				2766EFFD14DC7B37009ECCA8 /* CBLMultiStreamWriter.h in Headers */,
 				27C5305414DF3A050078F886 /* CBLMultipartUploader.h in Headers */,
 				27103F8314E9CE4400DF7209 /* CBLReachability.h in Headers */,
 				27C40C7914EC58BC00994283 /* CBL_ReplicatorManager.h in Headers */,
+				2706ECEA17EEBAA000125C8D /* fts3Int.h in Headers */,
 				279C7E2E14F424090004A1E8 /* CBLSequenceMap.h in Headers */,
+				2706ED3D17EEBAA000125C8D /* stem_UTF_8_finnish.h in Headers */,
 				272B85141523691700A90CB2 /* CBLJSON.h in Headers */,
 				27ADC079152502EE001ABC1D /* CBLMultipartDocumentReader.h in Headers */,
 				278B0CA0152A8B1900577747 /* CBLCanonicalJSON.h in Headers */,
@@ -1845,6 +2079,8 @@
 				27DA4312158FB79F00F9E7B5 /* CBLQuery.h in Headers */,
 				27DA4345159125B500F9E7B5 /* CBLManager.h in Headers */,
 				27DA434A15912AFD00F9E7B5 /* CBLView.h in Headers */,
+				2706ED5E17EEBAA000125C8D /* stem_UTF_8_swedish.h in Headers */,
+				2706ED3A17EEBAA000125C8D /* stem_UTF_8_english.h in Headers */,
 				27DA435015918C0200F9E7B5 /* MYDynamicObject.h in Headers */,
 				27DA435715918C8E00F9E7B5 /* CBLModel.h in Headers */,
 				27DA435A15918C8E00F9E7B5 /* CBLModelFactory.h in Headers */,
@@ -2348,25 +2584,34 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2706ECE717EEBAA000125C8D /* fts3_unicodesn.c in Sources */,
+				2706ED6517EEBC4400125C8D /* sqlite3_unicodesn_tokenizer.c in Sources */,
 				270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */,
 				270B3E121489382F00E0A926 /* CBL_Body.m in Sources */,
 				270B3E131489382F00E0A926 /* CBL_Server.m in Sources */,
 				270B3E2C1489581E00E0A926 /* CBL_Puller.m in Sources */,
 				270B3E3A14898DF200E0A926 /* CBL_Revision.m in Sources */,
+				2706ED5917EEBAA000125C8D /* stem_UTF_8_spanish.c in Sources */,
 				272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
 				270B3E3F148D7F0000E0A926 /* CBL_Pusher.m in Sources */,
+				2706ED5317EEBAA000125C8D /* stem_UTF_8_romanian.c in Sources */,
 				27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */,
+				2706ED3E17EEBAA000125C8D /* stem_UTF_8_french.c in Sources */,
 				27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */,
 				279EB2CF149140DE00E74185 /* CBLView+Internal.m in Sources */,
 				279EB2DC1491C34300E74185 /* CBLCollateJSON.m in Sources */,
 				27B0B7801491E76200A817AD /* CBL_View_Tests.m in Sources */,
+				2706ED5C17EEBAA000125C8D /* stem_UTF_8_swedish.c in Sources */,
 				27846FF115D5C8250030122F /* APITests.m in Sources */,
 				27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */,
+				2706ED0317EEBAA000125C8D /* utilities_sq3.c in Sources */,
+				2706ED3217EEBAA000125C8D /* stem_UTF_8_danish.c in Sources */,
 				27B0B79F1492932800A817AD /* CBLBase64.m in Sources */,
 				27731F001493FA3100815D67 /* CBL_BlobStore.m in Sources */,
 				279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
 				279906F0149ABFC2003D4338 /* CBLBatcher.m in Sources */,
 				27B945AB1768E63200B2DF2D /* CBLModelArray.m in Sources */,
+				2706ED3817EEBAA000125C8D /* stem_UTF_8_english.c in Sources */,
 				274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
 				27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */,
 				27AA40A314AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */,
@@ -2375,6 +2620,7 @@
 				279CE40114D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				279CE40614D88032009F3FA6 /* CBLBlobStore_Tests.m in Sources */,
 				279CE40B14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
+				2706ED5017EEBAA000125C8D /* stem_UTF_8_portuguese.c in Sources */,
 				2766EFF914DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFE14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305514DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
@@ -2389,17 +2635,24 @@
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27E7FAED155D78DA0025F93A /* CBLChangeTracker_Tests.m in Sources */,
 				27FFE20A17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
+				2706ED0017EEBAA000125C8D /* api_sq3.c in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
+				2706ED5F17EEBAA000125C8D /* stem_UTF_8_turkish.c in Sources */,
 				27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */,
 				27DA42F9158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
+				2706ECE517EEBAA000125C8D /* fts3_unicode2.c in Sources */,
 				27DA42FE158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */,
+				2706ECF117EEBAA000125C8D /* libstemmer_utf8.c in Sources */,
+				2706ED4117EEBAA000125C8D /* stem_UTF_8_german.c in Sources */,
+				2706ED4717EEBAA000125C8D /* stem_UTF_8_italian.c in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27DA435815918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435B15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
+				2706ED3B17EEBAA000125C8D /* stem_UTF_8_finnish.c in Sources */,
 				27E2E5A4159383E9005B9234 /* CBLAttachment.m in Sources */,
 				27E2E5CE159533A5005B9234 /* CBLReplication.m in Sources */,
 				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
@@ -2409,6 +2662,8 @@
 				2753160014ACF9330065964D /* Logging.m in Sources */,
 				2706EC8117EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
+				2706ED4417EEBAA000125C8D /* stem_UTF_8_hungarian.c in Sources */,
+				2706ED3517EEBAA000125C8D /* stem_UTF_8_dutch.c in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
 				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
 				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
@@ -2417,6 +2672,7 @@
 				27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27F128B5156AC8B7008465C2 /* OAToken.m in Sources */,
 				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
+				2706ED4D17EEBAA000125C8D /* stem_UTF_8_porter.c in Sources */,
 				27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */,
 				27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */,
 				270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */,
@@ -2426,8 +2682,10 @@
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				270D6FC2164484190081812D /* CBLSocketChangeTracker.m in Sources */,
+				2706ED4A17EEBAA000125C8D /* stem_UTF_8_norwegian.c in Sources */,
 				27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */,
 				2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */,
+				2706ED5617EEBAA000125C8D /* stem_UTF_8_russian.c in Sources */,
 				27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */,
 				2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
 				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
@@ -2485,13 +2743,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2706ED3617EEBAA000125C8D /* stem_UTF_8_dutch.c in Sources */,
 				27B0B7CD1492B86C00A817AD /* CBLDatabase+Internal.m in Sources */,
+				2706ED5A17EEBAA000125C8D /* stem_UTF_8_spanish.c in Sources */,
+				2706ED6017EEBAA000125C8D /* stem_UTF_8_turkish.c in Sources */,
 				27F9411B176A5FB4007BAEBE /* ModelTests.m in Sources */,
 				27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */,
 				27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */,
 				27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */,
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
+				2706ED5417EEBAA000125C8D /* stem_UTF_8_romanian.c in Sources */,
 				27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */,
+				2706ED5117EEBAA000125C8D /* stem_UTF_8_portuguese.c in Sources */,
 				27B0B7D21492B87D00A817AD /* CBLCollateJSON.m in Sources */,
 				27B0B7D51492B88F00A817AD /* CBL_Replicator.m in Sources */,
 				27B0B7D61492B8A200A817AD /* CBL_Puller.m in Sources */,
@@ -2502,6 +2765,8 @@
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
 				279906F1149ABFC2003D4338 /* CBLBatcher.m in Sources */,
 				274C391F149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
+				2706ECE817EEBAA000125C8D /* fts3_unicodesn.c in Sources */,
+				2706ED3C17EEBAA000125C8D /* stem_UTF_8_finnish.c in Sources */,
 				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
 				27AA409E14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */,
 				27AA40A414AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */,
@@ -2510,9 +2775,11 @@
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
+				2706ED6617EEBC4500125C8D /* sqlite3_unicodesn_tokenizer.c in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
+				2706ED4817EEBAA000125C8D /* stem_UTF_8_italian.c in Sources */,
 				27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				272B85161523691700A90CB2 /* CBLJSON.m in Sources */,
@@ -2524,13 +2791,18 @@
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
+				2706ED4E17EEBAA000125C8D /* stem_UTF_8_porter.c in Sources */,
 				27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */,
 				27DA42FA158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				27DA42FF158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
+				2706ECF217EEBAA000125C8D /* libstemmer_utf8.c in Sources */,
+				2706ED5717EEBAA000125C8D /* stem_UTF_8_russian.c in Sources */,
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
+				2706ED4B17EEBAA000125C8D /* stem_UTF_8_norwegian.c in Sources */,
 				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
+				2706ED0117EEBAA000125C8D /* api_sq3.c in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
 				27DA434C15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27DA435915918C8E00F9E7B5 /* CBLModel.m in Sources */,
@@ -2540,8 +2812,11 @@
 				27F9411D176A5FC2007BAEBE /* CBLModelArray.m in Sources */,
 				270D6FC3164484190081812D /* CBLSocketChangeTracker.m in Sources */,
 				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
+				2706ECE617EEBAA000125C8D /* fts3_unicode2.c in Sources */,
+				2706ED0417EEBAA000125C8D /* utilities_sq3.c in Sources */,
 				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,
 				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
+				2706ED5D17EEBAA000125C8D /* stem_UTF_8_swedish.c in Sources */,
 				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
 				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
 				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
@@ -2550,10 +2825,15 @@
 				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
+				2706ED4217EEBAA000125C8D /* stem_UTF_8_german.c in Sources */,
+				2706ED4517EEBAA000125C8D /* stem_UTF_8_hungarian.c in Sources */,
 				27F12887156ABE24008465C2 /* OAConsumer.m in Sources */,
+				2706ED3F17EEBAA000125C8D /* stem_UTF_8_french.c in Sources */,
 				27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */,
 				27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
+				2706ED3317EEBAA000125C8D /* stem_UTF_8_danish.c in Sources */,
+				2706ED3917EEBAA000125C8D /* stem_UTF_8_english.c in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,

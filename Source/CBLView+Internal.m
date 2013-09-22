@@ -25,6 +25,8 @@
 #import "FMResultSet.h"
 #import "ExceptionUtils.h"
 
+#include "sqlite3_unicodesn_tokenizer.h"
+
 
 #define kReduceBatchSize 100
 
@@ -51,7 +53,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 + (void) registerFunctions:(CBLDatabase *)db {
-    sqlite3_create_function(db.fmdb.sqliteHandle, "ftsrank", 1, SQLITE_ANY, NULL,
+    sqlite3* dbHandle = db.fmdb.sqliteHandle;
+    register_unicodesn_tokenizer(dbHandle);
+    sqlite3_create_function(dbHandle, "ftsrank", 1, SQLITE_ANY, NULL,
                             CBLComputeFTSRank, NULL, NULL);
 }
 

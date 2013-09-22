@@ -706,9 +706,9 @@ TestCase(CBL_View_FullTextQuery) {
 
     NSMutableArray* docs = $marray();
     [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"text", @"it was a dark"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"text", @"and stormy night."}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"text", @"and STöRMy night."}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"text", @"outside somewhere"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"text", @"a dog whøse ñame was “ Dog ”"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"text", @"a dog whøse ñame was “Dog”"}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
 
     CBLView* view = [db viewNamed: @"fts"];
@@ -750,9 +750,9 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
-    CAssertEqual(row.fullText, @"a dog whøse ñame was “ Dog ”");
+    CAssertEqual(row.fullText, @"a dog whøse ñame was “Dog”");
     CAssertEqual(row.documentID, @"33333");
-    CAssertEqual(row.snippet, @"a \001dog\002 whøse ñame \001was\002 “ \001Dog\002 ”");
+    CAssertEqual(row.snippet, @"a \001dog\002 whøse ñame \001was\002 “\001Dog\002”");
     CAssertEq(row.matchCount, 3u);
     CAssertEq([row termIndexOfMatch: 0], 1u);
     CAssertEq([row textRangeOfMatch: 0].location, 2u);
@@ -761,10 +761,10 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEq([row textRangeOfMatch: 1].location, 17u);
     CAssertEq([row textRangeOfMatch: 1].length, 3u);
     CAssertEq([row termIndexOfMatch: 2], 1u);
-    CAssertEq([row textRangeOfMatch: 2].location, 23u);
+    CAssertEq([row textRangeOfMatch: 2].location, 22u);
     CAssertEq([row textRangeOfMatch: 2].length, 3u);
     NSString* snippet = [row snippetWithWordStart: @"[" wordEnd: @"]"];
-    CAssertEqual(snippet, @"a [dog] whøse ñame [was] “ [Dog] ”");
+    CAssertEqual(snippet, @"a [dog] whøse ñame [was] “[Dog]”");
 
     row = rows[1];
     CAssertEqual(row.fullText, @"it was a dark");
