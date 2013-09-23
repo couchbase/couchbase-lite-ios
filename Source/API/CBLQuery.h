@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLGeometry.h"
 
 @class CBLDatabase, CBLDocument;
 @class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow;
@@ -50,10 +49,6 @@ typedef enum {
 /** If non-nil, the document ID to end at. 
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
 @property (copy) NSString* endKeyDocID;
-
-/** The geometric bounding box to search. Setting this property causes the query to
-    search geometries rather than keys. */
-@property CBLGeoRect boundingBox;
 
 /** If set, the view will not be updated for this query, even if the database has changed.
     This allows faster results at the expense of returning possibly out-of-date data. */
@@ -149,7 +144,8 @@ typedef enum {
 @end
 
 
-/** A result row from a CouchbaseLite view query. */
+/** A result row from a CouchbaseLite view query.
+    Full-text and geo queries return subclasses -- see CBLFullTextQueryRow and CBLGeoQueryRow. */
 @interface CBLQueryRow : NSObject
 
 /** The row's key: this is the first parameter passed to the emit() call that generated the row. */
@@ -157,15 +153,6 @@ typedef enum {
 
 /** The row's value: this is the second parameter passed to the emit() call that generated the row. */
 @property (readonly) id value;
-
-/** The row's geo data, if the key of the emit() call was a GeoJSON object, else nil.
-    The format is a parsed GeoJSON point or polygon; see http://geojson.org/geojson-spec */
-@property (readonly) NSDictionary* geometry;
-
-/** The row's geo bounding box in native form.
-    If the row has no geo data, the coordinates will all be 0.
-    If the emitted geo object was a point, the boundingBox's min and max will be equal.*/
-@property (readonly, nonatomic) CBLGeoRect boundingBox;
 
 /** The ID of the document described by this view row.
     This is not necessarily the same as the document that caused this row to be emitted; see the discussion of the .sourceDocumentID property for details. */

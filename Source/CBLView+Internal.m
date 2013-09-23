@@ -47,9 +47,11 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 @interface CBLSpecialKey : NSObject
 - (instancetype) initWithText: (NSString*)text;
 @property (readonly, nonatomic) NSString* text;
+- (instancetype) initWithPoint: (CBLGeoPoint)point;
 - (instancetype) initWithRect: (CBLGeoRect)rect;
 - (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON;
 @property (readonly, nonatomic) CBLGeoRect rect;
+@property (readonly, nonatomic) NSData* geoJSONData;
 @end
 
 
@@ -133,6 +135,45 @@ static id fromJSON( NSData* json ) {
 }
 
 
+/** The body of the emit() callback while indexing a view. */
+- (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
+    NSString* valueJSON = toJSONString(value);
+    NSNumber* fullTextID = nil, *bboxID = nil;
+    NSString* keyJSON = @"null";
+    NSData* geoKey = nil;
+    if ([key isKindOfClass: [CBLSpecialKey class]]) {
+        CBLSpecialKey *specialKey = key;
+        LogTo(View, @"    emit( %@, %@)", specialKey, valueJSON);
+        BOOL ok;
+        NSString* text = specialKey.text;
+        if (text) {
+            ok = [_db.fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)", text];
+            fullTextID = @(_db.fmdb.lastInsertRowId);
+        } else {
+            CBLGeoRect rect = specialKey.rect;
+            ok = [_db.fmdb executeUpdate: @"INSERT INTO bboxes (x0,y0,x1,y1) VALUES (?,?,?,?)",
+                  @(rect.min.x), @(rect.min.y), @(rect.max.x), @(rect.max.y)];
+            bboxID = @(_db.fmdb.lastInsertRowId);
+            geoKey = specialKey.geoJSONData;
+        }
+        if (!ok)
+            return _db.lastDbError;
+        key = nil;
+    } else {
+        if (key)
+            keyJSON = toJSONString(key);
+        LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
+    }
+
+    if (![_db.fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
+                                   "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                  @(self.viewID), @(sequence), keyJSON, valueJSON,
+                                  fullTextID, bboxID, geoKey])
+        return _db.lastDbError;
+    return kCBLStatusOK;
+}
+
+
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
@@ -179,40 +220,11 @@ static id fromJSON( NSData* json ) {
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.
         CBLMapEmitBlock emit = ^(id key, id value) {
-            NSString* valueJSON = toJSONString(value);
-            NSNumber* fullTextID = nil;
-            id geoX0 = nil, geoY0 = nil, geoX1 = nil, geoY1 = nil;
-            NSString* keyJSON = @"null";
-            if ([key isKindOfClass: [CBLSpecialKey class]]) {
-                NSString* text = [key text];
-                if (text) {
-                    if (![fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)",
-                          text]) {
-                        emitStatus = _db.lastDbError;
-                        return;
-                    }
-                    fullTextID = @(_db.fmdb.lastInsertRowId);
-                } else {
-                    CBLGeoRect rect = ((CBLSpecialKey*)key).rect;
-                    geoX0 = @(rect.min.x);
-                    geoY0 = @(rect.min.y);
-                    geoX1 = @(rect.max.x);
-                    geoY1 = @(rect.max.y);
-                }
-                LogTo(View, @"    emit( %@, %@)", key, valueJSON);
-                key = nil;
-            } else {
-                if (key)
-                    keyJSON = toJSONString(key);
-                LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
-            }
-
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, fulltext_id, ax0, ay0, ax1, ay1) VALUES "
-                                        "(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                                        @(viewID), @(sequence), keyJSON, valueJSON, fullTextID, geoX0, geoY0, geoX1, geoY1])
-                ++inserted;
+            int status = [self _emitKey: key value: value forSequence: sequence];
+            if (status != kCBLStatusOK)
+                emitStatus = status;
             else
-                emitStatus = _db.lastDbError;
+                inserted++;
         };
 
         // Now scan every revision added since the last time the view was indexed:
@@ -366,8 +378,11 @@ static id fromJSON( NSData* json ) {
     if (options->includeDocs)
         [sql appendString: @", revid, json"];
     if (options->bbox)
-        [sql appendString: @", ax0, ay0, ax1, ay1"];
-    [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
+        [sql appendString: @", bboxes.x0, bboxes.y0, bboxes.x1, bboxes.y1, maps.geokey"];
+    [sql appendString: @" FROM maps, revs, docs"];
+    if (options->bbox)
+        [sql appendString: @", bboxes"];
+    [sql appendString: @" WHERE maps.view_id=?"];
     NSMutableArray* args = $marray(@(_viewID));
 
     if (options->keys) {
@@ -401,8 +416,9 @@ static id fromJSON( NSData* json ) {
     }
     
     if (options->bbox) {
-        [sql appendString: @" AND (maps.ax1 > ? AND maps.ax0 < ?)"
-                            " AND (maps.ay1 > ? AND maps.ay0 < ?)"];
+        [sql appendString: @" AND (bboxes.x1 > ? AND bboxes.x0 < ?)"
+                            " AND (bboxes.y1 > ? AND bboxes.y0 < ?)"
+                            " AND bboxes.rowid = maps.bbox_id"];
         [args addObject: @(options->bbox->min.x)];
         [args addObject: @(options->bbox->max.x)];
         [args addObject: @(options->bbox->min.y)];
@@ -410,7 +426,11 @@ static id fromJSON( NSData* json ) {
     }
     
     [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
-                        "ORDER BY key"];
+                        "ORDER BY"];
+    if (options->bbox)
+        [sql appendString: @" bboxes.y0, bboxes.x0"];
+    else
+        [sql appendString: @" key"];
     [sql appendString: collationStr];
     if (options->descending)
         [sql appendString: @" DESC"];
@@ -500,16 +520,24 @@ static id fromJSON( NSData* json ) {
                 LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
                       toJSONString(docID));
-                CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                             sequence: sequence
-                                                                  key: keyData
-                                                                value: valueData
-                                                        docProperties: docContents];
-                if (options->bbox && [r objectForColumnName: @"ax0"] != nil) {
-                    row.boundingBox = (CBLGeoRect){{[r doubleForColumn: @"ax0"],
-                                                    [r doubleForColumn: @"ay0"]},
-                                                   {[r doubleForColumn: @"ax1"],
-                                                    [r doubleForColumn: @"ay1"]}};
+                CBLQueryRow* row;
+                if (options->bbox) {
+                    CBLGeoRect bbox = {{[r doubleForColumn: @"x0"],
+                                        [r doubleForColumn: @"y0"]},
+                                       {[r doubleForColumn: @"x1"],
+                                        [r doubleForColumn: @"y1"]}};
+                    row = [[CBLGeoQueryRow alloc] initWithDocID: docID
+                                                       sequence: sequence
+                                                    boundingBox: bbox
+                                                    geoJSONData: [r dataForColumn: @"geokey"]
+                                                          value: valueData
+                                                  docProperties: docContents];
+                } else {
+                    row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                    sequence: sequence
+                                                         key: keyData
+                                                       value: valueData
+                                               docProperties: docContents];
                 }
                 [rows addObject: row];
             }
@@ -528,7 +556,11 @@ id CBLTextKey(NSString* text) {
 }
 
 id CBLGeoPointKey(double x, double y) {
-    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x,y}, {x,y}}];
+    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
+}
+
+id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
+    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
 }
 
 id CBLGeoJSONKey(NSDictionary* geoJSON) {
@@ -537,10 +569,6 @@ id CBLGeoJSONKey(NSDictionary* geoJSON) {
         Warn(@"CBLGeoJSONKey doesn't recognize %@",
              [CBLJSON stringWithJSONObject: geoJSON options:0 error: NULL]);
     return key;
-}
-
-id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
-    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
 }
 
 
@@ -723,6 +751,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 {
     NSString* _text;
     CBLGeoRect _rect;
+    NSData* _geoJSONData;
 }
 
 - (instancetype) initWithText: (NSString*)text {
@@ -734,10 +763,21 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     return self;
 }
 
+- (instancetype) initWithPoint: (CBLGeoPoint)point {
+    self = [super init];
+    if (self) {
+        _rect = (CBLGeoRect){point, point};
+        _geoJSONData = [CBLJSON dataWithJSONObject: CBLGeoPointToJSON(point) options: 0 error:NULL];
+        _geoJSONData = [NSData data]; // Empty _geoJSONData means the bbox is a point
+    }
+    return self;
+}
+
 - (instancetype) initWithRect: (CBLGeoRect)rect {
     self = [super init];
     if (self) {
         _rect = rect;
+        // Don't set _geoJSONData; if nil it defaults to the same as the bbox.
     }
     return self;
 }
@@ -747,11 +787,12 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (self) {
         if (!CBLGeoJSONBoundingBox(geoJSON, &_rect))
             return nil;
+        _geoJSONData = [CBLJSON dataWithJSONObject: geoJSON options: 0 error: NULL];
     }
     return self;
 }
 
-@synthesize text=_text, rect=_rect;
+@synthesize text=_text, rect=_rect, geoJSONData=_geoJSONData;
 
 - (NSString*) description {
     if (_text) {

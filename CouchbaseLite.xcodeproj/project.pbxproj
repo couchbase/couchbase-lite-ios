@@ -208,6 +208,9 @@
 		2753160214ACF9330065964D /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2753160C14ACFC2A0065964D /* CBLHTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753160A14ACFC2A0065964D /* CBLHTTPConnection.h */; };
 		2753160D14ACFC2A0065964D /* CBLHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */; };
+		27538F4917F0B805004C3BFD /* CBLQuery+Geo.h in Headers */ = {isa = PBXBuildFile; fileRef = 27538F4717F0B805004C3BFD /* CBLQuery+Geo.h */; };
+		27538F4A17F0B805004C3BFD /* CBLQuery+Geo.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F4817F0B805004C3BFD /* CBLQuery+Geo.m */; };
+		27538F4B17F0B805004C3BFD /* CBLQuery+Geo.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F4817F0B805004C3BFD /* CBLQuery+Geo.m */; };
 		275A24E016B986CD00561DF0 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -856,6 +859,8 @@
 		275315FA14ACF7FF0065964D /* CouchbaseLiteListener.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = CouchbaseLiteListener.exp; sourceTree = "<group>"; };
 		2753160A14ACFC2A0065964D /* CBLHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLHTTPConnection.h; sourceTree = "<group>"; };
 		2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLHTTPConnection.m; sourceTree = "<group>"; };
+		27538F4717F0B805004C3BFD /* CBLQuery+Geo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Geo.h"; sourceTree = "<group>"; };
+		27538F4817F0B805004C3BFD /* CBLQuery+Geo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLQuery+Geo.m"; sourceTree = "<group>"; };
 		2766EFF614DB7F9F009ECCA8 /* CBLMultipartWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartWriter.h; sourceTree = "<group>"; };
 		2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartWriter.m; sourceTree = "<group>"; };
 		2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultiStreamWriter.h; sourceTree = "<group>"; };
@@ -1787,6 +1792,8 @@
 				27DA4311158FB79E00F9E7B5 /* CBLQuery.m */,
 				2706EC7E17EE703F00125C8D /* CBLQuery+FullTextSearch.h */,
 				2706EC7F17EE703F00125C8D /* CBLQuery+FullTextSearch.m */,
+				27538F4717F0B805004C3BFD /* CBLQuery+Geo.h */,
+				27538F4817F0B805004C3BFD /* CBLQuery+Geo.m */,
 				27E2E5CB159533A5005B9234 /* CBLReplication.h */,
 				27E2E5CC159533A5005B9234 /* CBLReplication.m */,
 				27846FEE15D5C7DE0030122F /* Tests */,
@@ -2054,6 +2061,7 @@
 				2706ED0217EEBAA000125C8D /* header.h in Headers */,
 				2706ED3717EEBAA000125C8D /* stem_UTF_8_dutch.h in Headers */,
 				27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */,
+				27538F4917F0B805004C3BFD /* CBLQuery+Geo.h in Headers */,
 				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
@@ -2671,6 +2679,7 @@
 				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
 				2753160014ACF9330065964D /* Logging.m in Sources */,
 				2706EC8117EE703F00125C8D /* CBLQuery+FullTextSearch.m in Sources */,
+				27538F4A17F0B805004C3BFD /* CBLQuery+Geo.m in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
 				2706ED4417EEBAA000125C8D /* stem_UTF_8_hungarian.c in Sources */,
 				2706ED3517EEBAA000125C8D /* stem_UTF_8_dutch.c in Sources */,
@@ -2836,6 +2845,7 @@
 				27FFE20617BBF20D0040AE60 /* CBLReplicator_Tests.m in Sources */,
 				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
+				27538F4B17F0B805004C3BFD /* CBLQuery+Geo.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
 				2706ED4217EEBAA000125C8D /* stem_UTF_8_german.c in Sources */,
 				2706ED4517EEBAA000125C8D /* stem_UTF_8_hungarian.c in Sources */,

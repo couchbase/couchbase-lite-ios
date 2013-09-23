@@ -48,9 +48,8 @@
     id _startKey, _endKey;
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
-    CBLGeoRect _boundingBox;
     CBLStaleness _stale;
-    BOOL _descending, _prefetch, _mapOnly, _includeDeleted, _isGeoQuery;
+    BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
@@ -122,16 +121,6 @@
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly,
             database=_database, includeDeleted=_includeDeleted;
-
-
-- (CBLGeoRect) boundingBox {
-    return _boundingBox;
-}
-
-- (void) setBoundingBox:(CBLGeoRect)boundingBox {
-    _boundingBox = boundingBox;
-    _isGeoQuery = YES;
-}
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -431,8 +420,6 @@ static id fromJSON( NSData* json ) {
 @implementation CBLQueryRow
 {
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
-    BOOL _hasGeo;
-    CBLGeoRect _boundingBox;
     __weak id _parsedKey, _parsedValue;
     UInt64 _sequence;
     NSString* _sourceDocID;
@@ -443,7 +430,7 @@ static id fromJSON( NSData* json ) {
 
 
 @synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID,
-            database=_database, localSequence=_sequence, boundingBox=_boundingBox;
+            database=_database, localSequence=_sequence;
 
 
 - (instancetype) initWithDocID: (NSString*)docID
@@ -475,8 +462,6 @@ static id fromJSON( NSData* json ) {
     CBLQueryRow* other = object;
     return _database == other->_database
         && $equal(_key, other->_key) && $equal(_value, other->_value)
-        && _hasGeo == other->_hasGeo
-        && (!_hasGeo || CBLGeoRectEqual(_boundingBox, other->_boundingBox))
         && $equal(_sourceDocID, other->_sourceDocID)
         && $equal(_documentProperties, other->_documentProperties);
 }
@@ -504,16 +489,6 @@ static id fromJSON( NSData* json ) {
         }
     }
     return value;
-}
-
-
-- (void) setBoundingBox:(CBLGeoRect)boundingBox {
-    _boundingBox = boundingBox;
-    _hasGeo = YES;
-}
-
-- (NSDictionary*) geometry {
-    return _hasGeo ? CBLGeoRectToJSON(_boundingBox) : nil;
 }
 
 
@@ -569,11 +544,9 @@ static id fromJSON( NSData* json ) {
 // This is used by the router
 - (NSDictionary*) asJSONDictionary {
     if (_value || _sourceDocID) {
-        id geo = self.geometry;
-        return $dict({@"key", (geo ? nil :self.key)},
+        return $dict({@"key", self.key},
                      {@"value", self.value},
                      {@"id", _sourceDocID},
-                     {@"geometry", geo},
                      {@"doc", _documentProperties});
     } else {
         return $dict({@"key", self.key}, {@"error", @"not_found"});

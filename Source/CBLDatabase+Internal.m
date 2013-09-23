@@ -335,26 +335,25 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         dbVersion = 7;
     }
 
-    if (dbVersion < 8) {
-        // Version 8: add geo index
-        NSString* sql = @"ALTER TABLE maps ADD COLUMN ax0 FLOAT; \
-                        ALTER TABLE maps ADD COLUMN ay0 FLOAT; \
-                        ALTER TABLE maps ADD COLUMN ax1 FLOAT; \
-                        ALTER TABLE maps ADD COLUMN ay1 FLOAT; \
-                        CREATE INDEX IF NOT EXISTS geo_ax0 on maps(view_id, ax0); \
-                        CREATE INDEX IF NOT EXISTS geo_ay0 on maps(view_id, ay0); \
-                        CREATE INDEX IF NOT EXISTS geo_ax1 on maps(view_id, ax1); \
-                        CREATE INDEX IF NOT EXISTS geo_ay1 on maps(view_id, ay1); \
-                        PRAGMA user_version = 8";
+    // (Version 8 was an older version of the geo index)
+
+    if (dbVersion < 9) {
+        // Version 9: Add geo-query index
+        NSString* sql = @"CREATE VIRTUAL TABLE bboxes USING rtree(rowid, x0, x1, y0, y1); \
+                        ALTER TABLE maps ADD COLUMN bbox_id INTEGER; \
+                        ALTER TABLE maps ADD COLUMN geokey BLOB; \
+                        CREATE TRIGGER del_bbox DELETE ON maps WHEN old.bbox_id not null \
+                        BEGIN DELETE FROM bboxes WHERE rowid=old.bbox_id| END;\
+                        PRAGMA user_version = 9";
         if (![self initialize: sql error: outError])
             return NO;
-        //dbVersion = 8;
+        dbVersion = 9;
     }
 
 #if DEBUG
     _fmdb.crashOnErrors = YES;
 #endif
-    
+
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
     _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath error: outError];

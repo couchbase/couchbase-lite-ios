@@ -9,6 +9,9 @@
 #import "CBLQuery.h"
 
 
+/** CBLQuery interface for full-text searches.
+    To use this, the view's map function must have emitted full-text strings as keys
+    using the CBLTextKey() function. */
 @interface CBLQuery (FullTextSearch)
 
 /** Query string for a full-text search; works only if the view's map function has triggered full-

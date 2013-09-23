@@ -9,6 +9,8 @@
 .objc_class_name_CBLQuery
 .objc_class_name_CBLQueryEnumerator
 .objc_class_name_CBLQueryRow
+.objc_class_name_CBLFullTextQueryRow
+.objc_class_name_CBLGeoQueryRow
 .objc_class_name_CBLModel
 .objc_class_name_CBLModelFactory
 .objc_class_name_CBLJSON
@@ -42,6 +44,16 @@ _CBLStatusFromNSError
 _CBLURLWithoutQuery
 _CBLSequenceCompare
 _CBLVersionString
+
+_CBLGeoPointToJSON
+_CBLGeoRectToJSON
+_CBLGeoJSONBoundingBox
+_CBLGeoPointToCoordPair
+_CBLGeoCoordPairToPoint
+_CBLGeoPointKey
+_CBLGeoRectKey
+_CBLGeoJSONKey
+_CBLTextKey
 
 _CBL_DatabaseChangesNotification
 _CBL_DatabaseWillCloseNotification

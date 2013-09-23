@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLView+Internal.h"
+#import "CBLQuery+Geo.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
@@ -417,16 +418,18 @@ TestCase(CBL_View_GeoQuery) {
     rows = [[query rows] allObjects];
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
-    CBLQueryRow* row = rows[0];
+    CBLGeoQueryRow* row = rows[0];
     AssertEq(row.boundingBox.min.x, -115);
     AssertEq(row.boundingBox.min.y,  -10);
     AssertEq(row.boundingBox.max.x,  -90);
     AssertEq(row.boundingBox.max.y,   12);
+    AssertEqual(row.geometryType, @"Polygon");
     AssertEqual(row.geometry, mkGeoRect(-115, -10, -90, 12));
 
     row = rows[1];
     AssertEq(row.boundingBox.min.x, -97.75);
     AssertEq(row.boundingBox.min.y,  30.25);
+    AssertEqual(row.geometryType, @"Point");
     AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
 
     [db close];

@@ -88,6 +88,8 @@
 {
     NSString* _fullTextQuery;
     BOOL _fullTextSnippets, _fullTextRanking;
+    CBLGeoRect _boundingBox;
+    BOOL _isGeoQuery;
 }
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view                  __attribute__((nonnull(1)));
@@ -103,7 +105,6 @@
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
-@property (readwrite) CBLGeoRect boundingBox;
 @end
 
 @interface CBLFullTextQueryRow ()
@@ -113,6 +114,15 @@
                   matchOffsets: (NSString*)matchOffsets
                          value: (id)value;
 @property (nonatomic) NSString* snippet;
+@end
+
+@interface CBLGeoQueryRow ()
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                   boundingBox: (CBLGeoRect)bbox
+                   geoJSONData: (NSData*)geoJSONData
+                         value: (NSData*)valueData
+                 docProperties: (NSDictionary*)docProperties;
 @end
 
 
