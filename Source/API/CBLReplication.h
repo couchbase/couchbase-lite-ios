@@ -101,11 +101,16 @@ typedef enum {
 
 /** Email address for login with Facebook credentials. This is stored persistently in
     the replication document, but it's not sufficient for login (you also need to get a
-    token from Facebook's servers, which you then pass to -registerPersonaAssertion:.)*/
+    token from Facebook's servers, which you then pass to -registerFacebookToken:forEmailAddress.)*/
 @property (nonatomic, copy) NSString* facebookEmailAddress;
 
 /** Registers a Facebook login token that will be used on the next login to the remote server.
-    This also sets facebookEmailAddress. */
+    This also sets facebookEmailAddress. 
+    For security reasons the token is not stored in the replication document, but instead kept
+    in an in-memory registry private to the Facebook authorizer. On login the token is sent to
+    the server, and the server will respond with a session cookie. After that the token isn't
+    needed again until the session expires. At that point you'll need to recover or regenerate
+    the token and register it again. */
 - (bool) registerFacebookToken: (NSString*)token
                forEmailAddress: (NSString*)email                        __attribute__((nonnull));
 
