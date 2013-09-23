@@ -77,11 +77,11 @@ static NSArray* putDocs(CBLDatabase* db) {
 }
 
 static NSDictionary* mkGeoPoint(double x, double y) {
-    return $dict({@"type", @"Point"}, {@"coordinates", @[@(x), @(y)]});
+    return CBLGeoPointToJSON((CBLGeoPoint){x,y});
 }
 
 static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
-    return $dict({@"type", @"Rect"}, {@"coordinates", @[@(x0), @(y0), @(x1), @(y1)]});
+    return CBLGeoRectToJSON((CBLGeoRect){{x0,y0}, {x1,y1}});
 }
 
 static NSArray* putGeoDocs(CBLDatabase* db) {
@@ -390,6 +390,7 @@ TestCase(CBL_View_Query) {
 }
 
 TestCase(CBL_View_GeoQuery) {
+    RequireTestCase(CBLGeometry);
     RequireTestCase(CBL_View_Index);
     CBLDatabase *db = createDB();
     putGeoDocs(db);

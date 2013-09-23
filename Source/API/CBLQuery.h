@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLGeometry.h"
 
 @class CBLDatabase, CBLDocument;
 @class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow;
@@ -158,11 +159,12 @@ typedef enum {
 @property (readonly) id value;
 
 /** The row's geo data, if the key of the emit() call was a GeoJSON object, else nil.
-    The format is a parsed GeoJSON point, with a "coordinates" property containing a two-element array [x, y]. */
+    The format is a parsed GeoJSON point or polygon; see http://geojson.org/geojson-spec */
 @property (readonly) NSDictionary* geometry;
 
 /** The row's geo bounding box in native form.
-    If the row has no geo data, the coordinates will all be 0. */
+    If the row has no geo data, the coordinates will all be 0.
+    If the emitted geo object was a point, the boundingBox's min and max will be equal.*/
 @property (readonly, nonatomic) CBLGeoRect boundingBox;
 
 /** The ID of the document described by this view row.

@@ -10,14 +10,6 @@
 @class CBLDatabase, CBLQuery, CBLDatabase;
 
 
-typedef struct CBLGeoPoint {
-    double x, y;
-} CBLGeoPoint;
-
-typedef struct CBLGeoRect {
-    CBLGeoPoint min, max;
-} CBLGeoRect;
-
 typedef void (^CBLMapEmitBlock)(id key, id value);
 
 
@@ -41,13 +33,6 @@ typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
 /** Returns a special value that, when emitted as a key, causes the given text to be indexed with
     the full-text indexer. Used inside a map block, like so: `emit(CBLTextKey(longText), value);` */
 id CBLTextKey(NSString* text);
-
-/** Returns a special value that, when emitted as a key, is indexed as a geometric point.
-    Used inside a map block, like so: `emit(CBLPointKey(3.0, 4.0), value);` */
-id CBLGeoPointKey(double x, double y);
-id CBLGeoRectKey(double x0, double y0, double x1, double y1);
-id CBLGeoJSONKey(NSDictionary* geoJSON);
-
 
 /** An external object that knows how to map source code of some sort into executable functions. */
 @protocol CBLViewCompiler <NSObject>

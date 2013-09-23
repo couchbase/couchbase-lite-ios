@@ -100,6 +100,10 @@
 		2706ED6117EEBAA000125C8D /* stem_UTF_8_turkish.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706ECDF17EEBAA000125C8D /* stem_UTF_8_turkish.h */; };
 		2706ED6517EEBC4400125C8D /* sqlite3_unicodesn_tokenizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8417EEBAA000125C8D /* sqlite3_unicodesn_tokenizer.c */; };
 		2706ED6617EEBC4500125C8D /* sqlite3_unicodesn_tokenizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 2706EC8417EEBAA000125C8D /* sqlite3_unicodesn_tokenizer.c */; };
+		2706EE0617EFF72A00125C8D /* CBLGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EE0417EFF72A00125C8D /* CBLGeometry.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2706EE0717EFF72A00125C8D /* CBLGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 2706EE0517EFF72A00125C8D /* CBLGeometry.m */; };
+		2706EE0817EFF72A00125C8D /* CBLGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 2706EE0517EFF72A00125C8D /* CBLGeometry.m */; };
+		2706EE0917EFFF7500125C8D /* CBLGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 2706EE0417EFF72A00125C8D /* CBLGeometry.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */; };
 		270B3E121489382F00E0A926 /* CBL_Body.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */; };
 		270B3E131489382F00E0A926 /* CBL_Server.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* CBL_Server.m */; };
@@ -764,6 +768,8 @@
 		2706ECDF17EEBAA000125C8D /* stem_UTF_8_turkish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_turkish.h; sourceTree = "<group>"; };
 		2706ECE117EEBAA000125C8D /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		2706ED6717EEC07B00125C8D /* sqlite3_unicodesn_tokenizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sqlite3_unicodesn_tokenizer.h; sourceTree = "<group>"; };
+		2706EE0417EFF72A00125C8D /* CBLGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLGeometry.h; sourceTree = "<group>"; };
+		2706EE0517EFF72A00125C8D /* CBLGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLGeometry.m; sourceTree = "<group>"; };
 		270B3DEA1489359000E0A926 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CouchbaseLite-Info.plist"; sourceTree = "<group>"; };
 		270B3DFC1489359000E0A926 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -1612,6 +1618,8 @@
 		279EB2D8149192DF00E74185 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				2706EE0417EFF72A00125C8D /* CBLGeometry.h */,
+				2706EE0517EFF72A00125C8D /* CBLGeometry.m */,
 				274F9807152E6E0C00247C46 /* CBLStatus.h */,
 				27CF5D2C152F514A0015D7A9 /* CBLStatus.m */,
 				279EB2D01491442500E74185 /* CBLInternal.h */,
@@ -2018,6 +2026,7 @@
 				270B3E251489392C00E0A926 /* CBL_Router.h in Headers */,
 				270B3E241489392600E0A926 /* CBL_Server.h in Headers */,
 				270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */,
+				2706EE0617EFF72A00125C8D /* CBLGeometry.h in Headers */,
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
 				2706EC8017EE703F00125C8D /* CBLQuery+FullTextSearch.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
@@ -2122,6 +2131,7 @@
 				27DA43671592387400F9E7B5 /* CBLQuery.h in Headers */,
 				27DA43681592387400F9E7B5 /* CBLModel.h in Headers */,
 				27DA43691592387400F9E7B5 /* CBLModelFactory.h in Headers */,
+				2706EE0917EFFF7500125C8D /* CBLGeometry.h in Headers */,
 				275A29051649A13900B0D8EE /* CBLReplication.h in Headers */,
 				27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */,
 				275A24E016B986CD00561DF0 /* CBLJSON.h in Headers */,
@@ -2673,6 +2683,7 @@
 				27F128B5156AC8B7008465C2 /* OAToken.m in Sources */,
 				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				2706ED4D17EEBAA000125C8D /* stem_UTF_8_porter.c in Sources */,
+				2706EE0717EFF72A00125C8D /* CBLGeometry.m in Sources */,
 				27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */,
 				27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */,
 				270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */,
@@ -2796,6 +2807,7 @@
 				27DA42FA158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				27DA42FF158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				2706ECF217EEBAA000125C8D /* libstemmer_utf8.c in Sources */,
+				2706EE0817EFF72A00125C8D /* CBLGeometry.m in Sources */,
 				2706ED5717EEBAA000125C8D /* stem_UTF_8_russian.c in Sources */,
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,

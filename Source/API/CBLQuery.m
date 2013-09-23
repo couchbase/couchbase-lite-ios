@@ -14,15 +14,6 @@
 #import "MYBlockUtils.h"
 
 
-static inline BOOL CBLGeoRectEqual(CBLGeoRect a, CBLGeoRect b) {
-    return a.min.x == b.min.x && a.min.y == b.min.y && a.max.x == b.max.x && a.max.y == b.max.y;
-}
-
-static inline BOOL CBLGeoRectIsEmpty(CBLGeoRect r) {
-    return r.min.x == r.max.x && r.min.y == r.max.y;
-}
-
-
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
 - (NSArray*) queryViewNamed: (NSString*)viewName
@@ -515,20 +506,14 @@ static id fromJSON( NSData* json ) {
     return value;
 }
 
+
 - (void) setBoundingBox:(CBLGeoRect)boundingBox {
     _boundingBox = boundingBox;
     _hasGeo = YES;
 }
 
 - (NSDictionary*) geometry {
-    if (!_hasGeo)
-        return nil;
-    else if (CBLGeoRectIsEmpty(_boundingBox))
-        return  @{@"type": @"Point", @"coordinates": @[@(_boundingBox.min.x), @(_boundingBox.min.y)]};
-    else
-        return  @{@"type": @"Rect", @"coordinates": @[@(_boundingBox.min.x), @(_boundingBox.min.y),
-                                                      @(_boundingBox.max.x), @(_boundingBox.max.y)]};
-
+    return _hasGeo ? CBLGeoRectToJSON(_boundingBox) : nil;
 }
 
 

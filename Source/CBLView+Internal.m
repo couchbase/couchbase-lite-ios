@@ -19,6 +19,7 @@
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
+#import "CBLGeometry.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -716,6 +717,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
 
 
+#pragma mark -
+
 @implementation CBLSpecialKey
 {
     NSString* _text;
@@ -742,30 +745,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON {
     self = [super init];
     if (self) {
-        NSArray* coordinates = $castIf(NSArray, geoJSON[@"coordinates"]);
-        NSUInteger n = coordinates.count;
-        if (n < 2)
+        if (!CBLGeoJSONBoundingBox(geoJSON, &_rect))
             return nil;
-        NSNumber* x = $castIf(NSNumber, coordinates[0]);
-        NSNumber* y = $castIf(NSNumber, coordinates[1]);
-        if (!x || !y)
-            return nil;
-        _rect.min.x = x.doubleValue;
-        _rect.min.y = y.doubleValue;
-        NSString* type = $castIf(NSString, geoJSON[@"type"]);
-        if ([type isEqualToString: @"Point"] && n == 2) {
-            _rect.max.x = _rect.min.x;
-            _rect.max.y = _rect.min.y;
-        } else if ([type isEqualToString: @"Rect"] && n == 4) {
-            x = $castIf(NSNumber, coordinates[2]);
-            y = $castIf(NSNumber, coordinates[3]);
-            if (!x || !y)
-                return nil;
-            _rect.max.x = x.doubleValue;
-            _rect.max.y = y.doubleValue;
-        } else {
-            return nil;
-        }
     }
     return self;
 }

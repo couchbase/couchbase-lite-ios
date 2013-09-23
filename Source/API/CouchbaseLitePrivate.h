@@ -10,6 +10,7 @@
 #import "CBLCache.h"
 #import "CBLDatabase.h"
 #import "CBL_Revision.h"
+#import "CBLGeometry.h"
 @class CBL_DatabaseChange, CBL_Revision, CBLManager, CBL_Server;
 
 
