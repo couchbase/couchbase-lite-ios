@@ -192,7 +192,7 @@ static id fromJSON( NSData* json ) {
                     }
                     fullTextID = @(_db.fmdb.lastInsertRowId);
                 } else {
-                    CBLGeoRect rect = [key rect];
+                    CBLGeoRect rect = ((CBLSpecialKey*)key).rect;
                     geoX0 = @(rect.min.x);
                     geoY0 = @(rect.min.y);
                     geoX1 = @(rect.max.x);

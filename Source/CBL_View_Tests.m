@@ -851,7 +851,7 @@ TestCase(CBL_View_FullTextQuery) {
     // Now delete a document:
     CBL_Revision* rev = docs[3];
     CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
-    del = [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
 
     CAssertEq([view updateIndex], kCBLStatusOK);
