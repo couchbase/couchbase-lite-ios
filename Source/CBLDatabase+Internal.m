@@ -337,10 +337,14 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     if (dbVersion < 8) {
         // Version 8: add geo index
-        NSString* sql = @"ALTER TABLE maps ADD COLUMN ax FLOAT; \
-                        ALTER TABLE maps ADD COLUMN ay FLOAT; \
-                        CREATE INDEX IF NOT EXISTS geo_ax on maps(view_id, ax); \
-                        CREATE INDEX IF NOT EXISTS geo_ay on maps(view_id, ay); \
+        NSString* sql = @"ALTER TABLE maps ADD COLUMN ax0 FLOAT; \
+                        ALTER TABLE maps ADD COLUMN ay0 FLOAT; \
+                        ALTER TABLE maps ADD COLUMN ax1 FLOAT; \
+                        ALTER TABLE maps ADD COLUMN ay1 FLOAT; \
+                        CREATE INDEX IF NOT EXISTS geo_ax0 on maps(view_id, ax0); \
+                        CREATE INDEX IF NOT EXISTS geo_ay0 on maps(view_id, ay0); \
+                        CREATE INDEX IF NOT EXISTS geo_ax1 on maps(view_id, ax1); \
+                        CREATE INDEX IF NOT EXISTS geo_ay1 on maps(view_id, ay1); \
                         PRAGMA user_version = 8";
         if (![self initialize: sql error: outError])
             return NO;

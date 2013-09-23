@@ -102,7 +102,7 @@
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
-@property (readwrite) CBLGeoPoint geoPoint;
+@property (readwrite) CBLGeoRect boundingBox;
 @end
 
 @interface CBLFullTextQueryRow ()

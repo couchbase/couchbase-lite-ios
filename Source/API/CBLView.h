@@ -45,7 +45,7 @@ id CBLTextKey(NSString* text);
 /** Returns a special value that, when emitted as a key, is indexed as a geometric point.
     Used inside a map block, like so: `emit(CBLPointKey(3.0, 4.0), value);` */
 id CBLGeoPointKey(double x, double y);
-
+id CBLGeoRectKey(double x0, double y0, double x1, double y1);
 id CBLGeoJSONKey(NSDictionary* geoJSON);
 
 

@@ -80,6 +80,10 @@ static NSDictionary* mkGeoPoint(double x, double y) {
     return $dict({@"type", @"Point"}, {@"coordinates", @[@(x), @(y)]});
 }
 
+static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
+    return $dict({@"type", @"Rect"}, {@"coordinates", @[@(x0), @(y0), @(x1), @(y1)]});
+}
+
 static NSArray* putGeoDocs(CBLDatabase* db) {
     NSMutableArray* docs = $marray();
     [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}))];
@@ -96,6 +100,9 @@ static NSArray* putGeoDocs(CBLDatabase* db) {
     [docs addObject: putDoc(db, $dict({@"_id", @"hkg"}, {@"geoJSON", mkGeoPoint(-113.91, 45.52)}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"diy"}, {@"geoJSON", mkGeoPoint(40.12, 37.53)}))];
     [docs addObject: putDoc(db, $dict({@"_id", @"snc"}, {@"geoJSON", mkGeoPoint(-2.205, -80.98)}))];
+
+    [docs addObject: putDoc(db, $dict({@"_id", @"xxx"}, {@"geoJSON",
+                                        mkGeoRect(-115,-10, -90, 12)}))];
     return docs;
 }
 
@@ -395,8 +402,10 @@ TestCase(CBL_View_GeoQuery) {
     options.bbox = &bbox;
     CBLStatus status;
     NSArray* rows = [view _queryWithOptions: &options status: &status];
-    NSArray* expectedRows = @[$dict({@"id", @"aus"},
-                                    {@"geometry", mkGeoPoint(-97.75, 30.25)}),
+    NSArray* expectedRows = @[$dict({@"id", @"xxx"},
+                                    {@"geometry", mkGeoRect(-115, -10, -90, 12)}),
+                               $dict({@"id", @"aus"},
+                                     {@"geometry", mkGeoPoint(-97.75, 30.25)}),
                                $dict({@"id", @"diy"},
                                      {@"geometry", mkGeoPoint(40.12, 37.53)})];
     CAssertEqual(rowsToDicts(rows), expectedRows);
@@ -408,8 +417,15 @@ TestCase(CBL_View_GeoQuery) {
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
     CBLQueryRow* row = rows[0];
-    AssertEq(row.geoPoint.x, -97.75);
-    AssertEq(row.geoPoint.y, 30.25);
+    AssertEq(row.boundingBox.min.x, -115);
+    AssertEq(row.boundingBox.min.y,  -10);
+    AssertEq(row.boundingBox.max.x,  -90);
+    AssertEq(row.boundingBox.max.y,   12);
+    AssertEqual(row.geometry, mkGeoRect(-115, -10, -90, 12));
+
+    row = rows[1];
+    AssertEq(row.boundingBox.min.x, -97.75);
+    AssertEq(row.boundingBox.min.y,  30.25);
     AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
 
     [db close];

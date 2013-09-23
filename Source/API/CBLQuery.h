@@ -161,9 +161,9 @@ typedef enum {
     The format is a parsed GeoJSON point, with a "coordinates" property containing a two-element array [x, y]. */
 @property (readonly) NSDictionary* geometry;
 
-/** The row's geo point in native form.
-    If the row has no geo data, the coordinates will be (0.0, 0.0). */
-@property (readonly, nonatomic) CBLGeoPoint geoPoint;
+/** The row's geo bounding box in native form.
+    If the row has no geo data, the coordinates will all be 0. */
+@property (readonly, nonatomic) CBLGeoRect boundingBox;
 
 /** The ID of the document described by this view row.
     This is not necessarily the same as the document that caused this row to be emitted; see the discussion of the .sourceDocumentID property for details. */

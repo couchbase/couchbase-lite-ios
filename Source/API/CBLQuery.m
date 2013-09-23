@@ -14,6 +14,15 @@
 #import "MYBlockUtils.h"
 
 
+static inline BOOL CBLGeoRectEqual(CBLGeoRect a, CBLGeoRect b) {
+    return a.min.x == b.min.x && a.min.y == b.min.y && a.max.x == b.max.x && a.max.y == b.max.y;
+}
+
+static inline BOOL CBLGeoRectIsEmpty(CBLGeoRect r) {
+    return r.min.x == r.max.x && r.min.y == r.max.y;
+}
+
+
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
 - (NSArray*) queryViewNamed: (NSString*)viewName
@@ -34,7 +43,7 @@
 
 
 @interface CBLQueryRow ()
-@property (nonatomic) CBLDatabase* database;
+@property (readwrite, nonatomic) CBLDatabase* database;
 @end
 
 
@@ -432,7 +441,7 @@ static id fromJSON( NSData* json ) {
 {
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
     BOOL _hasGeo;
-    CBLGeoPoint _geoPoint;
+    CBLGeoRect _boundingBox;
     __weak id _parsedKey, _parsedValue;
     UInt64 _sequence;
     NSString* _sourceDocID;
@@ -443,7 +452,7 @@ static id fromJSON( NSData* json ) {
 
 
 @synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID,
-            database=_database, localSequence=_sequence, geoPoint=_geoPoint;
+            database=_database, localSequence=_sequence, boundingBox=_boundingBox;
 
 
 - (instancetype) initWithDocID: (NSString*)docID
@@ -476,7 +485,7 @@ static id fromJSON( NSData* json ) {
     return _database == other->_database
         && $equal(_key, other->_key) && $equal(_value, other->_value)
         && _hasGeo == other->_hasGeo
-        && (!_hasGeo || (_geoPoint.x == other->_geoPoint.x && _geoPoint.y == other->_geoPoint.y))
+        && (!_hasGeo || CBLGeoRectEqual(_boundingBox, other->_boundingBox))
         && $equal(_sourceDocID, other->_sourceDocID)
         && $equal(_documentProperties, other->_documentProperties);
 }
@@ -506,15 +515,20 @@ static id fromJSON( NSData* json ) {
     return value;
 }
 
-- (void) setGeoPoint: (CBLGeoPoint)geoPoint {
-    _geoPoint = geoPoint;
+- (void) setBoundingBox:(CBLGeoRect)boundingBox {
+    _boundingBox = boundingBox;
     _hasGeo = YES;
 }
 
 - (NSDictionary*) geometry {
     if (!_hasGeo)
         return nil;
-    return  @{@"type": @"Point", @"coordinates": @[@(_geoPoint.x), @(_geoPoint.y)]};
+    else if (CBLGeoRectIsEmpty(_boundingBox))
+        return  @{@"type": @"Point", @"coordinates": @[@(_boundingBox.min.x), @(_boundingBox.min.y)]};
+    else
+        return  @{@"type": @"Rect", @"coordinates": @[@(_boundingBox.min.x), @(_boundingBox.min.y),
+                                                      @(_boundingBox.max.x), @(_boundingBox.max.y)]};
+
 }
 
 

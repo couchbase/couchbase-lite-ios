@@ -46,9 +46,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 @interface CBLSpecialKey : NSObject
 - (instancetype) initWithText: (NSString*)text;
 @property (readonly, nonatomic) NSString* text;
-- (instancetype) initWithPoint: (CBLGeoPoint)point;
+- (instancetype) initWithRect: (CBLGeoRect)rect;
 - (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON;
-@property (readonly, nonatomic) CBLGeoPoint point;
+@property (readonly, nonatomic) CBLGeoRect rect;
 @end
 
 
@@ -180,7 +180,8 @@ static id fromJSON( NSData* json ) {
         CBLMapEmitBlock emit = ^(id key, id value) {
             NSString* valueJSON = toJSONString(value);
             NSNumber* fullTextID = nil;
-            id geoX = nil, geoY = nil;
+            id geoX0 = nil, geoY0 = nil, geoX1 = nil, geoY1 = nil;
+            NSString* keyJSON = @"null";
             if ([key isKindOfClass: [CBLSpecialKey class]]) {
                 NSString* text = [key text];
                 if (text) {
@@ -190,24 +191,24 @@ static id fromJSON( NSData* json ) {
                         return;
                     }
                     fullTextID = @(_db.fmdb.lastInsertRowId);
-                    LogTo(View, @"    emit( CBLTextKey(\"%@\"), %@)", text, valueJSON);
                 } else {
-                    CBLGeoPoint point = [key point];
-                    geoX = @(point.x);
-                    geoY = @(point.y);
-                    LogTo(View, @"    emit( CBLGeoPointKey(%g, %g), %@)", point.x, point.y, valueJSON);
+                    CBLGeoRect rect = [key rect];
+                    geoX0 = @(rect.min.x);
+                    geoY0 = @(rect.min.y);
+                    geoX1 = @(rect.max.x);
+                    geoY1 = @(rect.max.y);
                 }
+                LogTo(View, @"    emit( %@, %@)", key, valueJSON);
                 key = nil;
-            }
-            if (!key)
-                key = $null;
-            NSString* keyJSON = toJSONString(key);
-
-            if (!fullTextID)
+            } else {
+                if (key)
+                    keyJSON = toJSONString(key);
                 LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, fulltext_id, ax, ay) VALUES "
-                                        "(?, ?, ?, ?, ?, ?, ?)",
-                                        @(viewID), @(sequence), keyJSON, valueJSON, fullTextID, geoX, geoY])
+            }
+
+            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, fulltext_id, ax0, ay0, ax1, ay1) VALUES "
+                                        "(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                        @(viewID), @(sequence), keyJSON, valueJSON, fullTextID, geoX0, geoY0, geoX1, geoY1])
                 ++inserted;
             else
                 emitStatus = _db.lastDbError;
@@ -364,7 +365,7 @@ static id fromJSON( NSData* json ) {
     if (options->includeDocs)
         [sql appendString: @", revid, json"];
     if (options->bbox)
-        [sql appendString: @", ax, ay"];
+        [sql appendString: @", ax0, ay0, ax1, ay1"];
     [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
     NSMutableArray* args = $marray(@(_viewID));
 
@@ -399,8 +400,8 @@ static id fromJSON( NSData* json ) {
     }
     
     if (options->bbox) {
-        [sql appendString: @" AND (maps.ax >= ? AND maps.ax < ?)"
-                            " AND (maps.ay >= ? AND maps.ay < ?)"];
+        [sql appendString: @" AND (maps.ax1 > ? AND maps.ax0 < ?)"
+                            " AND (maps.ay1 > ? AND maps.ay0 < ?)"];
         [args addObject: @(options->bbox->min.x)];
         [args addObject: @(options->bbox->max.x)];
         [args addObject: @(options->bbox->min.y)];
@@ -503,8 +504,12 @@ static id fromJSON( NSData* json ) {
                                                                   key: keyData
                                                                 value: valueData
                                                         docProperties: docContents];
-                if (options->bbox && [r objectForColumnName: @"ax"] != nil)
-                    row.geoPoint = (CBLGeoPoint){[r doubleForColumn: @"ax"],[r doubleForColumn: @"ay"]};
+                if (options->bbox && [r objectForColumnName: @"ax0"] != nil) {
+                    row.boundingBox = (CBLGeoRect){{[r doubleForColumn: @"ax0"],
+                                                    [r doubleForColumn: @"ay0"]},
+                                                   {[r doubleForColumn: @"ax1"],
+                                                    [r doubleForColumn: @"ay1"]}};
+                }
                 [rows addObject: row];
             }
         }
@@ -522,11 +527,19 @@ id CBLTextKey(NSString* text) {
 }
 
 id CBLGeoPointKey(double x, double y) {
-    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
+    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x,y}, {x,y}}];
 }
 
 id CBLGeoJSONKey(NSDictionary* geoJSON) {
-    return [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
+    id key = [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
+    if (!key)
+        Warn(@"CBLGeoJSONKey doesn't recognize %@",
+             [CBLJSON stringWithJSONObject: geoJSON options:0 error: NULL]);
+    return key;
+}
+
+id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
+    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
 }
 
 
@@ -706,7 +719,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 @implementation CBLSpecialKey
 {
     NSString* _text;
-    CBLGeoPoint _point;
+    CBLGeoRect _rect;
 }
 
 - (instancetype) initWithText: (NSString*)text {
@@ -718,10 +731,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     return self;
 }
 
-- (instancetype) initWithPoint: (CBLGeoPoint)point {
+- (instancetype) initWithRect: (CBLGeoRect)rect {
     self = [super init];
     if (self) {
-        _point = point;
+        _rect = rect;
     }
     return self;
 }
@@ -729,25 +742,46 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON {
     self = [super init];
     if (self) {
-        NSNumber* xobj = nil, *yobj = nil;
-        NSString* type = $castIf(NSString, geoJSON[@"type"]);
         NSArray* coordinates = $castIf(NSArray, geoJSON[@"coordinates"]);
-        if ([type isEqualToString: @"Point"] && coordinates.count == 2) {
-            xobj = $castIf(NSNumber, coordinates[0]);
-            yobj = $castIf(NSNumber, coordinates[1]);
-        }
-        if (!xobj || !yobj) {
-            Warn(@"CBLGeoJSONKey doesn't recognize %@",
-                 [CBLJSON dataWithJSONObject: geoJSON options:0 error: NULL]);
+        NSUInteger n = coordinates.count;
+        if (n < 2)
+            return nil;
+        NSNumber* x = $castIf(NSNumber, coordinates[0]);
+        NSNumber* y = $castIf(NSNumber, coordinates[1]);
+        if (!x || !y)
+            return nil;
+        _rect.min.x = x.doubleValue;
+        _rect.min.y = y.doubleValue;
+        NSString* type = $castIf(NSString, geoJSON[@"type"]);
+        if ([type isEqualToString: @"Point"] && n == 2) {
+            _rect.max.x = _rect.min.x;
+            _rect.max.y = _rect.min.y;
+        } else if ([type isEqualToString: @"Rect"] && n == 4) {
+            x = $castIf(NSNumber, coordinates[2]);
+            y = $castIf(NSNumber, coordinates[3]);
+            if (!x || !y)
+                return nil;
+            _rect.max.x = x.doubleValue;
+            _rect.max.y = y.doubleValue;
+        } else {
             return nil;
         }
-        _point.x = xobj.doubleValue;
-        _point.y = yobj.doubleValue;
     }
     return self;
 }
 
-@synthesize text=_text, point=_point;
+@synthesize text=_text, rect=_rect;
+
+- (NSString*) description {
+    if (_text) {
+        return $sprintf(@"CBLTextKey(\"%@\")", _text);
+    } else if (_rect.min.x==_rect.max.x && _rect.min.y==_rect.max.y) {
+        return $sprintf(@"CBLGeoPointKey(%g, %g)", _rect.min.x, _rect.min.y);
+    } else {
+        return $sprintf(@"CBLGeoRectKey({%g, %g}, {%g, %g})",
+                        _rect.min.x, _rect.min.y, _rect.max.x, _rect.max.y);
+    }
+}
 
 @end
 
