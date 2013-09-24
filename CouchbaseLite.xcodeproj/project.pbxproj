@@ -145,11 +145,12 @@
 		27538F8217F1417B004C3BFD /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		27538F8317F14185004C3BFD /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		27538F8417F14198004C3BFD /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
-		27538F8617F14504004C3BFD /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
-		27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
+		27538F8617F14504004C3BFD /* CouchbaseLite.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
+		27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
 		27538F8917F148C2004C3BFD /* LiteServ.icns in Resources */ = {isa = PBXBuildFile; fileRef = 27538F8817F148C2004C3BFD /* LiteServ.icns */; };
 		27538F8B17F14A73004C3BFD /* LiteServ_MenubarIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27538F8A17F14A73004C3BFD /* LiteServ_MenubarIcon.png */; };
 		27538F8F17F15057004C3BFD /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27538F8E17F15057004C3BFD /* ScriptingBridge.framework */; };
+		27538F9317F1D2AC004C3BFD /* LiteServ in Copy Tool */ = {isa = PBXBuildFile; fileRef = 270FE0C814C5008C005FF647 /* LiteServ */; };
 		275A24E016B986CD00561DF0 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -525,6 +526,27 @@
 			remoteGlobalIDString = 270B3DE91489359000E0A926;
 			remoteInfo = TouchDB;
 		};
+		27538F9017F1D279004C3BFD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270FE0C714C5008C005FF647;
+			remoteInfo = LiteServ;
+		};
+		27538F9417F1D327004C3BFD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270B3DE91489359000E0A926;
+			remoteInfo = "CBL Mac";
+		};
+		27538F9617F1D327004C3BFD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 275315D414ACF0A10065964D;
+			remoteInfo = "CBL Listener Mac";
+		};
 		275A290A1649A54500B0D8EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -619,15 +641,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		27538F8517F144E6004C3BFD /* CopyFiles */ = {
+		27538F8517F144E6004C3BFD /* Copy Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				27538F8617F14504004C3BFD /* CouchbaseLite.framework in CopyFiles */,
-				27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in CopyFiles */,
+				27538F8617F14504004C3BFD /* CouchbaseLite.framework in Copy Frameworks */,
+				27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in Copy Frameworks */,
 			);
+			name = "Copy Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27538F9217F1D285004C3BFD /* Copy Tool */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Tools;
+			dstSubfolderSpec = 1;
+			files = (
+				27538F9317F1D2AC004C3BFD /* LiteServ in Copy Tool */,
+			);
+			name = "Copy Tool";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		27C706C51488668A00F0F099 /* CopyFiles */ = {
@@ -2075,11 +2109,15 @@
 				27538F4C17F13B03004C3BFD /* Sources */,
 				27538F4D17F13B03004C3BFD /* Frameworks */,
 				27538F4E17F13B03004C3BFD /* Resources */,
-				27538F8517F144E6004C3BFD /* CopyFiles */,
+				27538F8517F144E6004C3BFD /* Copy Frameworks */,
+				27538F9217F1D285004C3BFD /* Copy Tool */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				27538F9517F1D327004C3BFD /* PBXTargetDependency */,
+				27538F9717F1D327004C3BFD /* PBXTargetDependency */,
+				27538F9117F1D279004C3BFD /* PBXTargetDependency */,
 			);
 			name = "LiteServ App";
 			productName = "LiteServ App";
@@ -2243,6 +2281,9 @@
 			attributes = {
 				LastUpgradeCheck = 0500;
 				TargetAttributes = {
+					27538F4F17F13B03004C3BFD = {
+						DevelopmentTeam = N2Q372V7W2;
+					};
 					27B0B80A1492C16300A817AD = {
 						DevelopmentTeam = KAZWMGZL2X;
 					};
@@ -2796,6 +2837,21 @@
 			target = 270B3DE91489359000E0A926 /* CBL Mac */;
 			targetProxy = 275315FD14ACF87F0065964D /* PBXContainerItemProxy */;
 		};
+		27538F9117F1D279004C3BFD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270FE0C714C5008C005FF647 /* LiteServ */;
+			targetProxy = 27538F9017F1D279004C3BFD /* PBXContainerItemProxy */;
+		};
+		27538F9517F1D327004C3BFD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270B3DE91489359000E0A926 /* CBL Mac */;
+			targetProxy = 27538F9417F1D327004C3BFD /* PBXContainerItemProxy */;
+		};
+		27538F9717F1D327004C3BFD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 275315D414ACF0A10065964D /* CBL Listener Mac */;
+			targetProxy = 27538F9617F1D327004C3BFD /* PBXContainerItemProxy */;
+		};
 		275A290B1649A54500B0D8EE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 270B3DE91489359000E0A926 /* CBL Mac */;
@@ -2968,6 +3024,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CODE_SIGN_IDENTITY = "Mac Developer: Jens Alfke (4RH3RRNK4H)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2990,6 +3047,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CODE_SIGN_IDENTITY = "Mac Developer: Jens Alfke (4RH3RRNK4H)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -3024,7 +3082,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				LD_RUNPATH_SEARCH_PATHS = "@loader_path/";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/ @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3040,7 +3098,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				LD_RUNPATH_SEARCH_PATHS = "@loader_path/";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/ @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -3052,6 +3110,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				CODE_SIGN_IDENTITY = "Mac Developer: Jens Alfke (4RH3RRNK4H)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -3082,6 +3141,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
+				CODE_SIGN_IDENTITY = "Mac Developer: Jens Alfke (4RH3RRNK4H)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -3117,6 +3177,7 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -3149,6 +3210,7 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
