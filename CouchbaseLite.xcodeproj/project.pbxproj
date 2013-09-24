@@ -155,6 +155,7 @@
 		27538F9C17F1D957004C3BFD /* ToolInstallController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27538F9B17F1D957004C3BFD /* ToolInstallController.xib */; };
 		27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */; };
 		27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
+		27538FA317F1ECE8004C3BFD /* LoggingMode.c in Sources */ = {isa = PBXBuildFile; fileRef = 27538FA217F1ECE8004C3BFD /* LoggingMode.c */; };
 		275A24E016B986CD00561DF0 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -812,6 +813,8 @@
 		27538F9B17F1D957004C3BFD /* ToolInstallController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ToolInstallController.xib; sourceTree = "<group>"; };
 		27538F9D17F1D9D6004C3BFD /* PrivilegedInstall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrivilegedInstall.h; sourceTree = "<group>"; };
 		27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivilegedInstall.m; sourceTree = "<group>"; };
+		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
+		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
 		2766EFF614DB7F9F009ECCA8 /* CBLMultipartWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartWriter.h; sourceTree = "<group>"; };
 		2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartWriter.m; sourceTree = "<group>"; };
 		2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultiStreamWriter.h; sourceTree = "<group>"; };
@@ -972,7 +975,7 @@
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27ED862E157D0FC600712B33 /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		27ED862F157D0FC600712B33 /* CBLDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocument.m; sourceTree = "<group>"; };
-		27ED9A961639D8D2000C844A /* LiteServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LiteServ.m; sourceTree = "<group>"; };
+		27ED9A961639D8D2000C844A /* LiteServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LiteServ.m; path = ../Listener/LiteServ.m; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* CBLDatabase+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Internal.h"; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Internal.m"; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -1413,7 +1416,6 @@
 				2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */,
 				27E11F0E14AD15940006B340 /* CBLHTTPResponse.h */,
 				27E11F0F14AD15940006B340 /* CBLHTTPResponse.m */,
-				27ED9A961639D8D2000C844A /* LiteServ.m */,
 				275315D814ACF0A20065964D /* Supporting Files */,
 			);
 			path = Listener;
@@ -1434,10 +1436,13 @@
 			children = (
 				27538F5E17F13B03004C3BFD /* AppDelegate.h */,
 				27538F5F17F13B03004C3BFD /* AppDelegate.m */,
+				27ED9A961639D8D2000C844A /* LiteServ.m */,
 				27538F9817F1D93F004C3BFD /* ToolInstallController.h */,
 				27538F9917F1D93F004C3BFD /* ToolInstallController.m */,
 				27538F9D17F1D9D6004C3BFD /* PrivilegedInstall.h */,
 				27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */,
+				27538FA117F1ECE8004C3BFD /* LoggingMode.h */,
+				27538FA217F1ECE8004C3BFD /* LoggingMode.c */,
 				27538F8D17F14FB6004C3BFD /* Terminal.h */,
 				27538F6117F13B03004C3BFD /* MainMenu.xib */,
 				27538F9B17F1D957004C3BFD /* ToolInstallController.xib */,
@@ -2641,6 +2646,7 @@
 				27538F6017F13B03004C3BFD /* AppDelegate.m in Sources */,
 				27538F5917F13B03004C3BFD /* main.m in Sources */,
 				27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */,
+				27538FA317F1ECE8004C3BFD /* LoggingMode.c in Sources */,
 				27538F8317F14185004C3BFD /* CBLJSFunction.m in Sources */,
 				27538F9A17F1D93F004C3BFD /* ToolInstallController.m in Sources */,
 				27538F8217F1417B004C3BFD /* CBLJSViewCompiler.m in Sources */,
@@ -3187,6 +3193,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -3221,6 +3228,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BOOL_CONVERSION = YES;

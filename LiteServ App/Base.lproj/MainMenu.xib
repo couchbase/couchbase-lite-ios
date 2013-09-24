@@ -662,16 +662,22 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="kwG-5E-mzl"/>
+                <menuItem title="Install Tool…" id="Gtz-1L-8tu">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="showToolInstaller:" target="494" id="VdQ-ON-q1N"/>
+                    </connections>
+                </menuItem>
                 <menuItem title="Admin Interface" id="IM8-77-niD">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="openAdmin:" target="494" id="SUK-FU-4Tc"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Install Tool…" id="Gtz-1L-8tu">
+                <menuItem title="View Logs" id="sRD-84-tGc">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="showToolInstaller:" target="494" id="VdQ-ON-q1N"/>
+                        <action selector="viewLogs:" target="494" id="WxZ-pQ-rR3"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="0b1-1i-eRR"/>

@@ -16,6 +16,7 @@
 - (IBAction) about: (id)sender;
 - (IBAction) quit: (id)sender;
 - (IBAction) openAdmin: (id)sender;
+- (IBAction) viewLogs: (id)sender;
 - (IBAction) showToolInstaller: (id)sender;
 
 @end

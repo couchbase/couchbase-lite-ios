@@ -9,6 +9,7 @@
 #import "AppDelegate.h"
 #import "ToolInstallController.h"
 #import "Terminal.h"
+#import "LoggingMode.h"
 
 #import "CouchbaseLite.h"
 #import "CBLListener.h"
@@ -20,12 +21,17 @@
 
 @implementation AppDelegate
 {
+    BOOL _loggingToFile;
     NSStatusItem* _statusItem;
+    CBLManager* _manager;
+    CBLListener* _listener;
 }
 
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+    _loggingToFile = [self redirectLogging];
+
     _statusItem=[[NSStatusBar systemStatusBar] statusItemWithLength: NSSquareStatusItemLength];
     NSImage *statusIcon = [NSImage imageNamed:@"LiteServ_MenubarIcon.png"];
     statusIcon.size = NSMakeSize(16,16);
@@ -40,23 +46,38 @@
 }
 
 
+- (NSString*) logFile {
+    return [NSHomeDirectory() stringByAppendingPathComponent: @"Library/Logs/LiteServ.log"];
+}
+
+
+- (BOOL) redirectLogging {
+    if (GetLoggingMode() != kLoggingToNowhere)
+        return NO;
+    freopen(self.logFile.fileSystemRepresentation, "a", stderr);
+    fputs("\n\n\n\n", stderr);
+    fflush(stderr);
+    return YES;
+}
+
+
 - (void) startLiteServ {
-    CBLManager* manager = [CBLManager sharedInstance];
+    NSLog(@"Starting LiteServ.app ...");
 
     [CBLView setCompiler: [[CBLJSViewCompiler alloc] init]];
 
     // Start a listener socket:
-    CBLListener* listener = [[CBLListener alloc] initWithManager: manager port: kServerPort];
-    NSCAssert(listener!=nil, @"Couldn't create CBLListener");
+    _manager = [CBLManager sharedInstance];
+    _listener = [[CBLListener alloc] initWithManager: _manager port: kServerPort];
+    NSCAssert(_listener!=nil, @"Couldn't create CBLListener");
     // Advertise via Bonjour:
-    [listener setBonjourName: @"LiteServ" type: @"_cbl._tcp."];
+    //[listener setBonjourName: @"LiteServ" type: @"_cbl._tcp."];
 
     NSError* error;
-    if (![listener start: &error]) {
+    if (![_listener start: &error]) {
         [self fatalError: error];
-        exit(1);
     }
-    NSLog(@"LiteServ is listening...");
+    NSLog(@"LiteServ is listening on port %d", _listener.port);
 }
 
 
@@ -77,6 +98,11 @@
 
 
 - (IBAction) quit:(id)sender {
+    NSLog(@"Quitting LiteServ.app");
+
+    [_listener stop];
+    [_manager close];
+
     [(NSApplication*)NSApp terminate: self];
 }
 
@@ -104,7 +130,7 @@
         }
     }
 
-    // Create a "cd" command.
+    // Run the command.
     NSString * command = [NSString stringWithFormat: @"curl :%d/", kServerPort];
     [terminal doScript: command in: currentTab];
 
@@ -115,8 +141,23 @@
 }
 
 
+- (IBAction) viewLogs: (id)sender {
+    [[NSWorkspace sharedWorkspace] openFile: self.logFile];
+}
+
+
 -(IBAction) showToolInstaller: (id)sender {
     [ToolInstallController show];
 }
+
+
+- (BOOL) validateUserInterfaceItem: (id<NSValidatedUserInterfaceItem>)item {
+    if (item.action == @selector(viewLogs:)) {
+        return _loggingToFile;
+    } else {
+        return YES;
+    }
+}
+
 
 @end
