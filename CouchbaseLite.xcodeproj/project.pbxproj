@@ -134,6 +134,22 @@
 		2753160214ACF9330065964D /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2753160C14ACFC2A0065964D /* CBLHTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753160A14ACFC2A0065964D /* CBLHTTPConnection.h */; };
 		2753160D14ACFC2A0065964D /* CBLHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */; };
+		27538F5117F13B03004C3BFD /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
+		27538F5717F13B03004C3BFD /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 27538F5517F13B03004C3BFD /* InfoPlist.strings */; };
+		27538F5917F13B03004C3BFD /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F5817F13B03004C3BFD /* main.m */; };
+		27538F5D17F13B03004C3BFD /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 27538F5B17F13B03004C3BFD /* Credits.rtf */; };
+		27538F6017F13B03004C3BFD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F5F17F13B03004C3BFD /* AppDelegate.m */; };
+		27538F6317F13B03004C3BFD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27538F6117F13B03004C3BFD /* MainMenu.xib */; };
+		27538F8017F140DD004C3BFD /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
+		27538F8117F140DD004C3BFD /* CouchbaseLiteListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
+		27538F8217F1417B004C3BFD /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
+		27538F8317F14185004C3BFD /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
+		27538F8417F14198004C3BFD /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
+		27538F8617F14504004C3BFD /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
+		27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
+		27538F8917F148C2004C3BFD /* LiteServ.icns in Resources */ = {isa = PBXBuildFile; fileRef = 27538F8817F148C2004C3BFD /* LiteServ.icns */; };
+		27538F8B17F14A73004C3BFD /* LiteServ_MenubarIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27538F8A17F14A73004C3BFD /* LiteServ_MenubarIcon.png */; };
+		27538F8F17F15057004C3BFD /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27538F8E17F15057004C3BFD /* ScriptingBridge.framework */; };
 		275A24E016B986CD00561DF0 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -603,6 +619,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		27538F8517F144E6004C3BFD /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				27538F8617F14504004C3BFD /* CouchbaseLite.framework in CopyFiles */,
+				27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27C706C51488668A00F0F099 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -729,6 +756,19 @@
 		275315FA14ACF7FF0065964D /* CouchbaseLiteListener.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = CouchbaseLiteListener.exp; sourceTree = "<group>"; };
 		2753160A14ACFC2A0065964D /* CBLHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLHTTPConnection.h; sourceTree = "<group>"; };
 		2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLHTTPConnection.m; sourceTree = "<group>"; };
+		27538F5017F13B03004C3BFD /* LiteServ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiteServ.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		27538F5417F13B03004C3BFD /* LiteServ App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "LiteServ App-Info.plist"; sourceTree = "<group>"; };
+		27538F5617F13B03004C3BFD /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		27538F5817F13B03004C3BFD /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		27538F5C17F13B03004C3BFD /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		27538F5E17F13B03004C3BFD /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		27538F5F17F13B03004C3BFD /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		27538F6217F13B03004C3BFD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		27538F6B17F13B03004C3BFD /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		27538F8817F148C2004C3BFD /* LiteServ.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = LiteServ.icns; sourceTree = "<group>"; };
+		27538F8A17F14A73004C3BFD /* LiteServ_MenubarIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = LiteServ_MenubarIcon.png; sourceTree = "<group>"; };
+		27538F8D17F14FB6004C3BFD /* Terminal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Terminal.h; sourceTree = "<group>"; };
+		27538F8E17F15057004C3BFD /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		2766EFF614DB7F9F009ECCA8 /* CBLMultipartWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartWriter.h; sourceTree = "<group>"; };
 		2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartWriter.m; sourceTree = "<group>"; };
 		2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultiStreamWriter.h; sourceTree = "<group>"; };
@@ -1015,6 +1055,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27538F4D17F13B03004C3BFD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27538F8F17F15057004C3BFD /* ScriptingBridge.framework in Frameworks */,
+				27538F8417F14198004C3BFD /* JavaScriptCore.framework in Frameworks */,
+				27538F8017F140DD004C3BFD /* CouchbaseLite.framework in Frameworks */,
+				27538F8117F140DD004C3BFD /* CouchbaseLiteListener.framework in Frameworks */,
+				27538F5117F13B03004C3BFD /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27731F1D1495CFEF00815D67 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1113,6 +1165,7 @@
 				27DA4300158F9D7A00F9E7B5 /* API */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				275315D714ACF0A20065964D /* Listener */,
+				27538F5217F13B03004C3BFD /* LiteServ App */,
 				792867C1178DE01900248AF0 /* CBLJSViewCompiler */,
 				27C706CA1488679500F0F099 /* Demo-Mac */,
 				27B0B8111492C16300A817AD /* Demo-iOS */,
@@ -1152,6 +1205,7 @@
 				DA147C3614BCAC3B0052DA4D /* CouchbaseLiteListener.framework */,
 				270FE0C814C5008C005FF647 /* LiteServ */,
 				792867BF178DE01900248AF0 /* libCBLJSViewCompiler.a */,
+				27538F5017F13B03004C3BFD /* LiteServ.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1331,6 +1385,31 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		27538F5217F13B03004C3BFD /* LiteServ App */ = {
+			isa = PBXGroup;
+			children = (
+				27538F5E17F13B03004C3BFD /* AppDelegate.h */,
+				27538F5F17F13B03004C3BFD /* AppDelegate.m */,
+				27538F8D17F14FB6004C3BFD /* Terminal.h */,
+				27538F6117F13B03004C3BFD /* MainMenu.xib */,
+				27538F5317F13B03004C3BFD /* Supporting Files */,
+			);
+			path = "LiteServ App";
+			sourceTree = "<group>";
+		};
+		27538F5317F13B03004C3BFD /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				27538F5417F13B03004C3BFD /* LiteServ App-Info.plist */,
+				27538F5517F13B03004C3BFD /* InfoPlist.strings */,
+				27538F8817F148C2004C3BFD /* LiteServ.icns */,
+				27538F8A17F14A73004C3BFD /* LiteServ_MenubarIcon.png */,
+				27538F5817F13B03004C3BFD /* main.m */,
+				27538F5B17F13B03004C3BFD /* Credits.rtf */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		2776A5A316A48EEB006FF199 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
@@ -1481,6 +1560,7 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27538F8E17F15057004C3BFD /* ScriptingBridge.framework */,
 				792867D3178DE33E00248AF0 /* JavaScriptCore.framework */,
 				27C7066F1488634300F0F099 /* AppKit.framework */,
 				27F0745C11CD50A600E9A2AB /* Foundation.framework */,
@@ -1490,6 +1570,7 @@
 				27B0B7B81492B83C00A817AD /* UIKit.framework */,
 				27B0B7E81492BB6B00A817AD /* CoreFoundation.framework */,
 				27B0B80F1492C16300A817AD /* CoreGraphics.framework */,
+				27538F6B17F13B03004C3BFD /* XCTest.framework */,
 				27C70699148864BA00F0F099 /* Other Frameworks */,
 				27B0B7F81492BC8000A817AD /* libsqlite3.dylib */,
 				27DB90DC14DB250500FC7118 /* libz.dylib */,
@@ -1987,6 +2068,24 @@
 			productReference = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		27538F4F17F13B03004C3BFD /* LiteServ App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27538F7C17F13B04004C3BFD /* Build configuration list for PBXNativeTarget "LiteServ App" */;
+			buildPhases = (
+				27538F4C17F13B03004C3BFD /* Sources */,
+				27538F4D17F13B03004C3BFD /* Frameworks */,
+				27538F4E17F13B03004C3BFD /* Resources */,
+				27538F8517F144E6004C3BFD /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "LiteServ App";
+			productName = "LiteServ App";
+			productReference = 27538F5017F13B03004C3BFD /* LiteServ.app */;
+			productType = "com.apple.product-type.application";
+		};
 		27731F131495CFEF00815D67 /* CBL iOS Empty App */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27731F271495CFEF00815D67 /* Build configuration list for PBXNativeTarget "CBL iOS Empty App" */;
@@ -2155,6 +2254,7 @@
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* CouchLite */;
 			projectDirPath = "";
@@ -2170,6 +2270,7 @@
 				DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */,
 				DA023B2614BCA94C008184BB /* Listener iOS Library */,
 				270FE0C714C5008C005FF647 /* LiteServ */,
+				27538F4F17F13B03004C3BFD /* LiteServ App */,
 				275A29061649A54000B0D8EE /* All */,
 				792867BE178DE01900248AF0 /* CBLJSViewCompiler */,
 				27FA59EA179EEACA0043460A /* Documentation */,
@@ -2190,6 +2291,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				275315DC14ACF0A20065964D /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27538F4E17F13B03004C3BFD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27538F5717F13B03004C3BFD /* InfoPlist.strings in Resources */,
+				27538F8B17F14A73004C3BFD /* LiteServ_MenubarIcon.png in Resources */,
+				27538F5D17F13B03004C3BFD /* Credits.rtf in Resources */,
+				27538F8917F148C2004C3BFD /* LiteServ.icns in Resources */,
+				27538F6317F13B03004C3BFD /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2461,6 +2574,17 @@
 				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
 				279CE39014D1EDA0009F3FA6 /* Test.m in Sources */,
 				27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27538F4C17F13B03004C3BFD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27538F6017F13B03004C3BFD /* AppDelegate.m in Sources */,
+				27538F5917F13B03004C3BFD /* main.m in Sources */,
+				27538F8317F14185004C3BFD /* CBLJSFunction.m in Sources */,
+				27538F8217F1417B004C3BFD /* CBLJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2748,6 +2872,30 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
+		27538F5517F13B03004C3BFD /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				27538F5617F13B03004C3BFD /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		27538F5B17F13B03004C3BFD /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				27538F5C17F13B03004C3BFD /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+		27538F6117F13B03004C3BFD /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				27538F6217F13B03004C3BFD /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
 		27B0B8141492C16300A817AD /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -2954,6 +3102,66 @@
 				PRODUCT_NAME = CouchbaseLiteListener;
 				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		27538F7817F13B04004C3BFD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				INFOPLIST_FILE = "LiteServ App/LiteServ App-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = LiteServ;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		27538F7917F13B04004C3BFD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				INFOPLIST_FILE = "LiteServ App/LiteServ App-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = LiteServ;
+				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
 		};
@@ -3498,6 +3706,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		27538F7C17F13B04004C3BFD /* Build configuration list for PBXNativeTarget "LiteServ App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27538F7817F13B04004C3BFD /* Debug */,
+				27538F7917F13B04004C3BFD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		275A29071649A54000B0D8EE /* Build configuration list for PBXAggregateTarget "All" */ = {
 			isa = XCConfigurationList;
