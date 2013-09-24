@@ -42,6 +42,8 @@ NSURL* RemoteTestDBURL(NSString* dbName) {
     NSString* urlStr = [[NSProcessInfo processInfo] environment][@"CBL_TEST_SERVER"];
     if (!urlStr)
         urlStr = kDefaultRemoteTestServer;
+    else if (urlStr.length == 0)
+        return nil;
     NSURL* server = [NSURL URLWithString: urlStr];
     return [server URLByAppendingPathComponent: dbName];
 }
@@ -180,10 +182,15 @@ TestCase(CBL_Pusher) {
     
     // Push them to the remote:
     NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
-    deleteRemoteDB(remoteDB);
-    id lastSeq = replic8(db, remoteDB, YES, @"filter");
-    CAssertEqual(lastSeq, @"3");
-    CAssertEq(filterCalls, 2);
+    if (remoteDB) {
+        deleteRemoteDB(remoteDB);
+        id lastSeq = replic8(db, remoteDB, YES, @"filter");
+        CAssertEqual(lastSeq, @"3");
+        CAssertEq(filterCalls, 2);
+    } else {
+        Warn(@"Skipping rest of test CBL_Pusher (no remote test DB URL)");
+        return;
+    }
     
     [db close];
     [server close];
@@ -192,11 +199,16 @@ TestCase(CBL_Pusher) {
 
 TestCase(CBL_Puller) {
     RequireTestCase(CBL_Pusher);
+    NSURL* remoteURL = RemoteTestDBURL(kScratchDBName);
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+        return;
+    }
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
     
-    id lastSeq = replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    id lastSeq = replic8(db, remoteURL, NO, nil);
     CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
@@ -223,11 +235,16 @@ TestCase(CBL_Puller) {
 
 TestCase(CBL_Puller_Continuous) {
     RequireTestCase(CBL_Puller);
+    NSURL* remoteURL = RemoteTestDBURL(kScratchDBName);
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote URL");
+        return;
+    }
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
 
-    id lastSeq = replic8Continuous(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    id lastSeq = replic8Continuous(db, remoteURL, NO, nil);
     CAssertEqual(lastSeq, @2);
 
     CAssertEq(db.documentCount, 2u);
@@ -235,7 +252,7 @@ TestCase(CBL_Puller_Continuous) {
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8Continuous(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    replic8Continuous(db, remoteURL, NO, nil);
     CAssertEq(db.lastSequenceNumber, 3);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -255,12 +272,17 @@ TestCase(CBL_Puller_Continuous) {
 TestCase(CBLPuller_DocIDs) {
     RequireTestCase(CBL_Pusher);
     
+    NSURL* remote = RemoteTestDBURL(kScratchDBName);
+    if (!remote) {
+        Warn(@"Skipping test: no remote URL");
+        return;
+    }
+
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBLPuller_DocIDs_Test"];
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
 
     // Start a named document pull replication.
-    NSURL* remote = RemoteTestDBURL(kScratchDBName);
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                      push: NO continuous: NO];
     repl.docIDs = @[@"doc1"];
@@ -305,11 +327,17 @@ TestCase(CBLPuller_DocIDs) {
 
 TestCase(CBL_Puller_FromCouchApp) {
     RequireTestCase(CBL_Puller);
+    NSURL* remote = RemoteTestDBURL(kCouchAppDBName);
+    if (!remote) {
+        Warn(@"Skipping test: no remote URL");
+        return;
+    }
+
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
     CBLDatabase* db = [server createDatabaseNamed: kCouchAppDBName error: NULL];
     CAssert(db);
     
-    replic8(db, RemoteTestDBURL(kCouchAppDBName), NO, nil);
+    replic8(db, remote, NO, nil);
 
     CBLStatus status;
     CBL_Revision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kCBLIncludeAttachments status: &status];

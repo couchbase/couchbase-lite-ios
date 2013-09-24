@@ -117,6 +117,10 @@ TestCase(CBLMultipartDownloader) {
     
     CBLDatabase* db = [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CBLMultipartDownloader"]];
     NSString* urlStr = RemoteTestDBURL(kAttachTestDBName).absoluteString;
+    if (!urlStr) {
+        Warn(@"Skipping test CBLMultipartDownloader (no remote test DB URL)");
+        return;
+    }
     urlStr = [urlStr stringByAppendingString: @"/oneBigAttachment?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;

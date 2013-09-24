@@ -42,6 +42,14 @@ BOOL CBLGeoCoordPairToPoint(NSArray* coords, CBLGeoPoint* outPoint) {
 }
 
 
+BOOL CBLGeoCoordsToRect(NSArray* coords, CBLGeoRect* outRect) {
+    if (![coords isKindOfClass: [NSArray class]] || coords.count != 4)
+        return NO;
+    return CBLGeoCoordPairToPoint([coords subarrayWithRange: NSMakeRange(0,2)], &outRect->min)
+        && CBLGeoCoordPairToPoint([coords subarrayWithRange: NSMakeRange(2,2)], &outRect->max);
+}
+
+
 BOOL CBLGeoJSONBoundingBox(NSDictionary* geoJSON, CBLGeoRect* outRect) {
     // http://geojson.org/geojson-spec.html
     NSArray* coordinates = $castIf(NSArray, geoJSON[@"coordinates"]);

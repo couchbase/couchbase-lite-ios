@@ -405,11 +405,14 @@ TestCase(CBL_View_GeoQuery) {
     CBLStatus status;
     NSArray* rows = [view _queryWithOptions: &options status: &status];
     NSArray* expectedRows = @[$dict({@"id", @"xxx"},
-                                    {@"geometry", mkGeoRect(-115, -10, -90, 12)}),
+                                    {@"geometry", mkGeoRect(-115, -10, -90, 12)},
+                                    {@"bbox", @[@-115, @-10, @-90, @12]}),
                                $dict({@"id", @"aus"},
-                                     {@"geometry", mkGeoPoint(-97.75, 30.25)}),
+                                     {@"geometry", mkGeoPoint(-97.75, 30.25)},
+                                     {@"bbox", @[@-97.75, @30.25, @-97.75, @30.25]}),
                                $dict({@"id", @"diy"},
-                                     {@"geometry", mkGeoPoint(40.12, 37.53)})];
+                                     {@"geometry", mkGeoPoint(40.12, 37.53)},
+                                     {@"bbox", @[@40.12, @37.53, @40.12, @37.53]})];
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
     // Now try again using the public API:
@@ -813,9 +816,12 @@ TestCase(CBL_View_FullTextQuery) {
     NSArray* rows = [view _queryWithOptions: &options status: &status];
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rows);
-    NSArray* expectedRows = $array($dict({@"id",  @"44444"}, {@"key", $null},
+    NSArray* expectedRows = $array($dict({@"id",  @"44444"},
+                                         {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
                                          {@"value", @"44444"}),
-                                   $dict({@"id",  @"33333"}, {@"key", $null},
+                                   $dict({@"id",  @"33333"},
+                                         {@"matches", @[@{@"range": @[@2,  @3], @"term": @1},
+                                                        @{@"range": @[@26, @3], @"term": @1}]},
                                          {@"value", @"33333"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
@@ -867,7 +873,9 @@ TestCase(CBL_View_FullTextQuery) {
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"after deletion, rows = %@", rows);
 
-    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", $null}, {@"value", @"44444"}));
+    expectedRows = $array($dict({@"id",  @"44444"},
+                                {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
+                                {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
 }
 

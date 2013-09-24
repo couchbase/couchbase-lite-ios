@@ -94,6 +94,26 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 }
 
 
+// Override to add FTS result info
+- (NSDictionary*) asJSONDictionary {
+    NSMutableDictionary* dict = [[super asJSONDictionary] mutableCopy];
+    if (!dict[@"error"]) {
+        [dict removeObjectForKey: @"key"];
+        if (_snippet)
+            dict[@"snippet"] = _snippet;
+        if (_matchOffsets) {
+            NSMutableArray* matches = [[NSMutableArray alloc] init];
+            for (NSUInteger i = 0; i < _matchOffsets.count; i += 4) {
+                [matches addObject: @{@"term": _matchOffsets[i+1],
+                                      @"range": @[_matchOffsets[i+2], _matchOffsets[i+3]]}];
+            }
+            dict[@"matches"] = matches;
+        }
+    }
+    return dict;
+}
+
+
 @end
 
 

@@ -169,8 +169,12 @@ TestCase(CBLChangeTracker_SSL) {
 
 TestCase(CBLChangeTracker_Auth) {
     // This database requires authentication to access at all.
+    NSURL* url = RemoteTestDBURL(@"tdpuller_test2_auth");
+    if (!url) {
+        Warn(@"Skipping test; no remote DB URL configured");
+        return;
+    }
     CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
-    NSURL* url = [NSURL URLWithString: @"https://dummy@snej.iriscouch.com/tdpuller_test2_auth"];
     addTemporaryCredential(url, @"snejdom", @"dummy", @"dummy");
 
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];

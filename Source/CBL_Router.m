@@ -23,6 +23,7 @@
 #import "CBLInternal.h"
 #import "CBLJSON.h"
 #import "CBLMisc.h"
+#import "CBLGeometry.h"
 
 #import "ExceptionUtils.h"
 #import "CollectionUtils.h"
@@ -206,7 +207,8 @@
     options->reduce =  [self boolQuery: @"reduce"];
     options->group = [self boolQuery: @"group"];
     options->content = [self contentOptions];
-    
+
+    // Handle 'keys' and 'key' options:
     NSError* error = nil;
     id keys = [self jsonQuery: @"keys" error: &error];
     if (error || (keys && ![keys isKindOfClass: [NSArray class]]))
@@ -222,6 +224,7 @@
     if (keys) {
         options->keys = [self retainQuery: keys];
     } else {
+        // Handle 'startkey' and 'endkey':
         options->startKey = [self retainQuery: [self jsonQuery: @"startkey" error: &error]];
         if (error)
             return NO;
@@ -229,6 +232,26 @@
         if (error)
             return NO;
     }
+
+    // Nonstandard full-text search options 'full_text', 'snippets', 'ranking':
+    options->fullTextQuery = [self retainQuery: [self query: @"full_text"]];
+    options->fullTextSnippets = [self boolQuery: @"snippets"];
+    if ([self query: @"ranking"])
+        options->fullTextRanking = [self boolQuery: @"ranking"];
+
+    // Nonstandard geo-query option 'bbox':
+    NSArray* jsonBBox = [self jsonQuery: @"bbox" error: &error];
+    if (error)
+        return NO;
+    if (jsonBBox) {
+        CBLGeoRect bbox;
+        if (!CBLGeoCoordsToRect(jsonBBox, &bbox))
+            return NO;
+        NSData* savedBbox = [NSData dataWithBytes: &bbox length: sizeof(bbox)];
+        [_queryRetainer addObject: savedBbox];
+        options->bbox = savedBbox.bytes;
+    }
+
     return YES;
 }
 

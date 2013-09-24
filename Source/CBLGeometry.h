@@ -52,9 +52,11 @@ BOOL CBLGeoJSONBoundingBox(NSDictionary* geoJSON, CBLGeoRect* outBBox);
 /** Converts a point to a JSON-compatible array of two coordinates. */
 NSArray* CBLGeoPointToCoordPair(CBLGeoPoint pt);
 
-/** Converts an array of two coordinates back into a point. */
+/** Converts a JSON array of two coordinates [x,y] back into a point. */
 BOOL CBLGeoCoordPairToPoint(NSArray* coords, CBLGeoPoint* outPoint);
 
+/** Converts a JSON array of four coordinates [x0, y0, x1, y1] to a rectangle. */
+BOOL CBLGeoCoordsToRect(NSArray* coords, CBLGeoRect* outRect);
 
 #pragma mark - KEYS FOR MAP FUNCTIONS:
 

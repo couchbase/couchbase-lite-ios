@@ -44,6 +44,17 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 @implementation CBLDatabase (Internal)
 
 
+#if 0
++ (void) initialize {
+    if (self == [CBLDatabase class]) {
+        int i = 0;
+        while (NULL != (const char *opt = sqlite3_compileoption_get(i++))
+               Log(@"SQLite has option '%s'", opt);
+    }
+}
+#endif
+
+
 - (FMDatabase*) fmdb {
     return _fmdb;
 }
