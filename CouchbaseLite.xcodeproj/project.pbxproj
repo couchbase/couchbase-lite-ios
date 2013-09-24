@@ -151,6 +151,10 @@
 		27538F8B17F14A73004C3BFD /* LiteServ_MenubarIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27538F8A17F14A73004C3BFD /* LiteServ_MenubarIcon.png */; };
 		27538F8F17F15057004C3BFD /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27538F8E17F15057004C3BFD /* ScriptingBridge.framework */; };
 		27538F9317F1D2AC004C3BFD /* LiteServ in Copy Tool */ = {isa = PBXBuildFile; fileRef = 270FE0C814C5008C005FF647 /* LiteServ */; };
+		27538F9A17F1D93F004C3BFD /* ToolInstallController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9917F1D93F004C3BFD /* ToolInstallController.m */; };
+		27538F9C17F1D957004C3BFD /* ToolInstallController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27538F9B17F1D957004C3BFD /* ToolInstallController.xib */; };
+		27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */; };
+		27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		275A24E016B986CD00561DF0 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 272B85121523691700A90CB2 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -803,6 +807,11 @@
 		27538F8A17F14A73004C3BFD /* LiteServ_MenubarIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = LiteServ_MenubarIcon.png; sourceTree = "<group>"; };
 		27538F8D17F14FB6004C3BFD /* Terminal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Terminal.h; sourceTree = "<group>"; };
 		27538F8E17F15057004C3BFD /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
+		27538F9817F1D93F004C3BFD /* ToolInstallController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToolInstallController.h; sourceTree = "<group>"; };
+		27538F9917F1D93F004C3BFD /* ToolInstallController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ToolInstallController.m; sourceTree = "<group>"; };
+		27538F9B17F1D957004C3BFD /* ToolInstallController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ToolInstallController.xib; sourceTree = "<group>"; };
+		27538F9D17F1D9D6004C3BFD /* PrivilegedInstall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrivilegedInstall.h; sourceTree = "<group>"; };
+		27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivilegedInstall.m; sourceTree = "<group>"; };
 		2766EFF614DB7F9F009ECCA8 /* CBLMultipartWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartWriter.h; sourceTree = "<group>"; };
 		2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartWriter.m; sourceTree = "<group>"; };
 		2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultiStreamWriter.h; sourceTree = "<group>"; };
@@ -1093,6 +1102,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */,
 				27538F8F17F15057004C3BFD /* ScriptingBridge.framework in Frameworks */,
 				27538F8417F14198004C3BFD /* JavaScriptCore.framework in Frameworks */,
 				27538F8017F140DD004C3BFD /* CouchbaseLite.framework in Frameworks */,
@@ -1424,8 +1434,13 @@
 			children = (
 				27538F5E17F13B03004C3BFD /* AppDelegate.h */,
 				27538F5F17F13B03004C3BFD /* AppDelegate.m */,
+				27538F9817F1D93F004C3BFD /* ToolInstallController.h */,
+				27538F9917F1D93F004C3BFD /* ToolInstallController.m */,
+				27538F9D17F1D9D6004C3BFD /* PrivilegedInstall.h */,
+				27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */,
 				27538F8D17F14FB6004C3BFD /* Terminal.h */,
 				27538F6117F13B03004C3BFD /* MainMenu.xib */,
+				27538F9B17F1D957004C3BFD /* ToolInstallController.xib */,
 				27538F5317F13B03004C3BFD /* Supporting Files */,
 			);
 			path = "LiteServ App";
@@ -2340,6 +2355,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27538F5717F13B03004C3BFD /* InfoPlist.strings in Resources */,
+				27538F9C17F1D957004C3BFD /* ToolInstallController.xib in Resources */,
 				27538F8B17F14A73004C3BFD /* LiteServ_MenubarIcon.png in Resources */,
 				27538F5D17F13B03004C3BFD /* Credits.rtf in Resources */,
 				27538F8917F148C2004C3BFD /* LiteServ.icns in Resources */,
@@ -2624,7 +2640,9 @@
 			files = (
 				27538F6017F13B03004C3BFD /* AppDelegate.m in Sources */,
 				27538F5917F13B03004C3BFD /* main.m in Sources */,
+				27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */,
 				27538F8317F14185004C3BFD /* CBLJSFunction.m in Sources */,
+				27538F9A17F1D93F004C3BFD /* ToolInstallController.m in Sources */,
 				27538F8217F1417B004C3BFD /* CBLJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3188,6 +3206,7 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				INFOPLIST_FILE = "LiteServ App/LiteServ App-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
@@ -3218,6 +3237,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				INFOPLIST_FILE = "LiteServ App/LiteServ App-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";

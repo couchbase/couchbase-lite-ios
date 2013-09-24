@@ -13,8 +13,9 @@
     IBOutlet NSMenu* _statusMenu;
 }
 
-- (IBAction) about:(id)sender;
-- (IBAction) quit:(id)sender;
+- (IBAction) about: (id)sender;
+- (IBAction) quit: (id)sender;
 - (IBAction) openAdmin: (id)sender;
+- (IBAction) showToolInstaller: (id)sender;
 
 @end

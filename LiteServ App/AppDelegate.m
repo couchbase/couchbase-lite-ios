@@ -7,10 +7,12 @@
 //
 
 #import "AppDelegate.h"
+#import "ToolInstallController.h"
+#import "Terminal.h"
+
 #import "CouchbaseLite.h"
 #import "CBLListener.h"
 #import "CBLJSViewCompiler.h"
-#import "Terminal.h"
 
 
 #define kServerPort 59840
@@ -33,6 +35,8 @@
     _statusItem.highlightMode = YES;
 
     [self startLiteServ];
+
+    //[ToolInstallController showIfFirstRun];
 }
 
 
@@ -110,5 +114,9 @@
 
 }
 
+
+-(IBAction) showToolInstaller: (id)sender {
+    [ToolInstallController show];
+}
 
 @end

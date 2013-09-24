@@ -208,11 +208,11 @@ static NSDateFormatter* getISO8601Formatter() {
 #if DEBUG
 
 TestCase(CBLJSON_Date) {
-    CAssertAlmostEq([CBLJSON absoluteTimeWithJSONObject: @"2013-04-01T20:42:33Z"], 386541753.000, 1e-6);
+    AssertAlmostEq([CBLJSON absoluteTimeWithJSONObject: @"2013-04-01T20:42:33Z"], 386541753.000, 1e-6);
     NSDate* date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33Z"];
     CAssertEq(date.timeIntervalSinceReferenceDate, 386541753.000);
     date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33.388Z"];
-    CAssertAlmostEq(date.timeIntervalSinceReferenceDate, 386541753.388, 1e-6);
+    AssertAlmostEq(date.timeIntervalSinceReferenceDate, 386541753.388, 1e-6);
     CAssertNil([CBLJSON dateWithJSONObject: @""]);
     CAssertNil([CBLJSON dateWithJSONObject: @"1347554643"]);
     CAssertNil([CBLJSON dateWithJSONObject: @"20:42:33Z"]);
