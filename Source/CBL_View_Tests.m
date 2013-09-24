@@ -812,16 +812,19 @@ TestCase(CBL_View_FullTextQuery) {
     __unused NSString* fullTextQuery = @"stormy OR dog";
     options.fullTextQuery = fullTextQuery;
     options.fullTextRanking = NO;
+    options.fullTextSnippets = YES;
     CBLStatus status;
     NSArray* rows = [view _queryWithOptions: &options status: &status];
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rows);
     NSArray* expectedRows = $array($dict({@"id",  @"44444"},
                                          {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
+                                         {@"snippet", @"and [STöRMy] night."},
                                          {@"value", @"44444"}),
                                    $dict({@"id",  @"33333"},
                                          {@"matches", @[@{@"range": @[@2,  @3], @"term": @1},
                                                         @{@"range": @[@26, @3], @"term": @1}]},
+                                         {@"snippet", @"a [dog] whøse ñame was “[Dog]”"},
                                          {@"value", @"33333"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
@@ -875,6 +878,7 @@ TestCase(CBL_View_FullTextQuery) {
 
     expectedRows = $array($dict({@"id",  @"44444"},
                                 {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
+                                {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
 }

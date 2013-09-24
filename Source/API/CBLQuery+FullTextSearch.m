@@ -100,7 +100,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
     if (!dict[@"error"]) {
         [dict removeObjectForKey: @"key"];
         if (_snippet)
-            dict[@"snippet"] = _snippet;
+            dict[@"snippet"] = [self snippetWithWordStart: @"[" wordEnd: @"]"];
         if (_matchOffsets) {
             NSMutableArray* matches = [[NSMutableArray alloc] init];
             for (NSUInteger i = 0; i < _matchOffsets.count; i += 4) {
