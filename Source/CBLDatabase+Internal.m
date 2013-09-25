@@ -759,6 +759,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     CBLStatus status = [self loadRevisionBody: nuRev options: options];
     if (outStatus)
         *outStatus = status;
+    if (CBLStatusIsError(status))
+        nuRev = nil;
     return nuRev;
 }
 

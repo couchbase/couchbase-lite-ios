@@ -140,6 +140,7 @@
 
 - (NSString*) revisionID    {return _rev.revID;}
 - (BOOL) isDeleted          {return _rev.deleted;}
+- (BOOL) propertiesAvailable{return !_rev.missing;}
 
 
 - (bool) loadProperties {
@@ -149,6 +150,7 @@
         Warn(@"Couldn't load body/sequence of %@: %d", self, status);
         return false;
     }
+    Log(@"Loaded %@: body=%@ status=%d", self, rev.body, status);//TEMP
     _rev = rev;
     return true;
 }

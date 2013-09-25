@@ -61,6 +61,10 @@
 /** An existing revision of a CBLDocument. Most of its API is inherited from CBLRevisionBase. */
 @interface CBLRevision : CBLRevisionBase
 
+/** Are this revision's properties available? They may not be if the revision is an ancestor and
+    either the database has been compacted, or the revision was replicated from another db. */
+@property (readonly) BOOL propertiesAvailable;
+
 /** Has this object fetched its contents from the database yet? */
 @property (readonly) BOOL propertiesAreLoaded;
 
