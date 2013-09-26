@@ -439,16 +439,27 @@ static id fromJSON( NSData* json ) {
 }
 
 
+// This is used implicitly by -[CBLLiveQuery update] to decide whether the query result has changed
+// enough to notify the client. So it's important that it not give false positives, else the app
+// won't get notified of changes.
 - (BOOL) isEqual:(id)object {
     if (object == self)
         return YES;
     if (![object isKindOfClass: [CBLQueryRow class]])
         return NO;
     CBLQueryRow* other = object;
-    return _database == other->_database
-        && $equal(_key, other->_key) && $equal(_value, other->_value)
-        && $equal(_sourceDocID, other->_sourceDocID)
-        && $equal(_documentProperties, other->_documentProperties);
+    if (_database == other->_database
+            && $equal(_key, other->_key)
+            && $equal(_sourceDocID, other->_sourceDocID)
+            && $equal(_documentProperties, other->_documentProperties)) {
+        // If values were emitted, compare them. Otherwise we have nothing to go on so check
+        // if _anything_ about the doc has changed (i.e. the sequences are different.)
+        if (_value || other->_value)
+            return  $equal(_value, other->_value);
+        else
+            return _sequence == other->_sequence;
+    }
+    return NO;
 }
 
 
