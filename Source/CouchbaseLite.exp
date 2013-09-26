@@ -50,6 +50,7 @@ _CBLGeoRectToJSON
 _CBLGeoJSONBoundingBox
 _CBLGeoPointToCoordPair
 _CBLGeoCoordPairToPoint
+_CBLGeoCoordsToRect
 _CBLGeoPointKey
 _CBLGeoRectKey
 _CBLGeoJSONKey
