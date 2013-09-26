@@ -9,3 +9,4 @@ build/
 DerivedData/
 obj/
 derived_src/
+CouchbaseLite.xccheckout
