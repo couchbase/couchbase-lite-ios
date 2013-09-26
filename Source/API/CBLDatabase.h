@@ -77,8 +77,8 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
 - (CBLDocument*)objectForKeyedSubscript: (NSString*)key                 __attribute__((nonnull));
 
-/** Creates a CBLDocument object with no current ID.
-    The first time you PUT to that document, it will be created on the server (via a POST). */
+/** Creates a new CBLDocument object with no properties and a new (random) UUID.
+    The document will be saved to the database when you call -putProperties: on it. */
 - (CBLDocument*) untitledDocument;
 
 /** Returns the already-instantiated cached CBLDocument with the given ID, or nil if none is yet cached. */
