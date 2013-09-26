@@ -17,6 +17,8 @@ typedef struct CBLQueryOptions {
     __unsafe_unretained id startKey;
     __unsafe_unretained id endKey;
     __unsafe_unretained NSArray* keys;
+    __unsafe_unretained NSString* fullTextQuery;
+    const struct CBLGeoRect* bbox;
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
@@ -30,6 +32,8 @@ typedef struct CBLQueryOptions {
     BOOL reduce;                   // Ignore if !reduceSpecified
     BOOL group;
     BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
+    BOOL fullTextSnippets;
+    BOOL fullTextRanking;
     CBLStaleness stale;
 } CBLQueryOptions;
 
@@ -53,6 +57,8 @@ typedef enum {
 
 
 @interface CBLView (Internal)
+
++ (void) registerFunctions: (CBLDatabase*)db;
 
 #if DEBUG  // for unit tests only
 - (void) setCollation: (CBLViewCollation)collation;

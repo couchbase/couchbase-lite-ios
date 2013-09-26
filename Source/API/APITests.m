@@ -525,9 +525,9 @@ TestCase(API_CreateView) {
     CAssert(view.mapBlock == NULL);
     CAssert(view.reduceBlock == NULL);
 
-    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
-    } version: @"1"];
+    }) version: @"1"];
 
     CAssert(view.mapBlock != nil);
 
@@ -617,9 +617,9 @@ TestCase(API_ViewWithLinkedDocs) {
     
     // The map function will emit the ID of the previous document, causing that document to be
     // included when include_docs (aka prefetch) is enabled.
-    CBLQuery* query = [db slowQueryWithMap: ^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    CBLQuery* query = [db slowQueryWithMap: MAPBLOCK({
         emit(doc[@"sequence"], @{ @"_id": doc[@"prev"] });
-    }];
+    })];
     query.startKey = @23;
     query.endKey = @33;
     query.prefetch = YES;
@@ -643,9 +643,9 @@ TestCase(API_LiveQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createEmptyDB();
     CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
-    } version: @"1"];
+    }) version: @"1"];
 
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
@@ -687,9 +687,9 @@ TestCase(API_AsyncViewQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createEmptyDB();
     CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
-    } version: @"1"];
+    }) version: @"1"];
 
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
@@ -739,9 +739,9 @@ TestCase(API_SharedMapBlocks) {
         return YES;
     })];
     CBLView* view = [db viewNamed: @"view"];
-    BOOL ok = [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    BOOL ok = [view setMapBlock: MAPBLOCK({
         // nothing
-    } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
+    }) reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
         return nil;
     } version: @"1"];
     CAssert(ok, @"Couldn't set map/reduce");

@@ -195,6 +195,95 @@
 		2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */; };
 		2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
 		2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
+		277EF39D17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		277EF39E17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */; };
+		277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */; };
+		277EF3A017F4DEDD00F7B7F7 /* CBLQuery+Geo.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		277EF3A117F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */; };
+		277EF3A217F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */; };
+		277EF3A517F4DF0600F7B7F7 /* CBLGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF3A317F4DF0600F7B7F7 /* CBLGeometry.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		277EF3A617F4DF0600F7B7F7 /* CBLGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3A417F4DF0600F7B7F7 /* CBLGeometry.m */; };
+		277EF3A717F4DF0600F7B7F7 /* CBLGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3A417F4DF0600F7B7F7 /* CBLGeometry.m */; };
+		277EF40B17F4DF3700F7B7F7 /* fts3_tokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF3AA17F4DF3700F7B7F7 /* fts3_tokenizer.h */; };
+		277EF40C17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3AB17F4DF3700F7B7F7 /* fts3_unicode2.c */; };
+		277EF40D17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3AB17F4DF3700F7B7F7 /* fts3_unicode2.c */; };
+		277EF40E17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3AC17F4DF3700F7B7F7 /* fts3_unicodesn.c */; };
+		277EF40F17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3AC17F4DF3700F7B7F7 /* fts3_unicodesn.c */; };
+		277EF41017F4DF3700F7B7F7 /* fts3_unicodesn.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF3AD17F4DF3700F7B7F7 /* fts3_unicodesn.h */; };
+		277EF41117F4DF3700F7B7F7 /* fts3Int.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF3AE17F4DF3700F7B7F7 /* fts3Int.h */; };
+		277EF41817F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3B717F4DF3700F7B7F7 /* libstemmer_utf8.c */; };
+		277EF41917F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3B717F4DF3700F7B7F7 /* libstemmer_utf8.c */; };
+		277EF42717F4DF3700F7B7F7 /* api_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C317F4DF3700F7B7F7 /* api_sq3.c */; };
+		277EF42817F4DF3700F7B7F7 /* api_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C317F4DF3700F7B7F7 /* api_sq3.c */; };
+		277EF42A17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C517F4DF3700F7B7F7 /* utilities_sq3.c */; };
+		277EF42B17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C517F4DF3700F7B7F7 /* utilities_sq3.c */; };
+		277EF42C17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C717F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c */; };
+		277EF42D17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C717F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c */; };
+		277EF42F17F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C917F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c */; };
+		277EF43017F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3C917F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c */; };
+		277EF43217F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3CB17F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c */; };
+		277EF43317F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3CB17F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c */; };
+		277EF43517F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3CD17F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c */; };
+		277EF43617F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3CD17F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c */; };
+		277EF43817F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3CF17F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c */; };
+		277EF43917F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3CF17F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c */; };
+		277EF43B17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D117F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c */; };
+		277EF43C17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D117F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c */; };
+		277EF43E17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D317F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c */; };
+		277EF43F17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D317F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c */; };
+		277EF44117F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D517F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c */; };
+		277EF44217F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D517F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c */; };
+		277EF44417F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D717F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c */; };
+		277EF44517F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D717F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c */; };
+		277EF44717F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D917F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c */; };
+		277EF44817F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3D917F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c */; };
+		277EF44A17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3DB17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c */; };
+		277EF44B17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3DB17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c */; };
+		277EF44D17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3DD17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c */; };
+		277EF44E17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3DD17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c */; };
+		277EF45017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3DF17F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c */; };
+		277EF45117F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3DF17F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c */; };
+		277EF45317F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E117F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c */; };
+		277EF45417F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E117F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c */; };
+		277EF45617F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E317F4DF3700F7B7F7 /* stem_KOI8_R_russian.c */; };
+		277EF45717F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E317F4DF3700F7B7F7 /* stem_KOI8_R_russian.c */; };
+		277EF45917F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E517F4DF3700F7B7F7 /* stem_UTF_8_danish.c */; };
+		277EF45A17F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E517F4DF3700F7B7F7 /* stem_UTF_8_danish.c */; };
+		277EF45C17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E717F4DF3700F7B7F7 /* stem_UTF_8_dutch.c */; };
+		277EF45D17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E717F4DF3700F7B7F7 /* stem_UTF_8_dutch.c */; };
+		277EF45F17F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E917F4DF3700F7B7F7 /* stem_UTF_8_english.c */; };
+		277EF46017F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3E917F4DF3700F7B7F7 /* stem_UTF_8_english.c */; };
+		277EF46217F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3EB17F4DF3700F7B7F7 /* stem_UTF_8_finnish.c */; };
+		277EF46317F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3EB17F4DF3700F7B7F7 /* stem_UTF_8_finnish.c */; };
+		277EF46517F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3ED17F4DF3700F7B7F7 /* stem_UTF_8_french.c */; };
+		277EF46617F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3ED17F4DF3700F7B7F7 /* stem_UTF_8_french.c */; };
+		277EF46817F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3EF17F4DF3700F7B7F7 /* stem_UTF_8_german.c */; };
+		277EF46917F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3EF17F4DF3700F7B7F7 /* stem_UTF_8_german.c */; };
+		277EF46B17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F117F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c */; };
+		277EF46C17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F117F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c */; };
+		277EF46E17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F317F4DF3700F7B7F7 /* stem_UTF_8_italian.c */; };
+		277EF46F17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F317F4DF3700F7B7F7 /* stem_UTF_8_italian.c */; };
+		277EF47117F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F517F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c */; };
+		277EF47217F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F517F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c */; };
+		277EF47417F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F717F4DF3700F7B7F7 /* stem_UTF_8_porter.c */; };
+		277EF47517F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F717F4DF3700F7B7F7 /* stem_UTF_8_porter.c */; };
+		277EF47717F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F917F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c */; };
+		277EF47817F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3F917F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c */; };
+		277EF47A17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3FB17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c */; };
+		277EF47B17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3FB17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c */; };
+		277EF47D17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3FD17F4DF3700F7B7F7 /* stem_UTF_8_russian.c */; };
+		277EF47E17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3FD17F4DF3700F7B7F7 /* stem_UTF_8_russian.c */; };
+		277EF48017F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3FF17F4DF3700F7B7F7 /* stem_UTF_8_spanish.c */; };
+		277EF48117F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF3FF17F4DF3700F7B7F7 /* stem_UTF_8_spanish.c */; };
+		277EF48317F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF40117F4DF3700F7B7F7 /* stem_UTF_8_swedish.c */; };
+		277EF48417F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF40117F4DF3700F7B7F7 /* stem_UTF_8_swedish.c */; };
+		277EF48617F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF40317F4DF3700F7B7F7 /* stem_UTF_8_turkish.c */; };
+		277EF48717F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF40317F4DF3700F7B7F7 /* stem_UTF_8_turkish.c */; };
+		277EF48C17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF40717F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c */; };
+		277EF48D17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 277EF40717F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c */; };
+		277EF49017F4EA0000F7B7F7 /* CBLQuery+FullTextSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		277EF49117F4EA0000F7B7F7 /* CBLQuery+Geo.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		277EF49217F4EA0B00F7B7F7 /* CBLGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF3A317F4DF0600F7B7F7 /* CBLGeometry.h */; };
 		27821BB7148E7D6F0099B373 /* CBL_Replicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* CBL_Replicator.h */; };
 		27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* CBL_Replicator.m */; };
 		27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* CBLReplicator_Tests.m */; };
@@ -838,6 +927,92 @@
 		2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLPersonaAuthorizer.m; sourceTree = "<group>"; };
 		2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_DatabaseChange.h; sourceTree = "<group>"; };
 		2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_DatabaseChange.m; sourceTree = "<group>"; };
+		277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+FullTextSearch.h"; sourceTree = "<group>"; };
+		277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLQuery+FullTextSearch.m"; sourceTree = "<group>"; };
+		277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Geo.h"; sourceTree = "<group>"; };
+		277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLQuery+Geo.m"; sourceTree = "<group>"; };
+		277EF3A317F4DF0600F7B7F7 /* CBLGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLGeometry.h; sourceTree = "<group>"; };
+		277EF3A417F4DF0600F7B7F7 /* CBLGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLGeometry.m; sourceTree = "<group>"; };
+		277EF3AA17F4DF3700F7B7F7 /* fts3_tokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fts3_tokenizer.h; sourceTree = "<group>"; };
+		277EF3AB17F4DF3700F7B7F7 /* fts3_unicode2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fts3_unicode2.c; sourceTree = "<group>"; };
+		277EF3AC17F4DF3700F7B7F7 /* fts3_unicodesn.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fts3_unicodesn.c; sourceTree = "<group>"; };
+		277EF3AD17F4DF3700F7B7F7 /* fts3_unicodesn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fts3_unicodesn.h; sourceTree = "<group>"; };
+		277EF3AE17F4DF3700F7B7F7 /* fts3Int.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fts3Int.h; sourceTree = "<group>"; };
+		277EF3B317F4DF3700F7B7F7 /* libstemmer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libstemmer.h; sourceTree = "<group>"; };
+		277EF3B617F4DF3700F7B7F7 /* libstemmer_c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libstemmer_c.in; sourceTree = "<group>"; };
+		277EF3B717F4DF3700F7B7F7 /* libstemmer_utf8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libstemmer_utf8.c; sourceTree = "<group>"; };
+		277EF3BA17F4DF3700F7B7F7 /* modules_utf8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = modules_utf8.h; sourceTree = "<group>"; };
+		277EF3BB17F4DF3700F7B7F7 /* modules_utf8.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = modules_utf8.txt; sourceTree = "<group>"; };
+		277EF3C017F4DF3700F7B7F7 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		277EF3C217F4DF3700F7B7F7 /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = api.h; sourceTree = "<group>"; };
+		277EF3C317F4DF3700F7B7F7 /* api_sq3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = api_sq3.c; sourceTree = "<group>"; };
+		277EF3C417F4DF3700F7B7F7 /* header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = header.h; sourceTree = "<group>"; };
+		277EF3C517F4DF3700F7B7F7 /* utilities_sq3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utilities_sq3.c; sourceTree = "<group>"; };
+		277EF3C717F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_danish.c; sourceTree = "<group>"; };
+		277EF3C817F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_danish.h; sourceTree = "<group>"; };
+		277EF3C917F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_dutch.c; sourceTree = "<group>"; };
+		277EF3CA17F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_dutch.h; sourceTree = "<group>"; };
+		277EF3CB17F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_english.c; sourceTree = "<group>"; };
+		277EF3CC17F4DF3700F7B7F7 /* stem_ISO_8859_1_english.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_english.h; sourceTree = "<group>"; };
+		277EF3CD17F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_finnish.c; sourceTree = "<group>"; };
+		277EF3CE17F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_finnish.h; sourceTree = "<group>"; };
+		277EF3CF17F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_french.c; sourceTree = "<group>"; };
+		277EF3D017F4DF3700F7B7F7 /* stem_ISO_8859_1_french.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_french.h; sourceTree = "<group>"; };
+		277EF3D117F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_german.c; sourceTree = "<group>"; };
+		277EF3D217F4DF3700F7B7F7 /* stem_ISO_8859_1_german.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_german.h; sourceTree = "<group>"; };
+		277EF3D317F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_hungarian.c; sourceTree = "<group>"; };
+		277EF3D417F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_hungarian.h; sourceTree = "<group>"; };
+		277EF3D517F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_italian.c; sourceTree = "<group>"; };
+		277EF3D617F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_italian.h; sourceTree = "<group>"; };
+		277EF3D717F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_norwegian.c; sourceTree = "<group>"; };
+		277EF3D817F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_norwegian.h; sourceTree = "<group>"; };
+		277EF3D917F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_porter.c; sourceTree = "<group>"; };
+		277EF3DA17F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_porter.h; sourceTree = "<group>"; };
+		277EF3DB17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_portuguese.c; sourceTree = "<group>"; };
+		277EF3DC17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_portuguese.h; sourceTree = "<group>"; };
+		277EF3DD17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_spanish.c; sourceTree = "<group>"; };
+		277EF3DE17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_spanish.h; sourceTree = "<group>"; };
+		277EF3DF17F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_1_swedish.c; sourceTree = "<group>"; };
+		277EF3E017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_1_swedish.h; sourceTree = "<group>"; };
+		277EF3E117F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_ISO_8859_2_romanian.c; sourceTree = "<group>"; };
+		277EF3E217F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_ISO_8859_2_romanian.h; sourceTree = "<group>"; };
+		277EF3E317F4DF3700F7B7F7 /* stem_KOI8_R_russian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_KOI8_R_russian.c; sourceTree = "<group>"; };
+		277EF3E417F4DF3700F7B7F7 /* stem_KOI8_R_russian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_KOI8_R_russian.h; sourceTree = "<group>"; };
+		277EF3E517F4DF3700F7B7F7 /* stem_UTF_8_danish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_danish.c; sourceTree = "<group>"; };
+		277EF3E617F4DF3700F7B7F7 /* stem_UTF_8_danish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_danish.h; sourceTree = "<group>"; };
+		277EF3E717F4DF3700F7B7F7 /* stem_UTF_8_dutch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_dutch.c; sourceTree = "<group>"; };
+		277EF3E817F4DF3700F7B7F7 /* stem_UTF_8_dutch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_dutch.h; sourceTree = "<group>"; };
+		277EF3E917F4DF3700F7B7F7 /* stem_UTF_8_english.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_english.c; sourceTree = "<group>"; };
+		277EF3EA17F4DF3700F7B7F7 /* stem_UTF_8_english.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_english.h; sourceTree = "<group>"; };
+		277EF3EB17F4DF3700F7B7F7 /* stem_UTF_8_finnish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_finnish.c; sourceTree = "<group>"; };
+		277EF3EC17F4DF3700F7B7F7 /* stem_UTF_8_finnish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_finnish.h; sourceTree = "<group>"; };
+		277EF3ED17F4DF3700F7B7F7 /* stem_UTF_8_french.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_french.c; sourceTree = "<group>"; };
+		277EF3EE17F4DF3700F7B7F7 /* stem_UTF_8_french.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_french.h; sourceTree = "<group>"; };
+		277EF3EF17F4DF3700F7B7F7 /* stem_UTF_8_german.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_german.c; sourceTree = "<group>"; };
+		277EF3F017F4DF3700F7B7F7 /* stem_UTF_8_german.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_german.h; sourceTree = "<group>"; };
+		277EF3F117F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_hungarian.c; sourceTree = "<group>"; };
+		277EF3F217F4DF3700F7B7F7 /* stem_UTF_8_hungarian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_hungarian.h; sourceTree = "<group>"; };
+		277EF3F317F4DF3700F7B7F7 /* stem_UTF_8_italian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_italian.c; sourceTree = "<group>"; };
+		277EF3F417F4DF3700F7B7F7 /* stem_UTF_8_italian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_italian.h; sourceTree = "<group>"; };
+		277EF3F517F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_norwegian.c; sourceTree = "<group>"; };
+		277EF3F617F4DF3700F7B7F7 /* stem_UTF_8_norwegian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_norwegian.h; sourceTree = "<group>"; };
+		277EF3F717F4DF3700F7B7F7 /* stem_UTF_8_porter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_porter.c; sourceTree = "<group>"; };
+		277EF3F817F4DF3700F7B7F7 /* stem_UTF_8_porter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_porter.h; sourceTree = "<group>"; };
+		277EF3F917F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_portuguese.c; sourceTree = "<group>"; };
+		277EF3FA17F4DF3700F7B7F7 /* stem_UTF_8_portuguese.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_portuguese.h; sourceTree = "<group>"; };
+		277EF3FB17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_romanian.c; sourceTree = "<group>"; };
+		277EF3FC17F4DF3700F7B7F7 /* stem_UTF_8_romanian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_romanian.h; sourceTree = "<group>"; };
+		277EF3FD17F4DF3700F7B7F7 /* stem_UTF_8_russian.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_russian.c; sourceTree = "<group>"; };
+		277EF3FE17F4DF3700F7B7F7 /* stem_UTF_8_russian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_russian.h; sourceTree = "<group>"; };
+		277EF3FF17F4DF3700F7B7F7 /* stem_UTF_8_spanish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_spanish.c; sourceTree = "<group>"; };
+		277EF40017F4DF3700F7B7F7 /* stem_UTF_8_spanish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_spanish.h; sourceTree = "<group>"; };
+		277EF40117F4DF3700F7B7F7 /* stem_UTF_8_swedish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_swedish.c; sourceTree = "<group>"; };
+		277EF40217F4DF3700F7B7F7 /* stem_UTF_8_swedish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_swedish.h; sourceTree = "<group>"; };
+		277EF40317F4DF3700F7B7F7 /* stem_UTF_8_turkish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stem_UTF_8_turkish.c; sourceTree = "<group>"; };
+		277EF40417F4DF3700F7B7F7 /* stem_UTF_8_turkish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stem_UTF_8_turkish.h; sourceTree = "<group>"; };
+		277EF40617F4DF3700F7B7F7 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		277EF40717F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sqlite3_unicodesn_tokenizer.c; sourceTree = "<group>"; };
+		277EF40817F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sqlite3_unicodesn_tokenizer.h; sourceTree = "<group>"; };
 		27821BB5148E7D6F0099B373 /* CBL_Replicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Replicator.h; sourceTree = "<group>"; };
 		27821BB6148E7D6F0099B373 /* CBL_Replicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Replicator.m; sourceTree = "<group>"; };
 		27821BBB149001B20099B373 /* CBLReplicator_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReplicator_Tests.m; sourceTree = "<group>"; };
@@ -1312,6 +1487,7 @@
 				2753154E14ACEF5C0065964D /* CocoaHTTPServer */,
 				27DB90D414DB249700FC7118 /* google-toolbox-for-mac */,
 				27F12842156ABE23008465C2 /* oauthconsumer */,
+				277EF3A817F4DF3700F7B7F7 /* sqlite3-unicodesn */,
 			);
 			path = vendor;
 			sourceTree = "<group>";
@@ -1479,6 +1655,133 @@
 			name = Auth;
 			sourceTree = "<group>";
 		};
+		277EF3A817F4DF3700F7B7F7 /* sqlite3-unicodesn */ = {
+			isa = PBXGroup;
+			children = (
+				277EF3AA17F4DF3700F7B7F7 /* fts3_tokenizer.h */,
+				277EF3AB17F4DF3700F7B7F7 /* fts3_unicode2.c */,
+				277EF3AC17F4DF3700F7B7F7 /* fts3_unicodesn.c */,
+				277EF3AD17F4DF3700F7B7F7 /* fts3_unicodesn.h */,
+				277EF3AE17F4DF3700F7B7F7 /* fts3Int.h */,
+				277EF3AF17F4DF3700F7B7F7 /* libstemmer_c */,
+				277EF40617F4DF3700F7B7F7 /* README */,
+				277EF40717F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c */,
+				277EF40817F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.h */,
+			);
+			path = "sqlite3-unicodesn";
+			sourceTree = "<group>";
+		};
+		277EF3AF17F4DF3700F7B7F7 /* libstemmer_c */ = {
+			isa = PBXGroup;
+			children = (
+				277EF3B217F4DF3700F7B7F7 /* include */,
+				277EF3B417F4DF3700F7B7F7 /* libstemmer */,
+				277EF3C017F4DF3700F7B7F7 /* README */,
+				277EF3C117F4DF3700F7B7F7 /* runtime */,
+				277EF3C617F4DF3700F7B7F7 /* src_c */,
+			);
+			path = libstemmer_c;
+			sourceTree = "<group>";
+		};
+		277EF3B217F4DF3700F7B7F7 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				277EF3B317F4DF3700F7B7F7 /* libstemmer.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		277EF3B417F4DF3700F7B7F7 /* libstemmer */ = {
+			isa = PBXGroup;
+			children = (
+				277EF3B617F4DF3700F7B7F7 /* libstemmer_c.in */,
+				277EF3B717F4DF3700F7B7F7 /* libstemmer_utf8.c */,
+				277EF3BA17F4DF3700F7B7F7 /* modules_utf8.h */,
+				277EF3BB17F4DF3700F7B7F7 /* modules_utf8.txt */,
+			);
+			path = libstemmer;
+			sourceTree = "<group>";
+		};
+		277EF3C117F4DF3700F7B7F7 /* runtime */ = {
+			isa = PBXGroup;
+			children = (
+				277EF3C217F4DF3700F7B7F7 /* api.h */,
+				277EF3C317F4DF3700F7B7F7 /* api_sq3.c */,
+				277EF3C417F4DF3700F7B7F7 /* header.h */,
+				277EF3C517F4DF3700F7B7F7 /* utilities_sq3.c */,
+			);
+			path = runtime;
+			sourceTree = "<group>";
+		};
+		277EF3C617F4DF3700F7B7F7 /* src_c */ = {
+			isa = PBXGroup;
+			children = (
+				277EF3C717F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c */,
+				277EF3C817F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.h */,
+				277EF3C917F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c */,
+				277EF3CA17F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.h */,
+				277EF3CB17F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c */,
+				277EF3CC17F4DF3700F7B7F7 /* stem_ISO_8859_1_english.h */,
+				277EF3CD17F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c */,
+				277EF3CE17F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.h */,
+				277EF3CF17F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c */,
+				277EF3D017F4DF3700F7B7F7 /* stem_ISO_8859_1_french.h */,
+				277EF3D117F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c */,
+				277EF3D217F4DF3700F7B7F7 /* stem_ISO_8859_1_german.h */,
+				277EF3D317F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c */,
+				277EF3D417F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.h */,
+				277EF3D517F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c */,
+				277EF3D617F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.h */,
+				277EF3D717F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c */,
+				277EF3D817F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.h */,
+				277EF3D917F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c */,
+				277EF3DA17F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.h */,
+				277EF3DB17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c */,
+				277EF3DC17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.h */,
+				277EF3DD17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c */,
+				277EF3DE17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.h */,
+				277EF3DF17F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c */,
+				277EF3E017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.h */,
+				277EF3E117F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c */,
+				277EF3E217F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.h */,
+				277EF3E317F4DF3700F7B7F7 /* stem_KOI8_R_russian.c */,
+				277EF3E417F4DF3700F7B7F7 /* stem_KOI8_R_russian.h */,
+				277EF3E517F4DF3700F7B7F7 /* stem_UTF_8_danish.c */,
+				277EF3E617F4DF3700F7B7F7 /* stem_UTF_8_danish.h */,
+				277EF3E717F4DF3700F7B7F7 /* stem_UTF_8_dutch.c */,
+				277EF3E817F4DF3700F7B7F7 /* stem_UTF_8_dutch.h */,
+				277EF3E917F4DF3700F7B7F7 /* stem_UTF_8_english.c */,
+				277EF3EA17F4DF3700F7B7F7 /* stem_UTF_8_english.h */,
+				277EF3EB17F4DF3700F7B7F7 /* stem_UTF_8_finnish.c */,
+				277EF3EC17F4DF3700F7B7F7 /* stem_UTF_8_finnish.h */,
+				277EF3ED17F4DF3700F7B7F7 /* stem_UTF_8_french.c */,
+				277EF3EE17F4DF3700F7B7F7 /* stem_UTF_8_french.h */,
+				277EF3EF17F4DF3700F7B7F7 /* stem_UTF_8_german.c */,
+				277EF3F017F4DF3700F7B7F7 /* stem_UTF_8_german.h */,
+				277EF3F117F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c */,
+				277EF3F217F4DF3700F7B7F7 /* stem_UTF_8_hungarian.h */,
+				277EF3F317F4DF3700F7B7F7 /* stem_UTF_8_italian.c */,
+				277EF3F417F4DF3700F7B7F7 /* stem_UTF_8_italian.h */,
+				277EF3F517F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c */,
+				277EF3F617F4DF3700F7B7F7 /* stem_UTF_8_norwegian.h */,
+				277EF3F717F4DF3700F7B7F7 /* stem_UTF_8_porter.c */,
+				277EF3F817F4DF3700F7B7F7 /* stem_UTF_8_porter.h */,
+				277EF3F917F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c */,
+				277EF3FA17F4DF3700F7B7F7 /* stem_UTF_8_portuguese.h */,
+				277EF3FB17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c */,
+				277EF3FC17F4DF3700F7B7F7 /* stem_UTF_8_romanian.h */,
+				277EF3FD17F4DF3700F7B7F7 /* stem_UTF_8_russian.c */,
+				277EF3FE17F4DF3700F7B7F7 /* stem_UTF_8_russian.h */,
+				277EF3FF17F4DF3700F7B7F7 /* stem_UTF_8_spanish.c */,
+				277EF40017F4DF3700F7B7F7 /* stem_UTF_8_spanish.h */,
+				277EF40117F4DF3700F7B7F7 /* stem_UTF_8_swedish.c */,
+				277EF40217F4DF3700F7B7F7 /* stem_UTF_8_swedish.h */,
+				277EF40317F4DF3700F7B7F7 /* stem_UTF_8_turkish.c */,
+				277EF40417F4DF3700F7B7F7 /* stem_UTF_8_turkish.h */,
+			);
+			path = src_c;
+			sourceTree = "<group>";
+		};
 		27821BB4148E7D590099B373 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
@@ -1541,6 +1844,8 @@
 				27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */,
 				27B0B79C1492932700A817AD /* CBLBase64.h */,
 				27B0B79D1492932700A817AD /* CBLBase64.m */,
+				277EF3A317F4DF0600F7B7F7 /* CBLGeometry.h */,
+				277EF3A417F4DF0600F7B7F7 /* CBLGeometry.m */,
 				279EB2D91491C34300E74185 /* CBLCollateJSON.h */,
 				279EB2DA1491C34300E74185 /* CBLCollateJSON.m */,
 				279906EC149ABFC1003D4338 /* CBLBatcher.h */,
@@ -1694,6 +1999,10 @@
 				27DA434915912AFD00F9E7B5 /* CBLView.m */,
 				27DA4310158FB79E00F9E7B5 /* CBLQuery.h */,
 				27DA4311158FB79E00F9E7B5 /* CBLQuery.m */,
+				277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */,
+				277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */,
+				277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */,
+				277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */,
 				27E2E5CB159533A5005B9234 /* CBLReplication.h */,
 				27E2E5CC159533A5005B9234 /* CBLReplication.m */,
 				27846FEE15D5C7DE0030122F /* Tests */,
@@ -1899,9 +2208,12 @@
 				279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */,
 				27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */,
 				27B0B79E1492932800A817AD /* CBLBase64.h in Headers */,
+				277EF39D17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h in Headers */,
+				277EF3A017F4DEDD00F7B7F7 /* CBLQuery+Geo.h in Headers */,
 				27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */,
 				279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */,
 				279906EE149ABFC2003D4338 /* CBLBatcher.h in Headers */,
+				277EF3A517F4DF0600F7B7F7 /* CBLGeometry.h in Headers */,
 				27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */,
 				2753156E14ACEFC90065964D /* DDData.h in Headers */,
 				2753157214ACEFC90065964D /* DDNumber.h in Headers */,
@@ -1916,6 +2228,7 @@
 				2711CE0014C7595900505D55 /* CBLDatabase+Insertion.h in Headers */,
 				2773ADC714BD1EB80027A292 /* CBLDatabase+LocalDocs.h in Headers */,
 				2711CE0314C759BD00505D55 /* CBLDatabase+Replication.h in Headers */,
+				277EF41017F4DF3700F7B7F7 /* fts3_unicodesn.h in Headers */,
 				270B3E2B1489581E00E0A926 /* CBL_Puller.h in Headers */,
 				270B3E3E148D7F0000E0A926 /* CBL_Pusher.h in Headers */,
 				27821BB7148E7D6F0099B373 /* CBL_Replicator.h in Headers */,
@@ -1962,6 +2275,7 @@
 				27ADC079152502EE001ABC1D /* CBLMultipartDocumentReader.h in Headers */,
 				278B0CA0152A8B1900577747 /* CBLCanonicalJSON.h in Headers */,
 				278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */,
+				277EF41117F4DF3700F7B7F7 /* fts3Int.h in Headers */,
 				27F128AB156AC004008465C2 /* NSMutableURLRequest+Parameters.h in Headers */,
 				27F128B1156AC1CA008465C2 /* CBLOAuth1Authorizer.h in Headers */,
 				270F5705156AE0BF000FEB8F /* CBLAuthorizer.h in Headers */,
@@ -1977,6 +2291,7 @@
 				27DA435A15918C8E00F9E7B5 /* CBLModelFactory.h in Headers */,
 				27846FB915D475DF0030122F /* MYRegexUtils.h in Headers */,
 				27846FBC15D475DF0030122F /* MYStreamUtils.h in Headers */,
+				277EF40B17F4DF3700F7B7F7 /* fts3_tokenizer.h in Headers */,
 				270D6FC1164484190081812D /* CBLSocketChangeTracker.h in Headers */,
 				275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */,
 				2776A59116A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
@@ -2023,6 +2338,7 @@
 				27B0B7FB1492BDE800A817AD /* CBLDatabase+Internal.h in Headers */,
 				2711CDFE14C7590A00505D55 /* CBLDatabase+Attachments.h in Headers */,
 				2711CE0114C7595900505D55 /* CBLDatabase+Insertion.h in Headers */,
+				277EF49117F4EA0000F7B7F7 /* CBLQuery+Geo.h in Headers */,
 				2711CE1414C75B6E00505D55 /* CBLDatabase+LocalDocs.h in Headers */,
 				2711CE0414C759BD00505D55 /* CBLDatabase+Replication.h in Headers */,
 				27B0B7FC1492BDE800A817AD /* CBLView+Internal.h in Headers */,
@@ -2032,8 +2348,10 @@
 				27B0B7FF1492BDE800A817AD /* CBL_Server.h in Headers */,
 				27B0B8001492BDE800A817AD /* CBL_Router.h in Headers */,
 				27B0B8011492BDE800A817AD /* CBL_URLProtocol.h in Headers */,
+				277EF49217F4EA0B00F7B7F7 /* CBLGeometry.h in Headers */,
 				27B0B8021492BDE800A817AD /* CBL_Replicator.h in Headers */,
 				27B0B8031492BDE800A817AD /* CBL_Puller.h in Headers */,
+				277EF49017F4EA0000F7B7F7 /* CBLQuery+FullTextSearch.h in Headers */,
 				27B0B8041492BDE800A817AD /* CBL_Pusher.h in Headers */,
 				2776A59216A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
 			);
@@ -2522,22 +2840,34 @@
 			buildActionMask = 2147483647;
 			files = (
 				270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */,
+				277EF42C17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */,
 				270B3E121489382F00E0A926 /* CBL_Body.m in Sources */,
 				270B3E131489382F00E0A926 /* CBL_Server.m in Sources */,
+				277EF46817F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */,
 				270B3E2C1489581E00E0A926 /* CBL_Puller.m in Sources */,
 				270B3E3A14898DF200E0A926 /* CBL_Revision.m in Sources */,
 				272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
 				270B3E3F148D7F0000E0A926 /* CBL_Pusher.m in Sources */,
+				277EF45917F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */,
+				277EF45317F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
 				27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */,
 				27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */,
 				279EB2CF149140DE00E74185 /* CBLView+Internal.m in Sources */,
 				279EB2DC1491C34300E74185 /* CBLCollateJSON.m in Sources */,
 				27B0B7801491E76200A817AD /* CBL_View_Tests.m in Sources */,
+				277EF44717F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */,
 				27846FF115D5C8250030122F /* APITests.m in Sources */,
 				27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */,
 				27B0B79F1492932800A817AD /* CBLBase64.m in Sources */,
+				277EF42717F4DF3700F7B7F7 /* api_sq3.c in Sources */,
 				27731F001493FA3100815D67 /* CBL_BlobStore.m in Sources */,
+				277EF48317F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */,
+				277EF44417F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */,
+				277EF42A17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */,
+				277EF48C17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
+				277EF3A617F4DF0600F7B7F7 /* CBLGeometry.m in Sources */,
 				279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
+				277EF47417F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
 				279906F0149ABFC2003D4338 /* CBLBatcher.m in Sources */,
 				27B945AB1768E63200B2DF2D /* CBLModelArray.m in Sources */,
 				274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
@@ -2546,10 +2876,13 @@
 				2773ADC814BD1EB80027A292 /* CBLDatabase+LocalDocs.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				279CE40114D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
+				277EF47A17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */,
+				277EF46517F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */,
 				279CE40614D88032009F3FA6 /* CBLBlobStore_Tests.m in Sources */,
 				279CE40B14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
 				2766EFF914DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFE14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
+				277EF48017F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
 				27C5305514DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27103F8414E9CE4400DF7209 /* CBLReachability.m in Sources */,
@@ -2557,39 +2890,59 @@
 				279C7E2F14F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				272B85151523691700A90CB2 /* CBLJSON.m in Sources */,
 				27ADC07A152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
+				277EF46E17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */,
+				277EF43217F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */,
 				278B0CA1152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
+				277EF43E17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */,
 				27A720A1152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27E7FAED155D78DA0025F93A /* CBLChangeTracker_Tests.m in Sources */,
 				27FFE20A17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
+				277EF47717F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
 				27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */,
 				27DA42F9158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
+				277EF44D17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
 				27DA42FE158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */,
+				277EF44A17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
+				277EF43817F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27DA435815918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435B15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
 				27E2E5A4159383E9005B9234 /* CBLAttachment.m in Sources */,
 				27E2E5CE159533A5005B9234 /* CBLReplication.m in Sources */,
+				277EF47D17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
+				277EF48617F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
+				277EF41817F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
 				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
 				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				277EF43517F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
 				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
 				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
 				2753160014ACF9330065964D /* Logging.m in Sources */,
+				277EF39E17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
+				277EF44117F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
+				277EF46B17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
+				277EF46217F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
 				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
 				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27D90B1815601C340000735E /* MYErrorUtils.m in Sources */,
 				278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
 				27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
+				277EF47117F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */,
 				27F128B5156AC8B7008465C2 /* OAToken.m in Sources */,
 				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */,
+				277EF40E17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */,
+				277EF3A117F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */,
+				277EF45F17F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
+				277EF45617F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */,
 				27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */,
 				270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */,
 				27B945B417692E2000B2DF2D /* CBLModel+Properties.m in Sources */,
@@ -2598,11 +2951,16 @@
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				270D6FC2164484190081812D /* CBLSocketChangeTracker.m in Sources */,
+				277EF42F17F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
 				27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */,
 				2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */,
+				277EF45017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
 				27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */,
+				277EF43B17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
 				2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
+				277EF45C17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
+				277EF40C17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2672,48 +3030,76 @@
 			buildActionMask = 2147483647;
 			files = (
 				27B0B7CD1492B86C00A817AD /* CBLDatabase+Internal.m in Sources */,
+				277EF48417F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */,
+				277EF42B17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */,
+				277EF43317F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */,
 				27F9411B176A5FB4007BAEBE /* ModelTests.m in Sources */,
 				27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */,
 				27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */,
 				27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */,
+				277EF48117F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
+				277EF48717F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
 				27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */,
+				277EF46017F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
 				27B0B7D21492B87D00A817AD /* CBLCollateJSON.m in Sources */,
+				277EF43C17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
 				27B0B7D51492B88F00A817AD /* CBL_Replicator.m in Sources */,
 				27B0B7D61492B8A200A817AD /* CBL_Puller.m in Sources */,
 				27B0B7D71492B8A200A817AD /* CBL_Pusher.m in Sources */,
 				27B0B7D81492B8A200A817AD /* CBLChangeTracker.m in Sources */,
+				277EF47517F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
 				27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */,
 				27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */,
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
+				277EF44217F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
 				279906F1149ABFC2003D4338 /* CBLBatcher.m in Sources */,
+				277EF45417F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
 				274C391F149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
 				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				277EF46917F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */,
 				27AA409E14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */,
 				27AA40A414AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */,
 				2773ADC914BD1EB80027A292 /* CBLDatabase+LocalDocs.m in Sources */,
+				277EF3A717F4DF0600F7B7F7 /* CBLGeometry.m in Sources */,
 				27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
+				277EF45A17F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */,
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
+				277EF40F17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
+				277EF42D17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */,
+				277EF45717F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */,
+				277EF46317F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */,
+				277EF44B17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				272B85161523691700A90CB2 /* CBLJSON.m in Sources */,
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				278B0CA2152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
+				277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
+				277EF43617F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
 				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
+				277EF45117F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
+				277EF44517F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */,
 				270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
+				277EF41917F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
 				27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */,
 				27DA42FA158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				27DA42FF158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
+				277EF47217F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */,
+				277EF47B17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */,
+				277EF43F17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */,
+				277EF43017F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
+				277EF40D17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
 				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
@@ -2721,9 +3107,12 @@
 				27DA435915918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435C15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
 				27E2E5A5159383E9005B9234 /* CBLAttachment.m in Sources */,
+				277EF46F17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */,
+				277EF47E17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
 				27E2E5CF159533A5005B9234 /* CBLReplication.m in Sources */,
 				27F9411D176A5FC2007BAEBE /* CBLModelArray.m in Sources */,
 				270D6FC3164484190081812D /* CBLSocketChangeTracker.m in Sources */,
+				277EF48D17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
 				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
 				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,
 				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
@@ -2735,14 +3124,23 @@
 				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
+				277EF43917F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
 				27F12887156ABE24008465C2 /* OAConsumer.m in Sources */,
 				27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */,
+				277EF42817F4DF3700F7B7F7 /* api_sq3.c in Sources */,
 				27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
+				277EF46C17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
+				277EF3A217F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */,
+				277EF47817F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
+				277EF46617F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */,
+				277EF44817F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */,
+				277EF45D17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
+				277EF44E17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
 				27FFE20B17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,

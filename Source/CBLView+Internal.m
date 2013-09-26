@@ -19,11 +19,14 @@
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
+#import "CBLGeometry.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
 #import "ExceptionUtils.h"
+
+#include "sqlite3_unicodesn_tokenizer.h"
 
 
 #define kReduceBatchSize 100
@@ -31,12 +34,36 @@
 
 const CBLQueryOptions kDefaultCBLQueryOptions = {
     .limit = UINT_MAX,
-    .inclusiveEnd = YES
+    .inclusiveEnd = YES,
+    .fullTextRanking = YES
     // everything else will default to nil/0/NO
 };
 
 
+static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
+
+
+// Special key object returned by CBLMapKey.
+@interface CBLSpecialKey : NSObject
+- (instancetype) initWithText: (NSString*)text;
+@property (readonly, nonatomic) NSString* text;
+- (instancetype) initWithPoint: (CBLGeoPoint)point;
+- (instancetype) initWithRect: (CBLGeoRect)rect;
+- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON;
+@property (readonly, nonatomic) CBLGeoRect rect;
+@property (readonly, nonatomic) NSData* geoJSONData;
+@end
+
+
 @implementation CBLView (Internal)
+
+
++ (void) registerFunctions:(CBLDatabase *)db {
+    sqlite3* dbHandle = db.fmdb.sqliteHandle;
+    register_unicodesn_tokenizer(dbHandle);
+    sqlite3_create_function(dbHandle, "ftsrank", 1, SQLITE_ANY, NULL,
+                            CBLComputeFTSRank, NULL, NULL);
+}
 
 
 #if DEBUG
@@ -108,6 +135,46 @@ static id fromJSON( NSData* json ) {
 }
 
 
+/** The body of the emit() callback while indexing a view. */
+- (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
+    NSString* valueJSON = toJSONString(value);
+    NSNumber* fullTextID = nil, *bboxID = nil;
+    NSString* keyJSON = @"null";
+    NSData* geoKey = nil;
+    if ([key isKindOfClass: [CBLSpecialKey class]]) {
+        CBLSpecialKey *specialKey = key;
+        LogTo(View, @"    emit( %@, %@)", specialKey, valueJSON);
+        BOOL ok;
+        NSString* text = specialKey.text;
+        if (text) {
+            ok = [_db.fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)", text];
+            fullTextID = @(_db.fmdb.lastInsertRowId);
+        } else {
+            CBLGeoRect rect = specialKey.rect;
+            ok = [_db.fmdb executeUpdate: @"INSERT INTO bboxes (x0,y0,x1,y1) VALUES (?,?,?,?)",
+                  @(rect.min.x), @(rect.min.y), @(rect.max.x), @(rect.max.y)];
+            bboxID = @(_db.fmdb.lastInsertRowId);
+            geoKey = specialKey.geoJSONData;
+        }
+        if (!ok)
+            return _db.lastDbError;
+        key = nil;
+    } else {
+        if (key)
+            keyJSON = toJSONString(key);
+        LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
+    }
+
+    if (![_db.fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
+                                   "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                  @(self.viewID), @(sequence), keyJSON, valueJSON,
+                                  fullTextID, bboxID, geoKey])
+        return _db.lastDbError;
+    return kCBLStatusOK;
+}
+
+
+/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
     CBLMapBlock mapBlock = self.mapBlock;
@@ -153,19 +220,13 @@ static id fromJSON( NSData* json ) {
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.
         CBLMapEmitBlock emit = ^(id key, id value) {
-            if (!key)
-                key = $null;
-            NSString* keyJSON = toJSONString(key);
-            NSString* valueJSON = toJSONString(value);
-            LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
-                                        "(?, ?, ?, ?)",
-                                        @(viewID), @(sequence), keyJSON, valueJSON])
-                ++inserted;
+            int status = [self _emitKey: key value: value forSequence: sequence];
+            if (status != kCBLStatusOK)
+                emitStatus = status;
             else
-                emitStatus = _db.lastDbError;
+                inserted++;
         };
-        
+
         // Now scan every revision added since the last time the view was indexed:
         FMResultSet* r;
         r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json FROM revs, docs "
@@ -298,6 +359,7 @@ static id fromJSON( NSData* json ) {
 #pragma mark - QUERYING:
 
 
+/** Generates and runs the SQL SELECT statement for a view query, and returns its iterator. */
 - (FMResultSet*) resultSetWithOptions: (const CBLQueryOptions*)options
                                status: (CBLStatus*)outStatus
 {
@@ -315,7 +377,12 @@ static id fromJSON( NSData* json ) {
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
     if (options->includeDocs)
         [sql appendString: @", revid, json"];
-    [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
+    if (options->bbox)
+        [sql appendString: @", bboxes.x0, bboxes.y0, bboxes.x1, bboxes.y1, maps.geokey"];
+    [sql appendString: @" FROM maps, revs, docs"];
+    if (options->bbox)
+        [sql appendString: @", bboxes"];
+    [sql appendString: @" WHERE maps.view_id=?"];
     NSMutableArray* args = $marray(@(_viewID));
 
     if (options->keys) {
@@ -348,8 +415,22 @@ static id fromJSON( NSData* json ) {
         [args addObject: toJSONString(maxKey)];
     }
     
+    if (options->bbox) {
+        [sql appendString: @" AND (bboxes.x1 > ? AND bboxes.x0 < ?)"
+                            " AND (bboxes.y1 > ? AND bboxes.y0 < ?)"
+                            " AND bboxes.rowid = maps.bbox_id"];
+        [args addObject: @(options->bbox->min.x)];
+        [args addObject: @(options->bbox->max.x)];
+        [args addObject: @(options->bbox->min.y)];
+        [args addObject: @(options->bbox->max.y)];
+    }
+    
     [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
-                        "ORDER BY key"];
+                        "ORDER BY"];
+    if (options->bbox)
+        [sql appendString: @" bboxes.y0, bboxes.x0"];
+    else
+        [sql appendString: @" key"];
     [sql appendString: collationStr];
     if (options->descending)
         [sql appendString: @" DESC"];
@@ -368,11 +449,15 @@ static id fromJSON( NSData* json ) {
 }
 
 
+/** Main internal call to query a view. */
 - (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus
 {
     if (!options)
         options = &kDefaultCBLQueryOptions;
+
+    if (options->fullTextQuery)
+        return [self _queryFullText: options status: outStatus];
     
     FMResultSet* r = [self resultSetWithOptions: options status: outStatus];
     if (!r)
@@ -435,11 +520,26 @@ static id fromJSON( NSData* json ) {
                 LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
                       toJSONString(docID));
-                [rows addObject: [[CBLQueryRow alloc] initWithDocID: docID
-                                                           sequence: sequence
-                                                                key: keyData
-                                                              value: valueData
-                                                      docProperties: docContents]];
+                CBLQueryRow* row;
+                if (options->bbox) {
+                    CBLGeoRect bbox = {{[r doubleForColumn: @"x0"],
+                                        [r doubleForColumn: @"y0"]},
+                                       {[r doubleForColumn: @"x1"],
+                                        [r doubleForColumn: @"y1"]}};
+                    row = [[CBLGeoQueryRow alloc] initWithDocID: docID
+                                                       sequence: sequence
+                                                    boundingBox: bbox
+                                                    geoJSONData: [r dataForColumn: @"geokey"]
+                                                          value: valueData
+                                                  docProperties: docContents];
+                } else {
+                    row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                    sequence: sequence
+                                                         key: keyData
+                                                       value: valueData
+                                               docProperties: docContents];
+                }
+                [rows addObject: row];
             }
         }
     }
@@ -447,6 +547,74 @@ static id fromJSON( NSData* json ) {
     [r close];
     *outStatus = kCBLStatusOK;
     LogTo(View, @"Query %@: Returning %u rows", _name, (unsigned)rows.count);
+    return rows;
+}
+
+
+id CBLTextKey(NSString* text) {
+    return [[CBLSpecialKey alloc] initWithText: text];
+}
+
+id CBLGeoPointKey(double x, double y) {
+    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
+}
+
+id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
+    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
+}
+
+id CBLGeoJSONKey(NSDictionary* geoJSON) {
+    id key = [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
+    if (!key)
+        Warn(@"CBLGeoJSONKey doesn't recognize %@",
+             [CBLJSON stringWithJSONObject: geoJSON options:0 error: NULL]);
+    return key;
+}
+
+
+/** Runs a full-text query of a view, using the FTS4 table. */
+- (NSArray*) _queryFullText: (const CBLQueryOptions*)options
+                     status: (CBLStatus*)outStatus
+{
+    NSMutableString* sql = [@"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value, "
+                             "offsets(fulltext)" mutableCopy];
+    if (options->fullTextSnippets)
+        [sql appendString: @", snippet(fulltext, '\001','\002','…')"];
+    [sql appendString: @" FROM maps, fulltext, revs, docs "
+                        "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
+                        "AND maps.view_id = ? "
+                        "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "];
+    if (options->fullTextRanking)
+        [sql appendString: @"ORDER BY - ftsrank(matchinfo(fulltext)) "];
+    else
+        [sql appendString: @"ORDER BY maps.sequence "];
+    if (options->descending)
+        [sql appendString: @" DESC"];
+    [sql appendString: @" LIMIT ? OFFSET ?"];
+    int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
+
+    FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID),
+                                              @(limit), @(options->skip)];
+    if (!r) {
+        *outStatus = _db.lastDbError;
+        return nil;
+    }
+    NSMutableArray* rows = [[NSMutableArray alloc] init];
+    while ([r next]) {
+        NSString* docID = [r stringForColumnIndex: 0];
+        SequenceNumber sequence = [r longLongIntForColumnIndex: 1];
+        UInt64 fulltextID = [r longLongIntForColumnIndex: 2];
+        NSData* valueData = [r dataForColumnIndex: 3];
+        NSString* offsets = [r stringForColumnIndex: 4];
+        CBLFullTextQueryRow* row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
+                                                                     sequence: sequence
+                                                                   fullTextID: fulltextID
+                                                                 matchOffsets: offsets
+                                                                        value: valueData];
+        if (options->fullTextSnippets)
+            row.snippet = [r stringForColumnIndex: 5];
+        [rows addObject: row];
+    }
     return rows;
 }
 
@@ -573,3 +741,133 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
 
 @end
+
+
+
+
+#pragma mark -
+
+@implementation CBLSpecialKey
+{
+    NSString* _text;
+    CBLGeoRect _rect;
+    NSData* _geoJSONData;
+}
+
+- (instancetype) initWithText: (NSString*)text {
+    Assert(text != nil);
+    self = [super init];
+    if (self) {
+        _text = text;
+    }
+    return self;
+}
+
+- (instancetype) initWithPoint: (CBLGeoPoint)point {
+    self = [super init];
+    if (self) {
+        _rect = (CBLGeoRect){point, point};
+        _geoJSONData = [CBLJSON dataWithJSONObject: CBLGeoPointToJSON(point) options: 0 error:NULL];
+        _geoJSONData = [NSData data]; // Empty _geoJSONData means the bbox is a point
+    }
+    return self;
+}
+
+- (instancetype) initWithRect: (CBLGeoRect)rect {
+    self = [super init];
+    if (self) {
+        _rect = rect;
+        // Don't set _geoJSONData; if nil it defaults to the same as the bbox.
+    }
+    return self;
+}
+
+- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON {
+    self = [super init];
+    if (self) {
+        if (!CBLGeoJSONBoundingBox(geoJSON, &_rect))
+            return nil;
+        _geoJSONData = [CBLJSON dataWithJSONObject: geoJSON options: 0 error: NULL];
+    }
+    return self;
+}
+
+@synthesize text=_text, rect=_rect, geoJSONData=_geoJSONData;
+
+- (NSString*) description {
+    if (_text) {
+        return $sprintf(@"CBLTextKey(\"%@\")", _text);
+    } else if (_rect.min.x==_rect.max.x && _rect.min.y==_rect.max.y) {
+        return $sprintf(@"CBLGeoPointKey(%g, %g)", _rect.min.x, _rect.min.y);
+    } else {
+        return $sprintf(@"CBLGeoRectKey({%g, %g}, {%g, %g})",
+                        _rect.min.x, _rect.min.y, _rect.max.x, _rect.max.y);
+    }
+}
+
+@end
+
+
+
+
+/*    Adapted from http://sqlite.org/fts3.html#appendix_a (public domain)
+ *    removing the column-weights feature (because we only have one column)
+ **
+ ** SQLite user defined function to use with matchinfo() to calculate the
+ ** relevancy of an FTS match. The value returned is the relevancy score
+ ** (a real value greater than or equal to zero). A larger value indicates
+ ** a more relevant document.
+ **
+ ** The overall relevancy returned is the sum of the relevancies of each
+ ** column value in the FTS table. The relevancy of a column value is the
+ ** sum of the following for each reportable phrase in the FTS query:
+ **
+ **   (<hit count> / <global hit count>)
+ **
+ ** where <hit count> is the number of instances of the phrase in the
+ ** column value of the current row and <global hit count> is the number
+ ** of instances of the phrase in the same column of all rows in the FTS
+ ** table.
+ */
+static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal) {
+    const uint32_t *aMatchinfo;                /* Return value of matchinfo() */
+    uint32_t nCol;
+    uint32_t nPhrase;                    /* Number of phrases in the query */
+    uint32_t iPhrase;                    /* Current phrase */
+    double score = 0.0;             /* Value to return */
+
+    /*  Set aMatchinfo to point to the array
+     ** of unsigned integer values returned by FTS function matchinfo. Set
+     ** nPhrase to contain the number of reportable phrases in the users full-text
+     ** query, and nCol to the number of columns in the table.
+     */
+    aMatchinfo = (const uint32_t*)sqlite3_value_blob(apVal[0]);
+    nPhrase = aMatchinfo[0];
+    nCol = aMatchinfo[1];
+
+    /* Iterate through each phrase in the users query. */
+    for(iPhrase=0; iPhrase<nPhrase; iPhrase++){
+        uint32_t iCol;                     /* Current column */
+
+        /* Now iterate through each column in the users query. For each column,
+         ** increment the relevancy score by:
+         **
+         **   (<hit count> / <global hit count>)
+         **
+         ** aPhraseinfo[] points to the start of the data for phrase iPhrase. So
+         ** the hit count and global hit counts for each column are found in
+         ** aPhraseinfo[iCol*3] and aPhraseinfo[iCol*3+1], respectively.
+         */
+        const uint32_t *aPhraseinfo = &aMatchinfo[2 + iPhrase*nCol*3];
+        for(iCol=0; iCol<nCol; iCol++){
+            uint32_t nHitCount = aPhraseinfo[3*iCol];
+            uint32_t nGlobalHitCount = aPhraseinfo[3*iCol+1];
+            if( nHitCount>0 ){
+                score += ((double)nHitCount / (double)nGlobalHitCount);
+            }
+        }
+    }
+
+    sqlite3_result_double(pCtx, score);
+    return;
+}

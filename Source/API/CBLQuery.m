@@ -7,6 +7,7 @@
 //
 
 #import "CouchbaseLitePrivate.h"
+#import "CBLQuery+FullTextSearch.h"
 #import "CBLView+Internal.h"
 #import "CBLDatabase.h"
 #import "CBL_Server.h"
@@ -33,8 +34,9 @@
 
 
 @interface CBLQueryRow ()
-@property (nonatomic) CBLDatabase* database;
+@property (readwrite, nonatomic) CBLDatabase* database;
 @end
+
 
 
 @implementation CBLQuery
@@ -63,6 +65,7 @@
         _database = database;
         _view = view;
         _limit = kDefaultCBLQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
+        _fullTextRanking = kDefaultCBLQueryOptions.fullTextRanking; // defaults to YES
         _mapOnly = (view.reduceBlock == nil);
     }
     return self;
@@ -89,11 +92,18 @@
         _descending = query.descending;
         _prefetch = query.prefetch;
         self.keys = query.keys;
+        if (query->_isGeoQuery) {
+            _isGeoQuery = YES;
+            _boundingBox = query->_boundingBox;
+        }
         _groupLevel = query.groupLevel;
         _mapOnly = query.mapOnly;
         self.startKeyDocID = query.startKeyDocID;
         self.endKeyDocID = query.endKeyDocID;
         _stale = query.stale;
+        _fullTextQuery = query.fullTextQuery;
+        _fullTextRanking = query.fullTextRanking;
+        _fullTextSnippets = query.fullTextSnippets;
         
     }
     return self;
@@ -122,6 +132,10 @@
         .startKey = _startKey,
         .endKey = _endKey,
         .keys = _keys,
+        .fullTextQuery = _fullTextQuery,
+        .fullTextSnippets = _fullTextSnippets,
+        .fullTextRanking = _fullTextRanking,
+        .bbox = (_isGeoQuery ? &_boundingBox : NULL),
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
         .reduce = !_mapOnly,
@@ -405,12 +419,13 @@ static id fromJSON( NSData* json ) {
 
 @implementation CBLQueryRow
 {
-    CBLDatabase* _database;
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
     __weak id _parsedKey, _parsedValue;
     UInt64 _sequence;
     NSString* _sourceDocID;
     NSDictionary* _documentProperties;
+    @protected
+    CBLDatabase* _database;
 }
 
 
@@ -539,11 +554,14 @@ static id fromJSON( NSData* json ) {
 
 // This is used by the router
 - (NSDictionary*) asJSONDictionary {
-    if (_value || _sourceDocID)
-        return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _sourceDocID},
+    if (_value || _sourceDocID) {
+        return $dict({@"key", self.key},
+                     {@"value", self.value},
+                     {@"id", _sourceDocID},
                      {@"doc", _documentProperties});
-    else
+    } else {
         return $dict({@"key", self.key}, {@"error", @"not_found"});
+    }
 
 }
 

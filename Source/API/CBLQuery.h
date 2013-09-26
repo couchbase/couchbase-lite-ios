@@ -144,7 +144,8 @@ typedef enum {
 @end
 
 
-/** A result row from a CouchbaseLite view query. */
+/** A result row from a CouchbaseLite view query.
+    Full-text and geo queries return subclasses -- see CBLFullTextQueryRow and CBLGeoQueryRow. */
 @interface CBLQueryRow : NSObject
 
 /** The row's key: this is the first parameter passed to the emit() call that generated the row. */
@@ -166,6 +167,8 @@ typedef enum {
 
 /** The revision ID of the document this row was mapped from. */
 @property (readonly) NSString* documentRevision;
+
+@property (readonly) CBLDatabase* database;
 
 /** The document this row was mapped from.
     This will be nil if a grouping was enabled in the query, because then the result rows don't correspond to individual documents. */

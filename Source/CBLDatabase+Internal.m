@@ -44,6 +44,17 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 @implementation CBLDatabase (Internal)
 
 
+#if 0
++ (void) initialize {
+    if (self == [CBLDatabase class]) {
+        int i = 0;
+        while (NULL != (const char *opt = sqlite3_compileoption_get(i++))
+               Log(@"SQLite has option '%s'", opt);
+    }
+}
+#endif
+
+
 - (FMDatabase*) fmdb {
     return _fmdb;
 }
@@ -140,7 +151,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 - (BOOL) initialize: (NSString*)statements error: (NSError**)outError {
-    for (NSString* statement in [statements componentsSeparatedByString: @";"]) {
+    for (NSString* quotedStatement in [statements componentsSeparatedByString: @";"]) {
+        NSString* statement = [quotedStatement stringByReplacingOccurrencesOfString: @"|"
+                                                                         withString: @";"];
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             if (outError) *outError = self.fmdbError;
             Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
@@ -180,6 +193,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     sqlite3_create_collation(_fmdb.sqliteHandle, "REVID", SQLITE_UTF8,
                              NULL, CBLCollateRevIDs);
 
+    [CBLView registerFunctions: self];
+    
     // Stuff we need to initialize every time the database opens:
     if (![self initialize: @"PRAGMA foreign_keys = ON;" error: outError])
         return NO;
@@ -306,20 +321,50 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             return NO;
         dbVersion = 5;
     }
-    
+
     if (dbVersion < 6) {
         // Version 6: enable Write-Ahead Log (WAL) <http://sqlite.org/wal.html>
         NSString* sql = @"PRAGMA journal_mode=WAL; \
-                          PRAGMA user_version = 6";
+        PRAGMA user_version = 6";
         if (![self initialize: sql error: outError])
             return NO;
-        //dbVersion = 6;
+        dbVersion = 6;
+    }
+
+    if (dbVersion < 7) {
+        // Version 7: enable full-text search
+        // Note: Apple's SQLite build does not support the icu or unicode61 tokenizers :(
+        // OPT: Could add compress/decompress functions to make stored content smaller
+        NSString* sql = @"CREATE VIRTUAL TABLE fulltext USING fts4(content, tokenize=unicodesn); \
+                          ALTER TABLE maps ADD COLUMN fulltext_id INTEGER; \
+                          CREATE INDEX IF NOT EXISTS maps_by_fulltext ON maps(fulltext_id); \
+                          CREATE TRIGGER del_fulltext DELETE ON maps WHEN old.fulltext_id not null \
+                                BEGIN DELETE FROM fulltext WHERE rowid=old.fulltext_id| END;\
+                          PRAGMA user_version = 7";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 7;
+    }
+
+    // (Version 8 was an older version of the geo index)
+
+    if (dbVersion < 9) {
+        // Version 9: Add geo-query index
+        NSString* sql = @"CREATE VIRTUAL TABLE bboxes USING rtree(rowid, x0, x1, y0, y1); \
+                        ALTER TABLE maps ADD COLUMN bbox_id INTEGER; \
+                        ALTER TABLE maps ADD COLUMN geokey BLOB; \
+                        CREATE TRIGGER del_bbox DELETE ON maps WHEN old.bbox_id not null \
+                        BEGIN DELETE FROM bboxes WHERE rowid=old.bbox_id| END;\
+                        PRAGMA user_version = 9";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 9;
     }
 
 #if DEBUG
     _fmdb.crashOnErrors = YES;
 #endif
-    
+
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
     _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath error: outError];
@@ -380,6 +425,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         case SQLITE_CORRUPT:
             return kCBLStatusCorruptError;
         default:
+            LogTo(CBLDatabase, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
             return kCBLStatusDBError;
     }
 }
@@ -778,6 +824,13 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     NSString* sql = $sprintf(@"SELECT sequence FROM revs WHERE doc_id=? AND revid=? %@ LIMIT 1",
                              (onlyCurrent ? @"AND current=1" : @""));
     return [_fmdb longLongForQuery: sql, @(docNumericID), revID];
+}
+
+
+- (NSString*) _indexedTextWithID: (UInt64)fullTextID {
+    if (fullTextID == 0)
+        return nil;
+    return [_fmdb stringForQuery: @"SELECT content FROM fulltext WHERE rowid=?", @(fullTextID)];
 }
 
 

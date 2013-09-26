@@ -10,6 +10,7 @@
 #import "CBLCache.h"
 #import "CBLDatabase.h"
 #import "CBL_Revision.h"
+#import "CBLGeometry.h"
 @class CBL_DatabaseChange, CBL_Revision, CBLManager, CBL_Server;
 
 
@@ -84,6 +85,12 @@
 
 
 @interface CBLQuery ()
+{
+    NSString* _fullTextQuery;
+    BOOL _fullTextSnippets, _fullTextRanking;
+    CBLGeoRect _boundingBox;
+    BOOL _isGeoQuery;
+}
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view                  __attribute__((nonnull(1)));
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -98,6 +105,24 @@
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
+@end
+
+@interface CBLFullTextQueryRow ()
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                    fullTextID: (UInt64)fullTextID
+                  matchOffsets: (NSString*)matchOffsets
+                         value: (id)value;
+@property (nonatomic) NSString* snippet;
+@end
+
+@interface CBLGeoQueryRow ()
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                   boundingBox: (CBLGeoRect)bbox
+                   geoJSONData: (NSData*)geoJSONData
+                         value: (NSData*)valueData
+                 docProperties: (NSDictionary*)docProperties;
 @end
 
 
