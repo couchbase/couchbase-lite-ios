@@ -263,7 +263,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [_db addActiveReplicator: self];
 
     // Did client request a reset (i.e. starting over from first sequence?)
-    if (_options[@"reset"] != nil) {
+    if (_options[kCBLReplicatorOption_Reset] != nil) {
         [_db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
     }
 
@@ -406,7 +406,21 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) reachabilityChanged: (CBLReachability*)host {
     LogTo(Sync, @"%@: Reachability state = %@ (%02X)", self, host, host.reachabilityFlags);
 
-    if (host.reachable)
+    // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
+    BOOL reachable = host.reachable;
+    NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
+                              lowercaseString];
+    if (network && reachable) {
+        BOOL wifi = host.reachableByWiFi;
+        if ($equal(network, @"wifi") || $equal(network, @"!cell"))
+            reachable = wifi;
+        else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
+            reachable = !wifi;
+        else
+            Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
+    }
+
+    if (reachable)
         [self goOnline];
     else if (host.reachabilityKnown)
         [self goOffline];
@@ -551,7 +565,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (NSTimeInterval) requestTimeout {
-    id timeoutObj = _options[@"connection_timeout"];    // CouchDB specifies this name
+    id timeoutObj = _options[kCBLReplicatorOption_Timeout];
     if (!timeoutObj)
         return kDefaultRequestTimeout;
     NSTimeInterval timeout = [timeoutObj doubleValue] / 1000.0;

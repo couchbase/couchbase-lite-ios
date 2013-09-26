@@ -120,7 +120,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 // These are the JSON properties in the replication document:
-@dynamic source, target, create_target, continuous, filter, query_params, doc_ids;
+@dynamic source, target, create_target, continuous, filter, query_params, doc_ids, network;
 
 @synthesize remoteURL=_remoteURL, pull=_pull;
 

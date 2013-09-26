@@ -127,3 +127,10 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 @property (readonly) NSTimeInterval requestTimeout;
 
 @end
+
+
+// Supported keys in the .options dictionary:
+#define kCBLReplicatorOption_Reset @"reset"
+#define kCBLReplicatorOption_Timeout @"connection_timeout"  // CouchDB specifies this name
+#define kCBLReplicatorOption_Heartbeat @"heartbeat"
+#define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"

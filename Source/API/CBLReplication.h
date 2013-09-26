@@ -86,6 +86,12 @@ typedef enum {
     Should map strings (header names) to strings. */
 @property (nonatomic, copy) NSDictionary* headers;
 
+/** Specifies which class of network the replication will operate over.
+    Default value is nil, which means replicate over all networks.
+    Set to "WiFi" (or "!Cell") to replicate only over WiFi,
+    or to "Cell" (or "!WiFi") to replicate only over cellular. */
+@property (nonatomic, copy) NSString* network;
+
 
 #pragma mark - AUTHENTICATION:
 
