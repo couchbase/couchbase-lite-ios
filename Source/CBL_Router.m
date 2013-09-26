@@ -16,6 +16,7 @@
 #import "CBL_Router.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Server.h"
+#import "CBLHTTPConnection.h"
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartWriter.h"
@@ -64,6 +65,7 @@
 }
 
 - (instancetype) initWithServer: (CBL_Server*)server
+                     connection: (CBLHTTPConnection *)connection
                         request: (NSURLRequest*)request
                         isLocal: (BOOL)isLocal
 {
@@ -72,6 +74,7 @@
     self = [self initWithDatabaseManager: nil request: request];
     if (self) {
         _server = server;
+        _connection = connection;
         _local = isLocal;
         _processRanges = YES;
     }
@@ -158,8 +161,24 @@
 
 
 - (NSDictionary*) bodyAsDictionary {
-    return $castIf(NSDictionary, [CBLJSON JSONObjectWithData: _request.HTTPBody
-                                                    options: 0 error: NULL]);
+    NSString *contentType = _request.allHTTPHeaderFields[@"Content-Type"];
+    if (contentType && [contentType rangeOfString:@"application/x-www-form-urlencoded"].location != NSNotFound) {
+        // TODO, check for a charset= parameter and don't assume UTF-8
+        NSString *body = [[NSString alloc] initWithData:_request.HTTPBody encoding:NSUTF8StringEncoding];
+
+        NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+        NSArray *formFields = [body componentsSeparatedByString:@"&"];
+        for (NSString *field in formFields) {
+            NSArray *fieldParts = [field componentsSeparatedByString:@"="];
+            if (fieldParts.count == 2) {
+                [result setObject:fieldParts[1] forKey:fieldParts[0]];
+            }
+        }
+        return result;
+    } else {
+        return $castIf(NSDictionary, [CBLJSON JSONObjectWithData: _request.HTTPBody
+                                                         options: 0 error: NULL]);
+    }
 }
 
 
@@ -349,6 +368,9 @@ static NSArray* splitPath( NSURL* url ) {
         } else if ([name hasPrefix: @"_design/"] || [name hasPrefix: @"_local/"]) {
             // This is also a document, just with a URL-encoded "/"
             docID = name;
+        } else if ([name isEqualToString: @"_session"]) {
+            // This fall through should not be reached
+            return kCBLStatusNotFound;
         } else {
             // Special document name like "_all_docs":
             [message insertString: name atIndex: message.length-1]; // add to 1st component of msg

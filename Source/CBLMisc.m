@@ -310,6 +310,25 @@ NSURL* CBLAppendToURL(NSURL* baseURL, NSString* toAppend) {
 }
 
 
+BOOL CBLSafeCompare(NSData *data1, NSData *data2) {
+    BOOL equal = YES;
+    
+    const char *data1bytes = [data1 bytes];
+    const char *data2bytes = [data2 bytes];
+    
+    for (NSUInteger i = 0; i < MAX(data1.length, data2.length); i++)
+    {
+        if (i >= data1.length || i >= data2.length) {
+            equal = NO;
+        } else {
+            if (data1bytes[i] != data2bytes[i])
+               equal = NO;
+        }
+    }
+    return equal;
+}
+
+
 TestCase(CBLQuoteString) {
     CAssertEqual(CBLQuoteString(@""), @"\"\"");
     CAssertEqual(CBLQuoteString(@"foo"), @"\"foo\"");

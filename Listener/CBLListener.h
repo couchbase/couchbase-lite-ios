@@ -41,6 +41,9 @@
     Setting the .passwords property automatically enables this.*/
 @property BOOL requiresAuth;
 
+/** Secret string configured per app or per device used for hashing AuthSession cookies */
+@property (copy) NSString* authSecret;
+    
 /** Security realm string to return in authentication challenges. */
 @property (copy) NSString* realm;
 
@@ -51,7 +54,10 @@
 /** Returns the password assigned to a user name, or nil if the name is not recognized. */
 - (NSString*) passwordForUser: (NSString*)username;
 
-
+/** User crededitial dictionary from the _users database */
+- (NSDictionary *) getUserCreds:(NSString *)username;
+    
+    
 /** Private key and certificate to use for incoming SSL connections.
     If nil (the default) SSL connections are not accepted. */
 @property (nonatomic) SecIdentityRef SSLIdentity;

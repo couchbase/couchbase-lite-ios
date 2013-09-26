@@ -8,7 +8,8 @@
 
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
-@class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter;
+
+@class CBL_Server, CBLHTTPConnection, CBLResponse, CBL_Body, CBLMultipartWriter;
 
 
 typedef CBLStatus (^OnAccessCheckBlock)(CBLDatabase*, NSString *docID, SEL action);
@@ -22,6 +23,7 @@ typedef void (^OnFinishedBlock)();
     @private
     CBL_Server* _server;
     CBLManager* _dbManager;
+    CBLHTTPConnection* _connection;
     NSURLRequest* _request;
     NSMutableArray* _path;
     NSDictionary* _queries;
@@ -45,6 +47,7 @@ typedef void (^OnFinishedBlock)();
 }
 
 - (instancetype) initWithServer: (CBL_Server*)server
+                     connection: (CBLHTTPConnection *)connection
                         request: (NSURLRequest*)request
                         isLocal: (BOOL)isLocal;
 

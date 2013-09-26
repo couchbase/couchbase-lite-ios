@@ -19,6 +19,9 @@
 #import "CBL_Router.h"
 #import "CBL_Body.h"
 
+#import "CBLBase64.h"
+#import "CBLMisc.h"
+
 #import "Logging.h"
 
 
@@ -40,6 +43,10 @@
         //EnableLogTo(CBLListenerVerbose, YES);
         _router = router;
         _connection = connection;
+        
+        // Check to see if there is an AuthSession cookie and authenticate the user if not timed out
+        [_connection processAuthSession];
+
         router.onResponseReady = ^(CBLResponse* r) {
             [self onResponseReady: r];
         };
@@ -128,6 +135,9 @@
 
 - (NSDictionary *) httpHeaders {
     LogTo(CBLListenerVerbose, @"%@ answers httpHeaders={%u headers}", self, (unsigned)_response.headers.count);
+    
+    // If the session has been authenticated, write the AuthSession header
+    [_connection writeAuthSession:_response];
     return _response.headers;
 }
 

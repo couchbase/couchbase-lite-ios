@@ -179,7 +179,10 @@ static NSString* normalizeHostname( NSString* hostname ) {
     }
     
     NSThread* loaderThread = [NSThread currentThread];
-    _router = [[CBL_Router alloc] initWithServer: server request: self.request isLocal: YES];
+    _router = [[CBL_Router alloc] initWithServer: server
+                                      connection: NULL
+                                         request: self.request
+                                         isLocal: YES];
     
     __weak id weakSelf = self;
     
