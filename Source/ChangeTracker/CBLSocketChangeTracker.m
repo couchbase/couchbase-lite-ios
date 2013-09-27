@@ -428,14 +428,13 @@
     
     uint8_t buffer[kReadLength];
     NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
-    if (bytesRead > 0)
+    if (bytesRead > 0) {
         [_inputBuffer appendBytes: buffer length: bytesRead];
-    else
-        Warn(@"%@: input stream read returned %ld", self, (long)bytesRead); // should never happen
-    LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
+        LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)bytesRead);
 
-    if (_mode == kContinuous)
-        [self readLines];
+        if (_mode == kContinuous)
+            [self readLines];
+    }
 }
 
 
