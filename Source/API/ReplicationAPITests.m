@@ -14,6 +14,11 @@
 #if DEBUG
 
 
+// This db will get deleted and overwritten during every test.
+#define kPushThenPullDBName @"cbl_replicator_pushpull"
+#define kNDocuments 1000
+
+
 static CBLDatabase* createEmptyManagerAndDb(void) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
     NSError* error;
@@ -27,15 +32,23 @@ static void runReplication(CBLReplication* repl) {
     Log(@"Waiting for %@ to finish...", repl);
     bool started = false, done = false;
     [repl start];
+    CFAbsoluteTime lastTime = 0;
     while (!done) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]])
             break;
         if (repl.running)
             started = true;
         if (started && (repl.mode == kCBLReplicationStopped ||
                         repl.mode == kCBLReplicationIdle))
             done = true;
+
+        // Replication runs on a background thread, so the main runloop should not be blocked.
+        // Make sure it's spinning in a timely manner:
+        CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+        if (lastTime > 0 && now-lastTime > 0.25)
+            Warn(@"Runloop was blocked for %g sec", now-lastTime);
+        lastTime = now;
     }
     Log(@"...replicator finished. mode=%d, progress %u/%u, error=%@",
         repl.mode, repl.completed, repl.total, repl.error);
@@ -88,7 +101,64 @@ TestCase(CreateReplicators) {
 }
 
 
-TestCase(RunReplicatorWithError) {
+TestCase(RunPushReplication) {
+
+    RequireTestCase(CreateReplicators);
+    NSURL* remoteDbURL = RemoteTestDBURL(kPushThenPullDBName);
+    if (!remoteDbURL) {
+        Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
+        return;
+    }
+    DeleteRemoteDB(remoteDbURL);
+
+    Log(@"Creating %d documents...", kNDocuments);
+    CBLDatabase* db = createEmptyManagerAndDb();
+    [db inTransaction:^BOOL{
+        for (int i = 1; i <= kNDocuments; i++) {
+            @autoreleasepool {
+                CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+                NSError* error;
+                [doc putProperties: @{@"index": @(i), @"bar": $false} error: &error];
+                AssertNil(error);
+            }
+        }
+        return YES;
+    }];
+
+    Log(@"Pushing...");
+    CBLReplication* repl = [db pushToURL: remoteDbURL];
+    repl.create_target = YES;
+    runReplication(repl);
+    AssertNil(repl.error);
+    [db.manager close];
+}
+
+
+TestCase(RunPullReplication) {
+    RequireTestCase(RunPushReplication);
+    NSURL* remoteDbURL = RemoteTestDBURL(kPushThenPullDBName);
+    if (!remoteDbURL) {
+        Warn(@"Skipping test RunPullReplication (no remote test DB URL)");
+        return;
+    }
+    CBLDatabase* db = createEmptyManagerAndDb();
+
+    Log(@"Pulling...");
+    CBLReplication* repl = [db pullFromURL: remoteDbURL];
+    runReplication(repl);
+    AssertNil(repl.error);
+
+    Log(@"Verifying documents...");
+    for (int i = 1; i <= kNDocuments; i++) {
+        CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+        AssertEqual(doc[@"index"], @(i));
+        AssertEqual(doc[@"bar"], $false);
+    }
+    [db.manager close];
+}
+
+
+TestCase(RunReplicationWithError) {
     RequireTestCase(CreateReplicators);
     NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://couchbase.com/no_such_db"];
     CBLDatabase* db = createEmptyManagerAndDb();
@@ -139,8 +209,9 @@ TestCase(ReplicationChannelsProperty) {
 
 TestCase(API_Replicator) {
     RequireTestCase(CreateReplicators);
-    RequireTestCase(RunReplicatorWithError);
+    RequireTestCase(RunReplicationWithError);
     RequireTestCase(ReplicationChannelsProperty);
+    RequireTestCase(RunPushReplication);
 }
 
 

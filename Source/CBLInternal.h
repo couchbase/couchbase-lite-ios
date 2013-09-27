@@ -108,4 +108,6 @@ NSURL* RemoteTestDBURL(NSString* dbName);
 
 void AddTemporaryCredential(NSURL* url, NSString* realm,
                             NSString* username, NSString* password);
+
+void DeleteRemoteDB(NSURL* dbURL);
 #endif

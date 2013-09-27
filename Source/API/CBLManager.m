@@ -145,7 +145,7 @@ static NSCharacterSet* kIllegalNameChars;
 #endif
 
 
-- (id) copyWithZone: (NSZone*)zone {
+- (id) _copy {
     CBLManagerOptions options = _options;
     options.noReplicator = true;        // Don't want to run multiple replicator tasks
     NSError* error;
@@ -157,6 +157,13 @@ static NSCharacterSet* kIllegalNameChars;
         return nil;
     }
     mgr->_shared = self.shared;
+    return mgr;
+}
+
+- (id) copyWithZone: (NSZone*)zone {
+    CBLManager* mgr = [self _copy];
+    if (mgr)
+        mgr->_server = self.backgroundServer;
     return mgr;
 }
 
@@ -220,7 +227,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 - (CBL_Server*) backgroundServer {
     if (!_server) {
-        CBLManager* newManager = [self copy];
+        CBLManager* newManager = [self _copy];
         if (newManager) {
             _server = [[CBL_Server alloc] initWithManager: newManager];
             LogTo(CBLDatabase, @"%@ created %@", self, _server);

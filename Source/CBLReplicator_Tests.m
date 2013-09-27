@@ -98,7 +98,7 @@ static id<CBLAuthorizer> authorizer(void) {
 }
 
 
-static void deleteRemoteDB(NSURL* dbURL) {
+void DeleteRemoteDB(NSURL* dbURL) {
     Log(@"Deleting %@", dbURL);
     __block NSError* error = nil;
     __block BOOL finished = NO;
@@ -221,7 +221,7 @@ TestCase(CBL_Pusher) {
     // Push them to the remote:
     NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
     if (remoteDB) {
-        deleteRemoteDB(remoteDB);
+        DeleteRemoteDB(remoteDB);
         id lastSeq = replic8(db, remoteDB, YES, @"filter");
         CAssertEqual(lastSeq, @"3");
         CAssertEq(filterCalls, 2);

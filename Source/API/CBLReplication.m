@@ -21,7 +21,7 @@
 #import "MYURLUtils.h"
 
 
-#undef RUN_IN_BACKGROUND
+#define RUN_IN_BACKGROUND 1
 
 
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
@@ -358,7 +358,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block {
 #if RUN_IN_BACKGROUND
-    [self.database.manager.tdServer tellDatabaseManager: block];
+    [self.database.manager.backgroundServer tellDatabaseManager: block];
 #else
     block(self.database.manager);
 #endif
