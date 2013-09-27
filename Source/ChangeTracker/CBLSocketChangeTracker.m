@@ -253,7 +253,8 @@
             if (_credential) {
                 // Recoverable auth failure -- close socket but try again with _credential:
                 _unauthResponse = response;
-                [self failedWithError: CBLStatusToNSError((CBLStatus)status, self.changesFeedURL)];
+                [self clearConnection];
+                [self retry];
                 return NO;
             }
         }
