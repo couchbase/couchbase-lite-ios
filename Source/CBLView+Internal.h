@@ -62,10 +62,7 @@ typedef enum {
 
 #if DEBUG  // for unit tests only
 - (void) setCollation: (CBLViewCollation)collation;
-- (NSArray*) dump;
 #endif
-
-//@property CBLContentOptions mapContentOptions;
 
 /** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
 - (BOOL) compileFromProperties: (NSDictionary*)viewProps
@@ -75,10 +72,18 @@ typedef enum {
  @return  200 if updated, 304 if already up-to-date, else an error code */
 - (CBLStatus) updateIndex;
 
+@end
+
+
+@interface CBLView (Querying)
+
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
     @return  An array of CBLQueryRow. */
 - (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus;
+#if DEBUG
+- (NSArray*) dump;
+#endif
 
 @end
