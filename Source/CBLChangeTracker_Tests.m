@@ -72,7 +72,7 @@ TestCase(DictOf) {
         Warn(@"Timeout contacting %@", tracker.databaseURL);
         return;
     }
-    Assert(!tracker.error, nil);
+    AssertNil(tracker.error);
     CAssertEqual(_changes, expectedChanges);
 }
 
@@ -175,12 +175,12 @@ TestCase(CBLChangeTracker_Auth) {
         return;
     }
     CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
-    addTemporaryCredential(url, @"snejdom", @"dummy", @"dummy");
+    addTemporaryCredential(url, @"CouchDB", @"dummy", @"dummy");
 
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"something"},
-                                     {@"changes", $array($dict({@"rev", @"1-967a00dff5e02add41819138abb3284d"}))}) );
+                                     {@"changes", $array($dict({@"rev", @"1-31e4c2faf5cfcd56f4518c29367f9124"}))}) );
     [tester run: tracker expectingChanges: expected];
 }
 

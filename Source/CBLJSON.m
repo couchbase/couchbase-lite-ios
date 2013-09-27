@@ -223,6 +223,7 @@ TestCase(CBLJSON_Date) {
 }
 
 
+#if 0 // this is a performance not a correctness test; and it's slow
 // Benchmark code adapted from https://gist.github.com/AnuragMishra/6474321
 
 #import "sqlite3.h"
@@ -361,6 +362,7 @@ unsigned randomNumberInRange(unsigned start, unsigned end)
     unsigned span = end - start;
     return start + (unsigned)arc4random_uniform(span);
 }
+#endif
 
 
 #endif // DEBUG
