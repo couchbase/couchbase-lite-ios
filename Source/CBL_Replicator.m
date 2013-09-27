@@ -696,7 +696,7 @@ static BOOL sOnlyTrustAnchorCerts;
                                        {@"continuous", (self.continuous ? nil : $false)},
                                        {@"filter", _filterName},
                                        {@"filterParams", _filterParameters},
-                                       {@"headers", _requestHeaders},
+                                     //{@"headers", _requestHeaders}, (removed; see #143)
                                        {@"docids", _docIDs});
     return CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
 }
