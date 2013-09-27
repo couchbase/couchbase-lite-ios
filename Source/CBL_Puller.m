@@ -395,8 +395,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: dl.document];
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                [_downloadsToInsert queueObject: gotRev];
                 [strongSelf asyncTaskStarted];
+                [_downloadsToInsert queueObject: gotRev];
             }
             
             // Note that we've finished this task:
@@ -450,8 +450,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                               if (pos != NSNotFound) {
                                   rev.sequence = [remainingRevs[pos] sequence];
                                   [remainingRevs removeObjectAtIndex: pos];
-                                  [_downloadsToInsert queueObject: rev];
                                   [self asyncTaskStarted];
+                                  [_downloadsToInsert queueObject: rev];
                               }
                           }
                       }
