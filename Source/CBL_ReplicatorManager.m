@@ -114,7 +114,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", @"continuous", nil];
     NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params",
                                               @"heartbeat", @"feed", @"reset", @"continuous",
-                                              @"headers", "network", nil];
+                                              @"headers", @"network", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
     return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context currentRevision])
