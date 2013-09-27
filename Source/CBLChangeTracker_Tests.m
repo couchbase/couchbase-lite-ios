@@ -109,17 +109,6 @@ TestCase(DictOf) {
 @end
 
 
-static void addTemporaryCredential(NSURL* url, NSString* realm,
-                                   NSString* username, NSString* password)
-{
-    NSURLCredential* c = [NSURLCredential credentialWithUser: username password: password
-                                                 persistence: NSURLCredentialPersistenceForSession];
-    NSURLProtectionSpace* s = [url my_protectionSpaceWithRealm: realm
-                                          authenticationMethod: NSURLAuthenticationMethodDefault];
-    [[NSURLCredentialStorage sharedCredentialStorage] setCredential: c forProtectionSpace: s];
-}
-
-
 TestCase(CBLChangeTracker_Simple) {
     for (CBLChangeTrackerMode mode = kOneShot; mode <= kContinuous; ++mode) {
         Log(@"Mode = %d ...", mode);
@@ -175,7 +164,7 @@ TestCase(CBLChangeTracker_Auth) {
         return;
     }
     CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
-    addTemporaryCredential(url, @"CouchDB", @"dummy", @"dummy");
+    AddTemporaryCredential(url, @"CouchDB", @"dummy", @"dummy");
 
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
     NSArray* expected = $array($dict({@"seq", @1},

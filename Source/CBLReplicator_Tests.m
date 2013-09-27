@@ -38,6 +38,18 @@
 // This is a read-only db whose contents should be a default CouchApp.
 #define kCouchAppDBName @"couchapp_helloworld"
 
+
+
+/** Returns the base URL of a replication-compatible server that has the necessary databases for
+    unit tests. All unit tests that connect to a server should call this function to get the server
+    address, so it can be configured at runtime.
+    This is configured by the following environment variables; the best way to set
+    them up is to use the Xcode scheme editor, under "Arguments" in the "Run" section.
+        CBL_TEST_SERVER :    The base URL of the server (defaults to http://127.0.0.1:5984/)
+        CBL_TEST_USERNAME :  The user name to authenticate as [optional]
+        CBL_TEST_PASSWORD :  The password [required if username is given]
+        CBL_TEST_REALM :     The server's "Realm" string [required if username is given]
+*/
 NSURL* RemoteTestDBURL(NSString* dbName) {
     NSString* urlStr = [[NSProcessInfo processInfo] environment][@"CBL_TEST_SERVER"];
     if (!urlStr)
@@ -45,8 +57,34 @@ NSURL* RemoteTestDBURL(NSString* dbName) {
     else if (urlStr.length == 0)
         return nil;
     NSURL* server = [NSURL URLWithString: urlStr];
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString* username = [[NSProcessInfo processInfo] environment][@"CBL_TEST_USERNAME"];
+        NSString* password = [[NSProcessInfo processInfo] environment][@"CBL_TEST_PASSWORD"];
+        NSString* realm = [[NSProcessInfo processInfo] environment][@"CBL_TEST_REALM"];
+        if (username) {
+            Assert(password, @"Didn't setenv CBL_TEST_PASSWORD");
+            Assert(realm, @"Didn't setenv CBL_TEST_REALM");
+            AddTemporaryCredential(server, realm, username, password);
+            Log(@"Registered credentials for %@ as %@  (realm %@)", urlStr, username, realm);
+        }
+    });
+
     return [server URLByAppendingPathComponent: dbName];
 }
+
+
+void AddTemporaryCredential(NSURL* url, NSString* realm,
+                            NSString* username, NSString* password)
+{
+    NSURLCredential* c = [NSURLCredential credentialWithUser: username password: password
+                                                 persistence: NSURLCredentialPersistenceForSession];
+    NSURLProtectionSpace* s = [url my_protectionSpaceWithRealm: realm
+                                          authenticationMethod: NSURLAuthenticationMethodDefault];
+    [[NSURLCredentialStorage sharedCredentialStorage] setCredential: c forProtectionSpace: s];
+}
+
 
 
 static id<CBLAuthorizer> authorizer(void) {
