@@ -52,16 +52,21 @@ static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
     CAssert(doc.currentRevisionID);
     CAssertEqual(doc.userProperties, properties);
     CAssertEq(db[doc.documentID], doc);
-    Log(@"Created %p = %@", doc, doc);
+    //Log(@"Created %p = %@", doc, doc);
     return doc;
 }
 
 
 static void createDocuments(CBLDatabase* db, unsigned n) {
+    [db inTransaction:^BOOL{
     for (unsigned i=0; i<n; i++) {
+            @autoreleasepool {
         NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
         createDocumentWithProperties(db, properties);
     }
+}
+        return YES;
+    }];
 }
 
 

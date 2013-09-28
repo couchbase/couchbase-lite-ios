@@ -17,6 +17,11 @@
 #import "RootViewController.h"
 #import "CouchbaseLite.h"
 
+#define PERFORMANCE_TEST 0 // Enable this to do benchmarking (see RunViewPerformanceTest below)
+#if PERFORMANCE_TEST
+static void RunViewPerformanceTest(void);
+#endif
+
 
 @implementation DemoAppDelegate
 
@@ -26,6 +31,11 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+#if PERFORMANCE_TEST
+    RunViewPerformanceTest();
+    exit(0);
+#endif
+
     // Add the navigation controller's view to the window and display.
 	[window addSubview:navigationController.view];
 	[window makeKeyAndVisible];
@@ -68,3 +78,76 @@
 
 
 @end
+
+
+
+#if PERFORMANCE_TEST
+
+@interface CBLView (seekrit)
+- (void) updateIndex;
+@end
+
+
+static CBLDatabase* createEmptyDB(void) {
+    CBLManager* dbmgr = [CBLManager sharedInstance];
+    NSError* error;
+    CBLDatabase* db = dbmgr[@"test_db"];
+    if (db)
+        assert([db deleteDatabase: &error]);
+    return [dbmgr createDatabaseNamed: @"test_db" error: &error];
+}
+
+
+static NSTimeInterval elapsed(void) {
+    static CFAbsoluteTime time;
+    CFAbsoluteTime curTime = CFAbsoluteTimeGetCurrent();
+    NSTimeInterval t = curTime - time;
+    time = curTime;
+    return t;
+}
+
+
+static void RunViewPerformanceTest(void) {
+    CBLDatabase* db = createEmptyDB();
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], doc[@"testName"]);
+    }) version: @"1"];
+
+    (void)elapsed();
+    static const NSUInteger kNDocs = 5000;
+    NSLog(@"Creating %u documents...", (unsigned)kNDocs);
+    [db inTransaction:^BOOL{
+        for (unsigned i=0; i<kNDocs; i++) {
+            @autoreleasepool {
+                NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
+                CBLDocument* doc = [db untitledDocument];
+                NSError* error;
+                __unused CBLRevision* rev = [doc putProperties: properties error: &error];
+                NSCAssert(rev,@"Couldn't save: %@", error);  // save it!
+            }
+        }
+        return YES;
+    }];
+
+    NSLog(@"Created docs:  %6.3f", elapsed());
+    [view updateIndex];
+
+    NSLog(@"Updated index: %6.3f", elapsed());
+    CBLQuery* query = [view query];
+    NSArray* rows = [query rows].allObjects;
+    NSCAssert(rows, @"query failed");
+    NSCAssert(rows.count == kNDocs, @"wrong number of rows");
+
+    NSLog(@"Queried view:  %6.3f", elapsed());
+    int expectedKey = 0;
+    for (CBLQueryRow* row in rows) {
+        NSCAssert([row.key intValue] == expectedKey, @"wrong key");
+        ++expectedKey;
+    }
+    NSLog(@"Verified rows: %6.3f", elapsed());
+
+    [db.manager close];
+}
+
+#endif // PERFORMANCE_TEST
