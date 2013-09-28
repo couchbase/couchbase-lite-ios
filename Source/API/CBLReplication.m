@@ -389,9 +389,10 @@ static inline BOOL isLocalDBName(NSString* url) {
         _started = YES;
         _mainThread = [NSThread currentThread];
 
+        NSDictionary* properties= self.currentProperties;
         [self tellDatabaseManager:^(CBLManager* dbmgr) {
             // This runs on the server thread:
-            [self bg_startReplicator: dbmgr properties: self.currentProperties];
+            [self bg_startReplicator: dbmgr properties: properties];
         }];
     }
 }
