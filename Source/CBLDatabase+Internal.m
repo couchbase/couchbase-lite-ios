@@ -363,6 +363,15 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         dbVersion = 9;
     }
 
+    if (dbVersion < 10) {
+        // Version 10: Add rev flag for whether it has an attachment
+        NSString* sql = @"ALTER TABLE revs ADD COLUMN no_attachments BOOLEAN; \
+                          PRAGMA user_version = 10";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 10;
+    }
+
 #if DEBUG
     _fmdb.crashOnErrors = YES;
 #endif
@@ -626,8 +635,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     Assert(sequence > 0);
     
     // Get attachment metadata, and optionally the contents:
-    NSDictionary* attachmentsDict = [self getAttachmentDictForSequence: sequence
-                                                               options: options];
+    NSDictionary* attachmentsDict = nil;
+    if (!(options & kCBLNoAttachments))
+        attachmentsDict = [self getAttachmentDictForSequence: sequence options: options];
     
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
@@ -720,7 +730,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 {
     CBL_MutableRevision* result = nil;
     CBLStatus status;
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence"];
+    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence, no_attachments"];
     if (!(options & kCBLNoBody))
         [sql appendString: @", json"];
     if (revID)
@@ -748,7 +758,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (options != kCBLNoBody) {
             NSData* json = nil;
             if (!(options & kCBLNoBody))
-                json = [r dataNoCopyForColumnIndex: 3];
+                json = [r dataNoCopyForColumnIndex: 4];
+            if ([r boolForColumnIndex: 3]) // no_attachments == true
+                options |= kCBLNoAttachments;
             [self expandStoredJSON: json intoRevision: result options: options];
         }
         status = kCBLStatusOK;

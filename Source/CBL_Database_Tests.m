@@ -512,6 +512,7 @@ static void insertAttachment(CBLDatabase* db, NSData* blob,
     attachment->encodedLength = encodedLength;
     attachment->revpos = revpos;
     CAssertEq([db insertAttachment: attachment forSequence: sequence], kCBLStatusCreated);
+    [db _setNoAttachments: NO forSequence: sequence];
 }
 
 
@@ -528,7 +529,7 @@ TestCase(CBL_Database_Attachments) {
     CBL_Revision* rev1;
     CBLStatus status;
     rev1 = [db putRevision: [CBL_Revision revisionWithProperties:$dict({@"foo", @1},
-                                                                     {@"bar", $false})]
+                                                                       {@"bar", $false})]
             prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
     CAssert(![db sequenceHasAttachments: rev1.sequence]);

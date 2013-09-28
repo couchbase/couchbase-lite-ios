@@ -44,4 +44,9 @@
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
                      result: (NSDictionary**)outResult;
 
+#if DEBUG
+// Grotesque hack, for some attachment unit-tests only!
+- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence;
+#endif
+
 @end

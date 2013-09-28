@@ -494,13 +494,13 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
-/** Given a revision, read its _attachments dictionary (if any), convert each attachment to a
-    CBL_Attachment object, and return a dictionary mapping names->CBL_Attachments. */
+/** Given a revision, read its _attachments dictionary (if any), convert each non-stub
+    attachment to a CBL_Attachment object, and return a dictionary names->CBL_Attachments. */
 - (NSDictionary*) attachmentsFromRevision: (CBL_Revision*)rev
                                    status: (CBLStatus*)outStatus
 {
     // If there are no attachments in the new rev, there's nothing to do:
-    NSDictionary* revAttachments = rev[@"_attachments"];
+    NSDictionary* revAttachments = $castIf(NSDictionary, rev[@"_attachments"]);
     if (revAttachments.count == 0 || rev.deleted) {
         *outStatus = kCBLStatusOK;
         return @{};

@@ -231,15 +231,18 @@
                      docNumericID: (SInt64)docNumericID
                    parentSequence: (SequenceNumber)parentSequence
                           current: (BOOL)current
+                   hasAttachments: (BOOL)hasAttachments
                              JSON: (NSData*)json
 {
-    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
-                                "VALUES (?, ?, ?, ?, ?, ?)",
+    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, "
+                                                  "no_attachments, json) "
+                                "VALUES (?, ?, ?, ?, ?, ?, ?)",
                                @(docNumericID),
                                rev.revID,
                                (parentSequence ? @(parentSequence) : nil ),
                                @(current),
                                @(rev.deleted),
+                               @(!hasAttachments),
                                json])
         return 0;
     return rev.sequence = _fmdb.lastInsertRowId;
@@ -407,6 +410,7 @@
                                           docNumericID: docNumericID
                                         parentSequence: parentSequence
                                                current: YES
+                                        hasAttachments: (oldRev[@"_attachments"] != nil)
                                                   JSON: json];
         if (!sequence) {
             // The insert failed. If it was due to a constraint violation, that means a revision
@@ -556,6 +560,7 @@
                                    docNumericID: docNumericID
                                  parentSequence: sequence
                                         current: current 
+                                 hasAttachments: (newRev[@"_attachments"] != nil)
                                            JSON: json];
                 if (sequence <= 0)
                     return self.lastDbError;
@@ -604,6 +609,17 @@
     }
     return status;
 }
+
+
+#if DEBUG
+// Grotesque hack, for some attachment unit-tests only!
+- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence {
+    if (![_fmdb executeUpdate: @"UPDATE revs SET no_attachments=? WHERE sequence=?",
+                               @(noAttachments), @(sequence)])
+        return self.lastDbError;
+    return kCBLStatusOK;
+}
+#endif
 
 
 #pragma mark - PURGING / COMPACTING:

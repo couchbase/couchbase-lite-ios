@@ -230,7 +230,8 @@ static NSString* toJSONString( id object ) {
 
         // Now scan every revision added since the last time the view was indexed:
         FMResultSet* r;
-        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json FROM revs, docs "
+        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
+                                 "FROM revs, docs "
                                  "WHERE sequence>? AND current!=0 AND deleted=0 "
                                  "AND revs.doc_id = docs.doc_id "
                                  "ORDER BY revs.doc_id, revid DESC",
@@ -308,11 +309,14 @@ static NSString* toJSONString( id object ) {
                 }
                 
                 // Get the document properties, to pass to the map function:
+                CBLContentOptions contentOptions = _mapContentOptions;
+                if ([r boolForColumnIndex: 5])
+                    contentOptions |= kCBLNoAttachments;
                 NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
                                                                    deleted: NO
                                                                   sequence: sequence
-                                                                   options: _mapContentOptions];
+                                                                   options: contentOptions];
                 if (!properties) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
