@@ -48,7 +48,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 + (void) initialize {
     if (self == [CBLDatabase class]) {
         int i = 0;
-        while (NULL != (const char *opt = sqlite3_compileoption_get(i++))
+        while (NULL != (const char *opt = sqlite3_compileoption_get(i++)))
                Log(@"SQLite has option '%s'", opt);
     }
 }
@@ -182,6 +182,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (outError) *outError = self.fmdbError;
         return NO;
     }
+
+    _fmdb.shouldCacheStatements = YES;      // Saves the time to recompile SQL statements
 
     // Register CouchDB-compatible JSON collation functions:
     sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8,
