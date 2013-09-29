@@ -37,6 +37,8 @@ NSString* const CBL_DatabaseChangesNotification = @"CBL_DatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
+#define kDocIDCacheSize 1000
+
 #define kTransactionMaxRetries 10
 #define kTransactionRetryDelay 0.050
 
@@ -124,7 +126,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #else
         _fmdb.logsErrors = WillLogTo(CBLDatabase);
 #endif
-        _fmdb.traceExecution = WillLogTo(CBL_DatabaseVerbose);
+        _fmdb.traceExecution = WillLogTo(CBLDatabaseVerbose);
+        _docIDs = [[NSCache alloc] init];
+        _docIDs.countLimit = kDocIDCacheSize;
         _thread = [NSThread currentThread];
         _startTime = [NSDate date];
 
@@ -728,26 +732,27 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                           options: (CBLContentOptions)options
                            status: (CBLStatus*)outStatus
 {
+    SInt64 docNumericID = [self getDocNumericID: docID];
+    if (docNumericID <= 0) {
+        if (outStatus) *outStatus = kCBLStatusNotFound;
+        return nil;
+    }
+
     CBL_MutableRevision* result = nil;
     CBLStatus status;
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence, no_attachments"];
     if (!(options & kCBLNoBody))
         [sql appendString: @", json"];
     if (revID)
-        [sql appendString: @" FROM revs, docs "
-               "WHERE docs.docid=? AND revs.doc_id=docs.doc_id AND revid=? AND json notnull LIMIT 1"];
+        [sql appendString: @" FROM revs WHERE revs.doc_id=? AND revid=? AND json notnull LIMIT 1"];
     else
-        [sql appendString: @" FROM revs, docs "
-               "WHERE docs.docid=? AND revs.doc_id=docs.doc_id and current=1 and deleted=0 "
-               "ORDER BY revid DESC LIMIT 1"];
-    FMResultSet *r = [_fmdb executeQuery: sql, docID, revID];
+        [sql appendString: @" FROM revs WHERE revs.doc_id=? and current=1 and deleted=0 "
+                            "ORDER BY revid DESC LIMIT 1"];
+    FMResultSet *r = [_fmdb executeQuery: sql, @(docNumericID), revID];
     if (!r) {
         status = self.lastDbError;
     } else if (![r next]) {
-        if (!revID && [self getDocNumericID: docID] > 0)
-            status = kCBLStatusDeleted;
-        else
-            status = kCBLStatusNotFound;
+        status = revID ? kCBLStatusNotFound : kCBLStatusDeleted;
     } else {
         if (!revID)
             revID = [r stringForColumnIndex: 0];
@@ -792,9 +797,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (rev.body && options==0 && rev.sequence)
         return kCBLStatusOK;  // no-op
     Assert(rev.docID && rev.revID);
-    FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs, docs "
-                            "WHERE revid=? AND docs.docid=? AND revs.doc_id=docs.doc_id LIMIT 1",
-                            rev.revID, rev.docID];
+    SInt64 docNumericID = [self getDocNumericID: rev.docID];
+    if (docNumericID <= 0)
+        return kCBLStatusNotFound;
+    FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs "
+                            "WHERE doc_id=? AND revid=? LIMIT 1",
+                            @(docNumericID), rev.revID];
     if (!r)
         return self.lastDbError;
     CBLStatus status = kCBLStatusNotFound;
@@ -826,8 +834,16 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (SInt64) getDocNumericID: (NSString*)docID {
-    Assert(docID);
-    return [_fmdb longLongForQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
+    NSNumber* cached = [_docIDs objectForKey: docID];
+    if (cached) {
+        return cached.longLongValue;
+    } else {
+        SInt64 result = [_fmdb longLongForQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
+        if (result <= 0)
+            return result;
+        [_docIDs setObject: @(result) forKey: docID];
+        return result;
+    }
 }
 
 

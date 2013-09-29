@@ -68,6 +68,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     BOOL _isOpen;
     int _transactionLevel;
     NSThread* _thread;
+    NSCache* _docIDs;
     NSMutableDictionary* _views;
     CBL_BlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;

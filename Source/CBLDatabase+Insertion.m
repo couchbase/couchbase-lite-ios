@@ -133,7 +133,10 @@
     Assert([CBLDatabase isValidDocumentID: docID]);  // this should be caught before I get here
     if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
         return -1;
-    return _fmdb.lastInsertRowId;
+    SInt64 row = _fmdb.lastInsertRowId;
+    Assert(![_docIDs objectForKey: docID]);
+    [_docIDs setObject: @(row) forKey: docID];
+    return row;
 }
 
 

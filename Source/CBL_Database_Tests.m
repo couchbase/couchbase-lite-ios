@@ -999,14 +999,14 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_CRUD);
     RequireTestCase(CBL_Database_DeleteWithProperties);
     RequireTestCase(CBL_Database_RevTree);
+    RequireTestCase(CBL_Database_LocalDocs);
+    RequireTestCase(CBL_Database_FindMissingRevisions);
+    RequireTestCase(CBL_Database_Purge);
+    RequireTestCase(CBL_Database_ReplicatorSequences);
     RequireTestCase(CBL_Database_Attachments);
     RequireTestCase(CBL_Database_PutAttachment);
     RequireTestCase(CBL_Database_EncodedAttachment);
     RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
-    RequireTestCase(CBL_Database_ReplicatorSequences);
-    RequireTestCase(CBL_Database_LocalDocs);
-    RequireTestCase(CBL_Database_FindMissingRevisions);
-    RequireTestCase(CBL_Database_Purge);
 }
 
 
