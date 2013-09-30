@@ -726,7 +726,10 @@
                     // Now delete the sequences to be purged.
                     NSString* sql = $sprintf(@"DELETE FROM revs WHERE sequence in (%@)",
                                            [seqsToPurge.allObjects componentsJoinedByString: @","]);
-                    if (![_fmdb executeUpdate: sql])
+                    _fmdb.shouldCacheStatements = NO;
+                    BOOL ok = [_fmdb executeUpdate: sql];
+                    _fmdb.shouldCacheStatements = YES;
+                    if (!ok)
                         return self.lastDbError;
                     if ((NSUInteger)_fmdb.changes != seqsToPurge.count)
                         Warn(@"purgeRevisions: Only %i sequences deleted of (%@)",

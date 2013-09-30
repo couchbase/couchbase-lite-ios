@@ -112,9 +112,9 @@
                               "AND revs.doc_id == docs.doc_id",
                              [CBLDatabase joinQuotedStrings: revs.allRevIDs],
                              [CBLDatabase joinQuotedStrings: revs.allDocIDs]);
-    // ?? Not sure sqlite will optimize this fully. May need a first query that looks up all
-    // the numeric doc_ids from the docids.
+    _fmdb.shouldCacheStatements = NO;
     FMResultSet* r = [_fmdb executeQuery: sql];
+    _fmdb.shouldCacheStatements = YES;
     if (!r)
         return NO;
     while ([r next]) {

@@ -712,9 +712,10 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     // First delete attachment rows for already-cleared revisions:
     // OPT: Could start after last sequence# we GC'd up to
     [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
-                            "(SELECT sequence from revs WHERE json IS null)"];
+                            "(SELECT sequence from revs WHERE current=0 AND json IS null)"];
     
     // Now collect all remaining attachment IDs and tell the store to delete all but these:
+    // OPT: Unindexed scan of attachments table!
     FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
     if (!r)
         return self.lastDbError;

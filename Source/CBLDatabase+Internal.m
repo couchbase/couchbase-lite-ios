@@ -187,8 +187,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return NO;
     }
 
-    _fmdb.shouldCacheStatements = YES;      // Saves the time to recompile SQL statements
-
     // Register CouchDB-compatible JSON collation functions:
     sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8,
                              kCBLCollateJSON_Unicode, CBLCollateJSON);
@@ -370,11 +368,21 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (dbVersion < 10) {
         // Version 10: Add rev flag for whether it has an attachment
         NSString* sql = @"ALTER TABLE revs ADD COLUMN no_attachments BOOLEAN; \
-                          PRAGMA user_version = 10";
+        PRAGMA user_version = 10";
         if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 10;
     }
+
+    if (dbVersion < 11) {
+        // Version 10: Add another index
+        NSString* sql = @"CREATE INDEX revs_cur_deleted ON revs(current,deleted); \
+                          PRAGMA user_version = 11";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 11;
+    }
+
 
 #if DEBUG
     _fmdb.crashOnErrors = YES;
@@ -390,6 +398,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     }
 
     _isOpen = YES;
+
+    _fmdb.shouldCacheStatements = YES;      // Saves the time to recompile SQL statements
 
     // Listen for _any_ CBLDatabase changing, so I can detect changes made to my database
     // file by other instances (running on other threads presumably.)
@@ -949,7 +959,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                               "WHERE doc_id=? and revid in (%@) and revid <= ? "
                               "ORDER BY revid DESC LIMIT 1", 
                               [CBLDatabase joinQuotedStrings: revIDs]);
-    return [_fmdb stringForQuery: sql, @(docNumericID), rev.revID];
+    _fmdb.shouldCacheStatements = NO;
+    NSString* ancestor = [_fmdb stringForQuery: sql, @(docNumericID), rev.revID];
+    _fmdb.shouldCacheStatements = YES;
+    return ancestor;
 }
     
 
@@ -1265,14 +1278,19 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         options = &kDefaultCBLQueryOptions;
     
     // Generate the SELECT statement, based on the options:
+    BOOL cacheQuery = YES;
     NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid, sequence" mutableCopy];
     if (options->includeDocs)
         [sql appendString: @", json"];
     if (options->includeDeletedDocs)
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
-    if (options->keys)
-        [sql appendFormat: @" docid IN (%@) AND", [CBLDatabase joinQuotedStrings: options->keys]];
+    if (options->keys) {
+        if (options->keys.count == 0)
+            return @[];
+        [sql appendFormat: @" revs.doc_id IN (SELECT doc_id FROM docs WHERE docid IN (%@)) AND", [CBLDatabase joinQuotedStrings: options->keys]];
+        cacheQuery = NO; // we've put hardcoded key strings in the query
+    }
     [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
     if (!options->includeDeletedDocs)
         [sql appendString: @" AND deleted=0"];
@@ -1304,7 +1322,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     [args addObject: @(options->skip)];
     
     // Now run the database query:
+    if (!cacheQuery)
+        _fmdb.shouldCacheStatements = NO;
     FMResultSet* r = [_fmdb executeQuery: sql withArgumentsInArray: args];
+    if (!cacheQuery)
+        _fmdb.shouldCacheStatements = YES;
     if (!r)
         return nil;
     
