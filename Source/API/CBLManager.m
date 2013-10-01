@@ -11,6 +11,7 @@
 
 #import "CBLDatabase.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Pusher.h"
@@ -340,8 +341,9 @@ static NSCharacterSet* kIllegalNameChars;
             CBLRemoveFileIfExists(dstAttachmentsPath, outError) &&
             (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath
                                                toPath: dstAttachmentsPath
-                                                error: outError]);
-
+                                                error: outError]) &&
+            [db open: outError] &&
+            [db replaceUUIDs: outError];
 }
 
 

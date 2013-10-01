@@ -125,6 +125,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
+- (BOOL) replaceUUIDs: (NSError**)outError;
 
 /** Executes the block within a database transaction.
     If the block returns a non-OK status, the transaction is aborted/rolled back.
