@@ -65,6 +65,13 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Deletes the database. */
 - (BOOL) deleteDatabase: (NSError**)outError;
 
+/** Changes the database's unique IDs to new random values.
+    Ordinarily you should never need to call this method; it's only made public to fix databases
+    that are already affected by bug github.com/couchbase/couchbase-lite-ios/issues/145 .
+    Make sure you only call this once, to fix that problem, because every call has the side effect
+    of resetting all replications, making them run slow the next time. */
+- (BOOL) replaceUUIDs: (NSError**)outError;
+
 
 #pragma mark - DOCUMENT ACCESS:
 

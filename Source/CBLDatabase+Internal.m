@@ -469,6 +469,14 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
+- (CBLStatus) setInfo: (id)info forKey: (NSString*)key {
+    if ([_fmdb executeUpdate: @"UPDATE info SET value=? WHERE key=?", info, key])
+        return kCBLStatusOK;
+    else
+        return self.lastDbError;
+}
+
+
 - (NSString*) privateUUID {
     return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='privateUUID'"];
 }
@@ -476,15 +484,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (NSString*) publicUUID {
     return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='publicUUID'"];
 }
-
-- (BOOL) replaceUUIDs: (NSError**)outError {
-    if ([_fmdb executeUpdate: @"UPDATE info SET value=? WHERE key='publicUUID'", CBLCreateUUID()]
-      && [_fmdb executeUpdate: @"UPDATE info SET value=? WHERE key='privateUUID'", CBLCreateUUID()])
-        return YES;
-    *outError = CBLStatusToNSError(self.lastDbError, nil);
-    return NO;
-}
-
 
 #pragma mark - TRANSACTIONS & NOTIFICATIONS:
 

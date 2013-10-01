@@ -771,6 +771,21 @@ TestCase(API_SharedMapBlocks) {
 }
 
 
+TestCase(API_ChangeUUID) {
+    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
+    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: nil];
+    NSString* pub = db.publicUUID;
+    NSString* priv = db.privateUUID;
+    Assert(pub.length > 10);
+    Assert(priv.length > 10);
+
+    NSError* error;
+    Assert([db replaceUUIDs: &error], @"replaceUUIDs failed: %@", error);
+    Assert(!$equal(pub, db.publicUUID));
+    Assert(!$equal(priv, db.privateUUID));
+}
+
+
 TestCase(API) {
     RequireTestCase(API_Manager);
     RequireTestCase(API_CreateDocument);

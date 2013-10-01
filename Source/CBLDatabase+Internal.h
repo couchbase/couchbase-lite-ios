@@ -123,9 +123,10 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     because a CBLDatabase method failed, so you should be returning _some_ error to the caller. */
 @property (readonly) CBLStatus lastDbError;
 
+- (CBLStatus) setInfo: (id)info forKey: (NSString*)key;
+
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
-- (BOOL) replaceUUIDs: (NSError**)outError;
 
 /** Executes the block within a database transaction.
     If the block returns a non-OK status, the transaction is aborted/rolled back.

@@ -159,6 +159,19 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
+- (BOOL) replaceUUIDs: (NSError**)outError {
+    CBLStatus status = [self setInfo: CBLCreateUUID() forKey: @"publicUUID"];
+    if (status == kCBLStatusOK)
+        status = [self setInfo: CBLCreateUUID() forKey: @"privateUUID"];
+    if (status == kCBLStatusOK)
+        return YES;
+
+    if (outError)
+        *outError = CBLStatusToNSError(status, nil);
+    return NO;
+}
+
+
 #pragma mark - DOCUMENTS:
 
 
@@ -205,7 +218,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-// Appease the compiler; these are actually implemented in CBLDatabase.m
+// Appease the compiler; these are actually implemented in CBLDatabase+Internal.m
 @dynamic documentCount, lastSequenceNumber;
 
 
