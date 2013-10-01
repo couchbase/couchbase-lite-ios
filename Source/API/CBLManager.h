@@ -93,6 +93,13 @@ typedef struct CBLManagerOptions {
     This method is only available if you've linked with the CouchbaseLiteListener framework. */
 @property (readonly) NSURL* internalURL;
 
+/** Enables Couchbase Lite logging of the given type, process-wide. A partial list of types is here:
+    http://docs.couchbase.com/couchbase-lite/cbl-ios/#useful-logging-channels 
+    It's usually more convenient to enable logging via command-line args, as discussed on that
+    same page; but in some environments you may not have access to the args, or may want to use
+    other criteria to enable logging. */
++ (void) enableLogging: (NSString*)type;
+
 @end
 
 
