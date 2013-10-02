@@ -222,9 +222,11 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
         return;
     LogTo(Sync, @"ReplicatorManager: %@ was created", rev);
     NSDictionary* properties = rev.properties;
-    CBL_Replicator* repl = [_dbManager replicatorWithProperties: properties status: NULL];
+    CBLStatus status;
+    CBL_Replicator* repl = [_dbManager replicatorWithProperties: properties status: &status];
     if (!repl) {
-        Warn(@"CBL_ReplicatorManager: Can't create replicator for %@", properties);
+        Warn(@"CBL_ReplicatorManager: Can't create replicator for %@ (status %d)",
+             properties, status);
         return;
     }
     NSString* replicationID = properties[@"_replication_id"] ?: CBLCreateUUID();
