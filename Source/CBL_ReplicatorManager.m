@@ -72,9 +72,6 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
                                                  name: CBL_DatabaseChangesNotification
                                                object: _replicatorDB];
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(someDbDeleted:)
-                                                 name: CBL_DatabaseWillBeDeletedNotification
-                                               object: nil];
 #if TARGET_OS_IPHONE
     // Register for foreground/background transition notifications, on iOS:
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appForegrounding:)
@@ -351,37 +348,6 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
             // Replicator has stopped:
             [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: repl];
             [_replicatorsByDocID removeObjectForKey: docID];
-        }
-    }
-}
-
-
-// Notified that some database is being deleted; delete any associated replication document:
-- (void) someDbDeleted: (NSNotification*)n {
-    if (!_replicatorDB.exists)
-        return;
-    CBLDatabase* db = n.object;
-    if ([_dbManager.allOpenDatabases indexOfObjectIdenticalTo: db] == NSNotFound)
-        return;
-    NSString* dbName = db.name;
-    
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.includeDocs = YES;
-    for (CBLQueryRow* row in [_replicatorDB getAllDocs: &options]) {
-        NSDictionary* docProps = row.documentProperties;
-        NSString* source = $castIf(NSString, docProps[@"source"]);
-        NSString* target = $castIf(NSString, docProps[@"target"]);
-        if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
-            // Replication doc involves this database -- delete it:
-            LogTo(Sync, @"ReplicatorManager deleting replication %@", docProps);
-            CBL_Revision* delRev = [[CBL_Revision alloc] initWithDocID: docProps[@"_id"]
-                                                             revID: nil deleted: YES];
-            CBLStatus status;
-            if (![_replicatorDB putRevision: delRev
-                             prevRevisionID: docProps[@"_rev"]
-                              allowConflict: NO status: &status]) {
-                Warn(@"CBL_ReplicatorManager: Couldn't delete replication doc %@", docProps);
-            }
         }
     }
 }

@@ -11,6 +11,7 @@
 
 #import "CBLDatabase.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
@@ -420,6 +421,33 @@ static NSCharacterSet* kIllegalNameChars;
         }
     }
     return otherDbURL ? $array(pull, push) : nil;
+}
+
+
+- (void) deletePersistentReplicationsFor: (CBLDatabase*)db {
+    CBLDatabase* replicatorDB = [self databaseNamed: @"_replicator" error: NULL];
+    if (!replicatorDB)
+        return;
+    NSString* dbName = db.name;
+    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    options.includeDocs = YES;
+    for (CBLQueryRow* row in [replicatorDB getAllDocs: &options]) {
+        NSDictionary* docProps = row.documentProperties;
+        NSString* source = $castIf(NSString, docProps[@"source"]);
+        NSString* target = $castIf(NSString, docProps[@"target"]);
+        if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
+            // Replication doc involves this database -- delete it:
+            LogTo(Sync, @"%@ deleting replication %@", self, docProps);
+            CBL_Revision* delRev = [[CBL_Revision alloc] initWithDocID: docProps[@"_id"]
+                                                                 revID: nil deleted: YES];
+            CBLStatus status;
+            if (![replicatorDB putRevision: delRev
+                            prevRevisionID: docProps[@"_rev"]
+                             allowConflict: NO status: &status]) {
+                Warn(@"CBL_ReplicatorManager: Couldn't delete replication doc %@", docProps);
+            }
+        }
+    }
 }
 
 

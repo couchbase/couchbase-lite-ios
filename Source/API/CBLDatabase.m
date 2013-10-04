@@ -139,6 +139,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
         if (![self close])
             return NO;
     }
+    [_manager deletePersistentReplicationsFor: self];
     [_manager _forgetDatabase: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     if (!self.exists) {
