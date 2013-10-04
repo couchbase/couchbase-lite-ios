@@ -405,7 +405,8 @@ static CBL_Replicator* findActiveReplicator(CBLDatabase* db, NSURL* remote, BOOL
 TestCase(CBL_ReplicatorManager) {
     RequireTestCase(ParseReplicatorProperties);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
-    CAssert([server replicatorManager]);    // start the replicator
+    [server startReplicatorManager];
+    CAssert(server.replicatorManager);    // start the replicator
     CBLDatabase* replicatorDb = [server createDatabaseNamed: kCBL_ReplicatorDatabaseName
                                                 error: NULL];
     CAssert(replicatorDb);

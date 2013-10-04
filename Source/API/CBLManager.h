@@ -19,9 +19,8 @@ typedef struct CBLManagerOptions {
 
 /** Top-level CouchbaseLite object; manages a collection of databases as a CouchDB server does.
     A CBLManager and all the objects descending from it may only be used on a single
-    thread. To work with databases on another thread, create a new CBLManager instance for
-    that thread (and be sure to use the .noReplicator option.) The easist way to do this is simply
-    to call -copy on the existing manager. */
+    thread. To work with databases on another thread, copy the database manager (by calling
+    -copy) and use the copy on the other thread. */
 @interface CBLManager : NSObject <NSCopying>
 
 /** A shared per-process instance. This should only be used on the main thread. */
@@ -45,6 +44,8 @@ typedef struct CBLManagerOptions {
                            options: (const CBLManagerOptions*)options
                              error: (NSError**)outError                 __attribute__((nonnull(1)));
 
+/** Creates a copy of this CBLManager, which can be used on a different thread. */
+- (instancetype) copy;
 
 /** Releases all resources used by the CBLManager instance and closes all its databases. */
 - (void) close;

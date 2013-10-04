@@ -14,12 +14,16 @@
 //  and limitations under the License.
 
 #import "CBL_Shared.h"
+#import "CBL_Server.h"
 
 
 @implementation CBL_Shared
 {
     NSMutableDictionary* _databases;
+    CBL_Server* _backgroundServer;
 }
+
+@synthesize backgroundServer=_backgroundServer;
 
 - (id)init {
     self = [super init];
@@ -27,6 +31,11 @@
         _databases = [NSMutableDictionary dictionary];
     }
     return self;
+}
+
+- (void) dealloc
+{
+    [_backgroundServer close];
 }
 
 - (void) setValue: (id)value

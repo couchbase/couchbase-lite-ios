@@ -62,7 +62,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     @private
     NSString* _path;
     NSString* _name;
-    __weak CBLManager* _manager;
+    CBLManager* _manager;
     FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;

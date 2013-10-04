@@ -55,8 +55,9 @@
 
 
 @interface CBLManager (Testing)
-@property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 #if DEBUG
+- (void) startReplicatorManager;
+@property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 + (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
 + (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif

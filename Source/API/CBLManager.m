@@ -25,6 +25,7 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
+#import "MYBlockUtils.h"
 
 
 #define kOldDBExtension @"touchdb" // Used before CBL beta 1
@@ -40,7 +41,6 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
     CBLManagerOptions _options;
     NSMutableDictionary* _databases;
     CBL_ReplicatorManager* _replicatorManager;
-    CBL_Server* _server;
     NSURL* _internalURL;
     NSMutableArray* _replications;
     CBL_Shared *_shared;
@@ -98,17 +98,16 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+// Initializer for main manager (not copies).
 - (instancetype) initWithDirectory: (NSString*)directory
                            options: (const CBLManagerOptions*)options
                              error: (NSError**)outError
 {
     if (outError) *outError = nil;
-    self = [super init];
+    self = [self initWithDirectory: directory
+                           options: options
+                            shared: [[CBL_Shared alloc] init]];
     if (self) {
-        _dir = [directory copy];
-        _databases = [[NSMutableDictionary alloc] init];
-        _options = options ? *options : kCBLManagerDefaultOptions;
-
         // Create the directory but don't fail if it already exists:
         NSError* error;
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
@@ -122,13 +121,35 @@ static NSCharacterSet* kIllegalNameChars;
         }
         [self upgradeOldDatabaseFiles];
 
-        _replications = [[NSMutableArray alloc] init];
-
         if (!_options.noReplicator) {
-            LogTo(CBLDatabase, @"Starting replicator manager for %@", self);
-            _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
-            [_replicatorManager start];
+            // Don't start the replicator immediately; instead, give the app a chance to install
+            // filter and validation functions, otherwise persistent replications may behave
+            // incorrectly. The delayed-perform means the replicator won't start until after
+            // the caller (and its caller, etc.) returns back to the runloop.
+            MYAfterDelay(0.0, ^{
+                LogTo(CBLDatabase, @"Starting replicator manager for %@", self);
+                [self.backgroundServer tellDatabaseManager:^(CBLManager *bgMgr) {
+                    [bgMgr startReplicatorManager];
+                }];
+            });
         }
+    }
+    return self;
+}
+
+
+// Base initializer.
+- (instancetype) initWithDirectory: (NSString*)directory
+                           options: (const CBLManagerOptions*)options
+                            shared: (CBL_Shared*)shared
+{
+    self = [super init];
+    if (self) {
+        _dir = [directory copy];
+        _options = options ? *options : kCBLManagerDefaultOptions;
+        _shared = shared;
+        _databases = [[NSMutableDictionary alloc] init];
+        _replications = [[NSMutableArray alloc] init];
         LogTo(CBLDatabase, @"Created %@", self);
     }
     return self;
@@ -153,39 +174,26 @@ static NSCharacterSet* kIllegalNameChars;
 #endif
 
 
-- (id) _copy {
-    CBLManagerOptions options = _options;
-    options.noReplicator = true;        // Don't want to run multiple replicator tasks
-    NSError* error;
-    CBLManager* mgr = [[[self class] alloc] initWithDirectory: self.directory
-                                                      options: &options
-                                                        error: &error];
-    if (!mgr) {
-        Warn(@"Couldn't copy CBLManager: %@", error);
-        return nil;
-    }
-    mgr->_shared = self.shared;
-    return mgr;
+- (id) copyWithZone: (NSZone*)zone {
+    return [[[self class] alloc] initWithDirectory: self.directory
+                                           options: &_options
+                                            shared: _shared];
 }
 
-- (id) copyWithZone: (NSZone*)zone {
-    CBLManager* mgr = [self _copy];
-    if (mgr)
-        mgr->_server = self.backgroundServer;
-    return mgr;
+- (instancetype) copy {
+    return [self copyWithZone: nil];
 }
 
 
 - (void) close {
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
-    [_server close];
-    _server = nil;
     [_replicatorManager stop];
     _replicatorManager = nil;
     for (CBLDatabase* db in _databases.allValues) {
         [db close];
     }
     [_databases removeAllObjects];
+    _shared = nil;
     LogTo(CBLDatabase, @"CLOSED %@", self);
 }
 
@@ -218,6 +226,12 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+- (void) startReplicatorManager {
+    _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
+    [_replicatorManager start];
+}
+
+
 @synthesize directory = _dir;
 
 
@@ -234,15 +248,19 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (CBL_Server*) backgroundServer {
-    if (!_server) {
-        CBLManager* newManager = [self _copy];
-        if (newManager) {
-            _server = [[CBL_Server alloc] initWithManager: newManager];
-            LogTo(CBLDatabase, @"%@ created %@", self, _server);
+    @synchronized(_shared) {
+        CBL_Server* server = _shared.backgroundServer;
+        if (!server) {
+            CBLManager* newManager = [self copy];
+            if (newManager) {
+                server = [[CBL_Server alloc] initWithManager: newManager];
+            }
+            Assert(server, @"Failed to create backgroundServer!");
+            LogTo(CBLDatabase, @"%@ created %@", self, server);
+            _shared.backgroundServer = server;
         }
-        Assert(_server, @"Failed to create backgroundServer!");
+        return server;
     }
-    return _server;
 }
 
 
@@ -253,11 +271,10 @@ static NSCharacterSet* kIllegalNameChars;
 
 - (NSURL*) internalURL {
     if (!_internalURL) {
-        if (!self.backgroundServer)
-            return nil;
         Class tdURLProtocol = NSClassFromString(@"CBL_URLProtocol");
         Assert(tdURLProtocol, @"CBL_URLProtocol class not found; link CouchbaseLiteListener.framework");
-        _internalURL = [tdURLProtocol HTTPURLForServerURL: [tdURLProtocol registerServer: _server]];
+        NSURL* serverURL = [tdURLProtocol registerServer: self.backgroundServer];
+        _internalURL = [tdURLProtocol HTTPURLForServerURL: serverURL];
     }
     return _internalURL;
 }

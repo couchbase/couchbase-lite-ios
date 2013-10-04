@@ -7,6 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBL_Server;
+
 
 /** Container for shared state between CBLDatabase instances that represent the same database file. API is thread-safe. */
 @interface CBL_Shared : NSObject
@@ -27,5 +29,7 @@
                inDatabaseNamed: (NSString*)dbName;
 
 - (void) forgetDatabaseNamed: (NSString*)name;
+
+@property CBL_Server* backgroundServer;
 
 @end
