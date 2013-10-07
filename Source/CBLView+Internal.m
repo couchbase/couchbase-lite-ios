@@ -242,7 +242,8 @@ static NSString* toJSONString( id object ) {
         BOOL keepGoing = [r next]; // Go to first result row
         while (keepGoing) {
             @autoreleasepool {
-                // Reconstitute the document as a dictionary:
+                // Get row values now, before the code below advances 'r':
+                int64_t doc_id = [r longLongIntForColumnIndex: 0];
                 sequence = [r longLongIntForColumnIndex: 1];
                 NSString* docID = [r stringForColumnIndex: 2];
                 if ([docID hasPrefix: @"_design/"]) {     // design docs don't get indexed!
@@ -251,10 +252,10 @@ static NSString* toJSONString( id object ) {
                 }
                 NSString* revID = [r stringForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
+                BOOL noAttachments = [r boolForColumnIndex: 5];
             
                 // Iterate over following rows with the same doc_id -- these are conflicts.
                 // Skip them, but collect their revIDs:
-                int64_t doc_id = [r longLongIntForColumnIndex: 0];
                 NSMutableArray* conflicts = nil;
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
                     if (!conflicts)
@@ -310,7 +311,7 @@ static NSString* toJSONString( id object ) {
                 
                 // Get the document properties, to pass to the map function:
                 CBLContentOptions contentOptions = _mapContentOptions;
-                if ([r boolForColumnIndex: 5])
+                if (noAttachments)
                     contentOptions |= kCBLNoAttachments;
                 NSDictionary* properties = [_db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
