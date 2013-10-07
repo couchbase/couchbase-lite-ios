@@ -16,6 +16,15 @@
 #import "CBLBatcher.h"
 
 @implementation CBLBatcher
+{
+    NSUInteger _capacity;
+    NSTimeInterval _delay;
+    NSMutableArray* _inbox;
+    bool _scheduled;
+    NSTimeInterval _scheduledDelay;
+    CFAbsoluteTime _lastProcessedTime;
+    void (^_processor)(NSArray*);
+}
 
 
 - (instancetype) initWithCapacity: (NSUInteger)capacity
@@ -68,6 +77,7 @@
         [self scheduleWithDelay: 0.0];
     }
     _processor(toProcess);
+    _lastProcessedTime = CFAbsoluteTimeGetCurrent();
 }
 
 
@@ -78,9 +88,15 @@
         _inbox = [[NSMutableArray alloc] init];
     [_inbox addObjectsFromArray: objects];
 
-    if (_inbox.count < _capacity)
-        [self scheduleWithDelay: _delay];
-    else {
+    if (_inbox.count < _capacity) {
+        // Schedule the processing. To improve latency, if we haven't processed anything
+        // in at least our delay time, rush these object(s) through ASAP:
+        NSTimeInterval delay = _delay;
+        if (CFAbsoluteTimeGetCurrent() - _lastProcessedTime >= _delay)
+            delay = 0.0;
+        [self scheduleWithDelay: delay];
+    } else {
+        // If inbox fills up, process it immediately:
         [self unschedule];
         [self processNow];
     }
@@ -99,11 +115,12 @@
 
 
 - (void) flushAll {
-    if (_inbox.count > 0) {
+    while (_inbox.count > 0) {
         [self unschedule];
         NSArray* toProcess = _inbox;
         _inbox = nil;
         _processor(toProcess);
+        _lastProcessedTime = CFAbsoluteTimeGetCurrent();
     }
 }
 
