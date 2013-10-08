@@ -186,7 +186,7 @@
 
 - (BOOL) isDone {
     LogTo(CBLListenerVerbose, @"%@ answers isDone=%d", self, _finished);
-    return _finished;
+    return _finished && (_offset >= _dataOffset + _data.length);
 }
 
 
