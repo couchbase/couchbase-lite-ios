@@ -262,10 +262,10 @@ int main (int argc, const char * argv[])
             if (!doReplicate(server, replArg, pull, createTarget, continuous, user, password, realm))
                 return 1;
         } else {
-            Log(@"LiteServ %@ is listening%@ on port %d ... relax!",
+            Log(@"LiteServ %@ is listening%@ at <%@> ... relax!",
                 CBLVersionString(),
                 (listener.readOnly ? @" in read-only mode" : @""),
-                listener.port);
+                listener.URL);
         }
 
         [[NSRunLoop currentRunLoop] run];

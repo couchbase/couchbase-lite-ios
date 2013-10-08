@@ -23,6 +23,14 @@
 #import "HTTPServer.h"
 #import "HTTPLogging.h"
 
+#import <sys/types.h>
+#import <net/if.h>
+#import <netinet/in.h>
+#import <ifaddrs.h>
+
+
+static NSArray* GetIPv4Addresses(void);
+
 
 @interface CBLDDLogger : DDAbstractLogger
 @end
@@ -101,6 +109,17 @@
 }
 
 
+- (NSURL*) URL {
+    UInt16 port = self.port;
+    NSArray* addresses = GetIPv4Addresses();
+    if (port == 0 || addresses.count == 0)
+        return nil;
+    NSString* urlStr = [NSString stringWithFormat: @"http%@://%@:%d/",
+                        (_SSLIdentity ? @"s" : @""), addresses[0], port];
+    return [NSURL URLWithString: urlStr];
+}
+
+
 - (void) setPasswords: (NSDictionary*)passwords {
     _passwords = [passwords copy];
     _requiresAuth = (_passwords != nil);
@@ -128,14 +147,6 @@
 
 
 
-@implementation CBLHTTPServer
-
-@synthesize listener=_listener, tdServer=_tdServer;
-
-@end
-
-
-
 // Adapter to output DDLog messages (from CocoaHTTPServer) via MYUtilities logging.
 @implementation CBLDDLogger
 
@@ -144,3 +155,32 @@
 }
 
 @end
+
+
+
+static NSArray* GetIPv4Addresses(void) {
+    // getifaddrs returns a linked list of interface entries;
+    // find each active non-loopback interface with IPv4 whose name begins with "en" (an
+    // ugly hack to identify WiFi or Ethernet as opposed to a cellular connection.)
+    NSMutableArray* addresses = [NSMutableArray array];
+    UInt32 address = 0;
+    struct ifaddrs *interfaces;
+    if( getifaddrs(&interfaces) == 0 ) {
+        struct ifaddrs *interface;
+        for( interface=interfaces; interface; interface=interface->ifa_next ) {
+            if( (interface->ifa_flags & IFF_UP) && ! (interface->ifa_flags & IFF_LOOPBACK)
+               && (strncmp(interface->ifa_name, "en", 2) == 0)) {
+                const struct sockaddr_in *addr = (const struct sockaddr_in*) interface->ifa_addr;
+                if( addr && addr->sin_family==AF_INET ) {
+                    address = addr->sin_addr.s_addr;  // IPv4 addr in network byte order
+                    const UInt8* b = (const UInt8*)&address;
+                    NSString* addrStr = [NSString stringWithFormat: @"%u.%u.%u.%u",
+                                         b[0],b[1],b[2],b[3]];
+                    [addresses addObject: addrStr];
+                }
+            }
+        }
+        freeifaddrs(interfaces);
+    }
+    return addresses;
+}

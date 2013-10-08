@@ -33,6 +33,9 @@
     The keys are NSStrings and values are NSData. Total size should be kept small (under 1kbyte if possible) as this data is multicast over UDP. */
 @property (copy) NSDictionary* TXTRecordDictionary;
 
+/** The URL at which the listener can be reached. */
+@property (readonly) NSURL* URL;
+
 
 /** If set to YES, remote requests will not be allowed to make any changes to the server or its databases. */
 @property BOOL readOnly;
