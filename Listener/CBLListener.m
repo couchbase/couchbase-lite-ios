@@ -24,6 +24,7 @@
 #import "HTTPLogging.h"
 
 #import <sys/types.h>
+#import <sys/socket.h>
 #import <net/if.h>
 #import <netinet/in.h>
 #import <ifaddrs.h>
