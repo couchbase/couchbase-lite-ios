@@ -86,6 +86,9 @@
 }
 
 
+// Note -- the method comments below are copied from the superclass header HTTPResponse.h.
+
+
 /**
  * If you don't know the content-length in advance,
  * implement this method in your custom response class and return YES.
@@ -101,6 +104,11 @@
 }
 
 
+/**
+ * If you need time to calculate any part of the HTTP response headers (status code or header fields),
+ * this method allows you to delay sending the headers so that you may asynchronously execute the calculations.
+ * Simply implement this method and return YES until you have everything you need concerning the headers.
+ **/
 - (BOOL) delayResponseHeaders {
     @synchronized(self) {
         LogTo(CBLListenerVerbose, @"%@ answers delayResponseHeaders=%d", self, !_response);
@@ -121,11 +129,19 @@
 }
 
 
+/**
+ * Status code for response.
+ * Allows for responses such as redirect (301), etc.
+**/
 - (NSInteger) status {
     LogTo(CBLListenerVerbose, @"%@ answers status=%d", self, _response.status);
     return _response.status;
 }
 
+/**
+ * If you want to add any extra HTTP headers to the response,
+ * simply return them in a dictionary in this method.
+**/
 - (NSDictionary *) httpHeaders {
     LogTo(CBLListenerVerbose, @"%@ answers httpHeaders={%u headers}", self, (unsigned)_response.headers.count);
     return _response.headers;
@@ -153,9 +169,17 @@
 }
 
 
+/**
+ * The HTTP server supports range requests in order to allow things like
+ * file download resumption and optimized streaming on mobile devices.
+**/
 @synthesize offset=_offset;
 
 
+/**
+ * Returns the length of the data in bytes.
+ * If you don't know the length in advance, implement the isChunked method and have it return YES.
+**/
 - (UInt64) contentLength {
     @synchronized(self) {
         if (!_finished)
@@ -165,6 +189,12 @@
 }
 
 
+/**
+ * Returns the data for the response.
+ * You do not have to return data of the exact length that is given.
+ * You may optionally return data of a lesser length.
+ * However, you must never return data of a greater length than requested.
+**/
 - (NSData*) readDataOfLength: (NSUInteger)length {
     @synchronized(self) {
         NSAssert(_offset >= _dataOffset, @"Invalid offset %llu, min is %llu", _offset, _dataOffset);
@@ -178,12 +208,17 @@
         range.length = MIN(length, bytesAvailable);
         NSData* result = [_data subdataWithRange: range];
         _offset += range.length;
-        LogTo(CBLListenerVerbose, @"%@ sending %u bytes", self, (unsigned)result.length);
+        LogTo(CBLListenerVerbose, @"%@ sending %lu bytes (of %ld requested)",
+              self, (unsigned long)result.length, (unsigned long)length);
         return result;
     }
 }
 
 
+/**
+ * Should only return YES after the HTTPConnection has read all available data.
+ * That is, all data for the response has been returned to the HTTPConnection via the readDataOfLength method.
+**/
 - (BOOL) isDone {
     LogTo(CBLListenerVerbose, @"%@ answers isDone=%d", self, _finished);
     return _finished && (_offset >= _dataOffset + _data.length);
@@ -213,7 +248,6 @@
         if ((!_chunked || _offset == 0) && ![_router.request.HTTPMethod isEqualToString: @"HEAD"]) {
             // Response finished immediately, before the connection asked for any data, so we're free
             // to massage the response:
-            LogTo(CBLListenerVerbose, @"%@ prettifying response body", self);
 #if DEBUG
             BOOL pretty = YES;
 #else
@@ -222,6 +256,7 @@
             if (pretty) {
                 NSString* contentType = (_response.headers)[@"Content-Type"];
                 if ([contentType hasPrefix: @"application/json"] && _data.length < 100000) {
+                    LogTo(CBLListenerVerbose, @"%@ prettifying response body", self);
                     _data = [_response.body.asPrettyJSON mutableCopy];
                 }
             }
@@ -231,6 +266,12 @@
 }
 
 
+/**
+ * This method is called from the HTTPConnection class when the connection is closed,
+ * or when the connection is finished with the response.
+ * If your response is asynchronous, you should implement this method so you know not to
+ * invoke any methods on the HTTPConnection after this method is called (as the connection may be deallocated).
+**/
 - (void)connectionDidClose {
     @synchronized(self) {
         _connection = nil;
