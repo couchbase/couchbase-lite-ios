@@ -381,9 +381,10 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
-                                       remote: (NSURL*)remote
-                                         pull: (BOOL)pull
-                                       create: (BOOL)create
+                                     remote: (NSURL*)remote
+                                       pull: (BOOL)pull
+                                     create: (BOOL)create
+                                      start: (BOOL)start
 {
     for (CBLReplication* repl in self.allReplications) {
         if (repl.localDatabase == db && $equal(repl.remoteURL, remote) && repl.pull == pull)
@@ -392,23 +393,30 @@ static NSCharacterSet* kIllegalNameChars;
     if (!create)
         return nil;
     CBLReplication* repl = [[CBLReplication alloc] initWithDatabase: db
-                                                           remote: remote
-                                                             pull: pull];
+                                                             remote: remote
+                                                               pull: pull];
     [_replications addObject: repl];
+
+    if (start) {
+        // Give the caller a chance to customize parameters like .filter before calling -start,
+        // but make sure -start will be run even if the caller doesn't call it.
+        [repl performSelector: @selector(start) withObject: nil afterDelay: 0.0];
+    }
     return repl;
 }
 
 
 - (NSArray*) createReplicationsBetween: (CBLDatabase*)database
                                    and: (NSURL*)otherDbURL
-                           exclusively: (bool)exclusively
+                           exclusively: (BOOL)exclusively
+                                 start: (BOOL)start
 {
     CBLReplication* pull = nil, *push = nil;
     if (otherDbURL) {
         pull = [self replicationWithDatabase: database remote: otherDbURL
-                                                          pull: YES create: YES];
+                                        pull: YES create: YES start: start];
         push = [self replicationWithDatabase: database remote: otherDbURL
-                                                          pull: NO create: YES];
+                                        pull: NO create: YES start: start];
         if (!pull || !push)
             return nil;
         pull.continuous = push.continuous = YES;

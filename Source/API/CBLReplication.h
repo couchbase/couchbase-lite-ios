@@ -28,7 +28,8 @@ typedef enum {
     .persistent property.
     It's more common to call -[CBLDatabase pullFromURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
-    from the same source database (e.g. with different filters), use this. */
+    from the same source database (e.g. with different filters), use this.
+    Note: The replication won't start until you call -start. */
 - (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database
                                                                         __attribute__((nonnull));
 
@@ -36,7 +37,8 @@ typedef enum {
     .persistent property.
     It's more common to call -[CBLDatabase pushToURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
-    to the same source database (e.g. with different filters), use this. */
+     to the same source database (e.g. with different filters), use this.
+     Note: The replication won't start until you call -start. */
 - (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target
                                                                         __attribute__((nonnull));
 
@@ -149,7 +151,9 @@ typedef enum {
 
 #pragma mark - STATUS:
 
-/** Starts the replication, asynchronously. */
+/** Starts the replication, asynchronously.
+    You can monitor its progress by observing the kCBLReplicationChangeNotification it sends,
+    or by using KVO to observe its .running, .mode, .error, .total and .completed properties. */
 - (void) start;
 
 /** Stops replication, asynchronously. */

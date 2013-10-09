@@ -61,10 +61,10 @@ TestCase(CreateReplicators) {
 
     // Create a replication:
     CAssertEqual(db.allReplications, @[]);
-    CBLReplication* r1 = [db pushToURL: fakeRemoteURL];
+    CBLReplication* r1 = [db replicationToURL: fakeRemoteURL];
     CAssert(r1);
     CAssertEqual(db.allReplications, @[r1]);
-    CAssertEq([db pushToURL: fakeRemoteURL], r1);   // 2nd call returns same replicator instance
+    CAssertEq([db replicationToURL: fakeRemoteURL], r1);   // 2nd call returns same replicator instance
 
     // Check the replication's properties:
     CAssertEq(r1.localDatabase, db);
@@ -86,11 +86,11 @@ TestCase(CreateReplicators) {
     CAssertNil(r1.error);
 
     // Create another replication:
-    CBLReplication* r2 = [db pullFromURL: fakeRemoteURL];
+    CBLReplication* r2 = [db replicationFromURL: fakeRemoteURL];
     CAssert(r2);
     CAssert(r2 != r1);
     CAssertEqual(db.allReplications, (@[r1, r2]));
-    CAssertEq([db pullFromURL: fakeRemoteURL], r2);
+    CAssertEq([db replicationFromURL: fakeRemoteURL], r2);
 
     // Check the replication's properties:
     CAssertEq(r2.localDatabase, db);
@@ -126,7 +126,7 @@ TestCase(RunPushReplication) {
     }];
 
     Log(@"Pushing...");
-    CBLReplication* repl = [db pushToURL: remoteDbURL];
+    CBLReplication* repl = [db replicationToURL: remoteDbURL];
     repl.create_target = YES;
     runReplication(repl);
     AssertNil(repl.error);
@@ -144,7 +144,7 @@ TestCase(RunPullReplication) {
     CBLDatabase* db = createEmptyManagerAndDb();
 
     Log(@"Pulling...");
-    CBLReplication* repl = [db pullFromURL: remoteDbURL];
+    CBLReplication* repl = [db replicationFromURL: remoteDbURL];
     runReplication(repl);
     AssertNil(repl.error);
 
@@ -164,7 +164,7 @@ TestCase(RunReplicationWithError) {
     CBLDatabase* db = createEmptyManagerAndDb();
 
     // Create a replication:
-    CBLReplication* r1 = [db pullFromURL: fakeRemoteURL];
+    CBLReplication* r1 = [db replicationFromURL: fakeRemoteURL];
     CAssertNil(r1.document.properties);//TEMP
     runReplication(r1);
 
@@ -182,7 +182,7 @@ TestCase(RunReplicationWithError) {
 TestCase(ReplicationChannelsProperty) {
     CBLDatabase* db = createEmptyManagerAndDb();
     NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://couchbase.com/no_such_db"];
-    CBLReplication* r1 = [db pullFromURL: fakeRemoteURL];
+    CBLReplication* r1 = [db replicationFromURL: fakeRemoteURL];
 
     CAssertNil(r1.channels);
     r1.filter = @"foo/bar";

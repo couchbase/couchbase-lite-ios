@@ -347,16 +347,34 @@ static NSString* makeLocalDocID(NSString* docID) {
 }
 
 
+- (CBLReplication*) replicationToURL: (NSURL*)url {
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: NO create: YES start: NO];
+}
+
+- (CBLReplication*) replicationFromURL: (NSURL*)url {
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: YES create: YES start: NO];
+}
+
+- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
+    return [_manager createReplicationsBetween: self and: otherDbURL
+                                   exclusively: exclusively start: NO];
+}
+
+
+// Older, deprecated methods:
 - (CBLReplication*) pushToURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url pull: NO create: YES];
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: NO create: YES start: YES];
 }
-
 - (CBLReplication*) pullFromURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url pull: YES create: YES];
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: YES create: YES start: YES];
 }
-
 - (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
-    return [_manager createReplicationsBetween: self and: otherDbURL exclusively: exclusively];
+    return [_manager createReplicationsBetween: self and: otherDbURL
+                                   exclusively: exclusively start: YES];
 }
 
 

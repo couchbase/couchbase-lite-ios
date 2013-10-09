@@ -240,12 +240,14 @@ int main (int argc, const char * argv[]) {
         [self stopObservingReplication: _pull];
     if (_push)
         [self stopObservingReplication: _push];
-    NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
+    NSArray* repls = [_database replicationsWithURL: otherDbURL exclusively: YES];
     _pull = repls[0];
     _push = repls[1];
     _pull.continuous = _push.continuous = YES;
     [self observeReplication: _pull];
     [self observeReplication: _push];
+    [_pull start];
+    [_push start];
     
     _syncHostField.stringValue = otherDbURL ? $sprintf(@"⇄ %@", otherDbURL.host) : @"";
 #endif

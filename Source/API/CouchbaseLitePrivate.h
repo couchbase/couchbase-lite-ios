@@ -18,12 +18,14 @@
 @property (readonly) CBL_Server* backgroundServer;
 @property (readonly) NSArray* allReplications;
 - (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
-                                       remote: (NSURL*)remote
-                                         pull: (BOOL)pull
-                                       create: (BOOL)create         __attribute__((nonnull));
+                                     remote: (NSURL*)remote
+                                       pull: (BOOL)pull
+                                     create: (BOOL)create
+                                      start: (BOOL)start            __attribute__((nonnull));
 - (NSArray*) createReplicationsBetween: (CBLDatabase*)database
                                    and: (NSURL*)otherDbURL
-                           exclusively: (bool)exclusively           __attribute__((nonnull(1)));
+                           exclusively: (BOOL)exclusively
+                                 start: (BOOL)start                 __attribute__((nonnull(1)));
 - (void) deletePersistentReplicationsFor: (CBLDatabase*)db;
 #if DEBUG // for unit tests only
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;

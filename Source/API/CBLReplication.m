@@ -82,9 +82,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         self.autosaves = NO;
         self.source = pull ? remote.absoluteString : database.name;
         self.target = pull ? database.name : remote.absoluteString;
-        // Give the caller a chance to customize parameters like .filter before calling -start,
-        // but make sure -start will be run even if the caller doesn't call it.
-        [self performSelector: @selector(start) withObject: nil afterDelay: 0.0];
     }
     return self;
 }
