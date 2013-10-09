@@ -13,7 +13,8 @@
 /** Option flags for CBLManager initialization. */
 typedef struct CBLManagerOptions {
     bool readOnly;      /**< No modifications to databases are allowed. */
-    bool noReplicator;  /**< Persistent replications will not run. */
+    bool noReplicator;  /**< Persistent replications will not run (until/unless
+                             -startPersistentReplications is called.) */
 } CBLManagerOptions;
 
 
@@ -52,6 +53,10 @@ typedef struct CBLManagerOptions {
 
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
+
+/** If the manager was instantiated with the noReplicator option, persistent replications won't
+    run at startup. If you want to start them later, call this. */
+- (void) startPersistentReplications;
 
 /** Returns the database with the given name, or nil if it doesn't exist.
     Multiple calls with the same name will return the same CBLDatabase instance. */

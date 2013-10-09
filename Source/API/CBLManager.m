@@ -128,10 +128,7 @@ static NSCharacterSet* kIllegalNameChars;
             // incorrectly. The delayed-perform means the replicator won't start until after
             // the caller (and its caller, etc.) returns back to the runloop.
             MYAfterDelay(0.0, ^{
-                LogTo(CBLDatabase, @"Starting replicator manager for %@", self);
-                [self.backgroundServer tellDatabaseManager:^(CBLManager *bgMgr) {
-                    [bgMgr startReplicatorManager];
-                }];
+                [self startPersistentReplications];
             });
         }
     }
@@ -227,9 +224,18 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+- (void) startPersistentReplications {
+    [self.backgroundServer tellDatabaseManager:^(CBLManager *bgMgr) {
+        [bgMgr startReplicatorManager];
+    }];
+}
+
+// This is internal and should only be called on the background manager
 - (void) startReplicatorManager {
-    _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
-    [_replicatorManager start];
+    if (!_replicatorManager) {
+        _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
+        [_replicatorManager start];
+    }
 }
 
 
