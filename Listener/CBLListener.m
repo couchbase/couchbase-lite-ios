@@ -28,6 +28,7 @@
 #import <net/if.h>
 #import <netinet/in.h>
 #import <ifaddrs.h>
+#import <arpa/inet.h>
 
 
 static NSArray* GetIPv4Addresses(void);
@@ -161,10 +162,12 @@ static NSArray* GetIPv4Addresses(void);
 
 static NSArray* GetIPv4Addresses(void) {
     // getifaddrs returns a linked list of interface entries;
-    // find each active non-loopback interface with IPv4 whose name begins with "en" (an
-    // ugly hack to identify WiFi or Ethernet as opposed to a cellular connection.)
+    // find each active non-loopback interface whose name begins with "en" (an ugly hack
+    // to identify WiFi or Ethernet as opposed to a cellular connection.)
+    // IPv6 addresses are added, but at the end of the array to make them easier to skip
+    // since for most purposes IPv4 addresses are still preferred.
     NSMutableArray* addresses = [NSMutableArray array];
-    UInt32 address = 0;
+    NSUInteger ipv4count = 0;
     struct ifaddrs *interfaces;
     if( getifaddrs(&interfaces) == 0 ) {
         struct ifaddrs *interface;
@@ -172,12 +175,15 @@ static NSArray* GetIPv4Addresses(void) {
             if( (interface->ifa_flags & IFF_UP) && ! (interface->ifa_flags & IFF_LOOPBACK)
                && (strncmp(interface->ifa_name, "en", 2) == 0)) {
                 const struct sockaddr_in *addr = (const struct sockaddr_in*) interface->ifa_addr;
-                if( addr && addr->sin_family==AF_INET ) {
-                    address = addr->sin_addr.s_addr;  // IPv4 addr in network byte order
-                    const UInt8* b = (const UInt8*)&address;
-                    NSString* addrStr = [NSString stringWithFormat: @"%u.%u.%u.%u",
-                                         b[0],b[1],b[2],b[3]];
-                    [addresses addObject: addrStr];
+                if( addr && (addr->sin_family==AF_INET || addr->sin_family==AF_INET6)) {
+                    char addrBuf[64];
+                    if (inet_ntop(addr->sin_family, &addr->sin_addr, addrBuf, sizeof(addrBuf))) {
+                        NSString* addrStr = @(addrBuf);
+                        if (addr->sin_family==AF_INET)
+                            [addresses insertObject: addrStr atIndex: ipv4count++];
+                        else
+                            [addresses addObject: addrStr];     // put ipv6 addrs at the end
+                    }
                 }
             }
         }
