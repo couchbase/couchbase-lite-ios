@@ -41,7 +41,10 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 * [The Guidebook](https://github.com/couchbase/couchbase-lite-ios/wiki/Guide%3A-Introduction)
 * [API Reference](http://couchbase.github.com/couchbase-lite-ios/docs/html/annotated.html)
 * There's lots more information on the [wiki][2].
-* There's a "Grocery Sync" [demo app][18] for iOS, that implements a simple shared to-do list.
+* Demo apps:
+    * [Grocery Sync][18] - implements a simple shared grocery list.
+    * [CouchChat-iOS](https://github.com/couchbaselabs/CouchChat-iOS) - group chat with photos.
+    * [TodoLite-iOS](https://github.com/couchbaselabs/TodoLite-iOS) - a generic ToDo list with photos and sharing. 
 * Or if you want to ask questions or get help, join the [mailing list][17].
 
 ## Platforms ##
