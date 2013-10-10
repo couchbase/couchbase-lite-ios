@@ -44,7 +44,8 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
     CBL_ReplicatorManager* _replicatorManager;
     NSURL* _internalURL;
     NSMutableArray* _replications;
-    CBL_Shared *_shared;
+    __weak CBL_Shared *_shared;
+    id _strongShared;       // optional strong reference to _shared
 }
 
 
@@ -78,11 +79,13 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+static CBLManager* sInstance;
+
 + (instancetype) sharedInstance {
-    static CBLManager* sInstance;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sInstance = [[self alloc] init];
+        LogTo(CBLDatabase, @"%@ is the sharedInstance", sInstance);
     });
     return sInstance;
 }
@@ -127,6 +130,7 @@ static NSCharacterSet* kIllegalNameChars;
             // filter and validation functions, otherwise persistent replications may behave
             // incorrectly. The delayed-perform means the replicator won't start until after
             // the caller (and its caller, etc.) returns back to the runloop.
+            LogTo(CBL_Server, @"%@ will start bg server", self);
             MYAfterDelay(0.0, ^{
                 [self startPersistentReplications];
             });
@@ -146,6 +150,7 @@ static NSCharacterSet* kIllegalNameChars;
         _dir = [directory copy];
         _options = options ? *options : kCBLManagerDefaultOptions;
         _shared = shared;
+        _strongShared = _shared;
         _databases = [[NSMutableDictionary alloc] init];
         _replications = [[NSMutableArray alloc] init];
         LogTo(CBLDatabase, @"Created %@", self);
@@ -184,6 +189,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) close {
+    Assert(self != sInstance, @"Please don't close the sharedInstance!");
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
     [_replicatorManager stop];
     _replicatorManager = nil;
@@ -192,6 +198,7 @@ static NSCharacterSet* kIllegalNameChars;
     }
     [_databases removeAllObjects];
     _shared = nil;
+    _strongShared = nil;
     LogTo(CBLDatabase, @"CLOSED %@", self);
 }
 
@@ -225,6 +232,8 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (void) startPersistentReplications {
+    if (!_shared)
+        return; // already closed
     [self.backgroundServer tellDatabaseManager:^(CBLManager *bgMgr) {
         [bgMgr startReplicatorManager];
     }];
@@ -243,27 +252,33 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], self.directory);
+    return $sprintf(@"%@[%p %@]", [self class], self, self.directory);
 }
 
 
 - (CBL_Shared*) shared {
-    if (!_shared)
-        _shared = [[CBL_Shared alloc] init];
+    if (!_shared) {
+        _strongShared = [[CBL_Shared alloc] init];
+        _shared = _strongShared;
+    }
     return _shared;
 }
 
 
 - (CBL_Server*) backgroundServer {
+    Assert(_shared);
     @synchronized(_shared) {
         CBL_Server* server = _shared.backgroundServer;
-        if (!server) {
+        if (!server && _shared) {
             CBLManager* newManager = [self copy];
             if (newManager) {
+                // The server's manager can't have a strong reference to the CBLShared, or it will
+                // form a cycle (newManager -> strongShared -> backgroundServer -> newManager).
+                newManager->_strongShared = nil;
                 server = [[CBL_Server alloc] initWithManager: newManager];
+                LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
             }
             Assert(server, @"Failed to create backgroundServer!");
-            LogTo(CBLDatabase, @"%@ created %@", self, server);
             _shared.backgroundServer = server;
         }
         return server;
@@ -634,7 +649,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                 Warn(@"Invalid authorizer settings: %@", auth);
         }
     }
-    
+
     // Can't specify both a filter and doc IDs
     if (properties[@"filter"] && properties[@"doc_ids"])
         return kCBLStatusBadRequest;
@@ -744,6 +759,7 @@ TestCase(CBLManager) {
     CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);
 
     CAssertEq([dbm databaseNamed: @"foo" error: NULL], db);
+    [dbm close];
 }
 
 #endif

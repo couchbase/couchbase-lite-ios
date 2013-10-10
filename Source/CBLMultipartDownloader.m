@@ -151,5 +151,6 @@ TestCase(CBLMultipartDownloader) {
     
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
+    [db.manager close];
 }
 #endif

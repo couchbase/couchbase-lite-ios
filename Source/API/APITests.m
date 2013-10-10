@@ -94,6 +94,7 @@ TestCase(API_Manager) {
     CAssert(db);
     CBLDocument* doc = [db untitledDocument];
     CAssert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
+    [ro close];
 }
 
 
@@ -768,6 +769,7 @@ TestCase(API_SharedMapBlocks) {
     }];
     CAssertEqual(result, @"ok");
     closeTestDB(db);
+    [mgr close];
 }
 
 
@@ -783,6 +785,7 @@ TestCase(API_ChangeUUID) {
     Assert([db replaceUUIDs: &error], @"replaceUUIDs failed: %@", error);
     Assert(!$equal(pub, db.publicUUID));
     Assert(!$equal(priv, db.privateUUID));
+    [mgr close];
 }
 
 

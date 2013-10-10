@@ -122,12 +122,15 @@ void DeleteRemoteDB(NSURL* dbURL) {
 }
 
 
-static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push, NSString* filter) {
+static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push,
+                         NSString* filter, NSArray* docIDs)
+{
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO];
     if (push)
         ((CBL_Pusher*)repl).createTarget = YES;
     repl.filterName = filter;
+    repl.docIDs = docIDs;
     repl.authorizer = authorizer();
     [repl start];
     
@@ -222,7 +225,7 @@ TestCase(CBL_Pusher) {
     NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
     if (remoteDB) {
         DeleteRemoteDB(remoteDB);
-        id lastSeq = replic8(db, remoteDB, YES, @"filter");
+        id lastSeq = replic8(db, remoteDB, YES, @"filter", nil);
         CAssertEqual(lastSeq, @"3");
         CAssertEq(filterCalls, 2);
     } else {
@@ -246,7 +249,7 @@ TestCase(CBL_Puller) {
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
     
-    id lastSeq = replic8(db, remoteURL, NO, nil);
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil);
     CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
@@ -254,7 +257,7 @@ TestCase(CBL_Puller) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -307,8 +310,8 @@ TestCase(CBL_Puller_Continuous) {
     [server close];
 }
 
-TestCase(CBLPuller_DocIDs) {
-    RequireTestCase(CBL_Pusher);
+TestCase(CBL_Puller_DocIDs) {
+    RequireTestCase(CBL_Pusher); // CBL_Pusher populates the remote db that this test pulls from...
     
     NSURL* remote = RemoteTestDBURL(kScratchDBName);
     if (!remote) {
@@ -350,7 +353,7 @@ TestCase(CBLPuller_DocIDs) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -415,7 +418,7 @@ TestCase(CBL_Puller_FromCouchApp) {
     CBLDatabase* db = [server createDatabaseNamed: kCouchAppDBName error: NULL];
     CAssert(db);
     
-    replic8(db, remote, NO, nil);
+    replic8(db, remote, NO, nil, nil);
 
     CBLStatus status;
     CBL_Revision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kCBLIncludeAttachments status: &status];

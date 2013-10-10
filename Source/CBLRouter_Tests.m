@@ -617,6 +617,7 @@ TestCase(CBL_Router_GetRange) {
     CAssertEq(response.status, 206);
     CAssertEqual((response.headers)[@"Content-Range"], @"bytes 20-26/27");
     CAssertEqual(response.body.asJSON, [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+    [server close];
 }
 
 
@@ -648,6 +649,7 @@ TestCase(CBL_Router_PutMultipart) {
                            $dict({@"Content-Type", @"multipart/related; boundary=\"BOUNDARY\""}),
                                        [body dataUsingEncoding: NSUTF8StringEncoding]);
     CAssertEq(response.status, kCBLStatusCreated);
+    [server close];
 }
 
 
@@ -792,6 +794,7 @@ TestCase(CBL_Router_AccessCheck) {
     
     CAssert(calledOnAccessCheck);
     CAssert(router.response.status == 401);
+    [server close];
 }
 
 
