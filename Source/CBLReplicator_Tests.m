@@ -363,6 +363,46 @@ TestCase(CBLPuller_DocIDs) {
 }
 
 
+TestCase(CBL_Pusher_DocIDs) {
+    RequireTestCase(CBL_Puller_DocIDs);
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Pusher_DocIDs_Test"];
+    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    // Create some documents:
+    for (int i = 1; i <= 10; i++) {
+        NSDictionary* props = @{@"_id": $sprintf(@"doc%d", i)};
+        CBLStatus status;
+        [db putRevision: [CBL_Revision revisionWithProperties: props]
+             prevRevisionID: nil allowConflict: NO status: &status];
+        CAssertEq(status, kCBLStatusCreated);
+    }
+
+    // Push them to the remote:
+    NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
+    if (remoteDB) {
+        DeleteRemoteDB(remoteDB);
+        replic8(db, remoteDB, YES, nil, @[@"doc4", @"doc7"]);
+    } else {
+        Warn(@"Skipping rest of test CBL_Pusher_DocIDs (no remote test DB URL)");
+        return;
+    }
+
+    // Check _all_docs on the remote db and make sure only doc4 and doc7 were pushed:
+    NSURL* allDocsURL = [remoteDB URLByAppendingPathComponent: @"_all_docs"];
+    NSData* data = [NSData dataWithContentsOfURL: allDocsURL];
+    Assert(data);
+    NSDictionary* response = [CBLJSON JSONObjectWithData: data options: 0 error: NULL];
+    NSArray* rows = response[@"rows"];
+    CAssertEq(rows.count, 2u);
+    CAssertEqual([rows[0] objectForKey: @"id"], @"doc4");
+    CAssertEqual([rows[1] objectForKey: @"id"], @"doc7");
+
+    [db close];
+    [server close];
+}
+
+
 TestCase(CBL_Puller_FromCouchApp) {
     RequireTestCase(CBL_Puller);
     NSURL* remote = RemoteTestDBURL(kCouchAppDBName);

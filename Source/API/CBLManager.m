@@ -635,6 +635,10 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         }
     }
     
+    // Can't specify both a filter and doc IDs
+    if (properties[@"filter"] && properties[@"doc_ids"])
+        return kCBLStatusBadRequest;
+    
     return kCBLStatusOK;
 }
 
@@ -685,6 +689,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
     repl.filterName = $castIf(NSString, properties[@"filter"]);
     repl.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
+    repl.docIDs = $castIf(NSArray, properties[@"doc_ids"]);
     repl.options = properties;
     repl.requestHeaders = headers;
     repl.authorizer = authorizer;

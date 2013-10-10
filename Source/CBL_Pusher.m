@@ -23,6 +23,8 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLCanonicalJSON.h"
+#import "CBLRevision.h"
+#import "CBLDocument.h"
 
 
 static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
@@ -45,16 +47,22 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 
 - (CBLFilterBlock) filter {
-    if (!_filterName)
-        return NULL;
-    CBLStatus status;
-    CBLFilterBlock filter = [_db compileFilterNamed: _filterName status: &status];
-    if (!filter) {
-        Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
-        if (!_error) {
-            self.error = CBLStatusToNSError(status, nil);
+    CBLFilterBlock filter = nil;
+    if (_filterName) {
+        CBLStatus status;
+        filter = [_db compileFilterNamed: _filterName status: &status];
+        if (!filter) {
+            Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
+            if (!_error) {
+                self.error = CBLStatusToNSError(status, nil);
+            }
+            [self stop];
         }
-        [self stop];
+    } else if (_docIDs) {
+        NSArray* docIDs = _docIDs;
+        filter = FILTERBLOCK({
+            return [docIDs containsObject: revision.document.documentID];
+        });
     }
     return filter;
 }
@@ -92,13 +100,10 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     _pendingSequences = [NSMutableIndexSet indexSet];
     _maxPendingSequence = self.lastSequence.longLongValue;
     
-    CBLFilterBlock filter = NULL;
-    if (_filterName) {
-        filter = self.filter;
-        if (!filter)
-            return; // missing filter block
-    }
-    
+    CBLFilterBlock filter = self.filter;
+    if (!filter && self.error)
+        return;
+
     // Include conflicts so all conflicting revisions are replicated too
     CBLChangesOptions options = kDefaultCBLChangesOptions;
     options.includeConflicts = YES;
@@ -190,11 +195,9 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change.source isEqual: _remote]) {
             CBL_Revision* rev = change.addedRevision;
-            if (_filterName) {
-                CBLFilterBlock filter = self.filter;
-                if (!filter || ![_db runFilter: filter params: _filterParameters onRevision: rev])
-                    continue;
-            }
+            CBLFilterBlock filter = self.filter;
+            if (filter && ![_db runFilter: filter params: _filterParameters onRevision: rev])
+                continue;
             LogTo(SyncVerbose, @"%@: Queuing #%lld %@", self, rev.sequence, rev);
             [self addToInbox: rev];
         }

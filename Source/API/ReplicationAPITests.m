@@ -97,6 +97,14 @@ TestCase(CreateReplicators) {
     CAssertEqual(r2.remoteURL, fakeRemoteURL);
     CAssert(r2.pull);
 
+    CBLReplication* r3 = [[CBLReplication alloc] initPullFromSourceURL: fakeRemoteURL
+                                                            toDatabase: db];
+    CAssert(r3 != r2);
+    r3.doc_ids = @[@"doc1", @"doc2"];
+    CBLStatus status;
+    CBL_Replicator* repl = [db.manager replicatorWithProperties: r3.propertiesToSave
+                                                         status: &status];
+    AssertEqual(repl.docIDs, r3.doc_ids);
     [db.manager close];
 }
 

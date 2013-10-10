@@ -89,10 +89,18 @@
     }
     if (_limit > 0)
         [path appendFormat: @"&limit=%u", _limit];
-    if (_filterName) {
-        [path appendFormat: @"&filter=%@", CBLEscapeURLParam(_filterName)];
-        for (NSString* key in _filterParameters) {
-            NSString* value = _filterParameters[key];
+
+    // Add filter or doc_ids:
+    NSString* filterName = _filterName;
+    NSDictionary* filterParameters = _filterParameters;
+    if (_docIDs) {
+        filterName = @"_doc_ids";
+        filterParameters = @{@"doc_ids": _docIDs};
+    }
+    if (filterName) {
+        [path appendFormat: @"&filter=%@", CBLEscapeURLParam(filterName)];
+        for (NSString* key in filterParameters) {
+            NSString* value = filterParameters[key];
             if (![value isKindOfClass: [NSString class]]) {
                 // It's ambiguous whether non-string filter params are allowed.
                 // If we get one, encode it as JSON:
@@ -100,7 +108,7 @@
                 value = [CBLJSON stringWithJSONObject: value options: CBLJSONWritingAllowFragments
                                                 error: &error];
                 if (!value) {
-                    Warn(@"Illegal filter parameter %@ = %@", key, _filterParameters[key]);
+                    Warn(@"Illegal filter parameter %@ = %@", key, filterParameters[key]);
                     continue;
                 }
             }
@@ -108,22 +116,7 @@
                                            CBLEscapeURLParam(value)];
         }
     }
-    
-    if (_docIDs) {
-        
-        if (_filterName) {
-            Warn(@"You can't set both a replication filter and doc_ids, since doc_ids uses the internal _doc_ids filter.");
-        } else {        
-            NSError *error;
-            NSString *docIDsParam = [CBLJSON stringWithJSONObject: _docIDs options: CBLJSONWritingAllowFragments
-                                                           error: &error];
-            if (!docIDsParam || error) {
-                Warn(@"Illegal doc IDs %@, %@", [_docIDs description], [error localizedDescription]);
-            }
-            [path appendFormat:@"&filter=_doc_ids&doc_ids=%@", CBLEscapeURLParam(docIDsParam)];
-        }
-    }
-    
+
     return path;
 }
 
