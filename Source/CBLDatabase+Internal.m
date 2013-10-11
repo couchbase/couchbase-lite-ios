@@ -176,6 +176,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (BOOL) openFMDB: (NSError**)outError {
+    // Without the -ObjC linker flag, object files containing only category methods, not any
+    // class's main implementation, will be dead-stripped. This breaks several pieces of CBL.
+    Assert([FMDatabase instancesRespondToSelector: @selector(intForQuery:)],
+           @"Critical Couchbase Lite code has been stripped from the app binary! "
+            "Please make sure to build using the -ObjC linker flag!");
+    
     int flags = SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
     if (_readOnly)
         flags |= SQLITE_OPEN_READONLY;
