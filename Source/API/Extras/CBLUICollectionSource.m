@@ -9,7 +9,8 @@
 
 
 #import "CBLUICollectionSource.h"
-#import "CouchbaseLite.h"
+#import <CouchbaseLite/CouchbaseLite.h>
+
 
 @interface CBLUICollectionSource ()
 {
