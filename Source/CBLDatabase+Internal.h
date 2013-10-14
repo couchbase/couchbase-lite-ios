@@ -118,6 +118,11 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readonly) int schemaVersion;
 @property (nonatomic, readonly) NSDate* startTime;
 
+/** The status of the last SQLite call, either kCBLStatusOK on success, or some error (generally
+    kCBLStatusDBBusy or kCBLStatusDBError.)
+    If you already know there's been an error, you should use lastDbError instead. */
+@property (readonly) CBLStatus lastDbStatus;
+
 /** The error status of the last SQLite call: Generally kCBLStatusDBBusy or kCBLStatusDBError.
     Always returns some error code, never kCBLStatusOK! It's assumed that you're calling this
     because a CBLDatabase method failed, so you should be returning _some_ error to the caller. */

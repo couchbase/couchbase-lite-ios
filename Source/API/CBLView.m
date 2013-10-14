@@ -112,14 +112,16 @@
 - (void) removeIndex {
     if (self.viewID <= 0)
         return;
-    [_db _inTransaction: ^CBLStatus {
+    CBLStatus status = [_db _inTransaction: ^CBLStatus {
         if ([_db.fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?",
                                      @(_viewID)]) {
             [_db.fmdb executeUpdate: @"UPDATE views SET lastsequence=0 WHERE view_id=?",
                                      @(_viewID)];
         }
-        return _db.lastDbError;
+        return _db.lastDbStatus;
     }];
+    if (CBLStatusIsError(status))
+        Warn(@"Error status %d removing index of %@", status, self);
 }
 
 
