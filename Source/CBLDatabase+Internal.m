@@ -463,7 +463,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 - (CBLStatus) lastDbError {
     CBLStatus status = self.lastDbStatus;
-    return (status == kCBLStatusOK) ? kCBLStatusDBError : status;
+    return (status != kCBLStatusOK) ? kCBLStatusDBError : status;
 }
 
 
