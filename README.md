@@ -45,6 +45,7 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
     * [Grocery Sync][18] - implements a simple shared grocery list.
     * [CouchChat-iOS](https://github.com/couchbaselabs/CouchChat-iOS) - group chat with photos.
     * [TodoLite-iOS](https://github.com/couchbaselabs/TodoLite-iOS) - a generic ToDo list with photos and sharing. 
+    * [Checkers-iOS](https://github.com/couchbaselabs/Checkers-iOS) - a checkers app
 * Or if you want to ask questions or get help, join the [mailing list][17].
 
 ## Platforms ##
