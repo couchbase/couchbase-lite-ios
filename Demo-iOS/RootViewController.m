@@ -275,7 +275,7 @@
     
     [self forgetSync];
     
-    NSArray* repls = [self.database replicateWithURL: newRemoteURL exclusively: YES];
+    NSArray* repls = [self.database replicationsWithURL: newRemoteURL exclusively: YES];
     if (repls) {
         _pull = [repls objectAtIndex: 0];
         _push = [repls objectAtIndex: 1];
@@ -286,6 +286,8 @@
                      name: kCBLReplicationChangeNotification object: _pull];
         [nctr addObserver: self selector: @selector(replicationProgress:)
                      name: kCBLReplicationChangeNotification object: _push];
+        [_pull start];
+        [_push start];
     }
 }
 
