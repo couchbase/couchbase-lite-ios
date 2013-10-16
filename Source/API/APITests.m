@@ -443,6 +443,49 @@ TestCase(API_History) {
 }
 
 
+TestCase(API_Conflict) {
+    RequireTestCase(API_History);
+    CBLDatabase* db = createEmptyDB();
+    CBLDocument* doc = createDocumentWithProperties(db, @{@"foo": @"bar"});
+    CBLRevision* rev1 = doc.currentRevision;
+
+    NSMutableDictionary* properties = doc.properties.mutableCopy;
+    properties[@"tag"] = @2;
+    NSError* error;
+    CBLRevision* rev2a = [doc putProperties: properties error: &error];
+
+    properties = rev1.properties.mutableCopy;
+    properties[@"tag"] = @3;
+    CBLNewRevision* newRev = [rev1 newRevision];
+    newRev.properties = properties;
+    CBLRevision* rev2b = [newRev saveAllowingConflict: &error];
+    CAssert(rev2b, @"Failed to create a a conflict: %@", error);
+
+    CAssertEqual([doc getConflictingRevisions: &error], (@[rev2b, rev2a]));
+    CAssertEqual([doc getLeafRevisions: &error], (@[rev2b, rev2a]));
+
+    CBLRevision* defaultRev, *otherRev;
+    if ([rev2a.revisionID compare: rev2b.revisionID] > 0) {
+        defaultRev = rev2a; otherRev = rev2b;
+    } else {
+        defaultRev = rev2b; otherRev = rev2a;
+    }
+    AssertEqual(doc.currentRevision, defaultRev);
+
+    CBLQuery* query = [db queryAllDocuments];
+    query.allDocsMode = kCBLShowConflicts;
+    NSArray* rows = [[query rows] allObjects];
+    AssertEq(rows.count, 1u);
+    CBLQueryRow* row = rows[0];
+    NSArray* revs = row.conflictingRevisions;
+    AssertEq(revs.count, 2u);
+    AssertEqual(revs[0], defaultRev);
+    AssertEqual(revs[1], otherRev);
+    
+    closeTestDB(db);
+}
+
+
 #pragma mark - ATTACHMENTS
 
 TestCase(API_Attachments) {

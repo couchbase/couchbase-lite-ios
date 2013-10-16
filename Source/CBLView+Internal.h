@@ -31,10 +31,10 @@ typedef struct CBLQueryOptions {
     BOOL reduceSpecified;
     BOOL reduce;                   // Ignore if !reduceSpecified
     BOOL group;
-    BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
     BOOL fullTextSnippets;
     BOOL fullTextRanking;
     CBLStaleness stale;
+    CBLAllDocsMode allDocsMode;
 } CBLQueryOptions;
 
 extern const CBLQueryOptions kDefaultCBLQueryOptions;

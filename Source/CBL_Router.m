@@ -199,7 +199,12 @@
     options->groupLevel = [self intQuery: @"group_level" defaultValue: options->groupLevel];
     options->descending = [self boolQuery: @"descending"];
     options->includeDocs = [self boolQuery: @"include_docs"];
-    options->includeDeletedDocs = [self boolQuery: @"include_deleted"];
+    if ([self boolQuery: @"include_deleted"])
+        options->allDocsMode = kCBLIncludeDeleted;
+    else if ([self boolQuery: @"include_conflicts"]) // nonstandard
+        options->allDocsMode = kCBLShowConflicts;
+    else if ([self boolQuery: @"only_conflicts"]) // nonstandard
+        options->allDocsMode = kCBLOnlyConflicts;
     options->updateSeq = [self boolQuery: @"update_seq"];
     if ([self query: @"inclusive_end"])
         options->inclusiveEnd = [self boolQuery: @"inclusive_end"];

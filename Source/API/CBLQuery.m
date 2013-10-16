@@ -49,7 +49,8 @@
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
     CBLStaleness _stale;
-    BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
+    BOOL _descending, _prefetch, _mapOnly;
+    CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
@@ -104,6 +105,7 @@
         _fullTextQuery = query.fullTextQuery;
         _fullTextRanking = query.fullTextRanking;
         _fullTextSnippets = query.fullTextSnippets;
+        _allDocsMode = query.allDocsMode;
         
     }
     return self;
@@ -120,7 +122,16 @@
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly,
-            database=_database, includeDeleted=_includeDeleted;
+            database=_database, allDocsMode=_allDocsMode;
+
+
+- (BOOL) includeDeleted {
+    return _allDocsMode == kCBLIncludeDeleted;
+}
+
+- (void) setIncludeDeleted:(BOOL)includeDeleted {
+    _allDocsMode = includeDeleted ? kCBLIncludeDeleted : kCBLAllDocs;
+}
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -145,7 +156,7 @@
         .includeDocs = _prefetch,
         .updateSeq = YES,
         .inclusiveEnd = YES,
-        .includeDeletedDocs = _includeDeleted,
+        .allDocsMode = _allDocsMode,
         .stale = _stale
     };
 }
@@ -549,6 +560,19 @@ static id fromJSON( NSData* json ) {
     CBLDocument* doc = [_database documentWithID: docID];
     [doc loadCurrentRevisionFrom: self];
     return doc;
+}
+
+
+- (NSArray*) conflictingRevisions {
+    // The "_conflicts" value property is added when the query's allDocsMode==kCBLShowConflicts;
+    // see -[CBLDatabase getAllDocs:] in CBLDatabase+Internal.m.
+    CBLDocument* doc = [_database documentWithID: self.sourceDocumentID];
+    NSDictionary* value = $castIf(NSDictionary, self.value);
+    NSArray* conflicts = $castIf(NSArray, value[@"_conflicts"]);
+    return [conflicts my_map: ^id(id obj) {
+        NSString* revID = $castIf(NSString, obj);
+        return revID ? [doc revisionWithID: revID] : nil;
+    }];
 }
 
 

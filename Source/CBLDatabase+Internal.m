@@ -1289,13 +1289,14 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 - (NSArray*) getAllDocs: (const CBLQueryOptions*)options {
     if (!options)
         options = &kDefaultCBLQueryOptions;
+    BOOL includeDeletedDocs = (options->allDocsMode == kCBLIncludeDeleted);
     
     // Generate the SELECT statement, based on the options:
     BOOL cacheQuery = YES;
     NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid, sequence" mutableCopy];
     if (options->includeDocs)
         [sql appendString: @", json"];
-    if (options->includeDeletedDocs)
+    if (includeDeletedDocs)
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
     if (options->keys) {
@@ -1305,7 +1306,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         cacheQuery = NO; // we've put hardcoded key strings in the query
     }
     [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
-    if (!options->includeDeletedDocs)
+    if (!includeDeletedDocs)
         [sql appendString: @" AND deleted=0"];
 
     NSMutableArray* args = $marray();
@@ -1330,7 +1331,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     
     [sql appendFormat: @" ORDER BY docid %@, %@ revid DESC LIMIT ? OFFSET ?",
                        (options->descending ? @"DESC" : @"ASC"),
-                       (options->includeDeletedDocs ? @"deleted ASC," : @"")];
+                       (includeDeletedDocs ? @"deleted ASC," : @"")];
     [args addObject: @(options->limit)];
     [args addObject: @(options->skip)];
     
@@ -1343,21 +1344,19 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     if (!r)
         return nil;
     
-    int64_t lastDocID = 0;
     NSMutableArray* rows = $marray();
     NSMutableDictionary* docs = options->keys ? $mdict() : nil;
-    while ([r next]) {
+
+    BOOL keepGoing = [r next]; // Go to first result row
+    while (keepGoing) {
         @autoreleasepool {
-            // Only count the first rev for a given doc (the rest will be losing conflicts):
+            // Get row values now, before the code below advances 'r':
             int64_t docNumericID = [r longLongIntForColumnIndex: 0];
-            if (docNumericID == lastDocID)
-                continue;
-            lastDocID = docNumericID;
-            
             NSString* docID = [r stringForColumnIndex: 1];
             NSString* revID = [r stringForColumnIndex: 2];
             SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
-            BOOL deleted = options->includeDeletedDocs && [r boolForColumn: @"deleted"];
+            BOOL deleted = includeDeletedDocs && [r boolForColumn: @"deleted"];
+
             NSDictionary* docContents = nil;
             if (options->includeDocs) {
                 // Fill in the document contents:
@@ -1370,17 +1369,32 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                        options: options->content];
                 Assert(docContents);
             }
+            
+            // Iterate over following rows with the same doc_id -- these are conflicts.
+            // Skip them, but collect their revIDs if the 'conflicts' option is set:
+            NSMutableArray* conflicts = nil;
+            while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == docNumericID) {
+                if (options->allDocsMode >= kCBLIncludeConflicts) {
+                    if (!conflicts)
+                        conflicts = $marray(revID);
+                    [conflicts addObject: [r stringForColumnIndex: 2]];
+                }
+            }
+            if (options->allDocsMode == kCBLOnlyConflicts && !conflicts)
+                continue;
+
             NSDictionary* value = $dict({@"rev", revID},
-                                        {@"deleted", (deleted ?$true : nil)});
-            CBLQueryRow* change = [[CBLQueryRow alloc] initWithDocID: docID
-                                                            sequence: sequence
-                                                                 key: docID
-                                                               value: value
-                                                       docProperties: docContents];
+                                        {@"deleted", (deleted ?$true : nil)},
+                                        {@"_conflicts", conflicts});  // (not found in CouchDB)
+            CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                         sequence: sequence
+                                                              key: docID
+                                                            value: value
+                                                    docProperties: docContents];
             if (options->keys)
-                docs[docID] = change;
+                docs[docID] = row;
             else
-                [rows addObject: change];
+                [rows addObject: row];
         }
     }
     [r close];

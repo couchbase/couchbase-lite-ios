@@ -202,10 +202,11 @@
 
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties
-                           error: (NSError**)outError
+                         error: (NSError**)outError
 {
     return [self.document putProperties: properties
                               prevRevID: _rev.revID
+                          allowConflict: NO
                                   error: outError];
 }
 
@@ -260,7 +261,13 @@
 }
 
 - (CBLRevision*) save: (NSError**)outError {
-    return [_document putProperties: _properties prevRevID: _parentRevID error: outError];
+    return [_document putProperties: _properties prevRevID: _parentRevID
+                      allowConflict: NO error: outError];
+}
+
+- (CBLRevision*) saveAllowingConflict: (NSError**)outError {
+    return [_document putProperties: _properties prevRevID: _parentRevID
+                      allowConflict: YES error: outError];
 }
 
 - (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {

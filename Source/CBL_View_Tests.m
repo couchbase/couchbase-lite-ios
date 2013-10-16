@@ -449,7 +449,15 @@ TestCase(CBL_View_AllDocsQuery) {
                                  {@"key", rev.docID},
                                  {@"value", $dict({@"rev", rev.revID})});
     }
-    
+
+    // Create a conflict, won by the old revision:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-...."},  // lower revID, will lose conflict
+                                {@"key", @"40ur"});
+    CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
+    CAssert(status < 300);
+
     // Query all rows:
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     NSArray* query = [db getAllDocs: &options];
@@ -487,7 +495,6 @@ TestCase(CBL_View_AllDocsQuery) {
     // Delete a document:
     CBL_Revision* del = docs[0];
     del = [[CBL_Revision alloc] initWithDocID: del.docID revID: del.revID deleted: YES];
-    CBLStatus status;
     del = [db putRevision: del prevRevisionID: del.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
 
@@ -501,6 +508,24 @@ TestCase(CBL_View_AllDocsQuery) {
                                             {@"key", del.docID},
                                             {@"value", $dict({@"rev", del.revID},
                                                              {@"deleted", $true})}) ]));
+    // Get conflicts:
+    options = kDefaultCBLQueryOptions;
+    options.allDocsMode = kCBLIncludeConflicts;
+    query = [db getAllDocs: &options];
+    NSString* curRevID = [docs[1] revID];
+    NSDictionary* expectedConflict1 = $dict({@"id",  @"44444"},
+                                            {@"key", @"44444"},
+                                            {@"value", $dict({@"rev", [docs[1] revID]},
+                                                             {@"_conflicts", @[curRevID, @"1-...."]})} );
+    expectedRows = $array(expectedRow[2], expectedRow[3], expectedConflict1, expectedRow[4]);
+    CAssertEqual(rowsToDicts(query), expectedRows);
+
+    // Get _only_ conflicts:
+    options.allDocsMode = kCBLOnlyConflicts;
+    query = [db getAllDocs: &options];
+    expectedRows = $array(expectedConflict1);
+    CAssertEqual(rowsToDicts(query), expectedRows);
+
     [db close];
 }
 

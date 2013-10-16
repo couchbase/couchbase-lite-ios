@@ -51,8 +51,9 @@
 - (void) revisionAdded: (CBL_DatabaseChange*)change                 __attribute__((nonnull));
 - (void) loadCurrentRevisionFrom: (CBLQueryRow*)row                 __attribute__((nonnull));
 - (CBLRevision*) putProperties: (NSDictionary*)properties
-                       prevRevID: (NSString*)prevID
-                           error: (NSError**)outError;
+                     prevRevID: (NSString*)prevID
+                 allowConflict: (BOOL)allowConflict
+                         error: (NSError**)outError;
 @end
 
 

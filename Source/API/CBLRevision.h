@@ -109,6 +109,12 @@
     @return  A new CBLRevision representing the saved form of the revision. */
 - (CBLRevision*) save: (NSError**)outError;
 
+/** A special variant of -save: that always adds the revision, even if its parent is not the
+    current revision of the document.
+    This can be used to resolve conflicts, or to create them. If you're not certain that's what you
+    want to do, you should use the regular -save: method instead. */
+- (CBLRevision*) saveAllowingConflict: (NSError**)outError;
+
 /** Creates or updates an attachment.
     The attachment data will be written to the database when the revision is saved.
     @param attachment  A newly-created CBLAttachment (not yet associated with any revision)

@@ -219,6 +219,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties
                      prevRevID: (NSString*)prevID
+                 allowConflict: (BOOL)allowConflict
                          error: (NSError**)outError
 {
     id idProp = [properties objectForKey: @"_id"];
@@ -245,7 +246,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         rev.properties = properties;
     CBLStatus status = 0;
     CBL_Revision* newRev = [_database putRevision: rev prevRevisionID: prevID
-                                    allowConflict: NO status: &status];
+                                    allowConflict: allowConflict status: &status];
     if (!newRev) {
         if (outError) *outError = CBLStatusToNSError(status, nil);
         return nil;
@@ -255,7 +256,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
     NSString* prevID = properties[@"_rev"];
-    return [self putProperties: properties prevRevID: prevID error: outError];
+    return [self putProperties: properties prevRevID: prevID allowConflict: NO error: outError];
 }
 
 - (CBLRevision*) update: (BOOL(^)(CBLNewRevision*))block error: (NSError**)outError {
