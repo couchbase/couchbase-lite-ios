@@ -220,7 +220,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return NO;
     
     // Check the user_version number we last stored in the database:
-    int dbVersion = self.schemaVersion;
+    __unused int dbVersion = self.schemaVersion;
     
     // Incompatible version changes increment the hundreds' place:
     if (dbVersion >= 100) {
