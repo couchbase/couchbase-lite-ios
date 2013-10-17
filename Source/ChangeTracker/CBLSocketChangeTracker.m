@@ -314,7 +314,7 @@
     bodyStr = [bodyStr  stringByTrimmingCharactersInSet:
                [NSCharacterSet whitespaceAndNewlineCharacterSet]];
 
-    if (_mode != kLongPoll || ![bodyStr hasPrefix: @"{\"results\":["] ) {
+    if (_mode != kLongPoll || (bodyStr.length > 0 && ![bodyStr hasPrefix: @"{\"results\":["]) ) {
         Warn(@"%@: Unparseable response:\n%@", self, bodyStr);
         return NO;
     }
@@ -323,7 +323,7 @@
     // closed unexpectedly before the full response was sent.
     NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
     Warn(@"%@: Longpoll connection closed (by proxy?) after %.1f sec", self, elapsed);
-    if (elapsed >= 30.0 && $equal(bodyStr, @"{\"results\":[")) {
+    if (elapsed >= 30.0 && (bodyStr.length == 0 || $equal(bodyStr, @"{\"results\":["))) {
         // Looks like the connection got closed by a proxy (like AWS' load balancer) while the
         // server was waiting for a change to send, due to lack of activity.
         // Lower the heartbeat time to work around this, and reconnect:
