@@ -16,6 +16,3 @@
 [submodule "vendor/sqlite3-unicodesn"]
 	path = vendor/sqlite3-unicodesn
 	url = git://github.com/snej/sqlite3-unicodesn.git
-[submodule "vendor/JavaScriptCore.framework"]
-	path = vendor/JavaScriptCore.framework
-	url = git://github.com/couchbase/build/tree/master/tools/iOS/bin/JavaScriptCore.framework
