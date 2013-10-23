@@ -69,6 +69,7 @@ static const NSUInteger kDefaultRetainLimit = 50;
         doc.owningCache = nil;
 #endif
     objc_autorelease(objc_retain(_cache));
+    _cache = nil; // Should zero out this to prevent a double release.
 }
 
 
