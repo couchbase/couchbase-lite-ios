@@ -90,6 +90,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (readonly) NSThread* thread;  // actually needs to be atomic (called from other threads)
 
 - (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
+- (BOOL) close;
 @end
 
 
@@ -107,7 +108,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 #endif
 - (BOOL) openFMDB: (NSError**)outError;
 - (BOOL) open: (NSError**)outError;
-- (BOOL) close;
+- (BOOL) closeInternal;
 
 @property (nonatomic, readonly) FMDatabase* fmdb;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;

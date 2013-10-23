@@ -81,7 +81,8 @@
 - (void) dealloc
 {
     LogTo(CBLModel, @"%@ dealloc", self);
-    Assert(!_needsSave, @"%@ dealloc with unsaved changes!", self);
+    if(_needsSave)
+        Warn(@"%@ dealloced with unsaved changes!", self); // should be impossible
     _document.modelObject = nil;
 }
 

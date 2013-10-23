@@ -416,7 +416,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return YES;
 }
 
-- (BOOL) close {
+- (BOOL) closeInternal {
     if (!_isOpen)
         return NO;
     

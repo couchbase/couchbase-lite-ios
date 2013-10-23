@@ -8,11 +8,13 @@
 
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+LocalDocs.h"
 #import "CBL_DatabaseChange.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
+#import "CBLModel_Internal.h"
 #import "CBLModelFactory.h"
 #import "CBLCache.h"
 #import "CBLManager+Internal.h"
@@ -131,11 +133,27 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
+- (BOOL) close {
+    (void)[self saveAllModels: NULL];  // ?? Or should I return NO if this fails?
+
+    if (![self closeInternal])
+        return NO;
+
+    [self clearDocumentCache];
+    _modelFactory = nil;
+    return YES;
+}
+
+
 - (BOOL) deleteDatabase: (NSError**)outError {
     LogTo(CBLDatabase, @"Deleting %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
     if (_isOpen) {
+        // There is no need to save any changes!
+        for (CBLModel* model in _unsavedModelsMutable)
+            model.needsSave = false;
+        _unsavedModelsMutable = nil;
         if (![self close])
             return NO;
     }

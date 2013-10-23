@@ -113,6 +113,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+    if (!self.persistent)
+        [self setNeedsSave: false];     // I'm ephemeral, so avoid warning about unsaved changes
 }
 
 
