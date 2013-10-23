@@ -43,7 +43,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-@synthesize manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
+@synthesize manager=_manager, undoManager=_undoManager, unsavedModelsMutable=_unsavedModelsMutable;
 @synthesize path=_path, name=_name, isOpen=_isOpen, thread=_thread;
 
 

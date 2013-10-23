@@ -20,7 +20,7 @@
 /** Generic application delegate for simple Mac OS CouchbaseLite demo apps.
     The name of the (local) database to use should be added to the app's Info.plist
     under the 'DemoDatabase' key. */
-@interface DemoAppController : NSObject
+@interface DemoAppController : NSObject <NSWindowDelegate>
 {
     IBOutlet NSWindow* _window;
     IBOutlet NSTableView* _table;

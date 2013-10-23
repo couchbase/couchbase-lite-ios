@@ -55,6 +55,8 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     This method is only available if you've linked with the CouchbaseLiteListener framework. */
 @property (readonly) NSURL* internalURL;
 
+@property (nonatomic, strong) NSUndoManager* undoManager;
+
 
 #pragma mark - HOUSEKEEPING:
 

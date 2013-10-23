@@ -57,6 +57,11 @@ int main (int argc, const char * argv[]) {
     NSError* error;
     _database = [[CBLManager sharedInstance] createDatabaseNamed: dbName
                                                                      error: &error];
+    _database.undoManager = [[NSUndoManager alloc] init];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didUndo:) name:NSUndoManagerDidUndoChangeNotification object:_database.undoManager];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didUndo:) name:NSUndoManagerDidRedoChangeNotification object:_database.undoManager];
+    
     if (!_database) {
         NSAssert(NO, @"Error creating db: %@", error);
     }
@@ -411,5 +416,15 @@ int main (int argc, const char * argv[]) {
     [cell setDrawsBackground: (bg != nil)];
 }
 
+- (NSUndoManager *)windowWillReturnUndoManager:(NSWindow *)window
+{
+    return _database.undoManager;
+}
+
+- (void) didUndo: (NSNotification*)notification
+{
+    [_database saveAllModels:nil];
+    [_table reloadData];
+}
 
 @end

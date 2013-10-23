@@ -293,11 +293,66 @@ TestCase(API_ModelAttachments) {
     [db close];
 }
 
+TestCase(API_UndoManager) {
+    CBLDatabase* db = createEmptyDB();
+    db.undoManager = [[NSUndoManager alloc] init];
+    
+    NSError* error;
+    {
+        TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+        model.number = 1337;
+        
+        CAssert([model save: &error], @"Initial failed: %@", error);
+        
+        [db.undoManager undo];
+        CAssertEq(model.number, 0);
+        CAssertNil(model.document);
+        
+        [db.undoManager redo];
+        CAssertEq(model.number, 1337);
+        CAssert(model.document != nil);
+        
+        [model deleteDocument:nil];
+        
+        [db.undoManager undo];
+        CAssertEq(model.number, 1337);
+        CAssert(model.document != nil);
+        
+        [db.undoManager redo];
+        CAssertEq(model.number, 0);
+        CAssertNil(model.document);
+    }
+    {
+        TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+        [db.undoManager endUndoGrouping];
+        
+        [db.undoManager beginUndoGrouping];
+        NSData* attData = [@"Ceci n'est pas une pipe." dataUsingEncoding: NSUTF8StringEncoding];
+        
+        CBLAttachment* attachment = [[CBLAttachment alloc] initWithContentType: @"text/plain"
+                                                                          body: attData];
+        [model addAttachment: attachment named: @"Caption.txt"];
+        CAssert([model save: &error], @"Save after adding attachment failed: %@", error);
+        [db.undoManager undo];
+        CAssertNil([model attachmentNamed: @"Caption.txt"]);
+        [db.undoManager redo];
+        CAssert([model attachmentNamed: @"Caption.txt"] != nil);
+        
+        [model removeAttachmentNamed: @"Caption.txt"];
+        CAssertNil([model attachmentNamed: @"Caption.txt"]);
+        [db.undoManager undo];
+        CAssert([model attachmentNamed: @"Caption.txt"] != nil);
+    }
+
+    [db close];
+}
+
 
 TestCase(API_Model) {
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);
+    RequireTestCase(API_UndoManager);
 }
 
 

@@ -108,6 +108,8 @@
     [self._entries insertObject: object atIndex: index];
     object.autosaves = YES;
     object.database = _query.database;
+    
+    [_query.database saveAllModels:nil];
 }
 
 
