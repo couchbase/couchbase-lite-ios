@@ -7,10 +7,11 @@
 //
 
 #import <CouchbaseLite/CouchbaseLite.h>
+#import "CBLUndoableModel.h"
 @class NSImage;
 
 
-@interface ShoppingItem : CBLModel
+@interface ShoppingItem : CBLUndoableModel
 {
     NSImage* _picture;
 }

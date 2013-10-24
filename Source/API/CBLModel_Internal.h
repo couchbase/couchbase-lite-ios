@@ -17,7 +17,6 @@
     bool _needsSave :1;
     bool _saving    :1;
     bool _deleting  :1;
-    bool _canUndo   :1;
 
     NSMutableDictionary* _properties;   // Cached property values, including changed values
     NSMutableSet* _changedNames;        // Names of properties that have been changed but not saved
@@ -25,6 +24,8 @@
 }
 @property (readwrite, retain) CBLDocument* document;
 @property (readwrite) bool needsSave;
+@property (readwrite) bool deleting;
+@property (readwrite) bool saving;
 @property (readonly) NSDictionary* currentProperties;
 @property (readonly) NSDictionary* currentUserProperties;
 - (void) cacheValue: (id)value ofProperty: (NSString*)property changed: (BOOL)changed;

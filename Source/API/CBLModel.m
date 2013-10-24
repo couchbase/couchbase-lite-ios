@@ -19,7 +19,6 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
 #import "CBLBase64.h"
-#import "CBLDatabase+Internal.h"
 
 #import <objc/message.h>
 #import <objc/runtime.h>
@@ -40,7 +39,6 @@
             LogTo(CBLModel, @"%@ initWithDocument: %@ @%p", self.class, document, document);
             self.document = document;
             [self didLoadFromDocument];
-            _canUndo = true;
         } else {
             _isNew = true;
             LogTo(CBLModel, @"%@ init", self);
@@ -85,8 +83,6 @@
     LogTo(CBLModel, @"%@ dealloc", self);
     Assert(!_needsSave, @"%@ dealloc with unsaved changes!", self);
     _document.modelObject = nil;
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 
@@ -109,12 +105,6 @@
     NSAssert(document.modelObject == nil, @"Document already has a model");
     _document = document;
     _document.modelObject = self;
-    
-    NSUndoManager* undoManager = self.database.undoManager;
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(undoManagerDidCloseUndoGroupNotification:)
-                                                 name: NSUndoManagerDidCloseUndoGroupNotification
-                                               object: undoManager];
 }
 
 
@@ -139,13 +129,6 @@
         // On setting database, create a new untitled/unsaved CBLDocument:
         NSString* docID = [self idForNewDocumentInDatabase: db];
         self.document = docID ? [db documentWithID: docID] : [db untitledDocument];
-        
-        NSUndoManager* undoManager = self.database.undoManager;
-        if ([undoManager isUndoing] == NO && [undoManager isRedoing] == NO) {
-            [[undoManager prepareWithInvocationTarget: self] undoCreateModel];
-            _canUndo = false;
-        }
-
         LogTo(CBLModel, @"%@ made new document", self);
     } else {
         [self deleteDocument: nil];
@@ -156,28 +139,16 @@
 
 - (BOOL) deleteDocument: (NSError**)outError {
     CBLRevision* rev = _document.currentRevision;
-    
-    NSUndoManager* undoManager = self.database.undoManager;
-    if (_canUndo && [undoManager isUndoing] == NO && [undoManager isRedoing] == NO) {
-        NSDictionary* modelUndoData = @{@"currentProperties" : [[self currentUserProperties] copy],
-                                        @"database" : self.database,
-                                        @"model" : self};
-        
-        [[undoManager prepareWithInvocationTarget:self] undoDeleteModel: modelUndoData];
-        _canUndo = false;
-    }
-    
     if (!rev) {
         _properties = [NSMutableDictionary dictionary];
         [self detachFromDocument];
         return YES;
     }
     LogTo(CBLModel, @"%@ Deleting document", self);
-    
     self.needsSave = NO;        // prevent any pending saves
-    _deleting = true;
+    self.deleting = true;
     rev = [rev deleteDocument: outError];
-    _deleting = false;
+    self.deleting = false;
     if (!rev)
         return NO;
     [self detachFromDocument];
@@ -214,11 +185,6 @@
         _properties = nil;
     }
     
-    if (_deleting == false) {
-        [self.database.undoManager removeAllActionsWithTarget: self];
-        _canUndo = true;
-    }
-    
     [self didLoadFromDocument];
     for (NSString* key in keys)
         [self didChangeValueForKey: key];
@@ -237,7 +203,7 @@
 #pragma mark - SAVING:
 
 
-@synthesize isNew=_isNew, autosaves=_autosaves;
+@synthesize isNew=_isNew, autosaves=_autosaves, deleting=_deleting, saving=_saving;
 
 
 - (NSTimeInterval) autosaveDelay {
@@ -276,6 +242,7 @@
             [unsaved removeObject: self];
     }
 }
+
 
 - (void) willSave: (NSSet*)changedProperties {
     // Subclasses can override
@@ -438,18 +405,6 @@
     id curValue = [self getValueOfProperty: property];
     if (!$equal(value, curValue)) {
         LogTo(CBLModel, @"%@ .%@ := \"%@\"", self, property, value);
-        
-        NSUndoManager* undoManager = self.database.undoManager;
-        if (_canUndo && [undoManager isUndoing] == NO && [undoManager isRedoing] == NO) {
-            NSDictionary* propertiesToUndo = [[self currentUserProperties] copy];
-            if (propertiesToUndo == nil) {
-                propertiesToUndo = [NSDictionary dictionary];
-            }
-        
-            [[undoManager prepareWithInvocationTarget: self] undoSetProperties: propertiesToUndo];
-            _canUndo = false;
-        }
-        
         [self cacheValue: value ofProperty: property changed: YES];
         [self markNeedsSave];
     }
@@ -535,22 +490,6 @@
     if (attachment == [self attachmentNamed: name])
         return;
     
-    NSUndoManager* undoManager = self.database.undoManager;
-    if (_canUndo && [undoManager isUndoing] == NO && [undoManager isRedoing] == NO) {
-        if (attachment == nil) {
-            CBLAttachment *attachmentToRemove = [self attachmentNamed: name];
-            NSDictionary *attachmentUndoData = @{@"attachmentBody" : attachmentToRemove.body,
-                                                 @"attachmentContentType" : attachmentToRemove.contentType,
-                                                 @"attachmentName" : name};
-            [[undoManager prepareWithInvocationTarget: self] undoRemoveAttachment: attachmentUndoData];
-        }
-        else {
-            [[undoManager prepareWithInvocationTarget: self] undoAddAttachmentNamed: name];
-        }
-
-        _canUndo = false;
-    }
-    
     if (!_changedAttachments)
         _changedAttachments = [[NSMutableDictionary alloc] init];
     _changedAttachments[name] = (attachment ? attachment : [NSNull null]);
@@ -582,70 +521,5 @@
     return nuAttach;
 }
 
-#pragma mark - UNDO MANAGER:
-
-- (void) undoManagerDidCloseUndoGroupNotification: (NSNotification*)notification {
-    _canUndo = true;
-}
-
-- (void) undoCreateModel {
-    NSDictionary* modelUndoData = @{@"currentProperties" : [self currentUserProperties],
-                                    @"database" : self.database,
-                                    @"model" : self};
-    
-    [[self.database.undoManager prepareWithInvocationTarget: self] undoDeleteModel: modelUndoData];
-    
-    NSError *error = nil;
-    if ([self deleteDocument: &error] == NO) {
-        Warn(@"Error while undoing (deleting) created model = %@, error = %@", self, error);
-    }
-}
-
-- (void) undoDeleteModel: (NSDictionary*)modelUndoData {
-    self.database = modelUndoData[@"database"];
-    
-    [[self.database.undoManager prepareWithInvocationTarget: self] undoCreateModel];
-    
-    NSDictionary* currentProperties = modelUndoData[@"currentProperties"];
-    NSSet* propertyNames = [[self class] propertyNames];
-    
-    [propertyNames enumerateObjectsUsingBlock:^(NSString* propertyName, BOOL* stop) {
-        id value = currentProperties[propertyName];
-        [self setValue: value ofProperty: propertyName];
-        [self didChangeValueForKey: propertyName];
-    }];
-}
-
-- (void) undoSetProperties: (NSDictionary*)properties {
-    [[self.database.undoManager prepareWithInvocationTarget: self] undoSetProperties: [self currentUserProperties]];
-    
-    NSSet* propertyNames = [[self class] propertyNames];
-    [propertyNames enumerateObjectsUsingBlock:^(NSString* propertyName, BOOL* stop) {
-        id value = properties[propertyName];
-        [self setValue: value ofProperty: propertyName];
-        [self didChangeValueForKey: propertyName];
-    }];
-}
-
-- (void) undoAddAttachmentNamed: (NSString*) name {
-    CBLAttachment *attachmentToRemove = [self attachmentNamed: name];
-    NSDictionary *attachmentUndoData = @{@"attachmentBody" : attachmentToRemove.body,
-                                         @"attachmentContentType" : attachmentToRemove.contentType,
-                                         @"attachmentName" : name};
-    [[self.database.undoManager prepareWithInvocationTarget: self] undoRemoveAttachment: attachmentUndoData];
-    
-    [self removeAttachmentNamed: name];
-}
-
-- (void) undoRemoveAttachment: (NSDictionary*)attachmentUndoData {
-    NSData *attachmentBody = attachmentUndoData[@"attachmentBody"];
-    NSString *attachmentContentType = attachmentUndoData[@"attachmentContentType"];
-    NSString *attachmentName = attachmentUndoData[@"attachmentName"];
-    
-    [[self.database.undoManager prepareWithInvocationTarget:self] undoAddAttachmentNamed: attachmentName];
-    
-    CBLAttachment *attachment = [[CBLAttachment alloc] initWithContentType: attachmentContentType body: attachmentBody];
-    [self addAttachment: attachment named: attachmentName];
-}
 
 @end
