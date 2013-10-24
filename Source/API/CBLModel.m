@@ -140,11 +140,16 @@
 
 - (BOOL) deleteDocument: (NSError**)outError {
     CBLRevision* rev = _document.currentRevision;
-    if (!rev)
+    if (!rev) {
+        _properties = [NSMutableDictionary dictionary];
+        [self detachFromDocument];
         return YES;
+    }
     LogTo(CBLModel, @"%@ Deleting document", self);
     self.needsSave = NO;        // prevent any pending saves
+    self.deleting = true;
     rev = [rev deleteDocument: outError];
+    self.deleting = false;
     if (!rev)
         return NO;
     [self detachFromDocument];
@@ -199,7 +204,7 @@
 #pragma mark - SAVING:
 
 
-@synthesize isNew=_isNew, autosaves=_autosaves;
+@synthesize isNew=_isNew, autosaves=_autosaves, deleting=_deleting, saving=_saving;
 
 
 - (NSTimeInterval) autosaveDelay {
@@ -327,6 +332,14 @@
     return properties;
 }
 
+- (NSDictionary*) currentUserProperties {
+    NSMutableDictionary* properties = [_document.userProperties mutableCopy];
+    if (!properties)
+        properties = [[NSMutableDictionary alloc] init];
+    for (NSString* key in _changedNames)
+        [properties setValue: _properties[key] forKey: key];
+    return properties;
+}
 
 + (NSSet*) propertyNames {
     if (self == [CBLModel class])
