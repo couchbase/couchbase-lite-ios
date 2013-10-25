@@ -145,18 +145,21 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
+- (BOOL) closeForDeletion {
+    // There is no need to save any changes!
+    for (CBLModel* model in _unsavedModelsMutable)
+        model.needsSave = false;
+    _unsavedModelsMutable = nil;
+    return [self close];
+}
+
+
 - (BOOL) deleteDatabase: (NSError**)outError {
     LogTo(CBLDatabase, @"Deleting %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
-    if (_isOpen) {
-        // There is no need to save any changes!
-        for (CBLModel* model in _unsavedModelsMutable)
-            model.needsSave = false;
-        _unsavedModelsMutable = nil;
-        if (![self close])
-            return NO;
-    }
+    if (_isOpen && ![self closeForDeletion])
+        return NO;
     [_manager deletePersistentReplicationsFor: self];
     [_manager _forgetDatabase: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self];

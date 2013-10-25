@@ -91,6 +91,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 - (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
 - (BOOL) close;
+- (BOOL) closeForDeletion;
 @end
 
 

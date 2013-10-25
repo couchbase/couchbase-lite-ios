@@ -413,6 +413,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                              selector: @selector(dbChanged:)
                                                  name: CBL_DatabaseChangesNotification
                                                object: nil];
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(dbChanged:)
+                                                 name: CBL_DatabaseWillBeDeletedNotification
+                                               object: nil];
     return YES;
 }
 
@@ -427,6 +431,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                                         object: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self
                                                     name: CBL_DatabaseChangesNotification
+                                                  object: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                    name: CBL_DatabaseWillBeDeletedNotification
                                                   object: nil];
     for (CBLView* view in _views.allValues)
         [view databaseClosing];
@@ -615,16 +622,23 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     // Was this posted by a _different_ CBLDatabase instance on the same database as me?
     if (senderDB != self && [senderDB.path isEqualToString: _path]) {
         // Careful: I am being called on senderDB's thread, not my own!
-        NSMutableArray* echoedChanges = $marray();
-        for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
-            if (!change.echoed)
-                [echoedChanges addObject: change.copy]; // copied change is marked as echoed
-        }
-        if (echoedChanges.count > 0) {
-            LogTo(CBLDatabase, @"%@: Notified of %u changes by %@",
-                  self, (unsigned)echoedChanges.count, senderDB);
+        if ([[n name] isEqualToString: CBL_DatabaseChangesNotification]) {
+            NSMutableArray* echoedChanges = $marray();
+            for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
+                if (!change.echoed)
+                    [echoedChanges addObject: change.copy]; // copied change is marked as echoed
+            }
+            if (echoedChanges.count > 0) {
+                LogTo(CBLDatabase, @"%@: Notified of %u changes by %@",
+                      self, (unsigned)echoedChanges.count, senderDB);
+                MYOnThread(_thread, ^{
+                    [self notifyChanges: echoedChanges];
+                });
+            }
+        } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
             MYOnThread(_thread, ^{
-                [self notifyChanges: echoedChanges];
+                LogTo(CBLDatabase, @"%@: Notified of deletion; closing", self);
+                [self closeForDeletion];
             });
         }
     }
