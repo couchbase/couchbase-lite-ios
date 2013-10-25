@@ -11,12 +11,6 @@
 
 /** A request/response/document body, stored as either JSON or an NSDictionary. */
 @interface CBL_Body : NSObject <NSCopying>
-{
-    @private
-    NSData* _json;
-    NSDictionary* _object;
-    BOOL _error;
-}
 
 - (instancetype) initWithProperties: (NSDictionary*)properties;
 - (instancetype) initWithArray: (NSArray*)array;
@@ -34,5 +28,9 @@
 
 @property (readonly) NSDictionary* properties;
 - (id) objectForKeyedSubscript: (NSString*)key;  // enables subscript access in Xcode 4.4+
+
+/** Removes the receiver's cached NSDictionary, first converting it to JSON if necessary.
+    This has no visible effect, but saves some memory. */
+- (BOOL) compact;
 
 @end

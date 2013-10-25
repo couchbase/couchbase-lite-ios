@@ -17,6 +17,12 @@
 
 
 @implementation CBL_Body
+{
+    @private
+    NSData* _json;
+    NSDictionary* _object;
+    BOOL _error;
+}
 
 - (instancetype) initWithProperties: (NSDictionary*)properties {
     NSParameterAssert(properties);
@@ -119,6 +125,14 @@
 
 - (id) objectForKeyedSubscript: (NSString*)key {
     return (self.properties)[key];
+}
+
+- (BOOL) compact {
+    (void)[self asJSON];
+    if (_error)
+        return NO;
+    _object = nil;
+    return YES;
 }
 
 @end

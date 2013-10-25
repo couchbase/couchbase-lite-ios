@@ -18,6 +18,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
 #import "CBL_Revision.h"
+#import "CBL_Body.h"
 #import "CBLChangeTracker.h"
 #import "CBLAuthorizer.h"
 #import "CBLBatcher.h"
@@ -397,6 +398,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [strongSelf asyncTaskStarted];
+                [gotRev.body compact];
                 [_downloadsToInsert queueObject: gotRev];
             }
             
@@ -461,6 +463,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               if (props[@"_id"]) {
                   // Add to batcher ... eventually it will be fed to -insertRevisions:.
                   [strongSelf asyncTaskStarted];
+                  [rev.body compact];
                   [strongSelf->_downloadsToInsert queueObject: rev];
               } else {
                   CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
@@ -524,6 +527,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                   rev.sequence = [remainingRevs[pos] sequence];
                                   [remainingRevs removeObjectAtIndex: pos];
                                   [self asyncTaskStarted];
+                                  [rev.body compact];
                                   [_downloadsToInsert queueObject: rev];
                               }
                           }
