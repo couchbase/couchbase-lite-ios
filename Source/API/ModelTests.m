@@ -158,9 +158,9 @@ TestCase(API_ModelDynamicProperties) {
     TEST_PROPERTY(boolObjC, YES);
 
     TEST_PROPERTY(floaty, 0.0f);
-    TEST_PROPERTY(floaty, (float)pi);
+    TEST_PROPERTY(floaty, (float)M_PI);
     TEST_PROPERTY(doubly, 0.0f);
-    TEST_PROPERTY(doubly, pi);
+    TEST_PROPERTY(doubly, M_PI);
 
     model.str = @"LEET";
     model.strings = strings;
