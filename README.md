@@ -6,14 +6,14 @@ Get more info and downloads of Couchbase Lite (for iOS and Android) via [the Cou
 
 [Click here for **official documentation for Couchbase Lite iOS**](http://docs.couchbase.com/couchbase-lite/cbl-ios/)
 
-Latency matters a lot to users so a local database takes frustration out of the equation. It’s got JSON documents, and the same map reduce as Couchbase Server, in a pint-sized edition.
+Latency matters a lot to users, so a local database takes frustration out of the equation. It’s got JSON documents, and the same map/reduce as Couchbase Server, in a pint-sized edition.
 
-Native code for iOS and Android. Less than 1 MB optimized for quick launch and snappy user experience on occasionally connected devices when data matters.
+Couchbase Lite compiles natively for iOS and Android. Half a megabyte optimized, for quick launch and snappy user experience on occasionally connected devices when data matters.
 
 **Lightweight** means:
 
 * Embedded: The database engine is a library linked into the app, not a separate server process.
-* Small code size: currently under 400kbytes. This is important to mobile apps, which are often downloaded over cell networks.
+* Small code size: currently under 600kbytes. This is important to mobile apps, which are often downloaded over cell networks.
 * Quick startup time on relatively-slow CPUs: currently under 50ms on recent iPhones.
 * Low memory usage with typical mobile data-sets. The expectation is the number of documents will not be huge, although there may be sizable multimedia attachments.
 * "Good enough" performance with these CPUs and data-sets. (Exact figures depend on your data and application, of course.)
@@ -24,6 +24,7 @@ Native code for iOS and Android. Less than 1 MB optimized for quick launch and s
 * Records/documents can have arbitrary-sized binary attachments, like multimedia content.
 * Your application's data format can evolve over time without any need for explicit migrations.
 * Map/reduce indexing allows fast lookups without needing to use special query languages.
+* Documents can contain free-form text or geographic coordinates, which are efficiently indexed for full-text search or geo-querying.
 
 **[Syncable](http://syncable.org/)** means:
 
@@ -51,14 +52,14 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 ## Platforms ##
 
  * **Mac OS X** -- 10.7.2 or higher.
- * **iOS** -- 5.0 or higher.
+ * **iOS** -- 6.0 or higher.
  * **Android / Java** -- The [Android version of Couchbase Lite][11] is here.
 
 ## Requirements ##
 
  * It's written in Objective-C.
- * Xcode 4.5+ is required to build it (Clang 3.1+, with GNUstep).
- * Runtime system requirements for Apple platforms are iOS 5+, or Mac OS X 10.7.2+.
+ * Xcode 4.6+ is required to build it (Clang 3.1+, with GNUstep).
+ * Runtime system requirements for Apple platforms are iOS 6+, or Mac OS X 10.7.2+.
 
 ## Credits ##
 
@@ -73,6 +74,7 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
  * [Google Toolbox For Mac][10] is under the Apache License 2.0.
  * [CocoaHTTPServer][9], by Robbie Hanson, is under the BSD License.
  * [MYUtilities][6] (portions of which are copied into the vendor/MYUtilities directory) is under the BSD License. (But note that I, Jens, wrote MYUtilities and would have no problem re-licensing it under Apache for use here.)
+ * [SQLite3-unicodesn](https://github.com/illarionov/sqlite3-unicodesn) by Alexey Illiaronov, is in the public domain, but we wanted to say thanks anyway.
 
 ## Downloading Couchbase Lite ##
 
@@ -80,7 +82,7 @@ Get Couchbase Lite via [the Couchbase mobile portal](http://mobile.couchbase.com
 
 ## Building Couchbase Lite ##
 
-You shouldn't need to do this unless you plan to contribute patches.
+FYI, you shouldn't need to do this unless you plan to contribute patches.
 
 ### On a Mac ###
 
