@@ -79,6 +79,8 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @property NSArray* dates;
 @property NSArray* others;
 
+@property int Capitalized;
+
 @property unsigned reloadCount;
 @end
 
@@ -87,7 +89,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
 @dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly;
-@dynamic str, data, date, decimal, other, strings, dates, others;
+@dynamic str, data, date, decimal, other, strings, dates, others, Capitalized;
 @synthesize reloadCount;
 
 - (void) didLoadFromDocument {
@@ -161,6 +163,8 @@ TestCase(API_ModelDynamicProperties) {
     TEST_PROPERTY(floaty, (float)M_PI);
     TEST_PROPERTY(doubly, 0.0f);
     TEST_PROPERTY(doubly, M_PI);
+
+    TEST_PROPERTY(Capitalized, 12345);
 
     model.str = @"LEET";
     model.strings = strings;
