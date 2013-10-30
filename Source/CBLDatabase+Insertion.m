@@ -252,20 +252,11 @@
 }
 
 
-/** Public method to add a new revision of a document. */
-- (CBL_Revision*) putRevision: (CBL_Revision*)rev
-             prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
-                     status: (CBLStatus*)outStatus
-{
-    return [self putRevision: rev prevRevisionID: prevRevID allowConflict: NO status: outStatus];
-}
-
-
-/** Public method to add a new revision of a document. */
+/** Top-level method to add a new revision of a document. */
 - (CBL_Revision*) putRevision: (CBL_Revision*)oldRev
-             prevRevisionID: (NSString*)inputPrevRevID   // rev ID being replaced, or nil if an insert
-              allowConflict: (BOOL)allowConflict
-                     status: (CBLStatus*)outStatus
+               prevRevisionID: (NSString*)inputPrevRevID   // rev ID being replaced, nil if insert
+                allowConflict: (BOOL)allowConflict
+                       status: (CBLStatus*)outStatus
 {
     LogTo(CBLDatabase, @"PUT rev=%@, prevRevID=%@, allowConflict=%d", oldRev,
           inputPrevRevID, allowConflict);
@@ -319,7 +310,7 @@
                 else
                     return kCBLStatusNotFound;
             }
-            
+
             if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
                 // Fetch the previous revision and validate the new one against it:
                 CBL_Revision* prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
