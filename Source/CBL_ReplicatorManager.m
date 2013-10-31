@@ -64,6 +64,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 
 - (void) start {
+    [_replicatorDB open: nil];
     [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock:
          ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context) {
              return [self validateRevision: newRevision context: context];
@@ -280,9 +281,6 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 // Create CBLReplications for all documents at startup:
 - (void) processAllDocs {
-    if (!_replicatorDB.exists)
-        return;
-    [_replicatorDB open: nil];
     LogTo(Sync, @"ReplicatorManager scanning existing _replicator docs...");
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     options.includeDocs = YES;
