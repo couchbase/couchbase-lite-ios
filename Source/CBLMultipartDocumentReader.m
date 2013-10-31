@@ -171,11 +171,11 @@
 }
 
 
-- (void) stream: (NSInputStream*)stream handleEvent: (NSStreamEvent)eventCode {
+- (void) stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
     BOOL finish = NO;
     switch (eventCode) {
         case NSStreamEventHasBytesAvailable:
-            finish = ![self readFromStream: stream];
+            finish = ![self readFromStream: (NSInputStream*)stream];
             break;
         case NSStreamEventEndEncountered:
             finish = YES;
@@ -189,7 +189,7 @@
             break;
     }
     if (finish)
-        [self finishAsync: stream];
+        [self finishAsync: (NSInputStream*)stream];
 }
 
 

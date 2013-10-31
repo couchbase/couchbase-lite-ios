@@ -483,7 +483,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (void) processInbox: (NSArray*)inbox {
+- (void) processInbox: (CBL_RevisionList*)inbox {
 }
 
 

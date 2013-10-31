@@ -16,7 +16,7 @@
 - (instancetype) initWithArray: (NSArray*)array;
 - (instancetype) initWithJSON: (NSData*)json;
 
-+ (instancetype) bodyWithProperties: (id)properties;
++ (instancetype) bodyWithProperties: (NSDictionary*)properties;
 + (instancetype) bodyWithJSON: (NSData*)json;
 
 @property (readonly) BOOL isValidJSON;

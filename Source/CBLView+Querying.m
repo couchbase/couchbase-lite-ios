@@ -328,8 +328,8 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
 static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutableArray* values) {
     if (!reduceBlock)
         return nil;
-    CBLLazyArrayOfJSON* lazyKeys = [[CBLLazyArrayOfJSON alloc] initWithArray: keys];
-    CBLLazyArrayOfJSON* lazyVals = [[CBLLazyArrayOfJSON alloc] initWithArray: values];
+    CBLLazyArrayOfJSON* lazyKeys = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: keys];
+    CBLLazyArrayOfJSON* lazyVals = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: values];
     @try {
         id result = reduceBlock(lazyKeys, lazyVals, NO);
         if (result)

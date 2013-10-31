@@ -75,10 +75,6 @@ typedef SInt64 SequenceNumber;
 
 /** An ordered list of CBLRevs. */
 @interface CBL_RevisionList : NSObject <NSFastEnumeration>
-{
-    @private
-    NSMutableArray* _revs;
-}
 
 - (instancetype) init;
 - (instancetype) initWithArray: (NSArray*)revs;

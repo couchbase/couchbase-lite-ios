@@ -217,6 +217,10 @@
 
 
 @implementation CBL_RevisionList
+{
+@private
+    NSMutableArray* _revs;
+}
 
 - (instancetype) init {
     self = [super init];
