@@ -6,7 +6,7 @@
 *.framework
 *~
 xcuserdata/
-build/
+/build/
 DerivedData/
 obj/
 derived_src/
