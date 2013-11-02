@@ -58,9 +58,14 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 #pragma mark - HOUSEKEEPING:
 
-/** Compacts the database file by purging non-current revisions, deleting unused attachment files,
-    and running a SQLite "VACUUM" command. */
+/** Compacts the database file by purging non-current JSON bodies, pruning revisions older than
+    the maxRevTreeDepth, deleting unused attachment files, and vacuuming the SQLite database. */
 - (BOOL) compact: (NSError**)outError;
+
+/** The maximum depth of a document's revision tree (or, max length of its revision history.)
+    Revisions older than this limit will be deleted during a -compact: operation. 
+    Smaller values save space, at the expense of making document conflicts somewhat more likely. */
+@property NSUInteger maxRevTreeDepth;
 
 /** Deletes the database. */
 - (BOOL) deleteDatabase: (NSError**)outError;

@@ -459,6 +459,12 @@ TestCase(CBL_Database_RevTree) {
     CBL_Revision* maxDel = CBLCompareRevIDs(del1.revID, del2.revID) > 0 ? del1 : nil;
     CAssertEqual(change, announcement(del2, maxDel));
 
+    NSUInteger nPruned;
+    CAssertEq([db pruneRevsToMaxDepth: 2 numberPruned: &nPruned], 200);
+    CAssertEq(nPruned, 6u);
+    CAssertEq([db pruneRevsToMaxDepth: 2 numberPruned: &nPruned], 200);
+    CAssertEq(nPruned, 0u);
+
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
 }
 

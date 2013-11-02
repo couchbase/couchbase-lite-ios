@@ -735,6 +735,45 @@
 }
 
 
+- (CBLStatus) pruneRevsToMaxDepth: (NSUInteger)maxDepth numberPruned: (NSUInteger*)outPruned {
+    // TODO: This implementation is a bit simplistic. It won't do quite the right thing in
+    // histories with branches, if one branch stops much earlier than another. The shorter branch
+    // will be deleted entirely except for its leaf revision. A more accurate pruning
+    // would require an expensive full tree traversal. Hopefully this way is good enough.
+    if (maxDepth == 0)
+        maxDepth = self.maxRevTreeDepth;
+
+    *outPruned = 0;
+    // First find which docs need pruning, and by how much:
+    NSMutableDictionary* toPrune = $mdict();
+    NSString* sql = @"SELECT doc_id, MIN(revid), MAX(revid) FROM revs GROUP BY doc_id";
+    FMResultSet* r = [_fmdb executeQuery: sql];
+    while ([r next]) {
+        UInt64 docNumericID = [r longLongIntForColumnIndex: 0];
+        unsigned minGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 1]];
+        unsigned maxGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 2]];
+        if ((maxGen - minGen + 1) > maxDepth)
+            toPrune[@(docNumericID)] = @(maxGen - maxDepth);
+    }
+    [r close];
+
+    if (toPrune.count == 0)
+        return kCBLStatusOK;
+
+    // Now prune:
+    return [self _inTransaction:^CBLStatus{
+        for (id docNumericID in toPrune) {
+            NSString* minIDToKeep = $sprintf(@"%d-", [toPrune[docNumericID] intValue] + 1);
+            if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
+                                       docNumericID, minIDToKeep])
+                return self.lastDbError;
+            *outPruned += _fmdb.changes;
+        }
+        return kCBLStatusOK;
+    }];
+}
+
+
 #pragma mark - VALIDATION:
 
 

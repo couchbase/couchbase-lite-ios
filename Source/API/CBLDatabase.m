@@ -29,7 +29,11 @@
 // The lower-level stuff is in CBLDatabase.m, etc.
 
 
+// Size of document cache: max # of otherwise-unreferenced docs that will be kept in memory.
 #define kDocRetainLimit 50
+
+// Default value for maxRevTreeDepth, the max rev depth to preserve in a prune operation
+#define kDefaultMaxRevs 20
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChange";
 
@@ -171,13 +175,26 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (BOOL) compact: (NSError**)outError {
-    CBLStatus status = [self compact];
+    NSUInteger pruned;
+    CBLStatus status = [self pruneRevsToMaxDepth: 0 numberPruned: &pruned];
+    if (status == kCBLStatusOK)
+        status = [self compact];
+    
     if (CBLStatusIsError(status)) {
         if (outError)
             *outError = CBLStatusToNSError(status, nil);
         return NO;
     }
     return YES;
+}
+
+- (NSUInteger) maxRevTreeDepth {
+    return [[self infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+}
+
+- (void) setMaxRevTreeDepth: (NSUInteger)maxRevs {
+    [self setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];
+    // This property is looked up by pruneRevsToMaxDepth:
 }
 
 

@@ -482,6 +482,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
+- (NSString*) infoForKey: (NSString*)key {
+    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key=?", key];
+}
+
 - (CBLStatus) setInfo: (id)info forKey: (NSString*)key {
     if ([_fmdb executeUpdate: @"UPDATE info SET value=? WHERE key=?", info, key])
         return kCBLStatusOK;
@@ -491,11 +495,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (NSString*) privateUUID {
-    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='privateUUID'"];
+    return [self infoForKey: @"privateUUID"];
 }
 
 - (NSString*) publicUUID {
-    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key='publicUUID'"];
+    return [self infoForKey: @"publicUUID"];
 }
 
 #pragma mark - TRANSACTIONS & NOTIFICATIONS:

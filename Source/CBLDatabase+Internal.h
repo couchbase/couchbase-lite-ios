@@ -130,6 +130,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     because a CBLDatabase method failed, so you should be returning _some_ error to the caller. */
 @property (readonly) CBLStatus lastDbError;
 
+- (NSString*) infoForKey: (NSString*)key;
 - (CBLStatus) setInfo: (id)info forKey: (NSString*)key;
 
 @property (nonatomic, readonly) NSString* privateUUID;
