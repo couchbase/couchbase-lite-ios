@@ -50,6 +50,7 @@ typedef enum CBLChangeTrackerMode {
     unsigned _limit;
     NSError* _error;
     BOOL _continuous;
+    NSTimeInterval _pollInterval;
     BOOL _includeConflicts;
     NSString* _filterName;
     NSDictionary* _filterParameters;
@@ -70,6 +71,7 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly, copy, nonatomic) id lastSequenceID;
 @property (nonatomic) BOOL continuous;  // If true, never give up due to errors
+@property (nonatomic) NSTimeInterval pollInterval;  // 0.0 to not poll
 @property (strong, nonatomic) NSError* error;
 @property (weak, nonatomic) id<CBLChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;
@@ -92,6 +94,7 @@ typedef enum CBLChangeTrackerMode {
 
 // Protected
 @property (readonly) NSString* changesFeedPath;
+- (void) retryAfterDelay: (NSTimeInterval)retryDelay;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
 - (void) stopped; // override this

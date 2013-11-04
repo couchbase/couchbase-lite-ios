@@ -303,10 +303,16 @@
         // Successfully reached end.
         [_client changeTrackerFinished];
         [self clearConnection];
-        if (_mode == kLongPoll)
-            [self start];       // Next poll...
-        else
+        if (_continuous) {
+            if (_mode == kOneShot && _pollInterval == 0.0)
+                _mode = kLongPoll;
+            if (_pollInterval > 0.0)
+                LogTo(ChangeTracker, @"%@: Next poll of _changes feed in %g sec...",
+                      self, _pollInterval);
+            [self retryAfterDelay: _pollInterval];       // Next poll...
+        } else {
             [self stopped];
+        }
     } else {
         // JSON must have been truncated, probably due to socket being closed early.
         if (_mode == kOneShot) {

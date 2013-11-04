@@ -50,7 +50,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
-@synthesize docIDs = _docIDs;
+@synthesize docIDs = _docIDs, pollInterval=_pollInterval;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -189,12 +189,17 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
         ++_retryCount;
         Log(@"%@: Connection error #%d, retrying in %.1f sec: %@",
             self, _retryCount, retryDelay, error.localizedDescription);
-        [self performSelector: @selector(retry) withObject: nil afterDelay: retryDelay];
+        [self retryAfterDelay: retryDelay];
     } else {
         Warn(@"%@: Can't connect, giving up: %@", self, error);
         self.error = error;
         [self stop];
     }
+}
+
+
+- (void) retryAfterDelay: (NSTimeInterval)retryDelay {
+    [self performSelector: @selector(retry) withObject: nil afterDelay: retryDelay];
 }
 
 

@@ -81,7 +81,24 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 - (void) startChangeTracker {
     Assert(!_changeTracker);
-    CBLChangeTrackerMode mode = (_continuous && _caughtUp) ? kLongPoll : kOneShot;
+    NSTimeInterval pollInterval = 0.0;
+    if (_continuous) {
+        NSNumber* pollObj = $castIf(NSNumber, _options[kCBLReplicatorOption_PollInterval]);
+        if (pollObj) {
+            pollInterval = pollObj.doubleValue / 1000.0;
+            if (pollInterval < 30.0) {
+                Warn(@"%@: poll interval of %@ ms is too short!",
+                     self, pollObj);
+                pollInterval = 0.0;
+            }
+        }
+    }
+
+    CBLChangeTrackerMode mode;
+    if (_continuous && _caughtUp && pollInterval == 0.0)
+        mode = kLongPoll;
+    else
+        mode = kOneShot;
     
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _remote
@@ -95,10 +112,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
+
     unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
         _changeTracker.heartbeat = heartbeat / 1000.0;
-    
+    if (pollInterval > 0.0)
+        _changeTracker.pollInterval = pollInterval;
+
     NSMutableDictionary* headers = $mdict({@"User-Agent", [CBLRemoteRequest userAgentHeader]});
     [headers addEntriesFromDictionary: _requestHeaders];
     _changeTracker.requestHeaders = headers;
@@ -208,8 +228,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (!_caughtUp) {
         LogTo(Sync, @"%@: Caught up with changes!", self);
         _caughtUp = YES;
-        if (_continuous)
-            _changeTracker.mode = kLongPoll;
         [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
     }
 }
