@@ -190,7 +190,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
         }
     } while (status == kCBLStatusConflict);
     
-    if (CBLStatusIsError(status))
+    if (CBLStatusIsError(status) && status != kCBLStatusNotFound)
         Warn(@"CBL_ReplicatorManager: Error %d updating _replicator doc %@", status, currentRev);
     return status;
 }
@@ -339,8 +339,8 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
     for (NSString* docID in [_replicatorsByDocID allKeysForObject: repl]) {
         CBL_Revision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
-        
-        [self updateDoc: rev forReplicator: repl];
+        if (rev)
+            [self updateDoc: rev forReplicator: repl];
         
         if ($equal(n.name, CBL_ReplicatorStoppedNotification)) {
             // Replicator has stopped:
