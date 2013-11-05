@@ -69,7 +69,11 @@ id CBLTextKey(NSString* text);
     The view's definition is given as an Objective-C block (or NULL to delete the view). The body of the block should call the 'emit' block (passed in as a paramter) for every key/value pair it wants to write to the view.
     Since the function itself is obviously not stored in the database (only a unique string idenfitying it), you must re-define the view on every launch of the app! If the database needs to rebuild the view but the function hasn't been defined yet, it will fail and the view will be empty, causing weird problems later on.
     It is very important that this block be a law-abiding map function! As in other languages, it must be a "pure" function, with no side effects, that always emits the same values given the same input document. That means that it should not access or change any external state; be careful, since blocks make that so easy that you might do it inadvertently!
-    The block may be called on any thread, or on multiple threads simultaneously. This won't be a problem if the code is "pure" as described above, since it will as a consequence also be thread-safe. */
+    The block may be called on any thread, or on multiple threads simultaneously. This won't be a problem if the code is "pure" as described above, since it will as a consequence also be thread-safe. 
+    @param mapBlock  The map function. The MAPBLOCK macro makes it easier to declare this.
+    @param reduceBlock  The reduce function, or nil for none. The REDUCEBLOCK macro makes it easier to declare this.
+    @param version  An arbitrary string that will be stored persistently along with the index. Usually a string literal like @"1". If you subsequently change the functionality of the map or reduce function, change this string as well: the call will detect that it's different and will clear the index so it can be rebuilt by the new function.
+    @return  YES if the view was updated and the index cleared; NO if the version stayed the same. */
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock
          reduceBlock: (CBLReduceBlock)reduceBlock
              version: (NSString*)version                            __attribute__((nonnull(1,3)));
