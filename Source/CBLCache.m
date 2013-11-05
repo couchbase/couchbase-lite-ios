@@ -15,6 +15,13 @@
 
 #import "CBLCache.h"
 
+#if __has_include(<objc/objc-arc.h>)
+#import <objc/objc-arc.h>
+#else
+extern id objc_autorelease(id);
+extern id objc_retain(id);
+#endif
+
 
 static const NSUInteger kDefaultRetainLimit = 50;
 
@@ -56,12 +63,14 @@ static const NSUInteger kDefaultRetainLimit = 50;
 }
 
 
-#if ! CBLCACHE_IS_SMART
 - (void)dealloc {
+#if ! CBLCACHE_IS_SMART
     for (id<CBLCacheable> doc in _map.objectEnumerator)
         doc.owningCache = nil;
-}
 #endif
+    objc_autorelease(objc_retain(_cache));
+    _cache = nil; // Should zero out this to prevent a double release.
+}
 
 
 - (void) addResource: (id<CBLCacheable>)resource {
