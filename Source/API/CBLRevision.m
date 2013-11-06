@@ -15,7 +15,7 @@
 @implementation CBLRevisionBase
 {
     @protected
-    CBLDocument* _document;
+    __weak CBLDocument* _document;
 }
 
 @synthesize document=_document;

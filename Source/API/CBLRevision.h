@@ -15,7 +15,7 @@
 @interface CBLRevisionBase : NSObject
 
 /** The document this is a revision of. */
-@property (readonly) CBLDocument* document;
+@property (readonly, weak) CBLDocument* document;
 
 /** The database this revision's document belongs to. */
 @property (readonly) CBLDatabase* database;
