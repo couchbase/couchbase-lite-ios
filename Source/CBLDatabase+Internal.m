@@ -120,7 +120,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _name = name ?: [path.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
-        _fmdb.busyRetryTimeout = 10;
+        _fmdb.busyRetryTimeout = 2.0; // seconds
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
@@ -181,8 +181,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     Assert([FMDatabase instancesRespondToSelector: @selector(intForQuery:)],
            @"Critical Couchbase Lite code has been stripped from the app binary! "
             "Please make sure to build using the -ObjC linker flag!");
-    
-    int flags = SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
+
+    // Note: Using SQLite shared-cache mode! See http://sqlite.org/sharedcache.html
+    int flags = SQLITE_OPEN_SHAREDCACHE | SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
     if (_readOnly)
         flags |= SQLITE_OPEN_READONLY;
     else
