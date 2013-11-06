@@ -24,6 +24,10 @@
     (In other words, does it have a "_deleted" property?) */
 @property (readonly) BOOL isDeleted;
 
+/** Does this revision mark the deletion or removal (from available channels) of its document ?
+    (In other words, does it have a "_deleted_ or "_removed" property?) */
+@property (readonly) BOOL isGone;
+
 /** The ID of this revision. Will be nil if this is an unsaved CBLNewRevision. */
 @property (readonly) NSString* revisionID;
 

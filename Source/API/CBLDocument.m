@@ -97,6 +97,11 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 
+- (BOOL) isGone {
+    return self.currentRevision.isGone;
+}
+
+
 #pragma mark - REVISIONS:
 
 

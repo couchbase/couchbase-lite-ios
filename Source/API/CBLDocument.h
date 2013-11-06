@@ -25,6 +25,10 @@
 /** Is this document deleted? (That is, does its current revision have the '_deleted' property?) */
 @property (readonly) BOOL isDeleted;
 
+/** Has this document either been deleted or removed from available Sync Gateway channels?
+    (That is, does its current revision have a '_deleted' or '_removed' property?) */
+@property (readonly) BOOL isGone;
+
 /** Deletes this document by adding a deletion revision.
     This will be replicated to other databases. */
 - (BOOL) deleteDocument: (NSError**)outError;

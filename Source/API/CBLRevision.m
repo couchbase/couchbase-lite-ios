@@ -54,9 +54,16 @@
 }
 
 
+static inline BOOL isTruthy(id value) {
+    return value != nil && value != $false;
+}
+
 - (BOOL) isDeleted {
-    id del = self.properties[@"_deleted"];
-    return del != nil && del != $false;
+    return isTruthy(self.properties[@"_deleted"]);
+}
+
+- (BOOL) isGone {
+    return isTruthy(self.properties[@"_deleted"]) || isTruthy(self.properties[@"_removed"]);
 }
 
 
