@@ -179,7 +179,7 @@
     NSString* viewName = _view.name;
     CBLQueryOptions options = self.queryOptions;
     
-    [_database.manager asyncTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
+    [_database.manager backgroundTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
         // On the background server thread, run the query:
         CBLStatus status;
         SequenceNumber lastSequence;

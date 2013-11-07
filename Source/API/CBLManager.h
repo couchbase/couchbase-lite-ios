@@ -58,6 +58,11 @@ typedef struct CBLManagerOptions {
     as well. */
 @property dispatch_queue_t dispatchQueue;
 
+/** Runs the block asynchronously on the database manager's dispatch queue or thread.
+    Unlike the rest of the API, this can be called from any thread, and provides a limited form
+    of multithreaded access to Couchbase Lite. */
+- (void) doAsync: (void (^)())block;
+
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
 
@@ -97,8 +102,9 @@ typedef struct CBLManagerOptions {
 /** Asynchronously dispatches a block to run on a background thread. The block will be given a
     CBLDatabase instance to use; <em>it must use that database instead of any CBL objects that are
     in use on the surrounding code's thread.</em> Otherwise thread-safety will be violated, and
-    Really Bad Things that are intermittent and hard to debug can happen. */
-- (void) asyncTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
+    Really Bad Things that are intermittent and hard to debug can happen.
+    (Note: Unlike most of the API, this method is thread-safe.) */
+- (void) backgroundTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
 
 /** The base URL of the database manager's REST API. You can access this URL within this process,
     using NSURLConnection or other APIs that use that (such as XMLHTTPRequest inside a WebView),

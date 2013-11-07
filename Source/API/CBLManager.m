@@ -40,6 +40,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 {
     NSString* _dir;
     CBLManagerOptions _options;
+    NSThread* _thread;
     dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
     CBL_ReplicatorManager* _replicatorManager;
@@ -118,6 +119,8 @@ static CBLManager* sInstance;
     if (self) {
         if ([NSThread isMainThread])
             _dispatchQueue = dispatch_get_main_queue();
+        else
+            _thread = [NSThread currentThread];
         // Create the directory but don't fail if it already exists:
         NSError* error;
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
@@ -262,6 +265,14 @@ static CBLManager* sInstance;
 }
 
 
+- (void) doAsync: (void (^)())block {
+    if (_dispatchQueue)
+        dispatch_async(_dispatchQueue, block);
+    else
+        MYOnThread(_thread, block);
+}
+
+
 - (CBL_Shared*) shared {
     if (!_shared) {
         _strongShared = [[CBL_Shared alloc] init];
@@ -292,7 +303,7 @@ static CBLManager* sInstance;
 }
 
 
-- (void) asyncTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
+- (void) backgroundTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
     [self.backgroundServer tellDatabaseNamed: dbName to: block];
 }
 
