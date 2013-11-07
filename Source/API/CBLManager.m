@@ -538,6 +538,7 @@ static CBLManager* sInstance;
             return nil;
         }
         _databases[name] = db;
+        [_shared openedDatabase: name];
     }
     return db;
 }
@@ -546,6 +547,7 @@ static CBLManager* sInstance;
 - (void) _forgetDatabase: (CBLDatabase*)db {
     NSString* name = db.name;
     [_databases removeObjectForKey: name];
+    [_shared closedDatabase: name];
     [_shared forgetDatabaseNamed: name];
 }
 

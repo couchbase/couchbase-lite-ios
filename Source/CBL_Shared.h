@@ -28,6 +28,10 @@
 - (NSDictionary*) valuesOfType: (NSString*)type
                inDatabaseNamed: (NSString*)dbName;
 
+- (void) openedDatabase: (NSString*)dbName;
+- (void) closedDatabase: (NSString*)dbName;
+
+// Blocks till everyone who opened the database has closed it
 - (void) forgetDatabaseNamed: (NSString*)name;
 
 @property CBL_Server* backgroundServer;

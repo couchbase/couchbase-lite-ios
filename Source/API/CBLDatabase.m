@@ -182,7 +182,9 @@ static id<CBLFilterCompiler> sFilterCompiler;
     for (CBLModel* model in _unsavedModelsMutable)
         model.needsSave = false;
     _unsavedModelsMutable = nil;
-    return [self close];
+    [self close];
+    [_manager _forgetDatabase: self];
+    return YES;
 }
 
 

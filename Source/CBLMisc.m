@@ -264,7 +264,12 @@ BOOL CBLIsPermanentError( NSError* error ) {
 
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    return [fmgr removeItemAtPath: path error: outError] || ![fmgr fileExistsAtPath: path];
+    if ([fmgr removeItemAtPath: path error: outError]) {
+        LogTo(CBLDatabase, @"Deleted file %@", path);
+        return YES;
+    } else {
+        return ![fmgr fileExistsAtPath: path];
+    }
 }
 
 
