@@ -359,14 +359,9 @@ static CBLManager* sInstance;
 
 
 - (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
-    CFAbsoluteTime start = 0;
-    if (!_databases[name])
-        start = CFAbsoluteTimeGetCurrent();
     CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: outError];
     if (![db open: outError])
         db = nil;
-    if (start)
-        Log(@"CreateDatabase took %.3g sec", CFAbsoluteTimeGetCurrent()-start);
     return db;
 }
 

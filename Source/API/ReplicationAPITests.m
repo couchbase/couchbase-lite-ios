@@ -173,7 +173,6 @@ TestCase(RunReplicationWithError) {
 
     // Create a replication:
     CBLReplication* r1 = [db replicationFromURL: fakeRemoteURL];
-    CAssertNil(r1.document.properties);//TEMP
     runReplication(r1);
 
     // It should have failed with a 404:

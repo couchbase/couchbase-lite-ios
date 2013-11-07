@@ -157,7 +157,6 @@ static inline BOOL isTruthy(id value) {
         Warn(@"Couldn't load body/sequence of %@: %d", self, status);
         return false;
     }
-    Log(@"Loaded %@: body=%@ status=%d", self, rev.body, status);//TEMP
     _rev = rev;
     return true;
 }
