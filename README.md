@@ -70,11 +70,14 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 ## License ##
 
  * Couchbase Lite itself is under the Apache License 2.0.
+ * [CocoaHTTPServer][9], by Robbie Hanson, is under the BSD License.
  * [FMDB][5], by [Gus Mueller][8], is under the MIT License.
  * [Google Toolbox For Mac][10] is under the Apache License 2.0.
- * [CocoaHTTPServer][9], by Robbie Hanson, is under the BSD License.
- * [MYUtilities][6] (portions of which are copied into the vendor/MYUtilities directory) is under the BSD License. (But note that I, Jens, wrote MYUtilities and would have no problem re-licensing it under Apache for use here.)
+ * [MYUtilities][6] (portions of which are copied into the vendor/MYUtilities directory) is under the BSD License.
  * [SQLite3-unicodesn](https://github.com/illarionov/sqlite3-unicodesn) by Alexey Illiaronov, is in the public domain, but we wanted to say thanks anyway.
+ * [YAJL](https://github.com/lloyd/yajl), by Lloyd Hilael, is under the ISC license (which appears similar to BSD.)
+
+These are all permissive, commercial-friendly licenses, and you can abide by them simply by putting copyright and permission notices for each in your app's UI / credits / README. For details read the individual licenses.
 
 ## Downloading Couchbase Lite ##
 
@@ -82,11 +85,9 @@ Get Couchbase Lite via [the Couchbase mobile portal](http://mobile.couchbase.com
 
 ## Building Couchbase Lite ##
 
-FYI, you shouldn't need to do this unless you plan to contribute patches.
+Until we get continuous builds re-enabled, if you want the very latest and greatest (and possibly buggy) version, you'll need to build it yourself...
 
 ### On a Mac ###
-
-(You might prefer to just [download][20] the latest build. But if you want to build it yourself...)
 
 For full details see the [wiki page][7]. The basic steps are:
 
@@ -112,7 +113,6 @@ For full details see the [wiki page][7]. The basic steps are:
 [17]: https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase
 [18]: https://github.com/couchbaselabs/iOS-Couchbase-Demo
 [19]: http://files.couchbase.com/developer-previews/mobile/ios/CouchbaseLite/
-[20]: http://files.couchbase.com/developer-previews/mobile/ios/CouchbaseLite/CouchbaseLite.zip
 [21]: https://github.com/couchbaselabs/TouchDB-iOS
 [22]: https://github.com/couchbase/couchbase-lite-ios/wiki/Why-Couchbase-Lite%3F#history
 [23]: https://github.com/couchbase/couchbase-lite-ios/wiki/Replication-Algorithm
