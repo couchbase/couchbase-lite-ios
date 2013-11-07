@@ -1,3 +1,4 @@
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/dd0341b0dc5dcfad9f86b4ef5b44a65f "githalytics.com")](http://githalytics.com/couchbase/couchbase-lite-ios)
 # Couchbase Lite 
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine. 
