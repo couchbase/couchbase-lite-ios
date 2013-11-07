@@ -231,6 +231,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return NO;
     }
     
+    BOOL isNew = (dbVersion == 0);
+    if (isNew && ![self initialize: @"BEGIN TRANSACTION" error: outError])
+        return NO;
+
     if (dbVersion < 1) {
         // First-time initialization:
         // (Note: Declaring revs.sequence as AUTOINCREMENT means the values will always be
@@ -390,6 +394,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         dbVersion = 11;
     }
 
+    if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
+        return NO;
 
 #if DEBUG
     _fmdb.crashOnErrors = YES;
