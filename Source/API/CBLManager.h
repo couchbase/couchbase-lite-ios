@@ -51,6 +51,13 @@ typedef struct CBLManagerOptions {
 /** Releases all resources used by the CBLManager instance and closes all its databases. */
 - (void) close;
 
+/** The dispatch queue used to serialize access to the database manager (and its child objects.)
+    Setting this is optional: by default the objects are bound to the thread on which the database
+    manager was instantiated. By setting a dispatch queue, you can call the objects from within that
+    queue no matter what the underlying thread is, and notifications will be posted on that queue
+    as well. */
+@property dispatch_queue_t dispatchQueue;
+
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
 

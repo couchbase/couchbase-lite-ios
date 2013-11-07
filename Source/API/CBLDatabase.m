@@ -19,6 +19,7 @@
 #import "CBLCache.h"
 #import "CBLManager+Internal.h"
 #import "CBLMisc.h"
+#import "MYBlockUtils.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIApplication.h>
@@ -50,7 +51,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 @synthesize manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
-@synthesize path=_path, name=_name, isOpen=_isOpen, thread=_thread;
+@synthesize path=_path, name=_name, isOpen=_isOpen;
 
 
 - (instancetype) initWithPath: (NSString*)path
@@ -122,6 +123,33 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 - (NSURL*) internalURL {
     return [_manager.internalURL URLByAppendingPathComponent: self.name isDirectory: YES];
+}
+
+
+- (void) doAsync: (void (^)())block {
+    if (_dispatchQueue)
+        dispatch_async(_dispatchQueue, block);
+    else
+        MYOnThread(_thread, block);
+}
+
+
+- (void) doSync: (void (^)())block {
+    if (_dispatchQueue)
+        dispatch_sync(_dispatchQueue, block);
+    else
+        MYOnThreadSynchronously(_thread, block);
+}
+
+
+- (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block {
+    if (_dispatchQueue) {
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC));
+        dispatch_after(popTime, _dispatchQueue, block);
+    } else {
+        //FIX: This schedules on the _current_ thread, not _thread!
+        MYAfterDelay(delay, block);
+    }
 }
 
 

@@ -10,6 +10,7 @@
 
 #import "CBL_Replicator.h"
 #import "CBLInternal.h"
+#import "CouchbaseLitePrivate.h"
 #import "MYBlockUtils.h"
 
 #import <UIKit/UIKit.h>
@@ -65,16 +66,16 @@
     // work, but it has to block until that work is done, because UIApplication requires
     // background tasks to be registered before the notification handler returns; otherwise the app
     // simply suspends itself.
-    NSLog(@"APP BACKGROUNDING");
-    MYOnThreadSynchronously(self.db.thread, ^{
+    Log(@"APP BACKGROUNDING");
+    [self.db doSync: ^{
         if (self.active) {
             _bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler: ^{
                 // Called if process runs out of background time before replication finishes:
-                MYOnThreadSynchronously(self.db.thread, ^{
+                [self.db doSync: ^{
                     LogTo(Sync, @"%@: Background task (%lu) ran out of time!",
                           self, (unsigned long)_bgTask);
                     [self stop];
-                });
+                }];
             }];
             LogTo(Sync, @"%@: App going into background (bgTask=%lu)", self, (unsigned long)_bgTask);
             if (_bgTask == UIBackgroundTaskInvalid) {
@@ -82,22 +83,21 @@
                 [self stop];
             }
         } else {
-            LogTo(Sync, @"%@: App going into background", self);//TEMP
             [self stop];
         }
-    });
+    }];
 }
 
 
 - (void) appForegrounding: (NSNotification*)n {
     // Danger: This is called on the main thread!
-    NSLog(@"APP FOREGROUNDING");
-    MYOnThread(self.db.thread, ^{
+    Log(@"APP FOREGROUNDING");
+    [self.db doAsync: ^{
         if (_bgTask != UIBackgroundTaskInvalid) {
             LogTo(Sync, @"%@: App returning to foreground (bgTask=%lu)", self, (unsigned long)_bgTask);
             [self endBGTask];
         }
-    });
+    }];
 }
 
 

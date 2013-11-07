@@ -41,6 +41,8 @@
                      readOnly: (BOOL)readOnly;
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
+- (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
+- (void) doSync: (void (^)())block;
 @end
 
 

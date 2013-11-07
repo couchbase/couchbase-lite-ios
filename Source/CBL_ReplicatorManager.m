@@ -298,11 +298,10 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) appForegrounding: (NSNotification*)n {
     // Danger: This is called on the main thread!
-    MYOnThread(_replicatorDB.
-               thread, ^{
+    [_replicatorDB doAsync: ^{
         LogTo(Sync, @"App activated -- restarting all replications");
         [self processAllDocs];
-    });
+    }];
 }
 
 

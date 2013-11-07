@@ -68,6 +68,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     BOOL _isOpen;
     int _transactionLevel;
     NSThread* _thread;
+    dispatch_queue_t _dispatchQueue;    // One and only one of _thread or _dispatchQueue is set
     NSCache* _docIDs;
     NSMutableDictionary* _views;
     CBL_BlobStore* _attachments;
@@ -81,17 +82,14 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 #endif
 }
 
-/** Should the database file be opened in read-only mode? */
-//@property (nonatomic) BOOL readOnly;
-
 @property (nonatomic, readwrite, copy) NSString* name;  // make it settable
 @property (nonatomic, readonly) NSString* path;
 @property (nonatomic, readonly) BOOL isOpen;
-@property (readonly) NSThread* thread;  // actually needs to be atomic (called from other threads)
 
 - (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
 - (BOOL) close;
 - (BOOL) closeForDeletion;
+
 @end
 
 

@@ -129,7 +129,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _fmdb.traceExecution = WillLogTo(CBLDatabaseVerbose);
         _docIDs = [[NSCache alloc] init];
         _docIDs.countLimit = kDocIDCacheSize;
-        _thread = [NSThread currentThread];
+        _dispatchQueue = manager.dispatchQueue;
+        if (!_dispatchQueue)
+            _thread = [NSThread currentThread];
         _startTime = [NSDate date];
 
         if (0) {
@@ -230,7 +232,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
         return NO;
     }
-    
+
     BOOL isNew = (dbVersion == 0);
     if (isNew && ![self initialize: @"BEGIN TRANSACTION" error: outError])
         return NO;
@@ -431,7 +433,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (!_isOpen)
         return NO;
     
-    LogTo(CBLDatabase, @"Close %@", _path);
+    LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
     Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
             _transactionLevel);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
@@ -642,15 +644,15 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             if (echoedChanges.count > 0) {
                 LogTo(CBLDatabase, @"%@: Notified of %u changes by %@",
                       self, (unsigned)echoedChanges.count, senderDB);
-                MYOnThread(_thread, ^{
+                [self doAsync: ^{
                     [self notifyChanges: echoedChanges];
-                });
+                }];
             }
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
-            MYOnThread(_thread, ^{
+            [self doAsync: ^{
                 LogTo(CBLDatabase, @"%@: Notified of deletion; closing", self);
                 [self closeForDeletion];
-            });
+            }];
         }
     }
 }

@@ -207,18 +207,26 @@
 }
 
 
+- (void) scheduleAutosave {
+    [self.database doAsyncAfterDelay: self.autosaveDelay block: ^{
+        [self save: NULL];
+    }];
+}
+
+
 - (void) setAutosaves: (bool) autosaves {
     if (autosaves != _autosaves) {
         _autosaves = autosaves;
-        if (_autosaves && _needsSave)
-            [self performSelector: @selector(save:) withObject: nil afterDelay: self.autosaveDelay];
+        if (_autosaves && _needsSave) {
+            [self scheduleAutosave];
+        }
     }
 }
 
 
 - (void) markNeedsSave {
     if (_autosaves && !_needsSave)
-        [self performSelector: @selector(save:) withObject: nil afterDelay: self.autosaveDelay];
+        [self scheduleAutosave];
     self.needsSave = YES;
 }
 

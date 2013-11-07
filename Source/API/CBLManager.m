@@ -40,6 +40,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 {
     NSString* _dir;
     CBLManagerOptions _options;
+    dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
     CBL_ReplicatorManager* _replicatorManager;
     NSURL* _internalURL;
@@ -47,6 +48,9 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
     __weak CBL_Shared *_shared;
     id _strongShared;       // optional strong reference to _shared
 }
+
+
+@synthesize dispatchQueue=_dispatchQueue;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -112,6 +116,8 @@ static CBLManager* sInstance;
                            options: options
                             shared: [[CBL_Shared alloc] init]];
     if (self) {
+        if ([NSThread isMainThread])
+            _dispatchQueue = dispatch_get_main_queue();
         // Create the directory but don't fail if it already exists:
         NSError* error;
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
@@ -342,9 +348,14 @@ static CBLManager* sInstance;
 
 
 - (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
+    CFAbsoluteTime start = 0;
+    if (!_databases[name])
+        start = CFAbsoluteTimeGetCurrent();
     CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: outError];
     if (![db open: outError])
         db = nil;
+    if (start)
+        Log(@"CreateDatabase took %.3g sec", CFAbsoluteTimeGetCurrent()-start);
     return db;
 }
 
@@ -421,7 +432,9 @@ static CBLManager* sInstance;
     if (start) {
         // Give the caller a chance to customize parameters like .filter before calling -start,
         // but make sure -start will be run even if the caller doesn't call it.
-        [repl performSelector: @selector(start) withObject: nil afterDelay: 0.0];
+        [db doAsync: ^{
+            [repl start];
+        }];
     }
     return repl;
 }
@@ -668,8 +681,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 - (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)properties
-                                    status: (CBLStatus*)outStatus
+                                      status: (CBLStatus*)outStatus
 {
+    // An unfortunate limitation:
+    Assert(_dispatchQueue==NULL || _dispatchQueue==dispatch_get_main_queue(),
+           @"CBLReplicators need a thread not a dispatch queue");
+    
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
     CBLDatabase* db;

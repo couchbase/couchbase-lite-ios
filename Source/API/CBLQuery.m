@@ -282,7 +282,9 @@
 - (void) databaseChanged {
     if (!_willUpdate) {
         _willUpdate = YES;
-        [self performSelector: @selector(update) withObject: nil afterDelay: 0.0];
+        [self.database doAsync: ^{
+            [self update];
+        }];
     }
 }
 
@@ -631,7 +633,9 @@ static id fromJSON( NSData* json ) {
                 lastSequence = view.lastSequenceIndexed;
             } else if (options.stale == kCBLStaleUpdateAfter &&
                        lastSequence < self.lastSequenceNumber) {
-                [view performSelector: @selector(updateIndex) withObject: nil afterDelay: 0];
+                [self doAsync: ^{
+                    [view updateIndex];
+                }];
             }
             rows = [view _queryWithOptions: &options status: &status];
         } else {
