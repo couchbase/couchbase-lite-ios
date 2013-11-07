@@ -39,6 +39,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 #define kDocIDCacheSize 1000
 
+#define kSQLiteBusyTimeout 5.0 // seconds
+
 #define kTransactionMaxRetries 10
 #define kTransactionRetryDelay 0.050
 
@@ -120,7 +122,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _name = name ?: [path.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
         _fmdb = [[FMDatabase alloc] initWithPath: _path];
-        _fmdb.busyRetryTimeout = 2.0; // seconds
+        _fmdb.busyRetryTimeout = kSQLiteBusyTimeout;
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
