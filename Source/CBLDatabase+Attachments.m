@@ -228,7 +228,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     Assert(sequence > 0);
     Assert(filename);
     NSString* filePath = nil;
-    FMResultSet* r = [_fmdb executeQuery:
+    CBL_FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
                       @(sequence), filename];
     if (!r) {
@@ -301,7 +301,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
                                        options: (CBLContentOptions)options
 {
     Assert(sequence > 0);
-    FMResultSet* r = [_fmdb executeQuery:
+    CBL_FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT filename, key, type, encoding, length, encoded_length, revpos "
                        "FROM attachments WHERE sequence=?",
                       @(sequence)];
@@ -716,7 +716,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     
     // Now collect all remaining attachment IDs and tell the store to delete all but these:
     // OPT: Unindexed scan of attachments table!
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
     if (!r)
         return self.lastDbError;
     NSMutableSet* allKeys = [NSMutableSet set];

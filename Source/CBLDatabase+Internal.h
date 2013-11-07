@@ -10,7 +10,7 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange, CBL_Shared;
+@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
@@ -63,7 +63,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     NSString* _path;
     NSString* _name;
     CBLManager* _manager;
-    FMDatabase *_fmdb;
+    CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
     int _transactionLevel;
@@ -109,7 +109,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (BOOL) open: (NSError**)outError;
 - (BOOL) closeInternal;
 
-@property (nonatomic, readonly) FMDatabase* fmdb;
+@property (nonatomic, readonly) CBL_FMDatabase* fmdb;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 

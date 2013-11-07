@@ -113,7 +113,7 @@
                              [CBLDatabase joinQuotedStrings: revs.allRevIDs],
                              [CBLDatabase joinQuotedStrings: revs.allDocIDs]);
     _fmdb.shouldCacheStatements = NO;
-    FMResultSet* r = [_fmdb executeQuery: sql];
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
     _fmdb.shouldCacheStatements = YES;
     if (!r)
         return NO;

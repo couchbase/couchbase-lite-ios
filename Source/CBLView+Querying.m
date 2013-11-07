@@ -61,7 +61,7 @@ static id fromJSON( NSData* json ) {
 
 
 /** Generates and runs the SQL SELECT statement for a view query, and returns its iterator. */
-- (FMResultSet*) resultSetWithOptions: (const CBLQueryOptions*)options
+- (CBL_FMResultSet*) resultSetWithOptions: (const CBLQueryOptions*)options
                                status: (CBLStatus*)outStatus
 {
     if (!options)
@@ -143,7 +143,7 @@ static id fromJSON( NSData* json ) {
 
     LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
     
-    FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
+    CBL_FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r)
         *outStatus = _db.lastDbError;
     return r;
@@ -160,7 +160,7 @@ static id fromJSON( NSData* json ) {
     if (options->fullTextQuery)
         return [self _queryFullText: options status: outStatus];
     
-    FMResultSet* r = [self resultSetWithOptions: options status: outStatus];
+    CBL_FMResultSet* r = [self resultSetWithOptions: options status: outStatus];
     if (!r)
         return nil;
     
@@ -273,7 +273,7 @@ static id fromJSON( NSData* json ) {
     [sql appendString: @" LIMIT ? OFFSET ?"];
     int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
 
-    FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID),
+    CBL_FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID),
                                               @(limit), @(options->skip)];
     if (!r) {
         *outStatus = _db.lastDbError;
@@ -341,7 +341,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-- (NSMutableArray*) reducedQuery: (FMResultSet*)r group: (BOOL)group groupLevel: (unsigned)groupLevel
+- (NSMutableArray*) reducedQuery: (CBL_FMResultSet*)r group: (BOOL)group groupLevel: (unsigned)groupLevel
 {
     CBLReduceBlock reduce = self.reduceBlock;
     NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
@@ -403,7 +403,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (self.viewID <= 0)
         return nil;
 
-    FMResultSet* r = [_db.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
+    CBL_FMResultSet* r = [_db.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
                                               "WHERE view_id=? ORDER BY key",
                                              @(_viewID)];
     if (!r)

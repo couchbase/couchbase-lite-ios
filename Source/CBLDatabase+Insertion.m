@@ -680,7 +680,7 @@
                 // Iterate over all the revisions of the doc, in reverse sequence order.
                 // Keep track of all the sequences to delete, i.e. the given revs and ancestors,
                 // but not any non-given leaf revs or their ancestors.
-                FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, sequence, parent FROM revs "
+                CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, sequence, parent FROM revs "
                                                        "WHERE doc_id=? ORDER BY sequence DESC",
                                   @(docNumericID)];
                 if (!r)
@@ -747,7 +747,7 @@
     // First find which docs need pruning, and by how much:
     NSMutableDictionary* toPrune = $mdict();
     NSString* sql = @"SELECT doc_id, MIN(revid), MAX(revid) FROM revs GROUP BY doc_id";
-    FMResultSet* r = [_fmdb executeQuery: sql];
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
     while ([r next]) {
         UInt64 docNumericID = [r longLongIntForColumnIndex: 0];
         unsigned minGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 1]];

@@ -59,7 +59,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #endif
 
 
-- (FMDatabase*) fmdb {
+- (CBL_FMDatabase*) fmdb {
     return _fmdb;
 }
 
@@ -121,7 +121,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _manager = manager;
         _name = name ?: [path.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
-        _fmdb = [[FMDatabase alloc] initWithPath: _path];
+        _fmdb = [[CBL_FMDatabase alloc] initWithPath: _path];
         _fmdb.busyRetryTimeout = kSQLiteBusyTimeout;
 #if DEBUG
         _fmdb.logsErrors = YES;
@@ -182,7 +182,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (BOOL) openFMDB: (NSError**)outError {
     // Without the -ObjC linker flag, object files containing only category methods, not any
     // class's main implementation, will be dead-stripped. This breaks several pieces of CBL.
-    Assert([FMDatabase instancesRespondToSelector: @selector(intForQuery:)],
+    Assert([CBL_FMDatabase instancesRespondToSelector: @selector(intForQuery:)],
            @"Critical Couchbase Lite code has been stripped from the app binary! "
             "Please make sure to build using the -ObjC linker flag!");
 
@@ -665,7 +665,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 - (NSUInteger) documentCount {
     NSUInteger result = NSNotFound;
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT COUNT(DISTINCT doc_id) FROM revs "
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT COUNT(DISTINCT doc_id) FROM revs "
                                            "WHERE current=1 AND deleted=0"];
     if ([r next]) {
         result = [r intForColumnIndex: 0];
@@ -800,7 +800,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     else
         [sql appendString: @" FROM revs WHERE revs.doc_id=? and current=1 and deleted=0 "
                             "ORDER BY revid DESC LIMIT 1"];
-    FMResultSet *r = [_fmdb executeQuery: sql, @(docNumericID), revID];
+    CBL_FMResultSet *r = [_fmdb executeQuery: sql, @(docNumericID), revID];
     if (!r) {
         status = self.lastDbError;
     } else if (![r next]) {
@@ -852,7 +852,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     SInt64 docNumericID = [self getDocNumericID: rev.docID];
     if (docNumericID <= 0)
         return kCBLStatusNotFound;
-    FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs "
+    CBL_FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs "
                             "WHERE doc_id=? AND revid=? LIMIT 1",
                             @(docNumericID), rev.revID];
     if (!r)
@@ -930,7 +930,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     else
         sql = @"SELECT sequence, revid, deleted FROM revs "
                "WHERE doc_id=? ORDER BY sequence DESC";
-    FMResultSet* r = [_fmdb executeQuery: sql, @(docNumericID)];
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql, @(docNumericID)];
     if (!r)
         return nil;
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] init];
@@ -973,7 +973,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (docNumericID <= 0)
         return nil;
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
-    FMResultSet* r = [_fmdb executeQuery:
+    CBL_FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
                        " and deleted=0 and json not null"
                        " ORDER BY sequence DESC LIMIT ?",
@@ -1019,7 +1019,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     else if (docNumericID == 0)
         return @[];
     
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted, json isnull "
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted, json isnull "
                                            "FROM revs WHERE doc_id=? ORDER BY sequence DESC",
                                           @(docNumericID)];
     if (!r)
@@ -1114,7 +1114,7 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
                               isConflict: (BOOL*)outIsConflict // optional
 {
     Assert(docNumericID > 0);
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs"
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs"
                                            " WHERE doc_id=? and current=1"
                                            " ORDER BY deleted asc, revid desc LIMIT 2",
                                           @(docNumericID)];
@@ -1152,7 +1152,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                              "AND revs.doc_id = docs.doc_id "
                              "ORDER BY revs.doc_id, revid DESC",
                              (includeDocs ? @", json" : @""));
-    FMResultSet* r = [_fmdb executeQuery: sql, @(lastSequence)];
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql, @(lastSequence)];
     if (!r)
         return nil;
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
@@ -1259,7 +1259,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 - (NSArray*) allViews {
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT name FROM views"];
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT name FROM views"];
     if (!r)
         return nil;
     NSMutableArray* views = $marray();
@@ -1367,7 +1367,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     // Now run the database query:
     if (!cacheQuery)
         _fmdb.shouldCacheStatements = NO;
-    FMResultSet* r = [_fmdb executeQuery: sql withArgumentsInArray: args];
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql withArgumentsInArray: args];
     if (!cacheQuery)
         _fmdb.shouldCacheStatements = YES;
     if (!r)

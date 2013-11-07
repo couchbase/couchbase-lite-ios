@@ -28,7 +28,7 @@
                               revisionID: (NSString*)revID
 {
     CBL_MutableRevision* result = nil;
-    FMResultSet *r = [_fmdb executeQuery: @"SELECT revid, json FROM localdocs WHERE docid=?",docID];
+    CBL_FMResultSet *r = [_fmdb executeQuery: @"SELECT revid, json FROM localdocs WHERE docid=?",docID];
     if ([r next]) {
         NSString* gotRevID = [r stringForColumnIndex: 0];
         if (revID && !$equal(revID, gotRevID))

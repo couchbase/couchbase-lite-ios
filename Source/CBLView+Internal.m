@@ -195,7 +195,7 @@ static NSString* toJSONString( id object ) {
 
         __block CBLStatus emitStatus = kCBLStatusOK;
         __block unsigned inserted = 0;
-        FMDatabase* fmdb = _db.fmdb;
+        CBL_FMDatabase* fmdb = _db.fmdb;
         
         // First remove obsolete emitted results from the 'maps' table:
         __block SequenceNumber sequence = lastSequence;
@@ -229,7 +229,7 @@ static NSString* toJSONString( id object ) {
         };
 
         // Now scan every revision added since the last time the view was indexed:
-        FMResultSet* r;
+        CBL_FMResultSet* r;
         r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
                                  "FROM revs, docs "
                                  "WHERE sequence>? AND current!=0 AND deleted=0 "
@@ -266,7 +266,7 @@ static NSString* toJSONString( id object ) {
                 if (lastSequence > 0) {
                     // Find conflicts with documents from previous indexings.
                     BOOL first = YES;
-                    FMResultSet* r2 = [fmdb executeQuery:
+                    CBL_FMResultSet* r2 = [fmdb executeQuery:
                                     @"SELECT revid, sequence FROM revs "
                                      "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
                                      "ORDER BY revID DESC",

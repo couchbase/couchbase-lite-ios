@@ -85,7 +85,7 @@
 
     // Update the version column in the db. This is a little weird looking because we want to
     // avoid modifying the db if the version didn't change, and because the row might not exist yet.
-    FMDatabase* fmdb = _db.fmdb;
+    CBL_FMDatabase* fmdb = _db.fmdb;
     if (![fmdb executeUpdate: @"INSERT OR IGNORE INTO views (name, version) VALUES (?, ?)", 
                               _name, version])
         return NO;
