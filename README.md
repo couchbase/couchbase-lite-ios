@@ -1,4 +1,3 @@
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/dd0341b0dc5dcfad9f86b4ef5b44a65f "githalytics.com")](http://githalytics.com/couchbase/couchbase-lite-ios)
 # Couchbase Lite 
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine. 
@@ -117,3 +116,5 @@ For full details see the [wiki page][7]. The basic steps are:
 [21]: https://github.com/couchbaselabs/TouchDB-iOS
 [22]: https://github.com/couchbase/couchbase-lite-ios/wiki/Why-Couchbase-Lite%3F#history
 [23]: https://github.com/couchbase/couchbase-lite-ios/wiki/Replication-Algorithm
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/dd0341b0dc5dcfad9f86b4ef5b44a65f "githalytics.com")](http://githalytics.com/couchbase/couchbase-lite-ios)
