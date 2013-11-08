@@ -470,6 +470,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         case SQLITE_DONE:
             return kCBLStatusOK;
         case SQLITE_BUSY:
+        case SQLITE_LOCKED:
             return kCBLStatusDBBusy;
         case SQLITE_CORRUPT:
             return kCBLStatusCorruptError;
