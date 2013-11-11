@@ -167,13 +167,20 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 #pragma mark - TRANSACTIONS / THREADING:
 
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
-    Use this when performing bulk write operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits, greatly improving performance. */
-- (BOOL) inTransaction: (BOOL(^)(void))bloc                         __attribute__((nonnull(1)));
+    Use this when performing bulk write operations like multiple inserts/updates; it saves the 
+    overhead of multiple SQLite commits, greatly improving performance. */
+- (BOOL) inTransaction: (BOOL(^)(void))block                        __attribute__((nonnull(1)));
 
 /** Runs the block asynchronously on the database's dispatch queue or thread.
     Unlike the rest of the API, this can be called from any thread, and provides a limited form
     of multithreaded access to Couchbase Lite. */
 - (void) doAsync: (void (^)())block                                 __attribute__((nonnull(1)));
+
+/** Runs the block _synchronously_ on the database's dispatch queue or thread: this method does
+    not return until after the block has completed.
+    Unlike the rest of the API, this can _only_ be called from other threads/queues:  If you call it
+    from the same thread or dispatch queue that the database runs on, **it will deadlock!** */
+- (void) doSync: (void (^)())block                                 __attribute__((nonnull(1)));
 
 #pragma mark - REPLICATION:
 
