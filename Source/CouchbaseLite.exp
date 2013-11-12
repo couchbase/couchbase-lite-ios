@@ -55,6 +55,9 @@ _CBLTextKey
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
 
+.objc_class_name_GCDAsyncSocket
+.objc_class_name_WebSocket
+
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
 _CBLStatusFromNSError

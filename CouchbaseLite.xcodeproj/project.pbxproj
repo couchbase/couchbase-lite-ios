@@ -85,6 +85,19 @@
 		27208F8E184D1D83006ADBEF /* NSURL+Base.h in Headers */ = {isa = PBXBuildFile; fileRef = 27208F8C184D1D83006ADBEF /* NSURL+Base.h */; };
 		27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */ = {isa = PBXBuildFile; fileRef = 27208F8D184D1D83006ADBEF /* NSURL+Base.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */ = {isa = PBXBuildFile; fileRef = 27208F8D184D1D83006ADBEF /* NSURL+Base.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		272401B31860CB4B0080E082 /* WebSocket_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401AE1860CB4B0080E082 /* WebSocket_Internal.h */; };
+		272401B41860CB4B0080E082 /* WebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401AF1860CB4B0080E082 /* WebSocket.h */; };
+		272401B51860CB4B0080E082 /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B01860CB4B0080E082 /* WebSocket.m */; };
+		272401B61860CB4B0080E082 /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B01860CB4B0080E082 /* WebSocket.m */; };
+		272401B71860CB4B0080E082 /* WebSocketClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401B11860CB4B0080E082 /* WebSocketClient.h */; };
+		272401B81860CB4B0080E082 /* WebSocketClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B21860CB4B0080E082 /* WebSocketClient.m */; };
+		272401B91860CB4B0080E082 /* WebSocketClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B21860CB4B0080E082 /* WebSocketClient.m */; };
+		272401BE1860CBE00080E082 /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401BC1860CBE00080E082 /* GCDAsyncSocket.h */; };
+		272401BF1860CBE00080E082 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401BD1860CBE00080E082 /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-Wno-conversion"; }; };
+		272401C01860CBE00080E082 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401BD1860CBE00080E082 /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-Wno-conversion -Wno-sign-compare"; }; };
+		272401C61860D0850080E082 /* WebSocketHTTPLogic.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401C41860D0850080E082 /* WebSocketHTTPLogic.h */; };
+		272401C71860D0850080E082 /* WebSocketHTTPLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401C51860D0850080E082 /* WebSocketHTTPLogic.m */; };
+		272401C81860D0850080E082 /* WebSocketHTTPLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401C51860D0850080E082 /* WebSocketHTTPLogic.m */; };
 		272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */; };
 		272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
 		272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
@@ -112,8 +125,6 @@
 		2753159614ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156614ACEFC90065964D /* HTTPDynamicFileResponse.h */; };
 		2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156814ACEFC90065964D /* HTTPFileResponse.h */; };
 		2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156A14ACEFC90065964D /* HTTPRedirectResponse.h */; };
-		275315A214ACEFC90065964D /* WebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156C14ACEFC90065964D /* WebSocket.h */; };
-		275315AB14ACF00B0065964D /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315A814ACF00B0065964D /* GCDAsyncSocket.h */; };
 		275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */; };
 		275315C014ACF0330065964D /* DDASLLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B314ACF0330065964D /* DDASLLogger.h */; };
 		275315C414ACF0330065964D /* DDFileLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B514ACF0330065964D /* DDFileLogger.h */; };
@@ -129,8 +140,6 @@
 		275315E914ACF1130065964D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; };
 		275315EA14ACF1130065964D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; settings = {COMPILER_FLAGS = "-Wno-undeclared-selector"; }; };
 		275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; };
-		275315F014ACF1130065964D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; };
-		275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; };
 		275315F214ACF1130065964D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; };
 		275315F314ACF1C20065964D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C7069C148864BA00F0F099 /* Foundation.framework */; };
 		275315F514ACF1CC0065964D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
@@ -618,14 +627,12 @@
 		DA147C1414BCAA870052DA4D /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155414ACEFC90065964D /* DDNumber.m */; };
 		DA147C1514BCAA870052DA4D /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155614ACEFC90065964D /* DDRange.m */; };
 		DA147C1614BCAA8F0052DA4D /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315B814ACF0330065964D /* DDLog.m */; settings = {COMPILER_FLAGS = "-Wno-deprecated-declarations"; }; };
-		DA147C1714BCAA9C0052DA4D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315A914ACF00B0065964D /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-Wno-undeclared-selector -Wno-deprecated-declarations"; }; };
 		DA147C1814BCAAAD0052DA4D /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155814ACEFC90065964D /* HTTPAuthenticationRequest.m */; };
 		DA147C1914BCAAAD0052DA4D /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155A14ACEFC90065964D /* HTTPConnection.m */; };
 		DA147C1A14BCAAAD0052DA4D /* HTTPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155D14ACEFC90065964D /* HTTPMessage.m */; };
 		DA147C1B14BCAAAD0052DA4D /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156014ACEFC90065964D /* HTTPServer.m */; settings = {COMPILER_FLAGS = "-Wno-undeclared-selector -Wno-deprecated-declarations"; }; };
 		DA147C1C14BCAABE0052DA4D /* HTTPDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156514ACEFC90065964D /* HTTPDataResponse.m */; };
 		DA147C1D14BCAABE0052DA4D /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
-		DA147C1E14BCAABE0052DA4D /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156D14ACEFC90065964D /* WebSocket.m */; };
 		DA147C2514BCAC3B0052DA4D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F61492BC7A00A817AD /* Foundation.framework */; };
 		DA147C3C14BCAC780052DA4D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */; };
 		DA147C3D14BCAC780052DA4D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3B14BCAC780052DA4D /* Security.framework */; };
@@ -888,6 +895,15 @@
 		271C2AD316FA176300B8C9DB /* CBL_Shared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Shared.m; sourceTree = "<group>"; };
 		27208F8C184D1D83006ADBEF /* NSURL+Base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+Base.h"; sourceTree = "<group>"; };
 		27208F8D184D1D83006ADBEF /* NSURL+Base.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+Base.m"; sourceTree = "<group>"; };
+		272401AE1860CB4B0080E082 /* WebSocket_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocket_Internal.h; path = "WebSockets-Cocoa/WebSocket/WebSocket_Internal.h"; sourceTree = "<group>"; };
+		272401AF1860CB4B0080E082 /* WebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocket.h; path = "WebSockets-Cocoa/WebSocket/WebSocket.h"; sourceTree = "<group>"; };
+		272401B01860CB4B0080E082 /* WebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocket.m; path = "WebSockets-Cocoa/WebSocket/WebSocket.m"; sourceTree = "<group>"; };
+		272401B11860CB4B0080E082 /* WebSocketClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocketClient.h; path = "WebSockets-Cocoa/WebSocket/WebSocketClient.h"; sourceTree = "<group>"; };
+		272401B21860CB4B0080E082 /* WebSocketClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocketClient.m; path = "WebSockets-Cocoa/WebSocket/WebSocketClient.m"; sourceTree = "<group>"; };
+		272401BC1860CBE00080E082 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncSocket.h; path = "WebSockets-Cocoa/vendor/CocoaAsyncSocket/GCD/GCDAsyncSocket.h"; sourceTree = "<group>"; };
+		272401BD1860CBE00080E082 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = "WebSockets-Cocoa/vendor/CocoaAsyncSocket/GCD/GCDAsyncSocket.m"; sourceTree = "<group>"; };
+		272401C41860D0850080E082 /* WebSocketHTTPLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocketHTTPLogic.h; path = "WebSockets-Cocoa/WebSocket/WebSocketHTTPLogic.h"; sourceTree = "<group>"; };
+		272401C51860D0850080E082 /* WebSocketHTTPLogic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocketHTTPLogic.m; path = "WebSockets-Cocoa/WebSocket/WebSocketHTTPLogic.m"; sourceTree = "<group>"; };
 		272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFacebookAuthorizer.h; sourceTree = "<group>"; };
 		272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFacebookAuthorizer.m; sourceTree = "<group>"; };
 		272B85121523691700A90CB2 /* CBLJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSON.h; sourceTree = "<group>"; };
@@ -923,8 +939,6 @@
 		2753156914ACEFC90065964D /* HTTPFileResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPFileResponse.m; sourceTree = "<group>"; };
 		2753156A14ACEFC90065964D /* HTTPRedirectResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPRedirectResponse.h; sourceTree = "<group>"; };
 		2753156B14ACEFC90065964D /* HTTPRedirectResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPRedirectResponse.m; sourceTree = "<group>"; };
-		2753156C14ACEFC90065964D /* WebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebSocket.h; sourceTree = "<group>"; };
-		2753156D14ACEFC90065964D /* WebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebSocket.m; sourceTree = "<group>"; };
 		275315A814ACF00B0065964D /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
 		275315A914ACF00B0065964D /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
 		275315B014ACF0330065964D /* About.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = About.txt; sourceTree = "<group>"; };
@@ -1582,6 +1596,22 @@
 			name = CoreData;
 			sourceTree = "<group>";
 		};
+		272401AD1860CB260080E082 /* WebSockets-Cocoa */ = {
+			isa = PBXGroup;
+			children = (
+				272401BC1860CBE00080E082 /* GCDAsyncSocket.h */,
+				272401BD1860CBE00080E082 /* GCDAsyncSocket.m */,
+				272401AE1860CB4B0080E082 /* WebSocket_Internal.h */,
+				272401AF1860CB4B0080E082 /* WebSocket.h */,
+				272401B01860CB4B0080E082 /* WebSocket.m */,
+				272401B11860CB4B0080E082 /* WebSocketClient.h */,
+				272401B21860CB4B0080E082 /* WebSocketClient.m */,
+				272401C41860D0850080E082 /* WebSocketHTTPLogic.h */,
+				272401C51860D0850080E082 /* WebSocketHTTPLogic.m */,
+			);
+			name = "WebSockets-Cocoa";
+			sourceTree = "<group>";
+		};
 		2753154D14ACEF350065964D /* vendor */ = {
 			isa = PBXGroup;
 			children = (
@@ -1592,6 +1622,7 @@
 				27DB90D414DB249700FC7118 /* google-toolbox-for-mac */,
 				27F12842156ABE23008465C2 /* oauthconsumer */,
 				277EF3A817F4DF3700F7B7F7 /* sqlite3-unicodesn */,
+				272401AD1860CB260080E082 /* WebSockets-Cocoa */,
 			);
 			path = vendor;
 			sourceTree = "<group>";
@@ -1619,8 +1650,6 @@
 				2753155F14ACEFC90065964D /* HTTPServer.h */,
 				2753156014ACEFC90065964D /* HTTPServer.m */,
 				2753156114ACEFC90065964D /* Responses */,
-				2753156C14ACEFC90065964D /* WebSocket.h */,
-				2753156D14ACEFC90065964D /* WebSocket.m */,
 				275315A614ACF00B0065964D /* CocoaAsyncSocket */,
 				275315AF14ACF0330065964D /* CocoaLumberjack */,
 			);
@@ -2392,6 +2421,7 @@
 				27E2E5CD159533A5005B9234 /* CBLReplication.h in Headers */,
 				270B3E231489392100E0A926 /* CBL_Body.h in Headers */,
 				27A720A0152B959100C0A0E8 /* CBL_Attachment.h in Headers */,
+				272401B31860CB4B0080E082 /* WebSocket_Internal.h in Headers */,
 				270B3E221489391E00E0A926 /* CBLDatabase+Internal.h in Headers */,
 				2751D4E4151BAE7000F7FD57 /* CBLManager+Internal.h in Headers */,
 				2711CDFD14C7590A00505D55 /* CBLDatabase+Attachments.h in Headers */,
@@ -2411,6 +2441,7 @@
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
 				2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
+				272401BE1860CBE00080E082 /* GCDAsyncSocket.h in Headers */,
 				2753157E14ACEFC90065964D /* HTTPConnection.h in Headers */,
 				2753158214ACEFC90065964D /* HTTPLogging.h in Headers */,
 				2753158414ACEFC90065964D /* HTTPMessage.h in Headers */,
@@ -2422,9 +2453,7 @@
 				2753159614ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */,
 				2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */,
 				2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */,
-				275315A214ACEFC90065964D /* WebSocket.h in Headers */,
 				277B5D3B1821A8380088881E /* yajl_lex.h in Headers */,
-				275315AB14ACF00B0065964D /* GCDAsyncSocket.h in Headers */,
 				275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */,
 				275315C014ACF0330065964D /* DDASLLogger.h in Headers */,
 				275315C414ACF0330065964D /* DDFileLogger.h in Headers */,
@@ -2470,13 +2499,16 @@
 				27846FB915D475DF0030122F /* MYRegexUtils.h in Headers */,
 				27846FBC15D475DF0030122F /* MYStreamUtils.h in Headers */,
 				277EF40B17F4DF3700F7B7F7 /* fts3_tokenizer.h in Headers */,
+				272401B41860CB4B0080E082 /* WebSocket.h in Headers */,
 				270D6FC1164484190081812D /* CBLSocketChangeTracker.h in Headers */,
 				27208F8E184D1D83006ADBEF /* NSURL+Base.h in Headers */,
 				275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */,
 				2776A59116A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
 				277B5DCE1821AE990088881E /* CBLJSONReader.h in Headers */,
+				272401C61860D0850080E082 /* WebSocketHTTPLogic.h in Headers */,
 				2776A63016A9BCBC006FF199 /* CBLDatabaseChange.h in Headers */,
 				271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */,
+				272401B71860CB4B0080E082 /* WebSocketClient.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3109,6 +3141,9 @@
 				27208F8A184D1D5C006ADBEF /* NSString+URLEncoding.m in Sources */,
 				27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */,
 				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
+				272401BF1860CBE00080E082 /* GCDAsyncSocket.m in Sources */,
+				272401B51860CB4B0080E082 /* WebSocket.m in Sources */,
+				272401B81860CB4B0080E082 /* WebSocketClient.m in Sources */,
 				277B5D301821A8380088881E /* yajl_buf.c in Sources */,
 				277B5D291821A8380088881E /* yajl.c in Sources */,
 				277B5D341821A8380088881E /* yajl_encode.c in Sources */,
@@ -3143,6 +3178,7 @@
 				277EF47D17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
 				277EF48617F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
 				277EF41817F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
+				272401C71860D0850080E082 /* WebSocketHTTPLogic.m in Sources */,
 				277EF43517F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
 				277EF44117F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
 				277EF46B17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
@@ -3184,12 +3220,10 @@
 				275315E814ACF1130065964D /* HTTPConnection.m in Sources */,
 				275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */,
 				2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */,
-				275315F014ACF1130065964D /* WebSocket.m in Sources */,
 				27DA435E159230AA00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4360159230B100F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27B678B71804B62500B06D11 /* CBLHTTPServer.m in Sources */,
 				27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */,
-				275315F114ACF1130065964D /* GCDAsyncSocket.m in Sources */,
 				2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */,
 				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
 				279CE39014D1EDA0009F3FA6 /* Test.m in Sources */,
@@ -3307,6 +3341,10 @@
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */,
+				272401C81860D0850080E082 /* WebSocketHTTPLogic.m in Sources */,
+				272401B91860CB4B0080E082 /* WebSocketClient.m in Sources */,
+				272401B61860CB4B0080E082 /* WebSocket.m in Sources */,
+				272401C01860CBE00080E082 /* GCDAsyncSocket.m in Sources */,
 				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
 				277B5D2A1821A8380088881E /* yajl.c in Sources */,
 				277B5D351821A8380088881E /* yajl_encode.c in Sources */,
@@ -3421,12 +3459,10 @@
 			files = (
 				DA147C1C14BCAABE0052DA4D /* HTTPDataResponse.m in Sources */,
 				DA147C1D14BCAABE0052DA4D /* HTTPFileResponse.m in Sources */,
-				DA147C1E14BCAABE0052DA4D /* WebSocket.m in Sources */,
 				DA147C1814BCAAAD0052DA4D /* HTTPAuthenticationRequest.m in Sources */,
 				DA147C1914BCAAAD0052DA4D /* HTTPConnection.m in Sources */,
 				DA147C1A14BCAAAD0052DA4D /* HTTPMessage.m in Sources */,
 				DA147C1B14BCAAAD0052DA4D /* HTTPServer.m in Sources */,
-				DA147C1714BCAA9C0052DA4D /* GCDAsyncSocket.m in Sources */,
 				DA147C1614BCAA8F0052DA4D /* DDLog.m in Sources */,
 				DA147C1314BCAA870052DA4D /* DDData.m in Sources */,
 				DA147C1414BCAA870052DA4D /* DDNumber.m in Sources */,
