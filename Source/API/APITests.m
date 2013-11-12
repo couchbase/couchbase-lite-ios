@@ -149,7 +149,8 @@ TestCase(API_CreateNewRevisions) {
     CBLDocument* doc = [db untitledDocument];
     CBLNewRevision* newRev = [doc newRevision];
 
-    CAssertEq(newRev.document, doc);
+    CBLDocument* newRevDocument = newRev.document;
+    CAssertEq(newRevDocument, doc);
     CAssertEq(newRev.database, db);
     CAssertNil(newRev.parentRevisionID);
     CAssertNil(newRev.parentRevision);
@@ -169,7 +170,8 @@ TestCase(API_CreateNewRevisions) {
     CAssertEq(rev1.sequence, 1);
 
     newRev = [rev1 newRevision];
-    CAssertEq(newRev.document, doc);
+    newRevDocument = newRev.document;
+    CAssertEq(newRevDocument, doc);
     CAssertEq(newRev.database, db);
     CAssertEq(newRev.parentRevisionID, rev1.revisionID);
     CAssertEqual(newRev.parentRevision, rev1);

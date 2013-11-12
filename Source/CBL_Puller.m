@@ -378,9 +378,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // already-known revisions, so the server can skip sending the bodies of any
     // attachments we already have locally:
     BOOL hasAttachment;
-    NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev
-                                                       limit: kMaxNumberOfAttsSince
-                                               hasAttachment: &hasAttachment];
+    CBLDatabase* db = _db;
+    NSArray* knownRevs = [db getPossibleAncestorRevisionIDs: rev
+                                                      limit: kMaxNumberOfAttsSince
+                                              hasAttachment: &hasAttachment];
     if (hasAttachment && knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
@@ -390,7 +391,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     __weak CBL_Puller *weakSelf = self;
     CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
-                                           database: _db
+                                           database: db
                                      requestHeaders: self.requestHeaders
                                        onCompletion:
         ^(CBLMultipartDownloader* dl, NSError *error) {

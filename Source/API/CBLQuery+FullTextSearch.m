@@ -57,10 +57,12 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 }
 
 - (NSString*) fullText {
-    if (!_fullText) {
-        _fullText = [self.database _indexedTextWithID: _fullTextID];
+    NSString* fullText = _fullText;
+    if (!fullText) {
+        fullText = [self.database _indexedTextWithID: _fullTextID];
+        _fullText = fullText;
     }
-    return _fullText;
+    return fullText;
 }
 
 - (NSUInteger) matchCount {

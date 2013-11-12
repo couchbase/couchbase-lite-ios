@@ -274,19 +274,21 @@ static CBLManager* sInstance;
 
 
 - (CBL_Shared*) shared {
-    if (!_shared) {
-        _strongShared = [[CBL_Shared alloc] init];
-        _shared = _strongShared;
+    CBL_Shared* shared = _shared;
+    if (!shared) {
+        shared = [[CBL_Shared alloc] init];
+        _shared = shared;
     }
-    return _shared;
+    return shared;
 }
 
 
 - (CBL_Server*) backgroundServer {
-    Assert(_shared);
-    @synchronized(_shared) {
-        CBL_Server* server = _shared.backgroundServer;
-        if (!server && _shared) {
+    CBL_Shared* shared = _shared;
+    Assert(shared);
+    @synchronized(shared) {
+        CBL_Server* server = shared.backgroundServer;
+        if (!server) {
             CBLManager* newManager = [self copy];
             if (newManager) {
                 // The server's manager can't have a strong reference to the CBLShared, or it will
@@ -296,7 +298,7 @@ static CBLManager* sInstance;
                 LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
             }
             Assert(server, @"Failed to create backgroundServer!");
-            _shared.backgroundServer = server;
+            shared.backgroundServer = server;
         }
         return server;
     }
@@ -547,8 +549,9 @@ static CBLManager* sInstance;
 - (void) _forgetDatabase: (CBLDatabase*)db {
     NSString* name = db.name;
     [_databases removeObjectForKey: name];
-    [_shared closedDatabase: name];
-    [_shared forgetDatabaseNamed: name];
+    CBL_Shared* shared = _shared;
+    [shared closedDatabase: name];
+    [shared forgetDatabaseNamed: name];
 }
 
 

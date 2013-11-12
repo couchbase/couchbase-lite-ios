@@ -108,17 +108,18 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     CBLChangesOptions options = kDefaultCBLChangesOptions;
     options.includeConflicts = YES;
     // Process existing changes since the last push:
-    [self addRevsToInbox: [_db changesSinceSequence: [_lastSequence longLongValue]
-                                            options: &options
-                                             filter: filter
-                                             params: _filterParameters]];
+    CBLDatabase* db = _db;
+    [self addRevsToInbox: [db changesSinceSequence: [_lastSequence longLongValue]
+                                           options: &options
+                                            filter: filter
+                                            params: _filterParameters]];
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
     if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
-                                                     name: CBL_DatabaseChangesNotification object: _db];
+                                                     name: CBL_DatabaseChangesNotification object: db];
     }
 
 #ifdef GNUSTEP    // TODO: Multipart upload on GNUstep
@@ -230,6 +231,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         } else if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
+            CBLDatabase* db = _db;
             CBL_RevisionList* revsToSend = [[CBL_RevisionList alloc] init];
             NSArray* docsToSend = [changes.allRevisions my_map: ^id(CBL_Revision* rev) {
                 NSDictionary* properties;
@@ -247,7 +249,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                     if (!_dontSendMultipart)
                         options |= kCBLBigAttachmentsFollow;
                     CBLStatus status;
-                    rev = [_db revisionByLoadingBody: rev options: options status: &status];
+                    rev = [db revisionByLoadingBody: rev options: options status: &status];
                     CBL_MutableRevision* nuRev = [rev mutableCopy];
                     rev = nuRev;
                     if (status >= 300) {
@@ -258,7 +260,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
                     // Add the revision history:
                     NSArray* possibleAncestors = revResults[@"possible_ancestors"];
-                    nuRev[@"_revisions"] = [_db getRevisionHistoryDict: nuRev
+                    nuRev[@"_revisions"] = [db getRevisionHistoryDict: nuRev
                                                      startingFromAnyOf: possibleAncestors];
                     properties = nuRev.properties;
 

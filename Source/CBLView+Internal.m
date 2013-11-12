@@ -138,6 +138,8 @@ static NSString* toJSONString( id object ) {
 
 /** The body of the emit() callback while indexing a view. */
 - (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
+    CBLDatabase* db = _weakDB;
+    CBL_FMDatabase* fmdb = db.fmdb;
     NSString* valueJSON = toJSONString(value);
     NSNumber* fullTextID = nil, *bboxID = nil;
     NSString* keyJSON = @"null";
@@ -148,17 +150,17 @@ static NSString* toJSONString( id object ) {
         BOOL ok;
         NSString* text = specialKey.text;
         if (text) {
-            ok = [_db.fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)", text];
-            fullTextID = @(_db.fmdb.lastInsertRowId);
+            ok = [fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)", text];
+            fullTextID = @(fmdb.lastInsertRowId);
         } else {
             CBLGeoRect rect = specialKey.rect;
-            ok = [_db.fmdb executeUpdate: @"INSERT INTO bboxes (x0,y0,x1,y1) VALUES (?,?,?,?)",
+            ok = [fmdb executeUpdate: @"INSERT INTO bboxes (x0,y0,x1,y1) VALUES (?,?,?,?)",
                   @(rect.min.x), @(rect.min.y), @(rect.max.x), @(rect.max.y)];
-            bboxID = @(_db.fmdb.lastInsertRowId);
+            bboxID = @(fmdb.lastInsertRowId);
             geoKey = specialKey.geoJSONData;
         }
         if (!ok)
-            return _db.lastDbError;
+            return db.lastDbError;
         key = nil;
     } else {
         if (key)
@@ -166,11 +168,11 @@ static NSString* toJSONString( id object ) {
         LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
     }
 
-    if (![_db.fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
+    if (![fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
                                    "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?, ?)",
                                   @(self.viewID), @(sequence), keyJSON, valueJSON,
                                   fullTextID, bboxID, geoKey])
-        return _db.lastDbError;
+        return db.lastDbError;
     return kCBLStatusOK;
 }
 
@@ -184,23 +186,24 @@ static NSString* toJSONString( id object ) {
     int viewID = self.viewID;
     if (viewID <= 0)
         return kCBLStatusNotFound;
+    CBLDatabase* db = _weakDB;
     
-    CBLStatus status = [_db _inTransaction: ^CBLStatus {
+    CBLStatus status = [db _inTransaction: ^CBLStatus {
         // Check whether we need to update at all:
         const SequenceNumber lastSequence = self.lastSequenceIndexed;
-        const SequenceNumber dbMaxSequence = _db.lastSequenceNumber;
+        const SequenceNumber dbMaxSequence = db.lastSequenceNumber;
         if (lastSequence == dbMaxSequence) {
             return kCBLStatusNotModified;
         }
 
         __block CBLStatus emitStatus = kCBLStatusOK;
         __block unsigned inserted = 0;
-        CBL_FMDatabase* fmdb = _db.fmdb;
+        CBL_FMDatabase* fmdb = db.fmdb;
         
         // First remove obsolete emitted results from the 'maps' table:
         __block SequenceNumber sequence = lastSequence;
         if (lastSequence < 0)
-            return _db.lastDbError;
+            return db.lastDbError;
         BOOL ok;
         if (lastSequence == 0) {
             // If the lastSequence has been reset to 0, make sure to remove all map results:
@@ -213,7 +216,7 @@ static NSString* toJSONString( id object ) {
                                       @(_viewID), @(lastSequence), @(lastSequence)];
         }
         if (!ok)
-            return _db.lastDbError;
+            return db.lastDbError;
 #ifndef MY_DISABLE_LOGGING
         unsigned deleted = fmdb.changes;
 #endif
@@ -237,7 +240,7 @@ static NSString* toJSONString( id object ) {
                                  "ORDER BY revs.doc_id, revid DESC",
                                  @(lastSequence)];
         if (!r)
-            return _db.lastDbError;
+            return db.lastDbError;
 
         BOOL keepGoing = [r next]; // Go to first result row
         while (keepGoing) {
@@ -273,7 +276,7 @@ static NSString* toJSONString( id object ) {
                                     @(doc_id), @(lastSequence)];
                     if (!r2) {
                         [r close];
-                        return _db.lastDbError;
+                        return db.lastDbError;
                     }
                     while ([r2 next]) {
                         NSString* oldRevID = [r2 stringForColumnIndex:0];
@@ -313,7 +316,7 @@ static NSString* toJSONString( id object ) {
                 CBLContentOptions contentOptions = _mapContentOptions;
                 if (noAttachments)
                     contentOptions |= kCBLNoAttachments;
-                NSDictionary* properties = [_db documentPropertiesFromJSON: json
+                NSDictionary* properties = [db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
                                                                    deleted: NO
                                                                   sequence: sequence
@@ -349,7 +352,7 @@ static NSString* toJSONString( id object ) {
         // Finally, record the last revision sequence number that was indexed:
         if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
                                    @(dbMaxSequence), @(viewID)])
-            return _db.lastDbError;
+            return db.lastDbError;
         
         LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
               _name, dbMaxSequence, deleted, inserted);

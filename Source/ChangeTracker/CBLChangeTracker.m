@@ -154,11 +154,12 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     CBLJSONMatcher* root = [CBLChangeMatcher changesFeedMatcherWithClient:
         ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
             // Callback when the parser reads another change from the feed:
-            weakSelf.lastSequenceID = sequence;
-            [weakSelf.client changeTrackerReceivedSequence: sequence
-                                                     docID: docID
-                                                    revIDs: revs
-                                                   deleted: deleted];
+            CBLChangeTracker* strongSelf = weakSelf;
+            strongSelf.lastSequenceID = sequence;
+            [strongSelf.client changeTrackerReceivedSequence: sequence
+                                                       docID: docID
+                                                      revIDs: revs
+                                                     deleted: deleted];
     }];
     _parser = [[CBLJSONReader alloc] initWithMatcher: root];
     return NO;

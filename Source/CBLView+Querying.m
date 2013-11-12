@@ -143,9 +143,10 @@ static id fromJSON( NSData* json ) {
 
     LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
     
-    CBL_FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
+    CBLDatabase* db = _weakDB;
+    CBL_FMResultSet* r = [db.fmdb executeQuery: sql withArgumentsInArray: args];
     if (!r)
-        *outStatus = _db.lastDbError;
+        *outStatus = db.lastDbError;
     return r;
 }
 
@@ -187,6 +188,7 @@ static id fromJSON( NSData* json ) {
 
     } else {
         // Regular query:
+        CBLDatabase* db = _weakDB;
         rows = $marray();
         while ([r next]) {
             @autoreleasepool {
@@ -203,19 +205,19 @@ static id fromJSON( NSData* json ) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = value[@"_rev"]; // usually nil
                         CBLStatus linkedStatus;
-                        CBL_Revision* linked = [_db getDocumentWithID: linkedID
-                                                           revisionID: linkedRev
-                                                              options: options->content
-                                                               status: &linkedStatus];
+                        CBL_Revision* linked = [db getDocumentWithID: linkedID
+                                                          revisionID: linkedRev
+                                                             options: options->content
+                                                              status: &linkedStatus];
                         docContents = linked ? linked.properties : $null;
                         sequence = linked.sequence;
                     } else {
-                        docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 5]
-                                                                docID: docID
-                                                                revID: [r stringForColumnIndex: 4]
-                                                              deleted: NO
-                                                             sequence: sequence
-                                                              options: options->content];
+                        docContents = [db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 5]
+                                                               docID: docID
+                                                               revID: [r stringForColumnIndex: 4]
+                                                             deleted: NO
+                                                            sequence: sequence
+                                                             options: options->content];
                     }
                 }
                 LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
@@ -273,10 +275,11 @@ static id fromJSON( NSData* json ) {
     [sql appendString: @" LIMIT ? OFFSET ?"];
     int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
 
-    CBL_FMResultSet* r = [_db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID),
-                                              @(limit), @(options->skip)];
+    CBLDatabase* db = _weakDB;
+    CBL_FMResultSet* r = [db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID),
+                                                @(limit), @(options->skip)];
     if (!r) {
-        *outStatus = _db.lastDbError;
+        *outStatus = db.lastDbError;
         return nil;
     }
     NSMutableArray* rows = [[NSMutableArray alloc] init];
@@ -403,9 +406,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (self.viewID <= 0)
         return nil;
 
-    CBL_FMResultSet* r = [_db.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
-                                              "WHERE view_id=? ORDER BY key",
-                                             @(_viewID)];
+    CBL_FMResultSet* r = [_weakDB.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
+                                                      "WHERE view_id=? ORDER BY key",
+                                                     @(_viewID)];
     if (!r)
         return nil;
     NSMutableArray* result = $marray();

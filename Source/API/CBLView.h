@@ -46,7 +46,7 @@ id CBLTextKey(NSString* text);
 @interface CBLView : NSObject
 {
     @private
-    CBLDatabase* __weak _db;
+    CBLDatabase* __weak _weakDB;
     NSString* _name;
     int _viewID;
     uint8_t _collation;

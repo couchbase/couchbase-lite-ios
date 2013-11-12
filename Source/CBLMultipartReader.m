@@ -182,6 +182,7 @@ static NSData* kCRLFCRLF;
     do {
         nextState = -1;
         NSUInteger bufLen = _buffer.length;
+        id<CBLMultipartReaderDelegate> delegate = _delegate;
         switch (_state) {
             case kAtStart: {
                 // The entire message might start with a boundary without a leading CRLF.
@@ -207,8 +208,8 @@ static NSData* kCRLFCRLF;
                 NSRange r = [self searchFor: _boundary from: start];
                 if (r.length > 0) {
                     if (_state == kInBody) {
-                        [_delegate appendToPart: [_buffer subdataWithRange: NSMakeRange(0, r.location)]];
-                        [_delegate finishedPart];
+                        [delegate appendToPart: [_buffer subdataWithRange: NSMakeRange(0, r.location)]];
+                        [delegate finishedPart];
                     }
                     [self deleteUpThrough: r];
                     nextState = kInHeaders;
@@ -236,7 +237,7 @@ static NSData* kCRLFCRLF;
                     if (!ok)
                         return;  // parseHeaders already set .error
                     [self deleteUpThrough: r];
-                    [_delegate startedPart: _headers];
+                    [delegate startedPart: _headers];
                     nextState = kInBody;
                 }
                 break;

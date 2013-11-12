@@ -154,8 +154,9 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         _currentRevision = [[CBLRevision alloc] initWithDocument: self revision: rev];
     }
 
-    if ([_modelObject respondsToSelector: @selector(tdDocumentChanged:)])
-        [_modelObject tdDocumentChanged: self];
+    id model = _modelObject;
+    if ([model respondsToSelector: @selector(tdDocumentChanged:)])
+        [model tdDocumentChanged: self];
     
     NSNotification* n = [NSNotification notificationWithName: kCBLDocumentChangeNotification
                                                       object: self

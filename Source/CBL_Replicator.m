@@ -257,14 +257,15 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) start {
     if (_running)
         return;
-    Assert(_db, @"Can't restart an already stopped CBL_Replicator");
+    CBLDatabase* db = _db;
+    Assert(db, @"Can't restart an already stopped CBL_Replicator");
     LogTo(Sync, @"%@ STARTING ...", self);
 
-    [_db addActiveReplicator: self];
+    [db addActiveReplicator: self];
 
     // Did client request a reset (i.e. starting over from first sequence?)
     if (_options[kCBLReplicatorOption_Reset] != nil) {
-        [_db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
+        [db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
     }
 
     // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
@@ -804,7 +805,8 @@ static BOOL sOnlyTrustAnchorCerts;
                   _savingCheckpoint = NO;
                   if (error)
                       Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
-                  if (!_db)
+                  CBLDatabase* db = _db;
+                  if (!db)
                       return;
                   if (error) {
                       // Failed to save checkpoint:
@@ -828,7 +830,7 @@ static BOOL sOnlyTrustAnchorCerts;
                       if (rev)
                           body[@"_rev"] = rev;
                       self.remoteCheckpoint = body;
-                      [_db setLastSequence: _lastSequence withCheckpointID: checkpointID];
+                      [db setLastSequence: _lastSequence withCheckpointID: checkpointID];
                   }
                   if (_overdueForSave)
                       [self saveLastSequence];      // start a save that was waiting on me
