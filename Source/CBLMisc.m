@@ -233,6 +233,16 @@ BOOL CBLIsFileExistsError( NSError* error ) {
         ;
 }
 
+static BOOL CBLIsFileNotFoundError( NSError* error ) {
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    return ($equal(domain, NSPOSIXErrorDomain) && code == ENOENT)
+#ifndef GNUSTEP
+        || ($equal(domain, NSCocoaErrorDomain) && code == NSFileNoSuchFileError)
+#endif
+    ;
+}
+
 
 BOOL CBLMayBeTransientError( NSError* error ) {
     NSString* domain = error.domain;
@@ -263,12 +273,16 @@ BOOL CBLIsPermanentError( NSError* error ) {
 
 
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
-    NSFileManager* fmgr = [NSFileManager defaultManager];
-    if ([fmgr removeItemAtPath: path error: outError]) {
+    NSError* error;
+    if ([[NSFileManager defaultManager] removeItemAtPath: path error: &error]) {
         LogTo(CBLDatabase, @"Deleted file %@", path);
         return YES;
+    } else if (CBLIsFileNotFoundError(error)) {
+        return YES;
     } else {
-        return ![fmgr fileExistsAtPath: path];
+        if (outError)
+            *outError = error;
+        return NO;
     }
 }
 
