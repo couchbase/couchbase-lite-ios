@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 9/8/13.
-//
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 
 #ifndef CouchbaseLite_CBLParseDate_h

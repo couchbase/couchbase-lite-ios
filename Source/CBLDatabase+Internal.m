@@ -1,9 +1,9 @@
 //
-// CBLDatabase+Internal.m
-// CouchbaseLite
+//  CBLDatabase+Internal.m
+//  CouchbaseLite
 //
-// Created by Jens Alfke on 6/19/10.
-// Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Created by Jens Alfke on 6/19/10.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at

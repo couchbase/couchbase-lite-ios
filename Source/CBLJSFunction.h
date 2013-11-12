@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/28/13.
-//
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/20/13.
-//
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLRemoteRequest.h"

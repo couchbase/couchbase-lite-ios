@@ -1,9 +1,9 @@
 //
 //  CBLMultipartDocumentReader.h
-//  
+//  CouchbaseLite
 //
 //  Created by Jens Alfke on 3/29/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLMultipartReader.h"

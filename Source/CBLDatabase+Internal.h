@@ -1,11 +1,10 @@
-/*
- *  CBLDatabase+Internal.h
- *  CouchbaseLite
- *
- *  Created by Jens Alfke on 6/19/10.
- *  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
- *
- */
+//
+//  CBLDatabase+Internal.h
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 6/19/10.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
+//
 
 #import "CBL_Revision.h"
 #import "CBLStatus.h"

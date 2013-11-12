@@ -3,7 +3,7 @@
 //  CouchDemo
 //
 //  Created by Jens Alfke on 8/8/11.
-//  Copyright 2011 Couchbase, Inc. All rights reserved.
+//  Copyright 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

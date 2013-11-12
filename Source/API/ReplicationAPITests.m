@@ -3,6 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/16/13.
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 //
 

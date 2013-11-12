@@ -1,9 +1,9 @@
 //
-//  CBLJSONParser.h
+//  CBLJSONReader.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 10/30/13.
-//
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

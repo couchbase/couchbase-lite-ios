@@ -3,7 +3,7 @@
 //  Couchbase Server
 //
 //  Created by Jens Alfke on 6/14/12.
-//  Copyright (c) 2012 Couchbase. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase. All rights reserved.
 //
 //  Adapted from Listing 2-17 in the Authorization Services Programming Guide
 

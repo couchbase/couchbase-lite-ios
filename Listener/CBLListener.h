@@ -3,7 +3,7 @@
 //  CouchbaseLiteListener
 //
 //  Created by Jens Alfke on 12/29/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

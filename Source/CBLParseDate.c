@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 9/8/13.
-//
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 
 // The speed of sqlite's date parsing code (compared to Cocoa's NSDateFormatter) was noted
