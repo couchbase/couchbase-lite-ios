@@ -17,6 +17,7 @@
 
 #import "CBLChangeTracker.h"
 #import "CBLSocketChangeTracker.h"
+#import "CBLWebSocketChangeTracker.h"
 #import "CBLAuthorizer.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
@@ -32,7 +33,8 @@
 typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* revs, bool deleted);
 
 @interface CBLChangeMatcher : CBLJSONDictMatcher
-+ (CBLJSONMatcher*) changesFeedMatcherWithClient: (CBLChangeMatcherClient)client;
++ (CBLJSONMatcher*) changesFeedMatcherWithClient: (CBLChangeMatcherClient)client
+                               expectWrapperDict: (BOOL)expectWrapperDict;
 @end
 
 
@@ -64,11 +66,13 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     if (self) {
         if([self class] == [CBLChangeTracker class]) {
             // CBLChangeTracker is abstract; instantiate a concrete subclass instead.
-            return [[CBLSocketChangeTracker alloc] initWithDatabaseURL: databaseURL
-                                                                 mode: mode
-                                                            conflicts: includeConflicts
-                                                         lastSequence: lastSequenceID
-                                                               client: client];
+            Class klass = (mode==kWebSocket) ? [CBLWebSocketChangeTracker class]
+                                             : [CBLSocketChangeTracker class];
+            return [[klass alloc] initWithDatabaseURL: databaseURL
+                                                 mode: mode
+                                            conflicts: includeConflicts
+                                         lastSequence: lastSequenceID
+                                               client: client];
         }
         _databaseURL = databaseURL;
         _client = client;
@@ -84,11 +88,15 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     return _databaseURL.path.lastPathComponent;
 }
 
+- (NSString*) feed {
+    static NSString* const kModeNames[4] = {@"normal", @"longpoll", @"continuous", @"websocket"};
+    return kModeNames[_mode];
+}
+
 - (NSString*) changesFeedPath {
-    static NSString* const kModeNames[3] = {@"normal", @"longpoll", @"continuous"};
     NSMutableString* path;
     path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=%.0f",
-                                              kModeNames[_mode], _heartbeat*1000.0];
+                                              self.feed, _heartbeat*1000.0];
     if (_includeConflicts)
         [path appendString: @"&style=all_docs"];
     id seq = _lastSequenceID;
@@ -150,18 +158,6 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 
 - (BOOL) start {
     self.error = nil;
-    __weak CBLChangeTracker* weakSelf = self;
-    CBLJSONMatcher* root = [CBLChangeMatcher changesFeedMatcherWithClient:
-        ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
-            // Callback when the parser reads another change from the feed:
-            CBLChangeTracker* strongSelf = weakSelf;
-            strongSelf.lastSequenceID = sequence;
-            [strongSelf.client changeTrackerReceivedSequence: sequence
-                                                       docID: docID
-                                                      revIDs: revs
-                                                     deleted: deleted];
-    }];
-    _parser = [[CBLJSONReader alloc] initWithMatcher: root];
     return NO;
 }
 
@@ -212,7 +208,23 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 }
 
 - (BOOL) parseBytes: (const void*)bytes length: (size_t)length {
-    LogTo(ChangeTracker, @"%@: read %ld bytes", self, (long)length);
+    LogTo(ChangeTrackerVerbose, @"%@: read %ld bytes", self, (long)length);
+    if (!_parser) {
+        __weak CBLChangeTracker* weakSelf = self;
+        CBLJSONMatcher* root = [CBLChangeMatcher changesFeedMatcherWithClient:
+                                ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
+                                    // Callback when the parser reads another change from the feed:
+                                    CBLChangeTracker* strongSelf = weakSelf;
+                                    strongSelf.lastSequenceID = sequence;
+                                    [strongSelf.client changeTrackerReceivedSequence: sequence
+                                                                               docID: docID
+                                                                              revIDs: revs
+                                                                             deleted: deleted];
+                                }
+                                expectWrapperDict: (_mode != kWebSocket)];
+        _parser = [[CBLJSONReader alloc] initWithMatcher: root];
+    }
+    
     if (![_parser parseBytes: bytes length: length]) {
         Warn(@"JSON error parsing _changes feed: %@", _parser.errorString);
         [self failedWithError: [NSError errorWithDomain: @"CBLChangeTracker"
@@ -223,11 +235,11 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 }
 
 - (BOOL) endParsingData {
-    if (![_parser finish]) {
+    BOOL ok = [_parser finish];
+    if (!ok)
         Warn(@"Truncated changes feed");
-        return NO;
-    }
-    return YES;
+    _parser = nil;
+    return ok;
 }
 
 
@@ -276,10 +288,14 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     CBLChangeMatcherClient _client;
 }
 
-+ (CBLJSONMatcher*) changesFeedMatcherWithClient: (CBLChangeMatcherClient)client {
++ (CBLJSONMatcher*) changesFeedMatcherWithClient: (CBLChangeMatcherClient)client
+                               expectWrapperDict: (BOOL)expectWrapperDict
+{
     CBLChangeMatcher* changeMatcher = [[CBLChangeMatcher alloc] initWithClient: client];
-    id template = @[ @{@"results": @[changeMatcher]} ];
-    return [[CBLTemplateMatcher alloc] initWithTemplate: template];
+    id template = @[changeMatcher];
+    if (expectWrapperDict)
+        template = @{@"results": template};
+    return [[CBLTemplateMatcher alloc] initWithTemplate: @[template]];
 }
 
 - (id) initWithClient: (CBLChangeMatcherClient)client {
@@ -325,16 +341,27 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 
 
 TestCase(CBLChangeMatcher) {
-    NSString* kJSON = @"{\"results\":[\
+    NSString* kJSON = @"[\
     {\"seq\":1,\"id\":\"1\",\"changes\":[{\"rev\":\"2-751ac4eebdc2a3a4044723eaeb0fc6bd\"}],\"deleted\":true},\
     {\"seq\":2,\"id\":\"10\",\"changes\":[{\"rev\":\"2-566bffd5785eb2d7a79be8080b1dbabb\"}],\"deleted\":true},\
-    {\"seq\":3,\"id\":\"100\",\"changes\":[{\"rev\":\"2-ec2e4d1833099b8a131388b628fbefbf\"}],\"deleted\":true}]}";
+    {\"seq\":3,\"id\":\"100\",\"changes\":[{\"rev\":\"2-ec2e4d1833099b8a131388b628fbefbf\"}],\"deleted\":true}]";
     NSMutableArray* docIDs = $marray();
     CBLJSONMatcher* root = [CBLChangeMatcher changesFeedMatcherWithClient:
         ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
             [docIDs addObject: docID];
-        }];
+        } expectWrapperDict: NO];
     CBLJSONReader* parser = [[CBLJSONReader alloc] initWithMatcher: root];
+    CAssert([parser parseData: [kJSON dataUsingEncoding: NSUTF8StringEncoding]]);
+    CAssert([parser finish]);
+    CAssertEqual(docIDs, (@[@"1", @"10", @"100"]));
+
+    kJSON = [NSString stringWithFormat: @"{\"results\":%@}", kJSON];
+    docIDs = $marray();
+    root = [CBLChangeMatcher changesFeedMatcherWithClient:
+                            ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
+                                [docIDs addObject: docID];
+                            } expectWrapperDict: YES];
+    parser = [[CBLJSONReader alloc] initWithMatcher: root];
     CAssert([parser parseData: [kJSON dataUsingEncoding: NSUTF8StringEncoding]]);
     CAssert([parser finish]);
     CAssertEqual(docIDs, (@[@"1", @"10", @"100"]));

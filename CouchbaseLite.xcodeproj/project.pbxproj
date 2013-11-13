@@ -98,6 +98,9 @@
 		272401C61860D0850080E082 /* WebSocketHTTPLogic.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401C41860D0850080E082 /* WebSocketHTTPLogic.h */; };
 		272401C71860D0850080E082 /* WebSocketHTTPLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401C51860D0850080E082 /* WebSocketHTTPLogic.m */; };
 		272401C81860D0850080E082 /* WebSocketHTTPLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401C51860D0850080E082 /* WebSocketHTTPLogic.m */; };
+		272401CB1860D39B0080E082 /* CBLWebSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401C91860D39B0080E082 /* CBLWebSocketChangeTracker.h */; };
+		272401CC1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */; };
+		272401CD1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */; };
 		272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */; };
 		272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
 		272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
@@ -457,7 +460,6 @@
 		27BDA81E181973EF00F27A11 /* CBLBulkDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */; };
 		27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */; };
 		27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */; };
-		27C40C7914EC58BC00994283 /* CBL_ReplicatorManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */; };
 		27C5305414DF3A050078F886 /* CBLMultipartUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C5305214DF3A050078F886 /* CBLMultipartUploader.h */; };
 		27C5305514DF3A050078F886 /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
 		27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
@@ -904,6 +906,8 @@
 		272401BD1860CBE00080E082 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = "WebSockets-Cocoa/vendor/CocoaAsyncSocket/GCD/GCDAsyncSocket.m"; sourceTree = "<group>"; };
 		272401C41860D0850080E082 /* WebSocketHTTPLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocketHTTPLogic.h; path = "WebSockets-Cocoa/WebSocket/WebSocketHTTPLogic.h"; sourceTree = "<group>"; };
 		272401C51860D0850080E082 /* WebSocketHTTPLogic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocketHTTPLogic.m; path = "WebSockets-Cocoa/WebSocket/WebSocketHTTPLogic.m"; sourceTree = "<group>"; };
+		272401C91860D39B0080E082 /* CBLWebSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLWebSocketChangeTracker.h; sourceTree = "<group>"; };
+		272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLWebSocketChangeTracker.m; sourceTree = "<group>"; };
 		272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFacebookAuthorizer.h; sourceTree = "<group>"; };
 		272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFacebookAuthorizer.m; sourceTree = "<group>"; };
 		272B85121523691700A90CB2 /* CBLJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSON.h; sourceTree = "<group>"; };
@@ -1185,7 +1189,6 @@
 		27B945B117692E2000B2DF2D /* CBLModel+Properties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLModel+Properties.m"; sourceTree = "<group>"; };
 		27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBulkDownloader.h; sourceTree = "<group>"; };
 		27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBulkDownloader.m; sourceTree = "<group>"; };
-		27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_ReplicatorManager.h; sourceTree = "<group>"; };
 		27C5305214DF3A050078F886 /* CBLMultipartUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartUploader.h; sourceTree = "<group>"; };
 		27C5305314DF3A050078F886 /* CBLMultipartUploader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartUploader.m; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* CBL_Server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Server.h; sourceTree = "<group>"; };
@@ -1984,7 +1987,6 @@
 				279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */,
 				27C5305214DF3A050078F886 /* CBLMultipartUploader.h */,
 				27C5305314DF3A050078F886 /* CBLMultipartUploader.m */,
-				27C40C7714EC58BC00994283 /* CBL_ReplicatorManager.h */,
 				27B0B78F149290AB00A817AD /* ChangeTracker */,
 			);
 			name = Replicator;
@@ -2060,6 +2062,8 @@
 				27B0B791149290AB00A817AD /* CBLChangeTracker.m */,
 				270D6FBF164484190081812D /* CBLSocketChangeTracker.h */,
 				270D6FC0164484190081812D /* CBLSocketChangeTracker.m */,
+				272401C91860D39B0080E082 /* CBLWebSocketChangeTracker.h */,
+				272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */,
 			);
 			path = ChangeTracker;
 			sourceTree = "<group>";
@@ -2437,6 +2441,7 @@
 				270B3E251489392C00E0A926 /* CBL_Router.h in Headers */,
 				277B5D2F1821A8380088881E /* yajl_alloc.h in Headers */,
 				270B3E241489392600E0A926 /* CBL_Server.h in Headers */,
+				272401CB1860D39B0080E082 /* CBLWebSocketChangeTracker.h in Headers */,
 				270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */,
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
@@ -2473,7 +2478,6 @@
 				2766EFFD14DC7B37009ECCA8 /* CBLMultiStreamWriter.h in Headers */,
 				27C5305414DF3A050078F886 /* CBLMultipartUploader.h in Headers */,
 				27103F8314E9CE4400DF7209 /* CBLReachability.h in Headers */,
-				27C40C7914EC58BC00994283 /* CBL_ReplicatorManager.h in Headers */,
 				279C7E2E14F424090004A1E8 /* CBLSequenceMap.h in Headers */,
 				272B85141523691700A90CB2 /* CBLJSON.h in Headers */,
 				27ADC079152502EE001ABC1D /* CBLMultipartDocumentReader.h in Headers */,
@@ -3086,6 +3090,7 @@
 				276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27103F8414E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				279C7E2F14F424090004A1E8 /* CBLSequenceMap.m in Sources */,
+				272401CC1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */,
 				272B85151523691700A90CB2 /* CBLJSON.m in Sources */,
 				27ADC07A152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				278B0CA1152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
@@ -3387,6 +3392,7 @@
 				277EF47817F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
 				277EF46617F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */,
 				277EF44817F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */,
+				272401CD1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */,
 				277EF45D17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 				277EF44E17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
 				277EF48D17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,

@@ -35,7 +35,8 @@
 typedef enum CBLChangeTrackerMode {
     kOneShot,
     kLongPoll,
-    kContinuous
+    kContinuous,
+    kWebSocket
 } CBLChangeTrackerMode;
 
 
@@ -93,6 +94,7 @@ typedef enum CBLChangeTrackerMode {
 - (void) retry;
 
 // Protected
+@property (readonly) NSString* feed;
 @property (readonly) NSString* changesFeedPath;
 - (void) retryAfterDelay: (NSTimeInterval)retryDelay;
 - (void) setUpstreamError: (NSString*)message;

@@ -95,17 +95,20 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     }
 
     CBLChangeTrackerMode mode;
-    if (_continuous && _caughtUp && pollInterval == 0.0)
-        mode = kLongPoll;
-    else
+    if (!_continuous || pollInterval > 0.0) {
         mode = kOneShot;
-    
+    } else if ([_serverType hasPrefix: @"Couchbase Sync Gateway/"]
+                    && [_serverType compare: @"Couchbase Sync Gateway/0.82"] >= 0) {
+        mode = kWebSocket;
+    } else {
+        mode = _caughtUp ? kLongPoll : kOneShot;
+    }
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _remote
-                                                             mode: mode
-                                                        conflicts: YES
-                                                     lastSequence: _lastSequence
-                                                           client: self];
+                                                              mode: mode
+                                                         conflicts: YES
+                                                      lastSequence: _lastSequence
+                                                            client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
     _changeTracker.continuous = _continuous;
     _changeTracker.filterName = _filterName;

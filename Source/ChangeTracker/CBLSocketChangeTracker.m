@@ -135,7 +135,7 @@
     [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     [_trackingInput open];
     _startTime = CFAbsoluteTimeGetCurrent();
-    LogTo(ChangeTracker, @"%@: Started... <%@>", self, self.changesFeedURL);
+    LogTo(ChangeTracker, @"%@: Started... <%@>", self, url);
     return YES;
 }
 
@@ -358,7 +358,7 @@
     __unused id keepMeAround = self; // retain myself so I can't be dealloced during this method
     switch (eventCode) {
         case NSStreamEventHasBytesAvailable: {
-            LogTo(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);
+            LogTo(ChangeTrackerVerbose, @"%@: HasBytesAvailable %@", self, stream);
             if (!_gotResponseHeaders) {
                 if (![self checkSSLCert] || ![self readResponseHeader])
                     return;
