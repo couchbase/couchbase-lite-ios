@@ -174,7 +174,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) postProgressChanged {
-    LogTo(Sync, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)", 
+    LogTo(SyncVerbose, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)",
           self, (unsigned)_changesProcessed, (unsigned)_changesTotal,
           _active, (unsigned)_batcher.count, _asyncTaskCount, _online);
     NSNotification* n = [NSNotification notificationWithName: CBL_ReplicatorProgressChangedNotification
@@ -233,11 +233,21 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) setChangesProcessed: (NSUInteger)processed {
+    if (WillLogTo(Sync)) {
+        if (processed/100 != _changesProcessed/100
+                    || (processed == _changesTotal && _changesTotal > 0))
+            LogTo(Sync, @"%@ Progress: %lu / %lu",
+                  self, (unsigned long)processed, (unsigned long)_changesTotal);
+    }
     _changesProcessed = processed;
     [self postProgressChanged];
 }
 
 - (void) setChangesTotal: (NSUInteger)total {
+    if (WillLogTo(Sync) && total/100 != _changesTotal/100) {
+        LogTo(Sync, @"%@ Progress: %lu / %lu",
+              self, (unsigned long)_changesProcessed, (unsigned long)total);
+    }
     _changesTotal = total;
     [self postProgressChanged];
 }
@@ -248,6 +258,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     
     if (_error != error)
     {
+        LogTo(Sync, @"%@ Progress: set error = %@", self, error.localizedDescription);
         _error = error;
         [self postProgressChanged];
     }
@@ -431,6 +442,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) updateActive {
     BOOL active = _batcher.count > 0 || _asyncTaskCount > 0;
     if (active != _active) {
+        LogTo(Sync, @"%@ Progress: set active = %d", self, active);
         self.active = active;
         [self postProgressChanged];
         if (!_active) {
