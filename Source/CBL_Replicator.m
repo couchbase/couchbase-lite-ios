@@ -334,8 +334,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) stop {
     if (!_running)
         return;
-    LogTo(Sync, @"%@ STOPPING...", self);
-    [_batcher flushAll];
+    [_batcher clear];   // no sense processing any pending changes
     _continuous = NO;
     [self stopRemoteRequests];
     [NSObject cancelPreviousPerformRequestsWithTarget: self

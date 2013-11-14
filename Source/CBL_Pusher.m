@@ -156,6 +156,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 
 - (void) stop {
+    LogTo(Sync, @"%@ STOPPING...", self);
     _uploaderQueue = nil;
     _uploading = NO;
     [self stopObserving];

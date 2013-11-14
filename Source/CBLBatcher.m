@@ -125,6 +125,12 @@
 }
 
 
+- (void) clear {
+    [self unschedule];
+    _inbox = nil;
+}
+
+
 - (NSUInteger) count {
     return _inbox.count;
 }

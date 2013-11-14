@@ -132,21 +132,23 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) stop {
     if (!_running)
         return;
+    LogTo(Sync, @"%@ STOPPING...", self);
     if (_changeTracker) {
         _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
         [_changeTracker stop];
+        _changeTracker = nil;
         if (!_continuous)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
         if (!_caughtUp)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
     }
-    _changeTracker = nil;
     _revsToPull = nil;
     _deletedRevsToPull = nil;
     _bulkRevsToPull = nil;
-    [super stop];
-    
+
     [_downloadsToInsert flushAll];
+
+    [super stop];
 }
 
 

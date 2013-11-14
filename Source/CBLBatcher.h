@@ -37,4 +37,7 @@
     After this method returns, the queue is guaranteed to be empty.*/
 - (void) flushAll;
 
+/** Empties the queue without processing any of the objects in it. */
+- (void) clear;
+
 @end
