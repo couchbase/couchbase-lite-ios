@@ -95,14 +95,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     }
 
     CBLChangeTrackerMode mode;
-    if (!_continuous || pollInterval > 0.0) {
+    if (!_continuous || pollInterval > 0.0)
         mode = kOneShot;
-    } else if ([_serverType hasPrefix: @"Couchbase Sync Gateway/"]
-                    && [_serverType compare: @"Couchbase Sync Gateway/0.82"] >= 0) {
+    else if (self.canUseWebSockets)
         mode = kWebSocket;
-    } else {
+    else
         mode = _caughtUp ? kLongPoll : kOneShot;
-    }
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _remote
                                                               mode: mode
@@ -129,6 +127,15 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [_changeTracker start];
     if (!_continuous)
         [self asyncTaskStarted];
+}
+
+
+- (BOOL) canUseWebSockets {
+    id option = _options[@"websocket"];
+    if (option)
+        return [option boolValue];
+    return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
+        && [_serverType compare: @"Couchbase Sync Gateway/0.82"] >= 0;
 }
 
 
