@@ -87,14 +87,13 @@ Get Couchbase Lite via [the Couchbase mobile portal](http://mobile.couchbase.com
 
 Until we get continuous builds re-enabled, if you want the very latest and greatest (and possibly buggy) version, you'll need to build it yourself...
 
-### On a Mac ###
-
 For full details see the [wiki page][7]. The basic steps are:
 
  1. Clone the Couchbase Lite repository to your local disk.
  2. In that directory run "`git submodule init`" and then "`git submodule update`". This will clone the dependent library repos (such as [FMDB][5] and [MYUtilities][6]) into the vendor/ subdirectory.
- 3. Open the Xcode project and build the "CBL Mac" and/or "CBL iOS" schemes (whether it targets a device or simulator shouldn't matter).  
- 4. (optional) Find resulting framework.  After it builds it should create a `CouchbaseLite.framework` folder in the `/Users/you/Library/Developer/Xcode/DerivedData` directory, which can be copied into other projects.
+ 3. Open the Xcode project and choose the "CBL Mac" and/or "CBL iOS" schemes (whether it targets a device or simulator shouldn't matter).  
+ 4. Build or Archive (depending on whether you want a debug or release build.)
+ 5. The build product is "CouchbaseLite.framework" which you can now copy wherever you like and add to your application project.
 
 [1]: http://couchdb.apache.org
 [2]: https://github.com/couchbase/couchbase-lite-ios/wiki
