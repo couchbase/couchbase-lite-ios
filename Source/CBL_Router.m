@@ -19,7 +19,6 @@
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartWriter.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
 #import "CBLMisc.h"
@@ -282,8 +281,7 @@
 
 
 - (CBLStatus) openDB {
-    // As a special case, the _replicator db is created on demand (as though it already existed)
-    if (!_db.exists && !$equal(_db.name, kCBL_ReplicatorDatabaseName))
+    if (!_db.exists)
         return kCBLStatusNotFound;
     NSError* error;
     if (![_db open: &error])

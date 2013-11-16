@@ -188,20 +188,17 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 - (NSArray*) allReplications;
 
 /** Creates a replication that will 'push' to a database at the given URL, or returns an existing
-    such replication if there already is one.
-    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
+    such replication if there already is one. */
 - (CBLReplication*) replicationToURL: (NSURL*)url;
 
 /** Creates a replication that will 'pull' from a database at the given URL, or returns an existing
-    such replication if there already is one.
-    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
+    such replication if there already is one. */
 - (CBLReplication*) replicationFromURL: (NSURL*)url;
 
 /** Creates a pair of replications to both pull and push to database at the given URL, or returns existing replications if there are any.
     @param otherDbURL  The URL of the remote database, or nil for none.
     @param exclusively  If YES, any previously existing replications to or from otherDbURL will be deleted.
-    @return  An array whose first element is the "pull" replication and second is the "push".
-    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
+    @return  An array whose first element is the "pull" replication and second is the "push". */
 - (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
 
 

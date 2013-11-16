@@ -16,7 +16,7 @@
 #import "CBL_Replicator.h"
 #import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
-@class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange, CBL_ReplicatorManager;
+@class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
 
 
 @interface CBLDatabase (Insertion_Internal)
@@ -57,8 +57,6 @@
 
 @interface CBLManager (Testing)
 #if DEBUG
-- (void) startReplicatorManager;
-@property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 + (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
 + (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif

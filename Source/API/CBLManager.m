@@ -23,7 +23,6 @@
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Pusher.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
 #import "CBLPersonaAuthorizer.h"
@@ -50,7 +49,6 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
     NSThread* _thread;
     dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
-    CBL_ReplicatorManager* _replicatorManager;
     NSURL* _internalURL;
     NSMutableArray* _replications;
     __weak CBL_Shared *_shared;
@@ -140,17 +138,6 @@ static CBLManager* sInstance;
             }
         }
         [self upgradeOldDatabaseFiles];
-
-        if (!_options.noReplicator) {
-            // Don't start the replicator immediately; instead, give the app a chance to install
-            // filter and validation functions, otherwise persistent replications may behave
-            // incorrectly. The delayed-perform means the replicator won't start until after
-            // the caller (and its caller, etc.) returns back to the runloop.
-            LogTo(CBL_Server, @"%@ will start bg server", self);
-            MYAfterDelay(0.0, ^{
-                [self startPersistentReplications];
-            });
-        }
     }
     return self;
 }
@@ -207,8 +194,6 @@ static CBLManager* sInstance;
 - (void) close {
     Assert(self != sInstance, @"Please don't close the sharedInstance!");
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
-    [_replicatorManager stop];
-    _replicatorManager = nil;
     for (CBLDatabase* db in _databases.allValues) {
         [db close];
     }
@@ -243,23 +228,6 @@ static CBLManager* sInstance;
             if (!ok)
                 Warn(@"Couldn't move %@: %@", oldPath, error);
         }
-    }
-}
-
-
-- (void) startPersistentReplications {
-    if (!_shared)
-        return; // already closed
-    [self.backgroundServer tellDatabaseManager:^(CBLManager *bgMgr) {
-        [bgMgr startReplicatorManager];
-    }];
-}
-
-// This is internal and should only be called on the background manager
-- (void) startReplicatorManager {
-    if (!_replicatorManager) {
-        _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
-        [_replicatorManager start];
     }
 }
 
@@ -329,11 +297,9 @@ static CBLManager* sInstance;
 
 
 + (BOOL) isValidDatabaseName: (NSString*)name {
-    if (name.length > 0 && name.length < 240        // leave room for filename suffixes
+    return name.length > 0 && name.length < 240        // leave room for filename suffixes
             && [name rangeOfCharacterFromSet: kIllegalNameChars].length == 0
-            && islower([name characterAtIndex: 0]))
-        return YES;
-    return $equal(name, kCBL_ReplicatorDatabaseName);
+            && islower([name characterAtIndex: 0]);
 }
 
 
@@ -720,11 +686,6 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 }
 
 
-- (CBL_ReplicatorManager*) replicatorManager {
-    return _replicatorManager;
-}
-
-
 @end
 
 
@@ -736,7 +697,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 TestCase(CBLManager) {
     RequireTestCase(CBLDatabase);
 
-    for (NSString* name in @[@"f", @"foo123", @"foo/($12)", @"f+-_00/" @"_replicator"])
+    for (NSString* name in @[@"f", @"foo123", @"foo/($12)", @"f+-_00/"])
         CAssert([CBLManager isValidDatabaseName: name]);
     NSMutableString* longName = [@"long" mutableCopy];
     while (longName.length < 240)

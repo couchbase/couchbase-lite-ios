@@ -15,7 +15,6 @@
 
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Insertion.h"
@@ -448,7 +447,7 @@ TestCase(CBL_Puller_FromCouchApp) {
 
 
 TestCase(ParseReplicatorProperties) {
-    CBLManager* dbManager = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
+    CBLManager* dbManager = [CBLManager createEmptyAtTemporaryPath: @"CBL_ParseReplicatorProperties"];
     CBLDatabase* localDB = [dbManager _databaseNamed: @"foo" mustExist: NO error: NULL];
 
     CBLDatabase* db = nil;

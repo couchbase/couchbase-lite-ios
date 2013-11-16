@@ -91,7 +91,6 @@ int main (int argc, const char * argv[]) {
     self.query = [[DemoQuery alloc] initWithQuery: q
                                        modelClass: _tableController.objectClass];
     
-    // Start watching any persistent replications already configured:
     [self startContinuousSyncWith: self.syncURL];
     
 #ifdef FOR_TESTING_PURPOSES

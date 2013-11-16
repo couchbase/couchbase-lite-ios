@@ -20,12 +20,10 @@ typedef enum {
 
 
 /** A 'push' or 'pull' replication between a local and a remote database.
-    Replications can be one-shot, continuous or persistent.
-    CBLReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
+    Replications can be one-shot or continuous. */
 @interface CBLReplication : NSObject
 
-/** Creates a new pull replication. It is non-persistent, unless you immediately set its
-    .persistent property.
+/** Creates a new pull replication.
     It's more common to call -[CBLDatabase pullFromURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
     from the same source database (e.g. with different filters), use this.
@@ -33,15 +31,15 @@ typedef enum {
 - (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database
                                                                         __attribute__((nonnull));
 
-/** Creates a new push replication. It is non-persistent, unless you immediately set its
-    .persistent property.
+/** Creates a new push replication.
     It's more common to call -[CBLDatabase pushToURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
-     to the same source database (e.g. with different filters), use this.
-     Note: The replication won't start until you call -start. */
+    to the same source database (e.g. with different filters), use this.
+    Note: The replication won't start until you call -start. */
 - (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target
                                                                         __attribute__((nonnull));
 
+/** Stops the replication and tells the database to forget about it. */
 - (void) deleteReplication;
 
 /** The local database being replicated to/from. */
@@ -53,8 +51,7 @@ typedef enum {
 /** Does the replication pull from (as opposed to push to) the target? */
 @property (nonatomic, readonly) bool pull;
 
-@property (nonatomic) NSDictionary* customProperties;
-
+/** The full set of properties defining the replication, as a JSON-compatible dictionary. */
 @property (nonatomic, readonly) NSDictionary* properties;
 
 
@@ -63,7 +60,10 @@ typedef enum {
 /** Should the target database be created if it doesn't already exist? (Defaults to NO). */
 @property (nonatomic) bool create_target;
 
-/** Should the replication operate continuously, copying changes as soon as the source database is modified? (Defaults to NO). */
+/** Should the replication operate continuously? (Defaults to NO).
+    A continuous replication keeps running (in 'idle' mode) after updating the target database.
+    It monitors the source database and copies new revisions as soon as they're available.
+    Continuous replications keep running until the app quits or they're stopped. */
 @property (nonatomic) bool continuous;
 
 /** Name of an optional filter function to run on the source server.
@@ -83,7 +83,7 @@ typedef enum {
 @property (nonatomic, copy) NSArray* channels;
 
 /** Sets the documents to specify as part of the replication. */
-@property (copy) NSArray *doc_ids;
+@property (nonatomic, copy) NSArray *doc_ids;
 
 /** Extra HTTP headers to send in all requests to the remote server.
     Should map strings (header names) to strings. */
@@ -94,6 +94,9 @@ typedef enum {
     Set to "WiFi" (or "!Cell") to replicate only over WiFi,
     or to "Cell" (or "!WiFi") to replicate only over cellular. */
 @property (nonatomic, copy) NSString* network;
+
+/** An optional JSON-compatible dictionary of extra properties for the replicator. */
+@property (nonatomic, copy) NSDictionary* customProperties;
 
 
 #pragma mark - AUTHENTICATION:
@@ -108,9 +111,9 @@ typedef enum {
     and optionally "signature_method". */
 @property (nonatomic, copy) NSDictionary* OAuth;
 
-/** Email address for login with Facebook credentials. This is stored persistently in
-    the replication document, but it's not sufficient for login (you also need to get a
-    token from Facebook's servers, which you then pass to -registerFacebookToken:forEmailAddress.)*/
+/** Email address for login with Facebook credentials.
+    In addition to this, you also need to get a token from Facebook's servers,
+    which you then pass to -registerFacebookToken:forEmailAddress. */
 @property (nonatomic, copy) NSString* facebookEmailAddress;
 
 /** Registers a Facebook login token that will be used on the next login to the remote server.
@@ -127,10 +130,9 @@ typedef enum {
     Facebook authentication. */
 @property (readonly) NSURL* personaOrigin;
 
-/** Email address for remote login with Persona (aka BrowserID). This is stored persistently in
-    the replication document, but it's not sufficient for login (you also need to go through the
-    Persona protocol to get a signed assertion, which you then pass to the
-    -registerPersonaAssertion: method.)*/
+/** Email address for remote login with Persona (aka BrowserID).
+    In addition to this, you also need to go through the Persona protocol to get a signed assertion,
+    which you then pass to the -registerPersonaAssertion: method.)*/
 @property (nonatomic, copy) NSString* personaEmailAddress;
 
 /** Registers a Persona 'assertion' (ID verification) string that will be used on the next login to the remote server. This also sets personaEmailAddress.
@@ -150,17 +152,21 @@ typedef enum {
         root certs; if YES, it replaces them (so *only* the given certs will be trusted.) */
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
 
+
 #pragma mark - STATUS:
 
 /** Starts the replication, asynchronously.
+    Has no effect if the replication is already running.
     You can monitor its progress by observing the kCBLReplicationChangeNotification it sends,
     or by using KVO to observe its .running, .mode, .error, .total and .completed properties. */
 - (void) start;
 
-/** Stops replication, asynchronously. */
+/** Stops replication, asynchronously.
+    Has no effect if the replication is not running. */
 - (void) stop;
 
-/** Restarts a completed or failed replication. */
+/** Restarts a running replication.
+    Has no effect if the replication is not running. */
 - (void) restart;
 
 /** The replication's current state, one of {stopped, offline, idle, active}. */

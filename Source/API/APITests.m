@@ -81,7 +81,7 @@ TestCase(API_Manager) {
         Log(@"Database '%@': %u documents", db.name, (unsigned)db.documentCount);
     }
 
-    CBLManagerOptions options = {.readOnly= true, .noReplicator= false};
+    CBLManagerOptions options = {.readOnly= true};
     NSError* error;
     CBLManager* ro = [[CBLManager alloc] initWithDirectory: dbmgr.directory options: &options
                                                      error: &error];

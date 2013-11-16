@@ -29,7 +29,6 @@
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
 #import "CBL_Replicator.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBL_Pusher.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"

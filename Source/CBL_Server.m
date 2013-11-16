@@ -15,7 +15,6 @@
 
 #import "CBL_Server.h"
 #import "CBLDatabase.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBLMisc.h"
 #import "CBLManager+Internal.h"
 #import "CBLInternal.h"

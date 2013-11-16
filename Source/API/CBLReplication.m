@@ -47,17 +47,17 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 @implementation CBLReplication
 {
-    CBLDatabase* _database;
-    NSURL* _remoteURL;
-    bool _pull;
     bool _started;
-    bool _running;
-    unsigned _completed, _total;
-    CBLReplicationMode _mode;
-    NSError* _error;
-
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
 }
+
+
+@synthesize localDatabase=_database, create_target=_create_target;
+@synthesize continuous=_continuous, filter=_filter, query_params=_query_params;
+@synthesize doc_ids=_doc_ids, network=_network, remoteURL=_remoteURL, pull=_pull;
+@synthesize headers=_headers, OAuth=_OAuth, facebookEmailAddress=_facebookEmailAddress;
+@synthesize personaEmailAddress=_personaEmailAddress, customProperties=_customProperties;
+@synthesize running = _running, completed=_completed, total=_total, error = _error, mode=_mode;
 
 
 - (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database {
@@ -68,7 +68,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     return [self initWithDatabase: database remote: target pull: NO];
 }
 
-// Instantiate a new replication; it is not persistent yet
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
                              pull: (BOOL)pull
@@ -85,8 +84,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-- (void)dealloc
-{
+- (void) dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
@@ -95,12 +93,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     [self stop];
     [_database.manager forgetReplication: self];
 }
-
-
-@synthesize localDatabase=_database, create_target=_create_target, customProperties=_customProperties;
-@synthesize continuous=_continuous, filter=_filter, query_params=_query_params;
-@synthesize doc_ids=_doc_ids, network=_network, remoteURL=_remoteURL, pull=_pull;
-@synthesize headers=_headers, OAuth=_OAuth, facebookEmailAddress=_facebookEmailAddress, personaEmailAddress=_personaEmailAddress;
 
 
 - (NSString*) description {
@@ -283,9 +275,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-@synthesize running = _running, completed=_completed, total=_total, error = _error, mode=_mode;
-
-
 - (void) updateMode: (CBLReplicationMode)mode
               error: (NSError*)error
           processed: (NSUInteger)changesProcessed
@@ -363,7 +352,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }
     [self bg_setReplicator: repl];
     [repl start];
-    [self bg_updateProgress: _bg_replicator];
+    [self bg_updateProgress];
 }
 
 
@@ -376,31 +365,30 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_replicationProgressChanged: (NSNotification*)n
 {
-    CBL_Replicator* tdReplicator = n.object;
-    AssertEq(tdReplicator, _bg_replicator);
-    [self bg_updateProgress: tdReplicator];
+    AssertEq(n.object, _bg_replicator);
+    [self bg_updateProgress];
 }
 
 
 // CAREFUL: This is called on the server's background thread!
-- (void) bg_updateProgress: (CBL_Replicator*)tdReplicator {
+- (void) bg_updateProgress {
     CBLReplicationMode mode;
-    if (!tdReplicator.running)
+    if (!_bg_replicator.running)
         mode = kCBLReplicationStopped;
-    else if (!tdReplicator.online)
+    else if (!_bg_replicator.online)
         mode = kCBLReplicationOffline;
     else
-        mode = tdReplicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
+        mode = _bg_replicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
     
     // Communicate its state back to the main thread:
+    NSError* error = _bg_replicator.error;
+    NSUInteger changes = _bg_replicator.changesProcessed;
+    NSUInteger total = _bg_replicator.changesTotal;
     [_database doAsync: ^{
-        [self updateMode: mode
-                   error: tdReplicator.error
-               processed: tdReplicator.changesProcessed
-                 ofTotal: tdReplicator.changesTotal];
+        [self updateMode: mode error: error processed: changes ofTotal: total];
     }];
     
-    if (_bg_replicator && mode == kCBLReplicationStopped) {
+    if (mode == kCBLReplicationStopped) {
         [self bg_setReplicator: nil];
     }
 }
