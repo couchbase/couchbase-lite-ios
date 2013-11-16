@@ -58,7 +58,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 }
 
 
-@synthesize dispatchQueue=_dispatchQueue;
+@synthesize dispatchQueue=_dispatchQueue, allReplications=_replications, directory = _dir;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -264,9 +264,6 @@ static CBLManager* sInstance;
 }
 
 
-@synthesize directory = _dir;
-
-
 - (NSString*) description {
     return $sprintf(@"%@[%p %@]", [self class], self, self.directory);
 }
@@ -415,18 +412,6 @@ static CBLManager* sInstance;
 #pragma mark - REPLICATIONs (PUBLIC API):
 
 
-- (NSArray*) allReplications {
-    NSMutableArray* replications = [_replications mutableCopy];
-    CBLQuery* q = [self[@"_replicator"] queryAllDocuments];
-    for (CBLQueryRow* row in q.rows) {
-        CBLReplication* repl = [CBLReplication modelForDocument: row.document];
-        if (![replications containsObject: repl])
-            [replications addObject: repl];
-    }
-    return replications;
-}
-
-
 - (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
                                      remote: (NSURL*)remote
                                        pull: (BOOL)pull
@@ -473,7 +458,7 @@ static CBLManager* sInstance;
     if (exclusively) {
         for (CBLReplication* repl in self.allReplications) {
             if (repl.localDatabase == database && repl != pull && repl != push) {
-                [repl deleteDocument: nil];
+                [repl deleteReplication];
             }
         }
     }
@@ -481,30 +466,8 @@ static CBLManager* sInstance;
 }
 
 
-- (void) deletePersistentReplicationsFor: (CBLDatabase*)db {
-    CBLDatabase* replicatorDB = [self databaseNamed: @"_replicator" error: NULL];
-    if (!replicatorDB)
-        return;
-    NSString* dbName = db.name;
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.includeDocs = YES;
-    for (CBLQueryRow* row in [replicatorDB getAllDocs: &options]) {
-        NSDictionary* docProps = row.documentProperties;
-        NSString* source = $castIf(NSString, docProps[@"source"]);
-        NSString* target = $castIf(NSString, docProps[@"target"]);
-        if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
-            // Replication doc involves this database -- delete it:
-            LogTo(Sync, @"%@ deleting replication %@", self, docProps);
-            CBL_Revision* delRev = [[CBL_Revision alloc] initWithDocID: docProps[@"_id"]
-                                                                 revID: nil deleted: YES];
-            CBLStatus status;
-            if (![replicatorDB putRevision: delRev
-                            prevRevisionID: docProps[@"_rev"]
-                             allowConflict: NO status: &status]) {
-                Warn(@"CBL_ReplicatorManager: Couldn't delete replication doc %@", docProps);
-            }
-        }
-    }
+- (void) forgetReplication: (CBLReplication*)repl {
+    [_replications removeObject: repl];
 }
 
 

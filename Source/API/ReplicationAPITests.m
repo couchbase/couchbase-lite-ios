@@ -71,7 +71,6 @@ TestCase(CreateReplicators) {
     CAssertEq(r1.localDatabase, db);
     CAssertEqual(r1.remoteURL, fakeRemoteURL);
     CAssert(!r1.pull);
-    CAssert(!r1.persistent);
     CAssert(!r1.continuous);
     CAssert(!r1.create_target);
     CAssertNil(r1.filter);
@@ -103,7 +102,7 @@ TestCase(CreateReplicators) {
     CAssert(r3 != r2);
     r3.doc_ids = @[@"doc1", @"doc2"];
     CBLStatus status;
-    CBL_Replicator* repl = [db.manager replicatorWithProperties: r3.propertiesToSave
+    CBL_Replicator* repl = [db.manager replicatorWithProperties: r3.properties
                                                          status: &status];
     AssertEqual(repl.docIDs, r3.doc_ids);
     [db.manager close];

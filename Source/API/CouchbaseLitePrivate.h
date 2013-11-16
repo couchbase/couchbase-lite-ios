@@ -26,7 +26,7 @@
                                    and: (NSURL*)otherDbURL
                            exclusively: (BOOL)exclusively
                                  start: (BOOL)start                 __attribute__((nonnull(1)));
-- (void) deletePersistentReplicationsFor: (CBLDatabase*)db;
+- (void) forgetReplication: (CBLReplication*)repl;
 #if DEBUG // for unit tests only
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;
 #endif

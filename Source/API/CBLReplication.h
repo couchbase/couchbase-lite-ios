@@ -6,7 +6,7 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBLModel.h"
+#import <Foundation/Foundation.h>
 @class CBLDatabase;
 
 
@@ -22,7 +22,7 @@ typedef enum {
 /** A 'push' or 'pull' replication between a local and a remote database.
     Replications can be one-shot, continuous or persistent.
     CBLReplication is a model class representing a document in the _replicator database, but unless saved an instance has only a temporary existence. Saving it makes it persistent. */
-@interface CBLReplication : CBLModel
+@interface CBLReplication : NSObject
 
 /** Creates a new pull replication. It is non-persistent, unless you immediately set its
     .persistent property.
@@ -42,6 +42,8 @@ typedef enum {
 - (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target
                                                                         __attribute__((nonnull));
 
+- (void) deleteReplication;
+
 /** The local database being replicated to/from. */
 @property (nonatomic, readonly) CBLDatabase* localDatabase;
 
@@ -51,13 +53,12 @@ typedef enum {
 /** Does the replication pull from (as opposed to push to) the target? */
 @property (nonatomic, readonly) bool pull;
 
+@property (nonatomic) NSDictionary* customProperties;
+
+@property (nonatomic, readonly) NSDictionary* properties;
+
 
 #pragma mark - OPTIONS:
-
-/** Is this replication remembered persistently in the _replicator database?
-    Persistent continuous replications will automatically restart on the next launch
-    or (on iOS) when the app returns to the foreground. */
-@property bool persistent;
 
 /** Should the target database be created if it doesn't already exist? (Defaults to NO). */
 @property (nonatomic) bool create_target;

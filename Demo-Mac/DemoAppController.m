@@ -191,7 +191,7 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) resetReplication: (CBLReplication*)repl {
-    [repl setValue: @YES ofProperty: @"reset"];
+    repl.customProperties = @{@"reset": @YES};
     [repl restart];
 }
 
