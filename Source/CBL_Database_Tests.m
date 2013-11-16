@@ -22,7 +22,7 @@
 #import "CBL_Attachment.h"
 #import "CBL_Body.h"
 #import "CBLRevision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_BlobStore.h"
 #import "CBLBase64.h"
 #import "CBLInternal.h"
@@ -81,7 +81,7 @@ TestCase(CBL_Database_CRUD) {
                    queue: nil
                    usingBlock: ^(NSNotification* n) {
                        NSArray* changes = n.userInfo[@"changes"];
-                       for (CBL_DatabaseChange* change in changes) {
+                       for (CBLDatabaseChange* change in changes) {
                            CBL_Revision* rev = change.addedRevision;
                            CAssert(rev);
                            CAssert(rev.docID);
@@ -358,8 +358,9 @@ static void verifyHistory(CBLDatabase* db, CBL_Revision* rev, NSArray* history, 
 }
 
 
-static CBL_DatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) {
-    return [[CBL_DatabaseChange alloc] initWithAddedRevision: rev winningRevision: winner];
+static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) {
+    return [[CBLDatabaseChange alloc] initWithAddedRevision: rev winningRevision: winner
+                                              maybeConflict: NO source: nil];
 }
 
 
@@ -369,7 +370,7 @@ TestCase(CBL_Database_RevTree) {
     CBLDatabase* db = createDB();
 
     // Track the latest database-change notification that's posted:
-    __block CBL_DatabaseChange* change = nil;
+    __block CBLDatabaseChange* change = nil;
     id observer = [[NSNotificationCenter defaultCenter]
                    addObserverForName: CBL_DatabaseChangesNotification
                    object: db

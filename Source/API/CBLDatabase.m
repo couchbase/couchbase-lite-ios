@@ -18,7 +18,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+LocalDocs.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLModel_Internal.h"
@@ -96,27 +96,25 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-- (void) postPublicChangeNotification: (CBL_DatabaseChange*)change {
-    CBL_Revision* winningRev = change.winningRevision;
-    NSURL* source = change.source;
+- (void) postPublicChangeNotification: (NSArray*)changes {
+    BOOL external = NO;
+    for (CBLDatabaseChange* change in changes) {
+        // Notify the corresponding instantiated CBLDocument object (if any):
+        [[self cachedDocumentWithID: change.documentID] revisionAdded: change];
+        if (change.source != nil)
+            external = YES;
+    }
 
-    // Notify the corresponding instantiated CBLDocument object (if any):
-    [[self cachedDocumentWithID: winningRev.docID] revisionAdded: change];
-
-    // Post a database-changed notification, but only post one per runloop cycle by using
-    // a notification queue. If the current notification has the "external" flag, make sure
-    // it gets posted by clearing any pending instance of the notification that doesn't have
-    // the flag.
-    NSDictionary* userInfo = source ? $dict({@"external", $true}) : nil;
+    // Post the public kCBLDatabaseChangeNotification:
+    NSDictionary* userInfo = @{@"changes": changes,
+                               @"external": @(external)};
     NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
                                                       object: self
                                                     userInfo: userInfo];
     NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-    if (source != nil)
-        [queue dequeueNotificationsMatching: n coalesceMask: NSNotificationCoalescingOnSender];
     [queue enqueueNotification: n
                   postingStyle: NSPostASAP 
-                  coalesceMask: NSNotificationCoalescingOnSender
+                  coalesceMask: NSNotificationNoCoalescing
                       forModes: @[NSRunLoopCommonModes]];
 }
 

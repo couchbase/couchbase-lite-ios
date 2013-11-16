@@ -11,7 +11,7 @@
 #import "CBLDatabase.h"
 #import "CBL_Revision.h"
 #import "CBLGeometry.h"
-@class CBL_DatabaseChange, CBL_Revision, CBLManager, CBL_Server;
+@class CBLDatabaseChange, CBL_Revision, CBLManager, CBL_Server;
 
 
 @interface CBLManager ()
@@ -49,7 +49,7 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)docID                 __attribute__((nonnull));
 - (CBLRevision*) revisionFromRev: (CBL_Revision*)rev;
-- (void) revisionAdded: (CBL_DatabaseChange*)change                 __attribute__((nonnull));
+- (void) revisionAdded: (CBLDatabaseChange*)change                 __attribute__((nonnull));
 - (void) loadCurrentRevisionFrom: (CBLQueryRow*)row                 __attribute__((nonnull));
 - (CBLRevision*) putProperties: (NSDictionary*)properties
                      prevRevID: (NSString*)prevID

@@ -17,7 +17,7 @@
 #import "CBLDatabase+Attachments.h"
 #import "CBLInternal.h"
 #import "CBL_Revision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBLCollateJSON.h"
 #import "CBL_BlobStore.h"
 #import "CBL_Puller.h"
@@ -33,7 +33,7 @@
 #import "ExceptionUtils.h"
 
 
-NSString* const CBL_DatabaseChangesNotification = @"CBL_DatabaseChanges";
+NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
@@ -579,7 +579,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 /** Posts a local NSNotification of a new revision of a document. */
-- (void) notifyChange: (CBL_DatabaseChange*)change {
+- (void) notifyChange: (CBLDatabaseChange*)change {
     LogTo(CBLDatabase, @"Added: %@ (seq=%lld)", change.addedRevision, change.addedRevision.sequence);
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
@@ -609,7 +609,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
         if (WillLogTo(CBLDatabase)) {
             NSMutableString* seqs = [NSMutableString string];
-            for (CBL_DatabaseChange* change in changes) {
+            for (CBLDatabaseChange* change in changes) {
                 if (seqs.length > 0)
                     [seqs appendString: @", "];
                 SequenceNumber seq = change.addedRevision.sequence;
@@ -621,8 +621,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             LogTo(CBLDatabase, @"%@: Posting change notifications: seq %@", self, seqs);
         }
         
-        for (CBL_DatabaseChange* change in changes)
-            [self postPublicChangeNotification: change];
+        [self postPublicChangeNotification: changes];
         [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseChangesNotification
                                                             object: self
                                                           userInfo: $dict({@"changes", changes})];
@@ -639,7 +638,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         // Careful: I am being called on senderDB's thread, not my own!
         if ([[n name] isEqualToString: CBL_DatabaseChangesNotification]) {
             NSMutableArray* echoedChanges = $marray();
-            for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
+            for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
                 if (!change.echoed)
                     [echoedChanges addObject: change.copy]; // copied change is marked as echoed
             }

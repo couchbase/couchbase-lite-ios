@@ -22,7 +22,7 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Pusher.h"
 #import "CBL_Puller.h"
 #import "CBLView+Internal.h"
@@ -309,7 +309,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 - (void) dbChanged: (NSNotification*)n {
     if (_updateInProgress)
         return;
-    for (CBL_DatabaseChange* change in n.userInfo[@"changes"]) {
+    for (CBLDatabaseChange* change in n.userInfo[@"changes"]) {
         CBL_Revision* rev = change.winningRevision;
         LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
         NSString* docID = rev.docID;

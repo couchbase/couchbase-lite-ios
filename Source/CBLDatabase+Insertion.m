@@ -21,7 +21,7 @@
 #import "CBL_Revision.h"
 #import "CBLCanonicalJSON.h"
 #import "CBL_Attachment.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -444,10 +444,10 @@
         return nil;
     
     //// EPILOGUE: A change notification is sent...
-    CBL_DatabaseChange* change = [[CBL_DatabaseChange alloc] initWithAddedRevision: newRev
-                                                                   winningRevision: winningRev];
-    change.maybeConflict = maybeConflict;
-    [self notifyChange: change];
+    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
+                                                         winningRevision: winningRev
+                                                           maybeConflict: maybeConflict
+                                                                  source: nil]];
     return newRev;
 }
 
@@ -595,11 +595,10 @@
     }];
 
     if (!CBLStatusIsError(status)) {
-        CBL_DatabaseChange* change = [[CBL_DatabaseChange alloc] initWithAddedRevision: rev
-                                                                       winningRevision: winningRev];
-        change.maybeConflict = maybeConflict;
-        change.source = source;
-        [self notifyChange: change];
+        [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: rev
+                                                             winningRevision: winningRev
+                                                               maybeConflict: maybeConflict
+                                                                      source: source]];
     }
     return status;
 }

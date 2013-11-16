@@ -17,7 +17,7 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBLBatcher.h"
 #import "CBLMultipartUploader.h"
 #import "CBLInternal.h"
@@ -193,7 +193,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 - (void) dbChanged: (NSNotification*)n {
     NSArray* changes = (n.userInfo)[@"changes"];
-    for (CBL_DatabaseChange* change in changes) {
+    for (CBLDatabaseChange* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change.source isEqual: _remote]) {
             CBL_Revision* rev = change.addedRevision;

@@ -192,9 +192,9 @@
 		2776A59216A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */; };
 		2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */; };
 		2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */; };
-		2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */; };
-		2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
-		2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */; };
+		2776A63016A9BCBC006FF199 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBLDatabaseChange.h */; };
+		2776A63116A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBLDatabaseChange.m */; };
+		2776A63216A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 2776A62F16A9BCBC006FF199 /* CBLDatabaseChange.m */; };
 		277B5D291821A8380088881E /* yajl.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C7D1821A8370088881E /* yajl.c */; };
 		277B5D2A1821A8380088881E /* yajl.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C7D1821A8370088881E /* yajl.c */; };
 		277B5D2D1821A8380088881E /* yajl_alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C801821A8370088881E /* yajl_alloc.c */; };
@@ -962,8 +962,8 @@
 		2773ADC614BD1EB80027A292 /* CBLDatabase+LocalDocs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+LocalDocs.m"; sourceTree = "<group>"; };
 		2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLPersonaAuthorizer.h; sourceTree = "<group>"; };
 		2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLPersonaAuthorizer.m; sourceTree = "<group>"; };
-		2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_DatabaseChange.h; sourceTree = "<group>"; };
-		2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_DatabaseChange.m; sourceTree = "<group>"; };
+		2776A62E16A9BCBC006FF199 /* CBLDatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLDatabaseChange.h; path = ../CBLDatabaseChange.h; sourceTree = "<group>"; };
+		2776A62F16A9BCBC006FF199 /* CBLDatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLDatabaseChange.m; path = ../CBLDatabaseChange.m; sourceTree = "<group>"; };
 		277B5C701821A8370088881E /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		277B5C7D1821A8370088881E /* yajl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl.c; sourceTree = "<group>"; };
 		277B5C801821A8370088881E /* yajl_alloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yajl_alloc.c; sourceTree = "<group>"; };
@@ -1518,8 +1518,6 @@
 				27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */,
 				270B3E3714898DF200E0A926 /* CBL_Revision.h */,
 				270B3E3814898DF200E0A926 /* CBL_Revision.m */,
-				2776A62E16A9BCBC006FF199 /* CBL_DatabaseChange.h */,
-				2776A62F16A9BCBC006FF199 /* CBL_DatabaseChange.m */,
 				27A7209E152B959100C0A0E8 /* CBL_Attachment.h */,
 				27A7209F152B959100C0A0E8 /* CBL_Attachment.m */,
 				27C706401486BBD500F0F099 /* CBL_Server.h */,
@@ -2125,6 +2123,8 @@
 				277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */,
 				27E2E5CB159533A5005B9234 /* CBLReplication.h */,
 				27E2E5CC159533A5005B9234 /* CBLReplication.m */,
+				2776A62E16A9BCBC006FF199 /* CBLDatabaseChange.h */,
+				2776A62F16A9BCBC006FF199 /* CBLDatabaseChange.m */,
 				27846FEE15D5C7DE0030122F /* Tests */,
 				27DA431A158FD9BA00F9E7B5 /* iOS */,
 				27DA435D15918C9600F9E7B5 /* Model */,
@@ -2430,7 +2430,7 @@
 				275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */,
 				2776A59116A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
 				277B5DCE1821AE990088881E /* CBLJSONReader.h in Headers */,
-				2776A63016A9BCBC006FF199 /* CBL_DatabaseChange.h in Headers */,
+				2776A63016A9BCBC006FF199 /* CBLDatabaseChange.h in Headers */,
 				271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3103,7 +3103,7 @@
 				277EF45017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
 				27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */,
 				277EF43B17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
-				2776A63116A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
+				2776A63116A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
 				277EF45C17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
 				277EF40C17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
@@ -3302,7 +3302,7 @@
 				27FFE20B17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,
-				2776A63216A9BCBC006FF199 /* CBL_DatabaseChange.m in Sources */,
+				2776A63216A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
 				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -16,7 +16,8 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
+#import "CBLInternal.h"
 
 
 NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
@@ -155,8 +156,10 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 // Notification from the CBLDatabase that a (current, winning) revision has been added
-- (void) revisionAdded: (CBL_DatabaseChange*)change {
+- (void) revisionAdded: (CBLDatabaseChange*)change {
     CBL_Revision* rev = change.winningRevision;
+    if (!rev)
+        return; // current revision didn't change
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
         _currentRevision = [[CBLRevision alloc] initWithDocument: self revision: rev];
     }

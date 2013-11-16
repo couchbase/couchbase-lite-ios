@@ -9,13 +9,12 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange, CBL_Shared;
+@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
 /** NSNotification posted when one or more documents have been updated.
-    The userInfo key "changes" contains an array of {rev: CBL_Revision, source: NSURL,
-    winner: new winning CBL_Revision, _if_ it changed (often same as rev).}*/
+    The userInfo key "changes" contains an array of CBLDatabaseChange objects. */
 extern NSString* const CBL_DatabaseChangesNotification;
 
 /** NSNotification posted when a database is closing. */
@@ -85,7 +84,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readonly) NSString* path;
 @property (nonatomic, readonly) BOOL isOpen;
 
-- (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
+- (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
 - (BOOL) close;
 - (BOOL) closeForDeletion;
 
@@ -140,7 +139,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
 - (CBLStatus) _inTransaction: (CBLStatus(^)())block;
 
-- (void) notifyChange: (CBL_DatabaseChange*)change;
+- (void) notifyChange: (CBLDatabaseChange*)change;
 
 // DOCUMENTS:
 

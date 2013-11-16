@@ -24,7 +24,7 @@
 #import "CBL_Body.h"
 #import "CBLMultipartDocumentReader.h"
 #import "CBL_Revision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
@@ -519,7 +519,7 @@
     __unused id retainSelf = self;
 
     NSMutableArray* changes = $marray();
-    for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
+    for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
         CBL_Revision* rev = change.addedRevision;
         CBL_Revision* winningRev = change.winningRevision;
 

@@ -220,10 +220,8 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 
 /** This notification is posted by a CBLDatabase in response to document changes.
-    Only one notification is posted per runloop cycle, no matter how many documents changed.
-    If a change was not made by a CBLDocument belonging to this CBLDatabase (i.e. it came
-    from another process or from a "pull" replication), the notification's userInfo dictionary will
-    contain an "external" key with a value of YES. */
+    The notification's userInfo dictionary's "changes" key contains an NSArray of
+    CBLDatabaseChange objects that describe the revisions that were added. */
 extern NSString* const kCBLDatabaseChangeNotification;
 
 
