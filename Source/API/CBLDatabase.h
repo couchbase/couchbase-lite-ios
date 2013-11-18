@@ -184,32 +184,14 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 #pragma mark - REPLICATION:
 
-/** Returns an array of all current CBLReplications involving this database. */
+/** Returns an array of all current, running CBLReplications involving this database. */
 - (NSArray*) allReplications;
 
-/** Creates a replication that will 'push' to a database at the given URL, or returns an existing
-    such replication if there already is one. */
+/** Creates a replication that will 'push' to a database at the given URL. */
 - (CBLReplication*) replicationToURL: (NSURL*)url;
 
-/** Creates a replication that will 'pull' from a database at the given URL, or returns an existing
-    such replication if there already is one. */
+/** Creates a replication that will 'pull' from a database at the given URL. */
 - (CBLReplication*) replicationFromURL: (NSURL*)url;
-
-/** Creates a pair of replications to both pull and push to database at the given URL, or returns existing replications if there are any.
-    @param otherDbURL  The URL of the remote database, or nil for none.
-    @param exclusively  If YES, any previously existing replications to or from otherDbURL will be deleted.
-    @return  An array whose first element is the "pull" replication and second is the "push". */
-- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
-
-
-// deprecated methods; same as the above but call -start automatically
-- (CBLReplication*) pushToURL: (NSURL*)url
-        __attribute__((deprecated("use replicationToURL, then call -start")));
-- (CBLReplication*) pullFromURL: (NSURL*)url
-        __attribute__((deprecated("use replicationFromURL, then call -start")));
-- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
-        __attribute__((deprecated("use replicationsWithURL:, then call -start")));
-
 
 @end
 

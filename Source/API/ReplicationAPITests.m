@@ -8,6 +8,7 @@
 //
 
 #import "CouchbaseLite.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
 #import "Test.h"
 
@@ -64,8 +65,6 @@ TestCase(CreateReplicators) {
     CAssertEqual(db.allReplications, @[]);
     CBLReplication* r1 = [db replicationToURL: fakeRemoteURL];
     CAssert(r1);
-    CAssertEqual(db.allReplications, @[r1]);
-    CAssertEq([db replicationToURL: fakeRemoteURL], r1);   // 2nd call returns same replicator instance
 
     // Check the replication's properties:
     CAssertEq(r1.localDatabase, db);
@@ -89,16 +88,13 @@ TestCase(CreateReplicators) {
     CBLReplication* r2 = [db replicationFromURL: fakeRemoteURL];
     CAssert(r2);
     CAssert(r2 != r1);
-    CAssertEqual(db.allReplications, (@[r1, r2]));
-    CAssertEq([db replicationFromURL: fakeRemoteURL], r2);
 
     // Check the replication's properties:
     CAssertEq(r2.localDatabase, db);
     CAssertEqual(r2.remoteURL, fakeRemoteURL);
     CAssert(r2.pull);
 
-    CBLReplication* r3 = [[CBLReplication alloc] initPullFromSourceURL: fakeRemoteURL
-                                                            toDatabase: db];
+    CBLReplication* r3 = [db replicationFromURL: fakeRemoteURL];
     CAssert(r3 != r2);
     r3.doc_ids = @[@"doc1", @"doc2"];
     CBLStatus status;
@@ -136,8 +132,11 @@ TestCase(RunPushReplication) {
     Log(@"Pushing...");
     CBLReplication* repl = [db replicationToURL: remoteDbURL];
     repl.create_target = YES;
+    [repl start];
+    CAssertEqual(db.allReplications, @[repl]);
     runReplication(repl);
     AssertNil(repl.error);
+    CAssertEqual(db.allReplications, @[]);
     [db.manager close];
 }
 

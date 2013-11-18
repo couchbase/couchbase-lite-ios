@@ -54,6 +54,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     CBLCache* _docCache;
     CBLModelFactory* _modelFactory;  // used in category method in CBLModelFactory.m
     NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
+    NSMutableSet* _allReplications;
 }
 
 
@@ -69,6 +70,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     self = [self _initWithPath: path name: name manager: manager readOnly: readOnly];
     if (self) {
         _unsavedModelsMutable = [NSMutableSet set];
+        _allReplications = [[NSMutableSet alloc] init];
 #if TARGET_OS_IPHONE
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(appBackgrounding:)
@@ -410,43 +412,24 @@ static NSString* makeLocalDocID(NSString* docID) {
 
 
 - (NSArray*) allReplications {
-    NSMutableArray* result = $marray();
-    for (CBLReplication* repl in _manager.allReplications) {
-        if (repl.localDatabase == self)
-            [result addObject: repl];
-    }
-    return result;
+    return [_allReplications allObjects];
+}
+
+- (void) addReplication: (CBLReplication*)repl {
+    [_allReplications addObject: repl];
+}
+
+- (void) forgetReplication: (CBLReplication*)repl {
+    [_allReplications removeObject: repl];
 }
 
 
 - (CBLReplication*) replicationToURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: NO create: YES start: NO];
+    return [[CBLReplication alloc] initWithDatabase: self remote: url pull: NO];
 }
 
 - (CBLReplication*) replicationFromURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: YES create: YES start: NO];
-}
-
-- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
-    return [_manager createReplicationsBetween: self and: otherDbURL
-                                   exclusively: exclusively start: NO];
-}
-
-
-// Older, deprecated methods:
-- (CBLReplication*) pushToURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: NO create: YES start: YES];
-}
-- (CBLReplication*) pullFromURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: YES create: YES start: YES];
-}
-- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
-    return [_manager createReplicationsBetween: self and: otherDbURL
-                                   exclusively: exclusively start: YES];
+    return [[CBLReplication alloc] initWithDatabase: self remote: url pull: YES];
 }
 
 

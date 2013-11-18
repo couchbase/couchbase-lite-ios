@@ -60,14 +60,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @synthesize running = _running, completed=_completed, total=_total, error = _error, mode=_mode;
 
 
-- (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database {
-    return [self initWithDatabase: database remote: source pull: YES];
-}
-
-- (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target {
-    return [self initWithDatabase: database remote: target pull: NO];
-}
-
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
                              pull: (BOOL)pull
@@ -86,12 +78,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (void) dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-
-
-- (void) deleteReplication {
-    [self stop];
-    [_database.manager forgetReplication: self];
 }
 
 
@@ -254,6 +240,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
             // This runs on the server thread:
             [self bg_startReplicator: bgManager properties: properties];
         }];
+        [_database addReplication: self];
     }
 }
 
@@ -264,6 +251,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [self bg_stopReplicator];
     }];
     _started = NO;
+    [_database forgetReplication: self];
 }
 
 
@@ -282,9 +270,11 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 {
     if (!_started)
         return;
-    if (mode == kCBLReplicationStopped)
+    if (mode == kCBLReplicationStopped) {
         _started = NO;
-    
+        [_database forgetReplication: self];
+    }
+
     BOOL changed = NO;
     if (mode != _mode) {
         self.mode = mode;

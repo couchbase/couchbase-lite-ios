@@ -16,17 +16,6 @@
 
 @interface CBLManager ()
 @property (readonly) CBL_Server* backgroundServer;
-@property (readonly) NSArray* allReplications;
-- (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
-                                     remote: (NSURL*)remote
-                                       pull: (BOOL)pull
-                                     create: (BOOL)create
-                                      start: (BOOL)start            __attribute__((nonnull));
-- (NSArray*) createReplicationsBetween: (CBLDatabase*)database
-                                   and: (NSURL*)otherDbURL
-                           exclusively: (BOOL)exclusively
-                                 start: (BOOL)start                 __attribute__((nonnull(1)));
-- (void) forgetReplication: (CBLReplication*)repl;
 #if DEBUG // for unit tests only
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;
 #endif
@@ -42,6 +31,8 @@
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
+- (void) addReplication: (CBLReplication*)repl;
+- (void) forgetReplication: (CBLReplication*)repl;
 @end
 
 
@@ -135,4 +126,5 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
                              pull: (BOOL)pull                       __attribute__((nonnull));
+@property (nonatomic, readonly) NSDictionary* properties;
 @end

@@ -230,6 +230,7 @@ int main (int argc, const char * argv[]) {
     [repl removeObserver: self forKeyPath: @"total"];
     [repl removeObserver: self forKeyPath: @"error"];
     [repl removeObserver: self forKeyPath: @"mode"];
+    [repl stop];
 }
 
 
@@ -239,9 +240,8 @@ int main (int argc, const char * argv[]) {
         [self stopObservingReplication: _pull];
     if (_push)
         [self stopObservingReplication: _push];
-    NSArray* repls = [_database replicationsWithURL: otherDbURL exclusively: YES];
-    _pull = repls[0];
-    _push = repls[1];
+    _pull = [_database replicationFromURL: otherDbURL];
+    _push = [_database replicationToURL: otherDbURL];
     _pull.continuous = _push.continuous = YES;
     [self observeReplication: _pull];
     [self observeReplication: _push];

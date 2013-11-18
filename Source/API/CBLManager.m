@@ -56,7 +56,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 }
 
 
-@synthesize dispatchQueue=_dispatchQueue, allReplications=_replications, directory = _dir;
+@synthesize dispatchQueue=_dispatchQueue, directory = _dir;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -372,68 +372,6 @@ static CBLManager* sInstance;
                                                 error: outError]) &&
             [db open: outError] &&
             [db replaceUUIDs: outError];
-}
-
-
-#pragma mark - REPLICATIONs (PUBLIC API):
-
-
-- (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
-                                     remote: (NSURL*)remote
-                                       pull: (BOOL)pull
-                                     create: (BOOL)create
-                                      start: (BOOL)start
-{
-    for (CBLReplication* repl in self.allReplications) {
-        if (repl.localDatabase == db && $equal(repl.remoteURL, remote) && repl.pull == pull)
-            return repl;
-    }
-    if (!create)
-        return nil;
-    CBLReplication* repl = [[CBLReplication alloc] initWithDatabase: db
-                                                             remote: remote
-                                                               pull: pull];
-    [_replications addObject: repl];
-
-    if (start) {
-        // Give the caller a chance to customize parameters like .filter before calling -start,
-        // but make sure -start will be run even if the caller doesn't call it.
-        [db doAsync: ^{
-            [repl start];
-        }];
-    }
-    return repl;
-}
-
-
-- (NSArray*) createReplicationsBetween: (CBLDatabase*)database
-                                   and: (NSURL*)otherDbURL
-                           exclusively: (BOOL)exclusively
-                                 start: (BOOL)start
-{
-    CBLReplication* pull = nil, *push = nil;
-    if (otherDbURL) {
-        pull = [self replicationWithDatabase: database remote: otherDbURL
-                                        pull: YES create: YES start: start];
-        push = [self replicationWithDatabase: database remote: otherDbURL
-                                        pull: NO create: YES start: start];
-        if (!pull || !push)
-            return nil;
-        pull.continuous = push.continuous = YES;
-    }
-    if (exclusively) {
-        for (CBLReplication* repl in self.allReplications) {
-            if (repl.localDatabase == database && repl != pull && repl != push) {
-                [repl deleteReplication];
-            }
-        }
-    }
-    return otherDbURL ? $array(pull, push) : nil;
-}
-
-
-- (void) forgetReplication: (CBLReplication*)repl {
-    [_replications removeObject: repl];
 }
 
 

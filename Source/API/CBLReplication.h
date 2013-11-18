@@ -23,25 +23,6 @@ typedef enum {
     Replications can be one-shot or continuous. */
 @interface CBLReplication : NSObject
 
-/** Creates a new pull replication.
-    It's more common to call -[CBLDatabase pullFromURL:] instead, as that will return an existing
-    replication if possible. But if you intentionally want to create multiple replications
-    from the same source database (e.g. with different filters), use this.
-    Note: The replication won't start until you call -start. */
-- (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database
-                                                                        __attribute__((nonnull));
-
-/** Creates a new push replication.
-    It's more common to call -[CBLDatabase pushToURL:] instead, as that will return an existing
-    replication if possible. But if you intentionally want to create multiple replications
-    to the same source database (e.g. with different filters), use this.
-    Note: The replication won't start until you call -start. */
-- (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target
-                                                                        __attribute__((nonnull));
-
-/** Stops the replication and tells the database to forget about it. */
-- (void) deleteReplication;
-
 /** The local database being replicated to/from. */
 @property (nonatomic, readonly) CBLDatabase* localDatabase;
 
@@ -50,9 +31,6 @@ typedef enum {
 
 /** Does the replication pull from (as opposed to push to) the target? */
 @property (nonatomic, readonly) bool pull;
-
-/** The full set of properties defining the replication, as a JSON-compatible dictionary. */
-@property (nonatomic, readonly) NSDictionary* properties;
 
 
 #pragma mark - OPTIONS:
