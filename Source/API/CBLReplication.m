@@ -3,8 +3,15 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/22/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CBLReplication.h"
 #import "CouchbaseLitePrivate.h"
@@ -21,7 +28,7 @@
 #import "MYURLUtils.h"
 
 
-#undef RUN_IN_BACKGROUND
+#define RUN_IN_BACKGROUND 1
 
 
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
@@ -82,9 +89,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         self.autosaves = NO;
         self.source = pull ? remote.absoluteString : database.name;
         self.target = pull ? database.name : remote.absoluteString;
-        // Give the caller a chance to customize parameters like .filter before calling -start,
-        // but make sure -start will be run even if the caller doesn't call it.
-        [self performSelector: @selector(start) withObject: nil afterDelay: 0.0];
     }
     return self;
 }
@@ -116,11 +120,13 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+    if (!self.persistent)
+        [self setNeedsSave: false];     // I'm ephemeral, so avoid warning about unsaved changes
 }
 
 
 // These are the JSON properties in the replication document:
-@dynamic source, target, create_target, continuous, filter, query_params, doc_ids;
+@dynamic source, target, create_target, continuous, filter, query_params, doc_ids, network;
 
 @synthesize remoteURL=_remoteURL, pull=_pull;
 
@@ -358,7 +364,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block {
 #if RUN_IN_BACKGROUND
-    [self.database.manager.tdServer tellDatabaseManager: block];
+    [self.database.manager.backgroundServer tellDatabaseManager: block];
 #else
     block(self.database.manager);
 #endif
@@ -389,9 +395,10 @@ static inline BOOL isLocalDBName(NSString* url) {
         _started = YES;
         _mainThread = [NSThread currentThread];
 
+        NSDictionary* properties= self.currentProperties;
         [self tellDatabaseManager:^(CBLManager* dbmgr) {
             // This runs on the server thread:
-            [self bg_startReplicator: dbmgr properties: self.currentProperties];
+            [self bg_startReplicator: dbmgr properties: properties];
         }];
     }
 }

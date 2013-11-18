@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/19/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -228,7 +228,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     Assert(sequence > 0);
     Assert(filename);
     NSString* filePath = nil;
-    FMResultSet* r = [_fmdb executeQuery:
+    CBL_FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
                       @(sequence), filename];
     if (!r) {
@@ -291,12 +291,17 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
+- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence {
+    return [_fmdb boolForQuery: @"SELECT 1 FROM attachments WHERE sequence=? LIMIT 1", @(sequence)];
+}
+
+
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
                                        options: (CBLContentOptions)options
 {
     Assert(sequence > 0);
-    FMResultSet* r = [_fmdb executeQuery:
+    CBL_FMResultSet* r = [_fmdb executeQuery:
                       @"SELECT filename, key, type, encoding, length, encoded_length, revpos "
                        "FROM attachments WHERE sequence=?",
                       @(sequence)];
@@ -489,13 +494,13 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
-/** Given a revision, read its _attachments dictionary (if any), convert each attachment to a
-    CBL_Attachment object, and return a dictionary mapping names->CBL_Attachments. */
+/** Given a revision, read its _attachments dictionary (if any), convert each non-stub
+    attachment to a CBL_Attachment object, and return a dictionary names->CBL_Attachments. */
 - (NSDictionary*) attachmentsFromRevision: (CBL_Revision*)rev
                                    status: (CBLStatus*)outStatus
 {
     // If there are no attachments in the new rev, there's nothing to do:
-    NSDictionary* revAttachments = rev[@"_attachments"];
+    NSDictionary* revAttachments = $castIf(NSDictionary, rev[@"_attachments"]);
     if (revAttachments.count == 0 || rev.deleted) {
         *outStatus = kCBLStatusOK;
         return @{};
@@ -707,10 +712,11 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     // First delete attachment rows for already-cleared revisions:
     // OPT: Could start after last sequence# we GC'd up to
     [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
-                            "(SELECT sequence from revs WHERE json IS null)"];
+                            "(SELECT sequence from revs WHERE current=0 AND json IS null)"];
     
     // Now collect all remaining attachment IDs and tell the store to delete all but these:
-    FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
+    // OPT: Unindexed scan of attachments table!
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
     if (!r)
         return self.lastDbError;
     NSMutableSet* allKeys = [NSMutableSet set];

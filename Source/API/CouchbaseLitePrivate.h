@@ -3,26 +3,30 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/19/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import "CouchbaseLite.h"
 #import "CBLCache.h"
 #import "CBLDatabase.h"
 #import "CBL_Revision.h"
-@class CBL_DatabaseChange, CBL_Revision, CBLManager, CBL_Server;
+#import "CBLGeometry.h"
+@class CBLDatabaseChange, CBL_Revision, CBLManager, CBL_Server;
 
 
 @interface CBLManager ()
 @property (readonly) CBL_Server* backgroundServer;
 @property (readonly) NSArray* allReplications;
 - (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
-                                       remote: (NSURL*)remote
-                                         pull: (BOOL)pull
-                                       create: (BOOL)create         __attribute__((nonnull));
+                                     remote: (NSURL*)remote
+                                       pull: (BOOL)pull
+                                     create: (BOOL)create
+                                      start: (BOOL)start            __attribute__((nonnull));
 - (NSArray*) createReplicationsBetween: (CBLDatabase*)database
                                    and: (NSURL*)otherDbURL
-                           exclusively: (bool)exclusively           __attribute__((nonnull(1)));
+                           exclusively: (BOOL)exclusively
+                                 start: (BOOL)start                 __attribute__((nonnull(1)));
+- (void) deletePersistentReplicationsFor: (CBLDatabase*)db;
 #if DEBUG // for unit tests only
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;
 #endif
@@ -37,6 +41,7 @@
                      readOnly: (BOOL)readOnly;
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
+- (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
 @end
 
 
@@ -44,11 +49,12 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)docID                 __attribute__((nonnull));
 - (CBLRevision*) revisionFromRev: (CBL_Revision*)rev;
-- (void) revisionAdded: (CBL_DatabaseChange*)change                 __attribute__((nonnull));
+- (void) revisionAdded: (CBLDatabaseChange*)change                 __attribute__((nonnull));
 - (void) loadCurrentRevisionFrom: (CBLQueryRow*)row                 __attribute__((nonnull));
 - (CBLRevision*) putProperties: (NSDictionary*)properties
-                       prevRevID: (NSString*)prevID
-                           error: (NSError**)outError;
+                     prevRevID: (NSString*)prevID
+                 allowConflict: (BOOL)allowConflict
+                         error: (NSError**)outError;
 @end
 
 
@@ -84,6 +90,12 @@
 
 
 @interface CBLQuery ()
+{
+    NSString* _fullTextQuery;
+    BOOL _fullTextSnippets, _fullTextRanking;
+    CBLGeoRect _boundingBox;
+    BOOL _isGeoQuery;
+}
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view                  __attribute__((nonnull(1)));
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -98,6 +110,24 @@
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
+@end
+
+@interface CBLFullTextQueryRow ()
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                    fullTextID: (UInt64)fullTextID
+                  matchOffsets: (NSString*)matchOffsets
+                         value: (id)value;
+@property (nonatomic) NSString* snippet;
+@end
+
+@interface CBLGeoQueryRow ()
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                   boundingBox: (CBLGeoRect)bbox
+                   geoJSONData: (NSData*)geoJSONData
+                         value: (NSData*)valueData
+                 docProperties: (NSDictionary*)docProperties;
 @end
 
 

@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/17/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -15,7 +15,7 @@
 @interface CBLRevisionBase : NSObject
 
 /** The document this is a revision of. */
-@property (readonly) CBLDocument* document;
+@property (readonly, weak) CBLDocument* document;
 
 /** The database this revision's document belongs to. */
 @property (readonly) CBLDatabase* database;
@@ -23,6 +23,10 @@
 /** Does this revision mark the deletion of its document?
     (In other words, does it have a "_deleted" property?) */
 @property (readonly) BOOL isDeleted;
+
+/** Does this revision mark the deletion or removal (from available channels) of its document ?
+    (In other words, does it have a "_deleted_ or "_removed" property?) */
+@property (readonly) BOOL isGone;
 
 /** The ID of this revision. Will be nil if this is an unsaved CBLNewRevision. */
 @property (readonly) NSString* revisionID;
@@ -60,6 +64,10 @@
 
 /** An existing revision of a CBLDocument. Most of its API is inherited from CBLRevisionBase. */
 @interface CBLRevision : CBLRevisionBase
+
+/** Are this revision's properties available? They may not be if the revision is an ancestor and
+    either the database has been compacted, or the revision was replicated from another db. */
+@property (readonly) BOOL propertiesAvailable;
 
 /** Has this object fetched its contents from the database yet? */
 @property (readonly) BOOL propertiesAreLoaded;
@@ -104,6 +112,12 @@
     Afterwards you should use the returned CBLRevision instead of this object.
     @return  A new CBLRevision representing the saved form of the revision. */
 - (CBLRevision*) save: (NSError**)outError;
+
+/** A special variant of -save: that always adds the revision, even if its parent is not the
+    current revision of the document.
+    This can be used to resolve conflicts, or to create them. If you're not certain that's what you
+    want to do, you should use the regular -save: method instead. */
+- (CBLRevision*) saveAllowingConflict: (NSError**)outError;
 
 /** Creates or updates an attachment.
     The attachment data will be written to the database when the revision is saved.

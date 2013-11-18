@@ -3,7 +3,7 @@
 //  CouchbaseLiteListener
 //
 //  Created by Jens Alfke on 12/29/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -32,6 +32,9 @@
 /** Bonjour metadata associated with the service. Changes will be visible almost immediately.
     The keys are NSStrings and values are NSData. Total size should be kept small (under 1kbyte if possible) as this data is multicast over UDP. */
 @property (copy) NSDictionary* TXTRecordDictionary;
+
+/** The URL at which the listener can be reached. */
+@property (readonly) NSURL* URL;
 
 
 /** If set to YES, remote requests will not be allowed to make any changes to the server or its databases. */

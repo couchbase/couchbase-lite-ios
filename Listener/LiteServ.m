@@ -3,7 +3,7 @@
 //  LiteServ
 //
 //  Created by Jens Alfke on 1/16/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -262,10 +262,10 @@ int main (int argc, const char * argv[])
             if (!doReplicate(server, replArg, pull, createTarget, continuous, user, password, realm))
                 return 1;
         } else {
-            Log(@"LiteServ %@ is listening%@ on port %d ... relax!",
+            Log(@"LiteServ %@ is listening%@ at <%@> ... relax!",
                 CBLVersionString(),
                 (listener.readOnly ? @" in read-only mode" : @""),
-                listener.port);
+                listener.URL);
         }
 
         [[NSRunLoop currentRunLoop] run];

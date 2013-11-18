@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/13/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -53,6 +53,10 @@ BOOL CBLIsOfflineError( NSError* error );
 /** Returns YES if this is a network/HTTP error that is likely to be transient.
     Examples are timeout, connection lost, 502 Bad Gateway... */
 BOOL CBLMayBeTransientError( NSError* error );
+
+/** Returns YES if this is a network/HTTP error that should be considered permanent, i.e.
+    the problem probably lies with the local setup (wrong URL or wrong credentials.) */
+BOOL CBLIsPermanentError( NSError* error );
 
 /** Returns YES if this error appears to be due to a creating a file/dir that already exists. */
 BOOL CBLIsFileExistsError( NSError* error );

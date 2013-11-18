@@ -3,7 +3,7 @@
 //  Couchbase Mobile
 //
 //  Created by Jan Lehnardt on 27/11/2010.
-//  Copyright 2011 Couchbase, Inc.
+//  Copyright 2011-2013 Couchbase, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
 // use this file except in compliance with the License. You may obtain a copy of
@@ -196,9 +196,10 @@
     NSUInteger numChecked = self.checkedDocuments.count;
     if (numChecked == 0)
         return;
-    NSString* message = [NSString stringWithFormat: @"Are you sure you want to remove the %u"
+    NSString* message = [NSString stringWithFormat: @"Are you sure you want to remove the %lu"
                                                      " checked-off item%@?",
-                                                     numChecked, (numChecked==1 ? @"" : @"s")];
+                                                     (unsigned long)numChecked,
+                                                     (numChecked==1 ? @"" : @"s")];
     UIAlertView* alert = [[UIAlertView alloc] initWithTitle: @"Remove Completed Items?"
                                                     message: message
                                                    delegate: self
@@ -274,7 +275,7 @@
     
     [self forgetSync];
     
-    NSArray* repls = [self.database replicateWithURL: newRemoteURL exclusively: YES];
+    NSArray* repls = [self.database replicationsWithURL: newRemoteURL exclusively: YES];
     if (repls) {
         _pull = [repls objectAtIndex: 0];
         _push = [repls objectAtIndex: 1];
@@ -285,6 +286,8 @@
                      name: kCBLReplicationChangeNotification object: _pull];
         [nctr addObserver: self selector: @selector(replicationProgress:)
                      name: kCBLReplicationChangeNotification object: _push];
+        [_pull start];
+        [_push start];
     }
 }
 

@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/19/10.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,12 @@
 
 
 @implementation CBL_Body
+{
+    @private
+    NSData* _json;
+    NSDictionary* _object;
+    BOOL _error;
+}
 
 - (instancetype) initWithProperties: (NSDictionary*)properties {
     NSParameterAssert(properties);
@@ -119,6 +125,14 @@
 
 - (id) objectForKeyedSubscript: (NSString*)key {
     return (self.properties)[key];
+}
+
+- (BOOL) compact {
+    (void)[self asJSON];
+    if (_error)
+        return NO;
+    _object = nil;
+    return YES;
 }
 
 @end

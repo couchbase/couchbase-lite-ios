@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/15/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -34,7 +34,7 @@
 @implementation CBLRemoteRequest
 
 
-@synthesize delegate=_delegate;
+@synthesize delegate=_delegate, responseHeaders=_responseHeaders;
 
 
 + (NSString*) userAgentHeader {
@@ -103,6 +103,7 @@
 - (void) start {
     if (!_request)
         return;     // -clearConnection already called
+    _responseHeaders = nil;
     LogTo(RemoteRequest, @"%@: Starting...", self);
     Assert(!_connection);
     _connection = [NSURLConnection connectionWithRequest: _request delegate: self];
@@ -186,7 +187,7 @@
 - (bool) retryWithCredential {
     if (_authorizer || _challenged)
         return false;
-    _challenged = YES;
+    _challenged = true;
     NSURLCredential* cred = [_request.URL my_credentialForRealm: nil
                                            authenticationMethod: NSURLAuthenticationMethodHTTPBasic];
     if (!cred) {
@@ -286,6 +287,7 @@ static void WarnUntrustedCert(NSString* host, SecTrustRef trust) {
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     _status = (int) ((NSHTTPURLResponse*)response).statusCode;
+    _responseHeaders = ((NSHTTPURLResponse*)response).allHeaderFields;
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, _status);
     if (_status == 401) {
         // CouchDB says we're unauthorized but it didn't present a 'WWW-Authenticate' header

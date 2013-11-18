@@ -14,19 +14,44 @@
 //  and limitations under the License.
 
 #import "CBL_Shared.h"
+#import "CBL_Server.h"
 
 
 @implementation CBL_Shared
 {
     NSMutableDictionary* _databases;
+    NSCountedSet* _openDatabaseNames;
+    CBL_Server* _backgroundServer;
 }
+
+@synthesize backgroundServer=_backgroundServer;
 
 - (id)init {
     self = [super init];
     if (self) {
-        _databases = [NSMutableDictionary dictionary];
+        _databases = [[NSMutableDictionary alloc] init];
+        _openDatabaseNames = [[NSCountedSet alloc] init];
     }
     return self;
+}
+
+- (void) dealloc
+{
+    [_backgroundServer close];
+}
+
+- (void) openedDatabase: (NSString*)dbName {
+    @synchronized(self) {
+        [_openDatabaseNames addObject: dbName];
+    }
+}
+
+- (void) closedDatabase: (NSString*)dbName {
+    @synchronized(self) {
+        if ([_openDatabaseNames countForObject: dbName] == 1)
+            [_databases removeObjectForKey: dbName];
+        [_openDatabaseNames removeObject: dbName];
+    }
 }
 
 - (void) setValue: (id)value
@@ -57,7 +82,9 @@
 - (bool) hasValuesOfType: (NSString*)type
          inDatabaseNamed: (NSString*)dbName
 {
-    return [_databases[dbName][type] count] > 0;
+    @synchronized(self) {
+        return [_databases[dbName][type] count] > 0;
+    }
 }
 
 - (NSDictionary*) valuesOfType: (NSString*)type
@@ -68,9 +95,15 @@
     }
 }
 
-- (void) forgetDatabaseNamed: (NSString*)name {
-    @synchronized(self) {
-        [_databases removeObjectForKey: name];
+- (void) forgetDatabaseNamed: (NSString*)dbName {
+    while(true) {
+        NSUInteger count;
+        @synchronized(self) {
+            count = [_openDatabaseNames countForObject: dbName];
+        }
+        if (count == 0)
+            break;
+        usleep(5*1000);
     }
 }
 

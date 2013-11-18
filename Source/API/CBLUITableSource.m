@@ -3,8 +3,15 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/2/11.
-//  Copyright 2011 Couchbase, Inc. All rights reserved.
+//  Copyright 2011-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CBLUITableSource.h"
 #import "CouchbaseLite.h"
@@ -275,7 +282,6 @@
                                              inView:(UIView *)view
 {
     CBLQueryRow* row = [self rowAtIndexPath: idx];
-    Log(@"ModelIdentifier = %@", row.key);//TEMP
     return row.key;
 }
 
@@ -283,12 +289,10 @@
 - (NSIndexPath *) indexPathForElementWithModelIdentifier:(NSString *)identifier
                                                   inView:(UIView *)view
 {
-    Log(@"Restoring modelIdentifier %@", identifier);//TEMP
     if (identifier) {
         NSUInteger i = 0;
         for (CBLQueryRow* row in _rows) {
             if ($equal(row.key, identifier)) {
-                Log(@"\t...restored to index %u", i);//TEMP
                 return [NSIndexPath indexPathForItem: i inSection: 0];
             }
             ++i;

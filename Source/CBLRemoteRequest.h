@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/15/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -30,6 +30,7 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
     CBLRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
     int _status;
+    NSDictionary* _responseHeaders;
     UInt8 _retryCount;
     bool _dontLog404;
     bool _challenged;
@@ -54,6 +55,8 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
 
 /** Stops the request, calling the onCompletion block. */
 - (void) stop;
+
+@property (readonly) NSDictionary* responseHeaders;
 
 /** JSON-compatible dictionary with status information, to be returned from _active_tasks API */
 @property (readonly) NSMutableDictionary* statusInfo;

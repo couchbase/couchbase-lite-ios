@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/17/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -58,12 +58,24 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 #pragma mark - HOUSEKEEPING:
 
-/** Compacts the database file by purging non-current revisions, deleting unused attachment files,
-    and running a SQLite "VACUUM" command. */
+/** Compacts the database file by purging non-current JSON bodies, pruning revisions older than
+    the maxRevTreeDepth, deleting unused attachment files, and vacuuming the SQLite database. */
 - (BOOL) compact: (NSError**)outError;
+
+/** The maximum depth of a document's revision tree (or, max length of its revision history.)
+    Revisions older than this limit will be deleted during a -compact: operation. 
+    Smaller values save space, at the expense of making document conflicts somewhat more likely. */
+@property NSUInteger maxRevTreeDepth;
 
 /** Deletes the database. */
 - (BOOL) deleteDatabase: (NSError**)outError;
+
+/** Changes the database's unique IDs to new random values.
+    Ordinarily you should never need to call this method; it's only made public to fix databases
+    that are already affected by bug github.com/couchbase/couchbase-lite-ios/issues/145 .
+    Make sure you only call this once, to fix that problem, because every call has the side effect
+    of resetting all replications, making them run slow the next time. */
+- (BOOL) replaceUUIDs: (NSError**)outError;
 
 
 #pragma mark - DOCUMENT ACCESS:
@@ -77,8 +89,8 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
 - (CBLDocument*)objectForKeyedSubscript: (NSString*)key                 __attribute__((nonnull));
 
-/** Creates a CBLDocument object with no current ID.
-    The first time you PUT to that document, it will be created on the server (via a POST). */
+/** Creates a new CBLDocument object with no properties and a new (random) UUID.
+    The document will be saved to the database when you call -putProperties: on it. */
 - (CBLDocument*) untitledDocument;
 
 /** Returns the already-instantiated cached CBLDocument with the given ID, or nil if none is yet cached. */
@@ -105,7 +117,6 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Deletes the local document with the given ID. */
 - (BOOL) deleteLocalDocumentWithID: (NSString*)localDocID
                              error: (NSError**)outError             __attribute__((nonnull(1)));
-
 
 
 #pragma mark - VIEWS AND OTHER CALLBACKS:
@@ -153,10 +164,23 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 + (id<CBLFilterCompiler>) filterCompiler;
 
 
-/** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
-    Use this when performing bulk write operations like multiple inserts/updates; it saves the overhead of multiple SQLite commits, greatly improving performance. */
-- (BOOL) inTransaction: (BOOL(^)(void))bloc                         __attribute__((nonnull(1)));
+#pragma mark - TRANSACTIONS / THREADING:
 
+/** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
+    Use this when performing bulk write operations like multiple inserts/updates; it saves the 
+    overhead of multiple SQLite commits, greatly improving performance. */
+- (BOOL) inTransaction: (BOOL(^)(void))block                        __attribute__((nonnull(1)));
+
+/** Runs the block asynchronously on the database's dispatch queue or thread.
+    Unlike the rest of the API, this can be called from any thread, and provides a limited form
+    of multithreaded access to Couchbase Lite. */
+- (void) doAsync: (void (^)())block                                 __attribute__((nonnull(1)));
+
+/** Runs the block _synchronously_ on the database's dispatch queue or thread: this method does
+    not return until after the block has completed.
+    Unlike the rest of the API, this can _only_ be called from other threads/queues:  If you call it
+    from the same thread or dispatch queue that the database runs on, **it will deadlock!** */
+- (void) doSync: (void (^)())block                                 __attribute__((nonnull(1)));
 
 #pragma mark - REPLICATION:
 
@@ -166,19 +190,28 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Creates a replication that will 'push' to a database at the given URL, or returns an existing
     such replication if there already is one.
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (CBLReplication*) pushToURL: (NSURL*)url                              __attribute__((nonnull));
+- (CBLReplication*) replicationToURL: (NSURL*)url;
 
 /** Creates a replication that will 'pull' from a database at the given URL, or returns an existing
     such replication if there already is one.
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (CBLReplication*) pullFromURL: (NSURL*)url                            __attribute__((nonnull));
+- (CBLReplication*) replicationFromURL: (NSURL*)url;
 
 /** Creates a pair of replications to both pull and push to database at the given URL, or returns existing replications if there are any.
     @param otherDbURL  The URL of the remote database, or nil for none.
     @param exclusively  If YES, any previously existing replications to or from otherDbURL will be deleted.
     @return  An array whose first element is the "pull" replication and second is the "push".
     It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
+- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
+
+
+// deprecated methods; same as the above but call -start automatically
+- (CBLReplication*) pushToURL: (NSURL*)url
+        __attribute__((deprecated("use replicationToURL, then call -start")));
+- (CBLReplication*) pullFromURL: (NSURL*)url
+        __attribute__((deprecated("use replicationFromURL, then call -start")));
+- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
+        __attribute__((deprecated("use replicationsWithURL:, then call -start")));
 
 
 @end
@@ -187,10 +220,8 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 
 /** This notification is posted by a CBLDatabase in response to document changes.
-    Only one notification is posted per runloop cycle, no matter how many documents changed.
-    If a change was not made by a CBLDocument belonging to this CBLDatabase (i.e. it came
-    from another process or from a "pull" replication), the notification's userInfo dictionary will
-    contain an "external" key with a value of YES. */
+    The notification's userInfo dictionary's "changes" key contains an NSArray of
+    CBLDatabaseChange objects that describe the revisions that were added. */
 extern NSString* const kCBLDatabaseChangeNotification;
 
 

@@ -3,13 +3,21 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/4/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
+#import "CBLInternal.h"
 
 
 NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
@@ -97,6 +105,11 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 
+- (BOOL) isGone {
+    return self.currentRevision.isGone;
+}
+
+
 #pragma mark - REVISIONS:
 
 
@@ -143,14 +156,17 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 // Notification from the CBLDatabase that a (current, winning) revision has been added
-- (void) revisionAdded: (CBL_DatabaseChange*)change {
+- (void) revisionAdded: (CBLDatabaseChange*)change {
     CBL_Revision* rev = change.winningRevision;
+    if (!rev)
+        return; // current revision didn't change
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
         _currentRevision = [[CBLRevision alloc] initWithDocument: self revision: rev];
     }
 
-    if ([_modelObject respondsToSelector: @selector(tdDocumentChanged:)])
-        [_modelObject tdDocumentChanged: self];
+    id model = _modelObject;
+    if ([model respondsToSelector: @selector(tdDocumentChanged:)])
+        [model tdDocumentChanged: self];
     
     NSNotification* n = [NSNotification notificationWithName: kCBLDocumentChangeNotification
                                                       object: self
@@ -219,6 +235,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties
                      prevRevID: (NSString*)prevID
+                 allowConflict: (BOOL)allowConflict
                          error: (NSError**)outError
 {
     id idProp = [properties objectForKey: @"_id"];
@@ -245,7 +262,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         rev.properties = properties;
     CBLStatus status = 0;
     CBL_Revision* newRev = [_database putRevision: rev prevRevisionID: prevID
-                                    allowConflict: NO status: &status];
+                                    allowConflict: allowConflict status: &status];
     if (!newRev) {
         if (outError) *outError = CBLStatusToNSError(status, nil);
         return nil;
@@ -255,7 +272,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
     NSString* prevID = properties[@"_rev"];
-    return [self putProperties: properties prevRevID: prevID error: outError];
+    return [self putProperties: properties prevRevID: prevID allowConflict: NO error: outError];
 }
 
 - (CBLRevision*) update: (BOOL(^)(CBLNewRevision*))block error: (NSError**)outError {

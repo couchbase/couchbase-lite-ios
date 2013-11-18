@@ -3,6 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/4/13.
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +15,7 @@
 
 #import "CBLJSViewCompiler.h"
 #import "CBLJSFunction.h"
-#import <CouchbaseLite/CBLRevision.h>
+#import "CBLRevision.h"
 #import <JavaScriptCore/JavaScript.h>
 #import <JavaScriptCore/JSStringRefCF.h>
 

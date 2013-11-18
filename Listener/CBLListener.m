@@ -3,7 +3,7 @@
 //  CouchbaseLiteListener
 //
 //  Created by Jens Alfke on 12/29/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,16 @@
 
 #import "HTTPServer.h"
 #import "HTTPLogging.h"
+
+#import <sys/types.h>
+#import <sys/socket.h>
+#import <net/if.h>
+#import <netinet/in.h>
+#import <ifaddrs.h>
+#import <arpa/inet.h>
+
+
+static NSArray* GetIPv4Addresses(void);
 
 
 @interface CBLDDLogger : DDAbstractLogger
@@ -101,6 +111,17 @@
 }
 
 
+- (NSURL*) URL {
+    UInt16 port = self.port;
+    NSArray* addresses = GetIPv4Addresses();
+    if (port == 0 || addresses.count == 0)
+        return nil;
+    NSString* urlStr = [NSString stringWithFormat: @"http%@://%@:%d/",
+                        (_SSLIdentity ? @"s" : @""), addresses[0], port];
+    return [NSURL URLWithString: urlStr];
+}
+
+
 - (void) setPasswords: (NSDictionary*)passwords {
     _passwords = [passwords copy];
     _requiresAuth = (_passwords != nil);
@@ -128,14 +149,6 @@
 
 
 
-@implementation CBLHTTPServer
-
-@synthesize listener=_listener, tdServer=_tdServer;
-
-@end
-
-
-
 // Adapter to output DDLog messages (from CocoaHTTPServer) via MYUtilities logging.
 @implementation CBLDDLogger
 
@@ -144,3 +157,37 @@
 }
 
 @end
+
+
+
+static NSArray* GetIPv4Addresses(void) {
+    // getifaddrs returns a linked list of interface entries;
+    // find each active non-loopback interface whose name begins with "en" (an ugly hack
+    // to identify WiFi or Ethernet as opposed to a cellular connection.)
+    // IPv6 addresses are added, but at the end of the array to make them easier to skip
+    // since for most purposes IPv4 addresses are still preferred.
+    NSMutableArray* addresses = [NSMutableArray array];
+    NSUInteger ipv4count = 0;
+    struct ifaddrs *interfaces;
+    if( getifaddrs(&interfaces) == 0 ) {
+        struct ifaddrs *interface;
+        for( interface=interfaces; interface; interface=interface->ifa_next ) {
+            if( (interface->ifa_flags & IFF_UP) && ! (interface->ifa_flags & IFF_LOOPBACK)
+               && (strncmp(interface->ifa_name, "en", 2) == 0)) {
+                const struct sockaddr_in *addr = (const struct sockaddr_in*) interface->ifa_addr;
+                if( addr && (addr->sin_family==AF_INET || addr->sin_family==AF_INET6)) {
+                    char addrBuf[64];
+                    if (inet_ntop(addr->sin_family, &addr->sin_addr, addrBuf, sizeof(addrBuf))) {
+                        NSString* addrStr = @(addrBuf);
+                        if (addr->sin_family==AF_INET)
+                            [addresses insertObject: addrStr atIndex: ipv4count++];
+                        else
+                            [addresses addObject: addrStr];     // put ipv6 addrs at the end
+                    }
+                }
+            }
+        }
+        freeifaddrs(interfaces);
+    }
+    return addresses;
+}

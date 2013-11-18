@@ -3,20 +3,30 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/17/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+LocalDocs.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
+#import "CBLModel_Internal.h"
 #import "CBLModelFactory.h"
 #import "CBLCache.h"
 #import "CBLManager+Internal.h"
 #import "CBLMisc.h"
+#import "MYBlockUtils.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIApplication.h>
@@ -27,7 +37,11 @@
 // The lower-level stuff is in CBLDatabase.m, etc.
 
 
+// Size of document cache: max # of otherwise-unreferenced docs that will be kept in memory.
 #define kDocRetainLimit 50
+
+// Default value for maxRevTreeDepth, the max rev depth to preserve in a prune operation
+#define kDefaultMaxRevs 20
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChange";
 
@@ -44,7 +58,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 @synthesize manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
-@synthesize path=_path, name=_name, isOpen=_isOpen, thread=_thread;
+@synthesize path=_path, name=_name, isOpen=_isOpen;
 
 
 - (instancetype) initWithPath: (NSString*)path
@@ -82,27 +96,25 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-- (void) postPublicChangeNotification: (CBL_DatabaseChange*)change {
-    CBL_Revision* winningRev = change.winningRevision;
-    NSURL* source = change.source;
+- (void) postPublicChangeNotification: (NSArray*)changes {
+    BOOL external = NO;
+    for (CBLDatabaseChange* change in changes) {
+        // Notify the corresponding instantiated CBLDocument object (if any):
+        [[self cachedDocumentWithID: change.documentID] revisionAdded: change];
+        if (change.source != nil)
+            external = YES;
+    }
 
-    // Notify the corresponding instantiated CBLDocument object (if any):
-    [[self cachedDocumentWithID: winningRev.docID] revisionAdded: change];
-
-    // Post a database-changed notification, but only post one per runloop cycle by using
-    // a notification queue. If the current notification has the "external" flag, make sure
-    // it gets posted by clearing any pending instance of the notification that doesn't have
-    // the flag.
-    NSDictionary* userInfo = source ? $dict({@"external", $true}) : nil;
+    // Post the public kCBLDatabaseChangeNotification:
+    NSDictionary* userInfo = @{@"changes": changes,
+                               @"external": @(external)};
     NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
                                                       object: self
                                                     userInfo: userInfo];
     NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-    if (source != nil)
-        [queue dequeueNotificationsMatching: n coalesceMask: NSNotificationCoalescingOnSender];
     [queue enqueueNotification: n
                   postingStyle: NSPostASAP 
-                  coalesceMask: NSNotificationCoalescingOnSender
+                  coalesceMask: NSNotificationNoCoalescing
                       forModes: @[NSRunLoopCommonModes]];
 }
 
@@ -119,6 +131,33 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
+- (void) doAsync: (void (^)())block {
+    if (_dispatchQueue)
+        dispatch_async(_dispatchQueue, block);
+    else
+        MYOnThread(_thread, block);
+}
+
+
+- (void) doSync: (void (^)())block {
+    if (_dispatchQueue)
+        dispatch_sync(_dispatchQueue, block);
+    else
+        MYOnThreadSynchronously(_thread, block);
+}
+
+
+- (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block {
+    if (_dispatchQueue) {
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC));
+        dispatch_after(popTime, _dispatchQueue, block);
+    } else {
+        //FIX: This schedules on the _current_ thread, not _thread!
+        MYAfterDelay(delay, block);
+    }
+}
+
+
 - (BOOL) inTransaction: (BOOL(^)(void))block {
     return 200 == [self _inTransaction: ^CBLStatus {
         return block() ? 200 : 999;
@@ -131,14 +170,36 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
+- (BOOL) close {
+    (void)[self saveAllModels: NULL];  // ?? Or should I return NO if this fails?
+
+    if (![self closeInternal])
+        return NO;
+
+    [self clearDocumentCache];
+    _modelFactory = nil;
+    return YES;
+}
+
+
+- (BOOL) closeForDeletion {
+    // There is no need to save any changes!
+    for (CBLModel* model in _unsavedModelsMutable)
+        model.needsSave = false;
+    _unsavedModelsMutable = nil;
+    [self close];
+    [_manager _forgetDatabase: self];
+    return YES;
+}
+
+
 - (BOOL) deleteDatabase: (NSError**)outError {
     LogTo(CBLDatabase, @"Deleting %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
-    if (_isOpen) {
-        if (![self close])
-            return NO;
-    }
+    if (_isOpen && ![self closeForDeletion])
+        return NO;
+    [_manager deletePersistentReplicationsFor: self];
     [_manager _forgetDatabase: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     if (!self.exists) {
@@ -149,13 +210,39 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (BOOL) compact: (NSError**)outError {
-    CBLStatus status = [self compact];
+    NSUInteger pruned;
+    CBLStatus status = [self pruneRevsToMaxDepth: 0 numberPruned: &pruned];
+    if (status == kCBLStatusOK)
+        status = [self compact];
+    
     if (CBLStatusIsError(status)) {
         if (outError)
             *outError = CBLStatusToNSError(status, nil);
         return NO;
     }
     return YES;
+}
+
+- (NSUInteger) maxRevTreeDepth {
+    return [[self infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+}
+
+- (void) setMaxRevTreeDepth: (NSUInteger)maxRevs {
+    [self setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];
+    // This property is looked up by pruneRevsToMaxDepth:
+}
+
+
+- (BOOL) replaceUUIDs: (NSError**)outError {
+    CBLStatus status = [self setInfo: CBLCreateUUID() forKey: @"publicUUID"];
+    if (status == kCBLStatusOK)
+        status = [self setInfo: CBLCreateUUID() forKey: @"privateUUID"];
+    if (status == kCBLStatusOK)
+        return YES;
+
+    if (outError)
+        *outError = CBLStatusToNSError(status, nil);
+    return NO;
 }
 
 
@@ -205,7 +292,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-// Appease the compiler; these are actually implemented in CBLDatabase.m
+// Appease the compiler; these are actually implemented in CBLDatabase+Internal.m
 @dynamic documentCount, lastSequenceNumber;
 
 
@@ -333,16 +420,34 @@ static NSString* makeLocalDocID(NSString* docID) {
 }
 
 
+- (CBLReplication*) replicationToURL: (NSURL*)url {
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: NO create: YES start: NO];
+}
+
+- (CBLReplication*) replicationFromURL: (NSURL*)url {
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: YES create: YES start: NO];
+}
+
+- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
+    return [_manager createReplicationsBetween: self and: otherDbURL
+                                   exclusively: exclusively start: NO];
+}
+
+
+// Older, deprecated methods:
 - (CBLReplication*) pushToURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url pull: NO create: YES];
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: NO create: YES start: YES];
 }
-
 - (CBLReplication*) pullFromURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url pull: YES create: YES];
+    return [_manager replicationWithDatabase: self remote: url
+                                        pull: YES create: YES start: YES];
 }
-
 - (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
-    return [_manager createReplicationsBetween: self and: otherDbURL exclusively: exclusively];
+    return [_manager createReplicationsBetween: self and: otherDbURL
+                                   exclusively: exclusively start: YES];
 }
 
 

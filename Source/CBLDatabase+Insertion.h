@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/18/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLDatabase+Internal.h"
@@ -38,10 +38,19 @@
 /** Compacts the database storage by removing the bodies and attachments of obsolete revisions. */
 - (CBLStatus) compact;
 
+/** Removes old revisions such that no leaf revision has a tree deeper than maxDepth. */
+- (CBLStatus) pruneRevsToMaxDepth: (NSUInteger)maxDepth
+                     numberPruned: (NSUInteger*)outPruned;
+
 /** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
     @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
     @param outResult  On success will point to an NSDictionary with the same form as docsToRev, containing the doc/revision IDs that were actually removed. */
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
                      result: (NSDictionary**)outResult;
+
+#if DEBUG
+// Grotesque hack, for some attachment unit-tests only!
+- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence;
+#endif
 
 @end

@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/18/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLDatabase+Internal.h"
@@ -33,6 +33,9 @@ typedef enum {
 - (CBLStatus) processAttachments: (NSDictionary*)attachments
                     forRevision: (CBL_Revision*)rev
              withParentSequence: (SequenceNumber)parentSequence;
+
+/** Returns whether the revision with this sequence has any attachments. */
+- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence;
 
 /** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
 - (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence

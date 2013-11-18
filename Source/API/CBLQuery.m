@@ -3,10 +3,18 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/18/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CouchbaseLitePrivate.h"
+#import "CBLQuery+FullTextSearch.h"
 #import "CBLView+Internal.h"
 #import "CBLDatabase.h"
 #import "CBL_Server.h"
@@ -33,8 +41,9 @@
 
 
 @interface CBLQueryRow ()
-@property (nonatomic) CBLDatabase* database;
+@property (readwrite, nonatomic) CBLDatabase* database;
 @end
+
 
 
 @implementation CBLQuery
@@ -47,7 +56,8 @@
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
     CBLStaleness _stale;
-    BOOL _descending, _prefetch, _mapOnly, _includeDeleted;
+    BOOL _descending, _prefetch, _mapOnly;
+    CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
     NSUInteger _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
@@ -63,6 +73,7 @@
         _database = database;
         _view = view;
         _limit = kDefaultCBLQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
+        _fullTextRanking = kDefaultCBLQueryOptions.fullTextRanking; // defaults to YES
         _mapOnly = (view.reduceBlock == nil);
     }
     return self;
@@ -89,11 +100,19 @@
         _descending = query.descending;
         _prefetch = query.prefetch;
         self.keys = query.keys;
+        if (query->_isGeoQuery) {
+            _isGeoQuery = YES;
+            _boundingBox = query->_boundingBox;
+        }
         _groupLevel = query.groupLevel;
         _mapOnly = query.mapOnly;
         self.startKeyDocID = query.startKeyDocID;
         self.endKeyDocID = query.endKeyDocID;
         _stale = query.stale;
+        _fullTextQuery = query.fullTextQuery;
+        _fullTextRanking = query.fullTextRanking;
+        _fullTextSnippets = query.fullTextSnippets;
+        _allDocsMode = query.allDocsMode;
         
     }
     return self;
@@ -110,7 +129,16 @@
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, stale=_stale, mapOnly=_mapOnly,
-            database=_database, includeDeleted=_includeDeleted;
+            database=_database, allDocsMode=_allDocsMode;
+
+
+- (BOOL) includeDeleted {
+    return _allDocsMode == kCBLIncludeDeleted;
+}
+
+- (void) setIncludeDeleted:(BOOL)includeDeleted {
+    _allDocsMode = includeDeleted ? kCBLIncludeDeleted : kCBLAllDocs;
+}
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -122,6 +150,10 @@
         .startKey = _startKey,
         .endKey = _endKey,
         .keys = _keys,
+        .fullTextQuery = _fullTextQuery,
+        .fullTextSnippets = _fullTextSnippets,
+        .fullTextRanking = _fullTextRanking,
+        .bbox = (_isGeoQuery ? &_boundingBox : NULL),
         .skip = (unsigned)_skip,
         .limit = (unsigned)_limit,
         .reduce = !_mapOnly,
@@ -131,7 +163,7 @@
         .includeDocs = _prefetch,
         .updateSeq = YES,
         .inclusiveEnd = YES,
-        .includeDeletedDocs = _includeDeleted,
+        .allDocsMode = _allDocsMode,
         .stale = _stale
     };
 }
@@ -154,7 +186,7 @@
     NSString* viewName = _view.name;
     CBLQueryOptions options = self.queryOptions;
     
-    [_database.manager asyncTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
+    [_database.manager backgroundTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
         // On the background server thread, run the query:
         CBLStatus status;
         SequenceNumber lastSequence;
@@ -257,7 +289,9 @@
 - (void) databaseChanged {
     if (!_willUpdate) {
         _willUpdate = YES;
-        [self performSelector: @selector(update) withObject: nil afterDelay: 0.0];
+        [self.database doAsync: ^{
+            [self update];
+        }];
     }
 }
 
@@ -405,12 +439,13 @@ static id fromJSON( NSData* json ) {
 
 @implementation CBLQueryRow
 {
-    CBLDatabase* _database;
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
     __weak id _parsedKey, _parsedValue;
     UInt64 _sequence;
     NSString* _sourceDocID;
     NSDictionary* _documentProperties;
+    @protected
+    CBLDatabase* _database;
 }
 
 
@@ -439,16 +474,27 @@ static id fromJSON( NSData* json ) {
 }
 
 
+// This is used implicitly by -[CBLLiveQuery update] to decide whether the query result has changed
+// enough to notify the client. So it's important that it not give false positives, else the app
+// won't get notified of changes.
 - (BOOL) isEqual:(id)object {
     if (object == self)
         return YES;
     if (![object isKindOfClass: [CBLQueryRow class]])
         return NO;
     CBLQueryRow* other = object;
-    return _database == other->_database
-        && $equal(_key, other->_key) && $equal(_value, other->_value)
-        && $equal(_sourceDocID, other->_sourceDocID)
-        && $equal(_documentProperties, other->_documentProperties);
+    if (_database == other->_database
+            && $equal(_key, other->_key)
+            && $equal(_sourceDocID, other->_sourceDocID)
+            && $equal(_documentProperties, other->_documentProperties)) {
+        // If values were emitted, compare them. Otherwise we have nothing to go on so check
+        // if _anything_ about the doc has changed (i.e. the sequences are different.)
+        if (_value || other->_value)
+            return  $equal(_value, other->_value);
+        else
+            return _sequence == other->_sequence;
+    }
+    return NO;
 }
 
 
@@ -526,13 +572,29 @@ static id fromJSON( NSData* json ) {
 }
 
 
+- (NSArray*) conflictingRevisions {
+    // The "_conflicts" value property is added when the query's allDocsMode==kCBLShowConflicts;
+    // see -[CBLDatabase getAllDocs:] in CBLDatabase+Internal.m.
+    CBLDocument* doc = [_database documentWithID: self.sourceDocumentID];
+    NSDictionary* value = $castIf(NSDictionary, self.value);
+    NSArray* conflicts = $castIf(NSArray, value[@"_conflicts"]);
+    return [conflicts my_map: ^id(id obj) {
+        NSString* revID = $castIf(NSString, obj);
+        return revID ? [doc revisionWithID: revID] : nil;
+    }];
+}
+
+
 // This is used by the router
 - (NSDictionary*) asJSONDictionary {
-    if (_value || _sourceDocID)
-        return $dict({@"key", self.key}, {@"value", self.value}, {@"id", _sourceDocID},
+    if (_value || _sourceDocID) {
+        return $dict({@"key", self.key},
+                     {@"value", self.value},
+                     {@"id", _sourceDocID},
                      {@"doc", _documentProperties});
-    else
+    } else {
         return $dict({@"key", self.key}, {@"error", @"not_found"});
+    }
 
 }
 
@@ -578,7 +640,9 @@ static id fromJSON( NSData* json ) {
                 lastSequence = view.lastSequenceIndexed;
             } else if (options.stale == kCBLStaleUpdateAfter &&
                        lastSequence < self.lastSequenceNumber) {
-                [view performSelector: @selector(updateIndex) withObject: nil afterDelay: 0];
+                [self doAsync: ^{
+                    [view updateIndex];
+                }];
             }
             rows = [view _queryWithOptions: &options status: &status];
         } else {

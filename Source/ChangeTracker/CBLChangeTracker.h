@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/20/11.
-//  Copyright 2011 Couchbase, Inc.
+//  Copyright 2011-2013 Couchbase, Inc.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -22,9 +22,12 @@
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host
                                  port: (UInt16)port;
+- (void) changeTrackerReceivedSequence: (id)sequence
+                                 docID: (NSString*)docID
+                                revIDs: (NSArray*)revIDs
+                               deleted: (BOOL)deleted;
+- (void) changeTrackerFinished;
 @optional
-- (void) changeTrackerReceivedChange: (NSDictionary*)change;
-- (void) changeTrackerReceivedChanges: (NSArray*)changes;
 - (void) changeTrackerStopped: (CBLChangeTracker*)tracker;
 @end
 
@@ -46,6 +49,8 @@ typedef enum CBLChangeTrackerMode {
     id _lastSequenceID;
     unsigned _limit;
     NSError* _error;
+    BOOL _continuous;
+    NSTimeInterval _pollInterval;
     BOOL _includeConflicts;
     NSString* _filterName;
     NSDictionary* _filterParameters;
@@ -65,6 +70,8 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly, nonatomic) NSString* databaseName;
 @property (readonly) NSURL* changesFeedURL;
 @property (readonly, copy, nonatomic) id lastSequenceID;
+@property (nonatomic) BOOL continuous;  // If true, never give up due to errors
+@property (nonatomic) NSTimeInterval pollInterval;  // 0.0 to not poll
 @property (strong, nonatomic) NSError* error;
 @property (weak, nonatomic) id<CBLChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;
@@ -87,11 +94,11 @@ typedef enum CBLChangeTrackerMode {
 
 // Protected
 @property (readonly) NSString* changesFeedPath;
+- (void) retryAfterDelay: (NSTimeInterval)retryDelay;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
-- (NSInteger) receivedPollResponse: (NSData*)body errorMessage: (NSString**)errorMessage;
-- (BOOL) receivedChanges: (NSArray*)changes errorMessage: (NSString**)errorMessage;
-- (BOOL) receivedChange: (NSDictionary*)change;
 - (void) stopped; // override this
+- (BOOL) parseBytes: (const void*)bytes length: (size_t)length;
+- (BOOL) endParsingData;
 
 @end

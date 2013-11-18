@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/7/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -38,13 +38,53 @@
 // This is a read-only db whose contents should be a default CouchApp.
 #define kCouchAppDBName @"couchapp_helloworld"
 
+
+
+/** Returns the base URL of a replication-compatible server that has the necessary databases for
+    unit tests. All unit tests that connect to a server should call this function to get the server
+    address, so it can be configured at runtime.
+    This is configured by the following environment variables; the best way to set
+    them up is to use the Xcode scheme editor, under "Arguments" in the "Run" section.
+        CBL_TEST_SERVER :    The base URL of the server (defaults to http://127.0.0.1:5984/)
+        CBL_TEST_USERNAME :  The user name to authenticate as [optional]
+        CBL_TEST_PASSWORD :  The password [required if username is given]
+        CBL_TEST_REALM :     The server's "Realm" string [required if username is given]
+*/
 NSURL* RemoteTestDBURL(NSString* dbName) {
     NSString* urlStr = [[NSProcessInfo processInfo] environment][@"CBL_TEST_SERVER"];
     if (!urlStr)
         urlStr = kDefaultRemoteTestServer;
+    else if (urlStr.length == 0)
+        return nil;
     NSURL* server = [NSURL URLWithString: urlStr];
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString* username = [[NSProcessInfo processInfo] environment][@"CBL_TEST_USERNAME"];
+        NSString* password = [[NSProcessInfo processInfo] environment][@"CBL_TEST_PASSWORD"];
+        NSString* realm = [[NSProcessInfo processInfo] environment][@"CBL_TEST_REALM"];
+        if (username) {
+            Assert(password, @"Didn't setenv CBL_TEST_PASSWORD");
+            Assert(realm, @"Didn't setenv CBL_TEST_REALM");
+            AddTemporaryCredential(server, realm, username, password);
+            Log(@"Registered credentials for %@ as %@  (realm %@)", urlStr, username, realm);
+        }
+    });
+
     return [server URLByAppendingPathComponent: dbName];
 }
+
+
+void AddTemporaryCredential(NSURL* url, NSString* realm,
+                            NSString* username, NSString* password)
+{
+    NSURLCredential* c = [NSURLCredential credentialWithUser: username password: password
+                                                 persistence: NSURLCredentialPersistenceForSession];
+    NSURLProtectionSpace* s = [url my_protectionSpaceWithRealm: realm
+                                          authenticationMethod: NSURLAuthenticationMethodDefault];
+    [[NSURLCredentialStorage sharedCredentialStorage] setCredential: c forProtectionSpace: s];
+}
+
 
 
 static id<CBLAuthorizer> authorizer(void) {
@@ -58,7 +98,7 @@ static id<CBLAuthorizer> authorizer(void) {
 }
 
 
-static void deleteRemoteDB(NSURL* dbURL) {
+void DeleteRemoteDB(NSURL* dbURL) {
     Log(@"Deleting %@", dbURL);
     __block NSError* error = nil;
     __block BOOL finished = NO;
@@ -82,12 +122,15 @@ static void deleteRemoteDB(NSURL* dbURL) {
 }
 
 
-static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push, NSString* filter) {
+static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push,
+                         NSString* filter, NSArray* docIDs)
+{
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO];
     if (push)
         ((CBL_Pusher*)repl).createTarget = YES;
     repl.filterName = filter;
+    repl.docIDs = docIDs;
     repl.authorizer = authorizer();
     [repl start];
     
@@ -180,10 +223,15 @@ TestCase(CBL_Pusher) {
     
     // Push them to the remote:
     NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
-    deleteRemoteDB(remoteDB);
-    id lastSeq = replic8(db, remoteDB, YES, @"filter");
-    CAssertEqual(lastSeq, @"3");
-    CAssertEq(filterCalls, 2);
+    if (remoteDB) {
+        DeleteRemoteDB(remoteDB);
+        id lastSeq = replic8(db, remoteDB, YES, @"filter", nil);
+        CAssertEqual(lastSeq, @"3");
+        CAssertEq(filterCalls, 2);
+    } else {
+        Warn(@"Skipping rest of test CBL_Pusher (no remote test DB URL)");
+        return;
+    }
     
     [db close];
     [server close];
@@ -192,11 +240,16 @@ TestCase(CBL_Pusher) {
 
 TestCase(CBL_Puller) {
     RequireTestCase(CBL_Pusher);
+    NSURL* remoteURL = RemoteTestDBURL(kScratchDBName);
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+        return;
+    }
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
     
-    id lastSeq = replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil);
     CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
@@ -204,7 +257,7 @@ TestCase(CBL_Puller) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -223,11 +276,16 @@ TestCase(CBL_Puller) {
 
 TestCase(CBL_Puller_Continuous) {
     RequireTestCase(CBL_Puller);
+    NSURL* remoteURL = RemoteTestDBURL(kScratchDBName);
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote URL");
+        return;
+    }
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
 
-    id lastSeq = replic8Continuous(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    id lastSeq = replic8Continuous(db, remoteURL, NO, nil);
     CAssertEqual(lastSeq, @2);
 
     CAssertEq(db.documentCount, 2u);
@@ -235,7 +293,7 @@ TestCase(CBL_Puller_Continuous) {
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8Continuous(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    replic8Continuous(db, remoteURL, NO, nil);
     CAssertEq(db.lastSequenceNumber, 3);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -252,15 +310,20 @@ TestCase(CBL_Puller_Continuous) {
     [server close];
 }
 
-TestCase(CBLPuller_DocIDs) {
-    RequireTestCase(CBL_Pusher);
+TestCase(CBL_Puller_DocIDs) {
+    RequireTestCase(CBL_Pusher); // CBL_Pusher populates the remote db that this test pulls from...
     
+    NSURL* remote = RemoteTestDBURL(kScratchDBName);
+    if (!remote) {
+        Warn(@"Skipping test: no remote URL");
+        return;
+    }
+
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBLPuller_DocIDs_Test"];
     CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
     CAssert(db);
 
     // Start a named document pull replication.
-    NSURL* remote = RemoteTestDBURL(kScratchDBName);
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                      push: NO continuous: NO];
     repl.docIDs = @[@"doc1"];
@@ -290,7 +353,7 @@ TestCase(CBLPuller_DocIDs) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -303,13 +366,59 @@ TestCase(CBLPuller_DocIDs) {
 }
 
 
+TestCase(CBL_Pusher_DocIDs) {
+    RequireTestCase(CBL_Puller_DocIDs);
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Pusher_DocIDs_Test"];
+    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    // Create some documents:
+    for (int i = 1; i <= 10; i++) {
+        NSDictionary* props = @{@"_id": $sprintf(@"doc%d", i)};
+        CBLStatus status;
+        [db putRevision: [CBL_Revision revisionWithProperties: props]
+             prevRevisionID: nil allowConflict: NO status: &status];
+        CAssertEq(status, kCBLStatusCreated);
+    }
+
+    // Push them to the remote:
+    NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
+    if (remoteDB) {
+        DeleteRemoteDB(remoteDB);
+        replic8(db, remoteDB, YES, nil, @[@"doc4", @"doc7"]);
+    } else {
+        Warn(@"Skipping rest of test CBL_Pusher_DocIDs (no remote test DB URL)");
+        return;
+    }
+
+    // Check _all_docs on the remote db and make sure only doc4 and doc7 were pushed:
+    NSURL* allDocsURL = [remoteDB URLByAppendingPathComponent: @"_all_docs"];
+    NSData* data = [NSData dataWithContentsOfURL: allDocsURL];
+    Assert(data);
+    NSDictionary* response = [CBLJSON JSONObjectWithData: data options: 0 error: NULL];
+    NSArray* rows = response[@"rows"];
+    CAssertEq(rows.count, 2u);
+    CAssertEqual([rows[0] objectForKey: @"id"], @"doc4");
+    CAssertEqual([rows[1] objectForKey: @"id"], @"doc7");
+
+    [db close];
+    [server close];
+}
+
+
 TestCase(CBL_Puller_FromCouchApp) {
     RequireTestCase(CBL_Puller);
+    NSURL* remote = RemoteTestDBURL(kCouchAppDBName);
+    if (!remote) {
+        Warn(@"Skipping test: no remote URL");
+        return;
+    }
+
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
     CBLDatabase* db = [server createDatabaseNamed: kCouchAppDBName error: NULL];
     CAssert(db);
     
-    replic8(db, RemoteTestDBURL(kCouchAppDBName), NO, nil);
+    replic8(db, remote, NO, nil, nil);
 
     CBLStatus status;
     CBL_Revision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kCBLIncludeAttachments status: &status];
@@ -339,7 +448,8 @@ static CBL_Replicator* findActiveReplicator(CBLDatabase* db, NSURL* remote, BOOL
 TestCase(CBL_ReplicatorManager) {
     RequireTestCase(ParseReplicatorProperties);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
-    CAssert([server replicatorManager]);    // start the replicator
+    [server startReplicatorManager];
+    CAssert(server.replicatorManager);    // start the replicator
     CBLDatabase* replicatorDb = [server createDatabaseNamed: kCBL_ReplicatorDatabaseName
                                                 error: NULL];
     CAssert(replicatorDb);

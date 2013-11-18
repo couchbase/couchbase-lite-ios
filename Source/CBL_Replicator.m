@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/6/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -174,7 +174,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) postProgressChanged {
-    LogTo(Sync, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)", 
+    LogTo(SyncVerbose, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)",
           self, (unsigned)_changesProcessed, (unsigned)_changesTotal,
           _active, (unsigned)_batcher.count, _asyncTaskCount, _online);
     NSNotification* n = [NSNotification notificationWithName: CBL_ReplicatorProgressChangedNotification
@@ -233,11 +233,21 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) setChangesProcessed: (NSUInteger)processed {
+    if (WillLogTo(Sync)) {
+        if (processed/100 != _changesProcessed/100
+                    || (processed == _changesTotal && _changesTotal > 0))
+            LogTo(Sync, @"%@ Progress: %lu / %lu",
+                  self, (unsigned long)processed, (unsigned long)_changesTotal);
+    }
     _changesProcessed = processed;
     [self postProgressChanged];
 }
 
 - (void) setChangesTotal: (NSUInteger)total {
+    if (WillLogTo(Sync) && total/100 != _changesTotal/100) {
+        LogTo(Sync, @"%@ Progress: %lu / %lu",
+              self, (unsigned long)_changesProcessed, (unsigned long)total);
+    }
     _changesTotal = total;
     [self postProgressChanged];
 }
@@ -248,6 +258,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     
     if (_error != error)
     {
+        LogTo(Sync, @"%@ Progress: set error = %@", self, error.localizedDescription);
         _error = error;
         [self postProgressChanged];
     }
@@ -257,14 +268,15 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) start {
     if (_running)
         return;
-    Assert(_db, @"Can't restart an already stopped CBL_Replicator");
+    CBLDatabase* db = _db;
+    Assert(db, @"Can't restart an already stopped CBL_Replicator");
     LogTo(Sync, @"%@ STARTING ...", self);
 
-    [_db addActiveReplicator: self];
+    [db addActiveReplicator: self];
 
     // Did client request a reset (i.e. starting over from first sequence?)
-    if (_options[@"reset"] != nil) {
-        [_db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
+    if (_options[kCBLReplicatorOption_Reset] != nil) {
+        [db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
     }
 
     // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
@@ -322,8 +334,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) stop {
     if (!_running)
         return;
-    LogTo(Sync, @"%@ STOPPING...", self);
-    [_batcher flushAll];
+    [_batcher clear];   // no sense processing any pending changes
     _continuous = NO;
     [self stopRemoteRequests];
     [NSObject cancelPreviousPerformRequestsWithTarget: self
@@ -356,6 +367,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 // Called after a continuous replication has gone idle, but it failed to transfer some revisions
 // and so wants to try again in a minute. Should be overridden by subclasses.
 - (void) retry {
+    self.error = nil;
 }
 
 - (void) retryIfReady {
@@ -405,7 +417,21 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) reachabilityChanged: (CBLReachability*)host {
     LogTo(Sync, @"%@: Reachability state = %@ (%02X)", self, host, host.reachabilityFlags);
 
-    if (host.reachable)
+    // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
+    BOOL reachable = host.reachable;
+    NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
+                              lowercaseString];
+    if (network && reachable) {
+        BOOL wifi = host.reachableByWiFi;
+        if ($equal(network, @"wifi") || $equal(network, @"!cell"))
+            reachable = wifi;
+        else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
+            reachable = !wifi;
+        else
+            Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
+    }
+
+    if (reachable)
         [self goOnline];
     else if (host.reachabilityKnown)
         [self goOffline];
@@ -415,6 +441,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) updateActive {
     BOOL active = _batcher.count > 0 || _asyncTaskCount > 0;
     if (active != _active) {
+        LogTo(Sync, @"%@ Progress: set active = %d", self, active);
         self.active = active;
         [self postProgressChanged];
         if (!_active) {
@@ -424,7 +451,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
             if (!_continuous) {
                 [self stopped];
-            } else if (_revisionsFailed > 0) {
+            } else if (_error) /*(_revisionsFailed > 0)*/ {
                 LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
                       self, _revisionsFailed, kRetryDelay);
                 [NSObject cancelPreviousPerformRequestsWithTarget: self
@@ -468,7 +495,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (void) processInbox: (NSArray*)inbox {
+- (void) processInbox: (CBL_RevisionList*)inbox {
 }
 
 
@@ -550,7 +577,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (NSTimeInterval) requestTimeout {
-    id timeoutObj = _options[@"connection_timeout"];    // CouchDB specifies this name
+    id timeoutObj = _options[kCBLReplicatorOption_Timeout];
     if (!timeoutObj)
         return kDefaultRequestTimeout;
     NSTimeInterval timeout = [timeoutObj doubleValue] / 1000.0;
@@ -605,6 +632,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 - (void) removeRemoteRequest: (CBLRemoteRequest*)request {
+    if (!_serverType)
+        _serverType = request.responseHeaders[@"Server"];
     [_remoteRequests removeObjectIdenticalTo: request];
 }
 
@@ -681,7 +710,7 @@ static BOOL sOnlyTrustAnchorCerts;
                                        {@"continuous", (self.continuous ? nil : $false)},
                                        {@"filter", _filterName},
                                        {@"filterParams", _filterParameters},
-                                       {@"headers", _requestHeaders},
+                                     //{@"headers", _requestHeaders}, (removed; see #143)
                                        {@"docids", _docIDs});
     return CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
 }
@@ -749,6 +778,7 @@ static BOOL sOnlyTrustAnchorCerts;
                       _lastSequenceChanged = YES;
                       [self saveLastSequence]; // try saving again
                   }
+                  [self asyncTasksFinished: 1];
               }
      ];
     [request dontLog404];
@@ -786,7 +816,8 @@ static BOOL sOnlyTrustAnchorCerts;
                   _savingCheckpoint = NO;
                   if (error)
                       Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
-                  if (!_db)
+                  CBLDatabase* db = _db;
+                  if (!db)
                       return;
                   if (error) {
                       // Failed to save checkpoint:
@@ -810,7 +841,7 @@ static BOOL sOnlyTrustAnchorCerts;
                       if (rev)
                           body[@"_rev"] = rev;
                       self.remoteCheckpoint = body;
-                      [_db setLastSequence: _lastSequence withCheckpointID: checkpointID];
+                      [db setLastSequence: _lastSequence withCheckpointID: checkpointID];
                   }
                   if (_overdueForSave)
                       [self saveLastSequence];      // start a save that was waiting on me

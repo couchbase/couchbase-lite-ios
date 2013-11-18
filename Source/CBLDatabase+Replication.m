@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/27/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -112,9 +112,9 @@
                               "AND revs.doc_id == docs.doc_id",
                              [CBLDatabase joinQuotedStrings: revs.allRevIDs],
                              [CBLDatabase joinQuotedStrings: revs.allDocIDs]);
-    // ?? Not sure sqlite will optimize this fully. May need a first query that looks up all
-    // the numeric doc_ids from the docids.
-    FMResultSet* r = [_fmdb executeQuery: sql];
+    _fmdb.shouldCacheStatements = NO;
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
+    _fmdb.shouldCacheStatements = YES;
     if (!r)
         return NO;
     while ([r next]) {

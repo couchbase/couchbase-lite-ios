@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/22/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLModel.h"
@@ -28,7 +28,8 @@ typedef enum {
     .persistent property.
     It's more common to call -[CBLDatabase pullFromURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
-    from the same source database (e.g. with different filters), use this. */
+    from the same source database (e.g. with different filters), use this.
+    Note: The replication won't start until you call -start. */
 - (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database
                                                                         __attribute__((nonnull));
 
@@ -36,7 +37,8 @@ typedef enum {
     .persistent property.
     It's more common to call -[CBLDatabase pushToURL:] instead, as that will return an existing
     replication if possible. But if you intentionally want to create multiple replications
-    to the same source database (e.g. with different filters), use this. */
+     to the same source database (e.g. with different filters), use this.
+     Note: The replication won't start until you call -start. */
 - (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target
                                                                         __attribute__((nonnull));
 
@@ -86,6 +88,12 @@ typedef enum {
     Should map strings (header names) to strings. */
 @property (nonatomic, copy) NSDictionary* headers;
 
+/** Specifies which class of network the replication will operate over.
+    Default value is nil, which means replicate over all networks.
+    Set to "WiFi" (or "!Cell") to replicate only over WiFi,
+    or to "Cell" (or "!WiFi") to replicate only over cellular. */
+@property (nonatomic, copy) NSString* network;
+
 
 #pragma mark - AUTHENTICATION:
 
@@ -101,11 +109,16 @@ typedef enum {
 
 /** Email address for login with Facebook credentials. This is stored persistently in
     the replication document, but it's not sufficient for login (you also need to get a
-    token from Facebook's servers, which you then pass to -registerPersonaAssertion:.)*/
+    token from Facebook's servers, which you then pass to -registerFacebookToken:forEmailAddress.)*/
 @property (nonatomic, copy) NSString* facebookEmailAddress;
 
 /** Registers a Facebook login token that will be used on the next login to the remote server.
-    This also sets facebookEmailAddress. */
+    This also sets facebookEmailAddress. 
+    For security reasons the token is not stored in the replication document, but instead kept
+    in an in-memory registry private to the Facebook authorizer. On login the token is sent to
+    the server, and the server will respond with a session cookie. After that the token isn't
+    needed again until the session expires. At that point you'll need to recover or regenerate
+    the token and register it again. */
 - (bool) registerFacebookToken: (NSString*)token
                forEmailAddress: (NSString*)email                        __attribute__((nonnull));
 
@@ -138,7 +151,9 @@ typedef enum {
 
 #pragma mark - STATUS:
 
-/** Starts the replication, asynchronously. */
+/** Starts the replication, asynchronously.
+    You can monitor its progress by observing the kCBLReplicationChangeNotification it sends,
+    or by using KVO to observe its .running, .mode, .error, .total and .completed properties. */
 - (void) start;
 
 /** Stops replication, asynchronously. */

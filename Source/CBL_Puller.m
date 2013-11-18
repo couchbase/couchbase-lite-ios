@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/2/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -14,13 +14,16 @@
 //  and limitations under the License.
 
 #import "CBL_Puller.h"
+#import "CBL_Pusher.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
 #import "CBL_Revision.h"
+#import "CBL_Body.h"
 #import "CBLChangeTracker.h"
 #import "CBLAuthorizer.h"
 #import "CBLBatcher.h"
 #import "CBLMultipartDownloader.h"
+#import "CBLBulkDownloader.h"
 #import "CBLSequenceMap.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -32,16 +35,8 @@
 // run out, even if the CBL thread doesn't always have time to run.)
 #define kMaxOpenHTTPConnections 12
 
-// ?limit= param for _changes feed: max # of revs to get in one batch. Smaller values reduce
-// latency since we can't parse till the entire result arrives in longpoll mode. But larger
-// values are more efficient because they use fewer HTTP requests.
-#define kChangesFeedLimit 100u
-
 // Maximum number of revs to fetch in a single bulk request
 #define kMaxRevsToGetInBulk 50u
-
-// Maximum number of revision IDs to pass in an "?atts_since=" query param
-#define kMaxNumberOfAttsSince 50u
 
 
 @interface CBL_Puller () <CBLChangeTrackerClient>
@@ -86,7 +81,24 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 - (void) startChangeTracker {
     Assert(!_changeTracker);
-    CBLChangeTrackerMode mode = (_continuous && _caughtUp) ? kLongPoll : kOneShot;
+    NSTimeInterval pollInterval = 0.0;
+    if (_continuous) {
+        NSNumber* pollObj = $castIf(NSNumber, _options[kCBLReplicatorOption_PollInterval]);
+        if (pollObj) {
+            pollInterval = pollObj.doubleValue / 1000.0;
+            if (pollInterval < 30.0) {
+                Warn(@"%@: poll interval of %@ ms is too short!",
+                     self, pollObj);
+                pollInterval = 0.0;
+            }
+        }
+    }
+
+    CBLChangeTrackerMode mode;
+    if (_continuous && _caughtUp && pollInterval == 0.0)
+        mode = kLongPoll;
+    else
+        mode = kOneShot;
     
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _remote
@@ -95,15 +107,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                      lastSequence: _lastSequence
                                                            client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
-    _changeTracker.limit = kChangesFeedLimit;
+    _changeTracker.continuous = _continuous;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
-    unsigned heartbeat = $castIf(NSNumber, _options[@"heartbeat"]).unsignedIntValue;
+
+    unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
         _changeTracker.heartbeat = heartbeat / 1000.0;
-    
+    if (pollInterval > 0.0)
+        _changeTracker.pollInterval = pollInterval;
+
     NSMutableDictionary* headers = $mdict({@"User-Agent", [CBLRemoteRequest userAgentHeader]});
     [headers addEntriesFromDictionary: _requestHeaders];
     _changeTracker.requestHeaders = headers;
@@ -117,21 +132,23 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) stop {
     if (!_running)
         return;
+    LogTo(Sync, @"%@ STOPPING...", self);
     if (_changeTracker) {
         _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
         [_changeTracker stop];
+        _changeTracker = nil;
         if (!_continuous)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
         if (!_caughtUp)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
     }
-    _changeTracker = nil;
     _revsToPull = nil;
     _deletedRevsToPull = nil;
     _bulkRevsToPull = nil;
-    [super stop];
-    
+
     [_downloadsToInsert flushAll];
+
+    [super stop];
 }
 
 
@@ -179,50 +196,40 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-// Got a _changes feed response from the CBLChangeTracker.
-- (void) changeTrackerReceivedChanges: (NSArray*)changes {
-    LogTo(Sync, @"%@: Received %u changes", self, (unsigned)changes.count);
+- (void) changeTrackerReceivedSequence: (id)remoteSequenceID
+                                 docID: (NSString*)docID
+                                revIDs: (NSArray*)revIDs
+                               deleted: (BOOL)deleted
+{
     NSUInteger changeCount = 0;
-    for (NSDictionary* change in changes) {
-        @autoreleasepool {
-            // Process each change from the feed:
-            id remoteSequenceID = change[@"seq"];
-            NSString* docID = change[@"id"];
-            if (!docID || ![CBLDatabase isValidDocumentID: docID])
-                continue;
-            
-            BOOL deleted = [change[@"deleted"] isEqual: (id)kCFBooleanTrue];
-            NSArray* changes = $castIf(NSArray, change[@"changes"]);
-            for (NSDictionary* changeDict in changes) {
-                @autoreleasepool {
-                    // Push each revision info to the inbox
-                    NSString* revID = $castIf(NSString, changeDict[@"rev"]);
-                    if (!revID)
-                        continue;
-                    CBLPulledRevision* rev = [[CBLPulledRevision alloc] initWithDocID: docID
-                                                                              revID: revID
-                                                                            deleted: deleted];
-                    // Remember its remote sequence ID (opaque), and make up a numeric sequence
-                    // based on the order in which it appeared in the _changes feed:
-                    rev.remoteSequenceID = remoteSequenceID;
-                    if (changes.count > 1)
-                        rev.conflicted = true;
-                    LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
-                    [self addToInbox: rev];
 
-                    changeCount++;
-                }
-            }
-        }
+    // Process each change from the feed:
+    if (![CBLDatabase isValidDocumentID: docID])
+        return;
+    
+    for (NSString* revID in revIDs) {
+        // Push each revision info to the inbox
+        CBLPulledRevision* rev = [[CBLPulledRevision alloc] initWithDocID: docID
+                                                                  revID: revID
+                                                                deleted: deleted];
+        // Remember its remote sequence ID (opaque), and make up a numeric sequence
+        // based on the order in which it appeared in the _changes feed:
+        rev.remoteSequenceID = remoteSequenceID;
+        if (revIDs.count > 1)
+            rev.conflicted = true;
+        LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
+        [self addToInbox: rev];
+
+        changeCount++;
     }
     self.changesTotal += changeCount;
+}
 
-    // We can tell we've caught up when the _changes feed returns less than we asked for:
-    if (!_caughtUp && changes.count < kChangesFeedLimit) {
+
+- (void) changeTrackerFinished {
+    if (!_caughtUp) {
         LogTo(Sync, @"%@: Caught up with changes!", self);
         _caughtUp = YES;
-        if (_continuous)
-            _changeTracker.mode = kLongPoll;
         [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
     }
 }
@@ -257,6 +264,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Process a bunch of remote revisions from the _changes feed at once
 - (void) processInbox: (CBL_RevisionList*)inbox {
+    if (!_canBulkGet) {
+        _canBulkGet = [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
+                   && [_serverType compare: @"Couchbase Sync Gateway/0.81"] >= 0;
+    }
+
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
@@ -284,7 +296,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // Dump the revs into the queues of revs to pull from the remote db:
     unsigned numBulked = 0;
     for (CBLPulledRevision* rev in inbox.allRevisions) {
-        if (rev.generation == 1 && !rev.deleted && !rev.conflicted) {
+        if (_canBulkGet || (rev.generation == 1 && !rev.deleted && !rev.conflicted)) {
             // Optimistically pull 1st-gen revs in bulk:
             if (!_bulkRevsToPull) 
                 _bulkRevsToPull = [[NSMutableArray alloc] initWithCapacity: 100];
@@ -359,14 +371,20 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     
-    // Construct a query. We want the revision history, and the bodies of attachments that have
-    // been added since the latest revisions we have locally.
+    // Construct a query. We want the revision history, and the bodies of attachments.
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"%@?rev=%@&revs=true&attachments=true",
                               CBLEscapeID(rev.docID), CBLEscapeID(rev.revID));
-    NSArray* knownRevs = [_db getPossibleAncestorRevisionIDs: rev limit: kMaxNumberOfAttsSince];
-    if (knownRevs.count > 0)
+    // If the document has attachments, add an 'atts_since' param with a list of
+    // already-known revisions, so the server can skip sending the bodies of any
+    // attachments we already have locally:
+    BOOL hasAttachment;
+    CBLDatabase* db = _db;
+    NSArray* knownRevs = [db getPossibleAncestorRevisionIDs: rev
+                                                      limit: kMaxNumberOfAttsSince
+                                              hasAttachment: &hasAttachment];
+    if (hasAttachment && knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
     
@@ -375,7 +393,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     __weak CBL_Puller *weakSelf = self;
     CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
-                                           database: _db
+                                           database: db
                                      requestHeaders: self.requestHeaders
                                        onCompletion:
         ^(CBLMultipartDownloader* dl, NSError *error) {
@@ -389,8 +407,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: dl.document];
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                [_downloadsToInsert queueObject: gotRev];
                 [strongSelf asyncTaskStarted];
+                [gotRev.body compact];
+                [_downloadsToInsert queueObject: gotRev];
             }
             
             // Note that we've finished this task:
@@ -408,15 +427,88 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-// Get a bunch of revisions in one bulk request.
+// Get a bunch of revisions in one bulk request. Will use _bulk_get if possible.
 - (void) pullBulkRevisions: (NSArray*)bulkRevs {
-    // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
     NSUInteger nRevs = bulkRevs.count;
     if (nRevs == 0)
         return;
     LogTo(Sync, @"%@ bulk-fetching %u remote revisions...", self, (unsigned)nRevs);
     LogTo(SyncVerbose, @"%@ bulk-fetching remote revisions: %@", self, bulkRevs);
-    
+
+    if (!_canBulkGet) {
+        // _bulk_get is not supported, so fall back to _all_docs:
+        [self pullBulkWithAllDocs: bulkRevs];
+        return;
+    }
+
+    LogTo(SyncVerbose, @"%@: POST _bulk_get", self);
+    NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
+    [self asyncTaskStarted];
+    ++_httpConnectionCount;
+    __weak CBL_Puller *weakSelf = self;
+    CBLBulkDownloader *dl;
+    dl = [[CBLBulkDownloader alloc] initWithDbURL: _remote
+                                         database: _db
+                                   requestHeaders: self.requestHeaders
+                                        revisions: bulkRevs
+                                       onDocument:
+          ^(NSDictionary* props) {
+              // Got a revision!
+              __strong CBL_Puller *strongSelf = weakSelf;
+              // Find the matching revision in 'remainingRevs' and get its sequence:
+              CBL_Revision* rev;
+              if (props[@"_id"])
+                  rev = [CBL_Revision revisionWithProperties: props];
+              else
+                  rev = [[CBL_Revision alloc] initWithDocID: props[@"id"]
+                                                      revID: props[@"rev"] deleted: NO];
+              NSUInteger pos = [remainingRevs indexOfObject: rev];
+              if (pos != NSNotFound) {
+                  rev.sequence = [remainingRevs[pos] sequence];
+                  [remainingRevs removeObjectAtIndex: pos];
+              } else {
+                  Warn(@"%@: Received unexpected rev %@", self, rev);
+              }
+
+              if (props[@"_id"]) {
+                  // Add to batcher ... eventually it will be fed to -insertRevisions:.
+                  [strongSelf asyncTaskStarted];
+                  [rev.body compact];
+                  [strongSelf->_downloadsToInsert queueObject: rev];
+              } else {
+                  CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
+                  strongSelf.error = CBLStatusToNSError(status, nil);
+                  [strongSelf revisionFailed];
+                  strongSelf.changesProcessed++;
+              }
+          }
+                                   onCompletion:
+          ^(CBLMultipartDownloader* dl, NSError *error) {
+              // The entire _bulk_get is finished:
+              __strong CBL_Puller *strongSelf = weakSelf;
+              if (error) {
+                  strongSelf.error = error;
+                  [strongSelf revisionFailed];
+                  strongSelf.changesProcessed += remainingRevs.count;
+              }
+              // Note that we've finished this task:
+              [self asyncTasksFinished: 1];
+              --_httpConnectionCount;
+              // Start another task if there are still revisions waiting to be pulled:
+              [strongSelf pullRemoteRevisions];
+          }
+     ];
+    [self addRemoteRequest: dl];
+    dl.timeoutInterval = self.requestTimeout;
+    dl.authorizer = _authorizer;
+    [dl start];
+}
+
+
+// Get as many revisions as possible in one _all_docs request.
+// This is compatible with CouchDB, but it only works for revs of generation 1 without attachments.
+- (void) pullBulkWithAllDocs: (NSArray*)bulkRevs {
+    // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
@@ -444,8 +536,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                               if (pos != NSNotFound) {
                                   rev.sequence = [remainingRevs[pos] sequence];
                                   [remainingRevs removeObjectAtIndex: pos];
-                                  [_downloadsToInsert queueObject: rev];
                                   [self asyncTaskStarted];
+                                  [rev.body compact];
+                                  [_downloadsToInsert queueObject: rev];
                               }
                           }
                       }
@@ -454,7 +547,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   // Any leftover revisions that didn't get matched will be fetched individually:
                   if (remainingRevs.count) {
                       LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
-                            self, (unsigned)remainingRevs.count, (unsigned)nRevs);
+                            self, (unsigned)remainingRevs.count, (unsigned)bulkRevs.count);
                       for (CBL_Revision* rev in remainingRevs)
                           [self queueRemoteRevision: rev];
                       [self pullRemoteRevisions];

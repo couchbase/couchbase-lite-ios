@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 11/30/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -50,20 +50,8 @@
         _serverThread = [[NSThread alloc] initWithTarget: self
                                                 selector: @selector(runServerThread)
                                                   object: nil];
-        LogTo(CBL_Server, @"Starting server thread %@ ...", _serverThread);
+        LogTo(CBL_Server, @"%@ Starting server thread ...", self);
         [_serverThread start];
-
-        // Don't start the replicator immediately; instead, give the app a chance to install
-        // filter and validation functions, otherwise persistent replications may behave
-        // incorrectly. The delayed-perform means the replicator won't start until after
-        // the caller (and its caller, etc.) returns back to the runloop.
-        MYAfterDelay(0.0, ^{
-            if (_serverThread) {
-                [self queue: ^{
-                    [_manager replicatorManager];
-                }];
-            }
-        });
     }
     return self;
 }
@@ -78,7 +66,7 @@
 - (void) close {
     if (_serverThread) {
         [self waitForDatabaseManager:^id(CBLManager* mgr) {
-            LogTo(CBL_Server, @"Stopping server thread...");
+            LogTo(CBL_Server, @"%@: Stopping server thread...", self);
 
             Class tdURLProtocol = NSClassFromString(@"CBL_URLProtocol");
             if (tdURLProtocol)
@@ -93,6 +81,11 @@
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%p]", self.class, self];
+}
+
+
 - (NSString*) directory {
     return _manager.directory;
 }
@@ -100,7 +93,7 @@
 
 - (void) runServerThread {
     @autoreleasepool {
-        LogTo(CBL_Server, @"Server thread starting...");
+        LogTo(CBL_Server, @"%@: Server thread starting...", self);
 
         [[NSThread currentThread] setName:@"CouchbaseLite"];
         
@@ -117,7 +110,7 @@
                                                          beforeDate: [NSDate distantFuture]])
             ;
         
-        LogTo(CBL_Server, @"Server thread exiting");
+        LogTo(CBL_Server, @"%@: Server thread exiting", self);
 
         // Clean up; this has to be done on the server thread, not in the -close method.
         [_manager close];

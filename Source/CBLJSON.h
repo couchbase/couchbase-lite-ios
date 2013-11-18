@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 2/27/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -43,13 +43,24 @@ typedef NSUInteger CBLJSONWritingOptions;
 /** Encodes an NSDate as a string in ISO-8601 format. */
 + (NSString*) JSONObjectWithDate: (NSDate*)date;
 
-/** Parses an ISO-8601 formatted date string.
+/** Parses an ISO-8601 formatted date string to an NSDate object.
     If the object is not a string, or not valid ISO-8601, it returns nil. */
 + (NSDate*) dateWithJSONObject: (id)jsonObject;
+
+/** Parses an ISO-8601 formatted date string to an absolute time (timeSinceReferenceDate).
+    If the object is not a string, or not valid ISO-8601, it returns a NAN value. */
++ (CFAbsoluteTime) absoluteTimeWithJSONObject: (id)jsonObject;
 
 /** Follows a JSON-Pointer, returning the value pointed to, or nil if nothing.
     See spec at: http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-04 */
 + (id) valueAtPointer: (NSString*)pointer inObject: (id)object;
+
+/** Encodes an NSData as a string in Base64 format. */
++ (NSString*) base64StringWithData: (NSData*)data;
+
+/** Parses a Base64-encoded string into an NSData object.
+    If the object is not a string, or not valid Base64, it returns nil. */
++ (NSData*) dataWithBase64String: (id)jsonObject;
 
 @end
 
@@ -57,11 +68,8 @@ typedef NSUInteger CBLJSONWritingOptions;
 /** Wrapper for an NSArray of JSON data, that avoids having to parse the data if it's not used.
     NSData objects in the array will be parsed into native objects before being returned to the caller from -objectAtIndex. */
 @interface CBLLazyArrayOfJSON : NSArray
-{
-    NSMutableArray* _array;
-}
 
 /** Initialize a lazy array.
     @param array   An NSArray of NSData objects, each containing JSON. */
-- (instancetype) initWithArray: (NSMutableArray*)array;
+- (instancetype) initWithMutableArray: (NSMutableArray*)array;
 @end

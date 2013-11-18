@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/1/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -312,10 +312,10 @@ TestCase(CBL_Router_Views) {
     
     CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CBLView* view = [db viewNamed: @"design/view"];
-    [view setMapBlock: ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+    [view setMapBlock:  MAPBLOCK({
         if (doc[@"message"])
             emit(doc[@"message"], nil);
-    } reduceBlock: NULL version: @"1"];
+    }) reduceBlock: NULL version: @"1"];
 
     // Query the view and check the result:
     Send(server, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
@@ -617,6 +617,7 @@ TestCase(CBL_Router_GetRange) {
     CAssertEq(response.status, 206);
     CAssertEqual((response.headers)[@"Content-Range"], @"bytes 20-26/27");
     CAssertEqual(response.body.asJSON, [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+    [server close];
 }
 
 
@@ -648,6 +649,7 @@ TestCase(CBL_Router_PutMultipart) {
                            $dict({@"Content-Type", @"multipart/related; boundary=\"BOUNDARY\""}),
                                        [body dataUsingEncoding: NSUTF8StringEncoding]);
     CAssertEq(response.status, kCBLStatusCreated);
+    [server close];
 }
 
 
@@ -792,6 +794,7 @@ TestCase(CBL_Router_AccessCheck) {
     
     CAssert(calledOnAccessCheck);
     CAssert(router.response.status == 401);
+    [server close];
 }
 
 

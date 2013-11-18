@@ -1,22 +1,20 @@
-/*
- *  CBLDatabase+Internal.h
- *  CouchbaseLite
- *
- *  Created by Jens Alfke on 6/19/10.
- *  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
- *
- */
+//
+//  CBLDatabase+Internal.h
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 6/19/10.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
+//
 
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBL_DatabaseChange, CBL_Shared;
+@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
 /** NSNotification posted when one or more documents have been updated.
-    The userInfo key "changes" contains an array of {rev: CBL_Revision, source: NSURL,
-    winner: new winning CBL_Revision, _if_ it changed (often same as rev).}*/
+    The userInfo key "changes" contains an array of CBLDatabaseChange objects. */
 extern NSString* const CBL_DatabaseChangesNotification;
 
 /** NSNotification posted when a database is closing. */
@@ -39,6 +37,7 @@ enum {
     kCBLLeaveAttachmentsEncoded = 32,        // i.e. don't decode
     kCBLBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
     kCBLNoBody = 128,                        // omit regular doc body properties
+    kCBLNoAttachments = 256                  // Omit the _attachments property
 };
 
 
@@ -61,12 +60,14 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     @private
     NSString* _path;
     NSString* _name;
-    __weak CBLManager* _manager;
-    FMDatabase *_fmdb;
+    CBLManager* _manager;
+    CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
     int _transactionLevel;
     NSThread* _thread;
+    dispatch_queue_t _dispatchQueue;    // One and only one of _thread or _dispatchQueue is set
+    NSCache* _docIDs;
     NSMutableDictionary* _views;
     CBL_BlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
@@ -79,15 +80,14 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 #endif
 }
 
-/** Should the database file be opened in read-only mode? */
-//@property (nonatomic) BOOL readOnly;
-
 @property (nonatomic, readwrite, copy) NSString* name;  // make it settable
 @property (nonatomic, readonly) NSString* path;
 @property (nonatomic, readonly) BOOL isOpen;
-@property (readonly) NSThread* thread;  // actually needs to be atomic (called from other threads)
 
-- (void) postPublicChangeNotification: (CBL_DatabaseChange*)change; // implemented in CBLDatabase.m
+- (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
+- (BOOL) close;
+- (BOOL) closeForDeletion;
+
 @end
 
 
@@ -105,9 +105,9 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 #endif
 - (BOOL) openFMDB: (NSError**)outError;
 - (BOOL) open: (NSError**)outError;
-- (BOOL) close;
+- (BOOL) closeInternal;
 
-@property (nonatomic, readonly) FMDatabase* fmdb;
+@property (nonatomic, readonly) CBL_FMDatabase* fmdb;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 
@@ -116,10 +116,18 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readonly) int schemaVersion;
 @property (nonatomic, readonly) NSDate* startTime;
 
+/** The status of the last SQLite call, either kCBLStatusOK on success, or some error (generally
+    kCBLStatusDBBusy or kCBLStatusDBError.)
+    If you already know there's been an error, you should use lastDbError instead. */
+@property (readonly) CBLStatus lastDbStatus;
+
 /** The error status of the last SQLite call: Generally kCBLStatusDBBusy or kCBLStatusDBError.
     Always returns some error code, never kCBLStatusOK! It's assumed that you're calling this
     because a CBLDatabase method failed, so you should be returning _some_ error to the caller. */
 @property (readonly) CBLStatus lastDbError;
+
+- (NSString*) infoForKey: (NSString*)key;
+- (CBLStatus) setInfo: (id)info forKey: (NSString*)key;
 
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
@@ -131,7 +139,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
 - (CBLStatus) _inTransaction: (CBLStatus(^)())block;
 
-- (void) notifyChange: (CBL_DatabaseChange*)change;
+- (void) notifyChange: (CBLDatabaseChange*)change;
 
 // DOCUMENTS:
 
@@ -183,7 +191,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
     Does not return revisions whose bodies have been compacted away, or deletion markers. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
-                                      limit: (unsigned)limit;
+                                      limit: (unsigned)limit
+                              hasAttachment: (BOOL*)outHasAttachment;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
 - (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs;
@@ -204,6 +213,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     format ("designdocname/viewname"), it attempts to load the view properties from the
     design document and compile them with the CBLViewCompiler. */
 - (CBLView*) compileViewNamed: (NSString*)name status: (CBLStatus*)outStatus;
+
+- (NSString*) _indexedTextWithID: (UInt64)fullTextID;
 
 //@property (readonly) NSArray* allViews;
 

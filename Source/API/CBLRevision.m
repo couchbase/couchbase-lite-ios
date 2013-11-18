@@ -3,8 +3,15 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/17/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase+Insertion.h"
@@ -15,7 +22,7 @@
 @implementation CBLRevisionBase
 {
     @protected
-    CBLDocument* _document;
+    __weak CBLDocument* _document;
 }
 
 @synthesize document=_document;
@@ -54,9 +61,16 @@
 }
 
 
+static inline BOOL isTruthy(id value) {
+    return value != nil && value != $false;
+}
+
 - (BOOL) isDeleted {
-    id del = self.properties[@"_deleted"];
-    return del != nil && del != $false;
+    return isTruthy(self.properties[@"_deleted"]);
+}
+
+- (BOOL) isGone {
+    return isTruthy(self.properties[@"_deleted"]) || isTruthy(self.properties[@"_removed"]);
 }
 
 
@@ -140,6 +154,7 @@
 
 - (NSString*) revisionID    {return _rev.revID;}
 - (BOOL) isDeleted          {return _rev.deleted;}
+- (BOOL) propertiesAvailable{return !_rev.missing;}
 
 
 - (bool) loadProperties {
@@ -200,10 +215,11 @@
 
 
 - (CBLRevision*) putProperties: (NSDictionary*)properties
-                           error: (NSError**)outError
+                         error: (NSError**)outError
 {
     return [self.document putProperties: properties
                               prevRevID: _rev.revID
+                          allowConflict: NO
                                   error: outError];
 }
 
@@ -258,7 +274,13 @@
 }
 
 - (CBLRevision*) save: (NSError**)outError {
-    return [_document putProperties: _properties prevRevID: _parentRevID error: outError];
+    return [_document putProperties: _properties prevRevID: _parentRevID
+                      allowConflict: NO error: outError];
+}
+
+- (CBLRevision*) saveAllowingConflict: (NSError**)outError {
+    return [_document putProperties: _properties prevRevID: _parentRevID
+                      allowConflict: YES error: outError];
 }
 
 - (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {

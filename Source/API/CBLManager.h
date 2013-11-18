@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/19/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -13,15 +13,15 @@
 /** Option flags for CBLManager initialization. */
 typedef struct CBLManagerOptions {
     bool readOnly;      /**< No modifications to databases are allowed. */
-    bool noReplicator;  /**< Persistent replications will not run. */
+    bool noReplicator;  /**< Persistent replications will not run (until/unless
+                             -startPersistentReplications is called.) */
 } CBLManagerOptions;
 
 
 /** Top-level CouchbaseLite object; manages a collection of databases as a CouchDB server does.
     A CBLManager and all the objects descending from it may only be used on a single
-    thread. To work with databases on another thread, create a new CBLManager instance for
-    that thread (and be sure to use the .noReplicator option.) The easist way to do this is simply
-    to call -copy on the existing manager. */
+    thread. To work with databases on another thread, copy the database manager (by calling
+    -copy) and use the copy on the other thread. */
 @interface CBLManager : NSObject <NSCopying>
 
 /** A shared per-process instance. This should only be used on the main thread. */
@@ -45,12 +45,30 @@ typedef struct CBLManagerOptions {
                            options: (const CBLManagerOptions*)options
                              error: (NSError**)outError                 __attribute__((nonnull(1)));
 
+/** Creates a copy of this CBLManager, which can be used on a different thread. */
+- (instancetype) copy;
 
 /** Releases all resources used by the CBLManager instance and closes all its databases. */
 - (void) close;
 
+/** The dispatch queue used to serialize access to the database manager (and its child objects.)
+    Setting this is optional: by default the objects are bound to the thread on which the database
+    manager was instantiated. By setting a dispatch queue, you can call the objects from within that
+    queue no matter what the underlying thread is, and notifications will be posted on that queue
+    as well. */
+@property dispatch_queue_t dispatchQueue;
+
+/** Runs the block asynchronously on the database manager's dispatch queue or thread.
+    Unlike the rest of the API, this can be called from any thread, and provides a limited form
+    of multithreaded access to Couchbase Lite. */
+- (void) doAsync: (void (^)())block;
+
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
+
+/** If the manager was instantiated with the noReplicator option, persistent replications won't
+    run at startup. If you want to start them later, call this. */
+- (void) startPersistentReplications;
 
 /** Returns the database with the given name, or nil if it doesn't exist.
     Multiple calls with the same name will return the same CBLDatabase instance. */
@@ -84,14 +102,22 @@ typedef struct CBLManagerOptions {
 /** Asynchronously dispatches a block to run on a background thread. The block will be given a
     CBLDatabase instance to use; <em>it must use that database instead of any CBL objects that are
     in use on the surrounding code's thread.</em> Otherwise thread-safety will be violated, and
-    Really Bad Things that are intermittent and hard to debug can happen. */
-- (void) asyncTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
+    Really Bad Things that are intermittent and hard to debug can happen.
+    (Note: Unlike most of the API, this method is thread-safe.) */
+- (void) backgroundTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
 
 /** The base URL of the database manager's REST API. You can access this URL within this process,
     using NSURLConnection or other APIs that use that (such as XMLHTTPRequest inside a WebView),
     but it isn't available outside the process.
     This method is only available if you've linked with the CouchbaseLiteListener framework. */
 @property (readonly) NSURL* internalURL;
+
+/** Enables Couchbase Lite logging of the given type, process-wide. A partial list of types is here:
+    http://docs.couchbase.com/couchbase-lite/cbl-ios/#useful-logging-channels 
+    It's usually more convenient to enable logging via command-line args, as discussed on that
+    same page; but in some environments you may not have access to the args, or may want to use
+    other criteria to enable logging. */
++ (void) enableLogging: (NSString*)type;
 
 @end
 

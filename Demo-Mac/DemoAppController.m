@@ -3,7 +3,7 @@
 //  CouchCocoa
 //
 //  Created by Jens Alfke on 6/1/11.
-//  Copyright (c) 2011 Couchbase, Inc, Inc.
+//  Copyright (c) 2011-2013 Couchbase, Inc, Inc.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -240,11 +240,14 @@ int main (int argc, const char * argv[]) {
         [self stopObservingReplication: _pull];
     if (_push)
         [self stopObservingReplication: _push];
-    NSArray* repls = [_database replicateWithURL: otherDbURL exclusively: YES];
+    NSArray* repls = [_database replicationsWithURL: otherDbURL exclusively: YES];
     _pull = repls[0];
     _push = repls[1];
+    _pull.continuous = _push.continuous = YES;
     [self observeReplication: _pull];
     [self observeReplication: _push];
+    [_pull start];
+    [_push start];
     
     _syncHostField.stringValue = otherDbURL ? $sprintf(@"⇄ %@", otherDbURL.host) : @"";
 #endif
@@ -343,15 +346,15 @@ int main (int argc, const char * argv[]) {
         return NULL;
     CBLMapBlock mapBlock = NULL;
     if ([mapSource isEqualToString: @"(function (doc) {if (doc.a == 4) {emit(null, doc.b);}})"]) {
-        mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+        mapBlock = MAPBLOCK({
             if ([doc[@"a"] isEqual: @4])
                 emit(nil, doc[@"b"]);
-        };
+        });
     } else if ([mapSource isEqualToString: @"(function (doc) {emit(doc.foo, null);})"] ||
                [mapSource isEqualToString: @"function(doc) { emit(doc.foo, null); }"]) {
-        mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
+        mapBlock =  MAPBLOCK({
             emit(doc[@"foo"], nil);
-        };
+        });
     }
     return [mapBlock copy];
 }

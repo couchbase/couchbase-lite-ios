@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/13/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -233,6 +233,16 @@ BOOL CBLIsFileExistsError( NSError* error ) {
         ;
 }
 
+static BOOL CBLIsFileNotFoundError( NSError* error ) {
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    return ($equal(domain, NSPOSIXErrorDomain) && code == ENOENT)
+#ifndef GNUSTEP
+        || ($equal(domain, NSCocoaErrorDomain) && code == NSFileNoSuchFileError)
+#endif
+    ;
+}
+
 
 BOOL CBLMayBeTransientError( NSError* error ) {
     NSString* domain = error.domain;
@@ -249,9 +259,31 @@ BOOL CBLMayBeTransientError( NSError* error ) {
 }
 
 
+BOOL CBLIsPermanentError( NSError* error ) {
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    if ($equal(domain, NSURLErrorDomain)) {
+        return code == NSURLErrorBadURL || code == NSURLErrorUnsupportedURL;
+    } else if ($equal(domain, CBLHTTPErrorDomain)) {
+        return code >= 400 && code <= 499;
+    } else {
+        return NO;
+    }
+}
+
+
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
-    NSFileManager* fmgr = [NSFileManager defaultManager];
-    return [fmgr removeItemAtPath: path error: outError] || ![fmgr fileExistsAtPath: path];
+    NSError* error;
+    if ([[NSFileManager defaultManager] removeItemAtPath: path error: &error]) {
+        LogTo(CBLDatabase, @"Deleted file %@", path);
+        return YES;
+    } else if (CBLIsFileNotFoundError(error)) {
+        return YES;
+    } else {
+        if (outError)
+            *outError = error;
+        return NO;
+    }
 }
 
 

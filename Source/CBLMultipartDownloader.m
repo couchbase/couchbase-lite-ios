@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/31/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -117,6 +117,10 @@ TestCase(CBLMultipartDownloader) {
     
     CBLDatabase* db = [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CBLMultipartDownloader"]];
     NSString* urlStr = RemoteTestDBURL(kAttachTestDBName).absoluteString;
+    if (!urlStr) {
+        Warn(@"Skipping test CBLMultipartDownloader (no remote test DB URL)");
+        return;
+    }
     urlStr = [urlStr stringByAppendingString: @"/oneBigAttachment?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;
@@ -147,5 +151,6 @@ TestCase(CBLMultipartDownloader) {
     
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
+    [db.manager close];
 }
 #endif

@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/11/13.
-//  Copyright 2011 Couchbase, Inc.
+//  Copyright 2011-2013 Couchbase, Inc.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -54,6 +54,22 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 @interface TestModel : CBLModel
 @property int number;
+@property unsigned int uInt;
+@property NSInteger nsInt;
+@property NSUInteger nsUInt;
+@property int8_t sInt8;
+@property uint8_t uInt8;
+@property int16_t sInt16;
+@property uint16_t uInt16;
+@property int32_t sInt32;
+@property uint32_t uInt32;
+@property int64_t sInt64;
+@property uint64_t uInt64;
+@property bool boolean;
+@property BOOL boolObjC;
+@property float floaty;
+@property double doubly;
+
 @property NSString* str;
 @property NSData* data;
 @property NSDate* date;
@@ -63,13 +79,17 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @property NSArray* dates;
 @property NSArray* others;
 
+@property int Capitalized;
+
 @property unsigned reloadCount;
 @end
 
 
 @implementation TestModel
 
-@dynamic number, str, data, date, decimal, other, strings, dates, others;
+@dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
+@dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly;
+@dynamic str, data, date, decimal, other, strings, dates, others, Capitalized;
 @synthesize reloadCount;
 
 - (void) didLoadFromDocument {
@@ -89,6 +109,72 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 
 #pragma mark - MODELS:
+
+
+#define TEST_PROPERTY(PROPERTY, VALUE) \
+    model.PROPERTY = VALUE; \
+    CAssertEq(model.PROPERTY, VALUE); \
+    CAssertEqual([model getValueOfProperty: @""#PROPERTY], @(VALUE));
+
+
+TestCase(API_ModelDynamicProperties) {
+    NSArray* strings = @[@"fee", @"fie", @"foe", @"fum"];
+    NSData* data = [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding];
+
+    CBLDatabase* db = createEmptyDB();
+    TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+
+    TEST_PROPERTY(number, 1337);
+    TEST_PROPERTY(number, INT_MAX);
+    TEST_PROPERTY(number, INT_MIN);
+    TEST_PROPERTY(uInt, UINT_MAX);
+    TEST_PROPERTY(uInt, 0u);
+    TEST_PROPERTY(sInt64, INT64_MAX);
+    TEST_PROPERTY(sInt64, INT64_MIN);
+    TEST_PROPERTY(uInt64, UINT64_MAX);
+    TEST_PROPERTY(uInt64, 0u);
+    TEST_PROPERTY(sInt32, INT32_MAX);
+    TEST_PROPERTY(sInt32, INT32_MIN);
+    TEST_PROPERTY(uInt32, UINT32_MAX);
+    TEST_PROPERTY(uInt32, 0u);
+    TEST_PROPERTY(sInt16, INT16_MAX);
+    TEST_PROPERTY(sInt16, INT16_MIN);
+    TEST_PROPERTY(uInt16, USHRT_MAX);
+    TEST_PROPERTY(uInt16, 0u);
+    TEST_PROPERTY(sInt8, INT8_MAX);
+    TEST_PROPERTY(sInt8, INT8_MIN);
+    TEST_PROPERTY(uInt8, UCHAR_MAX);
+    TEST_PROPERTY(uInt8, 0u);
+
+    TEST_PROPERTY(nsInt, NSIntegerMax);
+    TEST_PROPERTY(nsInt, NSIntegerMin);
+    TEST_PROPERTY(nsUInt, NSUIntegerMax);
+    TEST_PROPERTY(nsUInt, 0u);
+
+    TEST_PROPERTY(boolean, false);
+    CAssertEq([model getValueOfProperty: @"boolean"], (id)kCFBooleanFalse);
+    TEST_PROPERTY(boolean, true);
+    CAssertEq([model getValueOfProperty: @"boolean"], (id)kCFBooleanTrue);
+
+    TEST_PROPERTY(boolObjC, NO);
+    TEST_PROPERTY(boolObjC, YES);
+
+    TEST_PROPERTY(floaty, 0.0f);
+    TEST_PROPERTY(floaty, (float)M_PI);
+    TEST_PROPERTY(doubly, 0.0f);
+    TEST_PROPERTY(doubly, M_PI);
+
+    TEST_PROPERTY(Capitalized, 12345);
+
+    model.str = @"LEET";
+    model.strings = strings;
+    model.data = data;
+    CAssertEqual(model.str, @"LEET");
+    CAssertEqual(model.strings, strings);
+    CAssertEqual(model.data, data);
+
+    Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
+}
 
 
 TestCase(API_ModelDeleteProperty) {
@@ -295,6 +381,7 @@ TestCase(API_ModelAttachments) {
 
 
 TestCase(API_Model) {
+    RequireTestCase(API_ModelDynamicProperties);
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);

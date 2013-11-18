@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/26/11.
-//  Copyright (c) 2011 Couchbase, Inc.
+//  Copyright (c) 2011-2013 Couchbase, Inc.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -81,7 +81,8 @@
 - (void) dealloc
 {
     LogTo(CBLModel, @"%@ dealloc", self);
-    Assert(!_needsSave, @"%@ dealloc with unsaved changes!", self);
+    if(_needsSave)
+        Warn(@"%@ dealloced with unsaved changes!", self); // should be impossible
     _document.modelObject = nil;
 }
 
@@ -206,18 +207,26 @@
 }
 
 
+- (void) scheduleAutosave {
+    [self.database doAsyncAfterDelay: self.autosaveDelay block: ^{
+        [self save: NULL];
+    }];
+}
+
+
 - (void) setAutosaves: (bool) autosaves {
     if (autosaves != _autosaves) {
         _autosaves = autosaves;
-        if (_autosaves && _needsSave)
-            [self performSelector: @selector(save:) withObject: nil afterDelay: self.autosaveDelay];
+        if (_autosaves && _needsSave) {
+            [self scheduleAutosave];
+        }
     }
 }
 
 
 - (void) markNeedsSave {
     if (_autosaves && !_needsSave)
-        [self performSelector: @selector(save:) withObject: nil afterDelay: self.autosaveDelay];
+        [self scheduleAutosave];
     self.needsSave = YES;
 }
 

@@ -3,10 +3,13 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 3/20/13.
+//  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 //
 
 #import <Foundation/Foundation.h>
+@class CBL_Server;
+
 
 /** Container for shared state between CBLDatabase instances that represent the same database file. API is thread-safe. */
 @interface CBL_Shared : NSObject
@@ -26,6 +29,12 @@
 - (NSDictionary*) valuesOfType: (NSString*)type
                inDatabaseNamed: (NSString*)dbName;
 
+- (void) openedDatabase: (NSString*)dbName;
+- (void) closedDatabase: (NSString*)dbName;
+
+// Blocks till everyone who opened the database has closed it
 - (void) forgetDatabaseNamed: (NSString*)name;
+
+@property CBL_Server* backgroundServer;
 
 @end

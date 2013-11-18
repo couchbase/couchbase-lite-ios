@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/5/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -17,12 +17,14 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBLBatcher.h"
 #import "CBLMultipartUploader.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLCanonicalJSON.h"
+#import "CBLRevision.h"
+#import "CBLDocument.h"
 
 
 static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
@@ -45,16 +47,22 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 
 - (CBLFilterBlock) filter {
-    if (!_filterName)
-        return NULL;
-    CBLStatus status;
-    CBLFilterBlock filter = [_db compileFilterNamed: _filterName status: &status];
-    if (!filter) {
-        Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
-        if (!_error) {
-            self.error = CBLStatusToNSError(status, nil);
+    CBLFilterBlock filter = nil;
+    if (_filterName) {
+        CBLStatus status;
+        filter = [_db compileFilterNamed: _filterName status: &status];
+        if (!filter) {
+            Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
+            if (!_error) {
+                self.error = CBLStatusToNSError(status, nil);
+            }
+            [self stop];
         }
-        [self stop];
+    } else if (_docIDs) {
+        NSArray* docIDs = _docIDs;
+        filter = FILTERBLOCK({
+            return [docIDs containsObject: revision.document.documentID];
+        });
     }
     return filter;
 }
@@ -92,28 +100,26 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     _pendingSequences = [NSMutableIndexSet indexSet];
     _maxPendingSequence = self.lastSequence.longLongValue;
     
-    CBLFilterBlock filter = NULL;
-    if (_filterName) {
-        filter = self.filter;
-        if (!filter)
-            return; // missing filter block
-    }
-    
+    CBLFilterBlock filter = self.filter;
+    if (!filter && self.error)
+        return;
+
     // Include conflicts so all conflicting revisions are replicated too
     CBLChangesOptions options = kDefaultCBLChangesOptions;
     options.includeConflicts = YES;
     // Process existing changes since the last push:
-    [self addRevsToInbox: [_db changesSinceSequence: [_lastSequence longLongValue]
-                                            options: &options
-                                             filter: filter
-                                             params: _filterParameters]];
+    CBLDatabase* db = _db;
+    [self addRevsToInbox: [db changesSinceSequence: [_lastSequence longLongValue]
+                                           options: &options
+                                            filter: filter
+                                            params: _filterParameters]];
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
     if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
-                                                     name: CBL_DatabaseChangesNotification object: _db];
+                                                     name: CBL_DatabaseChangesNotification object: db];
     }
 
 #ifdef GNUSTEP    // TODO: Multipart upload on GNUstep
@@ -150,6 +156,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 
 - (void) stop {
+    LogTo(Sync, @"%@ STOPPING...", self);
     _uploaderQueue = nil;
     _uploading = NO;
     [self stopObserving];
@@ -186,15 +193,13 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 - (void) dbChanged: (NSNotification*)n {
     NSArray* changes = (n.userInfo)[@"changes"];
-    for (CBL_DatabaseChange* change in changes) {
+    for (CBLDatabaseChange* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change.source isEqual: _remote]) {
             CBL_Revision* rev = change.addedRevision;
-            if (_filterName) {
-                CBLFilterBlock filter = self.filter;
-                if (!filter || ![_db runFilter: filter params: _filterParameters onRevision: rev])
-                    continue;
-            }
+            CBLFilterBlock filter = self.filter;
+            if (filter && ![_db runFilter: filter params: _filterParameters onRevision: rev])
+                continue;
             LogTo(SyncVerbose, @"%@: Queuing #%lld %@", self, rev.sequence, rev);
             [self addToInbox: rev];
         }
@@ -227,6 +232,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         } else if (results.count) {
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
+            CBLDatabase* db = _db;
             CBL_RevisionList* revsToSend = [[CBL_RevisionList alloc] init];
             NSArray* docsToSend = [changes.allRevisions my_map: ^id(CBL_Revision* rev) {
                 NSDictionary* properties;
@@ -244,7 +250,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                     if (!_dontSendMultipart)
                         options |= kCBLBigAttachmentsFollow;
                     CBLStatus status;
-                    rev = [_db revisionByLoadingBody: rev options: options status: &status];
+                    rev = [db revisionByLoadingBody: rev options: options status: &status];
                     CBL_MutableRevision* nuRev = [rev mutableCopy];
                     rev = nuRev;
                     if (status >= 300) {
@@ -255,7 +261,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
                     // Add the revision history:
                     NSArray* possibleAncestors = revResults[@"possible_ancestors"];
-                    nuRev[@"_revisions"] = [_db getRevisionHistoryDict: nuRev
+                    nuRev[@"_revisions"] = [db getRevisionHistoryDict: nuRev
                                                      startingFromAnyOf: possibleAncestors];
                     properties = nuRev.properties;
 
@@ -311,7 +317,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                       NSMutableSet* failedIDs = [NSMutableSet set];
                       // _bulk_docs response is really an array, not a dictionary!
                       for (NSDictionary* item in $castIf(NSArray, response)) {
-                          CBLStatus status = statusFromBulkDocsResponseItem(item);
+                          CBLStatus status = CBLStatusFromBulkDocsResponseItem(item);
                           if (CBLStatusIsError(status)) {
                               // One of the docs failed to save.
                               Warn(@"%@: _bulk_docs got an error: %@", self, item);
@@ -347,7 +353,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 }
 
 
-static CBLStatus statusFromBulkDocsResponseItem(NSDictionary* item) {
+CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     NSString* errorStr = item[@"error"];
     if (!errorStr)
         return kCBLStatusOK;

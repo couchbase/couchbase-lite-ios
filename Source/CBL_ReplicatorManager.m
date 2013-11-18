@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 2/15/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -22,7 +22,7 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Pusher.h"
 #import "CBL_Puller.h"
 #import "CBLView+Internal.h"
@@ -64,6 +64,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 
 - (void) start {
+    [_replicatorDB open: nil];
     [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock:
          ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context) {
              return [self validateRevision: newRevision context: context];
@@ -72,9 +73,6 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
                                                  name: CBL_DatabaseChangesNotification
                                                object: _replicatorDB];
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(someDbDeleted:)
-                                                 name: CBL_DatabaseWillBeDeletedNotification
-                                               object: nil];
 #if TARGET_OS_IPHONE
     // Register for foreground/background transition notifications, on iOS:
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appForegrounding:)
@@ -113,7 +111,8 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     // Only certain keys can be changed or removed:
     NSSet* deletableProperties = [NSSet setWithObjects: @"_replication_state", @"continuous", nil];
     NSSet* mutableProperties = [NSSet setWithObjects: @"filter", @"query_params",
-                                              @"heartbeat", @"feed", @"reset", @"continuous", nil];
+                                              @"heartbeat", @"feed", @"reset", @"continuous",
+                                              @"headers", @"network", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
     return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context currentRevision])
@@ -191,7 +190,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
         }
     } while (status == kCBLStatusConflict);
     
-    if (CBLStatusIsError(status))
+    if (CBLStatusIsError(status) && status != kCBLStatusNotFound)
         Warn(@"CBL_ReplicatorManager: Error %d updating _replicator doc %@", status, currentRev);
     return status;
 }
@@ -221,9 +220,11 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
         return;
     LogTo(Sync, @"ReplicatorManager: %@ was created", rev);
     NSDictionary* properties = rev.properties;
-    CBL_Replicator* repl = [_dbManager replicatorWithProperties: properties status: NULL];
+    CBLStatus status;
+    CBL_Replicator* repl = [_dbManager replicatorWithProperties: properties status: &status];
     if (!repl) {
-        Warn(@"CBL_ReplicatorManager: Can't create replicator for %@", properties);
+        Warn(@"CBL_ReplicatorManager: Can't create replicator for %@ (status %d)",
+             properties, status);
         return;
     }
     NSString* replicationID = properties[@"_replication_id"] ?: CBLCreateUUID();
@@ -280,9 +281,6 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 // Create CBLReplications for all documents at startup:
 - (void) processAllDocs {
-    if (!_replicatorDB.exists)
-        return;
-    [_replicatorDB open: nil];
     LogTo(Sync, @"ReplicatorManager scanning existing _replicator docs...");
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     options.includeDocs = YES;
@@ -300,11 +298,10 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) appForegrounding: (NSNotification*)n {
     // Danger: This is called on the main thread!
-    MYOnThread(_replicatorDB.
-               thread, ^{
+    [_replicatorDB doAsync: ^{
         LogTo(Sync, @"App activated -- restarting all replications");
         [self processAllDocs];
-    });
+    }];
 }
 
 
@@ -312,7 +309,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 - (void) dbChanged: (NSNotification*)n {
     if (_updateInProgress)
         return;
-    for (CBL_DatabaseChange* change in n.userInfo[@"changes"]) {
+    for (CBLDatabaseChange* change in n.userInfo[@"changes"]) {
         CBL_Revision* rev = change.winningRevision;
         LogTo(SyncVerbose, @"ReplicatorManager: %@ %@", n.name, rev);
         NSString* docID = rev.docID;
@@ -341,44 +338,13 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
     for (NSString* docID in [_replicatorsByDocID allKeysForObject: repl]) {
         CBL_Revision* rev = [_replicatorDB getDocumentWithID: docID revisionID: nil];
-        
-        [self updateDoc: rev forReplicator: repl];
+        if (rev)
+            [self updateDoc: rev forReplicator: repl];
         
         if ($equal(n.name, CBL_ReplicatorStoppedNotification)) {
             // Replicator has stopped:
             [[NSNotificationCenter defaultCenter] removeObserver: self name: nil object: repl];
             [_replicatorsByDocID removeObjectForKey: docID];
-        }
-    }
-}
-
-
-// Notified that some database is being deleted; delete any associated replication document:
-- (void) someDbDeleted: (NSNotification*)n {
-    if (!_replicatorDB.exists)
-        return;
-    CBLDatabase* db = n.object;
-    if ([_dbManager.allOpenDatabases indexOfObjectIdenticalTo: db] == NSNotFound)
-        return;
-    NSString* dbName = db.name;
-    
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.includeDocs = YES;
-    for (CBLQueryRow* row in [_replicatorDB getAllDocs: &options]) {
-        NSDictionary* docProps = row.documentProperties;
-        NSString* source = $castIf(NSString, docProps[@"source"]);
-        NSString* target = $castIf(NSString, docProps[@"target"]);
-        if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
-            // Replication doc involves this database -- delete it:
-            LogTo(Sync, @"ReplicatorManager deleting replication %@", docProps);
-            CBL_Revision* delRev = [[CBL_Revision alloc] initWithDocID: docProps[@"_id"]
-                                                             revID: nil deleted: YES];
-            CBLStatus status;
-            if (![_replicatorDB putRevision: delRev
-                             prevRevisionID: docProps[@"_rev"]
-                              allowConflict: NO status: &status]) {
-                Warn(@"CBL_ReplicatorManager: Couldn't delete replication doc %@", docProps);
-            }
         }
     }
 }

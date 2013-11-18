@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 3/29/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -21,6 +21,10 @@
 #import "CBLMisc.h"
 #import "CollectionUtils.h"
 #import "MYStreamUtils.h"
+
+
+@interface CBLMultipartDocumentReader () <CBLMultipartReaderDelegate, NSStreamDelegate>
+@end
 
 
 @implementation CBLMultipartDocumentReader
@@ -167,11 +171,11 @@
 }
 
 
-- (void) stream: (NSInputStream*)stream handleEvent: (NSStreamEvent)eventCode {
+- (void) stream: (NSStream*)stream handleEvent: (NSStreamEvent)eventCode {
     BOOL finish = NO;
     switch (eventCode) {
         case NSStreamEventHasBytesAvailable:
-            finish = ![self readFromStream: stream];
+            finish = ![self readFromStream: (NSInputStream*)stream];
             break;
         case NSStreamEventEndEncountered:
             finish = YES;
@@ -185,7 +189,7 @@
             break;
     }
     if (finish)
-        [self finishAsync: stream];
+        [self finishAsync: (NSInputStream*)stream];
 }
 
 

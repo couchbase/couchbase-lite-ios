@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/12/11.
-//  Copyright 2011 Couchbase, Inc.
+//  Copyright 2011-2013 Couchbase, Inc.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -52,16 +52,21 @@ static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
     CAssert(doc.currentRevisionID);
     CAssertEqual(doc.userProperties, properties);
     CAssertEq(db[doc.documentID], doc);
-    Log(@"Created %p = %@", doc, doc);
+    //Log(@"Created %p = %@", doc, doc);
     return doc;
 }
 
 
 static void createDocuments(CBLDatabase* db, unsigned n) {
+    [db inTransaction:^BOOL{
     for (unsigned i=0; i<n; i++) {
+            @autoreleasepool {
         NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
         createDocumentWithProperties(db, properties);
     }
+}
+        return YES;
+    }];
 }
 
 
@@ -89,6 +94,7 @@ TestCase(API_Manager) {
     CAssert(db);
     CBLDocument* doc = [db untitledDocument];
     CAssert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
+    [ro close];
 }
 
 
@@ -143,7 +149,8 @@ TestCase(API_CreateNewRevisions) {
     CBLDocument* doc = [db untitledDocument];
     CBLNewRevision* newRev = [doc newRevision];
 
-    CAssertEq(newRev.document, doc);
+    CBLDocument* newRevDocument = newRev.document;
+    CAssertEq(newRevDocument, doc);
     CAssertEq(newRev.database, db);
     CAssertNil(newRev.parentRevisionID);
     CAssertNil(newRev.parentRevision);
@@ -163,7 +170,8 @@ TestCase(API_CreateNewRevisions) {
     CAssertEq(rev1.sequence, 1);
 
     newRev = [rev1 newRevision];
-    CAssertEq(newRev.document, doc);
+    newRevDocument = newRev.document;
+    CAssertEq(newRevDocument, doc);
     CAssertEq(newRev.database, db);
     CAssertEq(newRev.parentRevisionID, rev1.revisionID);
     CAssertEqual(newRev.parentRevision, rev1);
@@ -437,6 +445,49 @@ TestCase(API_History) {
 }
 
 
+TestCase(API_Conflict) {
+    RequireTestCase(API_History);
+    CBLDatabase* db = createEmptyDB();
+    CBLDocument* doc = createDocumentWithProperties(db, @{@"foo": @"bar"});
+    CBLRevision* rev1 = doc.currentRevision;
+
+    NSMutableDictionary* properties = doc.properties.mutableCopy;
+    properties[@"tag"] = @2;
+    NSError* error;
+    CBLRevision* rev2a = [doc putProperties: properties error: &error];
+
+    properties = rev1.properties.mutableCopy;
+    properties[@"tag"] = @3;
+    CBLNewRevision* newRev = [rev1 newRevision];
+    newRev.properties = properties;
+    CBLRevision* rev2b = [newRev saveAllowingConflict: &error];
+    CAssert(rev2b, @"Failed to create a a conflict: %@", error);
+
+    CAssertEqual([doc getConflictingRevisions: &error], (@[rev2b, rev2a]));
+    CAssertEqual([doc getLeafRevisions: &error], (@[rev2b, rev2a]));
+
+    CBLRevision* defaultRev, *otherRev;
+    if ([rev2a.revisionID compare: rev2b.revisionID] > 0) {
+        defaultRev = rev2a; otherRev = rev2b;
+    } else {
+        defaultRev = rev2b; otherRev = rev2a;
+    }
+    AssertEqual(doc.currentRevision, defaultRev);
+
+    CBLQuery* query = [db queryAllDocuments];
+    query.allDocsMode = kCBLShowConflicts;
+    NSArray* rows = [[query rows] allObjects];
+    AssertEq(rows.count, 1u);
+    CBLQueryRow* row = rows[0];
+    NSArray* revs = row.conflictingRevisions;
+    AssertEq(revs.count, 2u);
+    AssertEqual(revs[0], defaultRev);
+    AssertEqual(revs[1], otherRev);
+    
+    closeTestDB(db);
+}
+
+
 #pragma mark - ATTACHMENTS
 
 TestCase(API_Attachments) {
@@ -525,9 +576,9 @@ TestCase(API_CreateView) {
     CAssert(view.mapBlock == NULL);
     CAssert(view.reduceBlock == NULL);
 
-    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
-    } version: @"1"];
+    }) version: @"1"];
 
     CAssert(view.mapBlock != nil);
 
@@ -617,9 +668,9 @@ TestCase(API_ViewWithLinkedDocs) {
     
     // The map function will emit the ID of the previous document, causing that document to be
     // included when include_docs (aka prefetch) is enabled.
-    CBLQuery* query = [db slowQueryWithMap: ^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    CBLQuery* query = [db slowQueryWithMap: MAPBLOCK({
         emit(doc[@"sequence"], @{ @"_id": doc[@"prev"] });
-    }];
+    })];
     query.startKey = @23;
     query.endKey = @33;
     query.prefetch = YES;
@@ -643,9 +694,9 @@ TestCase(API_LiveQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createEmptyDB();
     CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
-    } version: @"1"];
+    }) version: @"1"];
 
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
@@ -687,9 +738,9 @@ TestCase(API_AsyncViewQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createEmptyDB();
     CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
-    } version: @"1"];
+    }) version: @"1"];
 
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
@@ -739,9 +790,9 @@ TestCase(API_SharedMapBlocks) {
         return YES;
     })];
     CBLView* view = [db viewNamed: @"view"];
-    BOOL ok = [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
+    BOOL ok = [view setMapBlock: MAPBLOCK({
         // nothing
-    } reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
+    }) reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
         return nil;
     } version: @"1"];
     CAssert(ok, @"Couldn't set map/reduce");
@@ -763,6 +814,23 @@ TestCase(API_SharedMapBlocks) {
     }];
     CAssertEqual(result, @"ok");
     closeTestDB(db);
+    [mgr close];
+}
+
+
+TestCase(API_ChangeUUID) {
+    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
+    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: nil];
+    NSString* pub = db.publicUUID;
+    NSString* priv = db.privateUUID;
+    Assert(pub.length > 10);
+    Assert(priv.length > 10);
+
+    NSError* error;
+    Assert([db replaceUUIDs: &error], @"replaceUUIDs failed: %@", error);
+    Assert(!$equal(pub, db.publicUUID));
+    Assert(!$equal(priv, db.privateUUID));
+    [mgr close];
 }
 
 

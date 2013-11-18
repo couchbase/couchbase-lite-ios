@@ -3,14 +3,23 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/19/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CBLManager.h"
 #import "CouchbaseLitePrivate.h"
 
 #import "CBLDatabase.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Pusher.h"
@@ -24,6 +33,7 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
+#import "MYBlockUtils.h"
 
 
 #define kOldDBExtension @"touchdb" // Used before CBL beta 1
@@ -37,13 +47,18 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 {
     NSString* _dir;
     CBLManagerOptions _options;
+    NSThread* _thread;
+    dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
     CBL_ReplicatorManager* _replicatorManager;
-    CBL_Server* _server;
     NSURL* _internalURL;
     NSMutableArray* _replications;
-    CBL_Shared *_shared;
+    __weak CBL_Shared *_shared;
+    id _strongShared;       // optional strong reference to _shared
 }
+
+
+@synthesize dispatchQueue=_dispatchQueue;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -58,6 +73,13 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
++ (void) enableLogging: (NSString*)type {
+    EnableLog(YES);
+    if (type != nil)
+        _EnableLogTo(type, YES);
+}
+
+
 + (NSString*) defaultDirectory {
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
                                                          NSUserDomainMask, YES);
@@ -69,11 +91,13 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+static CBLManager* sInstance;
+
 + (instancetype) sharedInstance {
-    static CBLManager* sInstance;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sInstance = [[self alloc] init];
+        LogTo(CBLDatabase, @"%@ is the sharedInstance", sInstance);
     });
     return sInstance;
 }
@@ -90,17 +114,20 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+// Initializer for main manager (not copies).
 - (instancetype) initWithDirectory: (NSString*)directory
                            options: (const CBLManagerOptions*)options
                              error: (NSError**)outError
 {
     if (outError) *outError = nil;
-    self = [super init];
+    self = [self initWithDirectory: directory
+                           options: options
+                            shared: [[CBL_Shared alloc] init]];
     if (self) {
-        _dir = [directory copy];
-        _databases = [[NSMutableDictionary alloc] init];
-        _options = options ? *options : kCBLManagerDefaultOptions;
-
+        if ([NSThread isMainThread])
+            _dispatchQueue = dispatch_get_main_queue();
+        else
+            _thread = [NSThread currentThread];
         // Create the directory but don't fail if it already exists:
         NSError* error;
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
@@ -114,13 +141,34 @@ static NSCharacterSet* kIllegalNameChars;
         }
         [self upgradeOldDatabaseFiles];
 
-        _replications = [[NSMutableArray alloc] init];
-
         if (!_options.noReplicator) {
-            LogTo(CBLDatabase, @"Starting replicator manager for %@", self);
-            _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
-            [_replicatorManager start];
+            // Don't start the replicator immediately; instead, give the app a chance to install
+            // filter and validation functions, otherwise persistent replications may behave
+            // incorrectly. The delayed-perform means the replicator won't start until after
+            // the caller (and its caller, etc.) returns back to the runloop.
+            LogTo(CBL_Server, @"%@ will start bg server", self);
+            MYAfterDelay(0.0, ^{
+                [self startPersistentReplications];
+            });
         }
+    }
+    return self;
+}
+
+
+// Base initializer.
+- (instancetype) initWithDirectory: (NSString*)directory
+                           options: (const CBLManagerOptions*)options
+                            shared: (CBL_Shared*)shared
+{
+    self = [super init];
+    if (self) {
+        _dir = [directory copy];
+        _options = options ? *options : kCBLManagerDefaultOptions;
+        _shared = shared;
+        _strongShared = _shared;
+        _databases = [[NSMutableDictionary alloc] init];
+        _replications = [[NSMutableArray alloc] init];
         LogTo(CBLDatabase, @"Created %@", self);
     }
     return self;
@@ -146,31 +194,27 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (id) copyWithZone: (NSZone*)zone {
-    CBLManagerOptions options = _options;
-    options.noReplicator = true;        // Don't want to run multiple replicator tasks
-    NSError* error;
-    CBLManager* mgr = [[[self class] alloc] initWithDirectory: self.directory
-                                                      options: &options
-                                                        error: &error];
-    if (!mgr) {
-        Warn(@"Couldn't copy CBLManager: %@", error);
-        return nil;
-    }
-    mgr->_shared = self.shared;
-    return mgr;
+    return [[[self class] alloc] initWithDirectory: self.directory
+                                           options: &_options
+                                            shared: _shared];
+}
+
+- (instancetype) copy {
+    return [self copyWithZone: nil];
 }
 
 
 - (void) close {
+    Assert(self != sInstance, @"Please don't close the sharedInstance!");
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
-    [_server close];
-    _server = nil;
     [_replicatorManager stop];
     _replicatorManager = nil;
     for (CBLDatabase* db in _databases.allValues) {
         [db close];
     }
     [_databases removeAllObjects];
+    _shared = nil;
+    _strongShared = nil;
     LogTo(CBLDatabase, @"CLOSED %@", self);
 }
 
@@ -203,46 +247,82 @@ static NSCharacterSet* kIllegalNameChars;
 }
 
 
+- (void) startPersistentReplications {
+    if (!_shared)
+        return; // already closed
+    [self.backgroundServer tellDatabaseManager:^(CBLManager *bgMgr) {
+        [bgMgr startReplicatorManager];
+    }];
+}
+
+// This is internal and should only be called on the background manager
+- (void) startReplicatorManager {
+    if (!_replicatorManager) {
+        _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
+        [_replicatorManager start];
+    }
+}
+
+
 @synthesize directory = _dir;
 
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], self.directory);
+    return $sprintf(@"%@[%p %@]", [self class], self, self.directory);
+}
+
+
+- (void) doAsync: (void (^)())block {
+    if (_dispatchQueue)
+        dispatch_async(_dispatchQueue, block);
+    else
+        MYOnThread(_thread, block);
 }
 
 
 - (CBL_Shared*) shared {
-    if (!_shared)
-        _shared = [[CBL_Shared alloc] init];
-    return _shared;
+    CBL_Shared* shared = _shared;
+    if (!shared) {
+        shared = [[CBL_Shared alloc] init];
+        _shared = shared;
+    }
+    return shared;
 }
 
 
 - (CBL_Server*) backgroundServer {
-    if (!_server) {
-        CBLManager* newManager = [self copy];
-        if (newManager) {
-            _server = [[CBL_Server alloc] initWithManager: newManager];
-            LogTo(CBLDatabase, @"%@ created %@", self, _server);
+    CBL_Shared* shared = _shared;
+    Assert(shared);
+    @synchronized(shared) {
+        CBL_Server* server = shared.backgroundServer;
+        if (!server) {
+            CBLManager* newManager = [self copy];
+            if (newManager) {
+                // The server's manager can't have a strong reference to the CBLShared, or it will
+                // form a cycle (newManager -> strongShared -> backgroundServer -> newManager).
+                newManager->_strongShared = nil;
+                server = [[CBL_Server alloc] initWithManager: newManager];
+                LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
+            }
+            Assert(server, @"Failed to create backgroundServer!");
+            shared.backgroundServer = server;
         }
-        Assert(_server, @"Failed to create backgroundServer!");
+        return server;
     }
-    return _server;
 }
 
 
-- (void) asyncTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
+- (void) backgroundTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
     [self.backgroundServer tellDatabaseNamed: dbName to: block];
 }
 
 
 - (NSURL*) internalURL {
     if (!_internalURL) {
-        if (!self.backgroundServer)
-            return nil;
         Class tdURLProtocol = NSClassFromString(@"CBL_URLProtocol");
         Assert(tdURLProtocol, @"CBL_URLProtocol class not found; link CouchbaseLiteListener.framework");
-        _internalURL = [tdURLProtocol HTTPURLForServerURL: [tdURLProtocol registerServer: _server]];
+        NSURL* serverURL = [tdURLProtocol registerServer: self.backgroundServer];
+        _internalURL = [tdURLProtocol HTTPURLForServerURL: serverURL];
     }
     return _internalURL;
 }
@@ -326,8 +406,9 @@ static NSCharacterSet* kIllegalNameChars;
             CBLRemoveFileIfExists(dstAttachmentsPath, outError) &&
             (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath
                                                toPath: dstAttachmentsPath
-                                                error: outError]);
-
+                                                error: outError]) &&
+            [db open: outError] &&
+            [db replaceUUIDs: outError];
 }
 
 
@@ -347,9 +428,10 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 - (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
-                                       remote: (NSURL*)remote
-                                         pull: (BOOL)pull
-                                       create: (BOOL)create
+                                     remote: (NSURL*)remote
+                                       pull: (BOOL)pull
+                                     create: (BOOL)create
+                                      start: (BOOL)start
 {
     for (CBLReplication* repl in self.allReplications) {
         if (repl.localDatabase == db && $equal(repl.remoteURL, remote) && repl.pull == pull)
@@ -358,25 +440,35 @@ static NSCharacterSet* kIllegalNameChars;
     if (!create)
         return nil;
     CBLReplication* repl = [[CBLReplication alloc] initWithDatabase: db
-                                                           remote: remote
-                                                             pull: pull];
+                                                             remote: remote
+                                                               pull: pull];
     [_replications addObject: repl];
+
+    if (start) {
+        // Give the caller a chance to customize parameters like .filter before calling -start,
+        // but make sure -start will be run even if the caller doesn't call it.
+        [db doAsync: ^{
+            [repl start];
+        }];
+    }
     return repl;
 }
 
 
 - (NSArray*) createReplicationsBetween: (CBLDatabase*)database
                                    and: (NSURL*)otherDbURL
-                           exclusively: (bool)exclusively
+                           exclusively: (BOOL)exclusively
+                                 start: (BOOL)start
 {
     CBLReplication* pull = nil, *push = nil;
     if (otherDbURL) {
         pull = [self replicationWithDatabase: database remote: otherDbURL
-                                                          pull: YES create: YES];
+                                        pull: YES create: YES start: start];
         push = [self replicationWithDatabase: database remote: otherDbURL
-                                                          pull: NO create: YES];
+                                        pull: NO create: YES start: start];
         if (!pull || !push)
             return nil;
+        pull.continuous = push.continuous = YES;
     }
     if (exclusively) {
         for (CBLReplication* repl in self.allReplications) {
@@ -386,6 +478,33 @@ static NSCharacterSet* kIllegalNameChars;
         }
     }
     return otherDbURL ? $array(pull, push) : nil;
+}
+
+
+- (void) deletePersistentReplicationsFor: (CBLDatabase*)db {
+    CBLDatabase* replicatorDB = [self databaseNamed: @"_replicator" error: NULL];
+    if (!replicatorDB)
+        return;
+    NSString* dbName = db.name;
+    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    options.includeDocs = YES;
+    for (CBLQueryRow* row in [replicatorDB getAllDocs: &options]) {
+        NSDictionary* docProps = row.documentProperties;
+        NSString* source = $castIf(NSString, docProps[@"source"]);
+        NSString* target = $castIf(NSString, docProps[@"target"]);
+        if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
+            // Replication doc involves this database -- delete it:
+            LogTo(Sync, @"%@ deleting replication %@", self, docProps);
+            CBL_Revision* delRev = [[CBL_Revision alloc] initWithDocID: docProps[@"_id"]
+                                                                 revID: nil deleted: YES];
+            CBLStatus status;
+            if (![replicatorDB putRevision: delRev
+                            prevRevisionID: docProps[@"_rev"]
+                             allowConflict: NO status: &status]) {
+                Warn(@"CBL_ReplicatorManager: Couldn't delete replication doc %@", docProps);
+            }
+        }
+    }
 }
 
 
@@ -428,6 +547,7 @@ static NSCharacterSet* kIllegalNameChars;
             return nil;
         }
         _databases[name] = db;
+        [_shared openedDatabase: name];
     }
     return db;
 }
@@ -436,7 +556,9 @@ static NSCharacterSet* kIllegalNameChars;
 - (void) _forgetDatabase: (CBLDatabase*)db {
     NSString* name = db.name;
     [_databases removeObjectForKey: name];
-    [_shared forgetDatabaseNamed: name];
+    CBL_Shared* shared = _shared;
+    [shared closedDatabase: name];
+    [shared forgetDatabaseNamed: name];
 }
 
 
@@ -558,6 +680,10 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                 Warn(@"Invalid authorizer settings: %@", auth);
         }
     }
+
+    // Can't specify both a filter and doc IDs
+    if (properties[@"filter"] && properties[@"doc_ids"])
+        return kCBLStatusBadRequest;
     
     return kCBLStatusOK;
 }
@@ -573,8 +699,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 - (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)properties
-                                    status: (CBLStatus*)outStatus
+                                      status: (CBLStatus*)outStatus
 {
+    // An unfortunate limitation:
+    Assert(_dispatchQueue==NULL || _dispatchQueue==dispatch_get_main_queue(),
+           @"CBLReplicators need a thread not a dispatch queue");
+    
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
     CBLDatabase* db;
@@ -609,6 +739,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
     repl.filterName = $castIf(NSString, properties[@"filter"]);
     repl.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
+    repl.docIDs = $castIf(NSArray, properties[@"doc_ids"]);
     repl.options = properties;
     repl.requestHeaders = headers;
     repl.authorizer = authorizer;
@@ -663,6 +794,7 @@ TestCase(CBLManager) {
     CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);
 
     CAssertEq([dbm databaseNamed: @"foo" error: NULL], db);
+    [dbm close];
 }
 
 #endif

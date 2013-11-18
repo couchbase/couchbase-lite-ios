@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/5/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -24,7 +24,7 @@
 #import "CBL_Body.h"
 #import "CBLMultipartDocumentReader.h"
 #import "CBL_Revision.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
@@ -321,7 +321,7 @@
             }
         }
         CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
-        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0];
+        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0 hasAttachment: NULL];
         if (ancestors)
             docInfo[@"possible_ancestors"] = ancestors;
     }
@@ -519,7 +519,7 @@
     __unused id retainSelf = self;
 
     NSMutableArray* changes = $marray();
-    for (CBL_DatabaseChange* change in (n.userInfo)[@"changes"]) {
+    for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
         CBL_Revision* rev = change.addedRevision;
         CBL_Revision* winningRev = change.winningRevision;
 

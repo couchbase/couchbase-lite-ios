@@ -3,8 +3,15 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/19/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
+//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+//  except in compliance with the License. You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//  Unless required by applicable law or agreed to in writing, software distributed under the
+//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+//  either express or implied. See the License for the specific language governing permissions
+//  and limitations under the License.
 
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
@@ -27,7 +34,7 @@
     Assert(name.length);
     self = [super init];
     if (self) {
-        _db = db;
+        _weakDB = db;
         _name = [name copy];
         _viewID = -1;  // means 'unknown'
         if (0) { // appease static analyzer
@@ -43,28 +50,30 @@
 
 
 - (CBLDatabase*) database {
-    return _db;
+    return _weakDB;
 }
 
 
 - (int) viewID {
     if (_viewID < 0)
-        _viewID = [_db.fmdb intForQuery: @"SELECT view_id FROM views WHERE name=?", _name];
+        _viewID = [_weakDB.fmdb intForQuery: @"SELECT view_id FROM views WHERE name=?", _name];
     return _viewID;
 }
 
 
 - (SequenceNumber) lastSequenceIndexed {
-    return [_db.fmdb longLongForQuery: @"SELECT lastSequence FROM views WHERE name=?", _name];
+    return [_weakDB.fmdb longLongForQuery: @"SELECT lastSequence FROM views WHERE name=?", _name];
 }
 
 
 - (CBLMapBlock) mapBlock {
-    return [_db.shared valueForType: @"map" name: _name inDatabaseNamed: _db.name];
+    CBLDatabase* db = _weakDB;
+    return [db.shared valueForType: @"map" name: _name inDatabaseNamed: db.name];
 }
 
 - (CBLReduceBlock) reduceBlock {
-    return [_db.shared valueForType: @"reduce" name: _name inDatabaseNamed: _db.name];
+    CBLDatabase* db = _weakDB;
+    return [db.shared valueForType: @"reduce" name: _name inDatabaseNamed: db.name];
 }
 
 
@@ -74,18 +83,20 @@
 {
     Assert(mapBlock);
     Assert(version);
-    
-    [_db.shared setValue: [mapBlock copy]
-                 forType: @"map" name: _name inDatabaseNamed: _db.name];
-    [_db.shared setValue: [reduceBlock copy]
-                 forType: @"reduce" name: _name inDatabaseNamed: _db.name];
 
-    if (![_db open: nil])
+    CBLDatabase* db = _weakDB;
+    CBL_Shared* shared = db.shared;
+    [shared setValue: [mapBlock copy]
+             forType: @"map" name: _name inDatabaseNamed: db.name];
+    [shared setValue: [reduceBlock copy]
+             forType: @"reduce" name: _name inDatabaseNamed: db.name];
+
+    if (![db open: nil])
         return NO;
 
     // Update the version column in the db. This is a little weird looking because we want to
     // avoid modifying the db if the version didn't change, and because the row might not exist yet.
-    FMDatabase* fmdb = _db.fmdb;
+    CBL_FMDatabase* fmdb = db.fmdb;
     if (![fmdb executeUpdate: @"INSERT OR IGNORE INTO views (name, version) VALUES (?, ?)", 
                               _name, version])
         return NO;
@@ -105,32 +116,35 @@
 
 
 - (BOOL) stale {
-    return self.lastSequenceIndexed < _db.lastSequenceNumber;
+    return self.lastSequenceIndexed < _weakDB.lastSequenceNumber;
 }
 
 
 - (void) removeIndex {
     if (self.viewID <= 0)
         return;
-    [_db _inTransaction: ^CBLStatus {
-        if ([_db.fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?",
+    CBLDatabase* db = _weakDB;
+    CBLStatus status = [db _inTransaction: ^CBLStatus {
+        if ([db.fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?",
                                      @(_viewID)]) {
-            [_db.fmdb executeUpdate: @"UPDATE views SET lastsequence=0 WHERE view_id=?",
+            [db.fmdb executeUpdate: @"UPDATE views SET lastsequence=0 WHERE view_id=?",
                                      @(_viewID)];
         }
-        return _db.lastDbError;
+        return db.lastDbStatus;
     }];
+    if (CBLStatusIsError(status))
+        Warn(@"Error status %d removing index of %@", status, self);
 }
 
 
 - (void) deleteView {
-    [_db deleteViewNamed: _name];
+    [_weakDB deleteViewNamed: _name];
     _viewID = 0;
 }
 
 
 - (void) databaseClosing {
-    _db = nil;
+    _weakDB = nil;
     _viewID = 0;
 }
 

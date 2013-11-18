@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/30/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -182,6 +182,7 @@ static NSData* kCRLFCRLF;
     do {
         nextState = -1;
         NSUInteger bufLen = _buffer.length;
+        id<CBLMultipartReaderDelegate> delegate = _delegate;
         switch (_state) {
             case kAtStart: {
                 // The entire message might start with a boundary without a leading CRLF.
@@ -207,8 +208,8 @@ static NSData* kCRLFCRLF;
                 NSRange r = [self searchFor: _boundary from: start];
                 if (r.length > 0) {
                     if (_state == kInBody) {
-                        [_delegate appendToPart: [_buffer subdataWithRange: NSMakeRange(0, r.location)]];
-                        [_delegate finishedPart];
+                        [delegate appendToPart: [_buffer subdataWithRange: NSMakeRange(0, r.location)]];
+                        [delegate finishedPart];
                     }
                     [self deleteUpThrough: r];
                     nextState = kInHeaders;
@@ -236,7 +237,7 @@ static NSData* kCRLFCRLF;
                     if (!ok)
                         return;  // parseHeaders already set .error
                     [self deleteUpThrough: r];
-                    [_delegate startedPart: _headers];
+                    [delegate startedPart: _headers];
                     nextState = kInBody;
                 }
                 break;

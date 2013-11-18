@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/8/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -17,6 +17,8 @@ typedef struct CBLQueryOptions {
     __unsafe_unretained id startKey;
     __unsafe_unretained id endKey;
     __unsafe_unretained NSArray* keys;
+    __unsafe_unretained NSString* fullTextQuery;
+    const struct CBLGeoRect* bbox;
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
@@ -29,8 +31,10 @@ typedef struct CBLQueryOptions {
     BOOL reduceSpecified;
     BOOL reduce;                   // Ignore if !reduceSpecified
     BOOL group;
-    BOOL includeDeletedDocs;        // only works with _all_docs, not regular views
+    BOOL fullTextSnippets;
+    BOOL fullTextRanking;
     CBLStaleness stale;
+    CBLAllDocsMode allDocsMode;
 } CBLQueryOptions;
 
 extern const CBLQueryOptions kDefaultCBLQueryOptions;
@@ -54,12 +58,11 @@ typedef enum {
 
 @interface CBLView (Internal)
 
++ (void) registerFunctions: (CBLDatabase*)db;
+
 #if DEBUG  // for unit tests only
 - (void) setCollation: (CBLViewCollation)collation;
-- (NSArray*) dump;
 #endif
-
-//@property CBLContentOptions mapContentOptions;
 
 /** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
 - (BOOL) compileFromProperties: (NSDictionary*)viewProps
@@ -69,10 +72,18 @@ typedef enum {
  @return  200 if updated, 304 if already up-to-date, else an error code */
 - (CBLStatus) updateIndex;
 
+@end
+
+
+@interface CBLView (Querying)
+
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
     @return  An array of CBLQueryRow. */
 - (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus;
+#if DEBUG
+- (NSArray*) dump;
+#endif
 
 @end

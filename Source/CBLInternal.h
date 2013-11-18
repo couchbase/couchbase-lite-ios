@@ -3,11 +3,12 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/8/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLDatabase.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabaseChange.h"
 #import "CBLManager+Internal.h"
 #import "CBLView+Internal.h"
 #import "CBL_Server.h"
@@ -15,7 +16,7 @@
 #import "CBL_Replicator.h"
 #import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
-@class CBL_Attachment, CBL_BlobStoreWriter, CBL_DatabaseChange, CBL_ReplicatorManager;
+@class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange, CBL_ReplicatorManager;
 
 
 @interface CBLDatabase (Insertion_Internal)
@@ -55,11 +56,27 @@
 
 
 @interface CBLManager (Testing)
-@property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 #if DEBUG
+- (void) startReplicatorManager;
+@property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 + (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
 + (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
+@end
+
+
+@interface CBLDatabaseChange ()
+- (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
+                       winningRevision: (CBL_Revision*)winningRevision
+                         maybeConflict: (BOOL)maybeConflict
+                                source: (NSURL*)source;
+/** The revision just added. Guaranteed immutable. */
+@property (nonatomic, readonly) CBL_Revision* addedRevision;
+/** The revision that is now the default "winning" revision of the document.
+ Guaranteed immutable.*/
+@property (nonatomic, readonly) CBL_Revision* winningRevision;
+/** Is this a relayed notification of one from another thread, not the original? */
+@property (nonatomic, readonly) bool echoed;
 @end
 
 
@@ -105,4 +122,9 @@
 // The test server defaults to <http://127.0.0.1:5984> but can be configured by setting the
 // environment variable "CBL_TEST_SERVER" at runtime.
 NSURL* RemoteTestDBURL(NSString* dbName);
+
+void AddTemporaryCredential(NSURL* url, NSString* realm,
+                            NSString* username, NSString* password);
+
+void DeleteRemoteDB(NSURL* dbURL);
 #endif

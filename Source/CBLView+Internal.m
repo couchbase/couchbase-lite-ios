@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/8/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -19,24 +19,61 @@
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
+#import "CBLGeometry.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
 #import "ExceptionUtils.h"
 
+#include "sqlite3_unicodesn_tokenizer.h"
 
-#define kReduceBatchSize 100
+
+static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
 
 
-const CBLQueryOptions kDefaultCBLQueryOptions = {
-    .limit = UINT_MAX,
-    .inclusiveEnd = YES
-    // everything else will default to nil/0/NO
-};
+// Special key object returned by CBLMapKey.
+@interface CBLSpecialKey : NSObject
+- (instancetype) initWithText: (NSString*)text;
+@property (readonly, nonatomic) NSString* text;
+- (instancetype) initWithPoint: (CBLGeoPoint)point;
+- (instancetype) initWithRect: (CBLGeoRect)rect;
+- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON;
+@property (readonly, nonatomic) CBLGeoRect rect;
+@property (readonly, nonatomic) NSData* geoJSONData;
+@end
+
+
+id CBLTextKey(NSString* text) {
+    return [[CBLSpecialKey alloc] initWithText: text];
+}
+
+id CBLGeoPointKey(double x, double y) {
+    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
+}
+
+id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
+    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
+}
+
+id CBLGeoJSONKey(NSDictionary* geoJSON) {
+    id key = [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
+    if (!key)
+        Warn(@"CBLGeoJSONKey doesn't recognize %@",
+             [CBLJSON stringWithJSONObject: geoJSON options:0 error: NULL]);
+    return key;
+}
 
 
 @implementation CBLView (Internal)
+
+
++ (void) registerFunctions:(CBLDatabase *)db {
+    sqlite3* dbHandle = db.fmdb.sqliteHandle;
+    register_unicodesn_tokenizer(dbHandle);
+    sqlite3_create_function(dbHandle, "ftsrank", 1, SQLITE_ANY, NULL,
+                            CBLComputeFTSRank, NULL, NULL);
+}
 
 
 #if DEBUG
@@ -99,15 +136,48 @@ static NSString* toJSONString( id object ) {
 }
 
 
-static id fromJSON( NSData* json ) {
-    if (!json)
-        return nil;
-    return [CBLJSON JSONObjectWithData: json 
-                              options: CBLJSONReadingAllowFragments
-                                error: NULL];
+/** The body of the emit() callback while indexing a view. */
+- (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
+    CBLDatabase* db = _weakDB;
+    CBL_FMDatabase* fmdb = db.fmdb;
+    NSString* valueJSON = toJSONString(value);
+    NSNumber* fullTextID = nil, *bboxID = nil;
+    NSString* keyJSON = @"null";
+    NSData* geoKey = nil;
+    if ([key isKindOfClass: [CBLSpecialKey class]]) {
+        CBLSpecialKey *specialKey = key;
+        LogTo(View, @"    emit( %@, %@)", specialKey, valueJSON);
+        BOOL ok;
+        NSString* text = specialKey.text;
+        if (text) {
+            ok = [fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)", text];
+            fullTextID = @(fmdb.lastInsertRowId);
+        } else {
+            CBLGeoRect rect = specialKey.rect;
+            ok = [fmdb executeUpdate: @"INSERT INTO bboxes (x0,y0,x1,y1) VALUES (?,?,?,?)",
+                  @(rect.min.x), @(rect.min.y), @(rect.max.x), @(rect.max.y)];
+            bboxID = @(fmdb.lastInsertRowId);
+            geoKey = specialKey.geoJSONData;
+        }
+        if (!ok)
+            return db.lastDbError;
+        key = nil;
+    } else {
+        if (key)
+            keyJSON = toJSONString(key);
+        LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
+    }
+
+    if (![fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
+                                   "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                  @(self.viewID), @(sequence), keyJSON, valueJSON,
+                                  fullTextID, bboxID, geoKey])
+        return db.lastDbError;
+    return kCBLStatusOK;
 }
 
 
+/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
     LogTo(View, @"Re-indexing view %@ ...", _name);
     CBLMapBlock mapBlock = self.mapBlock;
@@ -116,23 +186,24 @@ static id fromJSON( NSData* json ) {
     int viewID = self.viewID;
     if (viewID <= 0)
         return kCBLStatusNotFound;
+    CBLDatabase* db = _weakDB;
     
-    CBLStatus status = [_db _inTransaction: ^CBLStatus {
+    CBLStatus status = [db _inTransaction: ^CBLStatus {
         // Check whether we need to update at all:
         const SequenceNumber lastSequence = self.lastSequenceIndexed;
-        const SequenceNumber dbMaxSequence = _db.lastSequenceNumber;
+        const SequenceNumber dbMaxSequence = db.lastSequenceNumber;
         if (lastSequence == dbMaxSequence) {
             return kCBLStatusNotModified;
         }
 
         __block CBLStatus emitStatus = kCBLStatusOK;
         __block unsigned inserted = 0;
-        FMDatabase* fmdb = _db.fmdb;
+        CBL_FMDatabase* fmdb = db.fmdb;
         
         // First remove obsolete emitted results from the 'maps' table:
         __block SequenceNumber sequence = lastSequence;
         if (lastSequence < 0)
-            return _db.lastDbError;
+            return db.lastDbError;
         BOOL ok;
         if (lastSequence == 0) {
             // If the lastSequence has been reset to 0, make sure to remove all map results:
@@ -145,7 +216,7 @@ static id fromJSON( NSData* json ) {
                                       @(_viewID), @(lastSequence), @(lastSequence)];
         }
         if (!ok)
-            return _db.lastDbError;
+            return db.lastDbError;
 #ifndef MY_DISABLE_LOGGING
         unsigned deleted = fmdb.changes;
 #endif
@@ -153,33 +224,29 @@ static id fromJSON( NSData* json ) {
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.
         CBLMapEmitBlock emit = ^(id key, id value) {
-            if (!key)
-                key = $null;
-            NSString* keyJSON = toJSONString(key);
-            NSString* valueJSON = toJSONString(value);
-            LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
-            if ([fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value) VALUES "
-                                        "(?, ?, ?, ?)",
-                                        @(viewID), @(sequence), keyJSON, valueJSON])
-                ++inserted;
+            int status = [self _emitKey: key value: value forSequence: sequence];
+            if (status != kCBLStatusOK)
+                emitStatus = status;
             else
-                emitStatus = _db.lastDbError;
+                inserted++;
         };
-        
+
         // Now scan every revision added since the last time the view was indexed:
-        FMResultSet* r;
-        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json FROM revs, docs "
+        CBL_FMResultSet* r;
+        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
+                                 "FROM revs, docs "
                                  "WHERE sequence>? AND current!=0 AND deleted=0 "
                                  "AND revs.doc_id = docs.doc_id "
                                  "ORDER BY revs.doc_id, revid DESC",
                                  @(lastSequence)];
         if (!r)
-            return _db.lastDbError;
+            return db.lastDbError;
 
         BOOL keepGoing = [r next]; // Go to first result row
         while (keepGoing) {
             @autoreleasepool {
-                // Reconstitute the document as a dictionary:
+                // Get row values now, before the code below advances 'r':
+                int64_t doc_id = [r longLongIntForColumnIndex: 0];
                 sequence = [r longLongIntForColumnIndex: 1];
                 NSString* docID = [r stringForColumnIndex: 2];
                 if ([docID hasPrefix: @"_design/"]) {     // design docs don't get indexed!
@@ -188,10 +255,10 @@ static id fromJSON( NSData* json ) {
                 }
                 NSString* revID = [r stringForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
+                BOOL noAttachments = [r boolForColumnIndex: 5];
             
                 // Iterate over following rows with the same doc_id -- these are conflicts.
                 // Skip them, but collect their revIDs:
-                int64_t doc_id = [r longLongIntForColumnIndex: 0];
                 NSMutableArray* conflicts = nil;
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
                     if (!conflicts)
@@ -202,14 +269,14 @@ static id fromJSON( NSData* json ) {
                 if (lastSequence > 0) {
                     // Find conflicts with documents from previous indexings.
                     BOOL first = YES;
-                    FMResultSet* r2 = [fmdb executeQuery:
+                    CBL_FMResultSet* r2 = [fmdb executeQuery:
                                     @"SELECT revid, sequence FROM revs "
                                      "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
                                      "ORDER BY revID DESC",
                                     @(doc_id), @(lastSequence)];
                     if (!r2) {
                         [r close];
-                        return _db.lastDbError;
+                        return db.lastDbError;
                     }
                     while ([r2 next]) {
                         NSString* oldRevID = [r2 stringForColumnIndex:0];
@@ -246,11 +313,14 @@ static id fromJSON( NSData* json ) {
                 }
                 
                 // Get the document properties, to pass to the map function:
-                NSDictionary* properties = [_db documentPropertiesFromJSON: json
+                CBLContentOptions contentOptions = _mapContentOptions;
+                if (noAttachments)
+                    contentOptions |= kCBLNoAttachments;
+                NSDictionary* properties = [db documentPropertiesFromJSON: json
                                                                      docID: docID revID:revID
                                                                    deleted: NO
                                                                   sequence: sequence
-                                                                   options: _mapContentOptions];
+                                                                   options: contentOptions];
                 if (!properties) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
@@ -282,7 +352,7 @@ static id fromJSON( NSData* json ) {
         // Finally, record the last revision sequence number that was indexed:
         if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
                                    @(dbMaxSequence), @(viewID)])
-            return _db.lastDbError;
+            return db.lastDbError;
         
         LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
               _name, dbMaxSequence, deleted, inserted);
@@ -295,281 +365,134 @@ static id fromJSON( NSData* json ) {
 }
 
 
-#pragma mark - QUERYING:
+@end
 
 
-- (FMResultSet*) resultSetWithOptions: (const CBLQueryOptions*)options
-                               status: (CBLStatus*)outStatus
+
+
+#pragma mark -
+
+@implementation CBLSpecialKey
 {
-    if (!options)
-        options = &kDefaultCBLQueryOptions;
-
-    // OPT: It would be faster to use separate tables for raw-or ascii-collated views so that
-    // they could be indexed with the right collation, instead of having to specify it here.
-    NSString* collationStr = @"";
-    if (_collation == kCBLViewCollationASCII)
-        collationStr = @" COLLATE JSON_ASCII";
-    else if (_collation == kCBLViewCollationRaw)
-        collationStr = @" COLLATE JSON_RAW";
-
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
-    if (options->includeDocs)
-        [sql appendString: @", revid, json"];
-    [sql appendString: @" FROM maps, revs, docs WHERE maps.view_id=?"];
-    NSMutableArray* args = $marray(@(_viewID));
-
-    if (options->keys) {
-        [sql appendString:@" AND key in ("];
-        NSString* item = @"?";
-        for (NSString * key in options->keys) {
-            [sql appendString: item];
-            item = @",?";
-            [args addObject: toJSONString(key)];
-        }
-        [sql appendString:@")"];
-    }
-    
-    id minKey = options->startKey, maxKey = options->endKey;
-    BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
-    if (options->descending) {
-        minKey = maxKey;
-        maxKey = options->startKey;
-        inclusiveMin = inclusiveMax;
-        inclusiveMax = YES;
-    }
-    if (minKey) {
-        [sql appendString: (inclusiveMin ? @" AND key >= ?" : @" AND key > ?")];
-        [sql appendString: collationStr];
-        [args addObject: toJSONString(minKey)];
-    }
-    if (maxKey) {
-        [sql appendString: (inclusiveMax ? @" AND key <= ?" :  @" AND key < ?")];
-        [sql appendString: collationStr];
-        [args addObject: toJSONString(maxKey)];
-    }
-    
-    [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
-                        "ORDER BY key"];
-    [sql appendString: collationStr];
-    if (options->descending)
-        [sql appendString: @" DESC"];
-
-    [sql appendString: @" LIMIT ? OFFSET ?"];
-    int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
-    [args addObject: @(limit)];
-    [args addObject: @(options->skip)];
-
-    LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
-    
-    FMResultSet* r = [_db.fmdb executeQuery: sql withArgumentsInArray: args];
-    if (!r)
-        *outStatus = _db.lastDbError;
-    return r;
+    NSString* _text;
+    CBLGeoRect _rect;
+    NSData* _geoJSONData;
 }
 
+- (instancetype) initWithText: (NSString*)text {
+    Assert(text != nil);
+    self = [super init];
+    if (self) {
+        _text = text;
+    }
+    return self;
+}
 
-- (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
-                        status: (CBLStatus*)outStatus
-{
-    if (!options)
-        options = &kDefaultCBLQueryOptions;
-    
-    FMResultSet* r = [self resultSetWithOptions: options status: outStatus];
-    if (!r)
-        return nil;
-    
-    NSMutableArray* rows;
+- (instancetype) initWithPoint: (CBLGeoPoint)point {
+    self = [super init];
+    if (self) {
+        _rect = (CBLGeoRect){point, point};
+        _geoJSONData = [CBLJSON dataWithJSONObject: CBLGeoPointToJSON(point) options: 0 error:NULL];
+        _geoJSONData = [NSData data]; // Empty _geoJSONData means the bbox is a point
+    }
+    return self;
+}
 
-    unsigned groupLevel = options->groupLevel;
-    bool group = options->group || groupLevel > 0;
-    bool reduce;
-    if (options->reduceSpecified) {
-        reduce = options->reduce;
-        if (reduce && !self.reduceBlock) {
-            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined",
-                 _name);
-            *outStatus = kCBLStatusBadParam;
+- (instancetype) initWithRect: (CBLGeoRect)rect {
+    self = [super init];
+    if (self) {
+        _rect = rect;
+        // Don't set _geoJSONData; if nil it defaults to the same as the bbox.
+    }
+    return self;
+}
+
+- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON {
+    self = [super init];
+    if (self) {
+        if (!CBLGeoJSONBoundingBox(geoJSON, &_rect))
             return nil;
-        }
+        _geoJSONData = [CBLJSON dataWithJSONObject: geoJSON options: 0 error: NULL];
+    }
+    return self;
+}
+
+@synthesize text=_text, rect=_rect, geoJSONData=_geoJSONData;
+
+- (NSString*) description {
+    if (_text) {
+        return $sprintf(@"CBLTextKey(\"%@\")", _text);
+    } else if (_rect.min.x==_rect.max.x && _rect.min.y==_rect.max.y) {
+        return $sprintf(@"CBLGeoPointKey(%g, %g)", _rect.min.x, _rect.min.y);
     } else {
-        reduce = (self.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
+        return $sprintf(@"CBLGeoRectKey({%g, %g}, {%g, %g})",
+                        _rect.min.x, _rect.min.y, _rect.max.x, _rect.max.y);
     }
-
-    if (reduce || group) {
-        // Reduced or grouped query:
-        rows = [self reducedQuery: r group: group groupLevel: groupLevel];
-
-    } else {
-        // Regular query:
-        rows = $marray();
-        while ([r next]) {
-            @autoreleasepool {
-                NSData* keyData = [r dataForColumnIndex: 0];
-                NSData* valueData = [r dataForColumnIndex: 1];
-                Assert(keyData);
-                NSString* docID = [r stringForColumnIndex: 2];
-                SequenceNumber sequence = [r longLongIntForColumnIndex:3];
-                id docContents = nil;
-                if (options->includeDocs) {
-                    id value = fromJSON(valueData);
-                    NSString* linkedID = $castIf(NSDictionary, value)[@"_id"];
-                    if (linkedID) {
-                        // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                        NSString* linkedRev = value[@"_rev"]; // usually nil
-                        CBLStatus linkedStatus;
-                        CBL_Revision* linked = [_db getDocumentWithID: linkedID
-                                                           revisionID: linkedRev
-                                                              options: options->content
-                                                               status: &linkedStatus];
-                        docContents = linked ? linked.properties : $null;
-                        sequence = linked.sequence;
-                    } else {
-                        docContents = [_db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 5]
-                                                                docID: docID
-                                                                revID: [r stringForColumnIndex: 4]
-                                                              deleted: NO
-                                                             sequence: sequence
-                                                              options: options->content];
-                    }
-                }
-                LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
-                      _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
-                      toJSONString(docID));
-                [rows addObject: [[CBLQueryRow alloc] initWithDocID: docID
-                                                           sequence: sequence
-                                                                key: keyData
-                                                              value: valueData
-                                                      docProperties: docContents]];
-            }
-        }
-    }
-
-    [r close];
-    *outStatus = kCBLStatusOK;
-    LogTo(View, @"Query %@: Returning %u rows", _name, (unsigned)rows.count);
-    return rows;
 }
-
-
-#pragma mark - REDUCING/GROUPING:
-
-
-// Are key1 and key2 grouped together at this groupLevel?
-static bool groupTogether(NSData* key1, NSData* key2, unsigned groupLevel) {
-    if (!key1 || !key2)
-        return NO;
-    if (groupLevel == 0)
-        groupLevel = UINT_MAX;
-    return CBLCollateJSONLimited(kCBLCollateJSON_Unicode,
-                                (int)key1.length, key1.bytes,
-                                (int)key2.length, key2.bytes,
-                                groupLevel) == 0;
-}
-
-// Returns the prefix of the key to use in the result row, at this groupLevel
-static id groupKey(NSData* keyJSON, unsigned groupLevel) {
-    id key = fromJSON(keyJSON);
-    if (groupLevel > 0 && [key isKindOfClass: [NSArray class]] && [key count] > groupLevel)
-        return [key subarrayWithRange: NSMakeRange(0, groupLevel)];
-    else
-        return key;
-}
-
-
-// Invokes the reduce function on the parallel arrays of keys and values
-static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutableArray* values) {
-    if (!reduceBlock)
-        return nil;
-    CBLLazyArrayOfJSON* lazyKeys = [[CBLLazyArrayOfJSON alloc] initWithArray: keys];
-    CBLLazyArrayOfJSON* lazyVals = [[CBLLazyArrayOfJSON alloc] initWithArray: values];
-    @try {
-        id result = reduceBlock(lazyKeys, lazyVals, NO);
-        if (result)
-            return result;
-    } @catch (NSException *x) {
-        MYReportException(x, @"reduce block");
-    }
-    return $null;
-}
-
-
-- (NSMutableArray*) reducedQuery: (FMResultSet*)r group: (BOOL)group groupLevel: (unsigned)groupLevel
-{
-    CBLReduceBlock reduce = self.reduceBlock;
-    NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
-    if (reduce) {
-        keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-        valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-    }
-    NSData* lastKeyData = nil;
-
-    NSMutableArray* rows = $marray();
-    while ([r next]) {
-        @autoreleasepool {
-            NSData* keyData = [r dataForColumnIndex: 0];
-            NSData* valueData = [r dataForColumnIndex: 1];
-            Assert(keyData);
-            if (group && !groupTogether(keyData, lastKeyData, groupLevel)) {
-                if (lastKeyData) {
-                    // This pair starts a new group, so reduce & record the last one:
-                    id key = groupKey(lastKeyData, groupLevel);
-                    id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-                    [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
-                                                               sequence: 0
-                                                                    key: key
-                                                                  value: reduced
-                                                          docProperties: nil]];
-                    [keysToReduce removeAllObjects];
-                    [valuesToReduce removeAllObjects];
-                }
-                lastKeyData = [keyData copy];
-            }
-            LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
-                  _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString]);
-            [keysToReduce addObject: keyData];
-            [valuesToReduce addObject: valueData ?: $null];
-        }
-    }
-
-    if (keysToReduce.count > 0) {
-        // Finish the last group (or the entire list, if no grouping):
-        id key = group ? groupKey(lastKeyData, groupLevel) : $null;
-        id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-        LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
-              _name, toJSONString(key), toJSONString(reduced));
-        [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
-                                                   sequence: 0
-                                                        key: key
-                                                      value: reduced
-                                              docProperties: nil]];
-    }
-    return rows;
-}
-
-
-#pragma mark - OTHER:
-
-// This is really just for unit tests & debugging
-#if DEBUG
-- (NSArray*) dump {
-    if (self.viewID <= 0)
-        return nil;
-
-    FMResultSet* r = [_db.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
-                                              "WHERE view_id=? ORDER BY key",
-                                             @(_viewID)];
-    if (!r)
-        return nil;
-    NSMutableArray* result = $marray();
-    while ([r next]) {
-        [result addObject: $dict({@"seq", [r objectForColumnIndex: 0]},
-                                 {@"key", [r stringForColumnIndex: 1]},
-                                 {@"value", [r stringForColumnIndex: 2]})];
-    }
-    [r close];
-    return result;
-}
-#endif
-
 
 @end
+
+
+
+
+/*    Adapted from http://sqlite.org/fts3.html#appendix_a (public domain)
+ *    removing the column-weights feature (because we only have one column)
+ **
+ ** SQLite user defined function to use with matchinfo() to calculate the
+ ** relevancy of an FTS match. The value returned is the relevancy score
+ ** (a real value greater than or equal to zero). A larger value indicates
+ ** a more relevant document.
+ **
+ ** The overall relevancy returned is the sum of the relevancies of each
+ ** column value in the FTS table. The relevancy of a column value is the
+ ** sum of the following for each reportable phrase in the FTS query:
+ **
+ **   (<hit count> / <global hit count>)
+ **
+ ** where <hit count> is the number of instances of the phrase in the
+ ** column value of the current row and <global hit count> is the number
+ ** of instances of the phrase in the same column of all rows in the FTS
+ ** table.
+ */
+static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal) {
+    const uint32_t *aMatchinfo;                /* Return value of matchinfo() */
+    uint32_t nCol;
+    uint32_t nPhrase;                    /* Number of phrases in the query */
+    uint32_t iPhrase;                    /* Current phrase */
+    double score = 0.0;             /* Value to return */
+
+    /*  Set aMatchinfo to point to the array
+     ** of unsigned integer values returned by FTS function matchinfo. Set
+     ** nPhrase to contain the number of reportable phrases in the users full-text
+     ** query, and nCol to the number of columns in the table.
+     */
+    aMatchinfo = (const uint32_t*)sqlite3_value_blob(apVal[0]);
+    nPhrase = aMatchinfo[0];
+    nCol = aMatchinfo[1];
+
+    /* Iterate through each phrase in the users query. */
+    for(iPhrase=0; iPhrase<nPhrase; iPhrase++){
+        uint32_t iCol;                     /* Current column */
+
+        /* Now iterate through each column in the users query. For each column,
+         ** increment the relevancy score by:
+         **
+         **   (<hit count> / <global hit count>)
+         **
+         ** aPhraseinfo[] points to the start of the data for phrase iPhrase. So
+         ** the hit count and global hit counts for each column are found in
+         ** aPhraseinfo[iCol*3] and aPhraseinfo[iCol*3+1], respectively.
+         */
+        const uint32_t *aPhraseinfo = &aMatchinfo[2 + iPhrase*nCol*3];
+        for(iCol=0; iCol<nCol; iCol++){
+            uint32_t nHitCount = aPhraseinfo[3*iCol];
+            uint32_t nGlobalHitCount = aPhraseinfo[3*iCol+1];
+            if( nHitCount>0 ){
+                score += ((double)nHitCount / (double)nGlobalHitCount);
+            }
+        }
+    }
+
+    sqlite3_result_double(pCtx, score);
+    return;
+}

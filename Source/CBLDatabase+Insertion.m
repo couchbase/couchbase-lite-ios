@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/27/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -21,7 +21,7 @@
 #import "CBL_Revision.h"
 #import "CBLCanonicalJSON.h"
 #import "CBL_Attachment.h"
-#import "CBL_DatabaseChange.h"
+#import "CBLDatabaseChange.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -133,7 +133,10 @@
     Assert([CBLDatabase isValidDocumentID: docID]);  // this should be caught before I get here
     if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
         return -1;
-    return _fmdb.lastInsertRowId;
+    SInt64 row = _fmdb.lastInsertRowId;
+    Assert(![_docIDs objectForKey: docID]);
+    [_docIDs setObject: @(row) forKey: docID];
+    return row;
 }
 
 
@@ -231,35 +234,29 @@
                      docNumericID: (SInt64)docNumericID
                    parentSequence: (SequenceNumber)parentSequence
                           current: (BOOL)current
+                   hasAttachments: (BOOL)hasAttachments
                              JSON: (NSData*)json
 {
-    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, json) "
-                                "VALUES (?, ?, ?, ?, ?, ?)",
+    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, "
+                                                  "no_attachments, json) "
+                                "VALUES (?, ?, ?, ?, ?, ?, ?)",
                                @(docNumericID),
                                rev.revID,
                                (parentSequence ? @(parentSequence) : nil ),
                                @(current),
                                @(rev.deleted),
+                               @(!hasAttachments),
                                json])
         return 0;
     return rev.sequence = _fmdb.lastInsertRowId;
 }
 
 
-/** Public method to add a new revision of a document. */
-- (CBL_Revision*) putRevision: (CBL_Revision*)rev
-             prevRevisionID: (NSString*)prevRevID   // rev ID being replaced, or nil if an insert
-                     status: (CBLStatus*)outStatus
-{
-    return [self putRevision: rev prevRevisionID: prevRevID allowConflict: NO status: outStatus];
-}
-
-
-/** Public method to add a new revision of a document. */
+/** Top-level method to add a new revision of a document. */
 - (CBL_Revision*) putRevision: (CBL_Revision*)oldRev
-             prevRevisionID: (NSString*)inputPrevRevID   // rev ID being replaced, or nil if an insert
-              allowConflict: (BOOL)allowConflict
-                     status: (CBLStatus*)outStatus
+               prevRevisionID: (NSString*)inputPrevRevID   // rev ID being replaced, nil if insert
+                allowConflict: (BOOL)allowConflict
+                       status: (CBLStatus*)outStatus
 {
     LogTo(CBLDatabase, @"PUT rev=%@, prevRevID=%@, allowConflict=%d", oldRev,
           inputPrevRevID, allowConflict);
@@ -313,7 +310,7 @@
                 else
                     return kCBLStatusNotFound;
             }
-            
+
             if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
                 // Fetch the previous revision and validate the new one against it:
                 CBL_Revision* prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
@@ -407,6 +404,7 @@
                                           docNumericID: docNumericID
                                         parentSequence: parentSequence
                                                current: YES
+                                        hasAttachments: (oldRev[@"_attachments"] != nil)
                                                   JSON: json];
         if (!sequence) {
             // The insert failed. If it was due to a constraint violation, that means a revision
@@ -446,10 +444,10 @@
         return nil;
     
     //// EPILOGUE: A change notification is sent...
-    CBL_DatabaseChange* change = [[CBL_DatabaseChange alloc] initWithAddedRevision: newRev
-                                                                   winningRevision: winningRev];
-    change.maybeConflict = maybeConflict;
-    [self notifyChange: change];
+    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
+                                                         winningRevision: winningRev
+                                                           maybeConflict: maybeConflict
+                                                                  source: nil]];
     return newRev;
 }
 
@@ -556,6 +554,7 @@
                                    docNumericID: docNumericID
                                  parentSequence: sequence
                                         current: current 
+                                 hasAttachments: (newRev[@"_attachments"] != nil)
                                            JSON: json];
                 if (sequence <= 0)
                     return self.lastDbError;
@@ -596,14 +595,24 @@
     }];
 
     if (!CBLStatusIsError(status)) {
-        CBL_DatabaseChange* change = [[CBL_DatabaseChange alloc] initWithAddedRevision: rev
-                                                                       winningRevision: winningRev];
-        change.maybeConflict = maybeConflict;
-        change.source = source;
-        [self notifyChange: change];
+        [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: rev
+                                                             winningRevision: winningRev
+                                                               maybeConflict: maybeConflict
+                                                                      source: source]];
     }
     return status;
 }
+
+
+#if DEBUG
+// Grotesque hack, for some attachment unit-tests only!
+- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence {
+    if (![_fmdb executeUpdate: @"UPDATE revs SET no_attachments=? WHERE sequence=?",
+                               @(noAttachments), @(sequence)])
+        return self.lastDbError;
+    return kCBLStatusOK;
+}
+#endif
 
 
 #pragma mark - PURGING / COMPACTING:
@@ -670,7 +679,7 @@
                 // Iterate over all the revisions of the doc, in reverse sequence order.
                 // Keep track of all the sequences to delete, i.e. the given revs and ancestors,
                 // but not any non-given leaf revs or their ancestors.
-                FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, sequence, parent FROM revs "
+                CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, sequence, parent FROM revs "
                                                        "WHERE doc_id=? ORDER BY sequence DESC",
                                   @(docNumericID)];
                 if (!r)
@@ -707,7 +716,10 @@
                     // Now delete the sequences to be purged.
                     NSString* sql = $sprintf(@"DELETE FROM revs WHERE sequence in (%@)",
                                            [seqsToPurge.allObjects componentsJoinedByString: @","]);
-                    if (![_fmdb executeUpdate: sql])
+                    _fmdb.shouldCacheStatements = NO;
+                    BOOL ok = [_fmdb executeUpdate: sql];
+                    _fmdb.shouldCacheStatements = YES;
+                    if (!ok)
                         return self.lastDbError;
                     if ((NSUInteger)_fmdb.changes != seqsToPurge.count)
                         Warn(@"purgeRevisions: Only %i sequences deleted of (%@)",
@@ -716,6 +728,45 @@
                 revsPurged = revsToPurge.allObjects;
             }
             result[docID] = revsPurged;
+        }
+        return kCBLStatusOK;
+    }];
+}
+
+
+- (CBLStatus) pruneRevsToMaxDepth: (NSUInteger)maxDepth numberPruned: (NSUInteger*)outPruned {
+    // TODO: This implementation is a bit simplistic. It won't do quite the right thing in
+    // histories with branches, if one branch stops much earlier than another. The shorter branch
+    // will be deleted entirely except for its leaf revision. A more accurate pruning
+    // would require an expensive full tree traversal. Hopefully this way is good enough.
+    if (maxDepth == 0)
+        maxDepth = self.maxRevTreeDepth;
+
+    *outPruned = 0;
+    // First find which docs need pruning, and by how much:
+    NSMutableDictionary* toPrune = $mdict();
+    NSString* sql = @"SELECT doc_id, MIN(revid), MAX(revid) FROM revs GROUP BY doc_id";
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
+    while ([r next]) {
+        UInt64 docNumericID = [r longLongIntForColumnIndex: 0];
+        unsigned minGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 1]];
+        unsigned maxGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 2]];
+        if ((maxGen - minGen + 1) > maxDepth)
+            toPrune[@(docNumericID)] = @(maxGen - maxDepth);
+    }
+    [r close];
+
+    if (toPrune.count == 0)
+        return kCBLStatusOK;
+
+    // Now prune:
+    return [self _inTransaction:^CBLStatus{
+        for (id docNumericID in toPrune) {
+            NSString* minIDToKeep = $sprintf(@"%d-", [toPrune[docNumericID] intValue] + 1);
+            if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
+                                       docNumericID, minIDToKeep])
+                return self.lastDbError;
+            *outPruned += _fmdb.changes;
         }
         return kCBLStatusOK;
     }];

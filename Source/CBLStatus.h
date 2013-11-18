@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 4/5/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 
@@ -34,7 +34,9 @@ typedef enum {
     kCBLStatusBadID          = 494,
     kCBLStatusBadParam       = 495,
     kCBLStatusDeleted        = 496,      // Document deleted
-    
+
+    kCBLStatusBadChangesFeed = 587,
+    kCBLStatusChangesFeedTruncated = 588,
     kCBLStatusUpstreamError  = 589,      // Error from remote replication server
     kCBLStatusDBError        = 590,      // SQLite error
     kCBLStatusCorruptError   = 591,      // bad data in database

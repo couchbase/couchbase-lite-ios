@@ -3,13 +3,21 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/18/12.
-//  Copyright (c) 2012 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 
 @class CBLDatabase, CBLDocument;
 @class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow;
+
+
+typedef enum {
+    kCBLAllDocs,            /**< Normal behavior for all-docs query */
+    kCBLIncludeDeleted,     /**< Will include rows for deleted documents */
+    kCBLShowConflicts,      /**< Rows will indicate conflicting revisions */
+    kCBLOnlyConflicts       /**< Will _only_ return rows for docs in conflict */
+} CBLAllDocsMode;
 
 
 /** Options for CBLQuery.stale property, to allow out-of-date results to be returned. */
@@ -71,9 +79,15 @@ typedef enum {
     (This property is equivalent to "include_docs" in the CouchDB API.) */
 @property BOOL prefetch;
 
-/** If set to YES, queries created by -queryAllDocuments will include deleted documents.
-    This property has no effect in other types of queries. */
-@property BOOL includeDeleted;
+/** Changes the behavior of a query created by -queryAllDocuments.
+    * In mode kCBLAllDocs (the default), the query simply returns all non-deleted documents.
+    * In mode kCBLIncludeDeleted, it also returns deleted documents.
+    * In mode kCBLShowConflicts, the .conflictingRevisions property of each row will return the
+      conflicting revisions, if any, of that document.
+    * In mode kCBLOnlyConflicts, _only_ documents in conflict will be returned.
+      (This mode is especially useful for use with a CBLLiveQuery, so you can be notified of
+      conflicts as they happen, i.e. when they're pulled in by a replication.) */
+@property CBLAllDocsMode allDocsMode;
 
 /** If non-nil, the error of the last execution of the query.
     If nil, the last execution of the query was successful. */
@@ -96,6 +110,9 @@ typedef enum {
 
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;
+
+
+@property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
 
 @end
 
@@ -144,7 +161,8 @@ typedef enum {
 @end
 
 
-/** A result row from a CouchbaseLite view query. */
+/** A result row from a CouchbaseLite view query.
+    Full-text and geo queries return subclasses -- see CBLFullTextQueryRow and CBLGeoQueryRow. */
 @interface CBLQueryRow : NSObject
 
 /** The row's key: this is the first parameter passed to the emit() call that generated the row. */
@@ -167,6 +185,8 @@ typedef enum {
 /** The revision ID of the document this row was mapped from. */
 @property (readonly) NSString* documentRevision;
 
+@property (readonly) CBLDatabase* database;
+
 /** The document this row was mapped from.
     This will be nil if a grouping was enabled in the query, because then the result rows don't correspond to individual documents. */
 @property (readonly) CBLDocument* document;
@@ -185,5 +205,12 @@ typedef enum {
 
 /** The local sequence number of the associated doc/revision. */
 @property (readonly) UInt64 localSequence;
+
+/** Returns all conflicting revisions of the document, as an array of CBLRevision, or nil if the
+    document is not in conflict.
+    The first object in the array will be the default "winning" revision that shadows the others.
+    This is only valid in an allDocuments query whose allDocsMode is set to kCBLShowConflicts
+    or kCBLOnlyConflicts; otherwise it returns nil. */
+@property (readonly) NSArray* conflictingRevisions;
 
 @end

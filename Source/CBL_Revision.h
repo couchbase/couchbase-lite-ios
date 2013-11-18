@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/2/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -75,10 +75,6 @@ typedef SInt64 SequenceNumber;
 
 /** An ordered list of CBLRevs. */
 @interface CBL_RevisionList : NSObject <NSFastEnumeration>
-{
-    @private
-    NSMutableArray* _revs;
-}
 
 - (instancetype) init;
 - (instancetype) initWithArray: (NSArray*)revs;

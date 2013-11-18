@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/6/11.
-//  Copyright (c) 2011 Couchbase, Inc. All rights reserved.
+//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -47,11 +47,13 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     id<CBLAuthorizer> _authorizer;
     NSDictionary* _options;
     NSDictionary* _requestHeaders;
+    NSString* _serverType;
     @private
     CBLReachability* _host;
 #if TARGET_OS_IPHONE
     NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;
 #endif
+
 }
 
 + (NSString *)progressChangedNotification;
@@ -127,3 +129,11 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 @property (readonly) NSTimeInterval requestTimeout;
 
 @end
+
+
+// Supported keys in the .options dictionary:
+#define kCBLReplicatorOption_Reset @"reset"
+#define kCBLReplicatorOption_Timeout @"connection_timeout"  // CouchDB specifies this name
+#define kCBLReplicatorOption_Heartbeat @"heartbeat"         // NSNumber, in ms
+#define kCBLReplicatorOption_PollInterval @"poll"           // NSNumber, in ms
+#define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"
