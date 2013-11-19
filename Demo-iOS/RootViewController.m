@@ -274,11 +274,10 @@
         newRemoteURL = [NSURL URLWithString:syncpoint];
     
     [self forgetSync];
-    
-    NSArray* repls = [self.database replicationsWithURL: newRemoteURL exclusively: YES];
-    if (repls) {
-        _pull = [repls objectAtIndex: 0];
-        _push = [repls objectAtIndex: 1];
+
+    if (newRemoteURL) {
+        _pull = [self.database replicationFromURL: newRemoteURL];
+        _push = [self.database replicationToURL: newRemoteURL];
         _pull.continuous = _push.continuous = YES;
         NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
         [nctr addObserver: self selector: @selector(replicationProgress:)
@@ -295,10 +294,12 @@
     NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
     if (_pull) {
         [nctr removeObserver: self name: nil object: _pull];
+        [_pull stop];
         _pull = nil;
     }
     if (_push) {
         [nctr removeObserver: self name: nil object: _push];
+        [_push stop];
         _push = nil;
     }
 }
