@@ -56,7 +56,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
             if (!_error) {
                 self.error = CBLStatusToNSError(status, nil);
             }
-            [self stop];
+            [self stop]; // this is fatal; don't know what to push
         }
     } else if (_docIDs) {
         NSArray* docIDs = _docIDs;
@@ -80,7 +80,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         if (error && error.code != kCBLStatusDuplicate) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
-            [self stop];
+            [self stop]; // this is fatal: no db to push to!
         } else {
             LogTo(Sync, @"Created remote db");
             _createTarget = NO;             // remember that I created the target

@@ -61,6 +61,9 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 @implementation CBL_Replicator
+{
+    BOOL _suspended;
+}
 
 + (NSString *)progressChangedNotification
 {
@@ -360,6 +363,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     _batcher = nil;
     [_host stop];
     _host = nil;
+    _suspended = NO;
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -415,13 +419,15 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) reachabilityChanged: (CBLReachability*)host {
-    LogTo(Sync, @"%@: Reachability state = %@ (%02X)", self, host, host.reachabilityFlags);
+    LogTo(Sync, @"%@: Reachability state = %@ (%02X), suspended=%d",
+          self, host, host.reachabilityFlags, _suspended);
 
+    BOOL reachable = host.reachable && !_suspended;
+    if (reachable) {
     // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
-    BOOL reachable = host.reachable;
     NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
                               lowercaseString];
-    if (network && reachable) {
+        if (network) {
         BOOL wifi = host.reachableByWiFi;
         if ($equal(network, @"wifi") || $equal(network, @"!cell"))
             reachable = wifi;
@@ -430,11 +436,21 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         else
             Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
     }
+    }
 
     if (reachable)
         [self goOnline];
-    else if (host.reachabilityKnown)
+    else if (host.reachabilityKnown || _suspended)
         [self goOffline];
+}
+
+// When suspended, the replicator acts as though it's offline, stopping all network activity.
+// This is used by the iOS backgrounding support (see CBLReplication+Backgrounding.m)
+- (void) setSuspended: (BOOL)suspended {
+    if (suspended != _suspended) {
+        _suspended = suspended;
+        [self reachabilityChanged: _host];
+    }
 }
 
 

@@ -58,12 +58,12 @@
 }
 
 
-// Called when the replicator goes idle
+// Called when the replicator goes idle (from -updateActive)
 - (void) okToEndBackgrounding {
     if (_bgTask != UIBackgroundTaskInvalid) {
         LogTo(Sync, @"%@: Now idle; stopping background task (%lu)",
               self, (unsigned long)_bgTask);
-        [self stop];
+        [self setSuspended: YES];
     }
 }
 
@@ -81,16 +81,16 @@
                 [self.db doSync: ^{
                     LogTo(Sync, @"%@: Background task (%lu) ran out of time!",
                           self, (unsigned long)_bgTask);
-                    [self stop];
+                    [self setSuspended: YES];
                 }];
             }];
             LogTo(Sync, @"%@: App going into background (bgTask=%lu)", self, (unsigned long)_bgTask);
             if (_bgTask == UIBackgroundTaskInvalid) {
                 // Backgrounding isn't possible for whatever reason, so just stop now:
-                [self stop];
+                [self setSuspended: YES];
             }
         } else {
-            [self stop];
+            [self setSuspended: YES];
         }
     }];
 }
@@ -104,6 +104,7 @@
             LogTo(Sync, @"%@: App returning to foreground (bgTask=%lu)", self, (unsigned long)_bgTask);
             [self endBGTask];
         }
+        [self setSuspended: NO];
     }];
 }
 
