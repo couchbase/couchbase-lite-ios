@@ -62,6 +62,19 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 @implementation CBL_Replicator
 {
+    BOOL _running, _online, _active;
+    BOOL _lastSequenceChanged;
+    NSString* _sessionID;
+    unsigned _revisionsFailed;
+    NSError* _error;
+    NSThread* _thread;
+    NSDictionary* _remoteCheckpoint;
+    BOOL _savingCheckpoint, _overdueForSave;
+    NSMutableArray* _remoteRequests;
+    int _asyncTaskCount;
+    NSUInteger _changesProcessed, _changesTotal;
+    CFAbsoluteTime _startTime;
+    CBLReachability* _host;
     BOOL _suspended;
 }
 
@@ -428,14 +441,14 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
                               lowercaseString];
         if (network) {
-        BOOL wifi = host.reachableByWiFi;
-        if ($equal(network, @"wifi") || $equal(network, @"!cell"))
-            reachable = wifi;
-        else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
-            reachable = !wifi;
-        else
-            Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
-    }
+            BOOL wifi = host.reachableByWiFi;
+            if ($equal(network, @"wifi") || $equal(network, @"!cell"))
+                reachable = wifi;
+            else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
+                reachable = !wifi;
+            else
+                Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
+        }
     }
 
     if (reachable)

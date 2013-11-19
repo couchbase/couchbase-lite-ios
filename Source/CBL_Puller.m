@@ -130,7 +130,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (void) stop {
-    if (!_running)
+    if (!self.running)
         return;
     LogTo(Sync, @"%@ STOPPING...", self);
     if (_changeTracker) {
@@ -174,7 +174,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // If we were already online (i.e. server is reachable) but got a reachability-change event,
     // tell the tracker to retry in case it's in retry mode after a transient failure. (I.e. the
     // state of the network might be better now.)
-    if (_running && _online)
+    if (self.running && self.online)
         [_changeTracker retry];
     return NO;
 }
@@ -247,7 +247,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (error) {
         if (CBLIsOfflineError(error))
             [self goOffline];
-        else if (!_error)
+        else if (!self.error)
             self.error = error;
     }
     
@@ -272,12 +272,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
-    NSUInteger total = _changesTotal - inbox.count;
+    NSUInteger total = self.changesTotal - inbox.count;
     if (![_db findMissingRevisions: inbox]) {
         Warn(@"%@ failed to look up local revs", self);
         inbox = nil;
     }
-    if (_changesTotal != total + inbox.count)
+    if (self.changesTotal != total + inbox.count)
         self.changesTotal = total + inbox.count;
     
     if (inbox.count == 0) {

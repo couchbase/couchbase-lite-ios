@@ -53,7 +53,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         filter = [_db compileFilterNamed: _filterName status: &status];
         if (!filter) {
             Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
-            if (!_error) {
+            if (!self.error) {
                 self.error = CBLStatusToNSError(status, nil);
             }
             [self stop]; // this is fatal; don't know what to push

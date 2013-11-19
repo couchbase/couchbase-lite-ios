@@ -24,36 +24,20 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 {
     @protected
     CBLDatabase* __weak _db;
-    NSThread* _thread;
     NSURL* _remote;
     BOOL _continuous;
     NSString* _filterName;
     NSDictionary* _filterParameters;
     NSArray* _docIDs;
     NSString* _lastSequence;
-    BOOL _lastSequenceChanged;
-    NSDictionary* _remoteCheckpoint;
-    BOOL _savingCheckpoint, _overdueForSave;
-    BOOL _running, _online, _active;
-    unsigned _revisionsFailed;
-    NSError* _error;
-    NSString* _sessionID;
-    NSString* _documentID;
     CBLBatcher* _batcher;
-    NSMutableArray* _remoteRequests;
-    int _asyncTaskCount;
-    NSUInteger _changesProcessed, _changesTotal;
-    CFAbsoluteTime _startTime;
     id<CBLAuthorizer> _authorizer;
     NSDictionary* _options;
     NSDictionary* _requestHeaders;
     NSString* _serverType;
-    @private
-    CBLReachability* _host;
 #if TARGET_OS_IPHONE
     NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;
 #endif
-
 }
 
 + (NSString *)progressChangedNotification;
