@@ -37,7 +37,7 @@ static NSData* ImageJPEGData(NSImage* image);
 
 - (NSImage*) picture {
     if (!_picture) {
-        NSData* pictureData = [[self attachmentNamed: @"picture"] body];
+        NSData* pictureData = [[self attachmentNamed: @"picture"] content];
         if (pictureData)
             _picture = [[NSImage alloc] initWithData: pictureData];
     }

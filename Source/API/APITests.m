@@ -525,14 +525,16 @@ TestCase(API_Attachments) {
     CAssertEqual(rev3.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
 
     CAssertEqual(attach.contentType, @"text/plain; charset=utf-8");
-    CAssertEqual(attach.body, body);
+    CAssertEqual(attach.content, body);
     CAssertEq(attach.length, (UInt64)body.length);
 
-    NSURL* bodyURL = attach.bodyURL;
+    NSURL* bodyURL = attach.contentURL;
     CAssert(bodyURL.isFileURL);
     CAssertEqual([NSData dataWithContentsOfURL: bodyURL], body);
 
-    CBLSavedRevision *rev4 = [attach updateBody:nil contentType:nil error:&error];
+    CBLNewRevision *newRev = [rev3 createRevision];
+    [newRev deleteAttachmentNamed: attach.name];
+    CBLRevision* rev4 = [newRev save: &error];
     CAssert(!error);
     CAssert(rev4);
     CAssertEq([rev4.attachmentNames count], (NSUInteger)0);

@@ -360,7 +360,7 @@ TestCase(API_ModelAttachments) {
         TestModel* model = [TestModel modelForDocument: doc];
         CAssertEq(model.number, 23);
         CBLAttachment* attachment = [model attachmentNamed: @"Caption.txt"];
-        CAssertEqual(attachment.body, attData);
+        CAssertEqual(attachment.content, attData);
 
         model.number = -1;
         CAssert([model save: &error], @"Save of new model object failed: %@", error);
