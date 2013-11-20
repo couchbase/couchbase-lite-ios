@@ -555,6 +555,9 @@ static CBLManager* sInstance;
 
 - (void) _forgetDatabase: (CBLDatabase*)db {
     NSString* name = db.name;
+    [_replications my_removeMatching: ^int(CBLReplication* repl) {
+        return [repl localDatabase] == db;
+    }];
     [_databases removeObjectForKey: name];
     CBL_Shared* shared = _shared;
     [shared closedDatabase: name];
