@@ -79,7 +79,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 {
     NSParameterAssert(database);
     NSParameterAssert(remote);
-    CBLDatabase* replicatorDB = [database.manager createDatabaseNamed: @"_replicator" error: NULL];
+    CBLDatabase* replicatorDB = [database.manager databaseNamed: @"_replicator" error: NULL];
     if (!replicatorDB)
         return nil;
     self = [super initWithNewDocumentInDatabase: replicatorDB];

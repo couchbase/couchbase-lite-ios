@@ -23,7 +23,7 @@
 static CBLDatabase* createEmptyManagerAndDb(void) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
     NSError* error;
-    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: &error];
+    CBLDatabase* db = [mgr databaseNamed: @"db" error: &error];
     CAssert(db);
     return db;
 }

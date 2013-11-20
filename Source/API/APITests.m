@@ -87,10 +87,10 @@ TestCase(API_Manager) {
                                                      error: &error];
     CAssert(ro);
 
-    CBLDatabase* db = [ro createDatabaseNamed: @"foo" error: &error];
+    CBLDatabase* db = [ro databaseNamed: @"foo" error: &error];
     CAssertNil(db);
 
-    db = [ro databaseNamed: @"test_db" error: &error];
+    db = [ro existingDatabaseNamed: @"test_db" error: &error];
     CAssert(db);
     CBLDocument* doc = [db untitledDocument];
     CAssert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
@@ -785,7 +785,7 @@ TestCase(API_AsyncViewQuery) {
 // running in the background server.
 TestCase(API_SharedMapBlocks) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
-    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: nil];
+    CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
     [db defineFilter: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
         return YES;
     }];
@@ -823,7 +823,7 @@ TestCase(API_SharedMapBlocks) {
 
 TestCase(API_ChangeUUID) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
-    CBLDatabase* db = [mgr createDatabaseNamed: @"db" error: nil];
+    CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
     NSString* pub = db.publicUUID;
     NSString* priv = db.privateUUID;
     Assert(pub.length > 10);

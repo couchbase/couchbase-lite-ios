@@ -55,7 +55,7 @@ int main (int argc, const char * argv[]) {
     }
     
     NSError* error;
-    _database = [[CBLManager sharedInstance] createDatabaseNamed: dbName
+    _database = [[CBLManager sharedInstance] databaseNamed: dbName
                                                                      error: &error];
     if (!_database) {
         NSAssert(NO, @"Error creating db: %@", error);
