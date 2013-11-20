@@ -51,7 +51,7 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
                       newRevision: (CBL_Revision*)newRevision;
-@property (readonly) CBLRevision* currentRevision;
+@property (readonly) CBLSavedRevision* currentRevision;
 @property int errorType;
 @property (copy) NSString* errorMessage;
 @end
@@ -780,7 +780,7 @@
     NSDictionary* validations = [self.shared valuesOfType: @"validation" inDatabaseNamed: _name];
     if (validations.count == 0)
         return kCBLStatusOK;
-    CBLRevision* publicRev = [[CBLRevision alloc] initWithDatabase: self revision: newRev];
+    CBLSavedRevision* publicRev = [[CBLSavedRevision alloc] initWithDatabase: self revision: newRev];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];
@@ -837,9 +837,9 @@
 }
 
 
-- (CBLRevision*) currentRevision {
+- (CBLSavedRevision*) currentRevision {
     CBL_Revision* cur = self.current_Revision;
-    return cur ? [[CBLRevision alloc] initWithDatabase: _db revision: cur] : nil;
+    return cur ? [[CBLSavedRevision alloc] initWithDatabase: _db revision: cur] : nil;
 }
 
 @synthesize errorType=_errorType, errorMessage=_errorMessage;

@@ -104,7 +104,7 @@
     
     // and a validation function requiring parseable dates:
     [theDatabase defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
-        if (newRevision.isDeleted)
+        if (newRevision.isDeletion)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
         if (date && ! [CBLJSON dateWithJSONObject: date]) {
@@ -171,7 +171,7 @@
 
     // Save changes:
     NSError* error;
-    if (![doc.currentRevision putProperties: docContent error: &error]) {
+    if (![doc.currentRevision createRevisionWithProperties: docContent error: &error]) {
         [self showErrorAlert: @"Failed to update item" forError: error];
     }
 }

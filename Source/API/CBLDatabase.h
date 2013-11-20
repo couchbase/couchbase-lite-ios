@@ -8,21 +8,21 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLView.h"
-@class CBLManager, CBLDocument, CBLRevision, CBLView, CBLQuery, CBLReplication;
+@class CBLManager, CBLDocument, CBLSavedRevision, CBLView, CBLQuery, CBLReplication;
 @protocol CBLValidationContext;
 
 
 /** Validation block, used to approve revisions being added to the database. */
-typedef BOOL (^CBLValidationBlock) (CBLRevision* newRevision,
+typedef BOOL (^CBLValidationBlock) (CBLSavedRevision* newRevision,
                                    id<CBLValidationContext> context);
 
-#define VALIDATIONBLOCK(BLOCK) ^BOOL(CBLRevision* newRevision, id<CBLValidationContext> context)\
+#define VALIDATIONBLOCK(BLOCK) ^BOOL(CBLSavedRevision* newRevision, id<CBLValidationContext> context)\
                                     {BLOCK}
 
 /** Filter block, used in changes feeds and replication. */
-typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
+typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params);
 
-#define FILTERBLOCK(BLOCK) ^BOOL(CBLRevision* revision, NSDictionary* params) {BLOCK}
+#define FILTERBLOCK(BLOCK) ^BOOL(CBLSavedRevision* revision, NSDictionary* params) {BLOCK}
 
 
 /** An external object that knows how to convert source code into an executable filter. */
@@ -205,6 +205,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 - (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
 
 
+#ifdef CBL_DEPRECATED
 // deprecated methods; same as the above but call -start automatically
 - (CBLReplication*) pushToURL: (NSURL*)url
         __attribute__((deprecated("use replicationToURL, then call -start")));
@@ -212,7 +213,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
         __attribute__((deprecated("use replicationFromURL, then call -start")));
 - (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
         __attribute__((deprecated("use replicationsWithURL:, then call -start")));
-
+#endif
 
 @end
 
@@ -236,7 +237,7 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 @protocol CBLValidationContext <NSObject>
 
 /** The contents of the current revision of the document, or nil if this is a new document. */
-@property (readonly) CBLRevision* currentRevision;
+@property (readonly) CBLSavedRevision* currentRevision;
 
 /** The type of HTTP status to report, if the validate block returns NO.
     The default value is 403 ("Forbidden"). */

@@ -344,10 +344,7 @@ TestCase(API_ModelAttachments) {
         model.number = 1337;
         CAssert([model save: &error], @"Initial failed: %@", error);
 
-        CBLAttachment* attachment = [[CBLAttachment alloc] initWithContentType: @"text/plain"
-                                                                          body: attData];
-
-        [model addAttachment: attachment named: @"Caption.txt"];
+        [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content: attData];
         CAssert([model save: &error], @"Save after adding attachment failed: %@", error);
 
         // Ensure that document's attachment metadata doesn't have the "follows" property set [#63]
@@ -369,11 +366,9 @@ TestCase(API_ModelAttachments) {
         CAssert([model save: &error], @"Save of new model object failed: %@", error);
 
         // Now update the attachment:
-        [model removeAttachmentNamed: @"caption.txt"];
+        [model deleteAttachmentNamed: @"caption.txt"];
         NSData* newAttData = [@"sluggo" dataUsingEncoding: NSUTF8StringEncoding];
-        attachment = [[CBLAttachment alloc] initWithContentType: @"text/plain"
-                                                                          body: newAttData];
-        [model addAttachment: attachment named: @"Caption.txt"];
+        [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content:newAttData];
         CAssert([model save: &error], @"Final save failed: %@", error);
     }
     [db close];

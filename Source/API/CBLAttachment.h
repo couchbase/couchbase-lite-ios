@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument, CBLRevisionBase, CBLRevision;
+@class CBLDocument, CBLRevision, CBLSavedRevision;
 
 
 /** A binary attachment to a document revision.
@@ -15,15 +15,8 @@
     To add a new attachment, call -initWithContentType:body: and then put the attachment object as a value in the "_attachments" dictionary of the properties when you create a new revision. */
 @interface CBLAttachment : NSObject
 
-/** Creates a new attachment that doesn't belong to any revision.
-    This object can then be added as a value in a new revision's _attachments dictionary; it will be converted to JSON when saved.
-    @param contentType  The MIME type
-    @param body  The attachment body; this can either be an NSData object, or an NSURL pointing to a (local) file. */
-- (instancetype) initWithContentType: (NSString*)contentType
-                                body: (id)body                          __attribute__((nonnull));
-
 /** The owning document revision. */
-@property (readonly, retain) CBLRevisionBase* revision;
+@property (readonly, retain) CBLRevision* revision;
 
 /** The owning document. */
 @property (readonly) CBLDocument* document;
@@ -52,8 +45,12 @@
     @param body  The new body, or nil to delete the attachment.
     @param contentType  The new content type, or nil to leave it the same.
     @param outError  On return, the error (if any). */
-- (CBLRevision*) updateBody: (NSData*)body
+- (CBLSavedRevision*) updateBody: (NSData*)body
                  contentType: (NSString*)contentType
                        error: (NSError**)outError;
 
+#ifdef CBL_DEPRECATED
+- (instancetype) initWithContentType: (NSString*)contentType
+                                body: (id)body __attribute__((deprecated("use CBLNewRevision or CBLModel's -addAttachmentNamed:")));
+#endif
 @end

@@ -150,7 +150,7 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
 
     // Return the CBLMapBlock; the code inside will be called when CouchbaseLite wants to run the map fn:
     JSContextRef ctx = self.context;
-    CBLFilterBlock block = ^BOOL(CBLRevision* revision, NSDictionary* params) {
+    CBLFilterBlock block = ^BOOL(CBLSavedRevision* revision, NSDictionary* params) {
         return JSValueToBoolean(ctx, [fn call: revision.properties, params]);
     };
     return [block copy];

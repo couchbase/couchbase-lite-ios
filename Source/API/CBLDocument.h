@@ -7,7 +7,7 @@
 //
 
 #import "CBLDatabase.h"
-@class CBLRevision, CBLNewRevision;
+@class CBLSavedRevision, CBLNewRevision;
 
 
 /** A CouchbaseLite document (as opposed to any specific revision of it.) */
@@ -44,10 +44,10 @@
 @property (readonly, copy) NSString* currentRevisionID;
 
 /** The current/latest revision. This object is cached. */
-@property (readonly) CBLRevision* currentRevision;
+@property (readonly) CBLSavedRevision* currentRevision;
 
 /** The revision with the specified ID. */
-- (CBLRevision*) revisionWithID: (NSString*)revisionID;
+- (CBLSavedRevision*) revisionWithID: (NSString*)revisionID;
 
 /** Returns the document's history as an array of CBLRevisions. (See CBLRevision's method.) */
 - (NSArray*) getRevisionHistory: (NSError**)outError;
@@ -85,7 +85,7 @@
 - (id)objectForKeyedSubscript:(NSString*)key                            __attribute__((nonnull));
 
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties property.) */
-- (CBLRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
+- (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
 
 /** Saves a new revision by letting the caller update the existing properties.
     This method handles conflicts by retrying (calling the block again).
@@ -98,7 +98,7 @@
             error will be stored.
     @return  The new saved revision, or nil on error or cancellation.
  */
-- (CBLRevision*) update: (BOOL(^)(CBLNewRevision*))block
+- (CBLSavedRevision*) update: (BOOL(^)(CBLNewRevision*))block
                   error: (NSError**)outError                            __attribute__((nonnull(1)));
 
 

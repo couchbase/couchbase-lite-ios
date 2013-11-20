@@ -19,7 +19,7 @@
 #import "CBLStatus.h"
 
 
-@implementation CBLRevisionBase
+@implementation CBLRevision
 {
     @protected
     __weak CBLDocument* _document;
@@ -37,6 +37,8 @@
 
 - (CBLDatabase*) database       {return _document.database;}
 - (NSString*) revisionID        {return nil;}
+- (NSString*) parentRevisionID  {AssertAbstractMethod();;}
+- (CBLSavedRevision*) parentRevision {AssertAbstractMethod();}
 - (SequenceNumber) sequence     {return 0;}
 - (NSDictionary*) properties    {AssertAbstractMethod();}
 
@@ -65,9 +67,15 @@ static inline BOOL isTruthy(id value) {
     return value != nil && value != $false;
 }
 
-- (BOOL) isDeleted {
+- (BOOL) isDeletion {
     return isTruthy(self.properties[@"_deleted"]);
 }
+
+#ifdef CBL_DEPRECATED
+- (BOOL) isDeleted {
+    return self.isDeletion;
+}
+#endif
 
 - (BOOL) isGone {
     return isTruthy(self.properties[@"_deleted"]) || isTruthy(self.properties[@"_removed"]);
@@ -118,7 +126,7 @@ static inline BOOL isTruthy(id value) {
 
 
 
-@implementation CBLRevision
+@implementation CBLSavedRevision
 {
     CBL_Revision* _rev;
     BOOL _checkedProperties;
@@ -144,7 +152,7 @@ static inline BOOL isTruthy(id value) {
 - (BOOL) isEqual: (id)object {
     if (object == self)
         return YES;
-    else if (![object isKindOfClass: [CBLRevision class]])
+    else if (![object isKindOfClass: [CBLSavedRevision class]])
         return NO;
     return self.document == [object document] && $equal(_rev.revID, [object revisionID]);
 }
@@ -153,8 +161,21 @@ static inline BOOL isTruthy(id value) {
 @synthesize rev=_rev;
 
 - (NSString*) revisionID    {return _rev.revID;}
-- (BOOL) isDeleted          {return _rev.deleted;}
+- (BOOL) isDeletion          {return _rev.deleted;}
 - (BOOL) propertiesAvailable{return !_rev.missing;}
+
+
+- (NSString*) parentRevisionID  {
+    return [_document.database getParentRevision: _rev].revID;
+}
+
+- (CBLSavedRevision*) parentRevision  {
+    CBLDocument* document = _document;
+    CBL_Revision* parent = [document.database getParentRevision: _rev];
+    if (!parent)
+        return nil;
+    return [[CBLSavedRevision alloc] initWithDocument: document revision: parent];
+}
 
 
 - (bool) loadProperties {
@@ -195,7 +216,7 @@ static inline BOOL isTruthy(id value) {
 - (NSArray*) getRevisionHistory: (NSError**)outError {
     NSMutableArray* history = $marray();
     for (CBL_Revision* rev in [self.database getRevisionHistory: _rev]) {
-        CBLRevision* revision;
+        CBLSavedRevision* revision;
         if ($equal(rev.revID, _rev.revID))
             revision = self;
         else
@@ -209,12 +230,12 @@ static inline BOOL isTruthy(id value) {
 #pragma mark - SAVING:
 
 
-- (CBLNewRevision*) newRevision {
+- (CBLNewRevision*) createRevision {
     return [[CBLNewRevision alloc] initWithDocument: self.document parent: self];
 }
 
 
-- (CBLRevision*) putProperties: (NSDictionary*)properties
+- (CBLSavedRevision*) createRevisionWithProperties: (NSDictionary*)properties
                          error: (NSError**)outError
 {
     return [self.document putProperties: properties
@@ -224,10 +245,19 @@ static inline BOOL isTruthy(id value) {
 }
 
 
-- (CBLRevision*) deleteDocument: (NSError**)outError {
-    return [self putProperties: nil error: outError];
+- (CBLSavedRevision*) deleteDocument: (NSError**)outError {
+    return [self createRevisionWithProperties: nil error: outError];
 }
 
+
+#ifdef CBL_DEPRECATED
+- (CBLNewRevision*) newRevision {
+    return [self createRevision];
+}
+- (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
+    return [self createRevisionWithProperties: properties error: outError];
+}
+#endif
 
 @end
 
@@ -245,7 +275,7 @@ static inline BOOL isTruthy(id value) {
 
 @synthesize parentRevisionID=_parentRevID, properties=_properties;
 
-- (instancetype) initWithDocument: (CBLDocument*)doc parent: (CBLRevision*)parent {
+- (instancetype) initWithDocument: (CBLDocument*)doc parent: (CBLSavedRevision*)parent {
     Assert(doc != nil);
     self = [super initWithDocument: doc];
     if (self) {
@@ -258,7 +288,7 @@ static inline BOOL isTruthy(id value) {
     return self;
 }
 
-- (CBLRevision*) parentRevision {
+- (CBLSavedRevision*) parentRevision {
     return _parentRevID ? [_document revisionWithID: _parentRevID] : nil;
 }
 
@@ -266,25 +296,40 @@ static inline BOOL isTruthy(id value) {
     [_properties setValue: object forKey: key];
 }
 
-- (void) setIsDeleted:(BOOL)isDeleted {
+- (void) setIsDeletion:(BOOL)isDeleted {
     if (isDeleted)
         _properties[@"_deleted"] = $true;
     else
         [_properties removeObjectForKey: @"_deleted"];
 }
 
-- (CBLRevision*) save: (NSError**)outError {
+- (CBLSavedRevision*) save: (NSError**)outError {
     return [_document putProperties: _properties prevRevID: _parentRevID
                       allowConflict: NO error: outError];
 }
 
-- (CBLRevision*) saveAllowingConflict: (NSError**)outError {
+- (CBLSavedRevision*) saveAllowingConflict: (NSError**)outError {
     return [_document putProperties: _properties prevRevID: _parentRevID
                       allowConflict: YES error: outError];
 }
 
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
-    Assert(attachment.revision == nil);
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                    content: (NSData*)content
+{
+    [self _addAttachment: [[CBLAttachment alloc] _initWithContentType: mimeType body: content]
+                  named: name];
+}
+
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                 contentURL: (NSURL*)fileURL
+{
+    [self _addAttachment: [[CBLAttachment alloc] _initWithContentType: mimeType body: fileURL]
+                  named: name];
+}
+
+- (void) _addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
     NSMutableDictionary* atts = [_properties[@"_attachments"] mutableCopy];
     if (!atts)
         atts = $mdict();
@@ -294,8 +339,19 @@ static inline BOOL isTruthy(id value) {
     attachment.revision = self;
 }
 
-- (void) removeAttachmentNamed: (NSString*)name {
-    [self addAttachment: nil named: name];
+- (void) deleteAttachmentNamed: (NSString*)name {
+    [self _addAttachment: nil named: name];
 }
+
+
+#ifdef CBL_DEPRECATED
+- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
+    Assert(attachment.revision == nil);
+    [self _addAttachment: attachment named: name];
+}
+- (void) removeAttachmentNamed: (NSString*)name {
+    [self deleteAttachmentNamed: name];
+}
+#endif
 
 @end

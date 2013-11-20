@@ -69,7 +69,7 @@ int main (int argc, const char * argv[]) {
     
     // and a validation function requiring parseable dates:
     [_database defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
-        if (newRevision.isDeleted)
+        if (newRevision.isDeletion)
             return YES;
         id date = newRevision[@"created_at"];
         if (date && ! [CBLJSON dateWithJSONObject: date]) {

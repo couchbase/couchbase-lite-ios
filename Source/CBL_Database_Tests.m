@@ -134,7 +134,7 @@ TestCase(CBL_Database_CRUD) {
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
 
-    CBLFilterBlock filter = ^BOOL(CBLRevision *revision, NSDictionary* params) {
+    CBLFilterBlock filter = ^BOOL(CBLSavedRevision *revision, NSDictionary* params) {
         NSString* status = params[@"status"];
         return [revision[@"status"] isEqual: status];
     };
@@ -265,13 +265,13 @@ TestCase(CBL_Database_Validation) {
     CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
     [db defineValidation: @"hoopy" 
-                 asBlock: ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context)
+                 asBlock: ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context)
     {
         CAssert(newRevision);
         CAssert(context);
-        CAssert(newRevision.properties || newRevision.isDeleted);
+        CAssert(newRevision.properties || newRevision.isDeletion);
         validationCalled = YES;
-        BOOL hoopy = newRevision.isDeleted || newRevision[@"towel"] != nil;
+        BOOL hoopy = newRevision.isDeletion || newRevision[@"towel"] != nil;
         Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
         if (!hoopy)
          [context setErrorMessage: @"Where's your towel?"];

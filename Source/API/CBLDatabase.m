@@ -436,6 +436,7 @@ static NSString* makeLocalDocID(NSString* docID) {
 }
 
 
+#ifdef CBL_DEPRECATED
 // Older, deprecated methods:
 - (CBLReplication*) pushToURL: (NSURL*)url {
     return [_manager replicationWithDatabase: self remote: url
@@ -449,7 +450,7 @@ static NSString* makeLocalDocID(NSString* docID) {
     return [_manager createReplicationsBetween: self and: otherDbURL
                                    exclusively: exclusively start: YES];
 }
-
+#endif
 
 @end
 

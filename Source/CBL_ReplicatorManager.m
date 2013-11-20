@@ -66,7 +66,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 - (void) start {
     [_replicatorDB open: nil];
     [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock:
-         ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context) {
+         ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
              return [self validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
@@ -95,9 +95,9 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 
 // Validation function for the _replicator database:
-- (BOOL) validateRevision: (CBLRevision*)newRev context: (id<CBLValidationContext>)context {
+- (BOOL) validateRevision: (CBLSavedRevision*)newRev context: (id<CBLValidationContext>)context {
     // Ignore the change if it's one I'm making myself, or if it's a deletion:
-    if (_updateInProgress || newRev.isDeleted)
+    if (_updateInProgress || newRev.isDeletion)
         return YES;
     
     // First make sure the basic properties are valid:

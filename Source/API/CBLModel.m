@@ -139,7 +139,7 @@
 
 
 - (BOOL) deleteDocument: (NSError**)outError {
-    CBLRevision* rev = _document.currentRevision;
+    CBLSavedRevision* rev = _document.currentRevision;
     if (!rev)
         return YES;
     LogTo(CBLModel, @"%@ Deleting document", self);
@@ -480,12 +480,25 @@
 }
 
 
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                    content: (NSData*)content
+{
+    [self _addAttachment: [[CBLAttachment alloc] _initWithContentType: mimeType body: content]
+                  named: name];
+}
+
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                 contentURL: (NSURL*)fileURL
+{
+    [self _addAttachment: [[CBLAttachment alloc] _initWithContentType: mimeType body: fileURL]
+                   named: name];
+}
+
+
+- (void) _addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
     Assert(name);
-    Assert(!attachment.name, @"Attachment already attached to another revision");
-    if (attachment == [self attachmentNamed: name])
-        return;
-    
     if (!_changedAttachments)
         _changedAttachments = [[NSMutableDictionary alloc] init];
     _changedAttachments[name] = (attachment ? attachment : [NSNull null]);
@@ -493,9 +506,21 @@
     [self markNeedsSave];
 }
 
-- (void) removeAttachmentNamed: (NSString*)name {
+- (void) deleteAttachmentNamed: (NSString*)name {
     [self addAttachment: nil named: name];
 }
+
+#ifdef CBL_DEPRECATED
+- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
+    Assert(!attachment.name, @"Attachment already attached to another revision");
+    if (attachment == [self attachmentNamed: name])
+        return;
+    [self _addAttachment: attachment named: name];
+}
+- (void) removeAttachmentNamed: (NSString*)name {
+    [self deleteAttachmentNamed: name];
+}
+#endif
 
 
 - (NSDictionary*) attachmentDataToSave {

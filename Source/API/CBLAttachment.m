@@ -23,14 +23,14 @@
 
 @implementation CBLAttachment
 {
-    CBLRevisionBase* _rev;
+    CBLRevision* _rev;
     NSString* _name;
     NSDictionary* _metadata;
     id _body;
 }
 
 
-- (instancetype) initWithRevision: (CBLRevisionBase*)rev
+- (instancetype) initWithRevision: (CBLRevision*)rev
                              name: (NSString*)name
                          metadata: (NSDictionary*)metadata
 {
@@ -47,8 +47,8 @@
 }
 
 
-- (instancetype) initWithContentType: (NSString*)contentType
-                                body: (id)body
+- (instancetype) _initWithContentType: (NSString*)contentType
+                                 body: (id)body
 {
     NSParameterAssert(contentType);
     NSParameterAssert(body);
@@ -63,6 +63,14 @@
     }
     return self;
 }
+
+#ifdef CBL_DEPRECATED
+- (instancetype) initWithContentType: (NSString*)contentType
+                                body: (id)body
+{
+    return [self _initWithContentType: contentType body: body];
+}
+#endif
 
 
 @synthesize revision=_rev, name=_name, metadata=_metadata;
@@ -137,7 +145,7 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* bo
 }
 
 
-- (CBLRevision*) updateBody: (NSData*)body
+- (CBLSavedRevision*) updateBody: (NSData*)body
                 contentType: (NSString*)contentType
                       error: (NSError**)outError
 {
@@ -155,7 +163,7 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* bo
         if (outError) *outError = CBLStatusToNSError(status, nil);
         return nil;
     }
-    return [[CBLRevision alloc] initWithDocument: self.document revision: newRev];
+    return [[CBLSavedRevision alloc] initWithDocument: self.document revision: newRev];
 }
 
 
