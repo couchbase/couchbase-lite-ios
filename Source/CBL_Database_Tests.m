@@ -264,7 +264,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
 TestCase(CBL_Database_Validation) {
     CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
-    [db defineValidation: @"hoopy" 
+    [db setValidationNamed: @"hoopy" 
                  asBlock: ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context)
     {
         CAssert(newRevision);

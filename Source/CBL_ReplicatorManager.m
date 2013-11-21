@@ -16,6 +16,7 @@
 //  http://wiki.apache.org/couchdb/Replication#Replicator_database
 //  http://www.couchbase.com/docs/couchdb-release-1.1/index.html
 
+#import "CouchbaseLitePrivate.h"
 #import "CBL_ReplicatorManager.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
@@ -65,9 +66,10 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) start {
     [_replicatorDB open: nil];
-    [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock:
+    __weak CBL_ReplicatorManager* weakSelf = self;
+    [_replicatorDB setValidationNamed: @"CBL_ReplicatorManager" asBlock:
          ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
-             return [self validateRevision: newRevision context: context];
+             return [weakSelf validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
@@ -85,7 +87,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) stop {
     LogTo(CBL_Server, @"STOP %@", self);
-    [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock: nil];
+    [_replicatorDB setValidationNamed: @"CBL_ReplicatorManager" asBlock: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     _replicatorsByDocID = nil;
 }

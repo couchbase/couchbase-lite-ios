@@ -129,7 +129,7 @@
     if (db) {
         // On setting database, create a new untitled/unsaved CBLDocument:
         NSString* docID = [self idForNewDocumentInDatabase: db];
-        self.document = docID ? [db documentWithID: docID] : [db untitledDocument];
+        self.document = docID ? [db documentWithID: docID] : [db createDocument];
         LogTo(CBLModel, @"%@ made new document", self);
     } else {
         [self deleteDocument: nil];

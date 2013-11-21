@@ -68,7 +68,7 @@ int main (int argc, const char * argv[]) {
     }) version: @"1.0"];
     
     // and a validation function requiring parseable dates:
-    [_database defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
+    [_database setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.isDeletion)
             return YES;
         id date = newRevision[@"created_at"];
@@ -81,7 +81,7 @@ int main (int argc, const char * argv[]) {
     
     // And why not a filter, just to allow some simple testing of filtered _changes.
     // For example, try curl 'http://localhost:8888/demo-shopping/_changes?filter=default/checked'
-    [_database defineFilter: @"checked" asBlock: FILTERBLOCK({
+    [_database setFilterNamed: @"checked" asBlock: FILTERBLOCK({
         return [revision[@"check"] boolValue];
     })];
 

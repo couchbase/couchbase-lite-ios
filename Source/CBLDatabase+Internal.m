@@ -1280,7 +1280,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         *outStatus = kCBLStatusCallbackError;
         return nil;
     }
-    [self defineFilter: filterName asBlock: filter];
+    [self setFilterNamed: filterName asBlock: filter];
     return filter;
 }
 

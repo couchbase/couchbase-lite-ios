@@ -103,7 +103,7 @@
     
     
     // and a validation function requiring parseable dates:
-    [theDatabase defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
+    [theDatabase setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.isDeletion)
             return YES;
         id date = [newRevision.properties objectForKey: @"created_at"];
@@ -247,7 +247,7 @@
                                 nil];
 
     // Save the document:
-    CBLDocument* doc = [database untitledDocument];
+    CBLDocument* doc = [database createDocument];
     NSError* error;
     if (![doc putProperties: inDocument error: &error]) {
         [self showErrorAlert: @"Couldn't save new item" forError: error];

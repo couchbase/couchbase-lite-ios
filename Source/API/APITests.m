@@ -39,7 +39,7 @@ static void closeTestDB(CBLDatabase* db) {
 
 static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
                                                    NSDictionary* properties) {
-    CBLDocument* doc = [db untitledDocument];
+    CBLDocument* doc = [db createDocument];
     CAssert(doc != nil);
     CAssertNil(doc.currentRevisionID);
     CAssertNil(doc.currentRevision);
@@ -92,7 +92,7 @@ TestCase(API_Manager) {
 
     db = [ro existingDatabaseNamed: @"test_db" error: &error];
     CAssert(db);
-    CBLDocument* doc = [db untitledDocument];
+    CBLDocument* doc = [db createDocument];
     CAssert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
     [ro close];
 }
@@ -110,6 +110,17 @@ TestCase(API_CreateDocument) {
     CAssert(currentRevisionID.length > 10, @"Invalid doc revision: '%@'", currentRevisionID);
 
     CAssertEqual(doc.userProperties, properties);
+
+    CAssertEq([db documentWithID: docID], doc);
+
+    [db _clearDocumentCache]; // so we can load fresh copies
+
+    CBLDocument* doc2 = [db existingDocumentWithID: docID];
+    CAssertEqual(doc2.documentID, docID);
+    CAssertEqual(doc2.currentRevision.revisionID, currentRevisionID);
+
+    CAssertNil([db existingDocumentWithID: @"b0gus"]);
+
     closeTestDB(db);
 }
 
@@ -146,7 +157,7 @@ TestCase(API_CreateNewRevisions) {
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
     @"tag": @1337};
     CBLDatabase* db = createEmptyDB();
-    CBLDocument* doc = [db untitledDocument];
+    CBLDocument* doc = [db createDocument];
     CBLNewRevision* newRev = [doc newRevision];
 
     CBLDocument* newRevDocument = newRev.document;
@@ -322,7 +333,7 @@ TestCase(API_PurgeDocument) {
     NSError* error;
     CAssert([doc purgeDocument: &error]);
     
-    CBLDocument* redoc = [db cachedDocumentWithID:doc.documentID];
+    CBLDocument* redoc = [db _cachedDocumentWithID:doc.documentID];
     CAssert(!redoc);
     closeTestDB(db);
 }
@@ -333,10 +344,10 @@ TestCase(API_AllDocuments) {
     createDocuments(db, kNDocs);
 
     // clear the cache so all documents/revisions will be re-fetched:
-    [db clearDocumentCache];
+    [db _clearDocumentCache];
     
     Log(@"----- all documents -----");
-    CBLQuery* query = [db queryAllDocuments];
+    CBLQuery* query = [db createAllDocumentsQuery];
     //query.prefetch = YES;
     Log(@"Getting all documents: %@", query);
     
@@ -363,9 +374,9 @@ TestCase(API_RowsIfChanged) {
     static const NSUInteger kNDocs = 5;
     createDocuments(db, kNDocs);
     // clear the cache so all documents/revisions will be re-fetched:
-    [db clearDocumentCache];
+    [db _clearDocumentCache];
     
-    CBLQuery* query = [db queryAllDocuments];
+    CBLQuery* query = [db createAllDocumentsQuery];
     query.prefetch = NO;    // Prefetching prevents view caching, so turn it off
     CBLQueryEnumerator* rows = query.rows;
     CAssertEq(rows.count, kNDocs);
@@ -381,23 +392,23 @@ TestCase(API_RowsIfChanged) {
 
 TestCase(API_LocalDocs) {
     CBLDatabase* db = createEmptyDB();
-    NSDictionary* props = [db getLocalDocumentWithID: @"dock"];
+    NSDictionary* props = [db existingLocalDocumentWithID: @"dock"];
     CAssertNil(props);
     NSError* error;
     CAssert([db putLocalDocument: @{@"foo": @"bar"} withID: @"dock" error: &error],
             @"Couldn't put new local doc: %@", error);
-    props = [db getLocalDocumentWithID: @"dock"];
+    props = [db existingLocalDocumentWithID: @"dock"];
     CAssertEqual(props[@"foo"], @"bar");
     
     CAssert([db putLocalDocument: @{@"FOOO": @"BARRR"} withID: @"dock" error: &error],
             @"Couldn't update local doc: %@", error);
-    props = [db getLocalDocumentWithID: @"dock"];
+    props = [db existingLocalDocumentWithID: @"dock"];
     CAssertNil(props[@"foo"]);
     CAssertEqual(props[@"FOOO"], @"BARRR");
 
     CAssert([db deleteLocalDocumentWithID: @"dock" error: &error],
             @"Couldn't delete local doc: %@", error);
-    props = [db getLocalDocumentWithID: @"dock"];
+    props = [db existingLocalDocumentWithID: @"dock"];
     CAssertNil(props);
 
     CAssert(![db deleteLocalDocumentWithID: @"dock" error: &error],
@@ -478,7 +489,7 @@ TestCase(API_Conflict) {
     }
     AssertEqual(doc.currentRevision, defaultRev);
 
-    CBLQuery* query = [db queryAllDocuments];
+    CBLQuery* query = [db createAllDocumentsQuery];
     query.allDocsMode = kCBLShowConflicts;
     NSArray* rows = [[query rows] allObjects];
     AssertEq(rows.count, 1u);
@@ -633,7 +644,7 @@ TestCase(API_RunSlowView) {
 TestCase(API_Validation) {
     CBLDatabase* db = createEmptyDB();
 
-    [db defineValidation: @"uncool"
+    [db setValidationNamed: @"uncool"
                  asBlock: ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
                      if (!newRevision.properties[@"groovy"]) {
                          context.errorMessage = @"uncool";
@@ -643,12 +654,12 @@ TestCase(API_Validation) {
                  }];
     
     NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
-    CBLDocument* doc = [db untitledDocument];
+    CBLDocument* doc = [db createDocument];
     NSError *error;
     CAssert([doc putProperties: properties error: &error]);
     
     properties = @{ @"foo": @"bar" };
-    doc = [db untitledDocument];
+    doc = [db createDocument];
     CAssert(![doc putProperties: properties error: &error]);
     CAssertEq(error.code, 403);
     //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
@@ -786,10 +797,10 @@ TestCase(API_AsyncViewQuery) {
 TestCase(API_SharedMapBlocks) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
     CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
-    [db defineFilter: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
+    [db setFilterNamed: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
         return YES;
     }];
-    [db defineValidation: @"val" asBlock: VALIDATIONBLOCK({
+    [db setValidationNamed: @"val" asBlock: VALIDATIONBLOCK({
         return YES;
     })];
     CBLView* view = [db viewNamed: @"view"];

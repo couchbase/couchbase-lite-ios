@@ -42,6 +42,10 @@
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
+#if DEBUG // for testing
+- (CBLDocument*) _cachedDocumentWithID: (NSString*)docID;
+- (void) _clearDocumentCache;
+#endif
 @end
 
 

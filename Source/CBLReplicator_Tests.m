@@ -193,7 +193,7 @@ TestCase(CBL_Pusher) {
     CAssert(db);
     
     __block int filterCalls = 0;
-    [db defineFilter: @"filter" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary* params) {
+    [db setFilterNamed: @"filter" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary* params) {
         Log(@"Test filter called with params = %@", params);
         Log(@"Rev = %@, properties = %@", revision, revision.properties);
         CAssert(revision.properties);
