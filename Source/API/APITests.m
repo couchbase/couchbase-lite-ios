@@ -136,6 +136,7 @@ TestCase(API_CreateRevisions) {
     CAssertEq(rev1.sequence, 1);
     CAssertNil(rev1.attachments);
 
+    // Test -createRevisionWithProperties:
     NSMutableDictionary* properties2 = [properties mutableCopy];
     properties2[@"tag"] = @4567;
     NSError* error;
@@ -149,6 +150,24 @@ TestCase(API_CreateRevisions) {
     CAssert(rev2.propertiesAreLoaded);
     CAssertEqual(rev2.userProperties, properties2);
     CAssertEq(rev2.document, doc);
+    CAssertEqual(rev2.properties[@"_id"], doc.documentID);
+    CAssertEqual(rev2.properties[@"_rev"], rev2.revisionID);
+
+    // Test -createRevision:
+    CBLNewRevision* newRev = [rev2 createRevision];
+    CAssertNil(newRev.revisionID);
+    CAssertEq(newRev.parentRevision, rev2);
+    CAssertEqual(newRev.parentRevisionID, rev2.revisionID);
+    CAssertEqual(([newRev getRevisionHistory: &error]), (@[rev1, rev2]));
+    CAssertEqual(newRev.properties, rev2.properties);
+    CAssertEqual(newRev.userProperties, rev2.userProperties);
+    newRev.userProperties = @{@"because": @"NoSQL"};
+    CAssertEqual(newRev.userProperties, @{@"because": @"NoSQL"});
+    CAssertEqual(newRev.properties,
+                 (@{@"because": @"NoSQL", @"_id": doc.documentID, @"_rev": rev2.revisionID}));
+    CBLSavedRevision* rev3 = [newRev save: &error];
+    CAssert(rev3);
+    CAssertEqual(rev3.userProperties, newRev.userProperties);
     closeTestDB(db);
 }
 

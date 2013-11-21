@@ -38,6 +38,10 @@
 /** The ID of the parentRevision. */
 @property (readonly) NSString* parentRevisionID;
 
+/** Returns the ancestry of this revision as an array of CBLRevisions, in chronological order.
+    Older revisions are NOT guaranteed to have their properties available. */
+- (NSArray*) getRevisionHistory: (NSError**)outError;
+
 /** The revision's contents as parsed from JSON.
     Keys beginning with "_" are defined and reserved by CouchbaseLite; others are app-specific.
     The first call to this method may need to fetch the properties from disk, but subsequent calls
@@ -94,10 +98,6 @@
 /** Deletes the document by creating a new deletion-marker revision. */
 - (CBLSavedRevision*) deleteDocument: (NSError**)outError;
 
-/** Returns the history of this document as an array of CBLRevisions, in forward order.
-    Older revisions are NOT guaranteed to have their properties available. */
-- (NSArray*) getRevisionHistory: (NSError**)outError;
-
 #ifdef CBL_DEPRECATED
 - (CBLNewRevision*) newRevision __attribute__((deprecated("use -createRevision:")));
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties
@@ -113,7 +113,7 @@
 // These properties are overridden to be settable:
 @property (readwrite) BOOL isDeletion;
 @property (readwrite, copy) NSMutableDictionary* properties;
-@property (readonly, copy) NSDictionary* userProperties;
+@property (readwrite, copy) NSDictionary* userProperties;
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key;
 
 /** Saves the new revision to the database.

@@ -234,9 +234,9 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties
-                     prevRevID: (NSString*)prevID
-                 allowConflict: (BOOL)allowConflict
-                         error: (NSError**)outError
+                          prevRevID: (NSString*)prevID
+                      allowConflict: (BOOL)allowConflict
+                              error: (NSError**)outError
 {
     id idProp = [properties objectForKey: @"_id"];
     if (idProp && ![idProp isEqual: self.documentID])
@@ -267,7 +267,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         if (outError) *outError = CBLStatusToNSError(status, nil);
         return nil;
     }
-    return [[CBLSavedRevision alloc] initWithDocument: self revision: newRev];
+    return [self revisionFromRev: newRev];
 }
 
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {

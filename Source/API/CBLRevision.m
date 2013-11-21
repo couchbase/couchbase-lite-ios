@@ -35,18 +35,19 @@
     return self;
 }
 
-- (CBLDatabase*) database       {return _document.database;}
-- (NSString*) revisionID        {return nil;}
-- (NSString*) parentRevisionID  {AssertAbstractMethod();;}
-- (CBLSavedRevision*) parentRevision {AssertAbstractMethod();}
-- (SequenceNumber) sequence     {return 0;}
-- (NSDictionary*) properties    {AssertAbstractMethod();}
+- (CBLDatabase*) database                            {return _document.database;}
+- (NSString*) revisionID                             {return nil;}
+- (NSString*) parentRevisionID                       {AssertAbstractMethod();}
+- (CBLSavedRevision*) parentRevision                 {AssertAbstractMethod();}
+- (NSArray*) getRevisionHistory: (NSError**)outError {AssertAbstractMethod();};
+- (NSDictionary*) properties                         {AssertAbstractMethod();}
+- (SequenceNumber) sequence                          {return 0;}
 
 - (NSDictionary*) userProperties {
     NSDictionary* rep = self.properties;
     if (!rep)
         return nil;
-    NSMutableDictionary* props = [NSMutableDictionary dictionary];
+    NSMutableDictionary* props = [NSMutableDictionary dictionaryWithCapacity: rep.count];
     for (NSString* key in rep) {
         if (![key hasPrefix: @"_"])
             props[key] = rep[key];
@@ -171,10 +172,7 @@ static inline BOOL isTruthy(id value) {
 
 - (CBLSavedRevision*) parentRevision  {
     CBLDocument* document = _document;
-    CBL_Revision* parent = [document.database getParentRevision: _rev];
-    if (!parent)
-        return nil;
-    return [[CBLSavedRevision alloc] initWithDocument: document revision: parent];
+    return [document revisionFromRev: [document.database getParentRevision: _rev]];
 }
 
 
@@ -290,6 +288,21 @@ static inline BOOL isTruthy(id value) {
 
 - (CBLSavedRevision*) parentRevision {
     return _parentRevID ? [_document revisionWithID: _parentRevID] : nil;
+}
+
+- (NSArray*) getRevisionHistory: (NSError**)outError {
+    CBLSavedRevision* parent = self.parentRevision;
+    return parent ? [parent getRevisionHistory: outError] : @[];
+    // (Don't include self in the array, because this revision doesn't really exist yet)
+}
+
+- (void) setUserProperties:(NSDictionary *)userProperties {
+    NSMutableDictionary* newProps = userProperties.mutableCopy ?: $mdict();
+    for (NSString* key in _properties) {
+        if ([key hasPrefix: @"_"])
+            newProps[key] = _properties[key];  // Preserve metadata properties
+    }
+    self.properties = newProps;
 }
 
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key {
