@@ -220,16 +220,16 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) observeReplication: (CBLReplication*)repl {
-    [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"total" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"completedChangesCount" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"changesCount" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"lastError" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
 }
 
 - (void) stopObservingReplication: (CBLReplication*)repl {
-    [repl removeObserver: self forKeyPath: @"completed"];
-    [repl removeObserver: self forKeyPath: @"total"];
-    [repl removeObserver: self forKeyPath: @"error"];
+    [repl removeObserver: self forKeyPath: @"completedChangesCount"];
+    [repl removeObserver: self forKeyPath: @"changesCount"];
+    [repl removeObserver: self forKeyPath: @"lastError"];
     [repl removeObserver: self forKeyPath: @"mode"];
 }
 
@@ -258,12 +258,12 @@ int main (int argc, const char * argv[]) {
 #ifdef ENABLE_REPLICATION
     int value;
     NSString* tooltip = nil;
-    if (_pull.error) {
+    if (_pull.lastError) {
         value = 3;  // red
-        tooltip = _pull.error.localizedDescription;
-    } else if (_push.error) {
+        tooltip = _pull.lastError.localizedDescription;
+    } else if (_push.lastError) {
         value = 3;  // red
-        tooltip = _push.error.localizedDescription;
+        tooltip = _push.lastError.localizedDescription;
     } else switch(MAX(_pull.mode, _push.mode)) {
         case kCBLReplicationStopped:
             value = 3; 
@@ -300,8 +300,8 @@ int main (int argc, const char * argv[]) {
     NSLog(@"SYNC mode=%d", repl.mode);
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
-            unsigned completed = _pull.completed + _push.completed;
-            unsigned total = _pull.total + _push.total;
+            unsigned completed = _pull.completedChangesCount + _push.completedChangesCount;
+            unsigned total = _pull.changesCount + _push.changesCount;
             NSLog(@"SYNC progress: %u / %u", completed, total);
             if (total > 0 && completed < total) {
                 [_syncProgress setDoubleValue: (completed / (double)total)];
@@ -313,14 +313,14 @@ int main (int argc, const char * argv[]) {
         [self updateSyncStatusView];
     } else if ([keyPath isEqualToString: @"error"]) {
         [self updateSyncStatusView];
-        if (repl.error) {
-            NSLog(@"SYNC error: %@", repl.error);
+        if (repl.lastError) {
+            NSLog(@"SYNC error: %@", repl.lastError);
             NSAlert* alert = [NSAlert alertWithMessageText: @"Replication failed"
                                              defaultButton: nil
                                            alternateButton: nil
                                                otherButton: nil
                                  informativeTextWithFormat: @"Replication with %@ failed.\n\n %@",
-                              repl.remoteURL, repl.error.localizedDescription];
+                              repl.remoteURL, repl.lastError.localizedDescription];
             [alert beginSheetModalForWindow: _window
                               modalDelegate: nil didEndSelector: NULL contextInfo: NULL];
         }

@@ -49,7 +49,7 @@ typedef enum {
 @property (nonatomic, readonly) NSURL* remoteURL;
 
 /** Does the replication pull from (as opposed to push to) the target? */
-@property (nonatomic, readonly) bool pull;
+@property (nonatomic, readonly) BOOL pull;
 
 
 #pragma mark - OPTIONS:
@@ -57,10 +57,10 @@ typedef enum {
 /** Is this replication remembered persistently in the _replicator database?
     Persistent continuous replications will automatically restart on the next launch
     or (on iOS) when the app returns to the foreground. */
-@property bool persistent;
+@property BOOL persistent;
 
 /** Should the target database be created if it doesn't already exist? (Defaults to NO). */
-@property (nonatomic) bool create_target;
+@property (nonatomic) BOOL createTarget;
 
 /** Should the replication operate continuously, copying changes as soon as the source database is modified? (Defaults to NO). */
 @property (nonatomic) bool continuous;
@@ -73,7 +73,7 @@ typedef enum {
 
 /** Parameters to pass to the filter function.
     Should map strings to strings. */
-@property (nonatomic, copy) NSDictionary* query_params;
+@property (nonatomic, copy) NSDictionary* filterParams;
 
 /** List of Sync Gateway channel names to filter by; a nil value means no filtering, i.e. all
     available channels will be synced.
@@ -82,7 +82,7 @@ typedef enum {
 @property (nonatomic, copy) NSArray* channels;
 
 /** Sets the documents to specify as part of the replication. */
-@property (copy) NSArray *doc_ids;
+@property (copy) NSArray *documentIDs;
 
 /** Extra HTTP headers to send in all requests to the remote server.
     Should map strings (header names) to strings. */
@@ -119,7 +119,7 @@ typedef enum {
     the server, and the server will respond with a session cookie. After that the token isn't
     needed again until the session expires. At that point you'll need to recover or regenerate
     the token and register it again. */
-- (bool) registerFacebookToken: (NSString*)token
+- (BOOL) registerFacebookToken: (NSString*)token
                forEmailAddress: (NSString*)email                        __attribute__((nonnull));
 
 /** The base URL of the remote server, for use as the "origin" parameter when requesting Persona or
@@ -139,7 +139,7 @@ typedef enum {
     immediately after registering the assertion, so that the replicator engine can use it to
     authenticate before it expires. After that, the replicator will have a login session cookie
     that should last significantly longer before needing to be renewed. */
-- (bool) registerPersonaAssertion: (NSString*)assertion               __attribute__((nonnull));
+- (BOOL) registerPersonaAssertion: (NSString*)assertion               __attribute__((nonnull));
 
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.
@@ -168,18 +168,26 @@ typedef enum {
 /** YES while the replication is running, NO if it's stopped.
     Note that a continuous replication never actually stops; it only goes idle waiting for new
     data to appear. */
-@property (nonatomic, readonly) bool running;
+@property (nonatomic, readonly) BOOL running;
 
 /** The error status of the replication, or nil if there have not been any errors since it started. */
-@property (nonatomic, readonly, retain) NSError* error;
+@property (nonatomic, readonly, retain) NSError* lastError;
 
 /** The number of completed changes processed, if the task is active, else 0 (observable). */
-@property (nonatomic, readonly) unsigned completed;
+@property (nonatomic, readonly) unsigned completedChangesCount;
 
 /** The total number of changes to be processed, if the task is active, else 0 (observable). */
-@property (nonatomic, readonly) unsigned total;
+@property (nonatomic, readonly) unsigned changesCount;
 
 
+#ifdef CBL_DEPRECATED
+@property (nonatomic) bool create_target __attribute__((deprecated("renamed createTarget")));
+@property (nonatomic, copy) NSDictionary* query_params __attribute__((deprecated("renamed filterParams")));
+@property (copy) NSArray *doc_ids __attribute__((deprecated("renamed documentIDs")));
+@property (nonatomic, readonly, retain) NSError* error;
+@property (nonatomic, readonly) unsigned completed __attribute__((deprecated("renamed completedChangesCount")));
+@property (nonatomic, readonly) unsigned total __attribute__((deprecated("renamed changesCount")));
+#endif
 @end
 
 

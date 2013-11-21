@@ -13,8 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBLReplication.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLReplication.h"
 
 #import "CBL_Pusher.h"
 #import "CBLDatabase+Replication.h"
@@ -41,23 +41,23 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @interface CBLReplication ()
 @property (copy) id source, target;  // document properties
 
-@property (nonatomic, readwrite) bool running;
+@property (nonatomic, readwrite) BOOL running;
 @property (nonatomic, readwrite) CBLReplicationMode mode;
-@property (nonatomic, readwrite) unsigned completed, total;
-@property (nonatomic, readwrite, retain) NSError* error;
+@property (nonatomic, readwrite) unsigned completedChangesCount, changesCount;
+@property (nonatomic, readwrite, retain) NSError* lastError;
 @end
 
 
 @implementation CBLReplication
 {
     NSURL* _remoteURL;
-    bool _pull;
+    BOOL _pull;
     NSThread* _mainThread;
-    bool _started;
-    bool _running;
-    unsigned _completed, _total;
+    BOOL _started;
+    BOOL _running;
+    unsigned _completedChangesCount, _changesCount;
     CBLReplicationMode _mode;
-    NSError* _error;
+    NSError* _lastError;
 
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
     NSString* _bg_documentID;           // ONLY used on the server thread
@@ -126,9 +126,34 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 // These are the JSON properties in the replication document:
-@dynamic source, target, create_target, continuous, filter, query_params, doc_ids, network;
+@dynamic source, target, continuous, filter, network;
 
 @synthesize remoteURL=_remoteURL, pull=_pull;
+
+
+- (BOOL) createTarget {
+    return $castIf(NSNumber, [self valueForKey: @"create_target"]).boolValue;
+}
+
+- (void) setCreateTarget:(BOOL)createTarget {
+    [self setValue: (createTarget ? $true : nil) forKey: @"create_target"];
+}
+
+- (NSDictionary*) filterParams {
+    return $castIf(NSDictionary, [self valueForKey: @"query_params"]);
+}
+
+- (void) setFilterParams:(NSDictionary *)filterParams {
+    [self setValue: filterParams forKey: @"query_params"];
+}
+
+- (NSArray*) documentIDs {
+    return $castIf(NSArray, [self valueForKey: @"doc_ids"]);
+}
+
+- (void) setDocumentIDs:(NSArray *)documentIDs {
+    [self setValue: documentIDs forKey: @"doc_ids"];
+}
 
 
 - (NSString*) description {
@@ -142,14 +167,14 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
-- (bool) persistent {
+- (BOOL) persistent {
     return !self.isNew;  // i.e. if it's been saved to the database, it's persistent
 }
 
-- (void) setPersistent:(bool)persistent {
+- (void) setPersistent:(BOOL)persistent {
     if (persistent == self.persistent)
         return;
-    bool ok;
+    BOOL ok;
     NSError* error;
     if (persistent)
         ok = [self save: &error];
@@ -237,7 +262,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (NSArray*) channels {
-    NSString* params = self.query_params[kChannelsQueryParam];
+    NSString* params = self.filterParams[kChannelsQueryParam];
     if (!self.pull || !$equal(self.filter, kByChannelFilterName) || params.length == 0)
         return nil;
     return [params componentsSeparatedByString: @","];
@@ -247,10 +272,10 @@ static inline BOOL isLocalDBName(NSString* url) {
     if (channels) {
         Assert(self.pull, @"filterChannels can only be set in pull replications");
         self.filter = kByChannelFilterName;
-        self.query_params = @{kChannelsQueryParam: [channels componentsJoinedByString: @","]};
+        self.filterParams = @{kChannelsQueryParam: [channels componentsJoinedByString: @","]};
     } else if ($equal(self.filter, kByChannelFilterName)) {
         self.filter = nil;
-        self.query_params = nil;
+        self.filterParams = nil;
     }
 }
 
@@ -317,7 +342,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
-- (bool) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
+- (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
     if (![CBLFacebookAuthorizer registerToken: token forEmailAddress: email forSite: self.remoteURL])
         return false;
     self.facebookEmailAddress = email;
@@ -342,7 +367,7 @@ static inline BOOL isLocalDBName(NSString* url) {
     [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
-- (bool) registerPersonaAssertion: (NSString*)assertion {
+- (BOOL) registerPersonaAssertion: (NSString*)assertion {
     NSString* email = [CBLPersonaAuthorizer registerAssertion: assertion];
     if (!email) {
         Warn(@"Invalid Persona assertion: %@", assertion);
@@ -421,7 +446,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
-@synthesize running = _running, completed=_completed, total=_total, error = _error, mode=_mode;
+@synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError = _lastError, mode=_mode;
 
 
 - (void) updateMode: (CBLReplicationMode)mode
@@ -444,16 +469,16 @@ static inline BOOL isLocalDBName(NSString* url) {
         self.running = running;
         changed = YES;
     }
-    if (!$equal(error, _error)) {
-        self.error = error;
+    if (!$equal(error, _lastError)) {
+        self.lastError = error;
         changed = YES;
     }
-    if (changesProcessed != _completed) {
-        self.completed = changesProcessed;
+    if (changesProcessed != _completedChangesCount) {
+        self.completedChangesCount = changesProcessed;
         changed = YES;
     }
-    if (changesTotal != _total) {
-        self.total = changesTotal;
+    if (changesTotal != _changesCount) {
+        self.changesCount = changesTotal;
         changed = YES;
     }
     if (changed) {
@@ -550,5 +575,12 @@ static inline BOOL isLocalDBName(NSString* url) {
     }
 }
 
+
+#ifdef CBL_DEPRECATED
+@dynamic create_target, query_params, doc_ids;
+- (NSError*) error      {return self.lastError;}
+- (unsigned) completed  {return self.completedChangesCount;}
+- (unsigned) total      {return self.changesCount;}
+#endif
 
 @end

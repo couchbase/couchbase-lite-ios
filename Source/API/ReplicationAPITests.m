@@ -52,7 +52,7 @@ static void runReplication(CBLReplication* repl) {
         lastTime = now;
     }
     Log(@"...replicator finished. mode=%d, progress %u/%u, error=%@",
-        repl.mode, repl.completed, repl.total, repl.error);
+        repl.mode, repl.completedChangesCount, repl.changesCount, repl.error);
 }
 
 
@@ -73,18 +73,18 @@ TestCase(CreateReplicators) {
     CAssert(!r1.pull);
     CAssert(!r1.persistent);
     CAssert(!r1.continuous);
-    CAssert(!r1.create_target);
+    CAssert(!r1.createTarget);
     CAssertNil(r1.filter);
-    CAssertNil(r1.query_params);
-    CAssertNil(r1.doc_ids);
+    CAssertNil(r1.filterParams);
+    CAssertNil(r1.documentIDs);
     CAssertNil(r1.headers);
 
     // Check that the replication hasn't started running:
     CAssert(!r1.running);
     CAssertEq(r1.mode, kCBLReplicationStopped);
-    CAssertEq(r1.completed, 0u);
-    CAssertEq(r1.total, 0u);
-    CAssertNil(r1.error);
+    CAssertEq(r1.completedChangesCount, 0u);
+    CAssertEq(r1.changesCount, 0u);
+    CAssertNil(r1.lastError);
 
     // Create another replication:
     CBLReplication* r2 = [db replicationFromURL: fakeRemoteURL];
@@ -101,11 +101,11 @@ TestCase(CreateReplicators) {
     CBLReplication* r3 = [[CBLReplication alloc] initPullFromSourceURL: fakeRemoteURL
                                                             toDatabase: db];
     CAssert(r3 != r2);
-    r3.doc_ids = @[@"doc1", @"doc2"];
+    r3.documentIDs = @[@"doc1", @"doc2"];
     CBLStatus status;
     CBL_Replicator* repl = [db.manager replicatorWithProperties: r3.propertiesToSave
                                                          status: &status];
-    AssertEqual(repl.docIDs, r3.doc_ids);
+    AssertEqual(repl.docIDs, r3.documentIDs);
     [db.manager close];
 }
 
@@ -136,9 +136,9 @@ TestCase(RunPushReplication) {
 
     Log(@"Pushing...");
     CBLReplication* repl = [db replicationToURL: remoteDbURL];
-    repl.create_target = YES;
+    repl.createTarget = YES;
     runReplication(repl);
-    AssertNil(repl.error);
+    AssertNil(repl.lastError);
     [db.manager close];
 }
 
@@ -155,7 +155,7 @@ TestCase(RunPullReplication) {
     Log(@"Pulling...");
     CBLReplication* repl = [db replicationFromURL: remoteDbURL];
     runReplication(repl);
-    AssertNil(repl.error);
+    AssertNil(repl.lastError);
 
     Log(@"Verifying documents...");
     for (int i = 1; i <= kNDocuments; i++) {
@@ -178,10 +178,10 @@ TestCase(RunReplicationWithError) {
 
     // It should have failed with a 404:
     CAssertEq(r1.mode, kCBLReplicationStopped);
-    CAssertEq(r1.completed, 0u);
-    CAssertEq(r1.total, 0u);
-    CAssertEqual(r1.error.domain, CBLHTTPErrorDomain);
-    CAssertEq(r1.error.code, 404);
+    CAssertEq(r1.completedChangesCount, 0u);
+    CAssertEq(r1.changesCount, 0u);
+    CAssertEqual(r1.lastError.domain, CBLHTTPErrorDomain);
+    CAssertEq(r1.lastError.code, 404);
 
     [db.manager close];
 }
@@ -195,21 +195,21 @@ TestCase(ReplicationChannelsProperty) {
     CAssertNil(r1.channels);
     r1.filter = @"foo/bar";
     CAssertNil(r1.channels);
-    r1.query_params = @{@"a": @"b"};
+    r1.filterParams = @{@"a": @"b"};
     CAssertNil(r1.channels);
 
     r1.channels = nil;
     CAssertEqual(r1.filter, @"foo/bar");
-    CAssertEqual(r1.query_params, @{@"a": @"b"});
+    CAssertEqual(r1.filterParams, @{@"a": @"b"});
 
     r1.channels = @[@"NBC", @"MTV"];
     CAssertEqual(r1.channels, (@[@"NBC", @"MTV"]));
     CAssertEqual(r1.filter, @"sync_gateway/bychannel");
-    CAssertEqual(r1.query_params, @{@"channels": @"NBC,MTV"});
+    CAssertEqual(r1.filterParams, @{@"channels": @"NBC,MTV"});
 
     r1.channels = nil;
     CAssertEqual(r1.filter, nil);
-    CAssertEqual(r1.query_params, nil);
+    CAssertEqual(r1.filterParams, nil);
 
     [db.manager close];
 }
