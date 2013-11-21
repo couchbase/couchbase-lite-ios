@@ -158,7 +158,7 @@
 
 
 // Respond to an external change (likely from sync). This is called by my CBLDocument.
-- (void) tdDocumentChanged: (CBLDocument*)doc {
+- (void) CBLDocument: (CBLDocument*)doc didChange:(CBLDatabaseChange*)change {
     NSAssert(doc == _document, @"Notified for wrong document");
     if (_saving)
         return;  // this is just an echo from my -justSave: method, below, so ignore it

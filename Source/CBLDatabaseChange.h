@@ -11,8 +11,8 @@
 
 
 /** Identifies a change to a database, that is, a newly added document revision.
-    The CBLDatabaseChangeNotification contains an array of these in the "changes" key of its
-    userInfo dictionary. */
+    The CBLDocumentChangeNotification contains one of these in the "changes" key of its
+    userInfo dictionary, and CBLDatabaseChangeNotification contains an array.  */
 @interface CBLDatabaseChange : NSObject <NSCopying>
 
 /** The ID of the document that changed. */
