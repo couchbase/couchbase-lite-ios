@@ -70,7 +70,7 @@
 
     // Create a query sorted by descending date, i.e. newest items first:
     NSAssert(database!=nil, @"Not hooked up to database yet");
-    CBLLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
+    CBLLiveQuery* query = [[[database viewNamed: @"byDate"] createQuery] asLiveQuery];
     query.descending = YES;
     
     self.dataSource.query = query;

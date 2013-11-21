@@ -86,7 +86,7 @@ int main (int argc, const char * argv[]) {
     })];
 
     
-    CBLQuery* q = [[_database viewNamed: @"byDate"] query];
+    CBLQuery* q = [[_database viewNamed: @"byDate"] createQuery];
     q.descending = YES;
     self.query = [[DemoQuery alloc] initWithQuery: q
                                        modelClass: _tableController.objectClass];

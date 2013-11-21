@@ -60,7 +60,7 @@ typedef enum {
 
 /** If set, the view will not be updated for this query, even if the database has changed.
     This allows faster results at the expense of returning possibly out-of-date data. */
-@property CBLStaleness stale;
+@property CBLStaleness staleness;
 
 /** If non-nil, the query will fetch only the rows with the given keys. */
 @property (copy) NSArray* keys;
@@ -75,8 +75,7 @@ typedef enum {
 /** If set to YES, the results will include the entire document contents of the associated rows.
     These can be accessed via CBLQueryRow's -documentProperties property.
     This slows down the query, but can be a good optimization if you know you'll need the entire
-    contents of each document.
-    (This property is equivalent to "include_docs" in the CouchDB API.) */
+    contents of each document. */
 @property BOOL prefetch;
 
 /** Changes the behavior of a query created by -queryAllDocuments.
@@ -89,31 +88,28 @@ typedef enum {
       conflicts as they happen, i.e. when they're pulled in by a replication.) */
 @property CBLAllDocsMode allDocsMode;
 
-/** If non-nil, the error of the last execution of the query.
-    If nil, the last execution of the query was successful. */
-@property (readonly) NSError* error;
-
-/** Sends the query to the server and returns an enumerator over the result rows (Synchronous).
-    If the query fails, this method returns nil and sets the query's .error property. */
-- (CBLQueryEnumerator*) rows;
-
-/** Same as -rows, except returns nil if the query results have not changed since the last time it
-    was evaluated (Synchronous). */
-- (CBLQueryEnumerator*) rowsIfChanged;
+/** Sends the query to the server and returns an enumerator over the result rows (Synchronous). */
+- (CBLQueryEnumerator*) rows: (NSError**)outError;
 
 /** Starts an asynchronous query. Returns immediately, then calls the onComplete block when the
     query completes, passing it the row enumerator.
     If the query fails, the block will receive a non-nil enumerator but its .error property will
     be set to a value reflecting the error. The originating CBLQuery's .error property will NOT
     change. */
-- (void) runAsync: (void (^)(CBLQueryEnumerator*))onComplete            __attribute__((nonnull));
+- (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete   __attribute__((nonnull));
 
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;
 
 
-@property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
 
+#ifdef CBL_DEPRECATED
+@property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
+@property CBLStaleness stale __attribute__((deprecated("renamed staleness")));
+- (CBLQueryEnumerator*) rows __attribute__((deprecated("renamed rows:")));
+- (CBLQueryEnumerator*) rowsIfChanged __attribute__((deprecated("use CBLQueryEnumerator.stale")));
+@property (readonly) NSError* error __attribute__((deprecated("use rows: which returns an error")));
+#endif
 @end
 
 
@@ -132,8 +128,13 @@ typedef enum {
 /** In CBLLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
 @property (readonly, retain) CBLQueryEnumerator* rows;
 
-/** Blocks until the intial async query finishes. After this call either .rows or .error will be non-nil. */
+/** Blocks until the intial async query finishes. 
+    After this call either .rows or .error will be non-nil. */
 - (BOOL) waitForRows;
+
+/** If non-nil, the error of the last execution of the query.
+    If nil, the last execution of the query was successful. */
+@property (readonly) NSError* lastError;
 
 @end
 
@@ -148,15 +149,17 @@ typedef enum {
 /** The database's current sequenceNumber at the time the view was generated. */
 @property (readonly) UInt64 sequenceNumber;
 
+/** YES if the database has changed since the view was generated. */
+@property (readonly) BOOL stale;
+
 /** The next result row. This is the same as -nextObject but with a checked return type. */
 - (CBLQueryRow*) nextRow;
 
 /** Random access to a row in the result */
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
 
-/** Error, if the query failed.
-    NOTE: This will only ever be set in an enumerator returned from an _asynchronous_ query. The CBLQuery.rows method returns a nil enumerator on error.) */
-@property (readonly) NSError* error;
+/** Resets the enumeration so the next call to -nextObject or -nextRow will return the first row. */
+- (void) reset;
 
 @end
 
@@ -192,7 +195,10 @@ typedef enum {
 @property (readonly) CBLDocument* document;
 
 /** The properties of the document this row was mapped from.
-    To get this, you must have set the -prefetch property on the query; else this will be nil. */
+    To get this, you must have set the .prefetch property on the query; else this will be nil.
+    (You can still get the document properties via the .document property, of course. But it
+    takes a separate call to the database. So if you're doing it for every row, using
+    .prefetch and .documentProperties is faster.) */
 @property (readonly) NSDictionary* documentProperties;
 
 /** If this row's key is an array, returns the item at that index in the array.
@@ -203,8 +209,8 @@ typedef enum {
 /** Convenience for use in keypaths. Returns the key at the given index. */
 @property (readonly) id key0, key1, key2, key3;
 
-/** The local sequence number of the associated doc/revision. */
-@property (readonly) UInt64 localSequence;
+/** The database sequence number of the associated doc/revision. */
+@property (readonly) UInt64 sequenceNumber;
 
 /** Returns all conflicting revisions of the document, as an array of CBLRevision, or nil if the
     document is not in conflict.
@@ -213,4 +219,7 @@ typedef enum {
     or kCBLOnlyConflicts; otherwise it returns nil. */
 @property (readonly) NSArray* conflictingRevisions;
 
+#ifdef CBL_DEPRECATED
+@property (readonly) UInt64 localSequence __attribute__((deprecated("renamed sequenceNumber")));
+#endif
 @end

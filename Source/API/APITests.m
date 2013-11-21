@@ -370,7 +370,7 @@ TestCase(API_AllDocuments) {
     //query.prefetch = YES;
     Log(@"Getting all documents: %@", query);
     
-    CBLQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = [query rows: NULL];
     CAssertEq(rows.count, kNDocs);
     NSUInteger n = 0;
     for (CBLQueryRow* row in rows) {
@@ -387,27 +387,6 @@ TestCase(API_AllDocuments) {
     closeTestDB(db);
 }
 
-
-TestCase(API_RowsIfChanged) {
-    CBLDatabase* db = createEmptyDB();
-    static const NSUInteger kNDocs = 5;
-    createDocuments(db, kNDocs);
-    // clear the cache so all documents/revisions will be re-fetched:
-    [db _clearDocumentCache];
-    
-    CBLQuery* query = [db createAllDocumentsQuery];
-    query.prefetch = NO;    // Prefetching prevents view caching, so turn it off
-    CBLQueryEnumerator* rows = query.rows;
-    CAssertEq(rows.count, kNDocs);
-    
-    // Make sure the query is cached (view eTag hasn't changed):
-    CAssertNil(query.rowsIfChanged);
-    
-    // Get the rows again to make sure caching isn't messing up:
-    rows = query.rows;
-    CAssertEq(rows.count, kNDocs);
-    closeTestDB(db);
-}
 
 TestCase(API_LocalDocs) {
     CBLDatabase* db = createEmptyDB();
@@ -510,7 +489,7 @@ TestCase(API_Conflict) {
 
     CBLQuery* query = [db createAllDocumentsQuery];
     query.allDocsMode = kCBLShowConflicts;
-    NSArray* rows = [[query rows] allObjects];
+    NSArray* rows = [[query rows: NULL] allObjects];
     AssertEq(rows.count, 1u);
     CBLQueryRow* row = rows[0];
     NSArray* revs = row.conflictingRevisions;
@@ -618,18 +597,18 @@ TestCase(API_CreateView) {
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
 
-    CBLQuery* query = [view query];
+    CBLQuery* query = [view createQuery];
     CAssertEq(query.database, db);
     query.startKey = @23;
     query.endKey = @33;
-    CBLQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = [query rows: NULL];
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
 
     int expectedKey = 23;
     for (CBLQueryRow* row in rows) {
         CAssertEq([row.key intValue], expectedKey);
-        CAssertEq(row.localSequence, (UInt64)expectedKey+1);
+        CAssertEq(row.sequenceNumber, (UInt64)expectedKey+1);
         ++expectedKey;
     }
     closeTestDB(db);
@@ -645,7 +624,7 @@ TestCase(API_RunSlowView) {
     CBLQuery* query = [db slowQueryWithMap: @"function(doc){emit(doc.sequence,null);};"];
     query.startKey = [NSNumber numberWithInt: 23];
     query.endKey = [NSNumber numberWithInt: 33];
-    CBLQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = [query rows: NULL];
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
     CAssertEq(rows.totalCount, kNDocs);
@@ -707,7 +686,7 @@ TestCase(API_ViewWithLinkedDocs) {
     query.startKey = @23;
     query.endKey = @33;
     query.prefetch = YES;
-    CBLQueryEnumerator* rows = query.rows;
+    CBLQueryEnumerator* rows = [query rows: NULL];
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
     
@@ -734,7 +713,7 @@ TestCase(API_LiveQuery) {
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
 
-    CBLLiveQuery* query = [[view query] asLiveQuery];
+    CBLLiveQuery* query = [[view createQuery] asLiveQuery];
     query.startKey = @23;
     query.endKey = @33;
     Log(@"Created %@", query);
@@ -749,7 +728,6 @@ TestCase(API_LiveQuery) {
         CBLQueryEnumerator* rows = query.rows;
         Log(@"Live query rows = %@", rows);
         if (rows != nil) {
-            CAssertNil(rows.error);
             CAssertEq(rows.count, (NSUInteger)11);
 
             int expectedKey = 23;
@@ -778,17 +756,17 @@ TestCase(API_AsyncViewQuery) {
     static const NSUInteger kNDocs = 50;
     createDocuments(db, kNDocs);
 
-    CBLQuery* query = [view query];
+    CBLQuery* query = [view createQuery];
     query.startKey = @23;
     query.endKey = @33;
 
     __block bool finished = false;
     NSThread* curThread = [NSThread currentThread];
-    [query runAsync: ^(CBLQueryEnumerator *rows) {
+    [query runAsync: ^(CBLQueryEnumerator *rows, NSError* error) {
         Log(@"Async query finished!");
         CAssertEq([NSThread currentThread], curThread);
         CAssert(rows);
-        CAssertNil(rows.error);
+        CAssertNil(error);
         CAssertEq(rows.count, (NSUInteger)11);
 
         int expectedKey = 23;
@@ -875,7 +853,6 @@ TestCase(API) {
     RequireTestCase(API_PurgeDocument);
     RequireTestCase(API_AllDocuments);
     RequireTestCase(API_LocalDocs);
-    RequireTestCase(API_RowsIfChanged);
     RequireTestCase(API_History);
     RequireTestCase(API_Attachments);
     RequireTestCase(API_ChangeTracking);

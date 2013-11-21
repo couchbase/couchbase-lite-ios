@@ -90,13 +90,13 @@ id CBLTextKey(NSString* text);
 @property (readonly) SInt64 lastSequenceIndexed;
 
 /** Deletes the view's persistent index. It will be regenerated on the next query. */
-- (void) removeIndex;
+- (void) deleteIndex;
 
 /** Deletes the view, persistently. */
 - (void) deleteView;
 
 /** Creates a new query object for this view. The query can be customized and then executed. */
-- (CBLQuery*) query;
+- (CBLQuery*) createQuery;
 
 /** Utility function to use in reduce blocks. Totals an array of NSNumbers. */
 + (NSNumber*) totalValues: (NSArray*)values;
@@ -107,4 +107,8 @@ id CBLTextKey(NSString* text);
 /** The registered object, if any, that can compile map/reduce functions from source code. */
 + (id<CBLViewCompiler>) compiler;
 
+#ifdef CBL_DEPRECATED
+- (void) removeIndex __attribute__((deprecated("renamed -deleteIndex")));
+- (CBLQuery*) query __attribute__((deprecated("renamed createQuery")));
+#endif
 @end
