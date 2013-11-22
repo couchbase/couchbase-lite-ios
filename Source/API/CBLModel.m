@@ -357,6 +357,8 @@
             value = [value docIDs];
         else
             value = [value my_map:^id(id obj) { return [self externalizePropertyValue: obj]; }];
+    } else if ([value conformsToProtocol: @protocol(CBLJSONEncoding)]) {
+        value = [(id<CBLJSONEncoding>)value encodeAsJSON];
     }
     return value;
 }

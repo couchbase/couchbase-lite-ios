@@ -73,3 +73,11 @@ typedef NSUInteger CBLJSONWritingOptions;
     @param array   An NSArray of NSData objects, each containing JSON. */
 - (instancetype) initWithMutableArray: (NSMutableArray*)array;
 @end
+
+
+/** Protocol for classes whose instances can encode themselves as JSON.
+    Such classes can be used directly as property types in CBLModel subclasses. */
+@protocol CBLJSONEncoding <NSObject>
+- (id) initWIthJSON: (id)jsonObject;
+- (id) encodeAsJSON;
+@end
