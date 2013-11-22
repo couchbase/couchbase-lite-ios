@@ -352,7 +352,7 @@ static inline BOOL isTruthy(id value) {
     attachment.revision = self;
 }
 
-- (void) deleteAttachmentNamed: (NSString*)name {
+- (void) removeAttachmentNamed: (NSString*)name {
     [self _addAttachment: nil named: name];
 }
 
@@ -361,9 +361,6 @@ static inline BOOL isTruthy(id value) {
 - (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
     Assert(attachment.revision == nil);
     [self _addAttachment: attachment named: name];
-}
-- (void) removeAttachmentNamed: (NSString*)name {
-    [self deleteAttachmentNamed: name];
 }
 #endif
 

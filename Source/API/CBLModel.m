@@ -506,7 +506,7 @@
     [self markNeedsSave];
 }
 
-- (void) deleteAttachmentNamed: (NSString*)name {
+- (void) removeAttachmentNamed: (NSString*)name {
     [self addAttachment: nil named: name];
 }
 
@@ -516,9 +516,6 @@
     if (attachment == [self attachmentNamed: name])
         return;
     [self _addAttachment: attachment named: name];
-}
-- (void) removeAttachmentNamed: (NSString*)name {
-    [self deleteAttachmentNamed: name];
 }
 #endif
 

@@ -366,7 +366,7 @@ TestCase(API_ModelAttachments) {
         CAssert([model save: &error], @"Save of new model object failed: %@", error);
 
         // Now update the attachment:
-        [model deleteAttachmentNamed: @"caption.txt"];
+        [model removeAttachmentNamed: @"caption.txt"];
         NSData* newAttData = [@"sluggo" dataUsingEncoding: NSUTF8StringEncoding];
         [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content:newAttData];
         CAssert([model save: &error], @"Final save failed: %@", error);

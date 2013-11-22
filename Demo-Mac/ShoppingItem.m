@@ -54,7 +54,7 @@ static NSData* ImageJPEGData(NSImage* image);
                  withContentType: @"image/jpeg"
                          content: ImageJPEGData(picture)];
     else
-        [self deleteAttachmentNamed: @"picture"];
+        [self removeAttachmentNamed: @"picture"];
     _picture = picture;
 }
 

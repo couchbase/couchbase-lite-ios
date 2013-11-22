@@ -542,7 +542,7 @@ TestCase(API_Attachments) {
     CAssertEqual([NSData dataWithContentsOfURL: bodyURL], body);
 
     CBLNewRevision *newRev = [rev3 createRevision];
-    [newRev deleteAttachmentNamed: attach.name];
+    [newRev removeAttachmentNamed: attach.name];
     CBLRevision* rev4 = [newRev save: &error];
     CAssert(!error);
     CAssert(rev4);

@@ -130,7 +130,9 @@
             withContentType: (NSString*)mimeType
                  contentURL: (NSURL*)fileURL                            __attribute__((nonnull));
 
-- (void) deleteAttachmentNamed: (NSString*)name                         __attribute__((nonnull));
+/** Deletes (in memory) any existing attachment with the given name.
+    The attachment will be deleted from the database at the same time as property changes are saved. */
+- (void) removeAttachmentNamed: (NSString*)name                         __attribute__((nonnull));
 
 
 #pragma mark - PROTECTED (FOR SUBCLASSES TO OVERRIDE)
@@ -176,10 +178,6 @@
     @param name  The attachment name. */
 - (void) addAttachment: (CBLAttachment*)attachment
                  named: (NSString*)name                                 __attribute__((nonnull(2)));
-
-/** Deletes (in memory) any existing attachment with the given name.
-    The attachment will be deleted from the database at the same time as property changes are saved. */
-- (void) removeAttachmentNamed: (NSString*)name                         __attribute__((nonnull));
 #endif
 @end
 

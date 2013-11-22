@@ -149,15 +149,13 @@
             withContentType: (NSString*)mimeType
                  contentURL: (NSURL*)fileURL;
 
-/** Deletes the attachment with the given name.
+/** Removes the attachment with the given name.
     When this revision is saved, it won't include the attachment. However, the attachment will
     still be present in the parent revision, until the database is next compacted. */
-- (void) deleteAttachmentNamed: (NSString*)name;
+- (void) removeAttachmentNamed: (NSString*)name;
 
 #ifdef CBL_DEPRECATED
 - (void) addAttachment: (CBLAttachment*)attachment
                  named: (NSString*)name __attribute__((deprecated("use setAttachmentNamed:withContentType:content:")));
-- (void) removeAttachmentNamed: (NSString*)name __attribute__((deprecated("use deleteAttachmentNamed")));
-
 #endif
 @end
