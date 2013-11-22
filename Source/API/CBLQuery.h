@@ -20,12 +20,12 @@ typedef enum {
 } CBLAllDocsMode;
 
 
-/** Options for CBLQuery.stale property, to allow out-of-date results to be returned. */
+/** Options for CBLQuery.updateIndex property, to allow out-of-date results to be returned. */
 typedef enum {
-    kCBLStaleNever,           /**< Never return stale view results (default) */
-    kCBLStaleOK,              /**< Return stale results as long as view is already populated */
-    kCBLStaleUpdateAfter      /**< Return stale results, then update view afterwards */
-} CBLStaleness;
+    kCBLUpdateIndexBefore,  /**< Always update index if needed before querying (default) */
+    kCBLUpdateIndexNever,   /**< Don't update the index; results may be out of date */
+    kCBLUpdateIndexAfter    /**< Update index after querying (results may still be out of date) */
+} CBLUpdateIndexMode;
 
 
 /** Represents a query of a CouchbaseLite 'view', or of a view-like resource like _all_documents. */
@@ -58,9 +58,12 @@ typedef enum {
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
 @property (copy) NSString* endKeyDocID;
 
-/** If set, the view will not be updated for this query, even if the database has changed.
-    This allows faster results at the expense of returning possibly out-of-date data. */
-@property CBLStaleness staleness;
+/** Determines whether or when the view index is updated. By default, the index will be updated
+    if necessary before the query runs -- this guarantees up-to-date results but can cause a
+    delay. The "Never" mode skips updating the index, so it's faster but can return out of date
+    results. The "After" mode is a compromise that may return out of date results but if so will
+    start asynchronously updating the index after the query so future results are accurate. */
+@property CBLUpdateIndexMode updateIndex;
 
 /** If non-nil, the query will fetch only the rows with the given keys. */
 @property (copy) NSArray* keys;
@@ -105,7 +108,7 @@ typedef enum {
 
 #ifdef CBL_DEPRECATED
 @property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
-@property CBLStaleness stale __attribute__((deprecated("renamed staleness")));
+@property CBLUpdateIndexMode stale __attribute__((deprecated("renamed staleness")));
 - (CBLQueryEnumerator*) rows __attribute__((deprecated("renamed rows:")));
 - (CBLQueryEnumerator*) rowsIfChanged __attribute__((deprecated("use CBLQueryEnumerator.stale")));
 @property (readonly) NSError* error __attribute__((deprecated("use rows: which returns an error")));
