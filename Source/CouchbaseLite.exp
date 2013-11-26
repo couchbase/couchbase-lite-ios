@@ -5,7 +5,7 @@
 .objc_class_name_CBLDocument
 .objc_class_name_CBLRevision
 .objc_class_name_CBLSavedRevision
-.objc_class_name_CBLNewRevision
+.objc_class_name_CBLUnsavedRevision
 .objc_class_name_CBLAttachment
 .objc_class_name_CBLView
 .objc_class_name_CBLQuery

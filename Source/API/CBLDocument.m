@@ -150,8 +150,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 
-- (CBLNewRevision*) newRevision {
-    return [[CBLNewRevision alloc] initWithDocument: self parent: self.currentRevision];
+- (CBLUnsavedRevision*) newRevision {
+    return [[CBLUnsavedRevision alloc] initWithDocument: self parent: self.currentRevision];
 }
 
 
@@ -273,10 +273,10 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     return [self putProperties: properties prevRevID: prevID allowConflict: NO error: outError];
 }
 
-- (CBLSavedRevision*) update: (BOOL(^)(CBLNewRevision*))block error: (NSError**)outError {
+- (CBLSavedRevision*) update: (BOOL(^)(CBLUnsavedRevision*))block error: (NSError**)outError {
     NSError* error;
     do {
-        CBLNewRevision* newRev = self.newRevision;
+        CBLUnsavedRevision* newRev = self.newRevision;
         if (!block(newRev)) {
             error = nil;
             break; // cancel

@@ -76,7 +76,7 @@
 @end
 
 
-@interface CBLNewRevision ()
+@interface CBLUnsavedRevision ()
 - (instancetype) initWithDocument: (CBLDocument*)doc
                            parent: (CBLSavedRevision*)parent             __attribute__((nonnull(1)));
 @end
