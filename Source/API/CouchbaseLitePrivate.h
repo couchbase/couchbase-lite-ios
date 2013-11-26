@@ -73,6 +73,7 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)tddb
                          revision: (CBL_Revision*)rev               __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
+@property (readonly) BOOL propertiesAreLoaded;
 @end
 
 

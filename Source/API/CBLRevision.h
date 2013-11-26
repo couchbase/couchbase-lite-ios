@@ -83,9 +83,6 @@
     either the database has been compacted, or the revision was replicated from another db. */
 @property (readonly) BOOL propertiesAvailable;
 
-/** Has this object fetched its contents from the database yet? */
-@property (readonly) BOOL propertiesAreLoaded;
-
 /** Creates a new mutable child revision whose properties and attachments are initially identical
     to this one's, which you can modify and then save. */
 - (CBLUnsavedRevision*) createRevision;
