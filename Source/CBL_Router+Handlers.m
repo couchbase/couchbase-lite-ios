@@ -640,6 +640,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                                          error: NULL]);
 }
 
+- (CBLStatus)do_OPTIONS: (CBLDatabase *)db docID:(NSString *)docID {
+    return kCBLStatusOK;
+}
 
 - (CBLStatus) do_GET: (CBLDatabase*)db docID: (NSString*)docID {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
