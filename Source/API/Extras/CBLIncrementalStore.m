@@ -17,24 +17,24 @@
 #endif
 
 
-NSString * const kCBLISIncrementalStoreErrorDomain = @"CBISIncrementalStoreErrorDomain";
-NSString * const kCBLISTypeKey = @"cbis_type";
-NSString * const kCBLISCurrentRevisionAttributeName = @"cbisRev";
-NSString * const kCBLISManagedObjectIDPrefix = @"cb";
-NSString * const kCBLISDesignName = @"cbisDesign";
-NSString * const kCBLISMetadataDocumentID = @"cbis_metadata";
-NSString * const kCBLISAllByTypeViewName = @"cbis_all_by_type";
-NSString * const kCBLISIDByTypeViewName = @"cbis_id_by_type";
-NSString * const kCBLISConflictsViewName = @"cblis_conflicts";
-NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"cbis_fetch_%@_by_%@";
-
+NSString * const kCBLIncrementalStoreErrorDomain = @"CBLISIncrementalStoreErrorDomain";
 NSString * const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
+
+NSString * const kCBLISTypeKey = @"cblis_type";
+NSString * const kCBLISCurrentRevisionAttributeName = @"cblisRev";
+NSString * const kCBLISManagedObjectIDPrefix = @"cbl";
+NSString * const kCBLISDesignName = @"cblisDesign";
+NSString * const kCBLISMetadataDocumentID = @"cblis_metadata";
+NSString * const kCBLISAllByTypeViewName = @"cblis_all_by_type";
+NSString * const kCBLISIDByTypeViewName = @"cblis_id_by_type";
+NSString * const kCBLISConflictsViewName = @"cblis_conflicts";
+NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"cblis_fetch_%@_by_%@";
 
 
 // utility functions
-BOOL CBCDBIsNull(id value);
-NSString *CBCDBToManyViewNameForRelationship(NSRelationshipDescription *relationship);
-NSString *CBResultTypeName(NSFetchRequestResultType resultType);
+BOOL CBLISIsNull(id value);
+NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship);
+NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 
 @interface NSManagedObjectID (CBLIncrementalStore)
@@ -77,7 +77,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
 {
     return [self createManagedObjectContextWithModel:managedObjectModel databaseName:databaseName importingDatabaseAtURL:nil error:outError];
 }
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl error:(NSError**)outError
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl type:(NSString*)importType error:(NSError**)outError
 {
     NSManagedObjectModel *model = [managedObjectModel mutableCopy];
     
@@ -114,7 +114,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         if (!store) {
             NSString *errorDescription = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
             if (outError) *outError = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                          code:-1
+                                                          code:-2
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: errorDescription,
                                                                  NSUnderlyingErrorKey: error
@@ -129,8 +129,8 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         
         if (!store) {
             NSString *errorDescription = [NSString stringWithFormat:@"Initialization of store failed: %@", error.description];
-            if (outError) *outError = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                          code:-2
+            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                          code:CBLIncrementalStoreErrorCreatingStoreFailed
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: errorDescription,
                                                                  NSUnderlyingErrorKey: error
@@ -210,14 +210,13 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     _coalescedChanges = [[NSMutableArray alloc] init];
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _entityAndPropertyToFetchViewName = [[NSMutableDictionary alloc] init];
-
     
     return self;
 }
 
 #pragma mark - NSIncrementalStore
 
--(BOOL)loadMetadata:(NSError **)error
+-(BOOL)loadMetadata:(NSError **)outError
 {
     // check data model if compatible with this store
     NSArray *entites = self.persistentStoreCoordinator.managedObjectModel.entities;
@@ -226,41 +225,42 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         NSDictionary *attributesByName = [entity attributesByName];
         
         if (![attributesByName objectForKey:kCBLISCurrentRevisionAttributeName]) {
-            if (error) *error = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain code:1
-                                                userInfo:@{
-                                                           NSLocalizedFailureReasonErrorKey: @"Database Model not compatible. You need to call +[updateManagedObjectModel:]."
-                                                           }];
+            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                          code:CBLIncrementalStoreErrorDatabaseModelIncompatible
+                                                      userInfo:@{
+                                                                 NSLocalizedFailureReasonErrorKey: @"Database Model not compatible. You need to call +[updateManagedObjectModel:]."
+                                                                 }];
             return NO;
         }
     }
 
     
-    NSError *localError;
+    NSError *error;
 
     NSString *databaseName = [self.URL lastPathComponent];
     
     CBLManager *manager = [CBLManager sharedInstance];
     if (!manager) {
-        if (error) *error = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                code:-1 userInfo:@{
-                                                                   NSLocalizedDescriptionKey: @"No CBLManager shared instance available"
-                                                                   }];
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorCBLManagerSharedInstanceMissing
+                                                  userInfo:@{
+                                                             NSLocalizedDescriptionKey: @"No CBLManager shared instance available"
+                                                             }];
         return NO;
     }
     
-    NSLog(@"[info] opening Couchbase-Lite database named: %@", databaseName);
-    
-    self.database = [manager databaseNamed:databaseName error:&localError];
+    self.database = [manager databaseNamed:databaseName error:&error];
     if (!self.database) {
-        if (error) *error = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                code:-1 userInfo:@{
-                                                                   NSLocalizedDescriptionKey: @"Could not create database",
-                                                                   NSUnderlyingErrorKey: localError
-                                                                   }];
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorCreatingDatabaseFailed
+                                                  userInfo:@{
+                                                             NSLocalizedDescriptionKey: @"Could not create database",
+                                                             NSUnderlyingErrorKey: error
+                                                             }];
         return NO;
     }
-        
-    [self initializeViews];
+    
+    [self _initializeViews];
   
     
     [[NSNotificationCenter defaultCenter] addObserverForName:kCBLDatabaseChangeNotification
@@ -270,7 +270,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                                                       NSArray *changes = note.userInfo[@"changes"];
                                                       
                                                       if (external) {
-                                                          [self couchDocumentsChanged:changes];
+                                                          [self _couchDocumentsChanged:changes];
                                                       }
                                                   }];
     
@@ -288,7 +288,19 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         [self setMetadata:metaData];
         
         CBLDocument *doc = [self.database documentWithID:kCBLISMetadataDocumentID];
-        success = [doc putProperties:metaData error:error] != nil;
+        
+        NSError *error;
+        success = [doc putProperties:metaData error:&error] != nil;
+        if (!success) {
+            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                          code:CBLIncrementalStoreErrorStoringMetadataFailed
+                                                      userInfo:@{
+                                                                 NSLocalizedDescriptionKey: @"Could not store metadata in database",
+                                                                 NSUnderlyingErrorKey: error
+                                                                 }];
+            return NO;
+
+        }
         
     } else {
         
@@ -315,7 +327,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     return success;
 }
 
-- (id)executeRequest:(NSPersistentStoreRequest *)request withContext:(NSManagedObjectContext*)context error:(NSError **)error
+- (id)executeRequest:(NSPersistentStoreRequest *)request withContext:(NSManagedObjectContext*)context error:(NSError **)outError
 {
     if (request.requestType == NSSaveRequestType) {
         
@@ -330,10 +342,10 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
               "[tids]---------------- ", [save insertedObjects], [save updatedObjects], [save deletedObjects], [save lockedObjects]);
 #endif
         
+        // TODO: Check if using the CouchbaseLite transaction mechanism makes sense here.
         
-        // NOTE: currently we are waiting for each operation. That's not really what we want.
-        // maybe we should wait using +[RESTOperation wait:set] but that didn't work on my test.
-
+        NSError *error;
+        
         NSMutableSet *changedEntities = [NSMutableSet setWithCapacity:[save insertedObjects].count];
 
         // Objects that were inserted...
@@ -341,8 +353,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
             NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
             
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            NSError *localError;
-            if ([doc putProperties:contents error:&localError]) {
+            if ([doc putProperties:contents error:&error]) {
                 [changedEntities addObject:object.entity.name];
                 
                 [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
@@ -355,27 +366,21 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                 
                 [context refreshObject:object mergeChanges:YES];
             } else {
-                if (error) *error = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                        code:2 userInfo:@{
-                            NSLocalizedFailureReasonErrorKey: @"Error putting inserted objects",
-                                        NSUnderlyingErrorKey:localError
-                                     }];
+                if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                              code:CBLIncrementalStoreErrorPersistingInsertedObjectsFailed
+                                                          userInfo:@{
+                                                                     NSLocalizedFailureReasonErrorKey: @"Error persisting inserted objects",
+                                                                     NSUnderlyingErrorKey:error
+                                                                     }];
             }
         }
-        
-        // clear cache for entities to get changes
-        for (NSString *entityName in changedEntities) {
-            [self _purgeCacheForEntityName:entityName];
-        }
-        
         
         // Objects that were updated...
         for (NSManagedObject *object in [save updatedObjects]) {
             NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
             
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            NSError *localError;
-            if ([doc putProperties:contents error:&localError]) {
+            if ([doc putProperties:contents error:&error]) {
                 [changedEntities addObject:object.entity.name];
                 
                 [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
@@ -384,11 +389,12 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                 
                 [context refreshObject:object mergeChanges:YES];
             } else {
-                if (error) *error = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                        code:2 userInfo:@{
-                            NSLocalizedFailureReasonErrorKey: @"Error putting updated object",
-                                        NSUnderlyingErrorKey:localError
-                                     }];
+                if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                              code:CBLIncrementalStoreErrorPersistingUpdatedObjectsFailed
+                                                          userInfo:@{
+                                                                     NSLocalizedFailureReasonErrorKey: @"Error persisting updated object",
+                                                                     NSUnderlyingErrorKey:error
+                                                                     }];
             }
         }
                 
@@ -396,14 +402,19 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         // Objects that were deleted from the calling context...
         for (NSManagedObject *object in [save deletedObjects]) {
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            NSError *localError;
-            if (![doc deleteDocument:&localError]) {
-                if (error) *error = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                        code:2 userInfo:@{
-                            NSLocalizedFailureReasonErrorKey: @"Error deleting object",
-                                        NSUnderlyingErrorKey:localError
-                                     }];
+            if (![doc deleteDocument:&error]) {
+                if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                              code:CBLIncrementalStoreErrorPersistingDeletedObjectsFailed
+                                                          userInfo:@{
+                                                                     NSLocalizedFailureReasonErrorKey: @"Error deleting object",
+                                                                     NSUnderlyingErrorKey:error
+                                                                     }];
             }
+        }
+        
+        // clear cache for entities to get changes
+        for (NSString *entityName in changedEntities) {
+            [self _purgeCacheForEntityName:entityName];
         }
         
         return @[];
@@ -428,7 +439,9 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         switch (resultType) {
             case NSManagedObjectResultType:
             case NSManagedObjectIDResultType: {
-                result = [self queryObjectsOfEntity:entity byFetchRequest:fetch inContext:context];
+                result = [self _queryObjectsOfEntity:entity byFetchRequest:fetch inContext:context error:outError];
+                if (!result) return nil;
+                
                 if (fetch.sortDescriptors) {
                     result = [result sortedArrayUsingDescriptors:fetch.sortDescriptors];
                 }
@@ -448,7 +461,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                 query.keys = @[ entityName ];
                 query.prefetch = YES;
                 
-                CBLQueryEnumerator *rows = [query rows:error];
+                CBLQueryEnumerator *rows = [self _queryEnumeratorForQuery:query error:outError];
                 if (!rows) return nil;
                 
                 NSMutableArray *array = [NSMutableArray arrayWithCapacity:rows.count];
@@ -471,7 +484,9 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
             case NSCountResultType: {
                 NSUInteger count = 0;
                 if (fetch.predicate) {
-                    NSArray *array = [self queryObjectsOfEntity:entity byFetchRequest:fetch inContext:context];
+                    NSArray *array = [self _queryObjectsOfEntity:entity byFetchRequest:fetch inContext:context error:outError];
+                    if (!array) return nil;
+                    
                     count = array.count;
                 } else {
                     CBLView *view = [self.database existingViewNamed:kCBLISAllByTypeViewName];
@@ -479,7 +494,10 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                     query.keys = @[ entityName ];
                     query.prefetch = NO;
                     
-                    count = [query rows:error].count;
+                    CBLQueryEnumerator *rows = [self _queryEnumeratorForQuery:query error:outError];
+                    if (!rows) return nil;
+                    
+                    count = rows.count;
                 }
                 
                 result = @[@(count)];
@@ -499,7 +517,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                   "[tdis]   fetchPredicate: %@\n"
                   "[tdis] --> took %f seconds\n"
                   "[tids]---------------- ",
-                  entityName, CBResultTypeName(resultType), fetch.predicate, end - start);
+                  entityName, CBLISResultTypeName(resultType), fetch.predicate, end - start);
 #ifndef PROFILE
         }
 #endif
@@ -507,15 +525,16 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         
         return result;
     } else {
-        if (error) *error = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                code:3 userInfo:@{
-                    NSLocalizedFailureReasonErrorKey: @"Unsupported requestType",
-                             }];
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorUnsupportedRequestType
+                                                  userInfo:@{
+                                                             NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:@"Unsupported requestType: %d", request.requestType]
+                                                             }];
         return nil;
     }
 }
 
-- (NSIncrementalStoreNode *)newValuesForObjectWithID:(NSManagedObjectID*)objectID withContext:(NSManagedObjectContext*)context error:(NSError**)error
+- (NSIncrementalStoreNode *)newValuesForObjectWithID:(NSManagedObjectID*)objectID withContext:(NSManagedObjectContext*)context error:(NSError**)outError
 {
     CBLDocument* doc = [self.database documentWithID:[objectID couchbaseLiteIDRepresentation]];
     
@@ -533,15 +552,15 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     return node;
 }
 
-- (id)newValueForRelationship:(NSRelationshipDescription*)relationship forObjectWithID:(NSManagedObjectID*)objectID withContext:(NSManagedObjectContext *)context error:(NSError **)error
+- (id)newValueForRelationship:(NSRelationshipDescription*)relationship forObjectWithID:(NSManagedObjectID*)objectID withContext:(NSManagedObjectContext *)context error:(NSError **)outError
 {
     if ([relationship isToMany]) {
-        CBLView *view = [self.database existingViewNamed:CBCDBToManyViewNameForRelationship(relationship)];
+        CBLView *view = [self.database existingViewNamed:CBLISToManyViewNameForRelationship(relationship)];
         CBLQuery* query = [view createQuery];
         
         query.keys = @[ [objectID couchbaseLiteIDRepresentation] ];
         
-        CBLQueryEnumerator *rows = [query rows:error];
+        CBLQueryEnumerator *rows = [self _queryEnumeratorForQuery:query error:outError];
         if (!rows) return nil;
         
         NSMutableArray *result = [NSMutableArray arrayWithCapacity:rows.count];
@@ -562,7 +581,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     }
 }
 
-- (NSArray *)obtainPermanentIDsForObjects:(NSArray *)array error:(NSError **)error
+- (NSArray *)obtainPermanentIDsForObjects:(NSArray *)array error:(NSError **)outError
 {
     NSMutableArray *result = [NSMutableArray arrayWithCapacity:array.count];
     for (NSManagedObject *object in array) {
@@ -605,7 +624,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark - Views
 
-- (void) initializeViews
+- (void) _initializeViews
 {
     NSMutableDictionary *subentitiesToSuperentities = [NSMutableDictionary dictionary];
     
@@ -629,7 +648,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                         }
                     }
                     
-                    NSString *viewName = CBCDBToManyViewNameForRelationship(rel);
+                    NSString *viewName = CBLISToManyViewNameForRelationship(rel);
                     NSString *destEntityName = rel.destinationEntity.name;
                     NSString *inverseRelNameLower = [rel.inverseRelationship.name lowercaseString];
                     if (entityNames.count == 0) {
@@ -725,13 +744,14 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark - Querying
 
-- (NSArray*) queryObjectsOfEntity:(NSEntityDescription*)entity byFetchRequest:(NSFetchRequest*)fetch inContext:(NSManagedObjectContext*)context
+- (NSArray*) _queryObjectsOfEntity:(NSEntityDescription*)entity byFetchRequest:(NSFetchRequest*)fetch inContext:(NSManagedObjectContext*)context error:(NSError**)outError
 {
-    if ([self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate]) {
-        return [self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate];
+    id cached = [self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate];
+    if (cached) {
+        return cached;
     }
     
-    CBLQuery* query = [self queryForFetchRequest:fetch onEntity:entity];
+    CBLQuery* query = [self _queryForFetchRequest:fetch onEntity:entity];
     if (!query) {
         CBLView *view = [self.database existingViewNamed:kCBLISAllByTypeViewName];
         query = [view createQuery];
@@ -739,20 +759,19 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         query.prefetch = fetch.predicate != nil;
     }
     
-    NSArray *result = [self filterObjectsOfEntity:entity fromQuery:query byFetchRequest:fetch
-                                        inContext:context];
+    NSArray *result = [self _filterObjectsOfEntity:entity fromQuery:query byFetchRequest:fetch
+                                         inContext:context error:outError];
     
     return result;
 }
 
-- (NSArray*) filterObjectsOfEntity:(NSEntityDescription*)entity fromQuery:(CBLQuery*)query byFetchRequest:(NSFetchRequest*)fetch inContext:(NSManagedObjectContext*)context
+- (NSArray*) _filterObjectsOfEntity:(NSEntityDescription*)entity fromQuery:(CBLQuery*)query byFetchRequest:(NSFetchRequest*)fetch inContext:(NSManagedObjectContext*)context error:(NSError**)outError
 {
     if ([self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate]) {
         return [self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate];
     }
     
-    NSError *error;
-    CBLQueryEnumerator *rows = [query rows:&error];
+    CBLQueryEnumerator *rows = [self _queryEnumeratorForQuery:query error:outError];
     if (!rows) return nil;
     
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:rows.count];
@@ -770,7 +789,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     return array;
 }
 
-- (CBLQuery*) queryForFetchRequest:(NSFetchRequest*)fetch onEntity:(NSEntityDescription*)entity
+- (CBLQuery*) _queryForFetchRequest:(NSFetchRequest*)fetch onEntity:(NSEntityDescription*)entity
 {
     NSPredicate *predicate = fetch.predicate;
     
@@ -900,7 +919,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     
     if ([propertyDesc objectForKey:kCBLISCurrentRevisionAttributeName]) {
         id rev = [object valueForKey:kCBLISCurrentRevisionAttributeName];
-        if (!CBCDBIsNull(rev)) {
+        if (!CBLISIsNull(rev)) {
             [proxy setObject:rev forKey:@"_rev"];
         }
     }
@@ -965,21 +984,21 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                     case NSInteger16AttributeType:
                     case NSInteger32AttributeType:
                     case NSInteger64AttributeType:
-                        value = [NSNumber numberWithLong:CBCDBIsNull(value) ? 0 : [value longValue]];
+                        value = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
                         break;
                     case NSDecimalAttributeType:
                     case NSDoubleAttributeType:
                     case NSFloatAttributeType:
-                        value = [NSNumber numberWithDouble:CBCDBIsNull(value) ? 0.0 : [value doubleValue]];
+                        value = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
                         break;
                     case NSStringAttributeType:
-                        value = CBCDBIsNull(value) ? @"" : value;
+                        value = CBLISIsNull(value) ? @"" : value;
                         break;
                     case NSBooleanAttributeType:
-                        value = [NSNumber numberWithBool:CBCDBIsNull(value) ? NO : [value boolValue]];
+                        value = [NSNumber numberWithBool:CBLISIsNull(value) ? NO : [value boolValue]];
                         break;
                     case NSDateAttributeType:
-                        value = CBCDBIsNull(value) ? nil : [CBLJSON JSONObjectWithDate:value];
+                        value = CBLISIsNull(value) ? nil : [CBLJSON JSONObjectWithDate:value];
                         break;
                         //                    case NSBinaryDataAttributeType: // handled above
                     case NSUndefinedAttributeType:
@@ -1093,21 +1112,21 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                     case NSInteger16AttributeType:
                     case NSInteger32AttributeType:
                     case NSInteger64AttributeType:
-                        value = [NSNumber numberWithLong:CBCDBIsNull(value) ? 0 : [value longValue]];
+                        value = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
                         break;
                     case NSDecimalAttributeType:
                     case NSDoubleAttributeType:
                     case NSFloatAttributeType:
-                        value = [NSNumber numberWithDouble:CBCDBIsNull(value) ? 0.0 : [value doubleValue]];
+                        value = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
                         break;
                     case NSStringAttributeType:
-                        value = CBCDBIsNull(value) ? @"" : value;
+                        value = CBLISIsNull(value) ? @"" : value;
                         break;
                     case NSBooleanAttributeType:
-                        value = [NSNumber numberWithBool:CBCDBIsNull(value) ? NO : [value boolValue]];
+                        value = [NSNumber numberWithBool:CBLISIsNull(value) ? NO : [value boolValue]];
                         break;
                     case NSDateAttributeType:
-                        value = CBCDBIsNull(value) ? nil : [CBLJSON dateWithJSONObject:value];
+                        value = CBLISIsNull(value) ? nil : [CBLJSON dateWithJSONObject:value];
                         break;
                     case NSTransformableAttributeType:
                         // intentionally do nothing
@@ -1131,7 +1150,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
             if (![rel isToMany]) { // only handle to-one relationships
                 id value = [properties objectForKey:property];
                 
-                if (!CBCDBIsNull(value)) {
+                if (!CBLISIsNull(value)) {
                     NSManagedObjectID *destination = [self newObjectIDForEntity:rel.destinationEntity
                                                                 referenceObject:value];
                     
@@ -1142,6 +1161,24 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     }
     
     return result;
+}
+
+/** Convenience method to execute a CouchbaseLite query and build a telling NSError if it fails. */
+- (CBLQueryEnumerator*) _queryEnumeratorForQuery:(CBLQuery*)query error:(NSError**)outError
+{
+    NSError *error;
+    CBLQueryEnumerator *rows = [query rows:&error];
+    if (!rows) {
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed
+                                                  userInfo:@{
+                                                             NSLocalizedFailureReasonErrorKey: @"Error querying CouchbaseLite",
+                                                             NSUnderlyingErrorKey: error
+                                                             }];
+        return nil;
+    }
+    
+    return rows;
 }
 
 #pragma mark - Caching
@@ -1330,7 +1367,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
 {
     [_observingManagedObjectContexts removeObject:context];
 }
-- (void) informManagedObjectContext:(NSManagedObjectContext*)context updatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs
+- (void) _informManagedObjectContext:(NSManagedObjectContext*)context updatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs
 {
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithCapacity:3];
     
@@ -1369,24 +1406,24 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                                                                   object:context userInfo:userInfo];
     [context mergeChangesFromContextDidSaveNotification:didUpdateNote];
 }
-- (void) informObservingManagedObjectContextsAboutUpdatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs
+- (void) _informObservingManagedObjectContextsAboutUpdatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs
 {
     for (NSManagedObjectContext *context in self.observingManagedObjectContexts) {
-        [self informManagedObjectContext:context updatedIDs:updatedIDs deletedIDs:deletedIDs];
+        [self _informManagedObjectContext:context updatedIDs:updatedIDs deletedIDs:deletedIDs];
     }
 }
 
-- (void) couchDocumentsChanged:(NSArray*)changes
+- (void) _couchDocumentsChanged:(NSArray*)changes
 {
-    [NSThread cancelPreviousPerformRequestsWithTarget:self selector:@selector(processCouchbaseLiteChanges) object:nil];
+    [NSThread cancelPreviousPerformRequestsWithTarget:self selector:@selector(_processCouchbaseLiteChanges) object:nil];
 
     @synchronized(self) {
         [_coalescedChanges addObjectsFromArray:changes];
     }
 
-    [self performSelector:@selector(processCouchbaseLiteChanges) withObject:nil afterDelay:1.0];
+    [self performSelector:@selector(_processCouchbaseLiteChanges) withObject:nil afterDelay:1.0];
 }
-- (void) processCouchbaseLiteChanges
+- (void) _processCouchbaseLiteChanges
 {
     NSArray *changes = nil;
     @synchronized(self) {
@@ -1430,7 +1467,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         }
     }
     
-    [self informObservingManagedObjectContextsAboutUpdatedIDs:updatedObjectIDs deletedIDs:deletedObjectIDs];
+    [self _informObservingManagedObjectContextsAboutUpdatedIDs:updatedObjectIDs deletedIDs:deletedObjectIDs];
     
     NSDictionary *userInfo = @{
                                NSDeletedObjectsKey: deletedObjectIDs,
@@ -1456,16 +1493,12 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         
         NSLog(@"[info] CONFLICTS: %lu", (unsigned long)enumerator.count);
         
-        [self resolveConflicts:enumerator];
+        [self _resolveConflicts:enumerator];
         
-    }
-    
-    if ([super respondsToSelector:@selector(observeValueForKeyPath:ofObject:change:context:)]) {
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
 
-- (void) resolveConflicts:(CBLQueryEnumerator*)enumerator
+- (void) _resolveConflicts:(CBLQueryEnumerator*)enumerator
 {
     // resolve conflicts
     for (CBLQueryRow *row in enumerator) {
@@ -1475,6 +1508,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         NSArray *conflictingRevisions = [doc getConflictingRevisions:&error];
         
         if ([kCBLISMetadataDocumentID isEqual:doc.documentID]) {
+            // TODO: what to do here?
             for (CBLRevision *rev in conflictingRevisions) {
                 if (![rev isEqual:doc.currentRevision]) {
                 }
@@ -1505,7 +1539,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         
         CBLNewRevision *newRevision = [doc newRevision];
         [newRevision setProperties:properties];
-        
+        [newRevision save:&error];
     }
 }
 
@@ -1527,20 +1561,20 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
 
 //// utility methods
 
-BOOL CBCDBIsNull(id value)
+BOOL CBLISIsNull(id value)
 {
     return value == nil || [value isKindOfClass:[NSNull class]];
 }
 
 // returns name of a view that returns objectIDs for all destination entities of a to-many relationship
-NSString *CBCDBToManyViewNameForRelationship(NSRelationshipDescription *relationship)
+NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship)
 {
     NSString *entityName = [relationship.entity.name lowercaseString];
     NSString *destinationName = [relationship.destinationEntity.name lowercaseString];
     return [NSString stringWithFormat:@"cbis_%@_tomany_%@", entityName, destinationName];
 }
 
-NSString *CBResultTypeName(NSFetchRequestResultType resultType)
+NSString *CBLISResultTypeName(NSFetchRequestResultType resultType)
 {
     switch (resultType) {
         case NSManagedObjectResultType:

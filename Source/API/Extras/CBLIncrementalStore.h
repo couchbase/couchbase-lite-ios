@@ -8,8 +8,24 @@
 
 #import <CoreData/CoreData.h>
 
-extern NSString * const kCBISIncrementalStoreErrorDomain;
+extern NSString * const kCBLIncrementalStoreErrorDomain;
 extern NSString * const kCBISObjectHasBeenChangedInStoreNotification;
+
+typedef enum
+{
+    CBLIncrementalStoreErrorUndefinedError = 0,
+    CBLIncrementalStoreErrorCreatingStoreFailed,
+    CBLIncrementalStoreErrorMigrationOfStoreFailed,
+    CBLIncrementalStoreErrorStoringMetadataFailed,
+    CBLIncrementalStoreErrorDatabaseModelIncompatible,
+    CBLIncrementalStoreErrorCBLManagerSharedInstanceMissing,
+    CBLIncrementalStoreErrorCreatingDatabaseFailed,
+    CBLIncrementalStoreErrorPersistingInsertedObjectsFailed,
+    CBLIncrementalStoreErrorPersistingUpdatedObjectsFailed,
+    CBLIncrementalStoreErrorPersistingDeletedObjectsFailed,
+    CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed,
+    CBLIncrementalStoreErrorUnsupportedRequestType
+} CBLIncrementalStoreError;
 
 
 /** NSIncrementalStore implementation for CouchbaseLite iOS. 
