@@ -75,9 +75,9 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 + (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName error:(NSError**)outError
 {
-    return [self createManagedObjectContextWithModel:managedObjectModel databaseName:databaseName importingDatabaseAtURL:nil error:outError];
+    return [self createManagedObjectContextWithModel:managedObjectModel databaseName:databaseName importingDatabaseAtURL:nil importType:nil error:outError];
 }
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl type:(NSString*)importType error:(NSError**)outError
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl importType:(NSString*)importType error:(NSError**)outError
 {
     NSManagedObjectModel *model = [managedObjectModel mutableCopy];
     
@@ -98,8 +98,8 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         NSPersistentStore *oldStore = [persistentStoreCoordinator addPersistentStoreWithType:importType configuration:nil
                                                                                          URL:importUrl options:options error:&error];
         if (!oldStore) {
-            if (outError) *outError = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                          code:-1
+            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                          code:CBLIncrementalStoreErrorMigrationOfStoreFailed
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: @"Couldn't open store to import",
                                                                  NSUnderlyingErrorKey: error
@@ -113,8 +113,8 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
         if (!store) {
             NSString *errorDescription = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
-            if (outError) *outError = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
-                                                          code:-2
+            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                          code:CBLIncrementalStoreErrorMigrationOfStoreFailed
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: errorDescription,
                                                                  NSUnderlyingErrorKey: error
