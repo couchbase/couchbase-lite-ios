@@ -38,12 +38,28 @@
     LogTo(ChangeTracker, @"%@: Starting...", self);
     [super start];
 
-    NSURL* url = self.changesFeedURL;
-    CFHTTPMessageRef request = CFHTTPMessageCreateRequest(NULL, CFSTR("GET"),
+    NSURL *url = self.changesFeedURL;
+    NSString *urlString = [url absoluteString];
+    NSString *query = [url query];
+    NSUInteger queryLength = [query length];
+    urlString = (queryLength ? [urlString substringToIndex:[urlString length] - (queryLength + 1)] : urlString);
+    LogTo(ChangeTracker, @"urlString: %@", urlString);
+    url = [NSURL URLWithString:urlString];
+  
+    CFHTTPMessageRef request = CFHTTPMessageCreateRequest(NULL, CFSTR("POST"),
                                                           (__bridge CFURLRef)url,
                                                           kCFHTTPVersion1_1);
     Assert(request);
-    
+  
+    CFDataRef bodyData = CFStringCreateExternalRepresentation(kCFAllocatorDefault,
+                                        (__bridge CFStringRef)query, kCFStringEncodingUTF8, 0);
+  
+    CFHTTPMessageSetBody(request, bodyData);
+    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Content-Length"),
+      (__bridge  CFStringRef)[NSString stringWithFormat:@"%ld", CFDataGetLength(bodyData)]);
+    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Content-Type"), CFSTR("application/json"));
+    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Accept"), CFSTR("application/json"));
+  
     // Add headers from my .requestHeaders property:
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         CFHTTPMessageSetHeaderFieldValue(request, (__bridge CFStringRef)key, (__bridge CFStringRef)value);
@@ -91,7 +107,7 @@
     }
 
     // Now open the connection:
-    LogTo(SyncVerbose, @"%@: GET %@", self, url.resourceSpecifier);
+    LogTo(SyncVerbose, @"%@: POST %@", self, url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)
