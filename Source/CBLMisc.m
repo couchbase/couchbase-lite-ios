@@ -128,16 +128,20 @@ NSString* CBLEscapeID( NSString* docOrRevID ) {
     docOrRevID = [docOrRevID stringByReplacingOccurrencesOfString: @"/" withString: @"%2F"];
     return docOrRevID;
 #else
+    NSString *escapedString = nil;
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)docOrRevID,
                                                                   NULL, (CFStringRef)@"?&/",
                                                                   kCFStringEncodingUTF8);
-    #ifdef __OBJC_GC__
-    return NSMakeCollectable(escaped);
-    #else
-    return (__bridge_transfer NSString *)escaped;
-    #endif
-
+#ifdef __OBJC_GC__
+    escapedString = NSMakeCollectable(escaped);
+#else
+    escapedString = (__bridge_transfer NSString *)escaped;
+#endif
+    
+    // Do not escape a / if it is part of a design doc name
+    escapedString = [escapedString stringByReplacingOccurrencesOfString: @"_design%2F" withString: @"_design/"];
+    return escapedString;
 #endif
 }
 
