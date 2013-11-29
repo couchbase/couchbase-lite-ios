@@ -75,9 +75,15 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
 
 + (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName error:(NSError**)outError
 {
+    return [self createManagedObjectContextWithModel:managedObjectModel databaseName:databaseName importingDatabaseAtURL:nil error:outError];
+}
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl error:(NSError**)outError
+{
     NSManagedObjectModel *model = [managedObjectModel mutableCopy];
     
     [self updateManagedObjectModel:model];
+    
+    NSError *error;
     
     NSPersistentStoreCoordinator *persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:model];
 
@@ -86,12 +92,54 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                               NSInferMappingModelAutomaticallyOption : @YES
                               };
     
-    CBLIncrementalStore *store = (CBLIncrementalStore*)[persistentStoreCoordinator addPersistentStoreWithType:[self type]
-                                                                                                                        configuration:nil URL:[NSURL URLWithString:databaseName]
-                                                                                                                              options:options error:outError];
-    if (!store) {
-        return nil;
+    CBLIncrementalStore *store = nil;
+    if (importUrl) {
+        
+        NSPersistentStore *oldStore = [persistentStoreCoordinator addPersistentStoreWithType:importType configuration:nil
+                                                                                         URL:importUrl options:options error:&error];
+        if (!oldStore) {
+            if (outError) *outError = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
+                                                          code:-1
+                                                      userInfo:@{
+                                                                 NSLocalizedDescriptionKey: @"Couldn't open store to import",
+                                                                 NSUnderlyingErrorKey: error
+                                                                 }];
+            return nil;
+        }
+        
+        store = (CBLIncrementalStore*)[persistentStoreCoordinator migratePersistentStore:oldStore
+                                                                                   toURL:[NSURL URLWithString:databaseName] options:options
+                                                                                withType:[self type] error:&error];
+    
+        if (!store) {
+            NSString *errorDescription = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
+            if (outError) *outError = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
+                                                          code:-1
+                                                      userInfo:@{
+                                                                 NSLocalizedDescriptionKey: errorDescription,
+                                                                 NSUnderlyingErrorKey: error
+                                                                 }];
+            return nil;
+        }
+        
+    } else {
+        store = (CBLIncrementalStore*)[persistentStoreCoordinator addPersistentStoreWithType:[self type]
+                                                                               configuration:nil URL:[NSURL URLWithString:databaseName]
+                                                                                     options:options error:&error];
+        
+        if (!store) {
+            NSString *errorDescription = [NSString stringWithFormat:@"Initialization of store failed: %@", error.description];
+            if (outError) *outError = [NSError errorWithDomain:kCBLISIncrementalStoreErrorDomain
+                                                          code:-2
+                                                      userInfo:@{
+                                                                 NSLocalizedDescriptionKey: errorDescription,
+                                                                 NSUnderlyingErrorKey: error
+                                                                 }];
+            return nil;
+        }
     }
+    
+    
     
     NSManagedObjectContext *managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
     

@@ -22,7 +22,7 @@ extern NSString * const kCBISObjectHasBeenChangedInStoreNotification;
 + (void) updateManagedObjectModel:(NSManagedObjectModel*)managedObjectModel;
 
 + (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName error:(NSError**)outError;
-
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl type:(NSString*)importType error:(NSError**)outError;
 
 - (NSArray*) replicateWithURL:(NSURL*)replicationURL exclusively:(BOOL)exclusively;
 - (NSArray*) replications;
