@@ -301,7 +301,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     if (success) {
         CBLView *conflictsView = [self.database viewNamed:kCBLISConflictsViewName];
         [conflictsView setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
-            if (doc[@"_conflicts"] != nil) emit(nil, doc);
+            if (doc[@"_conflicts"] != nil) emit(nil, nil);
         }
                            version:@"1.0"];
         
@@ -547,8 +547,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         NSMutableArray *result = [NSMutableArray arrayWithCapacity:rows.count];
         for (CBLQueryRow* row in rows) {
             [result addObject:[self _newObjectIDForEntity:relationship.destinationEntity
-                                     managedObjectContext:context couchID:[row.value objectForKey:@"_id"]
-                                                couchType:[row.value objectForKey:kCBLISTypeKey]]];
+                                     managedObjectContext:context couchID:row.documentID]];
         }
         
         return result;
@@ -637,10 +636,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                         CBLView *view = [self.database viewNamed:viewName];
                         [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
                             if ([[doc objectForKey:kCBLISTypeKey] isEqual:destEntityName] && [doc objectForKey:inverseRelNameLower]) {
-                                emit([doc objectForKey:inverseRelNameLower], @{
-                                                                               @"_id": [doc valueForKey:@"_id"],
-                                                                               kCBLISTypeKey: [doc objectForKey:kCBLISTypeKey]
-                                                                               });
+                                emit([doc objectForKey:inverseRelNameLower], nil);
                             }
                         }
                                   version:@"1.0"];
@@ -651,10 +647,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
                         CBLView *view = [self.database viewNamed:viewName];
                         [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
                                            if ([entityNames containsObject:[doc objectForKey:kCBLISTypeKey]] && [doc objectForKey:inverseRelNameLower]) {
-                                               emit([doc objectForKey:inverseRelNameLower], @{
-                                                                                              @"_id": [doc valueForKey:@"_id"],
-                                                                                              kCBLISTypeKey: [doc objectForKey:kCBLISTypeKey]
-                                                                                              });
+                                               emit([doc objectForKey:inverseRelNameLower], nil);
                                            }
                                        }
                                         version:@"1.0"];
@@ -685,13 +678,12 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         NSString *ident = [doc valueForKey:@"_id"];
         if ([ident hasPrefix:@"cbis_"]) return;
         
-        NSDictionary *data = @{@"_id": ident, kCBLISTypeKey: [doc objectForKey:kCBLISTypeKey]};
         NSString* type = [doc objectForKey: kCBLISTypeKey];
-        if (type) emit(type, data);
+        if (type) emit(type, nil);
         
         NSString *superentity = [subentitiesToSuperentities objectForKey:type];
         if (superentity) {
-            emit(superentity, data);
+            emit(superentity, nil);
         }
     }
               version:@"1.0"];
@@ -702,12 +694,11 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
         
         NSString* type = [doc objectForKey:kCBLISTypeKey];
         if (type) {
-            NSDictionary *data = @{@"_id": ident, kCBLISTypeKey: [doc objectForKey:kCBLISTypeKey]};
-            emit(type, data);
+            emit(type, nil);
             
             NSString *superentity = [subentitiesToSuperentities objectForKey:type];
             if (superentity) {
-                emit(superentity, data);
+                emit(superentity, nil);
             }
         }
         
@@ -724,8 +715,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
         NSString* type = [doc objectForKey:kCBLISTypeKey];
         if ([type isEqual:entityName] && [doc objectForKey:propertyName]) {
-            emit([doc objectForKey:propertyName], @{@"_id": [doc valueForKey:@"_id"],
-                                                    kCBLISTypeKey: [doc objectForKey:kCBLISTypeKey]});
+            emit([doc objectForKey:propertyName], nil);
         }
     }
               version:@"1.0"];
@@ -769,8 +759,7 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
     for (CBLQueryRow *row in rows) {
         if (!fetch.predicate || [self _evaluatePredicate:fetch.predicate withEntity:entity properties:row.documentProperties]) {
             NSManagedObjectID *objectID = [self _newObjectIDForEntity:entity managedObjectContext:context
-                                                              couchID:[row.value valueForKey:@"_id"]
-                                                            couchType:[row.value valueForKey:kCBLISTypeKey]];
+                                                              couchID:row.documentID];
             NSManagedObject *object = [context objectWithID:objectID];
             [array addObject:object];
         }
@@ -881,8 +870,12 @@ NSString *CBResultTypeName(NSFetchRequestResultType resultType);
 }
 
 - (NSManagedObjectID *)_newObjectIDForEntity:(NSEntityDescription *)entity managedObjectContext:(NSManagedObjectContext*)context
-                                     couchID:(NSString*)couchID couchType:(NSString*)couchType
+                                     couchID:(NSString*)couchID
 {
+    NSArray *parts = [couchID componentsSeparatedByString:@"_"];
+    NSAssert(parts.count == (NSUInteger)2, @"couchID needs to be of the defined pattern");
+    
+    NSString *couchType = parts[0];
     if (![entity.name isEqual:couchType]) {
         entity = [NSEntityDescription entityForName:couchType inManagedObjectContext:context];
     }
