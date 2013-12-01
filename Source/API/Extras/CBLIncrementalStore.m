@@ -146,6 +146,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
     
     NSManagedObjectContext *managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+    [managedObjectContext setPersistentStoreCoordinator:persistentStoreCoordinator];
     
     [store addObservingManagedObjectContext:managedObjectContext];
     
