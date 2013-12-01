@@ -49,9 +49,10 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 @interface CBLIncrementalStore ()
 
+// TODO: check if there is a better way to not hold strong references on these MOCs
 @property (nonatomic, strong) NSMutableArray *observingManagedObjectContexts;
 
-@property (nonatomic, strong) CBLDatabase *database;
+@property (nonatomic, strong, readwrite) CBLDatabase *database;
 
 @end
 
@@ -68,8 +69,11 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     CBLLiveQuery        *_conflictsQuery;
 }
 
-// TODO: check if there is a better way to not hold strong references on these MOCs
+@synthesize database = _database;
+@synthesize conflictHandler = _conflictHandler;
+
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
+
 
 #pragma mark - Convenience Method
 
@@ -1336,22 +1340,6 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     CBLDocument *document = [self.database documentWithID:documentID];
     CBLAttachment *attachment = [document.currentRevision attachmentNamed:name];
     return attachment.content;
-}
-
-#pragma mark - Replication
-
-- (NSArray*) replicateWithURL:(NSURL*)replicationURL exclusively:(BOOL)exclusively
-{
-    NSArray *replications = [self.database replicationsWithURL:replicationURL exclusively:exclusively];
-    for (CBLReplication *rep in replications) {
-        rep.persistent = YES;
-        [rep start];
-    }
-    return replications;
-}
-- (NSArray*) replications
-{
-    return self.database.allReplications;
 }
 
 #pragma mark - Change Handling

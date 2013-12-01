@@ -27,21 +27,20 @@ typedef enum
     CBLIncrementalStoreErrorUnsupportedRequestType
 } CBLIncrementalStoreError;
 
+@class CBLDatabase;
 
 /** NSIncrementalStore implementation for CouchbaseLite iOS. 
  *
  */
 @interface CBLIncrementalStore : NSIncrementalStore
 
+@property (nonatomic, strong, readonly) CBLDatabase *database;
 + (NSString *)type;
 
 + (void) updateManagedObjectModel:(NSManagedObjectModel*)managedObjectModel;
 
 + (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName error:(NSError**)outError;
 + (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl importType:(NSString*)importType error:(NSError**)outError;
-
-- (NSArray*) replicateWithURL:(NSURL*)replicationURL exclusively:(BOOL)exclusively;
-- (NSArray*) replications;
 
 - (void) addObservingManagedObjectContext:(NSManagedObjectContext*)context;
 - (void) removeObservingManagedObjectContext:(NSManagedObjectContext*)context;
