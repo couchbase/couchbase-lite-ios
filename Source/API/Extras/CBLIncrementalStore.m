@@ -269,15 +269,11 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     [self _initializeViews];
     
     
-    [[NSNotificationCenter defaultCenter] addObserverForName:kCBLDatabaseChangeNotification
+    [[NSNotificationCenter defaultCenter] addObserverForName:/*CBL_DatabaseChangesNotification*/@"CBLDatabaseChanges"
                                                       object:self.database queue:nil
                                                   usingBlock:^(NSNotification *note) {
-                                                      BOOL external = [note.userInfo[@"external"] boolValue];
                                                       NSArray *changes = note.userInfo[@"changes"];
-                                                      
-                                                      if (external) {
-                                                          [self _couchDocumentsChanged:changes];
-                                                      }
+                                                      [self _couchDocumentsChanged:changes];
                                                   }];
     
     CBLDocument *doc = [self.database documentWithID:kCBLISMetadataDocumentID];
@@ -704,7 +700,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     CBLView *view = [self.database viewNamed:kCBLISAllByTypeViewName];
     [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
         NSString *ident = [doc valueForKey:@"_id"];
-        if ([ident hasPrefix:@"cbis_"]) return;
+        if ([ident hasPrefix:@"cblis_"]) return;
         
         NSString* type = [doc objectForKey: kCBLISTypeKey];
         if (type) emit(type, nil);
@@ -1391,13 +1387,18 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 - (void) _couchDocumentsChanged:(NSArray*)changes
 {
+#if CBLIS_NO_CHANGE_COALESCING
+    [_coalescedChanges addObjectsFromArray:changes];
+    [self _processCouchbaseLiteChanges];
+#else
     [NSThread cancelPreviousPerformRequestsWithTarget:self selector:@selector(_processCouchbaseLiteChanges) object:nil];
     
     @synchronized(self) {
         [_coalescedChanges addObjectsFromArray:changes];
     }
     
-    [self performSelector:@selector(_processCouchbaseLiteChanges) withObject:nil afterDelay:1.0];
+    [self performSelector:@selector(_processCouchbaseLiteChanges) withObject:nil afterDelay:0.1];
+#endif
 }
 - (void) _processCouchbaseLiteChanges
 {
@@ -1424,7 +1425,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         }
         
         NSString *type = [ident substringToIndex:range.location];
-        if ([type isEqual:@"cbis"]) {
+        if ([type isEqual:@"cblis"]) {
             continue;
         }
         
@@ -1556,7 +1557,7 @@ NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relation
 {
     NSString *entityName = [relationship.entity.name lowercaseString];
     NSString *destinationName = [relationship.destinationEntity.name lowercaseString];
-    return [NSString stringWithFormat:@"cbis_%@_tomany_%@", entityName, destinationName];
+    return [NSString stringWithFormat:@"cblis_%@_tomany_%@", entityName, destinationName];
 }
 
 /** Returns a readable name for a NSFetchRequestResultType */
