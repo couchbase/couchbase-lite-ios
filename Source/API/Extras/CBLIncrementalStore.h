@@ -27,14 +27,23 @@ typedef enum
     CBLIncrementalStoreErrorUnsupportedRequestType
 } CBLIncrementalStoreError;
 
+@class CBLDocument;
 @class CBLDatabase;
 
-/** NSIncrementalStore implementation for CouchbaseLite iOS. 
+
+typedef void(^CBLISConflictHandler)(CBLDocument *doc, NSArray *conflictingRevisions);
+
+
+/** NSIncrementalStore implementation for CouchbaseLite iOS.
  *
  */
 @interface CBLIncrementalStore : NSIncrementalStore
 
 @property (nonatomic, strong, readonly) CBLDatabase *database;
+
+/** Conflict handling block that gets called when conflicts are to be handled. Initialied with a generic conflicts handler, can be set to NULL to not handle conflicts at all. */
+@property (nonatomic, copy) CBLISConflictHandler conflictHandler;
+
 + (NSString *)type;
 
 + (void) updateManagedObjectModel:(NSManagedObjectModel*)managedObjectModel;

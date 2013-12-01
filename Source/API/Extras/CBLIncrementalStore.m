@@ -215,6 +215,8 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _entityAndPropertyToFetchViewName = [[NSMutableDictionary alloc] init];
     
+    self.conflictHandler = [self _defaultConflictHandler];
+    
     return self;
 }
 
@@ -1479,10 +1481,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         if (enumerator.count == 0) return;
         
-        NSLog(@"[info] CONFLICTS: %lu", (unsigned long)enumerator.count);
-        
-        [self _resolveConflicts:enumerator];
-        
+        [self _resolveConflicts: enumerator];
     }
 }
 
@@ -1504,6 +1503,13 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             continue;
         }
         
+        if (self.conflictHandler) self.conflictHandler(doc, conflictingRevisions);
+    }
+}
+
+- (CBLISConflictHandler) _defaultConflictHandler
+{
+    CBLISConflictHandler handler = ^(CBLDocument *doc, NSArray *conflictingRevisions) {
         // merges changes by
         // - taking the current revision
         // - adding missing values from other revisions (starting with biggest version)
@@ -1527,8 +1533,11 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         CBLNewRevision *newRevision = [doc newRevision];
         [newRevision setProperties:properties];
+        
+        NSError *error;
         [newRevision save:&error];
-    }
+    };
+    return handler;
 }
 
 
