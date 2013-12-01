@@ -39,26 +39,29 @@
     [super start];
 
     NSURL *url = self.changesFeedURL;
-    NSString *urlString = [url absoluteString];
-    NSString *query = [url query];
-    NSUInteger queryLength = [query length];
-    urlString = (queryLength ? [urlString substringToIndex:[urlString length] - (queryLength + 1)] : urlString);
-    LogTo(ChangeTracker, @"urlString: %@", urlString);
-    url = [NSURL URLWithString:urlString];
+    CFHTTPMessageRef request;
+
+    // if we have a doc_ids-based replication, send the _changes request as a POST, with JSON-encoded doc_ids parameter
+    if (self.docIDs) {
+      request = CFHTTPMessageCreateRequest(NULL, CFSTR("POST"),
+                                           (__bridge CFURLRef)url,
+                                           kCFHTTPVersion1_1);
+      NSError* error = nil;
+      CFDataRef bodyData = (__bridge  CFDataRef)[CBLJSON dataWithJSONObject:@{@"doc_ids": self.docIDs} options:0 error:&error];
+      AssertNil(error);
+      
+      CFHTTPMessageSetBody(request, bodyData);
+      CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Content-Length"),
+        (__bridge  CFStringRef)[NSString stringWithFormat:@"%ld", CFDataGetLength(bodyData)]);
+      CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Content-Type"), CFSTR("application/json"));
+      CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Accept"), CFSTR("application/json"));
+    } else {
+      request = CFHTTPMessageCreateRequest(NULL, CFSTR("GET"),
+                                         (__bridge CFURLRef)url,
+                                         kCFHTTPVersion1_1);
+      Assert(request);
+    }
   
-    CFHTTPMessageRef request = CFHTTPMessageCreateRequest(NULL, CFSTR("POST"),
-                                                          (__bridge CFURLRef)url,
-                                                          kCFHTTPVersion1_1);
-    Assert(request);
-  
-    CFDataRef bodyData = CFStringCreateExternalRepresentation(kCFAllocatorDefault,
-                                        (__bridge CFStringRef)query, kCFStringEncodingUTF8, 0);
-  
-    CFHTTPMessageSetBody(request, bodyData);
-    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Content-Length"),
-      (__bridge  CFStringRef)[NSString stringWithFormat:@"%ld", CFDataGetLength(bodyData)]);
-    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Content-Type"), CFSTR("application/json"));
-    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Accept"), CFSTR("application/json"));
   
     // Add headers from my .requestHeaders property:
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
@@ -107,7 +110,7 @@
     }
 
     // Now open the connection:
-    LogTo(SyncVerbose, @"%@: POST %@", self, url.resourceSpecifier);
+    LogTo(SyncVerbose, @"%@: GET %@", self, url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)

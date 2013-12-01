@@ -106,7 +106,6 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     NSDictionary* filterParameters = _filterParameters;
     if (_docIDs) {
         filterName = @"_doc_ids";
-        filterParameters = @{@"doc_ids": _docIDs};
     }
     if (filterName) {
         [path appendFormat: @"&filter=%@", CBLEscapeURLParam(filterName)];
