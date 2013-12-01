@@ -1518,7 +1518,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         // TODO: Attachments
         
-        CBLNewRevision *newRevision = [doc newRevision];
+        CBLUnsavedRevision *newRevision = [doc newRevision];
         [newRevision setProperties:properties];
         
         NSError *error;
