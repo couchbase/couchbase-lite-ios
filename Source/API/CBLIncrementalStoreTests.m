@@ -18,11 +18,17 @@
 
 #pragma mark - Helper Classes / Methods
 
-NSManagedObjectModel *CBLISTestCoreDataModel(void);
-void CBLISEventuallyDeleteDatabaseNamed(NSString *name);
+typedef void(^CBLISAssertionBlock)(NSArray *result, NSFetchRequestResultType resultType);
 
+@class Entry;
 @class Subentry;
 @class File;
+
+NSManagedObjectModel *CBLISTestCoreDataModel(void);
+void CBLISEventuallyDeleteDatabaseNamed(NSString *name);
+void CBLISTestAssertFetchRequest(NSManagedObjectContext *context, NSFetchRequest *fetchRequest, CBLISAssertionBlock assertionBlock);
+Entry *CBLISTestInsertEntryWithProperties(NSManagedObjectContext *context, NSDictionary *props);
+NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *context, NSArray *entityProps);
 
 @interface Entry : NSManagedObject
 @property (nonatomic, retain) NSNumber * check;
@@ -155,7 +161,7 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     Assert(store, @"Context doesn't have any store?!");
     
     CBLDatabase *database = store.database;
-
+    
     // cut off seconds as they are not encoded in date values in DB
     NSString *text = @"Test";
     NSNumber *number = @23;
@@ -187,7 +193,7 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     NSManagedObjectID *entryID = entry.objectID;
     NSManagedObjectID *subentryID = subentry.objectID;
     NSManagedObjectID *fileID = file.objectID;
-
+    
     // get document from Couchbase to check correctness
     CBLDocument *entryDoc = [database documentWithID:[entryID couchbaseLiteIDRepresentation]];
     NSMutableDictionary *entryProperties = [entryDoc.properties mutableCopy];
@@ -196,12 +202,12 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     AssertEqual(entry.check, [entryProperties objectForKey:@"check"]);
     AssertEqual(entry.number, [entryProperties objectForKey:@"number"]);
     AssertEqual(number, [entryProperties objectForKey:@"number"]);
-
+    
     CBLDocument *subentryDoc = [database documentWithID:[subentryID couchbaseLiteIDRepresentation]];
     NSMutableDictionary *subentryProperties = [subentryDoc.properties mutableCopy];
     AssertEqual(subentry.text, [subentryProperties objectForKey:@"text"]);
     AssertEqual(subentry.number, [subentryProperties objectForKey:@"number"]);
-
+    
     CBLDocument *fileDoc = [database documentWithID:[fileID couchbaseLiteIDRepresentation]];
     NSMutableDictionary *fileProperties = [fileDoc.properties mutableCopy];
     AssertEqual(file.filename, [fileProperties objectForKey:@"filename"]);
@@ -210,7 +216,7 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     Assert(attachment != nil, @"Unable to load attachment");
     AssertEqual(file.data, attachment.content);
     
-
+    
     // now change the properties in CouchbaseLite and check if those are available in Core Data
     [entryProperties setObject:@"different text" forKey:@"text"];
     [entryProperties setObject:@NO forKey:@"check"];
@@ -221,7 +227,7 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     
     entry = (Entry*)[context existingObjectWithID:entryID error:&error];
     Assert(entry != nil, @"Couldn load entry: %@", error);
-
+    
     // if one of the following fails, make sure you compiled the CBLIncrementalStore with CBLIS_NO_CHANGE_COALESCING=1
     AssertEqual(entry.text, [entryProperties objectForKey:@"text"]);
     AssertEqual(entry.check, [entryProperties objectForKey:@"check"]);
@@ -259,7 +265,7 @@ TestCase(CBLIncrementalStoreCreateAndUpdate)
     success = [context save:&error];
     Assert(success, @"Could not save context after update: %@", error);
     
-
+    
     Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
                                                        inManagedObjectContext:context];
     
@@ -301,7 +307,7 @@ TestCase(CBLIncrementalStoreFetchrequest)
     
     CBLIncrementalStore *store = context.persistentStoreCoordinator.persistentStores[0];
     Assert(store, @"Context doesn't have any store?!");
-
+    
     
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
@@ -396,9 +402,9 @@ TestCase(CBLIncrementalStoreAttachments)
     
     CBLIncrementalStore *store = context.persistentStoreCoordinator.persistentStores[0];
     Assert(store, @"Context doesn't have any store?!");
-
+    
     CBLDatabase *database = store.database;
-
+    
     
     File *file = [NSEntityDescription insertNewObjectForEntityForName:@"File"
                                                inManagedObjectContext:context];
@@ -431,6 +437,223 @@ TestCase(CBLIncrementalStoreAttachments)
     file = (File*)[context existingObjectWithID:fileID error:&error];
     Assert(file != nil, @"File should not be nil (%@)", error);
     AssertEqual(file.data, data);
+}
+
+TestCase(CBLIncrementalStoreFetchWithPredicates)
+{
+    NSError *error;
+    
+    NSString *databaseName = @"test-attachments";
+    
+    CBLISEventuallyDeleteDatabaseNamed(databaseName);
+    
+    NSManagedObjectModel *model = CBLISTestCoreDataModel();
+    NSManagedObjectContext *context = [CBLIncrementalStore createManagedObjectContextWithModel:model databaseName:databaseName error:&error];
+    Assert(context, @"Context could not be created: %@", error);
+    
+    CBLIncrementalStore *store = context.persistentStoreCoordinator.persistentStores[0];
+    Assert(store, @"Context doesn't have any store?!");
+    
+    
+    NSDictionary *entry1 = @{
+                             @"created_at": [NSDate new],
+                             @"text": @"This is a test for predicates. Möhre.",
+                             @"text2": @"This is text2.",
+                             @"number": [NSNumber numberWithInt:10],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"10.10"],
+                             @"doubleNumber": [NSNumber numberWithDouble:42.23]
+                             };
+    NSDictionary *entry2 = @{
+                             @"created_at": [[NSDate new] dateByAddingTimeInterval:-60],
+                             @"text": @"Entry number 2. touché.",
+                             @"text2": @"Text 2 by Entry number 2",
+                             @"number": [NSNumber numberWithInt:20],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"20.20"],
+                             @"doubleNumber": [NSNumber numberWithDouble:12.45]
+                             };
+    NSDictionary *entry3 = @{
+                             @"created_at": [[NSDate new] dateByAddingTimeInterval:60],
+                             @"text": @"Entry number 3",
+                             @"text2": @"Text 2 by Entry number 3",
+                             @"number": [NSNumber numberWithInt:30],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"30.30"],
+                             @"doubleNumber": [NSNumber numberWithDouble:98.76]
+                             };
+    
+    CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
+    
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+    
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+    
+    //// ==
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text == %@", entry1[@"text"]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"text"], entry1[@"text"]);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number == %@", entry1[@"number"]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"number"], entry1[@"number"]);
+    });
+    
+    //// >=
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number >= %@", entry2[@"number"]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry2[@"number"]);
+        AssertEqual(numbers[1], entry3[@"number"]);
+    });
+    
+    //// <=
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number <= %@", entry2[@"number"]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1[@"number"]);
+        AssertEqual(numbers[1], entry2[@"number"]);
+    });
+    
+    //// >
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number > %@", entry2[@"number"]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry3[@"number"]);
+    });
+    
+    //// <
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number < %@", entry2[@"number"]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1[@"number"]);
+    });
+    
+    //// !=
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number != %@", entry2[@"number"]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1[@"number"]);
+        AssertEqual(numbers[1], entry3[@"number"]);
+    });
+    
+    //// BETWEEN
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number BETWEEN %@", @[entry1[@"number"], entry2[@"number"]]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1[@"number"]);
+        AssertEqual(numbers[1], entry2[@"number"]);
+    });
+    
+    //// BEGINSWITH
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text BEGINSWITH 'Entry'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        AssertEq((int)[[result[0] valueForKey:@"text"] rangeOfString:@"Entry"].location, 0);
+        AssertEq((int)[[result[1] valueForKey:@"text"] rangeOfString:@"Entry"].location, 0);
+    });
+    
+    //// CONTAINS
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text CONTAINS 'test'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        Assert([[result[0] valueForKey:@"text"] rangeOfString:@"test"].location != NSNotFound);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text CONTAINS[c] 'This'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        Assert([[result[0] valueForKey:@"text"] rangeOfString:@"test"].location != NSNotFound);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text CONTAINS[c] 'this'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        Assert([[result[0] valueForKey:@"text"] rangeOfString:@"test"].location != NSNotFound);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text CONTAINS 'this'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text CONTAINS 'touche'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text CONTAINS[d] 'touche'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+    });
+    
+    //// ENDSWITH
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text ENDSWITH 'touché.'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        Assert([[result[0] valueForKey:@"text"] rangeOfString:@"touché."].location != NSNotFound);
+    });
+    
+    //// LIKE
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text LIKE '*number ?*'"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+    });
+    
+    //// MATCH
+    // this test fails, although I think it should be correctly filter the second and third entries...: Need to investigate more
+//    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text MATCHES %@", @"^Entry"];
+//    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+//        AssertEq((int)result.count, 2);
+//    });
+    
+    //// IN
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number IN %@", @[@(10), @(30)]];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1[@"number"]);
+        AssertEqual(numbers[1], entry3[@"number"]);
+    });
+    
+    //// AND
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number == 10 AND decimalNumber == 10.10"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"number"], entry1[@"number"]);
+        AssertEqual([result[0] valueForKey:@"decimalNumber"], entry1[@"decimalNumber"]);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number == 10 AND decimalNumber == 20.10"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    });
+    //// OR
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number == 10 OR number == 20"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1[@"number"]);
+        AssertEqual(numbers[1], entry2[@"number"]);
+    });
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number == 11 OR number == 20"];
+    CBLISTestAssertFetchRequest(context, fetchRequest, ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry2[@"number"]);
+    });
 }
 
 #pragma mark -
@@ -472,7 +695,7 @@ NSManagedObjectModel *CBLISTestCoreDataModel(void)
     NSEntityDescription *file = [NSEntityDescription new];
     [file setName:@"File"];
     [file setManagedObjectClassName:@"File"];
-
+    
     NSEntityDescription *subentry = [NSEntityDescription new];
     [subentry setName:@"Subentry"];
     [subentry setManagedObjectClassName:@"Subentry"];
@@ -486,7 +709,7 @@ NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [entrySubentries setInverseRelationship:subentryEntry];
     [fileEntry setInverseRelationship:entryFiles];
     [subentryEntry setInverseRelationship:entrySubentries];
-
+    
     [entry setProperties:@[
                            CBLISAttributeDescription(@"check", YES, NSBooleanAttributeType, nil),
                            CBLISAttributeDescription(@"created_at", YES, NSDateAttributeType, nil),
@@ -536,6 +759,34 @@ void CBLISEventuallyDeleteDatabaseNamed(NSString *name)
         BOOL success = [database deleteDatabase:&error];
         Assert(success, @"Could not delete database named %@", name);
     }
+}
+
+void CBLISTestAssertFetchRequest(NSManagedObjectContext *context, NSFetchRequest *fetchRequest, CBLISAssertionBlock assertionBlock)
+{
+    NSFetchRequestResultType resultTypes[] = {NSManagedObjectResultType, NSDictionaryResultType};
+    for (int index = 0; index < 2; index++) {
+        fetchRequest.resultType = resultTypes[index];
+        NSError *error;
+        NSArray *result = [context executeFetchRequest:fetchRequest error:&error];
+        Assert(result != nil, @"Could not execute fetch request: %@", error);
+        assertionBlock(result, fetchRequest.resultType);
+    }
+}
+
+Entry *CBLISTestInsertEntryWithProperties(NSManagedObjectContext *context, NSDictionary *props)
+{
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    [entry setValuesForKeysWithDictionary:props];
+    return  entry;
+}
+NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *context, NSArray *entityProps)
+{
+    NSMutableArray *result = [NSMutableArray arrayWithCapacity:entityProps.count];
+    for (NSDictionary *props in entityProps) {
+        [result addObject:CBLISTestInsertEntryWithProperties(context, props)];
+    }
+    return result;
 }
 
 #endif
