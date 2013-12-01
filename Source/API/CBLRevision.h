@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument, CBLDatabase, CBLAttachment, CBLSavedRevision, CBLNewRevision;
+@class CBLDocument, CBLDatabase, CBLAttachment, CBLSavedRevision, CBLUnsavedRevision;
 
 
 /** A revision of a CBLDocument.
@@ -83,12 +83,9 @@
     either the database has been compacted, or the revision was replicated from another db. */
 @property (readonly) BOOL propertiesAvailable;
 
-/** Has this object fetched its contents from the database yet? */
-@property (readonly) BOOL propertiesAreLoaded;
-
 /** Creates a new mutable child revision whose properties and attachments are initially identical
     to this one's, which you can modify and then save. */
-- (CBLNewRevision*) createRevision;
+- (CBLUnsavedRevision*) createRevision;
 
 /** Creates and saves a new revision with the given properties.
     This will fail with a 412 error if the receiver is not the current revision of the document. */
@@ -99,7 +96,7 @@
 - (CBLSavedRevision*) deleteDocument: (NSError**)outError;
 
 #ifdef CBL_DEPRECATED
-- (CBLNewRevision*) newRevision __attribute__((deprecated("use -createRevision:")));
+- (CBLUnsavedRevision*) newRevision __attribute__((deprecated("use -createRevision:")));
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties
                               error: (NSError**)outError __attribute__((deprecated("use -createRevisionWithProperties:error:")));
 #endif
@@ -108,7 +105,7 @@
 
 
 /** An unsaved new revision. Most of its API is inherited from CBLRevisionBase. */
-@interface CBLNewRevision : CBLRevision
+@interface CBLUnsavedRevision : CBLRevision
 
 // These properties are overridden to be settable:
 @property (readwrite) BOOL isDeletion;

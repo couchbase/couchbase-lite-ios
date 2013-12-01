@@ -154,7 +154,7 @@ TestCase(API_CreateRevisions) {
     CAssertEqual(rev2.properties[@"_rev"], rev2.revisionID);
 
     // Test -createRevision:
-    CBLNewRevision* newRev = [rev2 createRevision];
+    CBLUnsavedRevision* newRev = [rev2 createRevision];
     CAssertNil(newRev.revisionID);
     CAssertEq(newRev.parentRevision, rev2);
     CAssertEqual(newRev.parentRevisionID, rev2.revisionID);
@@ -177,7 +177,7 @@ TestCase(API_CreateNewRevisions) {
     @"tag": @1337};
     CBLDatabase* db = createEmptyDB();
     CBLDocument* doc = [db createDocument];
-    CBLNewRevision* newRev = [doc newRevision];
+    CBLUnsavedRevision* newRev = [doc newRevision];
 
     CBLDocument* newRevDocument = newRev.document;
     CAssertEq(newRevDocument, doc);
@@ -471,7 +471,7 @@ TestCase(API_Conflict) {
 
     properties = rev1.properties.mutableCopy;
     properties[@"tag"] = @3;
-    CBLNewRevision* newRev = [rev1 createRevision];
+    CBLUnsavedRevision* newRev = [rev1 createRevision];
     newRev.properties = properties;
     CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
     CAssert(rev2b, @"Failed to create a a conflict: %@", error);
@@ -516,7 +516,7 @@ TestCase(API_Attachments) {
     CAssertNil([rev attachmentNamed: @"index.html"]);
     
     NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
-    CBLNewRevision *rev2 = [doc newRevision];
+    CBLUnsavedRevision *rev2 = [doc newRevision];
     [rev2 setAttachmentNamed: @"index.html" withContentType: @"text/plain; charset=utf-8" content:body];
 
     NSError * error;
@@ -541,7 +541,7 @@ TestCase(API_Attachments) {
     CAssert(bodyURL.isFileURL);
     CAssertEqual([NSData dataWithContentsOfURL: bodyURL], body);
 
-    CBLNewRevision *newRev = [rev3 createRevision];
+    CBLUnsavedRevision *newRev = [rev3 createRevision];
     [newRev removeAttachmentNamed: attach.name];
     CBLRevision* rev4 = [newRev save: &error];
     CAssert(!error);

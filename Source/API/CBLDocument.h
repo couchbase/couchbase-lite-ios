@@ -7,7 +7,7 @@
 //
 
 #import "CBLDatabase.h"
-@class CBLSavedRevision, CBLNewRevision, CBLDatabaseChange;
+@class CBLSavedRevision, CBLUnsavedRevision, CBLDatabaseChange;
 @protocol CBLDocumentModel;
 
 
@@ -65,7 +65,7 @@
     or which will be the first revision if the document doesn't exist yet.
     You can modify this revision's properties and attachments, then save it.
     No change is made to the database until/unless you save the new revision. */
-- (CBLNewRevision*) newRevision;
+- (CBLUnsavedRevision*) newRevision;
 
 
 #pragma mark PROPERTIES:
@@ -102,7 +102,7 @@
             error will be stored.
     @return  The new saved revision, or nil on error or cancellation.
  */
-- (CBLSavedRevision*) update: (BOOL(^)(CBLNewRevision*))block
+- (CBLSavedRevision*) update: (BOOL(^)(CBLUnsavedRevision*))block
                        error: (NSError**)outError                    __attribute__((nonnull(1)));
 
 

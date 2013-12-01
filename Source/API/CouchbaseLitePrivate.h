@@ -73,10 +73,11 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)tddb
                          revision: (CBL_Revision*)rev               __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
+@property (readonly) BOOL propertiesAreLoaded;
 @end
 
 
-@interface CBLNewRevision ()
+@interface CBLUnsavedRevision ()
 - (instancetype) initWithDocument: (CBLDocument*)doc
                            parent: (CBLSavedRevision*)parent             __attribute__((nonnull(1)));
 @end

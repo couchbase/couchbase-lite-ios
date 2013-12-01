@@ -228,8 +228,8 @@ static inline BOOL isTruthy(id value) {
 #pragma mark - SAVING:
 
 
-- (CBLNewRevision*) createRevision {
-    return [[CBLNewRevision alloc] initWithDocument: self.document parent: self];
+- (CBLUnsavedRevision*) createRevision {
+    return [[CBLUnsavedRevision alloc] initWithDocument: self.document parent: self];
 }
 
 
@@ -249,7 +249,7 @@ static inline BOOL isTruthy(id value) {
 
 
 #ifdef CBL_DEPRECATED
-- (CBLNewRevision*) newRevision {
+- (CBLUnsavedRevision*) newRevision {
     return [self createRevision];
 }
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
@@ -265,7 +265,7 @@ static inline BOOL isTruthy(id value) {
 #pragma mark - CBLNEWREVISION
 
 
-@implementation CBLNewRevision
+@implementation CBLUnsavedRevision
 {
     NSString* _parentRevID;
     NSMutableDictionary* _properties;
