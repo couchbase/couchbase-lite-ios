@@ -26,7 +26,6 @@ NSString * const kCBLISManagedObjectIDPrefix = @"cbl";
 NSString * const kCBLISDesignName = @"cblisDesign";
 NSString * const kCBLISMetadataDocumentID = @"cblis_metadata";
 NSString * const kCBLISAllByTypeViewName = @"cblis_all_by_type";
-NSString * const kCBLISIDByTypeViewName = @"cblis_id_by_type";
 NSString * const kCBLISConflictsViewName = @"cblis_conflicts";
 NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"cblis_fetch_%@_by_%@";
 
@@ -90,7 +89,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     NSError *error;
     
     NSPersistentStoreCoordinator *persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:model];
-
+    
     NSDictionary *options = @{
                               NSMigratePersistentStoresAutomaticallyOption : @YES,
                               NSInferMappingModelAutomaticallyOption : @YES
@@ -114,7 +113,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         store = (CBLIncrementalStore*)[persistentStoreCoordinator migratePersistentStore:oldStore
                                                                                    toURL:[NSURL URLWithString:databaseName] options:options
                                                                                 withType:[self type] error:&error];
-    
+        
         if (!store) {
             NSString *errorDescription = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
             if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
@@ -164,7 +163,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 }
 
 /**
- * This method has to be called once, before the NSManagedObjectModel is used by a NSPersistentStoreCoordinator. This method updates 
+ * This method has to be called once, before the NSManagedObjectModel is used by a NSPersistentStoreCoordinator. This method updates
  * the entities in the managedObjectModel and adds some required properties.
  *
  * @param managedObjectModel the managedObjectModel to use with this store
@@ -240,10 +239,10 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             return NO;
         }
     }
-
+    
     
     NSError *error;
-
+    
     NSString *databaseName = [self.URL lastPathComponent];
     
     CBLManager *manager = [CBLManager sharedInstance];
@@ -268,7 +267,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     }
     
     [self _initializeViews];
-  
+    
     
     [[NSNotificationCenter defaultCenter] addObserverForName:kCBLDatabaseChangeNotification
                                                       object:self.database queue:nil
@@ -306,7 +305,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                                                                  NSUnderlyingErrorKey: error
                                                                  }];
             return NO;
-
+            
         }
         
     } else {
@@ -354,7 +353,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         NSError *error;
         
         NSMutableSet *changedEntities = [NSMutableSet setWithCapacity:[save insertedObjects].count];
-
+        
         // Objects that were inserted...
         for (NSManagedObject *object in [save insertedObjects]) {
             NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
@@ -404,7 +403,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                                                                      }];
             }
         }
-                
+        
         
         // Objects that were deleted from the calling context...
         for (NSManagedObject *object in [save deletedObjects]) {
@@ -631,10 +630,12 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark - Views
 
+/** Initializes the views needed for querying objects by type and for to-many relationships. */
 - (void) _initializeViews
 {
     NSMutableDictionary *subentitiesToSuperentities = [NSMutableDictionary dictionary];
     
+    // Create a view for each to-many relationship
     NSArray *entites = self.persistentStoreCoordinator.managedObjectModel.entities;
     for (NSEntityDescription *entity in entites) {
         
@@ -672,11 +673,11 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                     } else {
                         CBLView *view = [self.database viewNamed:viewName];
                         [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
-                                           if ([entityNames containsObject:[doc objectForKey:kCBLISTypeKey]] && [doc objectForKey:inverseRelNameLower]) {
-                                               emit([doc objectForKey:inverseRelNameLower], nil);
-                                           }
-                                       }
-                                        version:@"1.0"];
+                            if ([entityNames containsObject:[doc objectForKey:kCBLISTypeKey]] && [doc objectForKey:inverseRelNameLower]) {
+                                emit([doc objectForKey:inverseRelNameLower], nil);
+                            }
+                        }
+                                  version:@"1.0"];
                         
                         // remember view for mapping super-entity and all sub-entities
                         [self _setViewName:viewName forFetchingProperty:inverseRelNameLower fromEntity:rel.destinationEntity.name];
@@ -699,6 +700,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         }
     }
     
+    // Create a view that maps entity names to instances
     CBLView *view = [self.database viewNamed:kCBLISAllByTypeViewName];
     [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
         NSString *ident = [doc valueForKey:@"_id"];
@@ -713,30 +715,13 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         }
     }
               version:@"1.0"];
-    view = [self.database viewNamed:kCBLISIDByTypeViewName];
-    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
-        NSString *ident = [doc valueForKey:@"_id"];
-        if ([ident hasPrefix:@"cbis_"]) return;
-        
-        NSString* type = [doc objectForKey:kCBLISTypeKey];
-        if (type) {
-            emit(type, nil);
-            
-            NSString *superentity = [subentitiesToSuperentities objectForKey:type];
-            if (superentity) {
-                emit(superentity, nil);
-            }
-        }
-        
-    }
-              version:@"1.0"];
 }
 
 - (void) defineFetchViewForEntity:(NSString*)entityName
                        byProperty:(NSString*)propertyName
 {
     NSString *viewName = [self _createViewNameForFetchingFromEntity:entityName byProperty:propertyName];
-
+    
     CBLView *view = [self.database viewNamed:viewName];
     [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
         NSString* type = [doc objectForKey:kCBLISTypeKey];
@@ -839,7 +824,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     if (!viewName) {
         return nil;
     }
-
+    
     CBLView *view = [self.database existingViewNamed:viewName];
     CBLQuery *query = [view createQuery];
     if (comparisonPredicate.predicateOperatorType == NSEqualToPredicateOperatorType) {
@@ -1407,11 +1392,11 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 - (void) _couchDocumentsChanged:(NSArray*)changes
 {
     [NSThread cancelPreviousPerformRequestsWithTarget:self selector:@selector(_processCouchbaseLiteChanges) object:nil];
-
+    
     @synchronized(self) {
         [_coalescedChanges addObjectsFromArray:changes];
     }
-
+    
     [self performSelector:@selector(_processCouchbaseLiteChanges) withObject:nil afterDelay:1.0];
 }
 - (void) _processCouchbaseLiteChanges
@@ -1447,7 +1432,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         NSString *reference = [ident substringFromIndex:range.location + 1];
         
         [changedEntitites addObject:type];
-
+        
         NSEntityDescription *entity = [self.persistentStoreCoordinator.managedObjectModel.entitiesByName objectForKey:type];
         NSManagedObjectID *objectID = [self newObjectIDForEntity:entity referenceObject:reference];
         
@@ -1547,6 +1532,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 @implementation NSManagedObjectID (CBLIncrementalStore)
 
+/** Returns an internal representation of this objectID that is used as _id in Couchbase. */
 - (NSString*) couchbaseLiteIDRepresentation
 {
     NSString *uuid = [[self.URIRepresentation lastPathComponent] substringFromIndex:kCBLISManagedObjectIDPrefix.length + 1];
@@ -1559,12 +1545,13 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 //// utility methods
 
+/** Checks if value is nil or NSNull. */
 BOOL CBLISIsNull(id value)
 {
     return value == nil || [value isKindOfClass:[NSNull class]];
 }
 
-// returns name of a view that returns objectIDs for all destination entities of a to-many relationship
+/** returns name of a view that returns objectIDs for all destination entities of a to-many relationship. */
 NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship)
 {
     NSString *entityName = [relationship.entity.name lowercaseString];
@@ -1572,6 +1559,7 @@ NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relation
     return [NSString stringWithFormat:@"cbis_%@_tomany_%@", entityName, destinationName];
 }
 
+/** Returns a readable name for a NSFetchRequestResultType */
 NSString *CBLISResultTypeName(NSFetchRequestResultType resultType)
 {
     switch (resultType) {

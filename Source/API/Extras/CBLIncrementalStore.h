@@ -54,4 +54,7 @@ typedef void(^CBLISConflictHandler)(CBLDocument *doc, NSArray *conflictingRevisi
 - (void) addObservingManagedObjectContext:(NSManagedObjectContext*)context;
 - (void) removeObservingManagedObjectContext:(NSManagedObjectContext*)context;
 
+/** Creates a view for fetching entities by a property name. Can speed up fetching this entity by this property. */
+- (void) defineFetchViewForEntity:(NSString*)entityName byProperty:(NSString*)propertyName;
+
 @end
