@@ -11,6 +11,9 @@
 #import <CouchbaseLite/CouchbaseLite.h>
 #import <CouchbaseLite/CBLDatabaseChange.h>
 
+// copied definition because we need them here:
+#define $true   ((NSNumber*)kCFBooleanTrue)
+
 
 #if !__has_feature(objc_arc)
 #  error This class requires ARC!
@@ -403,8 +406,10 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         // Objects that were deleted from the calling context...
         for (NSManagedObject *object in [save deletedObjects]) {
+            // doesn't delete the document the normal way, but marks it as deleted to keep the type field needed for notifying Core Data.
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            if (![doc deleteDocument:&error]) {
+            NSDictionary *contents = [self _propertiesForDeletingDocument:doc];
+            if (![doc putProperties:contents error:&error]) {
                 if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
                                                               code:CBLIncrementalStoreErrorPersistingDeletedObjectsFailed
                                                           userInfo:@{
@@ -608,9 +613,6 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 - (NSManagedObjectID *)newObjectIDForEntity:(NSEntityDescription *)entity referenceObject:(id)data
 {
     NSString *referenceObject = data;
-    
-    NSRange range = [referenceObject rangeOfString:@"_"];
-    if (range.location != NSNotFound) referenceObject = [referenceObject substringFromIndex:range.location + 1];
     
     if ([referenceObject hasPrefix:@"p"]) {
         referenceObject = [referenceObject substringFromIndex:1];
@@ -879,14 +881,6 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 - (NSManagedObjectID *)_newObjectIDForEntity:(NSEntityDescription *)entity managedObjectContext:(NSManagedObjectContext*)context
                                      couchID:(NSString*)couchID
 {
-    NSArray *parts = [couchID componentsSeparatedByString:@"_"];
-    NSAssert(parts.count == (NSUInteger)2, @"couchID needs to be of the defined pattern");
-    
-    NSString *couchType = parts[0];
-    if (![entity.name isEqual:couchType]) {
-        entity = [NSEntityDescription entityForName:couchType inManagedObjectContext:context];
-    }
-    
     NSManagedObjectID *objectID = [self newObjectIDForEntity:entity referenceObject:couchID];
     return objectID;
 }
@@ -1418,19 +1412,15 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         NSString *ident = change.documentID;
         BOOL deleted = [[rev valueForKey:@"deleted"] boolValue];
-        
-        NSRange range = [ident rangeOfString:@"_"];
-        if (range.location == NSNotFound) {
+
+        if ([ident hasPrefix:@"cblis"]) {
             continue;
         }
+
+        NSDictionary *properties = [rev properties];
         
-        NSString *type = [ident substringToIndex:range.location];
-        if ([type isEqual:@"cblis"]) {
-            continue;
-        }
-        
-        
-        NSString *reference = [ident substringFromIndex:range.location + 1];
+        NSString *type = [properties objectForKey:kCBLISTypeKey];
+        NSString *reference = ident;
         
         [changedEntitites addObject:type];
         
@@ -1527,6 +1517,20 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     return handler;
 }
 
+#pragma mark -
+
+/** Returns the properties that are stored for deleting a document. Must contain at least "_rev" and "_deleted" = true for 
+ * CouchbaseLite and kCBLISTypeKey for this store. Can be overridden if you need more for filtered syncing, for example.
+ */
+- (NSDictionary*) _propertiesForDeletingDocument:(CBLDocument*)doc
+{
+    NSDictionary *contents = @{
+                               @"_deleted": $true,
+                               @"_rev": [doc propertyForKey:@"_rev"],
+                               kCBLISTypeKey: [doc propertyForKey:kCBLISTypeKey]
+                               };
+    return contents;
+}
 
 @end
 
@@ -1536,9 +1540,9 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 /** Returns an internal representation of this objectID that is used as _id in Couchbase. */
 - (NSString*) couchbaseLiteIDRepresentation
 {
+    // +1 because of "p" prefix in managed object IDs
     NSString *uuid = [[self.URIRepresentation lastPathComponent] substringFromIndex:kCBLISManagedObjectIDPrefix.length + 1];
-    NSString *ident = [NSString stringWithFormat:@"%@_%@", self.entity.name, uuid];
-    return ident;
+    return uuid;
 }
 
 @end
