@@ -20,12 +20,12 @@ typedef enum {
 } CBLAllDocsMode;
 
 
-/** Options for CBLQuery.updateIndex property, to allow out-of-date results to be returned. */
+/** Query options to allow out-of-date results to be returned in return for faster queries. */
 typedef enum {
     kCBLUpdateIndexBefore,  /**< Always update index if needed before querying (default) */
     kCBLUpdateIndexNever,   /**< Don't update the index; results may be out of date */
-    kCBLUpdateIndexAfter    /**< Update index after querying (results may still be out of date) */
-} CBLUpdateIndexMode;
+    kCBLUpdateIndexAfter    /**< Update index _after_ querying (results may still be out of date) */
+} CBLIndexUpdateMode;
 
 
 /** Represents a query of a CouchbaseLite 'view', or of a view-like resource like _all_documents. */
@@ -63,7 +63,7 @@ typedef enum {
     delay. The "Never" mode skips updating the index, so it's faster but can return out of date
     results. The "After" mode is a compromise that may return out of date results but if so will
     start asynchronously updating the index after the query so future results are accurate. */
-@property CBLUpdateIndexMode updateIndex;
+@property CBLIndexUpdateMode indexUpdateMode;
 
 /** If non-nil, the query will fetch only the rows with the given keys. */
 @property (copy) NSArray* keys;
@@ -108,7 +108,7 @@ typedef enum {
 
 #ifdef CBL_DEPRECATED
 @property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
-@property CBLUpdateIndexMode stale __attribute__((deprecated("renamed staleness")));
+@property CBLIndexUpdateMode stale __attribute__((deprecated("renamed indexUpdateMode")));
 - (CBLQueryEnumerator*) rows __attribute__((deprecated("renamed rows:")));
 - (CBLQueryEnumerator*) rowsIfChanged __attribute__((deprecated("use CBLQueryEnumerator.stale")));
 @property (readonly) NSError* error __attribute__((deprecated("use rows: which returns an error")));

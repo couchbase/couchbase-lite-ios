@@ -52,7 +52,7 @@
     id _startKey, _endKey;
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
-    CBLUpdateIndexMode _updateIndex;
+    CBLIndexUpdateMode _indexUpdateMode;
     BOOL _descending, _prefetch, _mapOnly;
     CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
@@ -103,7 +103,7 @@
         _mapOnly = query.mapOnly;
         self.startKeyDocID = query.startKeyDocID;
         self.endKeyDocID = query.endKeyDocID;
-        _updateIndex = query.updateIndex;
+        _indexUpdateMode = query.indexUpdateMode;
         _fullTextQuery = query.fullTextQuery;
         _fullTextRanking = query.fullTextRanking;
         _fullTextSnippets = query.fullTextSnippets;
@@ -123,7 +123,7 @@
 
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
-            endKeyDocID=_endKeyDocID, updateIndex=_updateIndex, mapOnly=_mapOnly,
+            endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
             database=_database, allDocsMode=_allDocsMode;
 
 
@@ -150,7 +150,7 @@
         .updateSeq = YES,
         .inclusiveEnd = YES,
         .allDocsMode = _allDocsMode,
-        .stale = _updateIndex
+        .indexUpdateMode = _indexUpdateMode
     };
 }
 
@@ -211,8 +211,8 @@
 - (void) setIncludeDeleted:(BOOL)includeDeleted {
     _allDocsMode = includeDeleted ? kCBLIncludeDeleted : kCBLAllDocs;
 }
-- (CBLUpdateIndexMode) stale {return self.updateIndex;}
-- (void) setStale:(CBLUpdateIndexMode)stale {self.updateIndex = stale;}
+- (CBLIndexUpdateMode) stale {return self.indexUpdateMode;}
+- (void) setStale:(CBLIndexUpdateMode)stale {self.indexUpdateMode = stale;}
 - (CBLQueryEnumerator*) rows {
     NSError* error;
     CBLQueryEnumerator* result = [self rows: &error];
@@ -643,14 +643,14 @@ static id fromJSON( NSData* json ) {
                 break;
             }
             lastSequence = view.lastSequenceIndexed;
-            if (options.stale == kCBLUpdateIndexBefore || lastSequence <= 0) {
+            if (options.indexUpdateMode == kCBLUpdateIndexBefore || lastSequence <= 0) {
                 status = [view updateIndex];
                 if (CBLStatusIsError(status)) {
                     Warn(@"Failed to update view index: %d", status);
                     break;
                 }
                 lastSequence = view.lastSequenceIndexed;
-            } else if (options.stale == kCBLUpdateIndexAfter &&
+            } else if (options.indexUpdateMode == kCBLUpdateIndexAfter &&
                        lastSequence < self.lastSequenceNumber) {
                 [self doAsync: ^{
                     [view updateIndex];

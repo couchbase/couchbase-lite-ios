@@ -33,7 +33,7 @@ typedef struct CBLQueryOptions {
     BOOL group;
     BOOL fullTextSnippets;
     BOOL fullTextRanking;
-    CBLUpdateIndexMode stale;
+    CBLIndexUpdateMode indexUpdateMode;
     CBLAllDocsMode allDocsMode;
 } CBLQueryOptions;
 
