@@ -58,10 +58,6 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 @end
 
-/** NSIncrementalStore that uses a CouchbaseLite database for persistence.
- *
- * The last path component of the database URL is used for a database name. Examples: cblite://test-database, cblite://test/abc/database-name
- */
 @implementation CBLIncrementalStore
 {
     NSMutableArray      *_coalescedChanges;
@@ -715,6 +711,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
               version:@"1.0"];
 }
 
+/** Creates a view for fetching entities by a property name. Can speed up fetching this entity by this property. */
 - (void) defineFetchViewForEntity:(NSString*)entityName
                        byProperty:(NSString*)propertyName
 {
@@ -734,6 +731,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark - Querying
 
+/** Queries the database by a given fetch request. Checks the cache for the result first. */
 - (NSArray*) _queryObjectsOfEntity:(NSEntityDescription*)entity byFetchRequest:(NSFetchRequest*)fetch inContext:(NSManagedObjectContext*)context error:(NSError**)outError
 {
     id cached = [self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate];
@@ -741,7 +739,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         return cached;
     }
     
-    CBLQuery* query = [self _queryForFetchRequest:fetch onEntity:entity];
+    CBLQuery* query = [self _queryForFetchRequest:fetch onEntity:entity error:nil];
     if (!query) {
         CBLView *view = [self.database existingViewNamed:kCBLISAllByTypeViewName];
         query = [view createQuery];
@@ -755,10 +753,12 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     return result;
 }
 
+/** Filters a query by a given fetch request. Checks the cache for the result first. */
 - (NSArray*) _filterObjectsOfEntity:(NSEntityDescription*)entity fromQuery:(CBLQuery*)query byFetchRequest:(NSFetchRequest*)fetch inContext:(NSManagedObjectContext*)context error:(NSError**)outError
 {
-    if ([self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate]) {
-        return [self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate];
+    id cached = [self _cachedQueryResultsForEntity:entity.name predicate:fetch.predicate];
+    if (cached) {
+        return cached;
     }
     
     CBLQueryEnumerator *rows = [self _queryEnumeratorForQuery:query error:outError];
@@ -779,22 +779,36 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     return array;
 }
 
-- (CBLQuery*) _queryForFetchRequest:(NSFetchRequest*)fetch onEntity:(NSEntityDescription*)entity
+/** Creates a query for fetching the data for an entity filtered by a NSFetchRequest. Only takes a NSComparisonPredicate that references 
+ * the requested entity into account.
+ */
+- (CBLQuery*) _queryForFetchRequest:(NSFetchRequest*)fetch onEntity:(NSEntityDescription*)entity error:(NSError**)outError
 {
     NSPredicate *predicate = fetch.predicate;
     
     if (!predicate) return nil;
     
+    // Check if the query is a compound query.
     if ([predicate isKindOfClass:[NSCompoundPredicate class]]) {
         if (((NSCompoundPredicate*)predicate).subpredicates.count == 1 ||
             ((NSCompoundPredicate*)predicate).compoundPredicateType == NSAndPredicateType) {
             predicate = ((NSCompoundPredicate*)predicate).subpredicates[0];
         } else {
+            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                          code:CBLIncrementalStoreErrorCreatingQueryFailed
+                                                      userInfo:@{
+                                                                 NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported NSCompoundPredicate."
+                                                                 }];
             return nil;
         }
     }
     
     if (![predicate isKindOfClass:[NSComparisonPredicate class]]) {
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorCreatingQueryFailed
+                                                  userInfo:@{
+                                                             NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: only comparison predicate supported"
+                                                             }];
         return nil;
     }
     
@@ -803,18 +817,38 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     if (comparisonPredicate.predicateOperatorType != NSEqualToPredicateOperatorType &&
         comparisonPredicate.predicateOperatorType != NSNotEqualToPredicateOperatorType &&
         comparisonPredicate.predicateOperatorType != NSInPredicateOperatorType) {
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorCreatingQueryFailed
+                                                  userInfo:@{
+                                                             NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: only equal, not equal or IN supported"
+                                                             }];
         return nil;
     }
     
     if (comparisonPredicate.leftExpression.expressionType != NSKeyPathExpressionType) {
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorCreatingQueryFailed
+                                                  userInfo:@{
+                                                             NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: left expression invalid"
+                                                             }];
         return nil;
     }
     
     if (comparisonPredicate.rightExpression.expressionType != NSConstantValueExpressionType) {
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorCreatingQueryFailed
+                                                  userInfo:@{
+                                                             NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: right expression invalid"
+                                                             }];
         return nil;
     }
     
     if (![self _hasViewForFetchingFromEntity:entity.name byProperty:comparisonPredicate.leftExpression.keyPath]) {
+        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                                                      code:CBLIncrementalStoreErrorCreatingQueryFailed
+                                                  userInfo:@{
+                                                             NSLocalizedFailureReasonErrorKey: @"Error creating query: no view for that entity found"
+                                                             }];
         return nil;
     }
     
@@ -1011,7 +1045,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         }
     }
     
-    // add binary data attributes as
+    // add binary data attributes as attachment
     if (dataAttributes) {
         NSMutableDictionary *attachments = [NSMutableDictionary dictionary];
         for (NSAttributeDescription *attribute in dataAttributes) {
@@ -1051,7 +1085,6 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             
             // handle binary attributes specially
             if ([attr attributeType] == NSBinaryDataAttributeType) {
-                // TODO: handle binary attribute
                 NSDictionary *attachments = [properties objectForKey:@"_attachments"];
                 NSDictionary *attachment = [attachments objectForKey:property];
                 
