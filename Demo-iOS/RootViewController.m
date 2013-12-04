@@ -335,7 +335,7 @@
 
 
 - (void) replicationProgress: (NSNotificationCenter*)n {
-    if (_pull.mode == kCBLReplicationActive || _push.mode == kCBLReplicationActive) {
+    if (_pull.status == kCBLReplicationActive || _push.status == kCBLReplicationActive) {
         unsigned completed = _pull.completedChangesCount + _push.completedChangesCount;
         unsigned total = _pull.changesCount + _push.changesCount;
         NSLog(@"SYNC progress: %u / %u", completed, total);
