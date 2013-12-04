@@ -58,6 +58,7 @@ typedef enum CBLChangeTrackerMode {
     NSDictionary* _requestHeaders;
     id<CBLAuthorizer> _authorizer;
     unsigned _retryCount;
+    BOOL _usePOSTWithDocIDs;
 }
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
@@ -83,6 +84,7 @@ typedef enum CBLChangeTrackerMode {
 @property (nonatomic) unsigned limit;
 @property (nonatomic) NSTimeInterval heartbeat;
 @property (nonatomic) NSArray *docIDs;
+@property (nonatomic) BOOL usePOSTWithDocIDs; // use a POST request with JSON body when using doc_ids
 
 - (BOOL) start;
 - (void) stop;

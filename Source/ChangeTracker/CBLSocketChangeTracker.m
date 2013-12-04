@@ -41,8 +41,8 @@
     NSURL *url = self.changesFeedURL;
     CFHTTPMessageRef request;
 
-    // if we have a doc_ids-based replication, send the _changes request as a POST, with JSON-encoded doc_ids parameter
-    if (self.docIDs) {
+    if (self.docIDs && _usePOSTWithDocIDs) {
+      // send the _changes request as a POST, with JSON-encoded doc_ids body.
       request = CFHTTPMessageCreateRequest(NULL, CFSTR("POST"),
                                            (__bridge CFURLRef)url,
                                            kCFHTTPVersion1_1);

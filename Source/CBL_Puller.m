@@ -112,6 +112,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
+    // Limit the use of POST requests with doc_ids to servers supporting it
+    _changeTracker.usePOSTWithDocIDs = [_serverType hasPrefix: @"CouchDB/"];
 
     unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
