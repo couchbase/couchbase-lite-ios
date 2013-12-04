@@ -271,13 +271,13 @@
 
     __block CBL_MutableRevision* newRev = nil;
     __block CBL_Revision* winningRev = nil;
-    __block BOOL maybeConflict = NO;
+    __block BOOL inConflict = NO;
 
     *outStatus = [self _inTransaction: ^CBLStatus {
         // Remember, this block may be called multiple times if I have to retry the transaction.
         newRev = nil;
         winningRev = nil;
-        maybeConflict = NO;
+        inConflict = NO;
         NSString* prevRevID = inputPrevRevID;
         NSString* docID = oldRev.docID;
 
@@ -363,7 +363,7 @@
 
         // There may be a conflict if (a) the document was already in conflict, or
         // (b) a conflict is created by adding a non-deletion child of a non-winning rev.
-        maybeConflict = wasConflicted || (!deleted && !$equal(prevRevID, oldWinningRevID));
+        inConflict = wasConflicted || (!deleted && !$equal(prevRevID, oldWinningRevID));
 
         //// PART II: In which we prepare for insertion...
         
@@ -446,7 +446,7 @@
     //// EPILOGUE: A change notification is sent...
     [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
                                                          winningRevision: winningRev
-                                                           maybeConflict: maybeConflict
+                                                              inConflict: inConflict
                                                                   source: nil]];
     return newRev;
 }
@@ -471,7 +471,7 @@
         return kCBLStatusBadID;
     
     __block CBL_Revision* winningRev = nil;
-    __block BOOL maybeConflict = NO;
+    __block BOOL inConflict = NO;
     CBLStatus status = [self _inTransaction: ^CBLStatus {
         // First look up the document's row-id and all locally-known revisions of it:
         CBL_RevisionList* localRevs = nil;
@@ -506,7 +506,7 @@
         BOOL oldWinnerWasDeletion;
         NSString* oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
                                                            isDeleted: &oldWinnerWasDeletion
-                                                          isConflict: &maybeConflict];
+                                                          isConflict: &inConflict];
 
         // Walk through the remote history in chronological order, matching each revision ID to
         // a local revision. When the list diverges, start creating blank local revisions to fill
@@ -530,7 +530,7 @@
                 if (sequence == localParentSequence) {
                     // This is the point where we branch off of the existing rev tree.
                     // If the branch wasn't from the single existing leaf, this creates a conflict.
-                    maybeConflict = maybeConflict || (!rev.deleted && !$equal(localParentRevID, revID));
+                    inConflict = inConflict || (!rev.deleted && !$equal(localParentRevID, revID));
                 }
 
                 CBL_MutableRevision* newRev;
@@ -597,7 +597,7 @@
     if (!CBLStatusIsError(status)) {
         [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: rev
                                                              winningRevision: winningRev
-                                                               maybeConflict: maybeConflict
+                                                                  inConflict: inConflict
                                                                       source: source]];
     }
     return status;

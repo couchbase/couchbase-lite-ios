@@ -360,7 +360,7 @@ static void verifyHistory(CBLDatabase* db, CBL_Revision* rev, NSArray* history, 
 
 static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) {
     return [[CBLDatabaseChange alloc] initWithAddedRevision: rev winningRevision: winner
-                                              maybeConflict: NO source: nil];
+                                                 inConflict: NO source: nil];
 }
 
 
