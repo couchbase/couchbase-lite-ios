@@ -105,13 +105,10 @@
     // and a validation function requiring parseable dates:
     [theDatabase setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.isDeletion)
-            return YES;
+            return;
         id date = [newRevision.properties objectForKey: @"created_at"];
-        if (date && ! [CBLJSON dateWithJSONObject: date]) {
-            context.errorMessage = [@"invalid date " stringByAppendingString: [date description]];
-            return NO;
-        }
-        return YES;
+        if (date && ! [CBLJSON dateWithJSONObject: date])
+            [context rejectWithMessage: [@"invalid date " stringByAppendingString: [date description]]];
     })];
 }
 

@@ -70,13 +70,10 @@ int main (int argc, const char * argv[]) {
     // and a validation function requiring parseable dates:
     [_database setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.isDeletion)
-            return YES;
+            return;
         id date = newRevision[@"created_at"];
-        if (date && ! [CBLJSON dateWithJSONObject: date]) {
-            context.errorMessage = [@"invalid date " stringByAppendingString: date];
-            return NO;
-        }
-        return YES;
+        if (date && ! [CBLJSON dateWithJSONObject: date])
+            [context rejectWithMessage: [@"invalid date " stringByAppendingString: date]];
     })];
     
     // And why not a filter, just to allow some simple testing of filtered _changes.

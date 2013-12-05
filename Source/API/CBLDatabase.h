@@ -12,11 +12,13 @@
 @protocol CBLValidationContext;
 
 
-/** Validation block, used to approve revisions being added to the database. */
-typedef BOOL (^CBLValidationBlock) (CBLSavedRevision* newRevision,
+/** Validation block, used to approve revisions being added to the database.
+    The block should call `[context reject]` or `[context rejectWithMessage:]` if the proposed
+    new revision is invalid. */
+typedef void (^CBLValidationBlock) (CBLSavedRevision* newRevision,
                                    id<CBLValidationContext> context);
 
-#define VALIDATIONBLOCK(BLOCK) ^BOOL(CBLSavedRevision* newRevision, id<CBLValidationContext> context)\
+#define VALIDATIONBLOCK(BLOCK) ^void(CBLSavedRevision* newRevision, id<CBLValidationContext> context)\
                                     {BLOCK}
 
 /** Filter block, used in changes feeds and replication. */
@@ -246,13 +248,13 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 /** The contents of the current revision of the document, or nil if this is a new document. */
 @property (readonly) CBLSavedRevision* currentRevision;
 
-/** The type of HTTP status to report, if the validate block returns NO.
-    The default value is 403 ("Forbidden"). */
-@property int errorType;
+/** Rejects the proposed new revision. */
+- (void) reject;
 
-/** The error message to return in the HTTP response, if the validate block returns NO.
-    The default value is "invalid document". */
-@property (copy) NSString* errorMessage;
+/** Rejects the proposed new revision. Any resulting error will contain the provided message;
+    for example, if the change came from an external HTTP request, the message will be in the
+    response status line. The default message is "invalid document". */
+- (void) rejectWithMessage: (NSString*)message;
 
 
 #pragma mark - CONVENIENCE METHODS:
@@ -260,14 +262,17 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 /** Returns an array of all the keys whose values are different between the current and new revisions. */
 @property (readonly) NSArray* changedKeys;
 
-/** Returns YES if only the keys given in the 'allowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
+/** Returns YES if only the keys given in the 'allowedKeys' array have changed; else rejects the
+    revision, sets a default error message naming the offending key, and returns NO. */
 - (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys;
 
-/** Returns YES if none of the keys given in the 'disallowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
+/** Returns YES if none of the keys given in the 'disallowedKeys' array have changed; else rejects
+    the revision, sets a default error message naming the offending key, and returns NO. */
 - (BOOL) disallowChangesTo: (NSArray*)disallowedKeys;
 
 /** Calls the 'enumerator' block for each key that's changed, passing both the old and new values.
-    If the block returns NO, the enumeration stops and sets a default error message, and the method returns NO; else the method returns YES. */
+    If the block returns NO, the enumeration stops and rejects the revision, and the method returns
+    NO; else the method returns YES. */
 - (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator;
 
 @end

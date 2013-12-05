@@ -52,8 +52,7 @@
                          revision: (CBL_Revision*)currentRevision
                       newRevision: (CBL_Revision*)newRevision;
 @property (readonly) CBLSavedRevision* currentRevision;
-@property int errorType;
-@property (copy) NSString* errorMessage;
+@property (readonly) NSString* rejectionMessage;
 @end
 
 
@@ -788,19 +787,19 @@
     for (NSString* validationName in validations) {
         CBLValidationBlock validation = [self validationNamed: validationName];
         @try {
-            if (!validation(publicRev, context)) {
-                status = context.errorType;
-                break;
-            }
+            validation(publicRev, context);
         } @catch (NSException* x) {
             MYReportException(x, @"validation block '%@'", validationName);
             status = kCBLStatusCallbackError;
             break;
         }
+        if (context.rejectionMessage != nil) {
+            LogTo(CBLValidation, @"Failed update of %@: %@:\n  Old doc = %@\n  New doc = %@",
+                  oldRev, context.rejectionMessage, oldRev.properties, newRev.properties);
+            status = kCBLStatusForbidden;
+            break;
+        }
     }
-    if (CBLStatusIsError(status))
-        LogTo(CBLValidation, @"Failed update of %@: %d %@:\n  Old doc = %@\n  New doc = %@",
-             oldRev, context.errorType, context.errorMessage, oldRev.properties, newRev.properties);
     return status;
 }
 
@@ -830,6 +829,9 @@
 }
 
 
+@synthesize rejectionMessage=_rejectionMessage;
+
+
 - (CBL_Revision*) current_Revision {
     if (_currentRevision)
         _currentRevision = [_db revisionByLoadingBody: _currentRevision options: 0 status: NULL];
@@ -842,7 +844,17 @@
     return cur ? [[CBLSavedRevision alloc] initWithDatabase: _db revision: cur] : nil;
 }
 
-@synthesize errorType=_errorType, errorMessage=_errorMessage;
+- (void) reject {
+    if (!_rejectionMessage)
+        _rejectionMessage = @"invalid document";
+}
+
+- (void) rejectWithMessage: (NSString*)message {
+    NSParameterAssert(message);
+    if (!_rejectionMessage)
+        _rejectionMessage = [message copy];
+}
+
 
 - (NSArray*) changedKeys {
     if (!_changedKeys) {
@@ -867,7 +879,7 @@
 - (BOOL) allowChangesOnlyTo: (NSArray*)keys {
     for (NSString* key in self.changedKeys) {
         if (![keys containsObject: key]) {
-            self.errorMessage = $sprintf(@"The '%@' property may not be changed", key);
+            [self rejectWithMessage: $sprintf(@"The '%@' property may not be changed", key)];
             return NO;
         }
     }
@@ -877,7 +889,7 @@
 - (BOOL) disallowChangesTo: (NSArray*)keys {
     for (NSString* key in self.changedKeys) {
         if ([keys containsObject: key]) {
-            self.errorMessage = $sprintf(@"The '%@' property may not be changed", key);
+            [self rejectWithMessage: $sprintf(@"The '%@' property may not be changed", key)];
             return NO;
         }
     }
@@ -889,8 +901,7 @@
     NSDictionary* nuu = _newRevision.properties;
     for (NSString* key in self.changedKeys) {
         if (!enumerator(key, cur[key], nuu[key])) {
-            if ($equal(_errorMessage, @"invalid document"))
-                self.errorMessage = $sprintf(@"Illegal change to '%@' property", key);
+            [self rejectWithMessage: $sprintf(@"Illegal change to '%@' property", key)];
             return NO;
         }
     }

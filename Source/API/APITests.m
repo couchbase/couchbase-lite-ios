@@ -643,12 +643,9 @@ TestCase(API_Validation) {
     CBLDatabase* db = createEmptyDB();
 
     [db setValidationNamed: @"uncool"
-                 asBlock: ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
-                     if (!newRevision.properties[@"groovy"]) {
-                         context.errorMessage = @"uncool";
-                         return NO;
-                     }
-                     return YES;
+                 asBlock: ^void(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
+                     if (!newRevision.properties[@"groovy"])
+                         [context rejectWithMessage: @"uncool"];
                  }];
     
     NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
@@ -797,9 +794,7 @@ TestCase(API_SharedMapBlocks) {
     [db setFilterNamed: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
         return YES;
     }];
-    [db setValidationNamed: @"val" asBlock: VALIDATIONBLOCK({
-        return YES;
-    })];
+    [db setValidationNamed: @"val" asBlock: VALIDATIONBLOCK({ })];
     CBLView* view = [db viewNamed: @"view"];
     BOOL ok = [view setMapBlock: MAPBLOCK({
         // nothing
