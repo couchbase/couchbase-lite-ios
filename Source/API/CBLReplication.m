@@ -442,7 +442,12 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (void) restart {
-    [self setValue: nil ofProperty: @"_replication_state"];
+    if (self.persistent) {
+        [self setValue: nil ofProperty: @"_replication_state"];
+    } else if (_started) {
+        [self stop];
+        [self start];
+    }
 }
 
 
