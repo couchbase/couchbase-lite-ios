@@ -48,6 +48,15 @@ typedef enum {
 
 
 @interface CBLView ()
+{
+    @private
+    CBLDatabase* __weak _weakDB;
+    NSString* _name;
+    int _viewID;
+    uint8_t _collation;
+    CBLContentOptions _mapContentOptions;
+}
+
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name;
 
 - (void) databaseClosing;

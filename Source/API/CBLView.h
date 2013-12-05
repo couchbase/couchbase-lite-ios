@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDatabase, CBLQuery, CBLDatabase;
+@class CBLDatabase, CBLQuery;
 
 
 typedef void (^CBLMapEmitBlock)(id key, id value);
@@ -44,14 +44,6 @@ id CBLTextKey(NSString* text);
 /** A "view" in a CouchbaseLite database -- essentially a persistent index managed by map/reduce.
     The view can be queried using a CBLQuery. */
 @interface CBLView : NSObject
-{
-    @private
-    CBLDatabase* __weak _weakDB;
-    NSString* _name;
-    int _viewID;
-    uint8_t _collation;
-    uint8_t /*CBLContentOptions*/ _mapContentOptions;
-}
 
 /** The database that owns this view. */
 @property (readonly) CBLDatabase* database;
