@@ -226,3 +226,8 @@ typedef enum {
 @property (readonly) UInt64 localSequence __attribute__((deprecated("renamed sequenceNumber")));
 #endif
 @end
+
+
+#ifdef CBL_DEPRECATED
+typedef CBLIndexUpdateMode CBLStaleness __attribute__((deprecated("renamed CBLIndexUpdateMode")));
+#endif

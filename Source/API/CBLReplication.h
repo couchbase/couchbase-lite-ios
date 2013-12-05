@@ -196,3 +196,8 @@ typedef enum {
     {status, running, error, completed, total}. It's often more convenient to observe this
     notification rather than observing each property individually. */
 extern NSString* const kCBLReplicationChangeNotification;
+
+
+#ifdef CBL_DEPRECATED
+typedef CBLReplicationStatus CBLReplicationMode __attribute__((deprecated("renamed CBLReplicationStatus")));
+#endif
