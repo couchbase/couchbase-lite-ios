@@ -1,6 +1,8 @@
 # Symbols exported by the framework
 
+# Public classes:
 .objc_class_name_CBLDatabase
+.objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLManager
 .objc_class_name_CBLDocument
 .objc_class_name_CBLRevision
@@ -18,9 +20,22 @@
 .objc_class_name_CBLJSON
 .objc_class_name_MYDynamicObject
 
+# Public string constants:
 _kCBLDatabaseChangeNotification
 _kCBLDocumentChangeNotification
 
+# Public functions:
+_CBLGeoPointToJSON
+_CBLGeoRectToJSON
+_CBLGeoJSONBoundingBox
+_CBLGeoPointToCoordPair
+_CBLGeoCoordPairToPoint
+_CBLGeoCoordsToRect
+_CBLGeoCoordsStringToRect
+_CBLGeoPointKey
+_CBLGeoRectKey
+_CBLGeoJSONKey
+_CBLTextKey
 
 # Non-public symbols that are used by CBLRouter and CBLListener:
 .objc_class_name_CBL_BlobStore
@@ -46,17 +61,6 @@ _CBLStatusFromNSError
 _CBLURLWithoutQuery
 _CBLSequenceCompare
 _CBLVersionString
-
-_CBLGeoPointToJSON
-_CBLGeoRectToJSON
-_CBLGeoJSONBoundingBox
-_CBLGeoPointToCoordPair
-_CBLGeoCoordPairToPoint
-_CBLGeoCoordsToRect
-_CBLGeoPointKey
-_CBLGeoRectKey
-_CBLGeoJSONKey
-_CBLTextKey
 
 _CBL_DatabaseChangesNotification
 _CBL_DatabaseWillCloseNotification
