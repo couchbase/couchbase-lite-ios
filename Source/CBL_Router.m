@@ -454,7 +454,7 @@ static NSArray* splitPath( NSURL* url ) {
     @try {
         status = [self route];
     } @catch (NSException *x) {
-        MYReportException(x, @"CBLRouter");
+        Warn(@"Exception caught in CBL_Router:\n\t%@\n%@", x, x.my_callStack);
         status = kCBLStatusException;
         [_response reset];
     }
