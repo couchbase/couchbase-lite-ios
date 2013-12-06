@@ -116,7 +116,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
                                               @"heartbeat", @"feed", @"reset", @"continuous",
                                               @"headers", @"network", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
-    [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
+    [context validateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context currentRevision])
             return ![key hasPrefix: @"_"];
         

@@ -876,6 +876,23 @@
     return _changedKeys;
 }
 
+- (BOOL) validateChanges: (CBLChangeEnumeratorBlock)enumerator {
+    NSDictionary* cur = self.current_Revision.properties;
+    NSDictionary* nuu = _newRevision.properties;
+    for (NSString* key in self.changedKeys) {
+        if (!enumerator(key, cur[key], nuu[key])) {
+            [self rejectWithMessage: $sprintf(@"Illegal change to '%@' property", key)];
+            return NO;
+        }
+    }
+    return YES;
+}
+
+#ifdef CBL_DEPRECATED
+- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator {
+    return [self validateChanges: enumerator];
+}
+
 - (BOOL) allowChangesOnlyTo: (NSArray*)keys {
     for (NSString* key in self.changedKeys) {
         if (![keys containsObject: key]) {
@@ -895,17 +912,6 @@
     }
     return YES;
 }
-
-- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator {
-    NSDictionary* cur = self.current_Revision.properties;
-    NSDictionary* nuu = _newRevision.properties;
-    for (NSString* key in self.changedKeys) {
-        if (!enumerator(key, cur[key], nuu[key])) {
-            [self rejectWithMessage: $sprintf(@"Illegal change to '%@' property", key)];
-            return NO;
-        }
-    }
-    return YES;
-}
+#endif
 
 @end

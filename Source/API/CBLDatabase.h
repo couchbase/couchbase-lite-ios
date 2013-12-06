@@ -262,17 +262,14 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 /** Returns an array of all the keys whose values are different between the current and new revisions. */
 @property (readonly) NSArray* changedKeys;
 
-/** Returns YES if only the keys given in the 'allowedKeys' array have changed; else rejects the
-    revision, sets a default error message naming the offending key, and returns NO. */
-- (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys;
-
-/** Returns YES if none of the keys given in the 'disallowedKeys' array have changed; else rejects
-    the revision, sets a default error message naming the offending key, and returns NO. */
-- (BOOL) disallowChangesTo: (NSArray*)disallowedKeys;
-
 /** Calls the 'enumerator' block for each key that's changed, passing both the old and new values.
     If the block returns NO, the enumeration stops and rejects the revision, and the method returns
     NO; else the method returns YES. */
-- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator;
+- (BOOL) validateChanges: (CBLChangeEnumeratorBlock)enumerator;
 
+#ifdef CBL_DEPRECATED
+- (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys __attribute__((deprecated()));
+- (BOOL) disallowChangesTo: (NSArray*)disallowedKeys __attribute__((deprecated()));
+- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator __attribute__((deprecated("renamed validateChanges:")));
+#endif
 @end
