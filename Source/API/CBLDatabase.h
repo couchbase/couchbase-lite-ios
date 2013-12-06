@@ -8,17 +8,17 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLView.h"
-@class CBLManager, CBLDocument, CBLSavedRevision, CBLView, CBLQuery, CBLReplication;
+@class CBLManager, CBLDocument, CBLRevision, CBLSavedRevision, CBLView, CBLQuery, CBLReplication;
 @protocol CBLValidationContext;
 
 
 /** Validation block, used to approve revisions being added to the database.
     The block should call `[context reject]` or `[context rejectWithMessage:]` if the proposed
     new revision is invalid. */
-typedef void (^CBLValidationBlock) (CBLSavedRevision* newRevision,
+typedef void (^CBLValidationBlock) (CBLRevision* newRevision,
                                    id<CBLValidationContext> context);
 
-#define VALIDATIONBLOCK(BLOCK) ^void(CBLSavedRevision* newRevision, id<CBLValidationContext> context)\
+#define VALIDATIONBLOCK(BLOCK) ^void(CBLRevision* newRevision, id<CBLValidationContext> context)\
                                     {BLOCK}
 
 /** Filter block, used in changes feeds and replication. */

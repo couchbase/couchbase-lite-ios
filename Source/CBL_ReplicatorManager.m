@@ -68,7 +68,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     [_replicatorDB open: nil];
     __weak CBL_ReplicatorManager* weakSelf = self;
     [_replicatorDB setValidationNamed: @"CBL_ReplicatorManager" asBlock:
-         ^void(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
+         ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
             [weakSelf validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
@@ -97,7 +97,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 
 // Validation function for the _replicator database:
-- (void) validateRevision: (CBLSavedRevision*)newRev context: (id<CBLValidationContext>)context {
+- (void) validateRevision: (CBLRevision*)newRev context: (id<CBLValidationContext>)context {
     // Ignore the change if it's one I'm making myself, or if it's a deletion:
     if (_updateInProgress || newRev.isDeletion)
         return;

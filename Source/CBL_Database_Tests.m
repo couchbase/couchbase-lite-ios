@@ -265,7 +265,7 @@ TestCase(CBL_Database_Validation) {
     CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
     [db setValidationNamed: @"hoopy" 
-                 asBlock: ^void(CBLSavedRevision *newRevision, id<CBLValidationContext> context)
+                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context)
     {
         CAssert(newRevision);
         CAssert(context);

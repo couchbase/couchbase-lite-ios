@@ -643,7 +643,7 @@ TestCase(API_Validation) {
     CBLDatabase* db = createEmptyDB();
 
     [db setValidationNamed: @"uncool"
-                 asBlock: ^void(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
+                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
                      if (!newRevision.properties[@"groovy"])
                          [context rejectWithMessage: @"uncool"];
                  }];
