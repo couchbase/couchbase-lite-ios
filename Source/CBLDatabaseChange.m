@@ -22,12 +22,12 @@
 
 
 @synthesize addedRevision=_addedRevision, winningRevision=_winningRevision,
-            maybeConflict=_maybeConflict, source=_source, echoed=_echoed;
+            inConflict=_inConflict, source=_source, echoed=_echoed;
 
 
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
                        winningRevision: (CBL_Revision*)winningRevision
-                         maybeConflict: (BOOL)maybeConflict
+                            inConflict: (BOOL)maybeConflict
                                 source: (NSURL*)source
 {
     self = [super init];
@@ -35,7 +35,7 @@
         // Input CBL_Revisions need to be copied in case they are mutable:
         _addedRevision = addedRevision.copy;
         _winningRevision = winningRevision.copy;
-        _maybeConflict = maybeConflict;
+        _inConflict = maybeConflict;
         _source = source;
     }
     return self;
@@ -45,7 +45,7 @@
 - (id) copyWithZone:(NSZone *)zone {
     CBLDatabaseChange* change =  [[[self class] alloc] initWithAddedRevision: _addedRevision
                                                              winningRevision: _winningRevision
-                                                               maybeConflict: _maybeConflict
+                                                                  inConflict: _inConflict
                                                                       source: _source];
     change->_echoed = true; // Copied changes are echoes
     return change;

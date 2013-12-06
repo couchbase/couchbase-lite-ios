@@ -13,6 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+#import "CouchbaseLitePrivate.h"
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
 #import "CBL_ReplicatorManager.h"
@@ -188,11 +189,11 @@ static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
 TestCase(CBL_Pusher) {
     RequireTestCase(CBLDatabase);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
-    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
     
     __block int filterCalls = 0;
-    [db defineFilter: @"filter" asBlock: ^BOOL(CBLRevision *revision, NSDictionary* params) {
+    [db setFilterNamed: @"filter" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary* params) {
         Log(@"Test filter called with params = %@", params);
         Log(@"Rev = %@, properties = %@", revision, revision.properties);
         CAssert(revision.properties);
@@ -246,7 +247,7 @@ TestCase(CBL_Puller) {
         return;
     }
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
-    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
     
     id lastSeq = replic8(db, remoteURL, NO, nil, nil);
@@ -282,7 +283,7 @@ TestCase(CBL_Puller_Continuous) {
         return;
     }
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
-    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
 
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil);
@@ -320,7 +321,7 @@ TestCase(CBL_Puller_DocIDs) {
     }
 
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBLPuller_DocIDs_Test"];
-    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
 
     // Start a named document pull replication.
@@ -369,7 +370,7 @@ TestCase(CBL_Puller_DocIDs) {
 TestCase(CBL_Pusher_DocIDs) {
     RequireTestCase(CBL_Puller_DocIDs);
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Pusher_DocIDs_Test"];
-    CBLDatabase* db = [server createDatabaseNamed: @"db" error: NULL];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
 
     // Create some documents:
@@ -415,7 +416,7 @@ TestCase(CBL_Puller_FromCouchApp) {
     }
 
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_Puller_FromCouchApp"];
-    CBLDatabase* db = [server createDatabaseNamed: kCouchAppDBName error: NULL];
+    CBLDatabase* db = [server databaseNamed: kCouchAppDBName error: NULL];
     CAssert(db);
     
     replic8(db, remote, NO, nil, nil);
@@ -450,7 +451,7 @@ TestCase(CBL_ReplicatorManager) {
     CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
     [server startReplicatorManager];
     CAssert(server.replicatorManager);    // start the replicator
-    CBLDatabase* replicatorDb = [server createDatabaseNamed: kCBL_ReplicatorDatabaseName
+    CBLDatabase* replicatorDb = [server databaseNamed: kCBL_ReplicatorDatabaseName
                                                 error: NULL];
     CAssert(replicatorDb);
     
@@ -468,7 +469,7 @@ TestCase(CBL_ReplicatorManager) {
     rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusForbidden);
     
-    CBLDatabase* sourceDB = [server createDatabaseNamed: @"foo" error: NULL];
+    CBLDatabase* sourceDB = [server databaseNamed: @"foo" error: NULL];
     CAssert(sourceDB);
 
     // Now try a valid replication document:

@@ -51,9 +51,8 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
                       newRevision: (CBL_Revision*)newRevision;
-@property (readonly) CBLRevision* currentRevision;
-@property int errorType;
-@property (copy) NSString* errorMessage;
+@property (readonly) CBLSavedRevision* currentRevision;
+@property (readonly) NSString* rejectionMessage;
 @end
 
 
@@ -271,13 +270,13 @@
 
     __block CBL_MutableRevision* newRev = nil;
     __block CBL_Revision* winningRev = nil;
-    __block BOOL maybeConflict = NO;
+    __block BOOL inConflict = NO;
 
     *outStatus = [self _inTransaction: ^CBLStatus {
         // Remember, this block may be called multiple times if I have to retry the transaction.
         newRev = nil;
         winningRev = nil;
-        maybeConflict = NO;
+        inConflict = NO;
         NSString* prevRevID = inputPrevRevID;
         NSString* docID = oldRev.docID;
 
@@ -363,7 +362,7 @@
 
         // There may be a conflict if (a) the document was already in conflict, or
         // (b) a conflict is created by adding a non-deletion child of a non-winning rev.
-        maybeConflict = wasConflicted || (!deleted && !$equal(prevRevID, oldWinningRevID));
+        inConflict = wasConflicted || (!deleted && !$equal(prevRevID, oldWinningRevID));
 
         //// PART II: In which we prepare for insertion...
         
@@ -446,7 +445,7 @@
     //// EPILOGUE: A change notification is sent...
     [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
                                                          winningRevision: winningRev
-                                                           maybeConflict: maybeConflict
+                                                              inConflict: inConflict
                                                                   source: nil]];
     return newRev;
 }
@@ -471,7 +470,7 @@
         return kCBLStatusBadID;
     
     __block CBL_Revision* winningRev = nil;
-    __block BOOL maybeConflict = NO;
+    __block BOOL inConflict = NO;
     CBLStatus status = [self _inTransaction: ^CBLStatus {
         // First look up the document's row-id and all locally-known revisions of it:
         CBL_RevisionList* localRevs = nil;
@@ -506,7 +505,7 @@
         BOOL oldWinnerWasDeletion;
         NSString* oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
                                                            isDeleted: &oldWinnerWasDeletion
-                                                          isConflict: &maybeConflict];
+                                                          isConflict: &inConflict];
 
         // Walk through the remote history in chronological order, matching each revision ID to
         // a local revision. When the list diverges, start creating blank local revisions to fill
@@ -530,7 +529,7 @@
                 if (sequence == localParentSequence) {
                     // This is the point where we branch off of the existing rev tree.
                     // If the branch wasn't from the single existing leaf, this creates a conflict.
-                    maybeConflict = maybeConflict || (!rev.deleted && !$equal(localParentRevID, revID));
+                    inConflict = inConflict || (!rev.deleted && !$equal(localParentRevID, revID));
                 }
 
                 CBL_MutableRevision* newRev;
@@ -597,7 +596,7 @@
     if (!CBLStatusIsError(status)) {
         [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: rev
                                                              winningRevision: winningRev
-                                                               maybeConflict: maybeConflict
+                                                                  inConflict: inConflict
                                                                       source: source]];
     }
     return status;
@@ -780,7 +779,7 @@
     NSDictionary* validations = [self.shared valuesOfType: @"validation" inDatabaseNamed: _name];
     if (validations.count == 0)
         return kCBLStatusOK;
-    CBLRevision* publicRev = [[CBLRevision alloc] initWithDatabase: self revision: newRev];
+    CBLSavedRevision* publicRev = [[CBLSavedRevision alloc] initWithDatabase: self revision: newRev];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];
@@ -788,19 +787,19 @@
     for (NSString* validationName in validations) {
         CBLValidationBlock validation = [self validationNamed: validationName];
         @try {
-            if (!validation(publicRev, context)) {
-                status = context.errorType;
-                break;
-            }
+            validation(publicRev, context);
         } @catch (NSException* x) {
             MYReportException(x, @"validation block '%@'", validationName);
             status = kCBLStatusCallbackError;
             break;
         }
+        if (context.rejectionMessage != nil) {
+            LogTo(CBLValidation, @"Failed update of %@: %@:\n  Old doc = %@\n  New doc = %@",
+                  oldRev, context.rejectionMessage, oldRev.properties, newRev.properties);
+            status = kCBLStatusForbidden;
+            break;
+        }
     }
-    if (CBLStatusIsError(status))
-        LogTo(CBLValidation, @"Failed update of %@: %d %@:\n  Old doc = %@\n  New doc = %@",
-             oldRev, context.errorType, context.errorMessage, oldRev.properties, newRev.properties);
     return status;
 }
 
@@ -830,6 +829,9 @@
 }
 
 
+@synthesize rejectionMessage=_rejectionMessage;
+
+
 - (CBL_Revision*) current_Revision {
     if (_currentRevision)
         _currentRevision = [_db revisionByLoadingBody: _currentRevision options: 0 status: NULL];
@@ -837,12 +839,22 @@
 }
 
 
-- (CBLRevision*) currentRevision {
+- (CBLSavedRevision*) currentRevision {
     CBL_Revision* cur = self.current_Revision;
-    return cur ? [[CBLRevision alloc] initWithDatabase: _db revision: cur] : nil;
+    return cur ? [[CBLSavedRevision alloc] initWithDatabase: _db revision: cur] : nil;
 }
 
-@synthesize errorType=_errorType, errorMessage=_errorMessage;
+- (void) reject {
+    if (!_rejectionMessage)
+        _rejectionMessage = @"invalid document";
+}
+
+- (void) rejectWithMessage: (NSString*)message {
+    NSParameterAssert(message);
+    if (!_rejectionMessage)
+        _rejectionMessage = [message copy];
+}
+
 
 - (NSArray*) changedKeys {
     if (!_changedKeys) {
@@ -864,10 +876,27 @@
     return _changedKeys;
 }
 
+- (BOOL) validateChanges: (CBLChangeEnumeratorBlock)enumerator {
+    NSDictionary* cur = self.current_Revision.properties;
+    NSDictionary* nuu = _newRevision.properties;
+    for (NSString* key in self.changedKeys) {
+        if (!enumerator(key, cur[key], nuu[key])) {
+            [self rejectWithMessage: $sprintf(@"Illegal change to '%@' property", key)];
+            return NO;
+        }
+    }
+    return YES;
+}
+
+#ifdef CBL_DEPRECATED
+- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator {
+    return [self validateChanges: enumerator];
+}
+
 - (BOOL) allowChangesOnlyTo: (NSArray*)keys {
     for (NSString* key in self.changedKeys) {
         if (![keys containsObject: key]) {
-            self.errorMessage = $sprintf(@"The '%@' property may not be changed", key);
+            [self rejectWithMessage: $sprintf(@"The '%@' property may not be changed", key)];
             return NO;
         }
     }
@@ -877,24 +906,12 @@
 - (BOOL) disallowChangesTo: (NSArray*)keys {
     for (NSString* key in self.changedKeys) {
         if ([keys containsObject: key]) {
-            self.errorMessage = $sprintf(@"The '%@' property may not be changed", key);
+            [self rejectWithMessage: $sprintf(@"The '%@' property may not be changed", key)];
             return NO;
         }
     }
     return YES;
 }
-
-- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator {
-    NSDictionary* cur = self.current_Revision.properties;
-    NSDictionary* nuu = _newRevision.properties;
-    for (NSString* key in self.changedKeys) {
-        if (!enumerator(key, cur[key], nuu[key])) {
-            if ($equal(_errorMessage, @"invalid document"))
-                self.errorMessage = $sprintf(@"Illegal change to '%@' property", key);
-            return NO;
-        }
-    }
-    return YES;
-}
+#endif
 
 @end

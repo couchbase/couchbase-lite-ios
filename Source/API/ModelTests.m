@@ -42,7 +42,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
     closeTestDB(db);
     [[CBLManager sharedInstance] _forgetDatabase: db];
     NSError* error;
-    CBLDatabase* db2 = [[CBLManager sharedInstance] createDatabaseNamed: @"test_db" error: &error];
+    CBLDatabase* db2 = [[CBLManager sharedInstance] databaseNamed: @"test_db" error: &error];
     CAssert(db2, @"Couldn't reopen db: %@", error);
     CAssert(db2 != db, @"reopenTestDB couldn't make a new instance");
     return db2;
@@ -50,6 +50,36 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 
 #pragma mark - TEST MODEL:
+
+
+@interface TestSubModel : NSObject <CBLJSONEncoding>
+@property (copy) NSString *firstName, *lastName;
+@end
+
+
+@implementation TestSubModel
+
+@synthesize firstName, lastName;
+
+- (id) initWIthJSON:(id)jsonObject {
+    self = [super init];
+    if (self) {
+        self.firstName = [jsonObject objectForKey: @"first"];
+        self.lastName = [jsonObject objectForKey: @"last"];
+    }
+    return self;
+}
+
+- (id) encodeAsJSON {
+    return @{@"first": self.firstName, @"last": self.lastName};
+}
+
+- (BOOL) isEqual:(id)object {
+    return [self.firstName isEqual: [object firstName]] && [self.lastName isEqual: [object lastName]];
+}
+
+@end
+
 
 
 @interface TestModel : CBLModel
@@ -79,6 +109,9 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @property NSArray* dates;
 @property NSArray* others;
 
+@property TestSubModel* subModel;
+@property NSArray* subModels;
+
 @property int Capitalized;
 
 @property unsigned reloadCount;
@@ -90,6 +123,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
 @dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly;
 @dynamic str, data, date, decimal, other, strings, dates, others, Capitalized;
+@dynamic subModel, subModels;
 @synthesize reloadCount;
 
 - (void) didLoadFromDocument {
@@ -103,6 +137,10 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 + (Class) datesItemClass {
     return [NSDate class];
+}
+
++ (Class) subModelsItemClass {
+    return [TestSubModel class];
 }
 
 @end
@@ -174,6 +212,44 @@ TestCase(API_ModelDynamicProperties) {
     CAssertEqual(model.data, data);
 
     Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
+}
+
+
+TestCase(API_ModelEncodableProperties) {
+    CBLDatabase* db = createEmptyDB();
+    TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+
+    TestSubModel* name = [[TestSubModel alloc] init];
+    name.firstName = @"Jens";
+    name.lastName = @"Alfke";
+    model.subModel = name;
+    AssertEq(model.subModel, name);
+    AssertEq([model getValueOfProperty: @"subModel"], name);
+    NSDictionary* props = model.propertiesToSave;
+    CAssertEqual(props, (@{@"subModel": @{@"first": @"Jens", @"last": @"Alfke"}}));
+
+    CBLDocument* doc2 = [db createDocument];
+    CAssert([doc2 putProperties: props error: NULL]);
+    TestModel* model2 = [[TestModel alloc] initWithDocument: doc2];
+    CAssertEqual(model2.subModel, name);
+
+    // Now test array of encodable objects:
+    TestSubModel* name2 = [[TestSubModel alloc] init];
+    name2.firstName = @"Naomi";
+    name2.lastName = @"Pearl";
+    model.subModel = nil;
+    NSArray* subModels = @[name, name2];
+    model.subModels = subModels;
+    AssertEqual(model.subModels, subModels);
+    AssertEq([model getValueOfProperty: @"subModels"], subModels);
+    props = model.propertiesToSave;
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Jens", @"last": @"Alfke"},
+                                           @{@"first": @"Naomi", @"last": @"Pearl"}]}));
+
+    CBLDocument* doc3 = [db createDocument];
+    CAssert([doc3 putProperties: props error: NULL]);
+    TestModel* model3 = [[TestModel alloc] initWithDocument: doc3];
+    CAssertEqual(model3.subModels, subModels);
 }
 
 
@@ -344,10 +420,7 @@ TestCase(API_ModelAttachments) {
         model.number = 1337;
         CAssert([model save: &error], @"Initial failed: %@", error);
 
-        CBLAttachment* attachment = [[CBLAttachment alloc] initWithContentType: @"text/plain"
-                                                                          body: attData];
-
-        [model addAttachment: attachment named: @"Caption.txt"];
+        [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content: attData];
         CAssert([model save: &error], @"Save after adding attachment failed: %@", error);
 
         // Ensure that document's attachment metadata doesn't have the "follows" property set [#63]
@@ -363,7 +436,7 @@ TestCase(API_ModelAttachments) {
         TestModel* model = [TestModel modelForDocument: doc];
         CAssertEq(model.number, 23);
         CBLAttachment* attachment = [model attachmentNamed: @"Caption.txt"];
-        CAssertEqual(attachment.body, attData);
+        CAssertEqual(attachment.content, attData);
 
         model.number = -1;
         CAssert([model save: &error], @"Save of new model object failed: %@", error);
@@ -371,9 +444,7 @@ TestCase(API_ModelAttachments) {
         // Now update the attachment:
         [model removeAttachmentNamed: @"caption.txt"];
         NSData* newAttData = [@"sluggo" dataUsingEncoding: NSUTF8StringEncoding];
-        attachment = [[CBLAttachment alloc] initWithContentType: @"text/plain"
-                                                                          body: newAttData];
-        [model addAttachment: attachment named: @"Caption.txt"];
+        [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content:newAttData];
         CAssert([model save: &error], @"Final save failed: %@", error);
     }
     [db close];

@@ -42,50 +42,57 @@
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
+#if DEBUG // for testing
+- (CBLDocument*) _cachedDocumentWithID: (NSString*)docID;
+- (void) _clearDocumentCache;
+#endif
 @end
 
 
 @interface CBLDocument () <CBLCacheable>
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)docID                 __attribute__((nonnull));
-- (CBLRevision*) revisionFromRev: (CBL_Revision*)rev;
+- (CBLSavedRevision*) revisionFromRev: (CBL_Revision*)rev;
 - (void) revisionAdded: (CBLDatabaseChange*)change                 __attribute__((nonnull));
 - (void) loadCurrentRevisionFrom: (CBLQueryRow*)row                 __attribute__((nonnull));
-- (CBLRevision*) putProperties: (NSDictionary*)properties
+- (CBLSavedRevision*) putProperties: (NSDictionary*)properties
                      prevRevID: (NSString*)prevID
                  allowConflict: (BOOL)allowConflict
                          error: (NSError**)outError;
 @end
 
 
-@interface CBLRevisionBase ()
+@interface CBLRevision ()
 @property (readonly) SequenceNumber sequence;
 @end
 
 
-@interface CBLRevision ()
+@interface CBLSavedRevision ()
 - (instancetype) initWithDocument: (CBLDocument*)doc
                          revision: (CBL_Revision*)rev               __attribute__((nonnull(2)));
 - (instancetype) initWithDatabase: (CBLDatabase*)tddb
                          revision: (CBL_Revision*)rev               __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
+@property (readonly) BOOL propertiesAreLoaded;
 @end
 
 
-@interface CBLNewRevision ()
+@interface CBLUnsavedRevision ()
 - (instancetype) initWithDocument: (CBLDocument*)doc
-                           parent: (CBLRevision*)parent             __attribute__((nonnull(1)));
+                           parent: (CBLSavedRevision*)parent             __attribute__((nonnull(1)));
 @end
 
 
 @interface CBLAttachment ()
-- (instancetype) initWithRevision: (CBLRevisionBase*)rev
+- (instancetype) _initWithContentType: (NSString*)contentType
+                                 body: (id)body                          __attribute__((nonnull));
+- (instancetype) initWithRevision: (CBLRevision*)rev
                              name: (NSString*)name
                          metadata: (NSDictionary*)metadata          __attribute__((nonnull));
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (CBLDatabase*)database   __attribute__((nonnull(2)));
 @property (readwrite, copy) NSString* name;
-@property (readwrite, retain) CBLRevisionBase* revision;
+@property (readwrite, retain) CBLRevision* revision;
 @end
 
 

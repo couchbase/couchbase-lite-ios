@@ -104,7 +104,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
     // Actually replicate -- this could probably be cleaned up to use the public API.
     CBL_Replicator* repl = nil;
     NSError* error = nil;
-    CBLDatabase* db = [dbm databaseNamed: dbName error: &error];
+    CBLDatabase* db = [dbm existingDatabaseNamed: dbName error: &error];
     if (pull) {
         // Pull always deletes the local db, since it's used for testing the replicator.
         if (db) {
@@ -114,7 +114,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
                 return false;
             }
         }
-        db = [dbm createDatabaseNamed: dbName error: &error];
+        db = [dbm databaseNamed: dbName error: &error];
     }
     if (db && ![db open: &error])
         db = nil;

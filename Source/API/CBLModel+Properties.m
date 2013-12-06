@@ -17,6 +17,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLModelArray.h"
 #import "CBLBase64.h"
+#import "CBLJSON.h"
 
 #import <objc/message.h>
 
@@ -43,6 +44,10 @@ static ValueConverter valueConverterToClass(Class toClass) {
             if ([rawValue isKindOfClass: [NSString class]])
                 return [NSDecimalNumber decimalNumberWithString: rawValue];
             return nil;
+        };
+    } else if ([toClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
+        return ^id(id rawValue) {
+            return [(id<CBLJSONEncoding>)[toClass alloc] initWIthJSON: rawValue];
         };
     } else {
         return nil;

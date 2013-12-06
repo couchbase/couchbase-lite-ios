@@ -34,6 +34,10 @@ static inline BOOL CBLGeoRectIsEmpty(CBLGeoRect r) {
 }
 
 
+/** Converts a string of four comma-separated numbers ("x0,y0,x1,y1") to a rectangle. */
+BOOL CBLGeoCoordsStringToRect(NSString* coordsStr, CBLGeoRect* outRect);
+
+
 #pragma mark - CONVERTING TO/FROM JSON:
 
 /** Converts a point to GeoJSON format.

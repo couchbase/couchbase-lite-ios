@@ -129,7 +129,7 @@
     if (db) {
         // On setting database, create a new untitled/unsaved CBLDocument:
         NSString* docID = [self idForNewDocumentInDatabase: db];
-        self.document = docID ? [db documentWithID: docID] : [db untitledDocument];
+        self.document = docID ? [db documentWithID: docID] : [db createDocument];
         LogTo(CBLModel, @"%@ made new document", self);
     } else {
         [self deleteDocument: nil];
@@ -139,7 +139,7 @@
 
 
 - (BOOL) deleteDocument: (NSError**)outError {
-    CBLRevision* rev = _document.currentRevision;
+    CBLSavedRevision* rev = _document.currentRevision;
     if (!rev)
         return YES;
     LogTo(CBLModel, @"%@ Deleting document", self);
@@ -158,7 +158,7 @@
 
 
 // Respond to an external change (likely from sync). This is called by my CBLDocument.
-- (void) tdDocumentChanged: (CBLDocument*)doc {
+- (void) CBLDocument: (CBLDocument*)doc didChange:(CBLDatabaseChange*)change {
     NSAssert(doc == _document, @"Notified for wrong document");
     if (_saving)
         return;  // this is just an echo from my -justSave: method, below, so ignore it
@@ -357,6 +357,8 @@
             value = [value docIDs];
         else
             value = [value my_map:^id(id obj) { return [self externalizePropertyValue: obj]; }];
+    } else if ([value conformsToProtocol: @protocol(CBLJSONEncoding)]) {
+        value = [(id<CBLJSONEncoding>)value encodeAsJSON];
     }
     return value;
 }
@@ -480,12 +482,25 @@
 }
 
 
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                    content: (NSData*)content
+{
+    [self _addAttachment: [[CBLAttachment alloc] _initWithContentType: mimeType body: content]
+                  named: name];
+}
+
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                 contentURL: (NSURL*)fileURL
+{
+    [self _addAttachment: [[CBLAttachment alloc] _initWithContentType: mimeType body: fileURL]
+                   named: name];
+}
+
+
+- (void) _addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
     Assert(name);
-    Assert(!attachment.name, @"Attachment already attached to another revision");
-    if (attachment == [self attachmentNamed: name])
-        return;
-    
     if (!_changedAttachments)
         _changedAttachments = [[NSMutableDictionary alloc] init];
     _changedAttachments[name] = (attachment ? attachment : [NSNull null]);
@@ -496,6 +511,15 @@
 - (void) removeAttachmentNamed: (NSString*)name {
     [self addAttachment: nil named: name];
 }
+
+#ifdef CBL_DEPRECATED
+- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
+    Assert(!attachment.name, @"Attachment already attached to another revision");
+    if (attachment == [self attachmentNamed: name])
+        return;
+    [self _addAttachment: attachment named: name];
+}
+#endif
 
 
 - (NSDictionary*) attachmentDataToSave {

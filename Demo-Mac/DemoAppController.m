@@ -55,7 +55,7 @@ int main (int argc, const char * argv[]) {
     }
     
     NSError* error;
-    _database = [[CBLManager sharedInstance] createDatabaseNamed: dbName
+    _database = [[CBLManager sharedInstance] databaseNamed: dbName
                                                                      error: &error];
     if (!_database) {
         NSAssert(NO, @"Error creating db: %@", error);
@@ -68,25 +68,22 @@ int main (int argc, const char * argv[]) {
     }) version: @"1.0"];
     
     // and a validation function requiring parseable dates:
-    [_database defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
-        if (newRevision.isDeleted)
-            return YES;
+    [_database setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
+        if (newRevision.isDeletion)
+            return;
         id date = newRevision[@"created_at"];
-        if (date && ! [CBLJSON dateWithJSONObject: date]) {
-            context.errorMessage = [@"invalid date " stringByAppendingString: date];
-            return NO;
-        }
-        return YES;
+        if (date && ! [CBLJSON dateWithJSONObject: date])
+            [context rejectWithMessage: [@"invalid date " stringByAppendingString: date]];
     })];
     
     // And why not a filter, just to allow some simple testing of filtered _changes.
     // For example, try curl 'http://localhost:8888/demo-shopping/_changes?filter=default/checked'
-    [_database defineFilter: @"checked" asBlock: FILTERBLOCK({
+    [_database setFilterNamed: @"checked" asBlock: FILTERBLOCK({
         return [revision[@"check"] boolValue];
     })];
 
     
-    CBLQuery* q = [[_database viewNamed: @"byDate"] query];
+    CBLQuery* q = [[_database viewNamed: @"byDate"] createQuery];
     q.descending = YES;
     self.query = [[DemoQuery alloc] initWithQuery: q
                                        modelClass: _tableController.objectClass];
@@ -220,17 +217,17 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) observeReplication: (CBLReplication*)repl {
-    [repl addObserver: self forKeyPath: @"completed" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"total" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"error" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"completedChangesCount" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"changesCount" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"lastError" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"status" options: 0 context: NULL];
 }
 
 - (void) stopObservingReplication: (CBLReplication*)repl {
-    [repl removeObserver: self forKeyPath: @"completed"];
-    [repl removeObserver: self forKeyPath: @"total"];
-    [repl removeObserver: self forKeyPath: @"error"];
-    [repl removeObserver: self forKeyPath: @"mode"];
+    [repl removeObserver: self forKeyPath: @"completedChangesCount"];
+    [repl removeObserver: self forKeyPath: @"changesCount"];
+    [repl removeObserver: self forKeyPath: @"lastError"];
+    [repl removeObserver: self forKeyPath: @"status"];
 }
 
 
@@ -258,13 +255,13 @@ int main (int argc, const char * argv[]) {
 #ifdef ENABLE_REPLICATION
     int value;
     NSString* tooltip = nil;
-    if (_pull.error) {
+    if (_pull.lastError) {
         value = 3;  // red
-        tooltip = _pull.error.localizedDescription;
-    } else if (_push.error) {
+        tooltip = _pull.lastError.localizedDescription;
+    } else if (_push.lastError) {
         value = 3;  // red
-        tooltip = _push.error.localizedDescription;
-    } else switch(MAX(_pull.mode, _push.mode)) {
+        tooltip = _push.lastError.localizedDescription;
+    } else switch(MAX(_pull.status, _push.status)) {
         case kCBLReplicationStopped:
             value = 3; 
             tooltip = @"Sync stopped";
@@ -297,11 +294,11 @@ int main (int argc, const char * argv[]) {
                          change:(NSDictionary *)change context:(void *)context
 {
     CBLReplication* repl = object;
-    NSLog(@"SYNC mode=%d", repl.mode);
+    NSLog(@"SYNC mode=%d", repl.status);
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
-            unsigned completed = _pull.completed + _push.completed;
-            unsigned total = _pull.total + _push.total;
+            unsigned completed = _pull.completedChangesCount + _push.completedChangesCount;
+            unsigned total = _pull.changesCount + _push.changesCount;
             NSLog(@"SYNC progress: %u / %u", completed, total);
             if (total > 0 && completed < total) {
                 [_syncProgress setDoubleValue: (completed / (double)total)];
@@ -313,14 +310,14 @@ int main (int argc, const char * argv[]) {
         [self updateSyncStatusView];
     } else if ([keyPath isEqualToString: @"error"]) {
         [self updateSyncStatusView];
-        if (repl.error) {
-            NSLog(@"SYNC error: %@", repl.error);
+        if (repl.lastError) {
+            NSLog(@"SYNC error: %@", repl.lastError);
             NSAlert* alert = [NSAlert alertWithMessageText: @"Replication failed"
                                              defaultButton: nil
                                            alternateButton: nil
                                                otherButton: nil
                                  informativeTextWithFormat: @"Replication with %@ failed.\n\n %@",
-                              repl.remoteURL, repl.error.localizedDescription];
+                              repl.remoteURL, repl.lastError.localizedDescription];
             [alert beginSheetModalForWindow: _window
                               modalDelegate: nil didEndSelector: NULL contextInfo: NULL];
         }

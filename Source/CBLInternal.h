@@ -68,7 +68,7 @@
 @interface CBLDatabaseChange ()
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
                        winningRevision: (CBL_Revision*)winningRevision
-                         maybeConflict: (BOOL)maybeConflict
+                            inConflict: (BOOL)maybeConflict
                                 source: (NSURL*)source;
 /** The revision just added. Guaranteed immutable. */
 @property (nonatomic, readonly) CBL_Revision* addedRevision;

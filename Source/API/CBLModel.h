@@ -107,12 +107,28 @@
 /** Looks up the attachment with the given name (without fetching its contents). */
 - (CBLAttachment*) attachmentNamed: (NSString*)name                     __attribute__((nonnull));
 
-/** Creates or updates an attachment (in memory).
-    The attachment data will be written to the database at the same time as property changes are saved.
-    @param attachment  A newly-created CBLAttachment (not yet associated with any revision)
-    @param name  The attachment name. */
-- (void) addAttachment: (CBLAttachment*)attachment
-                 named: (NSString*)name                                 __attribute__((nonnull(2)));
+/** Creates, updates or deletes an attachment.
+    The attachment data will be written to the database when the model is saved.
+    @param name  The attachment name. By convention, this looks like a filename.
+    @param mimeType  The MIME type of the content.
+    @param content  The body of the attachment. If this is nil, any existing attachment with this
+                    name will be deleted. */
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                    content: (NSData*)content                           __attribute__((nonnull));
+
+/** Creates, updates or deletes an attachment whose body comes from a file.
+    (The method takes a URL, but it must be a "file:" URL. Remote resources are not supported.)
+    The file need only be readable. It won't be moved or altered in any way.
+    The attachment data will be copied from the file into the database when the model is saved.
+    The file needs to be preserved until then, but afterwards it can safely be deleted.
+    @param name  The attachment name. By convention, this looks like a filename.
+    @param mimeType  The MIME type of the content.
+    @param fileURL  The URL of a local file whose contents should be copied into the attachment.
+                     If this is nil, any existing attachment with this name will be deleted.*/
+- (void) setAttachmentNamed: (NSString*)name
+            withContentType: (NSString*)mimeType
+                 contentURL: (NSURL*)fileURL                            __attribute__((nonnull));
 
 /** Deletes (in memory) any existing attachment with the given name.
     The attachment will be deleted from the database at the same time as property changes are saved. */
@@ -155,6 +171,14 @@
     than overriding this one. */
 + (Class) itemClassForArrayProperty: (NSString*)property;
 
+#ifdef CBL_DEPRECATED
+/** Creates or updates an attachment (in memory).
+    The attachment data will be written to the database at the same time as property changes are saved.
+    @param attachment  A newly-created CBLAttachment (not yet associated with any revision)
+    @param name  The attachment name. */
+- (void) addAttachment: (CBLAttachment*)attachment
+                 named: (NSString*)name                                 __attribute__((nonnull(2)));
+#endif
 @end
 
 

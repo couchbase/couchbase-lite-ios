@@ -176,6 +176,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
                                isDeleted: (BOOL*)outIsDeleted
                               isConflict: (BOOL*)outIsConflict;
 
+- (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
+
 /** Returns an array of CBL_Revisions in reverse chronological order,
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev;

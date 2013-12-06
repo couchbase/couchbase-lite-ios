@@ -16,6 +16,7 @@
 //  http://wiki.apache.org/couchdb/Replication#Replicator_database
 //  http://www.couchbase.com/docs/couchdb-release-1.1/index.html
 
+#import "CouchbaseLitePrivate.h"
 #import "CBL_ReplicatorManager.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
@@ -65,9 +66,10 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) start {
     [_replicatorDB open: nil];
-    [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock:
-         ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context) {
-             return [self validateRevision: newRevision context: context];
+    __weak CBL_ReplicatorManager* weakSelf = self;
+    [_replicatorDB setValidationNamed: @"CBL_ReplicatorManager" asBlock:
+         ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
+            [weakSelf validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
@@ -85,7 +87,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 - (void) stop {
     LogTo(CBL_Server, @"STOP %@", self);
-    [_replicatorDB defineValidation: @"CBL_ReplicatorManager" asBlock: nil];
+    [_replicatorDB setValidationNamed: @"CBL_ReplicatorManager" asBlock: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     _replicatorsByDocID = nil;
 }
@@ -95,17 +97,17 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 
 // Validation function for the _replicator database:
-- (BOOL) validateRevision: (CBLRevision*)newRev context: (id<CBLValidationContext>)context {
+- (void) validateRevision: (CBLRevision*)newRev context: (id<CBLValidationContext>)context {
     // Ignore the change if it's one I'm making myself, or if it's a deletion:
-    if (_updateInProgress || newRev.isDeleted)
-        return YES;
+    if (_updateInProgress || newRev.isDeletion)
+        return;
     
     // First make sure the basic properties are valid:
     NSDictionary* newProperties = newRev.properties;
     LogTo(Sync, @"ReplicatorManager: Validating %@: %@", newRev, newProperties);
     if ([_dbManager validateReplicatorProperties: newProperties] >= 300) {
-        context.errorMessage = @"Invalid replication parameters";
-        return NO;
+        [context rejectWithMessage: @"Invalid replication parameters"];
+        return;
     }
     
     // Only certain keys can be changed or removed:
@@ -114,7 +116,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
                                               @"heartbeat", @"feed", @"reset", @"continuous",
                                               @"headers", @"network", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
-    return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
+    [context validateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context currentRevision])
             return ![key hasPrefix: @"_"];
         

@@ -356,10 +356,10 @@ static CBLManager* sInstance;
 
 
 - (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
-    return [self databaseNamed: key error: NULL];
+    return [self existingDatabaseNamed: key error: NULL];
 }
 
-- (CBLDatabase*) databaseNamed: (NSString*)name error: (NSError**)outError {
+- (CBLDatabase*) existingDatabaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = [self _databaseNamed: name mustExist: YES error: outError];
     if (![db open: outError])
         db = nil;
@@ -367,12 +367,18 @@ static CBLManager* sInstance;
 }
 
 
-- (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
+- (CBLDatabase*) databaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: outError];
     if (![db open: outError])
         db = nil;
     return db;
 }
+
+#ifdef CBL_DEPRECATED
+- (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
+    return [self databaseNamed: name error: outError];
+}
+#endif
 
 
 #if DEBUG
@@ -386,7 +392,7 @@ static CBLManager* sInstance;
                                               error: outError])
             return nil;
     }
-    return [self createDatabaseNamed: name error: outError];
+    return [self databaseNamed: name error: outError];
 }
 #endif
 
@@ -417,8 +423,8 @@ static CBLManager* sInstance;
 
 - (NSArray*) allReplications {
     NSMutableArray* replications = [_replications mutableCopy];
-    CBLQuery* q = [self[@"_replicator"] queryAllDocuments];
-    for (CBLQueryRow* row in q.rows) {
+    CBLQuery* q = [self[@"_replicator"] createAllDocumentsQuery];
+    for (CBLQueryRow* row in [q rows: NULL]) {
         CBLReplication* repl = [CBLReplication modelForDocument: row.document];
         if (![replications containsObject: repl])
             [replications addObject: repl];
@@ -482,7 +488,7 @@ static CBLManager* sInstance;
 
 
 - (void) deletePersistentReplicationsFor: (CBLDatabase*)db {
-    CBLDatabase* replicatorDB = [self databaseNamed: @"_replicator" error: NULL];
+    CBLDatabase* replicatorDB = [self existingDatabaseNamed: @"_replicator" error: NULL];
     if (!replicatorDB)
         return;
     NSString* dbName = db.name;
@@ -609,9 +615,9 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             NSError* error;
             CBLDatabase* targetDb;
             if (*outCreateTarget)
-                targetDb = [self createDatabaseNamed: target error: &error];
-            else
                 targetDb = [self databaseNamed: target error: &error];
+            else
+                targetDb = [self existingDatabaseNamed: target error: &error];
             if (!targetDb)
                 return CBLStatusFromNSError(error, kCBLStatusBadRequest);
             NSURL* targetURL = targetDb.internalURL;
@@ -786,17 +792,17 @@ TestCase(CBLManager) {
 
     CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
     CAssertEqual(dbm.allDatabaseNames, @[]);
-    CBLDatabase* db = [dbm databaseNamed: @"foo" error: NULL];
+    CBLDatabase* db = [dbm existingDatabaseNamed: @"foo" error: NULL];
     CAssert(db == nil);
     
-    db = [dbm createDatabaseNamed: @"foo" error: NULL];
+    db = [dbm databaseNamed: @"foo" error: NULL];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");
     CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);
     CAssert(db.exists);
     CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);
 
-    CAssertEq([dbm databaseNamed: @"foo" error: NULL], db);
+    CAssertEq([dbm existingDatabaseNamed: @"foo" error: NULL], db);
     [dbm close];
 }
 

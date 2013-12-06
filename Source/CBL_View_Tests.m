@@ -13,6 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+#import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
 #import "CBLQuery+Geo.h"
 #import "CBLDatabase+Insertion.h"
@@ -181,7 +182,7 @@ TestCase(CBL_View_Index) {
                                $dict({@"key", @"four"}, {@"id", rev4.docID}),
                                $dict({@"key", @"one"}, {@"id", rev1.docID}) ));
     
-    [view removeIndex];
+    [view deleteIndex];
     
     CAssert([db close]);
 }
@@ -390,6 +391,32 @@ TestCase(CBL_View_Query) {
     CAssert([db close]);
 }
 
+TestCase (CBL_View_NumericKeys) {
+    CBLDatabase *db = createDB();
+
+    putDoc(db, $dict({@"_id", @"22222"},
+                     {@"refrenceNumber", @(33547239)},
+                     {@"title", @"this is the title"}));
+
+    CBLView* view = [db viewNamed: @"things_byRefNumber"];
+    [view setMapBlock: MAPBLOCK({
+        NSNumber *refrenceNumber = [doc objectForKey: @"refrenceNumber"];
+        if (refrenceNumber) {
+            emit(refrenceNumber, doc);
+        };
+    }) version: @"0.3"];
+
+    CBLQuery* query = [[db viewNamed:@"things_byRefNumber"] createQuery];
+    query.startKey = @(33547239);
+    query.endKey = @(33547239);
+    NSError* error;
+    NSArray* rows = [[query rows: &error] allObjects];
+    AssertEq(rows.count, 1u);
+    AssertEqual([rows[0] key], @(33547239));
+
+    CAssert([db close]);
+}
+
 TestCase(CBL_View_GeoQuery) {
     RequireTestCase(CBLGeometry);
     RequireTestCase(CBL_View_Index);
@@ -416,9 +443,9 @@ TestCase(CBL_View_GeoQuery) {
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
     // Now try again using the public API:
-    CBLQuery* query = [view query];
+    CBLQuery* query = [view createQuery];
     query.boundingBox = bbox;
-    rows = [[query rows] allObjects];
+    rows = [[query rows: NULL] allObjects];
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
     CBLGeoQueryRow* row = rows[0];
@@ -854,10 +881,10 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
     // Try a query with the public API:
-    CBLQuery* query = [view query];
+    CBLQuery* query = [view createQuery];
     query.fullTextQuery = @"(was NOT barking) OR dog";
     query.fullTextSnippets = YES;
-    rows = [[query rows] allObjects];
+    rows = [[query rows: NULL] allObjects];
     CAssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];

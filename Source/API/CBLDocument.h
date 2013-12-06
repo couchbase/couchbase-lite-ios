@@ -7,7 +7,8 @@
 //
 
 #import "CBLDatabase.h"
-@class CBLRevision, CBLNewRevision;
+@class CBLSavedRevision, CBLUnsavedRevision, CBLDatabaseChange;
+@protocol CBLDocumentModel;
 
 
 /** A CouchbaseLite document (as opposed to any specific revision of it.) */
@@ -44,10 +45,10 @@
 @property (readonly, copy) NSString* currentRevisionID;
 
 /** The current/latest revision. This object is cached. */
-@property (readonly) CBLRevision* currentRevision;
+@property (readonly) CBLSavedRevision* currentRevision;
 
 /** The revision with the specified ID. */
-- (CBLRevision*) revisionWithID: (NSString*)revisionID;
+- (CBLSavedRevision*) revisionWithID: (NSString*)revisionID;
 
 /** Returns the document's history as an array of CBLRevisions. (See CBLRevision's method.) */
 - (NSArray*) getRevisionHistory: (NSError**)outError;
@@ -64,14 +65,15 @@
     or which will be the first revision if the document doesn't exist yet.
     You can modify this revision's properties and attachments, then save it.
     No change is made to the database until/unless you save the new revision. */
-- (CBLNewRevision*) newRevision;
+- (CBLUnsavedRevision*) newRevision;
 
 
 #pragma mark PROPERTIES:
 
 /** The contents of the current revision of the document.
     This is shorthand for self.currentRevision.properties.
-    Any keys in the dictionary that begin with "_", such as "_id" and "_rev", contain CouchbaseLite metadata. */
+    Any keys in the dictionary that begin with "_", such as "_id" and "_rev", contain CouchbaseLite
+    metadata. */
 @property (readonly, copy) NSDictionary* properties;
 
 /** The user-defined properties, without the ones reserved by CouchDB.
@@ -84,8 +86,10 @@
 /** Same as -propertyForKey:. Enables "[]" access in Xcode 4.4+ */
 - (id)objectForKeyedSubscript:(NSString*)key                            __attribute__((nonnull));
 
-/** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties property.) */
-- (CBLRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError;
+/** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties
+    property.) */
+- (CBLSavedRevision*) putProperties: (NSDictionary*)properties
+                              error: (NSError**)outError                __attribute__((nonnull(1)));
 
 /** Saves a new revision by letting the caller update the existing properties.
     This method handles conflicts by retrying (calling the block again).
@@ -98,8 +102,8 @@
             error will be stored.
     @return  The new saved revision, or nil on error or cancellation.
  */
-- (CBLRevision*) update: (BOOL(^)(CBLNewRevision*))block
-                  error: (NSError**)outError                            __attribute__((nonnull(1)));
+- (CBLSavedRevision*) update: (BOOL(^)(CBLUnsavedRevision*))block
+                       error: (NSError**)outError                    __attribute__((nonnull(1)));
 
 
 #pragma mark MODEL:
@@ -107,7 +111,7 @@
 /** Optional reference to an application-defined model object representing this document.
     Usually this is a CBLModel, but you can implement your own model classes if you want.
     Note that this is a weak reference. */
-@property (weak) id modelObject;
+@property (weak) id<CBLDocumentModel> modelObject;
 
 
 @end
@@ -116,12 +120,19 @@
 
 /** Protocol that CBLDocument model objects must implement. See the CBLModel class. */
 @protocol CBLDocumentModel <NSObject>
-/** If a CBLDocument's modelObject implements this method, it will be called whenever the document posts a kCBLDocumentChangeNotification. */
-- (void) tdDocumentChanged: (CBLDocument*)doc                           __attribute__((nonnull));
+/** Called whenever a new revision is added to the document.
+    (Equivalent to kCBLDocumentChangeNotification.) */
+- (void) CBLDocument: (CBLDocument*)doc
+           didChange: (CBLDatabaseChange*)change                        __attribute__((nonnull));
 @end
 
 
 
-/** This notification is posted by a CBLDocument in response to an external change.
-    It is not sent in response to 'local' changes made by this CBLDatabase's object tree. */
+/** This notification is posted by a CBLDocument in response to a change, i.e. a new revision.
+    The notification's userInfo contains a "change" property whose value is a CBLDatabaseChange
+    containing details of the change.
+    NOTE: This is *not* a way to detect changes to all documents. Only already-existing CBLDocument
+    objects will post this notification, so when a document changes in the database but there is
+    not currently any CBLDocument instance representing it, no notification will be posted.
+    If you want to observe all document changes in a database, use kCBLDatabaseChangeNotification.*/
 extern NSString* const kCBLDocumentChangeNotification;

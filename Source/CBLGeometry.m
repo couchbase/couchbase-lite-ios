@@ -57,6 +57,18 @@ BOOL CBLGeoCoordsToRect(NSArray* coords, CBLGeoRect* outRect) {
 }
 
 
+BOOL CBLGeoCoordsStringToRect(NSString* coordsStr, CBLGeoRect* outRect) {
+    NSArray* bboxArray = [coordsStr componentsSeparatedByString: @","];
+    if (bboxArray.count != 4)
+        return NO;
+    double coords[4];
+    for (NSUInteger i = 0; i < 4; i++)
+        coords[i] = [bboxArray[i] doubleValue];
+    *outRect = (CBLGeoRect){{coords[0],coords[1]}, {coords[2],coords[3]}};
+    return YES;
+}
+
+
 BOOL CBLGeoJSONBoundingBox(NSDictionary* geoJSON, CBLGeoRect* outRect) {
     // http://geojson.org/geojson-spec.html
     NSArray* coordinates = $castIf(NSArray, geoJSON[@"coordinates"]);
@@ -110,5 +122,8 @@ TestCase(CBLGeometry) {
 
     CBLGeoRect bbox;
     Assert(CBLGeoJSONBoundingBox(json, &bbox));
+    Assert(CBLGeoRectEqual(bbox, rect));
+
+    Assert(CBLGeoCoordsStringToRect(@"-115,-10,-90,12.0",&bbox));
     Assert(CBLGeoRectEqual(bbox, rect));
 }
