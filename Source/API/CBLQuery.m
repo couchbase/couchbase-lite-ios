@@ -155,7 +155,7 @@
 }
 
 
-- (CBLQueryEnumerator*) rows: (NSError**)outError {
+- (CBLQueryEnumerator*) run: (NSError**)outError {
     CBLStatus status;
     NSArray* rows = [_database queryViewNamed: _view.name
                                       options: self.queryOptions
@@ -215,14 +215,14 @@
 - (void) setStale:(CBLIndexUpdateMode)stale {self.indexUpdateMode = stale;}
 - (CBLQueryEnumerator*) rows {
     NSError* error;
-    CBLQueryEnumerator* result = [self rows: &error];
+    CBLQueryEnumerator* result = [self run: &error];
     _deprecatedError = error;
     return result;
 }
 - (CBLQueryEnumerator*) rowsIfChanged {
     if (_database.lastSequenceNumber == _lastSequence)
         return nil;
-    return [self rows: nil];
+    return [self run: nil];
 }
 #endif
 
@@ -274,7 +274,7 @@
 }
 
 
-- (CBLQueryEnumerator*) rows: (NSError**)outError {
+- (CBLQueryEnumerator*) run: (NSError**)outError {
     if ([self waitForRows]) {
         return self.rows;
     } else {
