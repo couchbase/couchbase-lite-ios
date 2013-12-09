@@ -536,7 +536,7 @@ static id fromJSON( NSData* json ) {
 }
 
 
-- (NSString*) documentRevision {
+- (NSString*) documentRevisionID {
     // Get the revision id from either the embedded document contents,
     // or the '_rev' or 'rev' value key:
     NSString* rev = _documentProperties[@"_rev"];
@@ -617,6 +617,7 @@ static id fromJSON( NSData* json ) {
 
 #ifdef CBL_DEPRECATED
 - (UInt64) localSequence {return _sequence;}
+- (NSString*) documentRevision {return self.documentRevisionID;}
 #endif
 
 

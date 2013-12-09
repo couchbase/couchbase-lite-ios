@@ -189,7 +189,7 @@ typedef enum {
 @property (readonly) NSString* sourceDocumentID;
 
 /** The revision ID of the document this row was mapped from. */
-@property (readonly) NSString* documentRevision;
+@property (readonly) NSString* documentRevisionID;
 
 @property (readonly) CBLDatabase* database;
 
@@ -223,6 +223,7 @@ typedef enum {
 @property (readonly) NSArray* conflictingRevisions;
 
 #ifdef CBL_DEPRECATED
+@property (readonly) NSString* documentRevision __attribute__((deprecated("renamed documentRevisionID")));
 @property (readonly) UInt64 localSequence __attribute__((deprecated("renamed sequenceNumber")));
 #endif
 @end
