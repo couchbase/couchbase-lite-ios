@@ -33,7 +33,11 @@ typedef enum
 @class CBLDatabase;
 
 
-/** Block that handles conflicts. Can merge all conflicting revisions into one, dismiss all conflicts, etc. */
+/** Block that handles conflicts and can merge all conflicting revisions into one, dismiss all conflicts, etc.
+ *
+ * @parameter doc the document that has the conflicts
+ * @parameter conflictingRevisions the conflicting revisions of that document as CBLSavedRevision instances.
+ */
 typedef void(^CBLISConflictHandler)(CBLDocument *doc, NSArray *conflictingRevisions);
 
 
@@ -76,7 +80,10 @@ typedef void(^CBLISConflictHandler)(CBLDocument *doc, NSArray *conflictingRevisi
  * @param outError an optional error reference. Contains an NSError when the return is nil
  * @returns a new NSManagedObjectContext ready to use, or nil if there was an error
  */
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName error:(NSError**)outError;
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
+                                                   databaseName:(NSString*)databaseName
+                                                          error:(NSError**)outError;
+
 /** Convenience method that creates the whole Core Data stack using the given database model, persists the data the given database and
  * imports the data from an existing Core Data database. You don't need to run #updateManagedObjectModel: before.
  * To get a reference to the underlying CBLIncrementalStore you can call `context.persistentStoreCoordinator.persistentStores[0]` afterwards.
@@ -88,7 +95,11 @@ typedef void(^CBLISConflictHandler)(CBLDocument *doc, NSArray *conflictingRevisi
  * @param outError an optional error reference. Contains an NSError when the return is nil
  * @returns a new NSManagedObjectContext ready to use, or nil if there was an error
  */
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl importType:(NSString*)importType error:(NSError**)outError;
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
+                                                   databaseName:(NSString*)databaseName
+                                         importingDatabaseAtURL:(NSURL*)importUrl
+                                                     importType:(NSString*)importType
+                                                          error:(NSError**)outError;
 
 /** Register a NSManagedObjectContext to be informed about changes in the CouchbaseLite database. A NSManagedObjectContextObjectsDidChangeNotification is sent
  * to this context on changes.

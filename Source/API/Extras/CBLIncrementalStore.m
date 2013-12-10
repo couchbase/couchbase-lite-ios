@@ -69,11 +69,18 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark - Convenience Method
 
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName error:(NSError**)outError
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
+                                                   databaseName:(NSString*)databaseName
+                                                          error:(NSError**)outError
 {
-    return [self createManagedObjectContextWithModel:managedObjectModel databaseName:databaseName importingDatabaseAtURL:nil importType:nil error:outError];
+    return [self createManagedObjectContextWithModel:managedObjectModel databaseName:databaseName
+                              importingDatabaseAtURL:nil importType:nil error:outError];
 }
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel databaseName:(NSString*)databaseName importingDatabaseAtURL:(NSURL*)importUrl importType:(NSString*)importType error:(NSError**)outError
++ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
+                                                   databaseName:(NSString*)databaseName
+                                         importingDatabaseAtURL:(NSURL*)importUrl
+                                                     importType:(NSString*)importType
+                                                          error:(NSError**)outError
 {
     NSManagedObjectModel *model = [managedObjectModel mutableCopy];
     
