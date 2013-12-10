@@ -9,7 +9,7 @@
 #import <CoreData/CoreData.h>
 
 extern NSString * const kCBLIncrementalStoreErrorDomain;
-extern NSString * const kCBISObjectHasBeenChangedInStoreNotification;
+extern NSString * const kCBLISObjectHasBeenChangedInStoreNotification;
 
 /** Error codes for CBLIncrementalStore. */
 typedef enum
