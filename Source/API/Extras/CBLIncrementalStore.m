@@ -1491,7 +1491,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         if (enumerator.count == 0) return;
         
-        [self _resolveConflicts: enumerator];
+        [self _resolveConflicts:enumerator];
     }
 }
 
@@ -1499,39 +1499,33 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 {
     // resolve conflicts
     for (CBLQueryRow *row in enumerator) {
-        CBLDocument *doc = row.document;
-        
-        NSError *error;
-        NSArray *conflictingRevisions = [doc getConflictingRevisions:&error];
-        
-        if ([kCBLISMetadataDocumentID isEqual:doc.documentID]) {
+        if ([kCBLISMetadataDocumentID isEqual:row.documentID]) {
             // TODO: what to do here?
-            for (CBLRevision *rev in conflictingRevisions) {
-                if (![rev isEqual:doc.currentRevision]) {
-                }
-            }
             continue;
         }
         
-        if (self.conflictHandler) self.conflictHandler(doc, conflictingRevisions);
+        if (self.conflictHandler) self.conflictHandler(row.conflictingRevisions);
     }
 }
 
 - (CBLISConflictHandler) _defaultConflictHandler
 {
-    CBLISConflictHandler handler = ^(CBLDocument *doc, NSArray *conflictingRevisions) {
+    CBLISConflictHandler handler = ^(NSArray *conflictingRevisions) {
         // merges changes by
-        // - taking the current revision
+        // - taking the winning revision
         // - adding missing values from other revisions (starting with biggest version)
-        NSMutableDictionary *properties = [doc.currentRevision.properties mutableCopy];
+        CBLRevision *winning = conflictingRevisions[0];
+        NSMutableDictionary *properties = [winning.properties mutableCopy];
+        
+        NSRange otherRevisionsRange = NSMakeRange(1, conflictingRevisions.count - 1);
+        NSArray *otherRevisions = [conflictingRevisions subarrayWithRange:otherRevisionsRange];
         
         NSArray *desc = @[[NSSortDescriptor sortDescriptorWithKey:@"revisionID"
                                                         ascending:NO]];
-        NSArray *sortedConflictingRevisions = [conflictingRevisions sortedArrayUsingDescriptors:desc];
+        NSArray *sortedRevisions = [otherRevisions sortedArrayUsingDescriptors:desc];
         
-        for (CBLRevision *rev in sortedConflictingRevisions) {
-            if ([doc.currentRevisionID isEqualToString:rev.revisionID]) continue;
-            
+        // this solution merges missing keys from other conflicting revisions to not loose any values
+        for (CBLRevision *rev in sortedRevisions) {
             for (NSString *key in rev.properties) {
                 if ([key hasPrefix:@"_"]) continue;
                 
@@ -1543,7 +1537,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         // TODO: Attachments
         
-        CBLUnsavedRevision *newRevision = [doc newRevision];
+        CBLUnsavedRevision *newRevision = [winning.document newRevision];
         [newRevision setProperties:properties];
         
         NSError *error;

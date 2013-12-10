@@ -34,11 +34,12 @@ typedef enum
 
 
 /** Block that handles conflicts and can merge all conflicting revisions into one, dismiss all conflicts, etc.
+ * Is called with all conflicting revisions of the document, as an array of CBLRevision.
+ * The first object in the array will be the default "winning" revision that shadows the others.
  *
- * @parameter doc the document that has the conflicts
- * @parameter conflictingRevisions the conflicting revisions of that document as CBLSavedRevision instances.
+ * @parameter conflictingRevisions the conflicting revisions of that document as CBLRevision instances.
  */
-typedef void(^CBLISConflictHandler)(CBLDocument *doc, NSArray *conflictingRevisions);
+typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
 
 
 /** NSIncrementalStore implementation that persists the data in a CouchbaseLite database. Before using this store you need to call #updateManagedObjectModel:
