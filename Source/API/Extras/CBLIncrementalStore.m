@@ -23,7 +23,6 @@ static NSString * const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
 static NSString * const kCBLISManagedObjectIDPrefix = @"CBL";
 static NSString * const kCBLISMetadataDocumentID = @"CBLIS_metadata";
 static NSString * const kCBLISAllByTypeViewName = @"CBLIS/allByType";
-static NSString * const kCBLISConflictsViewName = @"CBLIS/conflicts";
 static NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetch_%@_by_%@";
 
 
@@ -316,17 +315,14 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     }
     
     if (success) {
-        CBLView *conflictsView = [self.database viewNamed:kCBLISConflictsViewName];
-        [conflictsView setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
-            if (doc[@"_conflicts"] != nil) emit(nil, nil);
-        }
-                           version:@"1.0"];
+        // create a live-query for conflicting documents
+        CBLQuery* query = [self.database createAllDocumentsQuery];
+        query.allDocsMode = kCBLOnlyConflicts;
+        CBLLiveQuery *liveQuery = query.asLiveQuery;
+        [liveQuery addObserver:self forKeyPath:@"rows" options:NSKeyValueObservingOptionNew context:nil];
+        [liveQuery start];
         
-        CBLLiveQuery *query = [conflictsView createQuery].asLiveQuery;
-        [query addObserver:self forKeyPath:@"rows" options:NSKeyValueObservingOptionNew context:nil];
-        [query start];
-        
-        _conflictsQuery = query;
+        _conflictsQuery = liveQuery;
     }
     
     return success;
