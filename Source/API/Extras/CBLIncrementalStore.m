@@ -9,11 +9,6 @@
 #import "CBLIncrementalStore.h"
 
 #import <CouchbaseLite/CouchbaseLite.h>
-#import <CouchbaseLite/CBLDatabaseChange.h>
-
-// copied definition because we need them here:
-#define $true   ((NSNumber*)kCFBooleanTrue)
-
 
 #if !__has_feature(objc_arc)
 #  error This class requires ARC!
@@ -26,7 +21,6 @@ NSString * const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectH
 NSString * const kCBLISTypeKey = @"cblis_type";
 NSString * const kCBLISCurrentRevisionAttributeName = @"cblisRev";
 NSString * const kCBLISManagedObjectIDPrefix = @"cbl";
-NSString * const kCBLISDesignName = @"cblisDesign";
 NSString * const kCBLISMetadataDocumentID = @"cblis_metadata";
 NSString * const kCBLISAllByTypeViewName = @"cblis_all_by_type";
 NSString * const kCBLISConflictsViewName = @"cblis_conflicts";
@@ -1182,7 +1176,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 - (CBLQueryEnumerator*) _queryEnumeratorForQuery:(CBLQuery*)query error:(NSError**)outError
 {
     NSError *error;
-    CBLQueryEnumerator *rows = [query rows:&error];
+    CBLQueryEnumerator *rows = [query run:&error];
     if (!rows) {
         if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
                                                       code:CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed
@@ -1487,7 +1481,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         CBLLiveQuery *query = object;
         
         NSError *error;
-        CBLQueryEnumerator *enumerator = [query rows:&error];
+        CBLQueryEnumerator *enumerator = [query run:&error];
         
         if (enumerator.count == 0) return;
         
@@ -1558,7 +1552,7 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 - (NSDictionary*) _propertiesForDeletingDocument:(CBLDocument*)doc
 {
     NSDictionary *contents = @{
-                               @"_deleted": $true,
+                               @"_deleted": @YES,
                                @"_rev": [doc propertyForKey:@"_rev"],
                                kCBLISTypeKey: [doc propertyForKey:kCBLISTypeKey]
                                };
