@@ -18,19 +18,19 @@
 NSString * const kCBLIncrementalStoreErrorDomain = @"CBLISIncrementalStoreErrorDomain";
 NSString * const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
 
-NSString * const kCBLISTypeKey = @"cblis_type";
-NSString * const kCBLISCurrentRevisionAttributeName = @"cblisRev";
-NSString * const kCBLISManagedObjectIDPrefix = @"cbl";
-NSString * const kCBLISMetadataDocumentID = @"cblis_metadata";
-NSString * const kCBLISAllByTypeViewName = @"cblis_all_by_type";
-NSString * const kCBLISConflictsViewName = @"cblis_conflicts";
-NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"cblis_fetch_%@_by_%@";
+static NSString * const kCBLISTypeKey = @"CBLIS_type";
+static NSString * const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
+static NSString * const kCBLISManagedObjectIDPrefix = @"CBL";
+static NSString * const kCBLISMetadataDocumentID = @"CBLIS_metadata";
+static NSString * const kCBLISAllByTypeViewName = @"CBLIS/allByType";
+static NSString * const kCBLISConflictsViewName = @"CBLIS/conflicts";
+static NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetch_%@_by_%@";
 
 
 // utility functions
-BOOL CBLISIsNull(id value);
-NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship);
-NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
+static BOOL CBLISIsNull(id value);
+static NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship);
+static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 
 @interface NSManagedObjectID (CBLIncrementalStore)
@@ -288,8 +288,6 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                      NSStoreTypeKey: [[self class] type]
                      };
         [self setMetadata:metaData];
-        
-        CBLDocument *doc = [self.database documentWithID:kCBLISMetadataDocumentID];
         
         NSError *error;
         success = [doc putProperties:metaData error:&error] != nil;
@@ -1526,7 +1524,9 @@ NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         // - adding missing values from other revisions (starting with biggest version)
         NSMutableDictionary *properties = [doc.currentRevision.properties mutableCopy];
         
-        NSArray *sortedConflictingRevisions = [conflictingRevisions sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:@"revisionID" ascending:NO]]];
+        NSArray *desc = @[[NSSortDescriptor sortDescriptorWithKey:@"revisionID"
+                                                        ascending:NO]];
+        NSArray *sortedConflictingRevisions = [conflictingRevisions sortedArrayUsingDescriptors:desc];
         
         for (CBLRevision *rev in sortedConflictingRevisions) {
             if ([doc.currentRevisionID isEqualToString:rev.revisionID]) continue;
