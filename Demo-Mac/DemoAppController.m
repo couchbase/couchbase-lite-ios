@@ -70,13 +70,10 @@ int main (int argc, const char * argv[]) {
     // and a validation function requiring parseable dates:
     [_database setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.isDeletion)
-            return YES;
+            return;
         id date = newRevision[@"created_at"];
-        if (date && ! [CBLJSON dateWithJSONObject: date]) {
-            context.errorMessage = [@"invalid date " stringByAppendingString: date];
-            return NO;
-        }
-        return YES;
+        if (date && ! [CBLJSON dateWithJSONObject: date])
+            [context rejectWithMessage: [@"invalid date " stringByAppendingString: date]];
     })];
     
     // And why not a filter, just to allow some simple testing of filtered _changes.
@@ -223,14 +220,14 @@ int main (int argc, const char * argv[]) {
     [repl addObserver: self forKeyPath: @"completedChangesCount" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"changesCount" options: 0 context: NULL];
     [repl addObserver: self forKeyPath: @"lastError" options: 0 context: NULL];
-    [repl addObserver: self forKeyPath: @"mode" options: 0 context: NULL];
+    [repl addObserver: self forKeyPath: @"status" options: 0 context: NULL];
 }
 
 - (void) stopObservingReplication: (CBLReplication*)repl {
     [repl removeObserver: self forKeyPath: @"completedChangesCount"];
     [repl removeObserver: self forKeyPath: @"changesCount"];
     [repl removeObserver: self forKeyPath: @"lastError"];
-    [repl removeObserver: self forKeyPath: @"mode"];
+    [repl removeObserver: self forKeyPath: @"status"];
 }
 
 
@@ -264,7 +261,7 @@ int main (int argc, const char * argv[]) {
     } else if (_push.lastError) {
         value = 3;  // red
         tooltip = _push.lastError.localizedDescription;
-    } else switch(MAX(_pull.mode, _push.mode)) {
+    } else switch(MAX(_pull.status, _push.status)) {
         case kCBLReplicationStopped:
             value = 3; 
             tooltip = @"Sync stopped";
@@ -297,7 +294,7 @@ int main (int argc, const char * argv[]) {
                          change:(NSDictionary *)change context:(void *)context
 {
     CBLReplication* repl = object;
-    NSLog(@"SYNC mode=%d", repl.mode);
+    NSLog(@"SYNC mode=%d", repl.status);
     if ([keyPath isEqualToString: @"completed"] || [keyPath isEqualToString: @"total"]) {
         if (repl == _pull || repl == _push) {
             unsigned completed = _pull.completedChangesCount + _push.completedChangesCount;

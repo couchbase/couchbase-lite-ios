@@ -16,7 +16,7 @@ typedef enum {
     kCBLReplicationOffline, /**< The remote host is currently unreachable. */
     kCBLReplicationIdle,    /**< Continuous replication is caught up and waiting for more changes.*/
     kCBLReplicationActive   /**< The replication is actively transferring data. */
-} CBLReplicationMode;
+} CBLReplicationStatus;
 
 
 /** A 'push' or 'pull' replication between a local and a remote database.
@@ -153,7 +153,7 @@ typedef enum {
 
 /** Starts the replication, asynchronously.
     You can monitor its progress by observing the kCBLReplicationChangeNotification it sends,
-    or by using KVO to observe its .running, .mode, .error, .total and .completed properties. */
+    or by using KVO to observe its .running, .status, .error, .total and .completed properties. */
 - (void) start;
 
 /** Stops replication, asynchronously. */
@@ -163,7 +163,7 @@ typedef enum {
 - (void) restart;
 
 /** The replication's current state, one of {stopped, offline, idle, active}. */
-@property (nonatomic, readonly) CBLReplicationMode mode;
+@property (nonatomic, readonly) CBLReplicationStatus status;
 
 /** YES while the replication is running, NO if it's stopped.
     Note that a continuous replication never actually stops; it only goes idle waiting for new
@@ -184,6 +184,7 @@ typedef enum {
 @property (nonatomic) bool create_target __attribute__((deprecated("renamed createTarget")));
 @property (nonatomic, copy) NSDictionary* query_params __attribute__((deprecated("renamed filterParams")));
 @property (copy) NSArray *doc_ids __attribute__((deprecated("renamed documentIDs")));
+@property (nonatomic, readonly) CBLReplicationStatus mode __attribute__((deprecated("renamed status")));
 @property (nonatomic, readonly, retain) NSError* error;
 @property (nonatomic, readonly) unsigned completed __attribute__((deprecated("renamed completedChangesCount")));
 @property (nonatomic, readonly) unsigned total __attribute__((deprecated("renamed changesCount")));
@@ -192,6 +193,11 @@ typedef enum {
 
 
 /** This notification is posted by a CBLReplication when any of these properties change:
-    {mode, running, error, completed, total}. It's often more convenient to observe this
+    {status, running, error, completed, total}. It's often more convenient to observe this
     notification rather than observing each property individually. */
 extern NSString* const kCBLReplicationChangeNotification;
+
+
+#ifdef CBL_DEPRECATED
+typedef CBLReplicationStatus CBLReplicationMode __attribute__((deprecated("renamed CBLReplicationStatus")));
+#endif

@@ -33,7 +33,7 @@ typedef struct CBLQueryOptions {
     BOOL group;
     BOOL fullTextSnippets;
     BOOL fullTextRanking;
-    CBLUpdateIndexMode stale;
+    CBLIndexUpdateMode indexUpdateMode;
     CBLAllDocsMode allDocsMode;
 } CBLQueryOptions;
 
@@ -48,6 +48,15 @@ typedef enum {
 
 
 @interface CBLView ()
+{
+    @private
+    CBLDatabase* __weak _weakDB;
+    NSString* _name;
+    int _viewID;
+    uint8_t _collation;
+    CBLContentOptions _mapContentOptions;
+}
+
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name;
 
 - (void) databaseClosing;

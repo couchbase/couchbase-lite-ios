@@ -42,7 +42,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @property (copy) id source, target;  // document properties
 
 @property (nonatomic, readwrite) BOOL running;
-@property (nonatomic, readwrite) CBLReplicationMode mode;
+@property (nonatomic, readwrite) CBLReplicationStatus status;
 @property (nonatomic, readwrite) unsigned completedChangesCount, changesCount;
 @property (nonatomic, readwrite, retain) NSError* lastError;
 @end
@@ -56,7 +56,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     BOOL _started;
     BOOL _running;
     unsigned _completedChangesCount, _changesCount;
-    CBLReplicationMode _mode;
+    CBLReplicationStatus _status;
     NSError* _lastError;
 
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
@@ -442,14 +442,19 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 
 - (void) restart {
-    [self setValue: nil ofProperty: @"_replication_state"];
+    if (self.persistent) {
+        [self setValue: nil ofProperty: @"_replication_state"];
+    } else if (_started) {
+        [self stop];
+        [self start];
+    }
 }
 
 
-@synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError = _lastError, mode=_mode;
+@synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError = _lastError, status=_status;
 
 
-- (void) updateMode: (CBLReplicationMode)mode
+- (void) updateMode: (CBLReplicationStatus)mode
               error: (NSError*)error
           processed: (NSUInteger)changesProcessed
             ofTotal: (NSUInteger)changesTotal
@@ -460,8 +465,8 @@ static inline BOOL isLocalDBName(NSString* url) {
         _started = NO;
     
     BOOL changed = NO;
-    if (mode != _mode) {
-        self.mode = mode;
+    if (mode != _status) {
+        self.status = mode;
         changed = YES;
     }
     BOOL running = (mode > kCBLReplicationStopped);
@@ -554,7 +559,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress: (CBL_Replicator*)tdReplicator {
-    CBLReplicationMode mode;
+    CBLReplicationStatus mode;
     if (!tdReplicator.running)
         mode = kCBLReplicationStopped;
     else if (!tdReplicator.online)
@@ -578,6 +583,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 #ifdef CBL_DEPRECATED
 @dynamic create_target, query_params, doc_ids;
+- (CBLReplicationStatus) mode {return self.status;}
 - (NSError*) error      {return self.lastError;}
 - (unsigned) completed  {return self.completedChangesCount;}
 - (unsigned) total      {return self.changesCount;}

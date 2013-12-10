@@ -557,7 +557,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         @try {
             status = block();
         } @catch (NSException* x) {
-            Warn(@"Exception raised during -inTransaction: %@", x);
+            MYReportException(x, @"CBLDatabase transaction");
             status = kCBLStatusException;
         } @finally {
             [self endTransaction: !CBLStatusIsError(status)];

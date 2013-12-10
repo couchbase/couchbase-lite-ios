@@ -17,6 +17,7 @@
 
 #import "CBLManager.h"
 #import "CBLDatabase.h"
+#import "CBLDatabaseChange.h"
 #import "CBLDocument.h"
 #import "CBLRevision.h"
 #import "CBLAttachment.h"

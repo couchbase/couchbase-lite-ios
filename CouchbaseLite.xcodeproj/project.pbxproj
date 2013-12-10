@@ -17,7 +17,9 @@
 				275A29131649A54F00B0D8EE /* PBXTargetDependency */,
 				275A290D1649A54700B0D8EE /* PBXTargetDependency */,
 				275A29151649A55200B0D8EE /* PBXTargetDependency */,
+				27208F96184FC071006ADBEF /* PBXTargetDependency */,
 				275A29171649A55500B0D8EE /* PBXTargetDependency */,
+				27208F98184FC077006ADBEF /* PBXTargetDependency */,
 				275A290F1649A54A00B0D8EE /* PBXTargetDependency */,
 				275A29111649A54C00B0D8EE /* PBXTargetDependency */,
 				27B15522164AD14E00DF5E2C /* PBXTargetDependency */,
@@ -76,6 +78,11 @@
 		271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 271C2AD216FA176300B8C9DB /* CBL_Shared.h */; };
 		271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
 		271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
+		27208F8A184D1D5C006ADBEF /* NSString+URLEncoding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12847156ABE24008465C2 /* NSString+URLEncoding.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12847156ABE24008465C2 /* NSString+URLEncoding.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27208F8E184D1D83006ADBEF /* NSURL+Base.h in Headers */ = {isa = PBXBuildFile; fileRef = 27208F8C184D1D83006ADBEF /* NSURL+Base.h */; };
+		27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */ = {isa = PBXBuildFile; fileRef = 27208F8D184D1D83006ADBEF /* NSURL+Base.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */ = {isa = PBXBuildFile; fileRef = 27208F8D184D1D83006ADBEF /* NSURL+Base.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */; };
 		272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
 		272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
@@ -369,7 +376,7 @@
 		27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* CBL_Attachment.m */; };
 		27A82E3614A1145000C0B850 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82E3414A1145000C0B850 /* FMDatabaseAdditions.h */; };
 		27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; };
+		27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82E3514A1145000C0B850 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A98EA317BEDC9900943528 /* ReplicationAPITests.m */; };
 		27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */; };
 		27AA409E14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */; };
@@ -472,6 +479,7 @@
 		27DA4312158FB79F00F9E7B5 /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4310158FB79E00F9E7B5 /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA4311158FB79E00F9E7B5 /* CBLQuery.m */; };
 		27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA4311158FB79E00F9E7B5 /* CBLQuery.m */; };
+		27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA4318158FD9B400F9E7B5 /* CBLUITableSource.m */; };
 		27DA4345159125B500F9E7B5 /* CBLManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4343159125B500F9E7B5 /* CBLManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA4344159125B500F9E7B5 /* CBLManager.m */; };
 		27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA4344159125B500F9E7B5 /* CBLManager.m */; };
@@ -553,6 +561,7 @@
 		27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		27F1E4AB16979A0B00F0E50F /* CBLJSViewCompiler_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4AA16979A0B00F0E50F /* CBLJSViewCompiler_Test.m */; };
 		27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */; };
+		27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
 		27F273C417039F3700CD2B85 /* README.md in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F273C317039F3600CD2B85 /* README.md */; };
 		27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
@@ -598,11 +607,6 @@
 		792867D4178DE33E00248AF0 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 792867D3178DE33E00248AF0 /* JavaScriptCore.framework */; };
 		792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */; };
 		AA24F8E4184538AE0091D577 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AA24F914184B6DE70091D577 /* CBLUITableSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA4318158FD9B400F9E7B5 /* CBLUITableSource.m */; };
-		AA24F916184B6DEE0091D577 /* CBLIncrementalStore.h in Headers */ = {isa = PBXBuildFile; fileRef = AA24F90D184B6C8A0091D577 /* CBLIncrementalStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AA32A75F184B7E290080C263 /* CBLIncrementalStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = AA24F911184B6DC70091D577 /* CBLIncrementalStoreTests.m */; };
-		AA32A761184B7ED10080C263 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA32A760184B7ED10080C263 /* CoreData.framework */; };
-		AA32A762184B8C050080C263 /* CBLIncrementalStore.m in Sources */ = {isa = PBXBuildFile; fileRef = AA24F90E184B6C8A0091D577 /* CBLIncrementalStore.m */; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		DA147C0C14BCA98A0052DA4D /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
 		DA147C0D14BCA98A0052DA4D /* CBLHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753160B14ACFC2A0065964D /* CBLHTTPConnection.m */; };
@@ -653,6 +657,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 27B0B7E61492BB6B00A817AD;
 			remoteInfo = "iOS Framework";
+		};
+		27208F95184FC071006ADBEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 792867BE178DE01900248AF0;
+			remoteInfo = CBLJSViewCompiler;
+		};
+		27208F97184FC077006ADBEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27FA59EA179EEACA0043460A;
+			remoteInfo = Documentation;
 		};
 		275315FD14ACF87F0065964D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -818,6 +836,7 @@
 			files = (
 				792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */,
 				27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */,
+				27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */,
 				27F94128176F8235007BAEBE /* CBLJSONValidator.h in Copy Extras */,
 				27F94129176F823A007BAEBE /* CBLJSONValidator.m in Copy Extras */,
 				27F273C417039F3700CD2B85 /* README.md in Copy Extras */,
@@ -864,6 +883,8 @@
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		271C2AD216FA176300B8C9DB /* CBL_Shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Shared.h; sourceTree = "<group>"; };
 		271C2AD316FA176300B8C9DB /* CBL_Shared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Shared.m; sourceTree = "<group>"; };
+		27208F8C184D1D83006ADBEF /* NSURL+Base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+Base.h"; sourceTree = "<group>"; };
+		27208F8D184D1D83006ADBEF /* NSURL+Base.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+Base.m"; sourceTree = "<group>"; };
 		272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFacebookAuthorizer.h; sourceTree = "<group>"; };
 		272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFacebookAuthorizer.m; sourceTree = "<group>"; };
 		272B85121523691700A90CB2 /* CBLJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSON.h; sourceTree = "<group>"; };
@@ -1299,10 +1320,6 @@
 		792867D3178DE33E00248AF0 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = vendor/JavaScriptCore.framework; sourceTree = "<group>"; };
 		792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRegisterJSViewCompiler.h; sourceTree = "<group>"; };
 		792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRegisterJSViewCompiler.m; sourceTree = "<group>"; };
-		AA24F90D184B6C8A0091D577 /* CBLIncrementalStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLIncrementalStore.h; path = Extras/CBLIncrementalStore.h; sourceTree = "<group>"; };
-		AA24F90E184B6C8A0091D577 /* CBLIncrementalStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = CBLIncrementalStore.m; path = Extras/CBLIncrementalStore.m; sourceTree = "<group>"; };
-		AA24F911184B6DC70091D577 /* CBLIncrementalStoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLIncrementalStoreTests.m; sourceTree = "<group>"; };
-		AA32A760184B7ED10080C263 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteListener.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3614BCAC3B0052DA4D /* CouchbaseLiteListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
@@ -1396,7 +1413,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA32A761184B7ED10080C263 /* CoreData.framework in Frameworks */,
 				27D90B1A15601F8C0000735E /* Security.framework in Frameworks */,
 				27E7FAF0155D8EBA0025F93A /* CFNetwork.framework in Frameworks */,
 				27E00C8E14EC2C74004BCBA9 /* SystemConfiguration.framework in Frameworks */,
@@ -2045,7 +2061,6 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				AA32A760184B7ED10080C263 /* CoreData.framework */,
 				27538F8E17F15057004C3BFD /* ScriptingBridge.framework */,
 				792867D3178DE33E00248AF0 /* JavaScriptCore.framework */,
 				27C7066F1488634300F0F099 /* AppKit.framework */,
@@ -2149,9 +2164,6 @@
 				27DA4318158FD9B400F9E7B5 /* CBLUITableSource.m */,
 				27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */,
 				27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */,
-				AA24F90D184B6C8A0091D577 /* CBLIncrementalStore.h */,
-				AA24F90E184B6C8A0091D577 /* CBLIncrementalStore.m */,
-				AA24F90F184B6DA80091D577 /* Tests */,
 				27F273C317039F3600CD2B85 /* README.md */,
 			);
 			name = iOS;
@@ -2267,10 +2279,12 @@
 		27F12843156ABE24008465C2 /* Categories */ = {
 			isa = PBXGroup;
 			children = (
-				27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */,
-				27F128A7156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m */,
 				27F12846156ABE24008465C2 /* NSString+URLEncoding.h */,
 				27F12847156ABE24008465C2 /* NSString+URLEncoding.m */,
+				27208F8C184D1D83006ADBEF /* NSURL+Base.h */,
+				27208F8D184D1D83006ADBEF /* NSURL+Base.m */,
+				27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */,
+				27F128A7156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -2326,14 +2340,6 @@
 				792867C3178DE01900248AF0 /* CBLJSViewCompiler-Prefix.pch */,
 			);
 			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		AA24F90F184B6DA80091D577 /* Tests */ = {
-			isa = PBXGroup;
-			children = (
-				AA24F911184B6DC70091D577 /* CBLIncrementalStoreTests.m */,
-			);
-			name = Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -2447,6 +2453,7 @@
 				27846FBC15D475DF0030122F /* MYStreamUtils.h in Headers */,
 				277EF40B17F4DF3700F7B7F7 /* fts3_tokenizer.h in Headers */,
 				270D6FC1164484190081812D /* CBLSocketChangeTracker.h in Headers */,
+				27208F8E184D1D83006ADBEF /* NSURL+Base.h in Headers */,
 				275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */,
 				2776A59116A0C3A6006FF199 /* CBLPersonaAuthorizer.h in Headers */,
 				277B5DCE1821AE990088881E /* CBLJSONReader.h in Headers */,
@@ -2478,7 +2485,6 @@
 				27DA43621592387400F9E7B5 /* CBLManager.h in Headers */,
 				27DA43631592387400F9E7B5 /* CBLDatabase.h in Headers */,
 				27DA43641592387400F9E7B5 /* CBLDocument.h in Headers */,
-				AA24F916184B6DEE0091D577 /* CBLIncrementalStore.h in Headers */,
 				27DA43651592387400F9E7B5 /* CBLRevision.h in Headers */,
 				27DA43661592387400F9E7B5 /* CBLView.h in Headers */,
 				27DA43671592387400F9E7B5 /* CBLQuery.h in Headers */,
@@ -2997,35 +3003,23 @@
 			buildActionMask = 2147483647;
 			files = (
 				270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */,
-				277EF42C17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */,
 				270B3E121489382F00E0A926 /* CBL_Body.m in Sources */,
 				270B3E131489382F00E0A926 /* CBL_Server.m in Sources */,
-				277EF46817F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */,
 				270B3E2C1489581E00E0A926 /* CBL_Puller.m in Sources */,
 				270B3E3A14898DF200E0A926 /* CBL_Revision.m in Sources */,
 				272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
-				277B5D371821A8380088881E /* yajl_gen.c in Sources */,
 				270B3E3F148D7F0000E0A926 /* CBL_Pusher.m in Sources */,
-				277EF45917F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */,
-				277EF45317F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
 				27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */,
 				27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */,
 				279EB2CF149140DE00E74185 /* CBLView+Internal.m in Sources */,
 				279EB2DC1491C34300E74185 /* CBLCollateJSON.m in Sources */,
 				27B0B7801491E76200A817AD /* CBL_View_Tests.m in Sources */,
-				277EF44717F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */,
 				27846FF115D5C8250030122F /* APITests.m in Sources */,
 				27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */,
 				27B0B79F1492932800A817AD /* CBLBase64.m in Sources */,
-				277EF42717F4DF3700F7B7F7 /* api_sq3.c in Sources */,
 				27731F001493FA3100815D67 /* CBL_BlobStore.m in Sources */,
-				277EF48317F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */,
-				277EF44417F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */,
-				277EF42A17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */,
-				277EF48C17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
 				277EF3A617F4DF0600F7B7F7 /* CBLGeometry.m in Sources */,
 				279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
-				277EF47417F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
 				279906F0149ABFC2003D4338 /* CBLBatcher.m in Sources */,
 				27B945AB1768E63200B2DF2D /* CBLModelArray.m in Sources */,
 				274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
@@ -3034,13 +3028,10 @@
 				2773ADC814BD1EB80027A292 /* CBLDatabase+LocalDocs.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				279CE40114D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
-				277EF47A17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */,
-				277EF46517F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */,
 				279CE40614D88032009F3FA6 /* CBLBlobStore_Tests.m in Sources */,
 				279CE40B14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
 				2766EFF914DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFE14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
-				277EF48017F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
 				27C5305514DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27103F8414E9CE4400DF7209 /* CBLReachability.m in Sources */,
@@ -3048,87 +3039,104 @@
 				279C7E2F14F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				272B85151523691700A90CB2 /* CBLJSON.m in Sources */,
 				27ADC07A152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
-				277EF46E17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */,
-				277EF43217F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */,
 				278B0CA1152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
-				277EF43E17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */,
 				27A720A1152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27E7FAED155D78DA0025F93A /* CBLChangeTracker_Tests.m in Sources */,
 				27FFE20A17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
-				277B5D301821A8380088881E /* yajl_buf.c in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
-				277B5D291821A8380088881E /* yajl.c in Sources */,
-				277EF47717F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
 				27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */,
-				277B5D411821A8380088881E /* yajl_version.c in Sources */,
 				27DA42F9158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
-				277EF44D17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
 				27DA42FE158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
-				277B5D341821A8380088881E /* yajl_encode.c in Sources */,
 				27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */,
-				277EF44A17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
 				277B5DCF1821AE990088881E /* CBLJSONReader.m in Sources */,
-				277EF43817F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
 				27DA435815918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435B15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
 				27E2E5A4159383E9005B9234 /* CBLAttachment.m in Sources */,
 				27E2E5CE159533A5005B9234 /* CBLReplication.m in Sources */,
-				277EF47D17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
-				277EF48617F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
-				277EF41817F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
-				277B5D391821A8380088881E /* yajl_lex.c in Sources */,
-				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
-				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
-				277EF43517F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
-				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
-				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
-				2753160014ACF9330065964D /* Logging.m in Sources */,
 				277EF39E17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
-				277EF44117F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
-				277B5D3C1821A8380088881E /* yajl_parser.c in Sources */,
-				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
-				277B5D2D1821A8380088881E /* yajl_alloc.c in Sources */,
-				277EF46B17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
-				277EF46217F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */,
-				2753160214ACF9330065964D /* Test.m in Sources */,
-				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
-				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
-				27D90B1815601C340000735E /* MYErrorUtils.m in Sources */,
-				278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
-				27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
-				277EF47117F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */,
 				277EF49417F5F3CB00F7B7F7 /* CBLView+Querying.m in Sources */,
-				27F128B5156AC8B7008465C2 /* OAToken.m in Sources */,
-				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
-				27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */,
-				277EF40E17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */,
 				277EF3A117F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */,
-				277EF45F17F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
-				277EF45617F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */,
-				27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */,
-				270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */,
 				27B945B417692E2000B2DF2D /* CBLModel+Properties.m in Sources */,
 				27B945A51767E06B00B2DF2D /* ModelTests.m in Sources */,
+				270D6FC2164484190081812D /* CBLSocketChangeTracker.m in Sources */,
+				27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */,
+				2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */,
+				27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */,
+				2776A63116A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
+				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
 				27DA435115918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
-				270D6FC2164484190081812D /* CBLSocketChangeTracker.m in Sources */,
-				277EF42F17F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
-				27B15517164A118100DF5E2C /* CBL_Database_Tests.m in Sources */,
-				2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */,
-				277EF45017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
-				27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */,
-				277EF43B17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
-				2776A63116A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
-				277EF45C17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
-				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
+				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
+				2753160014ACF9330065964D /* Logging.m in Sources */,
+				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
+				2753160214ACF9330065964D /* Test.m in Sources */,
+				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
+				27D90B1815601C340000735E /* MYErrorUtils.m in Sources */,
+				278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
+				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
+				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
+				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
+				27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */,
+				270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */,
+				27F128B5156AC8B7008465C2 /* OAToken.m in Sources */,
+				27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */,
+				27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
+				27208F8A184D1D5C006ADBEF /* NSString+URLEncoding.m in Sources */,
+				27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */,
+				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
+				277B5D301821A8380088881E /* yajl_buf.c in Sources */,
+				277B5D291821A8380088881E /* yajl.c in Sources */,
+				277B5D341821A8380088881E /* yajl_encode.c in Sources */,
+				277B5D371821A8380088881E /* yajl_gen.c in Sources */,
+				277B5D411821A8380088881E /* yajl_version.c in Sources */,
+				277B5D391821A8380088881E /* yajl_lex.c in Sources */,
+				277B5D3C1821A8380088881E /* yajl_parser.c in Sources */,
+				277B5D2D1821A8380088881E /* yajl_alloc.c in Sources */,
 				277EF40C17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
+				277EF42A17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */,
+				277EF48C17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
+				277EF40E17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */,
+				277EF42C17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */,
+				277EF46817F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */,
+				277EF45917F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */,
+				277EF45317F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
+				277EF44717F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */,
+				277EF42717F4DF3700F7B7F7 /* api_sq3.c in Sources */,
+				277EF48317F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */,
+				277EF44417F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */,
+				277EF47417F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
+				277EF47A17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */,
+				277EF46517F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */,
+				277EF48017F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
+				277EF46E17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */,
+				277EF43217F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */,
+				277EF43E17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */,
+				277EF47717F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
+				277EF44D17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
+				277EF44A17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
+				277EF43817F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
+				277EF47D17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
+				277EF48617F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
+				277EF41817F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
+				277EF43517F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
+				277EF44117F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
+				277EF46B17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
+				277EF46217F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */,
+				277EF47117F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */,
+				277EF45F17F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
+				277EF45617F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */,
+				277EF42F17F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
+				277EF45017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
+				277EF43B17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
+				277EF45C17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3199,133 +3207,135 @@
 			buildActionMask = 2147483647;
 			files = (
 				27B0B7CD1492B86C00A817AD /* CBLDatabase+Internal.m in Sources */,
-				277EF48417F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */,
-				277EF42B17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */,
-				277EF43317F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */,
 				27F9411B176A5FB4007BAEBE /* ModelTests.m in Sources */,
 				27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */,
 				27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */,
 				27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */,
 				277B5DD01821AE990088881E /* CBLJSONReader.m in Sources */,
-				277EF48117F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
-				277EF48717F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
 				27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */,
-				277EF46017F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
 				27B0B7D21492B87D00A817AD /* CBLCollateJSON.m in Sources */,
-				277EF43C17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
 				27B0B7D51492B88F00A817AD /* CBL_Replicator.m in Sources */,
 				27B0B7D61492B8A200A817AD /* CBL_Puller.m in Sources */,
-				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
 				27B0B7D71492B8A200A817AD /* CBL_Pusher.m in Sources */,
 				27B0B7D81492B8A200A817AD /* CBLChangeTracker.m in Sources */,
-				277EF47517F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
 				27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */,
 				27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */,
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
-				277EF44217F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
 				279906F1149ABFC2003D4338 /* CBLBatcher.m in Sources */,
-				277B5D2A1821A8380088881E /* yajl.c in Sources */,
-				277B5D351821A8380088881E /* yajl_encode.c in Sources */,
-				277EF45417F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
 				274C391F149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
-				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
-				277EF46917F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */,
 				27AA409E14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */,
 				27AA40A414AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */,
 				2773ADC914BD1EB80027A292 /* CBLDatabase+LocalDocs.m in Sources */,
 				277EF3A717F4DF0600F7B7F7 /* CBLGeometry.m in Sources */,
 				27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
-				277EF45A17F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */,
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
-				277EF40F17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
-				277EF42D17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */,
-				277EF45717F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				27C40C7B14EC58BC00994283 /* CBL_ReplicatorManager.m in Sources */,
-				AA24F914184B6DE70091D577 /* CBLUITableSource.m in Sources */,
-				277EF46317F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */,
-				277EF44B17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				272B85161523691700A90CB2 /* CBLJSON.m in Sources */,
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				278B0CA2152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
-				277EF43617F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
 				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
-				277B5D311821A8380088881E /* yajl_buf.c in Sources */,
-				277EF45117F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
-				277B5D3A1821A8380088881E /* yajl_lex.c in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
-				277EF44517F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */,
 				270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
-				277EF41917F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
 				27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */,
 				27DA42FA158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				27DA42FF158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
-				277EF47217F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */,
-				277EF47B17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */,
-				277EF43F17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */,
-				277EF43017F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
-				277B5D381821A8380088881E /* yajl_gen.c in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
-				277EF40D17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
 				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
+				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
-				277B5D421821A8380088881E /* yajl_version.c in Sources */,
 				27DA434C15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27DA435915918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435C15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
 				27E2E5A5159383E9005B9234 /* CBLAttachment.m in Sources */,
-				277EF46F17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */,
-				277EF47E17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
 				27E2E5CF159533A5005B9234 /* CBLReplication.m in Sources */,
 				27F9411D176A5FC2007BAEBE /* CBLModelArray.m in Sources */,
+				277EF49517F5F3CB00F7B7F7 /* CBLView+Querying.m in Sources */,
 				270D6FC3164484190081812D /* CBLSocketChangeTracker.m in Sources */,
-				277EF48D17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
-				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
-				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,
+				27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
+				277EF3A217F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */,
+				27FFE20B17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
+				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,
+				2776A63216A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
+				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
+				27FFE20617BBF20D0040AE60 /* CBLReplicator_Tests.m in Sources */,
 				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
 				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
 				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
 				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
 				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
-				27FFE20617BBF20D0040AE60 /* CBLReplicator_Tests.m in Sources */,
-				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
-				277EF43917F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
-				277EF49517F5F3CB00F7B7F7 /* CBLView+Querying.m in Sources */,
+				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
+				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
+				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
+				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
+				27B0B7DC1492B8B200A817AD /* FMDatabase.m in Sources */,
+				27A82E3914A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				27B0B7DD1492B8B200A817AD /* FMResultSet.m in Sources */,
 				27F12887156ABE24008465C2 /* OAConsumer.m in Sources */,
 				27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */,
-				277EF42817F4DF3700F7B7F7 /* api_sq3.c in Sources */,
+				27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */,
 				27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
-				277EF46C17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
+				27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */,
+				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
+				277B5D2A1821A8380088881E /* yajl.c in Sources */,
+				277B5D351821A8380088881E /* yajl_encode.c in Sources */,
+				277B5D311821A8380088881E /* yajl_buf.c in Sources */,
+				277B5D3A1821A8380088881E /* yajl_lex.c in Sources */,
+				277B5D381821A8380088881E /* yajl_gen.c in Sources */,
+				277B5D421821A8380088881E /* yajl_version.c in Sources */,
 				277B5D3D1821A8380088881E /* yajl_parser.c in Sources */,
-				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
-				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
-				27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
-				277EF3A217F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */,
+				277EF40F17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */,
+				277EF42817F4DF3700F7B7F7 /* api_sq3.c in Sources */,
+				277EF48417F4DF3700F7B7F7 /* stem_UTF_8_swedish.c in Sources */,
+				277EF42B17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */,
+				277EF43317F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */,
+				277EF48117F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
+				277EF48717F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
+				277EF46017F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
+				277EF43C17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
+				277EF47517F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
+				277EF44217F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
+				277EF45417F4DF3700F7B7F7 /* stem_ISO_8859_2_romanian.c in Sources */,
+				277EF46917F4DF3700F7B7F7 /* stem_UTF_8_german.c in Sources */,
+				277EF45A17F4DF3700F7B7F7 /* stem_UTF_8_danish.c in Sources */,
+				277EF42D17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */,
+				277EF45717F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */,
+				277EF46317F4DF3700F7B7F7 /* stem_UTF_8_finnish.c in Sources */,
+				277EF44B17F4DF3700F7B7F7 /* stem_ISO_8859_1_portuguese.c in Sources */,
+				277EF43617F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
+				277EF45117F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
+				277EF44517F4DF3700F7B7F7 /* stem_ISO_8859_1_norwegian.c in Sources */,
+				277EF41917F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
+				277EF47217F4DF3700F7B7F7 /* stem_UTF_8_norwegian.c in Sources */,
+				277EF47B17F4DF3700F7B7F7 /* stem_UTF_8_romanian.c in Sources */,
+				277EF43F17F4DF3700F7B7F7 /* stem_ISO_8859_1_hungarian.c in Sources */,
+				277EF43017F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
+				277EF40D17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
+				277EF46F17F4DF3700F7B7F7 /* stem_UTF_8_italian.c in Sources */,
+				277EF47E17F4DF3700F7B7F7 /* stem_UTF_8_russian.c in Sources */,
+				277EF43917F4DF3700F7B7F7 /* stem_ISO_8859_1_french.c in Sources */,
+				277EF46C17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
 				277EF47817F4DF3700F7B7F7 /* stem_UTF_8_portuguese.c in Sources */,
 				277EF46617F4DF3700F7B7F7 /* stem_UTF_8_french.c in Sources */,
 				277EF44817F4DF3700F7B7F7 /* stem_ISO_8859_1_porter.c in Sources */,
 				277EF45D17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 				277EF44E17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
-				27FFE20B17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
-				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
-				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,
-				2776A63216A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
-				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
+				277EF48D17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3340,7 +3350,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA32A762184B8C050080C263 /* CBLIncrementalStore.m in Sources */,
 				27B0B8181492C16300A817AD /* main.m in Sources */,
 				27B0B81C1492C16300A817AD /* DemoAppDelegate.m in Sources */,
 				27AD1F8A17C2A1A40063108F /* CBLRouter_Tests.m in Sources */,
@@ -3348,7 +3357,6 @@
 				27F94124176F7448007BAEBE /* CBLJSONValidator.m in Sources */,
 				27AD1F8917C2A08B0063108F /* ReplicationAPITests.m in Sources */,
 				27731F3714967A5F00815D67 /* RootViewController.m in Sources */,
-				AA32A75F184B7E290080C263 /* CBLIncrementalStoreTests.m in Sources */,
 				27731F3814967A5F00815D67 /* ConfigViewController.m in Sources */,
 				27B0B8551492D0A000A817AD /* CBL_View_Tests.m in Sources */,
 				27E7FAEC155D78C20025F93A /* CBLChangeTracker_Tests.m in Sources */,
@@ -3442,6 +3450,16 @@
 			isa = PBXTargetDependency;
 			target = 27B0B7E61492BB6B00A817AD /* CBL iOS */;
 			targetProxy = 270BDD741564514C007D52F6 /* PBXContainerItemProxy */;
+		};
+		27208F96184FC071006ADBEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 792867BE178DE01900248AF0 /* CBLJSViewCompiler */;
+			targetProxy = 27208F95184FC071006ADBEF /* PBXContainerItemProxy */;
+		};
+		27208F98184FC077006ADBEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27FA59EA179EEACA0043460A /* Documentation */;
+			targetProxy = 27208F97184FC077006ADBEF /* PBXContainerItemProxy */;
 		};
 		275315FE14ACF87F0065964D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -3586,7 +3604,7 @@
 				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CURRENT_PROJECT_VERSION = 1.485;
+				CURRENT_PROJECT_VERSION = 1.486;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
@@ -3624,7 +3642,7 @@
 				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CURRENT_PROJECT_VERSION = 1.485;
+				CURRENT_PROJECT_VERSION = 1.486;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
@@ -3961,7 +3979,7 @@
 				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CURRENT_PROJECT_VERSION = 1.485;
+				CURRENT_PROJECT_VERSION = 1.486;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
@@ -4454,7 +4472,6 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
-					"CBLIS_NO_CHANGE_COALESCING=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;

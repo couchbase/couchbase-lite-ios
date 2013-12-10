@@ -68,8 +68,8 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
     [_replicatorDB open: nil];
     __weak CBL_ReplicatorManager* weakSelf = self;
     [_replicatorDB setValidationNamed: @"CBL_ReplicatorManager" asBlock:
-         ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
-             return [weakSelf validateRevision: newRevision context: context];
+         ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
+            [weakSelf validateRevision: newRevision context: context];
          }];
     [self processAllDocs];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:) 
@@ -97,17 +97,17 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
 
 
 // Validation function for the _replicator database:
-- (BOOL) validateRevision: (CBLSavedRevision*)newRev context: (id<CBLValidationContext>)context {
+- (void) validateRevision: (CBLRevision*)newRev context: (id<CBLValidationContext>)context {
     // Ignore the change if it's one I'm making myself, or if it's a deletion:
     if (_updateInProgress || newRev.isDeletion)
-        return YES;
+        return;
     
     // First make sure the basic properties are valid:
     NSDictionary* newProperties = newRev.properties;
     LogTo(Sync, @"ReplicatorManager: Validating %@: %@", newRev, newProperties);
     if ([_dbManager validateReplicatorProperties: newProperties] >= 300) {
-        context.errorMessage = @"Invalid replication parameters";
-        return NO;
+        [context rejectWithMessage: @"Invalid replication parameters"];
+        return;
     }
     
     // Only certain keys can be changed or removed:
@@ -116,7 +116,7 @@ NSString* const kCBL_ReplicatorDatabaseName = @"_replicator";
                                               @"heartbeat", @"feed", @"reset", @"continuous",
                                               @"headers", @"network", nil];
     NSSet* partialMutableProperties = [NSSet setWithObjects:@"target", @"source", nil];
-    return [context enumerateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
+    [context validateChanges: ^BOOL(NSString *key, id oldValue, id newValue) {
         if (![context currentRevision])
             return ![key hasPrefix: @"_"];
         

@@ -40,8 +40,8 @@ static void runReplication(CBLReplication* repl) {
             break;
         if (repl.running)
             started = true;
-        if (started && (repl.mode == kCBLReplicationStopped ||
-                        repl.mode == kCBLReplicationIdle))
+        if (started && (repl.status == kCBLReplicationStopped ||
+                        repl.status == kCBLReplicationIdle))
             done = true;
 
         // Replication runs on a background thread, so the main runloop should not be blocked.
@@ -52,7 +52,7 @@ static void runReplication(CBLReplication* repl) {
         lastTime = now;
     }
     Log(@"...replicator finished. mode=%d, progress %u/%u, error=%@",
-        repl.mode, repl.completedChangesCount, repl.changesCount, repl.error);
+        repl.status, repl.completedChangesCount, repl.changesCount, repl.error);
 }
 
 
@@ -81,7 +81,7 @@ TestCase(CreateReplicators) {
 
     // Check that the replication hasn't started running:
     CAssert(!r1.running);
-    CAssertEq(r1.mode, kCBLReplicationStopped);
+    CAssertEq(r1.status, kCBLReplicationStopped);
     CAssertEq(r1.completedChangesCount, 0u);
     CAssertEq(r1.changesCount, 0u);
     CAssertNil(r1.lastError);
@@ -177,7 +177,7 @@ TestCase(RunReplicationWithError) {
     runReplication(r1);
 
     // It should have failed with a 404:
-    CAssertEq(r1.mode, kCBLReplicationStopped);
+    CAssertEq(r1.status, kCBLReplicationStopped);
     CAssertEq(r1.completedChangesCount, 0u);
     CAssertEq(r1.changesCount, 0u);
     CAssertEqual(r1.lastError.domain, CBLHTTPErrorDomain);

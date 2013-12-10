@@ -265,7 +265,7 @@ TestCase(CBL_Database_Validation) {
     CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
     [db setValidationNamed: @"hoopy" 
-                 asBlock: ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context)
+                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context)
     {
         CAssert(newRevision);
         CAssert(context);
@@ -274,8 +274,7 @@ TestCase(CBL_Database_Validation) {
         BOOL hoopy = newRevision.isDeletion || newRevision[@"towel"] != nil;
         Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
         if (!hoopy)
-         [context setErrorMessage: @"Where's your towel?"];
-        return hoopy;
+            [context rejectWithMessage: @"Where's your towel?"];
     }];
     
     // POST a valid new document:
@@ -360,7 +359,7 @@ static void verifyHistory(CBLDatabase* db, CBL_Revision* rev, NSArray* history, 
 
 static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) {
     return [[CBLDatabaseChange alloc] initWithAddedRevision: rev winningRevision: winner
-                                              maybeConflict: NO source: nil];
+                                                 inConflict: NO source: nil];
 }
 
 

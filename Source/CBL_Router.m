@@ -245,12 +245,10 @@
         options->fullTextRanking = [self boolQuery: @"ranking"];
 
     // Nonstandard geo-query option 'bbox':
-    NSArray* jsonBBox = [self jsonQuery: @"bbox" error: &error];
-    if (error)
-        return NO;
-    if (jsonBBox) {
+    NSString* bboxString = [self query: @"bbox"];
+    if (bboxString) {
         CBLGeoRect bbox;
-        if (!CBLGeoCoordsToRect(jsonBBox, &bbox))
+        if (!CBLGeoCoordsStringToRect(bboxString, &bbox))
             return NO;
         NSData* savedBbox = [NSData dataWithBytes: &bbox length: sizeof(bbox)];
         [_queryRetainer addObject: savedBbox];

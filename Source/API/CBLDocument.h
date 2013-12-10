@@ -130,5 +130,9 @@
 
 /** This notification is posted by a CBLDocument in response to a change, i.e. a new revision.
     The notification's userInfo contains a "change" property whose value is a CBLDatabaseChange
-    containing details of the change. */
+    containing details of the change.
+    NOTE: This is *not* a way to detect changes to all documents. Only already-existing CBLDocument
+    objects will post this notification, so when a document changes in the database but there is
+    not currently any CBLDocument instance representing it, no notification will be posted.
+    If you want to observe all document changes in a database, use kCBLDatabaseChangeNotification.*/
 extern NSString* const kCBLDocumentChangeNotification;

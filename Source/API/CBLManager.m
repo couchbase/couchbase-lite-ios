@@ -424,7 +424,7 @@ static CBLManager* sInstance;
 - (NSArray*) allReplications {
     NSMutableArray* replications = [_replications mutableCopy];
     CBLQuery* q = [self[@"_replicator"] createAllDocumentsQuery];
-    for (CBLQueryRow* row in [q rows: NULL]) {
+    for (CBLQueryRow* row in [q run: NULL]) {
         CBLReplication* repl = [CBLReplication modelForDocument: row.document];
         if (![replications containsObject: repl])
             [replications addObject: repl];

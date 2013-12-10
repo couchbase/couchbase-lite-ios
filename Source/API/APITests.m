@@ -370,7 +370,7 @@ TestCase(API_AllDocuments) {
     //query.prefetch = YES;
     Log(@"Getting all documents: %@", query);
     
-    CBLQueryEnumerator* rows = [query rows: NULL];
+    CBLQueryEnumerator* rows = [query run: NULL];
     CAssertEq(rows.count, kNDocs);
     NSUInteger n = 0;
     for (CBLQueryRow* row in rows) {
@@ -489,7 +489,7 @@ TestCase(API_Conflict) {
 
     CBLQuery* query = [db createAllDocumentsQuery];
     query.allDocsMode = kCBLShowConflicts;
-    NSArray* rows = [[query rows: NULL] allObjects];
+    NSArray* rows = [[query run: NULL] allObjects];
     AssertEq(rows.count, 1u);
     CBLQueryRow* row = rows[0];
     NSArray* revs = row.conflictingRevisions;
@@ -601,7 +601,7 @@ TestCase(API_CreateView) {
     CAssertEq(query.database, db);
     query.startKey = @23;
     query.endKey = @33;
-    CBLQueryEnumerator* rows = [query rows: NULL];
+    CBLQueryEnumerator* rows = [query run: NULL];
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
 
@@ -643,12 +643,9 @@ TestCase(API_Validation) {
     CBLDatabase* db = createEmptyDB();
 
     [db setValidationNamed: @"uncool"
-                 asBlock: ^BOOL(CBLSavedRevision *newRevision, id<CBLValidationContext> context) {
-                     if (!newRevision.properties[@"groovy"]) {
-                         context.errorMessage = @"uncool";
-                         return NO;
-                     }
-                     return YES;
+                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
+                     if (!newRevision.properties[@"groovy"])
+                         [context rejectWithMessage: @"uncool"];
                  }];
     
     NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
@@ -686,7 +683,7 @@ TestCase(API_ViewWithLinkedDocs) {
     query.startKey = @23;
     query.endKey = @33;
     query.prefetch = YES;
-    CBLQueryEnumerator* rows = [query rows: NULL];
+    CBLQueryEnumerator* rows = [query run: NULL];
     CAssert(rows);
     CAssertEq(rows.count, (NSUInteger)11);
     
@@ -797,9 +794,7 @@ TestCase(API_SharedMapBlocks) {
     [db setFilterNamed: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
         return YES;
     }];
-    [db setValidationNamed: @"val" asBlock: VALIDATIONBLOCK({
-        return YES;
-    })];
+    [db setValidationNamed: @"val" asBlock: VALIDATIONBLOCK({ })];
     CBLView* view = [db viewNamed: @"view"];
     BOOL ok = [view setMapBlock: MAPBLOCK({
         // nothing

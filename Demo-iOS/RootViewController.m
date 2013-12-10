@@ -105,13 +105,10 @@
     // and a validation function requiring parseable dates:
     [theDatabase setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
         if (newRevision.isDeletion)
-            return YES;
+            return;
         id date = [newRevision.properties objectForKey: @"created_at"];
-        if (date && ! [CBLJSON dateWithJSONObject: date]) {
-            context.errorMessage = [@"invalid date " stringByAppendingString: [date description]];
-            return NO;
-        }
-        return YES;
+        if (date && ! [CBLJSON dateWithJSONObject: date])
+            [context rejectWithMessage: [@"invalid date " stringByAppendingString: [date description]]];
     })];
 }
 
@@ -335,7 +332,7 @@
 
 
 - (void) replicationProgress: (NSNotificationCenter*)n {
-    if (_pull.mode == kCBLReplicationActive || _push.mode == kCBLReplicationActive) {
+    if (_pull.status == kCBLReplicationActive || _push.status == kCBLReplicationActive) {
         unsigned completed = _pull.completedChangesCount + _push.completedChangesCount;
         unsigned total = _pull.changesCount + _push.changesCount;
         NSLog(@"SYNC progress: %u / %u", completed, total);

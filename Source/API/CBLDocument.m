@@ -174,7 +174,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (void) loadCurrentRevisionFrom: (CBLQueryRow*)row {
-    NSString* revID = row.documentRevision;
+    NSString* revID = row.documentRevisionID;
     if (!revID)
         return;
     if (!_currentRevision || CBLCompareRevIDs(revID, _currentRevision.revisionID) > 0) {
