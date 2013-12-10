@@ -24,6 +24,7 @@ static NSString * const kCBLISManagedObjectIDPrefix = @"CBL";
 static NSString * const kCBLISMetadataDocumentID = @"CBLIS_metadata";
 static NSString * const kCBLISAllByTypeViewName = @"CBLIS/allByType";
 static NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetch_%@_by_%@";
+static NSString * const kCBLISFetchEntityToManyViewNameFormat = @"CBLIS/%@_tomany_%@";
 
 
 // utility functions
@@ -1588,9 +1589,9 @@ BOOL CBLISIsNull(id value)
 /** returns name of a view that returns objectIDs for all destination entities of a to-many relationship. */
 NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship)
 {
-    NSString *entityName = [relationship.entity.name lowercaseString];
-    NSString *destinationName = [relationship.destinationEntity.name lowercaseString];
-    return [NSString stringWithFormat:@"cblis_%@_tomany_%@", entityName, destinationName];
+    NSString *entityName = relationship.entity.name;
+    NSString *destinationName = relationship.destinationEntity.name;
+    return [NSString stringWithFormat:kCBLISFetchEntityToManyViewNameFormat, entityName, destinationName];
 }
 
 /** Returns a readable name for a NSFetchRequestResultType */
