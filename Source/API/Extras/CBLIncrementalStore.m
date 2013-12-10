@@ -162,6 +162,11 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     }
 }
 
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 /**
  * This method has to be called once, before the NSManagedObjectModel is used by a NSPersistentStoreCoordinator. This method updates
  * the entities in the managedObjectModel and adds some required properties.
@@ -269,7 +274,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     [self _initializeViews];
     
     
-    [[NSNotificationCenter defaultCenter] addObserverForName:/*CBL_DatabaseChangesNotification*/@"CBLDatabaseChanges"
+    [[NSNotificationCenter defaultCenter] addObserverForName:kCBLDatabaseChangeNotification
                                                       object:self.database queue:nil
                                                   usingBlock:^(NSNotification *note) {
                                                       NSArray *changes = note.userInfo[@"changes"];

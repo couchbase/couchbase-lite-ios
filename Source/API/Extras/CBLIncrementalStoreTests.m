@@ -224,6 +224,9 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     id revisions = [entryDoc putProperties:entryProperties error:&error];
     Assert(revisions != nil, @"Couldn't persist changed properties in CBL: %@", error);
     Assert(error == nil, @"Couldn't persist changed properties in CBL: %@", error);
+
+    // wait for changes to be notified
+    [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 1.0]];
     
     entry = (Entry*)[context existingObjectWithID:entryID error:&error];
     Assert(entry != nil, @"Couldn load entry: %@", error);
