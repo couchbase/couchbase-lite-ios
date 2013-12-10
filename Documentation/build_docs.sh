@@ -28,7 +28,7 @@ fi
 PATH=$PATH:/usr/local/bin
 if ! /usr/bin/which -s doxygen
 then
-    echo "$0:21 Error: Doxygen is not installed" >&2
+    echo "$0:29 Error: doxygen is not installed" >&2
     exit 1
 fi
 
