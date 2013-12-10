@@ -1450,7 +1450,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         NSString *ident = change.documentID;
         BOOL deleted = [[rev valueForKey:@"deleted"] boolValue];
 
-        if ([ident hasPrefix:@"cblis"]) {
+        if ([ident hasPrefix:@"CBLIS"]) {
             continue;
         }
 
