@@ -141,6 +141,10 @@ typedef enum {
     If nil, the last execution of the query was successful. */
 @property (readonly) NSError* lastError;
 
+#ifdef CBL_DEPRECATED
+@property (readonly) NSError* error __attribute__((deprecated("renamed lastError")));
+#endif
+
 @end
 
 
