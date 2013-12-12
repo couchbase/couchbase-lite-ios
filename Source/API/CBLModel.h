@@ -177,7 +177,7 @@
     @param attachment  A newly-created CBLAttachment (not yet associated with any revision)
     @param name  The attachment name. */
 - (void) addAttachment: (CBLAttachment*)attachment
-                 named: (NSString*)name                                 __attribute__((nonnull(2)));
+                 named: (NSString*)name __attribute__((deprecated("use setAttachmentNamed: instead")));
 #endif
 @end
 

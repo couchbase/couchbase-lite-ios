@@ -91,8 +91,9 @@ typedef enum {
       conflicts as they happen, i.e. when they're pulled in by a replication.) */
 @property CBLAllDocsMode allDocsMode;
 
-/** Sends the query to the server and returns an enumerator over the result rows (Synchronous). */
-- (CBLQueryEnumerator*) rows: (NSError**)outError;
+/** Sends the query to the server and returns an enumerator over the result rows (Synchronous).
+    Note: In a CBLLiveQuery you should access the .rows property instead. */
+- (CBLQueryEnumerator*) run: (NSError**)outError;
 
 /** Starts an asynchronous query. Returns immediately, then calls the onComplete block when the
     query completes, passing it the row enumerator.
@@ -109,9 +110,9 @@ typedef enum {
 #ifdef CBL_DEPRECATED
 @property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
 @property CBLIndexUpdateMode stale __attribute__((deprecated("renamed indexUpdateMode")));
-- (CBLQueryEnumerator*) rows __attribute__((deprecated("renamed rows:")));
+- (CBLQueryEnumerator*) rows __attribute__((deprecated("renamed run:")));
 - (CBLQueryEnumerator*) rowsIfChanged __attribute__((deprecated("use CBLQueryEnumerator.stale")));
-@property (readonly) NSError* error __attribute__((deprecated("use rows: which returns an error")));
+@property (readonly) NSError* error __attribute__((deprecated("use error returned by run:")));
 #endif
 @end
 
@@ -128,16 +129,21 @@ typedef enum {
 /** Stops observing database changes. Calling -start or .rows will restart it. */
 - (void) stop;
 
-/** In CBLLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
+/** The current query results; this updates as the database changes, and can be observed using KVO.
+    Its value will be nil until the initial asynchronous query finishes. */
 @property (readonly, retain) CBLQueryEnumerator* rows;
 
-/** Blocks until the intial async query finishes. 
-    After this call either .rows or .error will be non-nil. */
+/** Blocks until the intial asynchronous query finishes.
+    After this call either .rows or .lastError will be non-nil. */
 - (BOOL) waitForRows;
 
 /** If non-nil, the error of the last execution of the query.
     If nil, the last execution of the query was successful. */
 @property (readonly) NSError* lastError;
+
+#ifdef CBL_DEPRECATED
+@property (readonly) NSError* error __attribute__((deprecated("renamed lastError")));
+#endif
 
 @end
 
@@ -189,7 +195,7 @@ typedef enum {
 @property (readonly) NSString* sourceDocumentID;
 
 /** The revision ID of the document this row was mapped from. */
-@property (readonly) NSString* documentRevision;
+@property (readonly) NSString* documentRevisionID;
 
 @property (readonly) CBLDatabase* database;
 
@@ -223,6 +229,7 @@ typedef enum {
 @property (readonly) NSArray* conflictingRevisions;
 
 #ifdef CBL_DEPRECATED
+@property (readonly) NSString* documentRevision __attribute__((deprecated("renamed documentRevisionID")));
 @property (readonly) UInt64 localSequence __attribute__((deprecated("renamed sequenceNumber")));
 #endif
 @end

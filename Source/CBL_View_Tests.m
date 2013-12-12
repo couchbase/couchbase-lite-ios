@@ -410,7 +410,7 @@ TestCase (CBL_View_NumericKeys) {
     query.startKey = @(33547239);
     query.endKey = @(33547239);
     NSError* error;
-    NSArray* rows = [[query rows: &error] allObjects];
+    NSArray* rows = [[query run: &error] allObjects];
     AssertEq(rows.count, 1u);
     AssertEqual([rows[0] key], @(33547239));
 
@@ -445,7 +445,7 @@ TestCase(CBL_View_GeoQuery) {
     // Now try again using the public API:
     CBLQuery* query = [view createQuery];
     query.boundingBox = bbox;
-    rows = [[query rows: NULL] allObjects];
+    rows = [[query run: NULL] allObjects];
     CAssertEqual(rowsToDicts(rows), expectedRows);
 
     CBLGeoQueryRow* row = rows[0];
@@ -884,7 +884,7 @@ TestCase(CBL_View_FullTextQuery) {
     CBLQuery* query = [view createQuery];
     query.fullTextQuery = @"(was NOT barking) OR dog";
     query.fullTextSnippets = YES;
-    rows = [[query rows: NULL] allObjects];
+    rows = [[query run: NULL] allObjects];
     CAssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
