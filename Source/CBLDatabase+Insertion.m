@@ -166,6 +166,7 @@
             @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts",
             @"_local_seq", nil];
         sSpecialKeysToLeave = [[NSSet alloc] initWithObjects:
+            @"_removed",
             @"_replication_id", @"_replication_state", @"_replication_state_time", nil];
     }
 
@@ -174,7 +175,7 @@
         return nil;
     
     // Don't leave in any "_"-prefixed keys except for the ones in sSpecialKeysToLeave.
-    // Keys in sSpecialKeysToIgnore (_id, _rev, ...) are left out, any others trigger an error.
+    // Keys in sSpecialKeysToRemove (_id, _rev, ...) are left out, any others trigger an error.
     NSMutableDictionary* properties = [[NSMutableDictionary alloc] initWithCapacity: origProps.count];
     for (NSString* key in origProps) {
         if (![key hasPrefix: @"_"]  || [sSpecialKeysToLeave member: key]) {
