@@ -15,7 +15,7 @@
 #endif
 
 
-NSString * const kCBLIncrementalStoreErrorDomain = @"CBLISIncrementalStoreErrorDomain";
+NSString * const kCBLISErrorDomain = @"CBLISErrorDomain";
 NSString * const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
 
 static NSString * const kCBLISTypeKey = @"CBLIS_type";
@@ -101,7 +101,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         NSPersistentStore *oldStore = [persistentStoreCoordinator addPersistentStoreWithType:importType configuration:nil
                                                                                          URL:importUrl options:options error:&error];
         if (!oldStore) {
-            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                           code:CBLIncrementalStoreErrorMigrationOfStoreFailed
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: @"Couldn't open store to import",
@@ -116,7 +116,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         if (!store) {
             NSString *errorDescription = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
-            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                           code:CBLIncrementalStoreErrorMigrationOfStoreFailed
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: errorDescription,
@@ -132,7 +132,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         if (!store) {
             NSString *errorDescription = [NSString stringWithFormat:@"Initialization of store failed: %@", error.description];
-            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                           code:CBLIncrementalStoreErrorCreatingStoreFailed
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: errorDescription,
@@ -236,7 +236,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         NSDictionary *attributesByName = [entity attributesByName];
         
         if (![attributesByName objectForKey:kCBLISCurrentRevisionAttributeName]) {
-            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                           code:CBLIncrementalStoreErrorDatabaseModelIncompatible
                                                       userInfo:@{
                                                                  NSLocalizedFailureReasonErrorKey: @"Database Model not compatible. You need to call +[updateManagedObjectModel:]."
@@ -252,7 +252,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
     CBLManager *manager = [CBLManager sharedInstance];
     if (!manager) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorCBLManagerSharedInstanceMissing
                                                   userInfo:@{
                                                              NSLocalizedDescriptionKey: @"No CBLManager shared instance available"
@@ -262,7 +262,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
     self.database = [manager databaseNamed:databaseName error:&error];
     if (!self.database) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorCreatingDatabaseFailed
                                                   userInfo:@{
                                                              NSLocalizedDescriptionKey: @"Could not create database",
@@ -297,7 +297,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         NSError *error;
         success = [doc putProperties:metaData error:&error] != nil;
         if (!success) {
-            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                           code:CBLIncrementalStoreErrorStoringMetadataFailed
                                                       userInfo:@{
                                                                  NSLocalizedDescriptionKey: @"Could not store metadata in database",
@@ -368,7 +368,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                 
                 [context refreshObject:object mergeChanges:YES];
             } else {
-                if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                               code:CBLIncrementalStoreErrorPersistingInsertedObjectsFailed
                                                           userInfo:@{
                                                                      NSLocalizedFailureReasonErrorKey: @"Error persisting inserted objects",
@@ -391,7 +391,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                 
                 [context refreshObject:object mergeChanges:YES];
             } else {
-                if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                               code:CBLIncrementalStoreErrorPersistingUpdatedObjectsFailed
                                                           userInfo:@{
                                                                      NSLocalizedFailureReasonErrorKey: @"Error persisting updated object",
@@ -407,7 +407,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
             NSDictionary *contents = [self _propertiesForDeletingDocument:doc];
             if (![doc putProperties:contents error:&error]) {
-                if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+                if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                               code:CBLIncrementalStoreErrorPersistingDeletedObjectsFailed
                                                           userInfo:@{
                                                                      NSLocalizedFailureReasonErrorKey: @"Error deleting object",
@@ -529,7 +529,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         return result;
     } else {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorUnsupportedRequestType
                                                   userInfo:@{
                                                              NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:@"Unsupported requestType: %d", request.requestType]
@@ -795,7 +795,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             ((NSCompoundPredicate*)predicate).compoundPredicateType == NSAndPredicateType) {
             predicate = ((NSCompoundPredicate*)predicate).subpredicates[0];
         } else {
-            if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                           code:CBLIncrementalStoreErrorCreatingQueryFailed
                                                       userInfo:@{
                                                                  NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported NSCompoundPredicate."
@@ -805,7 +805,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     }
     
     if (![predicate isKindOfClass:[NSComparisonPredicate class]]) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorCreatingQueryFailed
                                                   userInfo:@{
                                                              NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: only comparison predicate supported"
@@ -818,7 +818,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     if (comparisonPredicate.predicateOperatorType != NSEqualToPredicateOperatorType &&
         comparisonPredicate.predicateOperatorType != NSNotEqualToPredicateOperatorType &&
         comparisonPredicate.predicateOperatorType != NSInPredicateOperatorType) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorCreatingQueryFailed
                                                   userInfo:@{
                                                              NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: only equal, not equal or IN supported"
@@ -827,7 +827,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     }
     
     if (comparisonPredicate.leftExpression.expressionType != NSKeyPathExpressionType) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorCreatingQueryFailed
                                                   userInfo:@{
                                                              NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: left expression invalid"
@@ -836,7 +836,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     }
     
     if (comparisonPredicate.rightExpression.expressionType != NSConstantValueExpressionType) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorCreatingQueryFailed
                                                   userInfo:@{
                                                              NSLocalizedFailureReasonErrorKey: @"Error creating query: unsupported predicate: right expression invalid"
@@ -845,7 +845,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     }
     
     if (![self _hasViewForFetchingFromEntity:entity.name byProperty:comparisonPredicate.leftExpression.keyPath]) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorCreatingQueryFailed
                                                   userInfo:@{
                                                              NSLocalizedFailureReasonErrorKey: @"Error creating query: no view for that entity found"
@@ -1185,7 +1185,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     NSError *error;
     CBLQueryEnumerator *rows = [query run:&error];
     if (!rows) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLIncrementalStoreErrorDomain
+        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed
                                                   userInfo:@{
                                                              NSLocalizedFailureReasonErrorKey: @"Error querying CouchbaseLite",
