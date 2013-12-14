@@ -156,3 +156,9 @@
                  named: (NSString*)name __attribute__((deprecated("use setAttachmentNamed:withContentType:content:")));
 #endif
 @end
+
+
+#ifdef CBL_DEPRECATED
+typedef CBLRevision CBLRevisionBase __attribute__((deprecated("renamed CCBLRevision")));
+typedef CBLUnsavedRevision CBLNewRevision __attribute__((deprecated("renamed CCBLUnsavedRevision")));
+#endif

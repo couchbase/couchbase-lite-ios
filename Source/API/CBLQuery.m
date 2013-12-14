@@ -338,6 +338,7 @@
             break;
         }
     }
+
     return _rows != nil;
 }
 
