@@ -37,11 +37,6 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 - (NSString*) couchbaseLiteIDRepresentation;
 @end
 
-/** Makes private properties needed for change observing public. */
-@interface CBLDatabaseChange ()
-@property (nonatomic, readonly) CBLRevision* winningRevision;
-@end
-
 
 @interface CBLIncrementalStore ()
 
@@ -49,6 +44,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 @property (nonatomic, strong) NSMutableArray *observingManagedObjectContexts;
 
 @property (nonatomic, strong, readwrite) CBLDatabase *database;
+@property (nonatomic, strong)            id changeObserver;
 
 @end
 
@@ -62,6 +58,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 }
 
 @synthesize database = _database;
+@synthesize changeObserver = _changeObserver;
 @synthesize conflictHandler = _conflictHandler;
 
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
@@ -164,7 +161,11 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:self.changeObserver];
+    
+    [_conflictsQuery stop];
+    [_conflictsQuery removeObserver:self forKeyPath:@"rows"];
+    _conflictsQuery = nil;
 }
 
 /**
@@ -274,12 +275,13 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     [self _initializeViews];
     
     
-    [[NSNotificationCenter defaultCenter] addObserverForName:kCBLDatabaseChangeNotification
-                                                      object:self.database queue:nil
-                                                  usingBlock:^(NSNotification *note) {
-                                                      NSArray *changes = note.userInfo[@"changes"];
-                                                      [self _couchDocumentsChanged:changes];
-                                                  }];
+    __weak __typeof(self) _self = self;
+    self.changeObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kCBLDatabaseChangeNotification
+                                                                            object:self.database queue:nil
+                                                                        usingBlock:^(NSNotification *note) {
+                                                                            NSArray *changes = note.userInfo[@"changes"];
+                                                                            [_self _couchDocumentsChanged:changes];
+                                                                        }];
     
     CBLDocument *doc = [self.database documentWithID:kCBLISMetadataDocumentID];
     
@@ -1442,21 +1444,18 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     NSMutableArray *updatedObjectIDs = [NSMutableArray array];
     
     for (CBLDatabaseChange *change in changes) {
-        id rev = change.winningRevision;
+        if (!change.isCurrentRevision) continue;
+        if ([change.documentID hasPrefix:@"CBLIS"]) continue;
         
-        NSString *ident = change.documentID;
-        BOOL deleted = [[rev valueForKey:@"deleted"] boolValue];
-
-        if ([ident hasPrefix:@"CBLIS"]) {
-            continue;
-        }
+        CBLDocument *doc = [self.database documentWithID:change.documentID];
+        CBLRevision *rev = [doc revisionWithID:change.revisionID];
+        
+        BOOL deleted = rev.isDeletion;
 
         NSDictionary *properties = [rev properties];
         
         NSString *type = [properties objectForKey:kCBLISTypeKey];
-        NSString *reference = ident;
-        
-        [changedEntitites addObject:type];
+        NSString *reference = change.documentID;
         
         NSEntityDescription *entity = [self.persistentStoreCoordinator.managedObjectModel.entitiesByName objectForKey:type];
         NSManagedObjectID *objectID = [self newObjectIDForEntity:entity referenceObject:reference];
@@ -1466,6 +1465,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         } else {
             [updatedObjectIDs addObject:objectID];
         }
+
+        [changedEntitites addObject:type];
     }
     
     [self _informObservingManagedObjectContextsAboutUpdatedIDs:updatedObjectIDs deletedIDs:deletedObjectIDs];
