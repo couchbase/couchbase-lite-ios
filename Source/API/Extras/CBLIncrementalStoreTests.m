@@ -71,6 +71,8 @@ NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *context, N
 
 #pragma mark - Tests
 
+#pragma mark - TestCase CBLIncrementalStoreCRUD
+
 /** Test case that tests create, request, update and delete of Core Data objects. */
 TestCase(CBLIncrementalStoreCRUD)
 {
@@ -143,6 +145,8 @@ TestCase(CBLIncrementalStoreCRUD)
     doc = [database documentWithID:[objectID couchbaseLiteIDRepresentation]];
     Assert([doc isDeleted], @"Document not marked as deleted after deletion");
 }
+
+#pragma mark - TestCase CBLIncrementalStoreCBLIntegration
 
 /** Test case that tests the integration between Core Data and CouchbaseLite. */
 TestCase(CBLIncrementalStoreCBLIntegration)
@@ -238,6 +242,8 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     
 }
 
+#pragma mark - TestCase CBLIncrementalStoreCreateAndUpdate
+
 TestCase(CBLIncrementalStoreCreateAndUpdate)
 {
     NSError *error;
@@ -295,6 +301,8 @@ TestCase(CBLIncrementalStoreCreateAndUpdate)
     AssertEqual([entry.subentries valueForKeyPath:@"text"], [NSSet setWithObject:@"Subentry abc"]);
     AssertEqual([entry.subentries valueForKeyPath:@"number"], [NSSet setWithObject:@123]);
 }
+
+#pragma mark - TestCase CBLIncrementalStoreFetchrequest
 
 TestCase(CBLIncrementalStoreFetchrequest)
 {
@@ -391,6 +399,8 @@ TestCase(CBLIncrementalStoreFetchrequest)
     Assert([result[0] isKindOfClass:[NSManagedObject class]], @"Results are not NSManagedObjects");
 }
 
+#pragma mark - TestCase CBLIncrementalStoreAttachments
+
 TestCase(CBLIncrementalStoreAttachments)
 {
     NSError *error;
@@ -440,13 +450,40 @@ TestCase(CBLIncrementalStoreAttachments)
     file = (File*)[context existingObjectWithID:fileID error:&error];
     Assert(file != nil, @"File should not be nil (%@)", error);
     AssertEqual(file.data, data);
+    
+    
+    // update attachment
+    
+    data = [@"Updated. Hello World" dataUsingEncoding:NSUTF8StringEncoding];
+    file.data = data;
+    
+    success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+    
+    doc = [database documentWithID:[file.objectID couchbaseLiteIDRepresentation]];
+    Assert(doc != nil, @"Document should not be nil");
+    AssertEqual(file.filename, [doc propertyForKey:@"filename"]);
+    
+    att = [doc.currentRevision attachmentNamed:@"data"];
+    Assert(att != nil, @"Attachmant should be created");
+    
+    content = att.content;
+    Assert(content != nil, @"Content should be loaded");
+    AssertEq(content.length, data.length);
+    AssertEqual(content, data);
+
+    NSString *stringFromContent = [[NSString alloc] initWithData:content encoding:NSUTF8StringEncoding];
+    Assert([stringFromContent hasPrefix:@"Updated."], @"Not updated");
+
 }
+
+#pragma mark - TestCase CBLIncrementalStoreFetchWithPredicates
 
 TestCase(CBLIncrementalStoreFetchWithPredicates)
 {
     NSError *error;
     
-    NSString *databaseName = @"test-attachments";
+    NSString *databaseName = @"test-fetch-with-predicates";
     
     CBLISEventuallyDeleteDatabaseNamed(databaseName);
     

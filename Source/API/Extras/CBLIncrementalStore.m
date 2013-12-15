@@ -359,7 +359,31 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
             
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            if ([doc putProperties:contents error:&error]) {
+            CBLUnsavedRevision *revision = [doc newRevision];
+            [revision.properties setValuesForKeysWithDictionary:contents];
+            
+            
+            // add attachments
+            NSDictionary *propertyDesc = [object.entity propertiesByName];
+
+            for (NSString *property in propertyDesc) {
+                if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
+                
+                NSAttributeDescription *attr = [propertyDesc objectForKey:property];
+                if (![attr isKindOfClass:[NSAttributeDescription class]]) continue;
+                
+                if ([attr isTransient]) continue;
+                if ([attr attributeType] != NSBinaryDataAttributeType) continue;
+                
+                NSData *data = [object valueForKey:attr.name];
+                if (!data) continue;
+                
+                [revision setAttachmentNamed:attr.name withContentType:@"application/binary"
+                                     content:data];
+            }
+            
+            
+            if ([revision save:&error]) {
                 [changedEntities addObject:object.entity.name];
                 
                 [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
@@ -386,7 +410,34 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
             
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            if ([doc putProperties:contents error:&error]) {
+            CBLUnsavedRevision *revision = [doc newRevision];
+            [revision.properties setValuesForKeysWithDictionary:contents];
+            
+            
+            // update attachments
+            NSDictionary *propertyDesc = [object.entity propertiesByName];
+            
+            for (NSString *property in [[object changedValues] allKeys]) {
+                if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
+                
+                NSAttributeDescription *attr = [propertyDesc objectForKey:property];
+                if (![attr isKindOfClass:[NSAttributeDescription class]]) continue;
+                
+                if ([attr isTransient]) continue;
+                if ([attr attributeType] != NSBinaryDataAttributeType) continue;
+                
+                NSData *data = [object valueForKey:attr.name];
+                
+                if (data) {
+                    [revision setAttachmentNamed:attr.name withContentType:@"application/binary"
+                                         content:data];
+                } else {
+                    [revision removeAttachmentNamed:attr.name];
+                }
+            }
+            
+            
+            if ([revision save:&error]) {
                 [changedEntities addObject:object.entity.name];
                 
                 [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
@@ -924,10 +975,6 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     return objectID;
 }
 
-- (id) _couchbaseLiteRepresentationOfManagedObject:(NSManagedObject*)object
-{
-    return [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:NO];
-}
 - (id) _couchbaseLiteRepresentationOfManagedObject:(NSManagedObject*)object withCouchbaseLiteID:(BOOL)withID
 {
     NSEntityDescription *desc = object.entity;
@@ -949,8 +996,6 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         [proxy setObject:[object.objectID couchbaseLiteIDRepresentation] forKey:@"_id"];
     }
     
-    NSMutableArray *dataAttributes = nil;
-    
     for (NSString *property in propertyDesc) {
         if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
         
@@ -963,13 +1008,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                 continue;
             }
             
-            // handle binary attributes to not load them into memory here
+            // skip binary attributes to not load them into memory here. They are added as attachments
             if ([attr attributeType] == NSBinaryDataAttributeType) {
-                if (!dataAttributes) {
-                    dataAttributes = [NSMutableArray array];
-                }
-                [dataAttributes addObject:attr];
-                
                 continue;
             }
             
@@ -1050,25 +1090,6 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         }
     }
     
-    // add binary data attributes as attachment
-    if (dataAttributes) {
-        NSMutableDictionary *attachments = [NSMutableDictionary dictionary];
-        for (NSAttributeDescription *attribute in dataAttributes) {
-            NSData *data = [object valueForKey:attribute.name];
-            
-            if (!data) continue;
-            
-            [attachments setObject:@{
-                                     @"data": [data base64EncodedStringWithOptions:0],
-                                     @"length": @(data.length),
-                                     @"content_type": @"application/binary"
-                                     } forKey:attribute.name];
-        }
-        if (attachments.count > 0) {
-            [proxy setObject:attachments forKey:@"_attachments"];
-        }
-    }
-    
     return proxy;
 }
 
@@ -1090,12 +1111,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             
             // handle binary attributes specially
             if ([attr attributeType] == NSBinaryDataAttributeType) {
-                NSDictionary *attachments = [properties objectForKey:@"_attachments"];
-                NSDictionary *attachment = [attachments objectForKey:property];
-                
-                if (!attachment) continue;
-                
-                id value = [self _loadDataForAttachmentWithName:property ofDocumentWithID:documentID metadata:attachment];
+                id value = [self _loadDataForAttachmentWithName:property ofDocumentWithID:documentID];
                 if (value) {
                     [result setObject:value forKey:property];
                 }
@@ -1351,7 +1367,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark - Attachments
 
-- (NSData*) _loadDataForAttachmentWithName:(NSString*)name ofDocumentWithID:(NSString*)documentID metadata:(NSDictionary*)metadata
+- (NSData*) _loadDataForAttachmentWithName:(NSString*)name ofDocumentWithID:(NSString*)documentID
 {
     CBLDocument *document = [self.database documentWithID:documentID];
     CBLAttachment *attachment = [document.currentRevision attachmentNamed:name];
