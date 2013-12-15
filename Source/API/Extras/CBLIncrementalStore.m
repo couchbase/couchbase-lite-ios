@@ -41,7 +41,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 @interface CBLIncrementalStore ()
 
 // TODO: check if there is a better way to not hold strong references on these MOCs
-@property (nonatomic, strong) NSMutableArray *observingManagedObjectContexts;
+@property (nonatomic, strong) NSHashTable *observingManagedObjectContexts;
 
 @property (nonatomic, strong, readwrite) CBLDatabase *database;
 @property (nonatomic, strong)            id changeObserver;
@@ -166,6 +166,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     [_conflictsQuery stop];
     [_conflictsQuery removeObserver:self forKeyPath:@"rows"];
     _conflictsQuery = nil;
+    
+    self.database = nil;
 }
 
 /**
@@ -1361,7 +1363,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 - (void) addObservingManagedObjectContext:(NSManagedObjectContext*)context
 {
     if (!_observingManagedObjectContexts) {
-        _observingManagedObjectContexts = [[NSMutableArray alloc] init];
+        _observingManagedObjectContexts = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory capacity:10];
     }
     [_observingManagedObjectContexts addObject:context];
 }
