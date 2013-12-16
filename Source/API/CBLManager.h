@@ -125,6 +125,7 @@ typedef struct CBLManagerOptions {
     other criteria to enable logging. */
 + (void) enableLogging: (NSString*)type;
 
+@property (readonly, nonatomic) NSMutableDictionary* customHTTPHeaders;
 
 #ifdef CBL_DEPRECATED
 - (CBLDatabase*) createDatabaseNamed: (NSString*)name

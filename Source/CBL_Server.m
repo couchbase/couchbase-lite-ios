@@ -26,6 +26,7 @@
 
 @implementation CBL_Server
 
+@dynamic customHTTPHeaders;
 
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path {
@@ -43,6 +44,9 @@
 }
 #endif
 
+- (NSDictionary*) customHTTPHeaders {
+    return _manager.customHTTPHeaders;
+}
 
 - (instancetype) initWithManager: (CBLManager*)newManager {
     self = [super init];

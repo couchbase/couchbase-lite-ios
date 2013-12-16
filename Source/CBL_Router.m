@@ -582,6 +582,11 @@ static NSArray* splitPath( NSURL* url ) {
             _response[@"Cache-Control"] = @"must-revalidate";
     }
 
+    for (NSString *key in [_server.customHTTPHeaders allKeys])
+    {
+        _response[key] = _server.customHTTPHeaders[key];
+    }
+
     if (_onResponseReady)
         _onResponseReady(_response);
 }

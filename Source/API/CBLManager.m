@@ -42,6 +42,11 @@
 
 static const CBLManagerOptions kCBLManagerDefaultOptions;
 
+@interface CBLManager ()
+
+@property (nonatomic) NSMutableDictionary* customHTTPHeaders;
+
+@end
 
 @implementation CBLManager
 {
@@ -59,7 +64,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 
 
 @synthesize dispatchQueue=_dispatchQueue;
-
+@synthesize customHTTPHeaders = _customHTTPHeaders;
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
 #define kLegalChars @"abcdefghijklmnopqrstuvwxyz0123456789_$()+-/"
@@ -110,6 +115,9 @@ static CBLManager* sInstance;
                              error: &error];
     if (!self)
         Warn(@"Failed to create CBLManager: %@", error);
+    
+    _customHTTPHeaders = [NSMutableDictionary dictionary];
+    
     return self;
 }
 
@@ -194,9 +202,13 @@ static CBLManager* sInstance;
 
 
 - (id) copyWithZone: (NSZone*)zone {
-    return [[[self class] alloc] initWithDirectory: self.directory
+    CBLManager *managerCopy = [[[self class] alloc] initWithDirectory: self.directory
                                            options: &_options
-                                            shared: _shared];
+                                                               shared: _shared];
+    
+    managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
+    
+    return managerCopy;
 }
 
 - (instancetype) copy {
