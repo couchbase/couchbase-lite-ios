@@ -70,7 +70,7 @@
 
     // Create a query sorted by descending date, i.e. newest items first:
     NSAssert(database!=nil, @"Not hooked up to database yet");
-    CBLLiveQuery* query = [[[database viewNamed: @"byDate"] query] asLiveQuery];
+    CBLLiveQuery* query = [[[database viewNamed: @"byDate"] createQuery] asLiveQuery];
     query.descending = YES;
     
     self.dataSource.query = query;
@@ -103,15 +103,12 @@
     
     
     // and a validation function requiring parseable dates:
-    [theDatabase defineValidation: @"created_at" asBlock: VALIDATIONBLOCK({
-        if (newRevision.isDeleted)
-            return YES;
+    [theDatabase setValidationNamed: @"created_at" asBlock: VALIDATIONBLOCK({
+        if (newRevision.isDeletion)
+            return;
         id date = [newRevision.properties objectForKey: @"created_at"];
-        if (date && ! [CBLJSON dateWithJSONObject: date]) {
-            context.errorMessage = [@"invalid date " stringByAppendingString: [date description]];
-            return NO;
-        }
-        return YES;
+        if (date && ! [CBLJSON dateWithJSONObject: date])
+            [context rejectWithMessage: [@"invalid date " stringByAppendingString: [date description]]];
     })];
 }
 
@@ -171,7 +168,7 @@
 
     // Save changes:
     NSError* error;
-    if (![doc.currentRevision putProperties: docContent error: &error]) {
+    if (![doc.currentRevision createRevisionWithProperties: docContent error: &error]) {
         [self showErrorAlert: @"Failed to update item" forError: error];
     }
 }
@@ -247,7 +244,7 @@
                                 nil];
 
     // Save the document:
-    CBLDocument* doc = [database untitledDocument];
+    CBLDocument* doc = [database createDocument];
     NSError* error;
     if (![doc putProperties: inDocument error: &error]) {
         [self showErrorAlert: @"Couldn't save new item" forError: error];
@@ -335,9 +332,9 @@
 
 
 - (void) replicationProgress: (NSNotificationCenter*)n {
-    if (_pull.mode == kCBLReplicationActive || _push.mode == kCBLReplicationActive) {
-        unsigned completed = _pull.completed + _push.completed;
-        unsigned total = _pull.total + _push.total;
+    if (_pull.status == kCBLReplicationActive || _push.status == kCBLReplicationActive) {
+        unsigned completed = _pull.completedChangesCount + _push.completedChangesCount;
+        unsigned total = _pull.changesCount + _push.changesCount;
         NSLog(@"SYNC progress: %u / %u", completed, total);
         [self showSyncStatus];
         progress.progress = (completed / (float)MAX(total, 1u));

@@ -557,7 +557,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         @try {
             status = block();
         } @catch (NSException* x) {
-            Warn(@"Exception raised during -inTransaction: %@", x);
+            MYReportException(x, @"CBLDatabase transaction");
             status = kCBLStatusException;
         } @finally {
             [self endTransaction: !CBLStatusIsError(status)];
@@ -918,6 +918,37 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #pragma mark - HISTORY:
 
 
+- (CBL_Revision*) getParentRevision: (CBL_Revision*)rev {
+    // First get the parent's sequence:
+    SequenceNumber seq = rev.sequence;
+    if (seq) {
+        seq = [_fmdb longLongForQuery: @"SELECT parent FROM revs WHERE sequence=?",
+                                @(seq)];
+    } else {
+        SInt64 docNumericID = [self getDocNumericID: rev.docID];
+        if (!docNumericID)
+            return nil;
+        seq = [_fmdb longLongForQuery: @"SELECT parent FROM revs WHERE doc_id=? and revid=?",
+                                @(docNumericID), rev.revID];
+    }
+    if (seq == 0)
+        return nil;
+
+    // Now get its revID and deletion status:
+    CBL_Revision* result = nil;
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs WHERE sequence=?",
+                               @(seq)];
+    if ([r next]) {
+        result = [[CBL_Revision alloc] initWithDocID: rev.docID
+                                               revID: [r stringForColumnIndex: 0]
+                                             deleted: [r boolForColumnIndex: 1]];
+        result.sequence = seq;
+    }
+    [r close];
+    return result;
+}
+
+
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                         numericID: (SInt64)docNumericID
                                       onlyCurrent: (BOOL)onlyCurrent
@@ -1195,7 +1226,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 {
     if (!filter)
         return YES;
-    CBLRevision* publicRev = [[CBLRevision alloc] initWithDatabase: self revision: rev];
+    CBLSavedRevision* publicRev = [[CBLSavedRevision alloc] initWithDatabase: self revision: rev];
     @try {
         return filter(publicRev, filterParams);
     } @catch (NSException* x) {
@@ -1249,7 +1280,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         *outStatus = kCBLStatusCallbackError;
         return nil;
     }
-    [self defineFilter: filterName asBlock: filter];
+    [self setFilterNamed: filterName asBlock: filter];
     return filter;
 }
 
@@ -1402,7 +1433,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             // Skip them, but collect their revIDs if the 'conflicts' option is set:
             NSMutableArray* conflicts = nil;
             while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == docNumericID) {
-                if (options->allDocsMode >= kCBLIncludeConflicts) {
+                if (options->allDocsMode >= kCBLShowConflicts) {
                     if (!conflicts)
                         conflicts = $marray(revID);
                     [conflicts addObject: [r stringForColumnIndex: 2]];

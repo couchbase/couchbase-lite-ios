@@ -43,7 +43,7 @@ static void RunViewPerformanceTest(void);
     NSLog(@"Opening database...");
     // Open the database, creating it on the first run:
     NSError* error;
-    self.database = [[CBLManager sharedInstance] createDatabaseNamed: @"grocery-sync"
+    self.database = [[CBLManager sharedInstance] databaseNamed: @"grocery-sync"
                                                                       error: &error];
     if (!self.database)
         [self showAlert: @"Couldn't open database" error: error fatal: YES];
@@ -94,7 +94,7 @@ static CBLDatabase* createEmptyDB(void) {
     CBLDatabase* db = dbmgr[@"test_db"];
     if (db)
         assert([db deleteDatabase: &error]);
-    return [dbmgr createDatabaseNamed: @"test_db" error: &error];
+    return [dbmgr databaseNamed: @"test_db" error: &error];
 }
 
 

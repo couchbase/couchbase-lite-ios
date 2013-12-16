@@ -414,6 +414,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                                      streamer: bodyStream
                                requestHeaders: self.requestHeaders
                                  onCompletion: ^(CBLMultipartUploader* uploader, NSError *error) {
+                  [self removeRemoteRequest: uploader];
                   if (error) {
                       if ($equal(error.domain, CBLHTTPErrorDomain)
                                 && error.code == kCBLStatusUnsupportedType) {
@@ -430,7 +431,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                   }
                   self.changesProcessed++;
                   [self asyncTasksFinished: 1];
-                  [self removeRemoteRequest: uploader];
 
                   _uploading = NO;
                   [self startNextUpload];

@@ -134,7 +134,7 @@ TestCase(CBL_Database_CRUD) {
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
 
-    CBLFilterBlock filter = ^BOOL(CBLRevision *revision, NSDictionary* params) {
+    CBLFilterBlock filter = ^BOOL(CBLSavedRevision *revision, NSDictionary* params) {
         NSString* status = params[@"status"];
         return [revision[@"status"] isEqual: status];
     };
@@ -264,18 +264,17 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
 TestCase(CBL_Database_Validation) {
     CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
-    [db defineValidation: @"hoopy" 
-                 asBlock: ^BOOL(CBLRevision *newRevision, id<CBLValidationContext> context)
+    [db setValidationNamed: @"hoopy" 
+                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context)
     {
         CAssert(newRevision);
         CAssert(context);
-        CAssert(newRevision.properties || newRevision.isDeleted);
+        CAssert(newRevision.properties || newRevision.isDeletion);
         validationCalled = YES;
-        BOOL hoopy = newRevision.isDeleted || newRevision[@"towel"] != nil;
+        BOOL hoopy = newRevision.isDeletion || newRevision[@"towel"] != nil;
         Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
         if (!hoopy)
-         [context setErrorMessage: @"Where's your towel?"];
-        return hoopy;
+            [context rejectWithMessage: @"Where's your towel?"];
     }];
     
     // POST a valid new document:
@@ -360,7 +359,7 @@ static void verifyHistory(CBLDatabase* db, CBL_Revision* rev, NSArray* history, 
 
 static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) {
     return [[CBLDatabaseChange alloc] initWithAddedRevision: rev winningRevision: winner
-                                              maybeConflict: NO source: nil];
+                                                 inConflict: NO source: nil];
 }
 
 

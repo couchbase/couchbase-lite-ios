@@ -102,7 +102,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     BOOL external = NO;
     for (CBLDatabaseChange* change in changes) {
         // Notify the corresponding instantiated CBLDocument object (if any):
-        [[self cachedDocumentWithID: change.documentID] revisionAdded: change];
+        [[self _cachedDocumentWithID: change.documentID] revisionAdded: change];
         if (change.source != nil)
             external = YES;
     }
@@ -178,7 +178,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     if (![self closeInternal])
         return NO;
 
-    [self clearDocumentCache];
+    [self _clearDocumentCache];
     _modelFactory = nil;
     return YES;
 }
@@ -250,37 +250,46 @@ static id<CBLFilterCompiler> sFilterCompiler;
 #pragma mark - DOCUMENTS:
 
 
-- (CBLDocument*) documentWithID: (NSString*)docID {
+- (CBLDocument*) documentWithID: (NSString*)docID mustExist: (BOOL)mustExist {
     CBLDocument* doc = (CBLDocument*) [_docCache resourceWithCacheKey: docID];
-    if (!doc) {
-        if (docID.length == 0)
-            return nil;
-        doc = [[CBLDocument alloc] initWithDatabase: self documentID: docID];
-        if (!doc)
-            return nil;
-        if (!_docCache)
-            _docCache = [[CBLCache alloc] initWithRetainLimit: kDocRetainLimit];
-        [_docCache addResource: doc];
-    }
+    if (doc)
+        return doc;
+    if (docID.length == 0)
+        return nil;
+    doc = [[CBLDocument alloc] initWithDatabase: self documentID: docID];
+    if (!doc)
+        return nil;
+    if (mustExist && doc.currentRevision == nil)  // loads current revision from db
+        return nil;
+    if (!_docCache)
+        _docCache = [[CBLCache alloc] initWithRetainLimit: kDocRetainLimit];
+    [_docCache addResource: doc];
     return doc;
 }
 
+
+- (CBLDocument*) documentWithID: (NSString*)docID {
+    return [self documentWithID: docID mustExist: NO];
+}
+
+- (CBLDocument*) existingDocumentWithID: (NSString*)docID {
+    return [self documentWithID: docID mustExist: YES];
+}
+
 - (CBLDocument*) objectForKeyedSubscript: (NSString*)key {
-    return [self documentWithID: key];
+    return [self documentWithID: key mustExist: NO];
+}
+
+- (CBLDocument*) createDocument {
+    return [self documentWithID: [[self class] generateDocumentID] mustExist: NO];
 }
 
 
-- (CBLDocument*) untitledDocument {
-    return [self documentWithID: [[self class] generateDocumentID]];
-}
-
-
-- (CBLDocument*) cachedDocumentWithID: (NSString*)docID {
+- (CBLDocument*) _cachedDocumentWithID: (NSString*)docID {
     return (CBLDocument*) [_docCache resourceWithCacheKey: docID];
 }
 
-
-- (void) clearDocumentCache {
+- (void) _clearDocumentCache {
     [_docCache forgetAllResources];
 }
 
@@ -288,7 +297,8 @@ static id<CBLFilterCompiler> sFilterCompiler;
     [_docCache forgetResource: document];
 }
 
-- (CBLQuery*) queryAllDocuments {
+
+- (CBLQuery*) createAllDocumentsQuery {
     return [[CBLQuery alloc] initWithDatabase: self view: nil];
 }
 
@@ -302,7 +312,7 @@ static NSString* makeLocalDocID(NSString* docID) {
 }
 
 
-- (NSDictionary*) getLocalDocumentWithID: (NSString*)localDocID {
+- (NSDictionary*) existingLocalDocumentWithID: (NSString*)localDocID {
     return [self getLocalDocumentWithID: makeLocalDocID(localDocID) revisionID: nil].properties;
 }
 
@@ -379,7 +389,7 @@ static NSString* makeLocalDocID(NSString* docID) {
 #pragma mark - VALIDATION & FILTERS:
 
 
-- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
+- (void) setValidationNamed: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
     [self.shared setValue: [validationBlock copy]
                   forType: @"validation" name: validationName inDatabaseNamed: _name];
 }
@@ -389,7 +399,7 @@ static NSString* makeLocalDocID(NSString* docID) {
 }
 
 
-- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
+- (void) setFilterNamed: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
     [self.shared setValue: [filterBlock copy]
                   forType: @"filter" name: filterName inDatabaseNamed: _name];
 }
@@ -432,6 +442,51 @@ static NSString* makeLocalDocID(NSString* docID) {
     return [[CBLReplication alloc] initWithDatabase: self remote: url pull: YES];
 }
 
+- (CBLReplication*) existingReplicationWithURL: (NSURL*)url pull: (BOOL)pull {
+    for (CBLReplication* repl in _allReplications)
+        if (repl.pull == pull && $equal(repl.remoteURL, url))
+            return repl;
+    return nil;
+}
+
+
+#ifdef CBL_DEPRECATED
+- (CBLDocument*) untitledDocument {return [self createDocument];}
+- (void) clearDocumentCache {[self _clearDocumentCache];}
+- (CBLDocument*) cachedDocumentWithID: (NSString*)docID {
+    return [self _cachedDocumentWithID: docID];
+}
+- (NSDictionary*) getLocalDocumentWithID: (NSString*)localDocID {
+    return [self existingLocalDocumentWithID: localDocID];
+}
+- (CBLQuery*) queryAllDocuments {return [self createAllDocumentsQuery];}
+- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock {
+    [self setValidationNamed: validationName asBlock: validationBlock];
+}
+- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
+    [self setFilterNamed: filterName asBlock: filterBlock];
+}
+- (CBLReplication*) pushToURL: (NSURL*)url {
+    return [self replicationToURL: url];
+}
+- (CBLReplication*) pullFromURL: (NSURL*)url {
+    return [self replicationFromURL: url];
+}
+- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
+    if (exclusively) {
+        for (CBLReplication* repl in self.allReplications)
+            if (!$equal(repl.remoteURL, otherDbURL))
+                [repl stop];
+    }
+    CBLReplication* pull = [self existingReplicationWithURL: otherDbURL pull: YES];
+    if (!pull)
+        pull = [self replicationFromURL: otherDbURL];
+    CBLReplication* push = [self existingReplicationWithURL: otherDbURL pull: NO];
+    if (!push)
+        push = [self replicationToURL: otherDbURL];
+    return (pull && push) ? @[pull, push] : nil;
+}
+#endif
 
 @end
 

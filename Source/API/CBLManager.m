@@ -41,6 +41,11 @@
 
 static const CBLManagerOptions kCBLManagerDefaultOptions;
 
+@interface CBLManager ()
+
+@property (nonatomic) NSMutableDictionary* customHTTPHeaders;
+
+@end
 
 @implementation CBLManager
 {
@@ -57,6 +62,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 
 
 @synthesize dispatchQueue=_dispatchQueue, directory = _dir;
+@synthesize customHTTPHeaders = _customHTTPHeaders;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -108,6 +114,9 @@ static CBLManager* sInstance;
                              error: &error];
     if (!self)
         Warn(@"Failed to create CBLManager: %@", error);
+    
+    _customHTTPHeaders = [NSMutableDictionary dictionary];
+    
     return self;
 }
 
@@ -181,9 +190,13 @@ static CBLManager* sInstance;
 
 
 - (id) copyWithZone: (NSZone*)zone {
-    return [[[self class] alloc] initWithDirectory: self.directory
+    CBLManager *managerCopy = [[[self class] alloc] initWithDirectory: self.directory
                                            options: &_options
-                                            shared: _shared];
+                                                               shared: _shared];
+    
+    managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
+    
+    return managerCopy;
 }
 
 - (instancetype) copy {
@@ -319,10 +332,10 @@ static CBLManager* sInstance;
 
 
 - (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
-    return [self databaseNamed: key error: NULL];
+    return [self existingDatabaseNamed: key error: NULL];
 }
 
-- (CBLDatabase*) databaseNamed: (NSString*)name error: (NSError**)outError {
+- (CBLDatabase*) existingDatabaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = [self _databaseNamed: name mustExist: YES error: outError];
     if (![db open: outError])
         db = nil;
@@ -330,12 +343,18 @@ static CBLManager* sInstance;
 }
 
 
-- (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
+- (CBLDatabase*) databaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: outError];
     if (![db open: outError])
         db = nil;
     return db;
 }
+
+#ifdef CBL_DEPRECATED
+- (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
+    return [self databaseNamed: name error: outError];
+}
+#endif
 
 
 #if DEBUG
@@ -349,7 +368,7 @@ static CBLManager* sInstance;
                                               error: outError])
             return nil;
     }
-    return [self createDatabaseNamed: name error: outError];
+    return [self databaseNamed: name error: outError];
 }
 #endif
 
@@ -422,6 +441,9 @@ static CBLManager* sInstance;
 
 - (void) _forgetDatabase: (CBLDatabase*)db {
     NSString* name = db.name;
+    [_replications my_removeMatching: ^int(CBLReplication* repl) {
+        return [repl localDatabase] == db;
+    }];
     [_databases removeObjectForKey: name];
     CBL_Shared* shared = _shared;
     [shared closedDatabase: name];
@@ -473,9 +495,9 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             NSError* error;
             CBLDatabase* targetDb;
             if (*outCreateTarget)
-                targetDb = [self createDatabaseNamed: target error: &error];
-            else
                 targetDb = [self databaseNamed: target error: &error];
+            else
+                targetDb = [self existingDatabaseNamed: target error: &error];
             if (!targetDb)
                 return CBLStatusFromNSError(error, kCBLStatusBadRequest);
             NSURL* targetURL = targetDb.internalURL;
@@ -645,17 +667,17 @@ TestCase(CBLManager) {
 
     CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
     CAssertEqual(dbm.allDatabaseNames, @[]);
-    CBLDatabase* db = [dbm databaseNamed: @"foo" error: NULL];
+    CBLDatabase* db = [dbm existingDatabaseNamed: @"foo" error: NULL];
     CAssert(db == nil);
     
-    db = [dbm createDatabaseNamed: @"foo" error: NULL];
+    db = [dbm databaseNamed: @"foo" error: NULL];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");
     CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);
     CAssert(db.exists);
     CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);
 
-    CAssertEq([dbm databaseNamed: @"foo" error: NULL], db);
+    CAssertEq([dbm existingDatabaseNamed: @"foo" error: NULL], db);
     [dbm close];
 }
 

@@ -120,7 +120,7 @@
 }
 
 
-- (void) removeIndex {
+- (void) deleteIndex {
     if (self.viewID <= 0)
         return;
     CBLDatabase* db = _weakDB;
@@ -149,7 +149,7 @@
 }
 
 
-- (CBLQuery*) query {
+- (CBLQuery*) createQuery {
     return [[CBLQuery alloc] initWithDatabase: self.database view: self];
 }
 
@@ -173,5 +173,10 @@ static id<CBLViewCompiler> sCompiler;
     return sCompiler;
 }
 
+
+#ifdef CBL_DEPRECATED
+- (void) removeIndex    {[self deleteIndex];}
+- (CBLQuery*) query     {return [self createQuery];}
+#endif
 
 @end

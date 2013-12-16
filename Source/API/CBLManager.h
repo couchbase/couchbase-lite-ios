@@ -49,34 +49,24 @@ typedef struct CBLManagerOptions {
 /** Releases all resources used by the CBLManager instance and closes all its databases. */
 - (void) close;
 
-/** The dispatch queue used to serialize access to the database manager (and its child objects.)
-    Setting this is optional: by default the objects are bound to the thread on which the database
-    manager was instantiated. By setting a dispatch queue, you can call the objects from within that
-    queue no matter what the underlying thread is, and notifications will be posted on that queue
-    as well. */
-@property dispatch_queue_t dispatchQueue;
-
-/** Runs the block asynchronously on the database manager's dispatch queue or thread.
-    Unlike the rest of the API, this can be called from any thread, and provides a limited form
-    of multithreaded access to Couchbase Lite. */
-- (void) doAsync: (void (^)())block;
-
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
 
-/** Returns the database with the given name, or nil if it doesn't exist.
-    Multiple calls with the same name will return the same CBLDatabase instance. */
-- (CBLDatabase*) databaseNamed: (NSString*)name
-                         error: (NSError**)outError                     __attribute__((nonnull(1)));
-
-/** Same as -databaseNamed:. Enables "[]" access in Xcode 4.4+ */
-- (CBLDatabase*) objectForKeyedSubscript: (NSString*)key __attribute__((nonnull));
+#pragma mark - DATABASES:
 
 /** Returns the database with the given name, creating it if it didn't already exist.
     Multiple calls with the same name will return the same CBLDatabase instance.
-     NOTE: Database names may not contain capital letters! */
-- (CBLDatabase*) createDatabaseNamed: (NSString*)name
-                               error: (NSError**)outError               __attribute__((nonnull(1)));
+    NOTE: Database names may not contain capital letters! */
+- (CBLDatabase*) databaseNamed: (NSString*)name
+                         error: (NSError**)outError                     __attribute__((nonnull(1)));
+
+/** Returns the database with the given name, or nil if it doesn't exist.
+    Multiple calls with the same name will return the same CBLDatabase instance. */
+- (CBLDatabase*) existingDatabaseNamed: (NSString*)name
+                                 error: (NSError**)outError             __attribute__((nonnull(1)));
+
+/** Same as -existingDatabaseNamed:. Enables "[]" access in Xcode 4.4+ */
+- (CBLDatabase*) objectForKeyedSubscript: (NSString*)key __attribute__((nonnull));
 
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;
@@ -93,12 +83,28 @@ typedef struct CBLManagerOptions {
               withAttachments: (NSString*)attachmentsPath
                         error: (NSError**)outError                  __attribute__((nonnull(1,2)));
 
+#pragma mark - CONCURRENCY:
+
+/** The dispatch queue used to serialize access to the database manager (and its child objects.)
+    Setting this is optional: by default the objects are bound to the thread on which the database
+    manager was instantiated. By setting a dispatch queue, you can call the objects from within that
+    queue no matter what the underlying thread is, and notifications will be posted on that queue
+    as well. */
+@property dispatch_queue_t dispatchQueue;
+
+/** Runs the block asynchronously on the database manager's dispatch queue or thread.
+    Unlike the rest of the API, this can be called from any thread, and provides a limited form
+    of multithreaded access to Couchbase Lite. */
+- (void) doAsync: (void (^)())block;
+
 /** Asynchronously dispatches a block to run on a background thread. The block will be given a
     CBLDatabase instance to use; <em>it must use that database instead of any CBL objects that are
     in use on the surrounding code's thread.</em> Otherwise thread-safety will be violated, and
     Really Bad Things that are intermittent and hard to debug can happen.
     (Note: Unlike most of the API, this method is thread-safe.) */
 - (void) backgroundTellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
+
+#pragma mark - OTHER API:
 
 /** The base URL of the database manager's REST API. You can access this URL within this process,
     using NSURLConnection or other APIs that use that (such as XMLHTTPRequest inside a WebView),
@@ -113,6 +119,12 @@ typedef struct CBLManagerOptions {
     other criteria to enable logging. */
 + (void) enableLogging: (NSString*)type;
 
+@property (readonly, nonatomic) NSMutableDictionary* customHTTPHeaders;
+
+#ifdef CBL_DEPRECATED
+- (CBLDatabase*) createDatabaseNamed: (NSString*)name
+                               error: (NSError**)outError __attribute__((deprecated("use databaseNamed:error:")));
+#endif
 @end
 
 

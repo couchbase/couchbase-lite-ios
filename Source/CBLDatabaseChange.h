@@ -11,8 +11,8 @@
 
 
 /** Identifies a change to a database, that is, a newly added document revision.
-    The CBLDatabaseChangeNotification contains an array of these in the "changes" key of its
-    userInfo dictionary. */
+    The CBLDocumentChangeNotification contains one of these in the "change" key of its
+    userInfo dictionary, and CBLDatabaseChangeNotification contains an NSArray in "changes".  */
 @interface CBLDatabaseChange : NSObject <NSCopying>
 
 /** The ID of the document that changed. */
@@ -21,11 +21,12 @@
 /** The ID of the newly-added revision. */
 @property (readonly) NSString* revisionID;
 
-/** YES if the new revision is the current (default, winning) one. */
+/** Is the new revision the document's current (default, winning) one?
+    If not, there's a conflict. */
 @property (readonly) BOOL isCurrentRevision;
 
-/** YES if the document might be in conflict. */
-@property (readonly) BOOL maybeConflict;
+/** YES if the document is in conflict. (The conflict might pre-date this change.) */
+@property (readonly) BOOL inConflict;
 
 /** The remote database URL that this change was pulled from, if any. */
 @property (readonly) NSURL* source;

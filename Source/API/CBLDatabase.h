@@ -8,21 +8,23 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLView.h"
-@class CBLManager, CBLDocument, CBLRevision, CBLView, CBLQuery, CBLReplication;
+@class CBLManager, CBLDocument, CBLRevision, CBLSavedRevision, CBLView, CBLQuery, CBLReplication;
 @protocol CBLValidationContext;
 
 
-/** Validation block, used to approve revisions being added to the database. */
-typedef BOOL (^CBLValidationBlock) (CBLRevision* newRevision,
+/** Validation block, used to approve revisions being added to the database.
+    The block should call `[context reject]` or `[context rejectWithMessage:]` if the proposed
+    new revision is invalid. */
+typedef void (^CBLValidationBlock) (CBLRevision* newRevision,
                                    id<CBLValidationContext> context);
 
-#define VALIDATIONBLOCK(BLOCK) ^BOOL(CBLRevision* newRevision, id<CBLValidationContext> context)\
+#define VALIDATIONBLOCK(BLOCK) ^void(CBLRevision* newRevision, id<CBLValidationContext> context)\
                                     {BLOCK}
 
 /** Filter block, used in changes feeds and replication. */
-typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
+typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params);
 
-#define FILTERBLOCK(BLOCK) ^BOOL(CBLRevision* revision, NSDictionary* params) {BLOCK}
+#define FILTERBLOCK(BLOCK) ^BOOL(CBLSavedRevision* revision, NSDictionary* params) {BLOCK}
 
 
 /** An external object that knows how to convert source code into an executable filter. */
@@ -86,26 +88,26 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     at a time with the same documentID. */
 - (CBLDocument*) documentWithID: (NSString*)docID                       __attribute__((nonnull));
 
+/** Instantiates a CBLDocument object with the given ID.
+    Unlike -documentWithID: this method loads the document from the database, and returns nil if
+    no such document exists.
+    CBLDocuments are cached, so there will never be more than one instance (in this database)
+    at a time with the same documentID. */
+- (CBLDocument*) existingDocumentWithID: (NSString*)docID               __attribute__((nonnull));
+
 /** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
 - (CBLDocument*)objectForKeyedSubscript: (NSString*)key                 __attribute__((nonnull));
 
 /** Creates a new CBLDocument object with no properties and a new (random) UUID.
     The document will be saved to the database when you call -putProperties: on it. */
-- (CBLDocument*) untitledDocument;
-
-/** Returns the already-instantiated cached CBLDocument with the given ID, or nil if none is yet cached. */
-- (CBLDocument*) cachedDocumentWithID: (NSString*)docID                  __attribute__((nonnull));
-
-/** Empties the cache of recently used CBLDocument objects.
-    API calls will now instantiate and return new instances. */
-- (void) clearDocumentCache;
+- (CBLDocument*) createDocument;
 
 
 #pragma mark - LOCAL DOCUMENTS:
 
 
 /** Returns the contents of the local document with the given ID, or nil if none exists. */
-- (NSDictionary*) getLocalDocumentWithID: (NSString*)localDocID         __attribute__((nonnull));
+- (NSDictionary*) existingLocalDocumentWithID: (NSString*)localDocID         __attribute__((nonnull));
 
 /** Sets the contents of the local document with the given ID. Unlike CouchDB, no revision-ID
     checking is done; the put always succeeds. If the properties dictionary is nil, the document
@@ -123,7 +125,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 /** Returns a query that matches all documents in the database.
     This is like querying an imaginary view that emits every document's ID as a key. */
-- (CBLQuery*) queryAllDocuments;
+- (CBLQuery*) createAllDocumentsQuery;
 
 /** Creates a one-shot query with the given map function. This is equivalent to creating an
     anonymous CBLView and then deleting it immediately after querying it. It may be useful during
@@ -141,7 +143,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 /** Defines or clears a named document validation function.
     Before any change to the database, all registered validation functions are called and given a
     chance to reject it. (This includes incoming changes from a pull replication.) */
-- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock
+- (void) setValidationNamed: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock
                                                                      __attribute__((nonnull(1)));
 
 /** Returns the existing document validation function (block) registered with the given name.
@@ -150,7 +152,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 /** Defines or clears a named filter function.
     Filters are used by push replications to choose which documents to send. */
-- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock
+- (void) setFilterNamed: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock
                                                                      __attribute__((nonnull(1)));
 
 /** Returns the existing filter function (block) registered with the given name.
@@ -182,6 +184,7 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
     from the same thread or dispatch queue that the database runs on, **it will deadlock!** */
 - (void) doSync: (void (^)())block                                 __attribute__((nonnull(1)));
 
+
 #pragma mark - REPLICATION:
 
 /** Returns an array of all current, running CBLReplications involving this database. */
@@ -192,6 +195,23 @@ typedef BOOL (^CBLFilterBlock) (CBLRevision* revision, NSDictionary* params);
 
 /** Creates a replication that will 'pull' from a database at the given URL. */
 - (CBLReplication*) replicationFromURL: (NSURL*)url;
+
+
+#ifdef CBL_DEPRECATED
+- (CBLDocument*) untitledDocument __attribute__((deprecated("renamed -createDocument")));
+- (CBLDocument*) cachedDocumentWithID: (NSString*)docID __attribute__((deprecated("you shouldn't need to use this")));
+- (void) clearDocumentCache __attribute__((deprecated("you shouldn't need to use this")));
+- (NSDictionary*) getLocalDocumentWithID: (NSString*)localDocID __attribute__((deprecated("renamed -existingLocalDocumentWithID:")));
+- (CBLQuery*) queryAllDocuments __attribute__((deprecated("renamed -createAllDocumentsQuery")));
+- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock __attribute__((deprecated("renamed -setFilterNamed:asBlock:")));
+- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock __attribute__((deprecated("renamed -setValidationNamed:asBlock:")));
+- (CBLReplication*) pushToURL: (NSURL*)url
+        __attribute__((deprecated("use replicationToURL, then call -start")));
+- (CBLReplication*) pullFromURL: (NSURL*)url
+        __attribute__((deprecated("use replicationFromURL, then call -start")));
+- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
+        __attribute__((deprecated("call replicationToURL: and replicationFromURL:")));
+#endif
 
 @end
 
@@ -215,15 +235,15 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 @protocol CBLValidationContext <NSObject>
 
 /** The contents of the current revision of the document, or nil if this is a new document. */
-@property (readonly) CBLRevision* currentRevision;
+@property (readonly) CBLSavedRevision* currentRevision;
 
-/** The type of HTTP status to report, if the validate block returns NO.
-    The default value is 403 ("Forbidden"). */
-@property int errorType;
+/** Rejects the proposed new revision. */
+- (void) reject;
 
-/** The error message to return in the HTTP response, if the validate block returns NO.
-    The default value is "invalid document". */
-@property (copy) NSString* errorMessage;
+/** Rejects the proposed new revision. Any resulting error will contain the provided message;
+    for example, if the change came from an external HTTP request, the message will be in the
+    response status line. The default message is "invalid document". */
+- (void) rejectWithMessage: (NSString*)message;
 
 
 #pragma mark - CONVENIENCE METHODS:
@@ -231,14 +251,14 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 /** Returns an array of all the keys whose values are different between the current and new revisions. */
 @property (readonly) NSArray* changedKeys;
 
-/** Returns YES if only the keys given in the 'allowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
-- (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys;
-
-/** Returns YES if none of the keys given in the 'disallowedKeys' array have changed; else returns NO and sets a default error message naming the offending key. */
-- (BOOL) disallowChangesTo: (NSArray*)disallowedKeys;
-
 /** Calls the 'enumerator' block for each key that's changed, passing both the old and new values.
-    If the block returns NO, the enumeration stops and sets a default error message, and the method returns NO; else the method returns YES. */
-- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator;
+    If the block returns NO, the enumeration stops and rejects the revision, and the method returns
+    NO; else the method returns YES. */
+- (BOOL) validateChanges: (CBLChangeEnumeratorBlock)enumerator;
 
+#ifdef CBL_DEPRECATED
+- (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys __attribute__((deprecated()));
+- (BOOL) disallowChangesTo: (NSArray*)disallowedKeys __attribute__((deprecated()));
+- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator __attribute__((deprecated("renamed validateChanges:")));
+#endif
 @end

@@ -20,12 +20,12 @@ typedef enum {
 } CBLAllDocsMode;
 
 
-/** Options for CBLQuery.stale property, to allow out-of-date results to be returned. */
+/** Query options to allow out-of-date results to be returned in return for faster queries. */
 typedef enum {
-    kCBLStaleNever,           /**< Never return stale view results (default) */
-    kCBLStaleOK,              /**< Return stale results as long as view is already populated */
-    kCBLStaleUpdateAfter      /**< Return stale results, then update view afterwards */
-} CBLStaleness;
+    kCBLUpdateIndexBefore,  /**< Always update index if needed before querying (default) */
+    kCBLUpdateIndexNever,   /**< Don't update the index; results may be out of date */
+    kCBLUpdateIndexAfter    /**< Update index _after_ querying (results may still be out of date) */
+} CBLIndexUpdateMode;
 
 
 /** Represents a query of a CouchbaseLite 'view', or of a view-like resource like _all_documents. */
@@ -58,9 +58,12 @@ typedef enum {
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
 @property (copy) NSString* endKeyDocID;
 
-/** If set, the view will not be updated for this query, even if the database has changed.
-    This allows faster results at the expense of returning possibly out-of-date data. */
-@property CBLStaleness stale;
+/** Determines whether or when the view index is updated. By default, the index will be updated
+    if necessary before the query runs -- this guarantees up-to-date results but can cause a
+    delay. The "Never" mode skips updating the index, so it's faster but can return out of date
+    results. The "After" mode is a compromise that may return out of date results but if so will
+    start asynchronously updating the index after the query so future results are accurate. */
+@property CBLIndexUpdateMode indexUpdateMode;
 
 /** If non-nil, the query will fetch only the rows with the given keys. */
 @property (copy) NSArray* keys;
@@ -75,8 +78,7 @@ typedef enum {
 /** If set to YES, the results will include the entire document contents of the associated rows.
     These can be accessed via CBLQueryRow's -documentProperties property.
     This slows down the query, but can be a good optimization if you know you'll need the entire
-    contents of each document.
-    (This property is equivalent to "include_docs" in the CouchDB API.) */
+    contents of each document. */
 @property BOOL prefetch;
 
 /** Changes the behavior of a query created by -queryAllDocuments.
@@ -89,31 +91,29 @@ typedef enum {
       conflicts as they happen, i.e. when they're pulled in by a replication.) */
 @property CBLAllDocsMode allDocsMode;
 
-/** If non-nil, the error of the last execution of the query.
-    If nil, the last execution of the query was successful. */
-@property (readonly) NSError* error;
-
 /** Sends the query to the server and returns an enumerator over the result rows (Synchronous).
-    If the query fails, this method returns nil and sets the query's .error property. */
-- (CBLQueryEnumerator*) rows;
-
-/** Same as -rows, except returns nil if the query results have not changed since the last time it
-    was evaluated (Synchronous). */
-- (CBLQueryEnumerator*) rowsIfChanged;
+    Note: In a CBLLiveQuery you should access the .rows property instead. */
+- (CBLQueryEnumerator*) run: (NSError**)outError;
 
 /** Starts an asynchronous query. Returns immediately, then calls the onComplete block when the
     query completes, passing it the row enumerator.
     If the query fails, the block will receive a non-nil enumerator but its .error property will
     be set to a value reflecting the error. The originating CBLQuery's .error property will NOT
     change. */
-- (void) runAsync: (void (^)(CBLQueryEnumerator*))onComplete            __attribute__((nonnull));
+- (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete   __attribute__((nonnull));
 
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;
 
 
-@property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
 
+#ifdef CBL_DEPRECATED
+@property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
+@property CBLIndexUpdateMode stale __attribute__((deprecated("renamed indexUpdateMode")));
+- (CBLQueryEnumerator*) rows __attribute__((deprecated("renamed run:")));
+- (CBLQueryEnumerator*) rowsIfChanged __attribute__((deprecated("use CBLQueryEnumerator.stale")));
+@property (readonly) NSError* error __attribute__((deprecated("use error returned by run:")));
+#endif
 @end
 
 
@@ -129,11 +129,21 @@ typedef enum {
 /** Stops observing database changes. Calling -start or .rows will restart it. */
 - (void) stop;
 
-/** In CBLLiveQuery the -rows accessor is now a non-blocking property that can be observed using KVO. Its value will be nil until the initial query finishes. */
+/** The current query results; this updates as the database changes, and can be observed using KVO.
+    Its value will be nil until the initial asynchronous query finishes. */
 @property (readonly, retain) CBLQueryEnumerator* rows;
 
-/** Blocks until the intial async query finishes. After this call either .rows or .error will be non-nil. */
+/** Blocks until the intial asynchronous query finishes.
+    After this call either .rows or .lastError will be non-nil. */
 - (BOOL) waitForRows;
+
+/** If non-nil, the error of the last execution of the query.
+    If nil, the last execution of the query was successful. */
+@property (readonly) NSError* lastError;
+
+#ifdef CBL_DEPRECATED
+@property (readonly) NSError* error __attribute__((deprecated("renamed lastError")));
+#endif
 
 @end
 
@@ -148,15 +158,17 @@ typedef enum {
 /** The database's current sequenceNumber at the time the view was generated. */
 @property (readonly) UInt64 sequenceNumber;
 
+/** YES if the database has changed since the view was generated. */
+@property (readonly) BOOL stale;
+
 /** The next result row. This is the same as -nextObject but with a checked return type. */
 - (CBLQueryRow*) nextRow;
 
 /** Random access to a row in the result */
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
 
-/** Error, if the query failed.
-    NOTE: This will only ever be set in an enumerator returned from an _asynchronous_ query. The CBLQuery.rows method returns a nil enumerator on error.) */
-@property (readonly) NSError* error;
+/** Resets the enumeration so the next call to -nextObject or -nextRow will return the first row. */
+- (void) reset;
 
 @end
 
@@ -183,7 +195,7 @@ typedef enum {
 @property (readonly) NSString* sourceDocumentID;
 
 /** The revision ID of the document this row was mapped from. */
-@property (readonly) NSString* documentRevision;
+@property (readonly) NSString* documentRevisionID;
 
 @property (readonly) CBLDatabase* database;
 
@@ -192,7 +204,10 @@ typedef enum {
 @property (readonly) CBLDocument* document;
 
 /** The properties of the document this row was mapped from.
-    To get this, you must have set the -prefetch property on the query; else this will be nil. */
+    To get this, you must have set the .prefetch property on the query; else this will be nil.
+    (You can still get the document properties via the .document property, of course. But it
+    takes a separate call to the database. So if you're doing it for every row, using
+    .prefetch and .documentProperties is faster.) */
 @property (readonly) NSDictionary* documentProperties;
 
 /** If this row's key is an array, returns the item at that index in the array.
@@ -203,8 +218,8 @@ typedef enum {
 /** Convenience for use in keypaths. Returns the key at the given index. */
 @property (readonly) id key0, key1, key2, key3;
 
-/** The local sequence number of the associated doc/revision. */
-@property (readonly) UInt64 localSequence;
+/** The database sequence number of the associated doc/revision. */
+@property (readonly) UInt64 sequenceNumber;
 
 /** Returns all conflicting revisions of the document, as an array of CBLRevision, or nil if the
     document is not in conflict.
@@ -213,4 +228,13 @@ typedef enum {
     or kCBLOnlyConflicts; otherwise it returns nil. */
 @property (readonly) NSArray* conflictingRevisions;
 
+#ifdef CBL_DEPRECATED
+@property (readonly) NSString* documentRevision __attribute__((deprecated("renamed documentRevisionID")));
+@property (readonly) UInt64 localSequence __attribute__((deprecated("renamed sequenceNumber")));
+#endif
 @end
+
+
+#ifdef CBL_DEPRECATED
+typedef CBLIndexUpdateMode CBLStaleness __attribute__((deprecated("renamed CBLIndexUpdateMode")));
+#endif

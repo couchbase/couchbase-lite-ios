@@ -55,13 +55,13 @@ TestCase(JSFilterFunction) {
     // I'm using a CBL_Revision as a sort of mock CBLRevision, simply because it's easier to
     // instantiate one. The only method that will be called on it is -properties.
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: @{@"foo": @666}];
-    CAssert(!filterBlock((CBLRevision*)rev,nil));
+    CAssert(!filterBlock((CBLSavedRevision*)rev,nil));
     rev = [[CBL_Revision alloc] initWithProperties: @{@"ok": $false}];
-    CAssert(!filterBlock((CBLRevision*)rev,nil));
+    CAssert(!filterBlock((CBLSavedRevision*)rev,nil));
     rev = [[CBL_Revision alloc] initWithProperties: @{@"ok": $true}];
-    CAssert(filterBlock((CBLRevision*)rev,nil));
+    CAssert(filterBlock((CBLSavedRevision*)rev,nil));
     rev = [[CBL_Revision alloc] initWithProperties: @{@"ok": @"mais oui"}];
-    CAssert(filterBlock((CBLRevision*)rev,nil));
+    CAssert(filterBlock((CBLSavedRevision*)rev,nil));
 }
 
 
@@ -75,11 +75,11 @@ TestCase(JSFilterFunctionWithParams) {
     // I'm using a CBL_Revision as a sort of mock CBLRevision, simply because it's easier to
     // instantiate one. The only method that will be called on it is -properties.
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: @{@"foo": @666}];
-    CAssert(!filterBlock((CBLRevision*)rev, params));
+    CAssert(!filterBlock((CBLSavedRevision*)rev, params));
     rev = [[CBL_Revision alloc] initWithProperties: @{@"name": @"bob"}];
-    CAssert(!filterBlock((CBLRevision*)rev, params));
+    CAssert(!filterBlock((CBLSavedRevision*)rev, params));
     rev = [[CBL_Revision alloc] initWithProperties: @{@"name": @"jens"}];
-    CAssert(filterBlock((CBLRevision*)rev, params));
+    CAssert(filterBlock((CBLSavedRevision*)rev, params));
 }
 
 

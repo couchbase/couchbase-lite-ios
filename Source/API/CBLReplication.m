@@ -13,8 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBLReplication.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLReplication.h"
 
 #import "CBL_Pusher.h"
 #import "CBLDatabase+Replication.h"
@@ -38,10 +38,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 @interface CBLReplication ()
-@property (nonatomic, readwrite) bool running;
-@property (nonatomic, readwrite) CBLReplicationMode mode;
-@property (nonatomic, readwrite) unsigned completed, total;
-@property (nonatomic, readwrite, retain) NSError* error;
+@property (nonatomic, readwrite) BOOL running;
+@property (nonatomic, readwrite) CBLReplicationStatus status;
+@property (nonatomic, readwrite) unsigned completedChangesCount, changesCount;
+@property (nonatomic, readwrite, retain) NSError* lastError;
 @end
 
 
@@ -52,12 +52,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-@synthesize localDatabase=_database, create_target=_create_target;
-@synthesize continuous=_continuous, filter=_filter, query_params=_query_params;
-@synthesize doc_ids=_doc_ids, network=_network, remoteURL=_remoteURL, pull=_pull;
+@synthesize localDatabase=_database, createTarget=_createTarget;
+@synthesize continuous=_continuous, filter=_filter, filterParams=_filterParams;
+@synthesize documentIDs=_documentIDs, network=_network, remoteURL=_remoteURL, pull=_pull;
 @synthesize headers=_headers, OAuth=_OAuth, facebookEmailAddress=_facebookEmailAddress;
 @synthesize personaEmailAddress=_personaEmailAddress, customProperties=_customProperties;
-@synthesize running = _running, completed=_completed, total=_total, error = _error, mode=_mode;
+@synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError=_lastError, status=_status;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -109,7 +109,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (NSArray*) channels {
-    NSString* params = self.query_params[kChannelsQueryParam];
+    NSString* params = self.filterParams[kChannelsQueryParam];
     if (!self.pull || !$equal(self.filter, kByChannelFilterName) || params.length == 0)
         return nil;
     return [params componentsSeparatedByString: @","];
@@ -119,10 +119,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     if (channels) {
         Assert(self.pull, @"filterChannels can only be set in pull replications");
         self.filter = kByChannelFilterName;
-        self.query_params = @{kChannelsQueryParam: [channels componentsJoinedByString: @","]};
+        self.filterParams = @{kChannelsQueryParam: [channels componentsJoinedByString: @","]};
     } else if ($equal(self.filter, kByChannelFilterName)) {
         self.filter = nil;
-        self.query_params = nil;
+        self.filterParams = nil;
     }
 }
 
@@ -154,7 +154,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-- (bool) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
+- (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
     if (![CBLFacebookAuthorizer registerToken: token forEmailAddress: email forSite: self.remoteURL])
         return false;
     self.facebookEmailAddress = email;
@@ -167,7 +167,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     return self.remoteURL.my_baseURL;
 }
 
-- (bool) registerPersonaAssertion: (NSString*)assertion {
+- (BOOL) registerPersonaAssertion: (NSString*)assertion {
     NSString* email = [CBLPersonaAuthorizer registerAssertion: assertion];
     if (!email) {
         Warn(@"Invalid Persona assertion: %@", assertion);
@@ -190,10 +190,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 - (NSDictionary*) properties {
     // This is basically the inverse of -[CBLManager parseReplicatorProperties:...]
     NSMutableDictionary* props = $mdict({@"continuous", @(_continuous)},
-                                        {@"create_target", @(_create_target)},
+                                        {@"create_target", @(_createTarget)},
                                         {@"filter", _filter},
-                                        {@"query_params", _query_params},
-                                        {@"doc_ids", _doc_ids});
+                                        {@"query_params", _filterParams},
+                                        {@"doc_ids", _documentIDs});
     NSMutableDictionary* authDict = nil;
     if (_OAuth || _facebookEmailAddress) {
         authDict = $mdict({@"oauth", _OAuth});
@@ -263,7 +263,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-- (void) updateMode: (CBLReplicationMode)mode
+- (void) updateMode: (CBLReplicationStatus)mode
               error: (NSError*)error
           processed: (NSUInteger)changesProcessed
             ofTotal: (NSUInteger)changesTotal
@@ -276,8 +276,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }
 
     BOOL changed = NO;
-    if (mode != _mode) {
-        self.mode = mode;
+    if (mode != _status) {
+        self.status = mode;
         changed = YES;
     }
     BOOL running = (mode > kCBLReplicationStopped);
@@ -285,16 +285,16 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         self.running = running;
         changed = YES;
     }
-    if (!$equal(error, _error)) {
-        self.error = error;
+    if (!$equal(error, _lastError)) {
+        self.lastError = error;
         changed = YES;
     }
-    if (changesProcessed != _completed) {
-        self.completed = changesProcessed;
+    if (changesProcessed != _completedChangesCount) {
+        self.completedChangesCount = changesProcessed;
         changed = YES;
     }
-    if (changesTotal != _total) {
-        self.total = changesTotal;
+    if (changesTotal != _changesCount) {
+        self.changesCount = changesTotal;
         changed = YES;
     }
     if (changed) {
@@ -362,7 +362,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress {
-    CBLReplicationMode mode;
+    CBLReplicationStatus mode;
     if (!_bg_replicator.running)
         mode = kCBLReplicationStopped;
     else if (!_bg_replicator.online)
@@ -383,5 +383,18 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }
 }
 
+
+#ifdef CBL_DEPRECATED
+- (bool) create_target  {return self.createTarget;}
+- (void) setCreate_target:(bool)create_target {self.createTarget = create_target;}
+- (NSDictionary*) query_params {return self.filterParams;}
+- (void) setQuery_params:(NSDictionary *)query_params {self.filterParams = query_params;}
+- (NSArray*) doc_ids    {return self.documentIDs;}
+- (void) setDoc_ids:(NSArray *)doc_ids {self.documentIDs = doc_ids;}
+- (CBLReplicationStatus) mode {return self.status;}
+- (NSError*) error      {return self.lastError;}
+- (unsigned) completed  {return self.completedChangesCount;}
+- (unsigned) total      {return self.changesCount;}
+#endif
 
 @end

@@ -37,7 +37,7 @@ static NSData* ImageJPEGData(NSImage* image);
 
 - (NSImage*) picture {
     if (!_picture) {
-        NSData* pictureData = [[self attachmentNamed: @"picture"] body];
+        NSData* pictureData = [[self attachmentNamed: @"picture"] content];
         if (pictureData)
             _picture = [[NSImage alloc] initWithData: pictureData];
     }
@@ -49,11 +49,12 @@ static NSData* ImageJPEGData(NSImage* image);
     if (_picture && picture == _picture)
         return;
     
-    CBLAttachment* attachment = nil;
     if (picture)
-        attachment = [[CBLAttachment alloc] initWithContentType: @"image/jpeg"
-                                                             body: ImageJPEGData(picture)];
-    [self addAttachment: attachment named: @"picture"];
+        [self setAttachmentNamed: @"picture"
+                 withContentType: @"image/jpeg"
+                         content: ImageJPEGData(picture)];
+    else
+        [self removeAttachmentNamed: @"picture"];
     _picture = picture;
 }
 

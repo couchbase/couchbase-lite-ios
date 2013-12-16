@@ -23,14 +23,14 @@
 
 @implementation CBLAttachment
 {
-    CBLRevisionBase* _rev;
+    CBLRevision* _rev;
     NSString* _name;
     NSDictionary* _metadata;
     id _body;
 }
 
 
-- (instancetype) initWithRevision: (CBLRevisionBase*)rev
+- (instancetype) initWithRevision: (CBLRevision*)rev
                              name: (NSString*)name
                          metadata: (NSDictionary*)metadata
 {
@@ -47,8 +47,8 @@
 }
 
 
-- (instancetype) initWithContentType: (NSString*)contentType
-                                body: (id)body
+- (instancetype) _initWithContentType: (NSString*)contentType
+                                 body: (id)body
 {
     NSParameterAssert(contentType);
     NSParameterAssert(body);
@@ -63,6 +63,14 @@
     }
     return self;
 }
+
+#ifdef CBL_DEPRECATED
+- (instancetype) initWithContentType: (NSString*)contentType
+                                body: (id)body
+{
+    return [self _initWithContentType: contentType body: body];
+}
+#endif
 
 
 @synthesize revision=_rev, name=_name, metadata=_metadata;
@@ -92,7 +100,7 @@
 }
 
 
-- (NSData*) body {
+- (NSData*) content {
     if (_body) {
         if ([_body isKindOfClass: [NSData class]])
             return _body;
@@ -112,7 +120,7 @@
 }
 
 
-- (NSURL*) bodyURL {
+- (NSURL*) contentURL {
     if (_body) {
         if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
             return _body;
@@ -134,28 +142,6 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* bo
     [writer appendData: body];
     [writer finish];
     return writer;
-}
-
-
-- (CBLRevision*) updateBody: (NSData*)body
-                contentType: (NSString*)contentType
-                      error: (NSError**)outError
-{
-    Assert(_rev);
-    CBL_BlobStoreWriter* writer = body ? blobStoreWriterForBody(_rev.database, body) : nil;
-    CBLStatus status;
-    CBL_Revision* newRev = [_rev.database updateAttachment: _name
-                                                          body: writer
-                                                          type: contentType ?: self.contentType
-                                                      encoding: kCBLAttachmentEncodingNone
-                                                       ofDocID: _rev.document.documentID
-                                                         revID: _rev.revisionID
-                                                        status: &status];
-    if (!newRev) {
-        if (outError) *outError = CBLStatusToNSError(status, nil);
-        return nil;
-    }
-    return [[CBLRevision alloc] initWithDocument: self.document revision: newRev];
 }
 
 
@@ -187,5 +173,31 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* bo
     }];
 }
 
+
+#ifdef CBL_DEPRECATED
+- (NSData*) body {return self.content;}
+- (NSURL*) bodyURL {return self.contentURL;}
+
+- (CBLSavedRevision*) updateBody: (NSData*)body
+                     contentType: (NSString*)contentType
+                           error: (NSError**)outError
+{
+    Assert(_rev);
+    CBL_BlobStoreWriter* writer = body ? blobStoreWriterForBody(_rev.database, body) : nil;
+    CBLStatus status;
+    CBL_Revision* newRev = [_rev.database updateAttachment: _name
+                                                          body: writer
+                                                          type: contentType ?: self.contentType
+                                                      encoding: kCBLAttachmentEncodingNone
+                                                       ofDocID: _rev.document.documentID
+                                                         revID: _rev.revisionID
+                                                        status: &status];
+    if (!newRev) {
+        if (outError) *outError = CBLStatusToNSError(status, nil);
+        return nil;
+    }
+    return [[CBLSavedRevision alloc] initWithDocument: self.document revision: newRev];
+}
+#endif
 
 @end

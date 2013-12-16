@@ -13,6 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+#import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
 #import "CBLDatabase.h"
 #import "CBLMisc.h"
@@ -24,6 +25,7 @@
 
 @implementation CBL_Server
 
+@dynamic customHTTPHeaders;
 
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path {
@@ -41,6 +43,9 @@
 }
 #endif
 
+- (NSDictionary*) customHTTPHeaders {
+    return _manager.customHTTPHeaders;
+}
 
 - (instancetype) initWithManager: (CBLManager*)newManager {
     self = [super init];
@@ -124,7 +129,7 @@
 
 
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block {
-    [self queue: ^{ block([_manager createDatabaseNamed: dbName error: NULL]); }];
+    [self queue: ^{ block([_manager databaseNamed: dbName error: NULL]); }];
 }
 
 
@@ -139,7 +144,7 @@
     [self queue: ^{
         [lock lockWhenCondition: 0];
         @try {
-            CBLDatabase* db = [_manager createDatabaseNamed: dbName error: NULL];
+            CBLDatabase* db = [_manager databaseNamed: dbName error: NULL];
             result = block(db);
         } @finally {
             [lock unlockWithCondition: 1];
