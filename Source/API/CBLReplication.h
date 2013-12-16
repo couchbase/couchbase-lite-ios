@@ -39,7 +39,7 @@ typedef enum {
 @property (nonatomic) BOOL createTarget;
 
 /** Should the replication operate continuously? (Defaults to NO).
-    A continuous replication keeps running (in 'idle' mode) after updating the target database.
+    A continuous replication keeps running (with 'idle' status) after updating the target database.
     It monitors the source database and copies new revisions as soon as they're available.
     Continuous replications keep running until the app quits or they're stopped. */
 @property (nonatomic) bool continuous;
@@ -170,7 +170,7 @@ typedef enum {
 @property (nonatomic, copy) NSDictionary* query_params __attribute__((deprecated("renamed filterParams")));
 @property (copy) NSArray *doc_ids __attribute__((deprecated("renamed documentIDs")));
 @property (nonatomic, readonly) CBLReplicationStatus mode __attribute__((deprecated("renamed status")));
-@property (nonatomic, readonly, retain) NSError* error;
+@property (nonatomic, readonly, retain) NSError* error __attribute__((deprecated("renamed lastError")));
 @property (nonatomic, readonly) unsigned completed __attribute__((deprecated("renamed completedChangesCount")));
 @property (nonatomic, readonly) unsigned total __attribute__((deprecated("renamed changesCount")));
 #endif

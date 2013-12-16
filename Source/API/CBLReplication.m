@@ -263,24 +263,24 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-- (void) updateMode: (CBLReplicationStatus)mode
-              error: (NSError*)error
-          processed: (NSUInteger)changesProcessed
-            ofTotal: (NSUInteger)changesTotal
+- (void) updateStatus: (CBLReplicationStatus)status
+                error: (NSError*)error
+            processed: (NSUInteger)changesProcessed
+              ofTotal: (NSUInteger)changesTotal
 {
     if (!_started)
         return;
-    if (mode == kCBLReplicationStopped) {
+    if (status == kCBLReplicationStopped) {
         _started = NO;
         [_database forgetReplication: self];
     }
 
     BOOL changed = NO;
-    if (mode != _status) {
-        self.status = mode;
+    if (status != _status) {
+        self.status = status;
         changed = YES;
     }
-    BOOL running = (mode > kCBLReplicationStopped);
+    BOOL running = (status > kCBLReplicationStopped);
     if (running != _running) {
         self.running = running;
         changed = YES;
@@ -298,8 +298,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         changed = YES;
     }
     if (changed) {
-        LogTo(CBLReplication, @"%@: mode=%d, completed=%u, total=%u (changed=%d)",
-              self, mode, (unsigned)changesProcessed, (unsigned)changesTotal, changed);
+        LogTo(CBLReplication, @"%@: status=%d, completed=%u, total=%u (changed=%d)",
+              self, status, (unsigned)changesProcessed, (unsigned)changesTotal, changed);
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
     }
@@ -334,9 +334,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     CBL_Replicator* repl = [server_dbmgr replicatorWithProperties: properties status: &status];
     if (!repl) {
         [_database doAsync: ^{
-            [self updateMode: kCBLReplicationStopped
-                       error: CBLStatusToNSError(status, nil)
-                   processed: 0 ofTotal: 0];
+            [self updateStatus: kCBLReplicationStopped
+                         error: CBLStatusToNSError(status, nil)
+                     processed: 0 ofTotal: 0];
         }];
         return;
     }
@@ -362,23 +362,23 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress {
-    CBLReplicationStatus mode;
+    CBLReplicationStatus status;
     if (!_bg_replicator.running)
-        mode = kCBLReplicationStopped;
+        status = kCBLReplicationStopped;
     else if (!_bg_replicator.online)
-        mode = kCBLReplicationOffline;
+        status = kCBLReplicationOffline;
     else
-        mode = _bg_replicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
+        status = _bg_replicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
     
     // Communicate its state back to the main thread:
     NSError* error = _bg_replicator.error;
     NSUInteger changes = _bg_replicator.changesProcessed;
     NSUInteger total = _bg_replicator.changesTotal;
     [_database doAsync: ^{
-        [self updateMode: mode error: error processed: changes ofTotal: total];
+        [self updateStatus: status error: error processed: changes ofTotal: total];
     }];
     
-    if (mode == kCBLReplicationStopped) {
+    if (status == kCBLReplicationStopped) {
         [self bg_setReplicator: nil];
     }
 }

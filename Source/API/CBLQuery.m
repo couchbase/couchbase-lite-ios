@@ -180,7 +180,6 @@
     
     [_database.manager backgroundTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
         // On the background server thread, run the query:
-        LogTo(Query, @"%@: ...starting query on bg thread", self);
         CBLStatus status;
         SequenceNumber lastSequence;
         NSArray* rows = [bgdb queryViewNamed: viewName

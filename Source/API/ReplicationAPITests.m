@@ -53,7 +53,7 @@ static void runReplication(CBLReplication* repl) {
         lastTime = now;
     }
     Log(@"...replicator finished. mode=%d, progress %u/%u, error=%@",
-        repl.status, repl.completedChangesCount, repl.changesCount, repl.error);
+        repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
 }
 
 
