@@ -1433,7 +1433,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             // Skip them, but collect their revIDs if the 'conflicts' option is set:
             NSMutableArray* conflicts = nil;
             while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == docNumericID) {
-                if (options->allDocsMode >= kCBLIncludeConflicts) {
+                if (options->allDocsMode >= kCBLShowConflicts) {
                     if (!conflicts)
                         conflicts = $marray(revID);
                     [conflicts addObject: [r stringForColumnIndex: 2]];
