@@ -587,7 +587,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
                                                       code:CBLIncrementalStoreErrorUnsupportedRequestType
                                                   userInfo:@{
-                                                             NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:@"Unsupported requestType: %d", request.requestType]
+                                                             NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:@"Unsupported requestType: %d", (int)request.requestType]
                                                              }];
         return nil;
     }

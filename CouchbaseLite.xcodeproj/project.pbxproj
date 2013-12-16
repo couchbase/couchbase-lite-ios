@@ -78,6 +78,8 @@
 		271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 271C2AD216FA176300B8C9DB /* CBL_Shared.h */; };
 		271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
 		271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
+		271EFF0C185F6A6C00142804 /* CBLIncrementalStore.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */; };
+		271EFF0D185F6A6C00142804 /* CBLIncrementalStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1776B81857ADDB00CB01A3 /* CBLIncrementalStoreTests.m */; };
 		27208F8A184D1D5C006ADBEF /* NSString+URLEncoding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12847156ABE24008465C2 /* NSString+URLEncoding.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12847156ABE24008465C2 /* NSString+URLEncoding.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27208F8E184D1D83006ADBEF /* NSURL+Base.h in Headers */ = {isa = PBXBuildFile; fileRef = 27208F8C184D1D83006ADBEF /* NSURL+Base.h */; };
@@ -1573,6 +1575,16 @@
 			name = Tests;
 			sourceTree = "<group>";
 		};
+		271EFF0E185F6AD200142804 /* CoreData */ = {
+			isa = PBXGroup;
+			children = (
+				AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */,
+				AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */,
+				AA1776B81857ADDB00CB01A3 /* CBLIncrementalStoreTests.m */,
+			);
+			name = CoreData;
+			sourceTree = "<group>";
+		};
 		2753154D14ACEF350065964D /* vendor */ = {
 			isa = PBXGroup;
 			children = (
@@ -2161,6 +2173,7 @@
 				27846FEE15D5C7DE0030122F /* Tests */,
 				27DA431A158FD9BA00F9E7B5 /* iOS */,
 				27DA435D15918C9600F9E7B5 /* Model */,
+				271EFF0E185F6AD200142804 /* CoreData */,
 			);
 			name = API;
 			path = Source/API;
@@ -2173,9 +2186,6 @@
 				27DA4318158FD9B400F9E7B5 /* CBLUITableSource.m */,
 				27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */,
 				27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */,
-				AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */,
-				AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */,
-				AA1776B81857ADDB00CB01A3 /* CBLIncrementalStoreTests.m */,
 				27F273C317039F3600CD2B85 /* README.md */,
 			);
 			name = iOS;
@@ -3386,8 +3396,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				27C706D31488679500F0F099 /* DemoAppController.m in Sources */,
+				271EFF0C185F6A6C00142804 /* CBLIncrementalStore.m in Sources */,
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
 				27F94126176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */,
+				271EFF0D185F6A6C00142804 /* CBLIncrementalStoreTests.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
 				27FFE20517BBF17C0040AE60 /* CBLRouter_Tests.m in Sources */,
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
