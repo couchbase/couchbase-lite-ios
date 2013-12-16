@@ -9,6 +9,7 @@
 #import "Test.h"
 
 #import "CouchbaseLite.h"
+#import "CBLInternal.h"  // for -[CBLDatabase close]
 
 #import <CoreData/CoreData.h>
 #import "CBLIncrementalStore.h"
@@ -76,9 +77,10 @@ NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *context, N
 /** Test case that tests create, request, update and delete of Core Data objects. */
 TestCase(CBLIncrementalStoreCRUD)
 {
+    RequireTestCase(API);
     NSError *error;
     
-    NSString *databaseName = @"test-crud";
+    NSString *databaseName = @"test-cblis-crud";
     
     CBLISEventuallyDeleteDatabaseNamed(databaseName);
     
@@ -144,6 +146,8 @@ TestCase(CBLIncrementalStoreCRUD)
     
     doc = [database documentWithID:[objectID couchbaseLiteIDRepresentation]];
     Assert([doc isDeleted], @"Document not marked as deleted after deletion");
+
+    Assert([database close]);
 }
 
 #pragma mark - TestCase CBLIncrementalStoreCBLIntegration
@@ -151,9 +155,10 @@ TestCase(CBLIncrementalStoreCRUD)
 /** Test case that tests the integration between Core Data and CouchbaseLite. */
 TestCase(CBLIncrementalStoreCBLIntegration)
 {
+    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
-    NSString *databaseName = @"test-crud";
+    NSString *databaseName = @"test-cblis-integration";
     
     CBLISEventuallyDeleteDatabaseNamed(databaseName);
     
@@ -239,16 +244,18 @@ TestCase(CBLIncrementalStoreCBLIntegration)
     AssertEqual(entry.text, [entryProperties objectForKey:@"text"]);
     AssertEqual(entry.check, [entryProperties objectForKey:@"check"]);
     AssertEqual(entry.number, [entryProperties objectForKey:@"number"]);
-    
+
+    Assert([database close]);
 }
 
 #pragma mark - TestCase CBLIncrementalStoreCreateAndUpdate
 
 TestCase(CBLIncrementalStoreCreateAndUpdate)
 {
+    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
-    NSString *databaseName = @"test-createandupdate";
+    NSString *databaseName = @"test-cblis-createandupdate";
     
     CBLISEventuallyDeleteDatabaseNamed(databaseName);
     
@@ -300,15 +307,18 @@ TestCase(CBLIncrementalStoreCreateAndUpdate)
     AssertEq(entry.subentries.count, (unsigned int)1);
     AssertEqual([entry.subentries valueForKeyPath:@"text"], [NSSet setWithObject:@"Subentry abc"]);
     AssertEqual([entry.subentries valueForKeyPath:@"number"], [NSSet setWithObject:@123]);
+
+    Assert([store.database close]);
 }
 
 #pragma mark - TestCase CBLIncrementalStoreFetchrequest
 
 TestCase(CBLIncrementalStoreFetchrequest)
 {
+    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
-    NSString *databaseName = @"test-fetchrequest";
+    NSString *databaseName = @"test-cblis-fetchrequest";
     
     CBLISEventuallyDeleteDatabaseNamed(databaseName);
     
@@ -397,15 +407,18 @@ TestCase(CBLIncrementalStoreFetchrequest)
     result = [context executeFetchRequest:fetchRequest error:&error];
     Assert(result.count == count, @"Fetch request should return same result count as number fetch");
     Assert([result[0] isKindOfClass:[NSManagedObject class]], @"Results are not NSManagedObjects");
+
+    Assert([store.database close]);
 }
 
 #pragma mark - TestCase CBLIncrementalStoreAttachments
 
 TestCase(CBLIncrementalStoreAttachments)
 {
+    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
-    NSString *databaseName = @"test-attachments";
+    NSString *databaseName = @"test-cblis-attachments";
     
     CBLISEventuallyDeleteDatabaseNamed(databaseName);
     
@@ -475,15 +488,17 @@ TestCase(CBLIncrementalStoreAttachments)
     NSString *stringFromContent = [[NSString alloc] initWithData:content encoding:NSUTF8StringEncoding];
     Assert([stringFromContent hasPrefix:@"Updated."], @"Not updated");
 
+    Assert([database close]);
 }
 
 #pragma mark - TestCase CBLIncrementalStoreFetchWithPredicates
 
 TestCase(CBLIncrementalStoreFetchWithPredicates)
 {
+    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
-    NSString *databaseName = @"test-fetch-with-predicates";
+    NSString *databaseName = @"test-cblis-fetch-with-predicates";
     
     CBLISEventuallyDeleteDatabaseNamed(databaseName);
     
@@ -694,6 +709,8 @@ TestCase(CBLIncrementalStoreFetchWithPredicates)
         NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
         AssertEqual(numbers[0], entry2[@"number"]);
     });
+
+    Assert([store.database close]);
 }
 
 #pragma mark -
