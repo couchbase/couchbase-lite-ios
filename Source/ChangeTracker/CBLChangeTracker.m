@@ -51,6 +51,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
 @synthesize docIDs = _docIDs, pollInterval=_pollInterval;
+@synthesize usePOSTWithDocIDs = _usePOSTWithDocIDs;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -75,6 +76,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
         _mode = mode;
         _heartbeat = kDefaultHeartbeat;
         _includeConflicts = includeConflicts;
+        _usePOSTWithDocIDs = NO;
         self.lastSequenceID = lastSequenceID;
     }
     return self;
@@ -106,7 +108,9 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     NSDictionary* filterParameters = _filterParameters;
     if (_docIDs) {
         filterName = @"_doc_ids";
-        filterParameters = @{@"doc_ids": _docIDs};
+        if (!_usePOSTWithDocIDs) {
+          filterParameters = @{@"doc_ids": _docIDs};
+        }
     }
     if (filterName) {
         [path appendFormat: @"&filter=%@", CBLEscapeURLParam(filterName)];

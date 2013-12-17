@@ -164,6 +164,41 @@ TestCase(RunPullReplication) {
     [db.manager close];
 }
 
+TestCase(RunPullReplicationWithDocIds) {
+  RequireTestCase(RunPushReplication);
+  NSURL* remoteDbURL = RemoteTestDBURL(kPushThenPullDBName);
+  if (!remoteDbURL) {
+    Warn(@"Skipping test RunPullReplication (no remote test DB URL)");
+    return;
+  }
+  CBLDatabase* db = createEmptyManagerAndDb();
+  
+  Log(@"Pulling...");
+  CBLReplication* repl = [db replicationFromURL: remoteDbURL];
+  NSMutableArray* docIds = [NSMutableArray arrayWithCapacity:kNDocuments];
+  for (int i = 1; i <= kNDocuments / 2; i++) {
+    [docIds addObject:[NSString stringWithFormat:@"doc-%d", i]];
+  }
+  repl.documentIDs = docIds;
+  
+  runReplication(repl);
+  AssertNil(repl.lastError);
+  
+  Log(@"----- all documents -----");
+  CBLQuery* query = [db createAllDocumentsQuery];
+  Log(@"Getting all documents: %@", query);
+  
+  CBLQueryEnumerator* rows = [query rows: NULL];
+  CAssertEq(rows.count, kNDocuments / 2ul);
+  Log(@"Verifying documents...");
+  for (int i = 1; i <= kNDocuments / 2; i++) {
+    CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+    AssertEqual(doc[@"index"], @(i));
+    AssertEqual(doc[@"bar"], $false);
+  }
+  [db.manager close];
+}
+
 
 TestCase(RunReplicationWithError) {
     RequireTestCase(CreateReplicators);
