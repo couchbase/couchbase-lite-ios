@@ -51,13 +51,13 @@ TestCase(DictOf) {
 }
 @property (readonly) NSArray* changes;
 @property BOOL checkedAnSSLCert;
-@property (readonly) BOOL finished;
+@property (readonly) BOOL caughtUp, finished;
 @end
 
 
 @implementation CBLChangeTrackerTester
 
-@synthesize changes=_changes, checkedAnSSLCert=_checkedAnSSLCert, finished=_finished;
+@synthesize changes=_changes, checkedAnSSLCert=_checkedAnSSLCert, caughtUp=_caughtUp, finished=_finished;
 
 - (void) run: (CBLChangeTracker*)tracker expectingChanges: (NSArray*)expectedChanges {
     [tracker start];
@@ -86,6 +86,7 @@ TestCase(DictOf) {
                                        beforeDate: timeout])
         ;
     Assert(!_running, @"-changeTrackerStoped: wasn't called");
+    Assert(_caughtUp, @"-changeTrackerCaughtUp wasn't called");
     Assert(_finished, @"-changeTrackerFinished wasn't called");
     CAssertEqual(tracker.error.domain, error.domain);
     CAssertEq(tracker.error.code, error.code);
@@ -102,6 +103,10 @@ TestCase(DictOf) {
                                {@"id", docID},
                                {@"revs", revIDs},
                                {@"deleted", (deleted ? $true : nil)})];
+}
+
+- (void) changeTrackerCaughtUp {
+    _caughtUp = YES;
 }
 
 - (void) changeTrackerFinished {

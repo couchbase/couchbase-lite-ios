@@ -46,6 +46,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 @implementation CBLChangeTracker
 {
     CBLJSONReader* _parser;
+    NSInteger _parsedChangeCount;
 }
 
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
@@ -215,6 +216,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
                                 ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
                                     // Callback when the parser reads another change from the feed:
                                     CBLChangeTracker* strongSelf = weakSelf;
+                                    strongSelf->_parsedChangeCount++;
                                     strongSelf.lastSequenceID = sequence;
                                     [strongSelf.client changeTrackerReceivedSequence: sequence
                                                                                docID: docID
@@ -223,6 +225,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
                                 }
                                 expectWrapperDict: (_mode != kWebSocket)];
         _parser = [[CBLJSONReader alloc] initWithMatcher: root];
+        _parsedChangeCount = 0;
     }
     
     if (![_parser parseBytes: bytes length: length]) {
@@ -234,12 +237,15 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     return YES;
 }
 
-- (BOOL) endParsingData {
+- (NSInteger) endParsingData {
+    Assert(_parser);
     BOOL ok = [_parser finish];
-    if (!ok)
-        Warn(@"Truncated changes feed");
     _parser = nil;
-    return ok;
+    if (!ok) {
+        Warn(@"Truncated changes feed");
+        return -1;
+    }
+    return _parsedChangeCount;
 }
 
 

@@ -202,9 +202,13 @@
     }
     if (_mode == kContinuous) {
         [self stop];
-    } else if ([self endParsingData]) {
+    } else if ([self endParsingData] >= 0) {
         // Successfully reached end.
-        [_client changeTrackerFinished];
+        id<CBLChangeTrackerClient> client = _client;
+        if (!_caughtUp) {
+            _caughtUp = YES;
+            [client changeTrackerCaughtUp];
+        }
         [self clearConnection];
         if (_continuous) {
             if (_mode == kOneShot && _pollInterval == 0.0)
@@ -214,6 +218,7 @@
                       self, _pollInterval);
             [self retryAfterDelay: _pollInterval];       // Next poll...
         } else {
+            [client changeTrackerFinished];
             [self stopped];
         }
     } else {

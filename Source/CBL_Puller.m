@@ -236,12 +236,17 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-- (void) changeTrackerFinished {
+- (void) changeTrackerCaughtUp {
     if (!_caughtUp) {
         LogTo(Sync, @"%@: Caught up with changes!", self);
         _caughtUp = YES;
         [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
     }
+}
+
+
+- (void) changeTrackerFinished {
+    [self changeTrackerCaughtUp];
 }
 
 

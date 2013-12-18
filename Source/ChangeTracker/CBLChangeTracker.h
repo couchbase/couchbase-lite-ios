@@ -26,6 +26,7 @@
                                  docID: (NSString*)docID
                                 revIDs: (NSArray*)revIDs
                                deleted: (BOOL)deleted;
+- (void) changeTrackerCaughtUp;
 - (void) changeTrackerFinished;
 @optional
 - (void) changeTrackerStopped: (CBLChangeTracker*)tracker;
@@ -59,6 +60,7 @@ typedef enum CBLChangeTrackerMode {
     NSDictionary* _requestHeaders;
     id<CBLAuthorizer> _authorizer;
     unsigned _retryCount;
+    BOOL _caughtUp;
 }
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
@@ -101,6 +103,6 @@ typedef enum CBLChangeTrackerMode {
 - (void) failedWithError: (NSError*)error;
 - (void) stopped; // override this
 - (BOOL) parseBytes: (const void*)bytes length: (size_t)length;
-- (BOOL) endParsingData;
+- (NSInteger) endParsingData;
 
 @end

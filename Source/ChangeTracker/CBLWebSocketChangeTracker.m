@@ -19,6 +19,7 @@
 {
     NSThread* _thread;
     WebSocketClient* _ws;
+    BOOL _running;
     CFAbsoluteTime _startTime;
 }
 
@@ -38,14 +39,6 @@
         [request setValue: value forHTTPHeaderField: key];
     }];
 
-    // Add cookie headers from the NSHTTPCookieStorage:
-    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: url];
-    NSDictionary* cookieHeaders = [NSHTTPCookie requestHeaderFieldsWithCookies: cookies];
-    for (NSString* headerName in cookieHeaders)
-        [request addValue: cookieHeaders[headerName] forHTTPHeaderField: headerName];
-
-    // TODO: Authorization
-
     LogTo(SyncVerbose, @"%@: GET %@", self, url.resourceSpecifier);
     _ws = [[WebSocketClient alloc] initWithURLRequest: request];
     _ws.delegate = self;
@@ -56,6 +49,8 @@
         return NO;
     }
     _thread = [NSThread currentThread];
+    _running = YES;
+    _caughtUp = NO;
     _startTime = CFAbsoluteTimeGetCurrent();
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, url);
     return YES;
@@ -67,6 +62,7 @@
                                                object: nil];    // cancel pending retries
     if (_ws) {
         LogTo(ChangeTracker, @"%@: stop", self);
+        _running = NO; // don't want to receive any more messages
         [_ws disconnect];
     }
     [super stop];
@@ -77,15 +73,30 @@
 
 // THESE ARE CALLED ON THE WEBSOCKET'S DISPATCH QUEUE, NOT MY THREAD!!
 
+- (void) webSocketDidOpen: (WebSocket *)ws {
+    LogTo(ChangeTrackerVerbose, @"%@: WebSocket opened", self);
+}
+
 /** Called when a WebSocket receives a textual message from its peer. */
-- (void) webSocket:(WebSocket *)ws
-         didReceiveMessage:(NSString *)msg
+- (void) webSocket: (WebSocket *)ws
+         didReceiveMessage: (NSString *)msg
 {
     MYOnThread(_thread, ^{
-        LogTo(ChangeTrackerVerbose, @"Got a message: %@", msg);
-        if (msg.length > 0) {
+        LogTo(ChangeTrackerVerbose, @"%@: Got a message: %@", self, msg);
+        if (msg.length > 0 && ws == _ws && _running) {
             NSData *data = [msg dataUsingEncoding: NSUTF8StringEncoding];
-            if (![self parseBytes: data.bytes length: data.length] || ![self endParsingData]) {
+            BOOL parsed = [self parseBytes: data.bytes length: data.length];
+            if (parsed) {
+                NSInteger changeCount = [self endParsingData];
+                parsed = changeCount >= 0;
+                if (changeCount == 0 && !_caughtUp) {
+                    // Received an empty changes array: means server is waiting, so I'm caught up
+                    LogTo(ChangeTracker, @"%@: caught up!", self);
+                    _caughtUp = YES;
+                    [self.client changeTrackerCaughtUp];
+                }
+            }
+            if (!parsed) {
                 Warn(@"Couldn't parse message: %@", msg);
                 [_ws closeWithCode: kWebSocketCloseDataError reason: @"Unparseable change entry"];
             }
@@ -94,11 +105,13 @@
 }
 
 /** Called after the WebSocket closes, either intentionally or due to an error. */
-- (void) webSocket:(WebSocket *)ws
+- (void) webSocket: (WebSocket *)ws
   didCloseWithCode: (WebSocketCloseCode)code
             reason: (NSString*)reason
 {
     MYOnThread(_thread, ^{
+        if (ws != _ws)
+            return;
         _ws = nil;
         if (code == kWebSocketCloseNormal) {
             LogTo(ChangeTracker, @"%@: closed", self);
