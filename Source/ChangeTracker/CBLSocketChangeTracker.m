@@ -76,19 +76,12 @@
     _http.handleRedirects = NO;  // CFStream will handle redirects instead
 
     // Configure HTTP proxy -- CFNetwork makes us do this manually, unlike NSURLConnection :-p
-    CFDictionaryRef proxySettings = CFNetworkCopySystemProxySettings();
-    if (proxySettings) {
-        CFArrayRef proxies = CFNetworkCopyProxiesForURL((__bridge CFURLRef)url, proxySettings);
-        if (proxies) {
-            if (CFArrayGetCount(proxies) > 0) {
-                CFTypeRef proxy = CFArrayGetValueAtIndex(proxies, 0);
-                LogTo(ChangeTracker, @"Changes feed using proxy %@", proxy);
-                bool ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxy);
-                Assert(ok);
-            }
-            CFRelease(proxies);
-        }
-        CFRelease(proxySettings);
+    NSDictionary* proxy = url.my_proxySettings;
+    if (proxy) {
+        LogTo(ChangeTracker, @"Changes feed using proxy %@", proxy);
+        bool ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy,
+                                          (CFDictionaryRef)proxy);
+        Assert(ok);
     }
 
     if (_databaseURL.my_isHTTPS) {

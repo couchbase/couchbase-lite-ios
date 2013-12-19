@@ -28,6 +28,7 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
+#import "MYURLUtils.h"
 
 
 // Maximum number of revisions to fetch simultaneously. (CFNetwork will only send about 5
@@ -134,8 +135,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     id option = _options[@"websocket"];
     if (option)
         return [option boolValue];
-    return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
-        && [_serverType compare: @"Couchbase Sync Gateway/0.82"] >= 0;
+    BOOL isSG = [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
+             && [_serverType compare: @"Couchbase Sync Gateway/0.82"] >= 0;
+    if (!isSG)
+        return NO;
+    if (self.remote.my_proxySettings != nil)    // WebSocket class doesn't support proxies yet
+        return NO;
+    return YES;
 }
 
 
