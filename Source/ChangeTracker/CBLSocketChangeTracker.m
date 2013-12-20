@@ -55,7 +55,7 @@
         }];
     }
 
-    CFHTTPMessageRef request = [_http createHTTPRequest];
+    CFHTTPMessageRef request = [_http newHTTPRequest];
 
     if (_authorizer && !_http.credential) {
         // Let the Authorizer add its own credential:
