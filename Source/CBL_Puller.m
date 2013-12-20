@@ -136,7 +136,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (option)
         return [option boolValue];
     BOOL isSG = [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
-             && [_serverType compare: @"Couchbase Sync Gateway/0.82"] >= 0;
+             && [_serverType compare: @"Couchbase Sync Gateway/0.91"] >= 0;
     if (!isSG)
         return NO;
     if (self.remote.my_proxySettings != nil)    // WebSocket class doesn't support proxies yet
