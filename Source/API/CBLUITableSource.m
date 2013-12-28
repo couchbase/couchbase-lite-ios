@@ -22,10 +22,12 @@
     @private
     UITableView* _tableView;
     CBLLiveQuery* _query;
-	NSMutableArray* _rows;
     NSString* _labelProperty;
     BOOL _deletionAllowed;
 }
+
+@property (strong, nonatomic) NSMutableArray* mutableSections;
+
 @end
 
 
@@ -49,37 +51,55 @@
 #pragma mark -
 #pragma mark ACCESSORS:
 
-
 @synthesize tableView=_tableView;
-@synthesize rows=_rows;
+@synthesize mutableSections=_mutableSections;
 
 
-- (CBLQueryRow*) rowAtIndex: (NSUInteger)index {
-    return [_rows objectAtIndex: index];
+- (NSArray*) rows {
+    return [_mutableSections[0] copy];
 }
 
 
-- (NSIndexPath*) indexPathForDocument: (CBLDocument*)document {
-    NSString* documentID = document.documentID;
-    NSUInteger index = 0;
-    for (CBLQueryRow* row in _rows) {
-        if ([row.documentID isEqualToString: documentID])
-            return [NSIndexPath indexPathForRow: index inSection: 0];
-        ++index;
-    }
-    return nil;
+- (NSArray*) sections {
+    return [_mutableSections copy];
+}
+
+
+- (CBLQueryRow*) rowAtIndex: (NSUInteger)index {
+    return _mutableSections[0][index];
 }
 
 
 - (CBLQueryRow*) rowAtIndexPath: (NSIndexPath*)path {
-    if (path.section == 0)
-        return [_rows objectAtIndex: path.row];
+    if ((NSInteger)[_mutableSections count] > path.section) {
+        NSArray *sectionRows = _mutableSections[path.section];
+        if ((NSInteger)[sectionRows count] > path.row) {
+            return sectionRows[path.row];
+        }
+    }
     return nil;
 }
 
 
 - (CBLDocument*) documentAtIndexPath: (NSIndexPath*)path {
     return [self rowAtIndexPath: path].document;
+}
+
+
+- (NSIndexPath*) indexPathForDocument: (CBLDocument*)document {
+    NSString* documentID = document.documentID;
+    NSUInteger section = 0;
+    NSUInteger row = 0;
+    for (NSArray *sectionRows in _mutableSections) {
+        for (CBLQueryRow* queryRow in sectionRows) {
+            if ([queryRow.documentID isEqualToString: documentID])
+                return [NSIndexPath indexPathForRow: row inSection: section];
+            
+            row++;
+        }
+        section++;
+    }
+    return nil;
 }
 
 
@@ -107,20 +127,38 @@
 }
 
 
--(void) reloadFromQuery {
+- (void) reloadFromQuery {
     CBLQueryEnumerator* rowEnum = _query.rows;
     if (rowEnum) {
-        NSArray *oldRows = _rows;
-        _rows = [rowEnum.allObjects mutableCopy];
+        id delegate = _tableView.delegate;
+        
+        // retrieve new rows and sectionize, if desired
+        NSArray *oldSections = _mutableSections;
+        NSArray *allRows = rowEnum.allObjects;
+        if ([delegate respondsToSelector:@selector(couchTableSource:sectionizeRows:)]) {
+            NSMutableArray *sectionized = [delegate couchTableSource: self sectionizeRows: allRows];
+            NSAssert(!sectionized || [sectionized isKindOfClass:[NSMutableArray class]], @"Must return a mutable array");
+            NSAssert(0 == [sectionized count] || [sectionized[0] isKindOfClass:[NSMutableArray class]], @"Must fill mutable arrays into sections");
+            _mutableSections = sectionized;
+        }
+        else {
+            _mutableSections = [NSMutableArray arrayWithObject: [allRows mutableCopy]];
+        }
+        
         TELL_DELEGATE(@selector(couchTableSource:willUpdateFromQuery:), _query);
         
-        id delegate = _tableView.delegate;
-        SEL selector = @selector(couchTableSource:updateFromQuery:previousRows:);
-        if ([delegate respondsToSelector: selector]) {
+        // update table view
+        if ([delegate respondsToSelector: @selector(couchTableSource:updateFromQuery:previousSections:)]) {
             [delegate couchTableSource: self 
                        updateFromQuery: _query
-                          previousRows: oldRows];
-        } else {
+                      previousSections: oldSections];
+        }
+        else if ([delegate respondsToSelector: @selector(couchTableSource:updateFromQuery:previousRows:)]) {
+            [delegate couchTableSource: self 
+                       updateFromQuery: _query
+                          previousRows: ([oldSections count] > 0) ? oldSections[0] : nil];
+        }
+        else {
             [self.tableView reloadData];
         }
     }
@@ -156,8 +194,12 @@
 }
 
 
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return [_mutableSections count];
+}
+
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return _rows.count;
+    return [_mutableSections[section] count];
 }
 
 
@@ -174,7 +216,7 @@
             cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleDefault
                                           reuseIdentifier: @"CBLUITableDelegate"];
         
-        CBLQueryRow* row = [self rowAtIndex: indexPath.row];
+        CBLQueryRow* row = [self rowAtIndexPath: indexPath];
         cell.textLabel.text = [self labelForRow: row];
         
         // Allow the delegate to customize the cell:
@@ -211,7 +253,7 @@
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         // Delete the document from the database.
 
-        CBLQueryRow* row = [self rowAtIndex: indexPath.row];
+        CBLQueryRow* row = [self rowAtIndexPath: indexPath];
         id<CBLUITableDelegate> delegate = (id<CBLUITableDelegate>)_tableView.delegate;
         if ([delegate respondsToSelector: @selector(couchTableSource:deleteRow:)]) {
             if (![delegate couchTableSource: self deleteRow: row])
@@ -225,7 +267,7 @@
         }
 
         // Delete the row from the table data source.
-        [_rows removeObjectAtIndex: indexPath.row];
+        [_mutableSections[indexPath.section] removeObjectAtIndex: indexPath.row];
         [self.tableView deleteRowsAtIndexPaths: [NSArray arrayWithObject:indexPath]
                               withRowAnimation: UITableViewRowAnimationFade];
     }
@@ -250,13 +292,20 @@
         return NO;
     }
     
-    
-    NSMutableIndexSet* indexSet = [NSMutableIndexSet indexSet];
+    NSMutableDictionary *perSection = [NSMutableDictionary dictionaryWithCapacity:[indexPaths count]];
     for (NSIndexPath* path in indexPaths) {
-        if (path.section == 0)
-            [indexSet addIndex: path.row];
+        NSMutableIndexSet *indexSet = perSection[@(path.section)];
+        if (!indexSet) {
+            indexSet = [NSMutableIndexSet indexSet];
+            perSection[@(path.section)] = indexSet;
+        }
+        [indexSet addIndex: path.row];
     }
-    [_rows removeObjectsAtIndexes: indexSet];
+    
+    for (NSNumber *sectionNum in [perSection allKeys]) {
+        NSIndexSet *indexSet = perSection[sectionNum];
+        [_mutableSections[[sectionNum integerValue]] removeObjectsAtIndexes: indexSet];
+    }
 
     [_tableView deleteRowsAtIndexPaths: indexPaths withRowAnimation: UITableViewRowAnimationFade];
     return YES;
@@ -290,12 +339,16 @@
                                                   inView:(UIView *)view
 {
     if (identifier) {
-        NSUInteger i = 0;
-        for (CBLQueryRow* row in _rows) {
-            if ($equal(row.key, identifier)) {
-                return [NSIndexPath indexPathForItem: i inSection: 0];
+        NSUInteger section = 0;
+        NSUInteger row = 0;
+        for (NSArray *sectionRows in _mutableSections) {
+            for (CBLQueryRow* queryRow in sectionRows) {
+                if ($equal(queryRow.key, identifier)) {
+                    return [NSIndexPath indexPathForRow: row inSection: section];
+                }
+                row++;
             }
-            ++i;
+            section++;
         }
     }
     return nil;

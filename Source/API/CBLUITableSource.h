@@ -26,16 +26,22 @@
 @property (retain) CBLLiveQuery* query;
 
 /** Rebuilds the table from the query's current .rows property. */
--(void) reloadFromQuery;
+- (void) reloadFromQuery;
 
 
 #pragma mark Row Accessors:
 
-/** The current array of CBLQueryRows being used as the data source for the table. */
-@property (nonatomic, readonly) NSArray* rows;
+/** The current array of sections containing arrays of CBLQueryRows; this is used to feed the table. */
+@property (nonatomic, readonly) NSArray* sections;
 
-/** Convenience accessor to get the row object for a given table row index. */
-- (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
+/** The current array of CBLQueryRows being used as the data source for the table.
+    @attention This getter only returns the rows from the first section, which is no issue if you don't use sections. */
+@property (nonatomic, readonly) NSArray* rows;                          // DEPRECATED_ATTRIBUTE;
+
+/** Convenience accessor to get the row object for a given table row index.
+    @attention This method only looks in the first section, which is no issue if you don't use sections.
+ */
+- (CBLQueryRow*) rowAtIndex: (NSUInteger)index;                         // DEPRECATED_ATTRIBUTE;
 
 /** Convenience accessor to find the index path of the row with a given document. */
 - (NSIndexPath*) indexPathForDocument: (CBLDocument*)document           __attribute__((nonnull));
@@ -80,6 +86,11 @@
 - (UITableViewCell *)couchTableSource:(CBLUITableSource*)source
                 cellForRowAtIndexPath:(NSIndexPath *)indexPath;
 
+/** Called when the query has returned a new set of rows to enable the delegate to sectionize the rows.
+ @return A mutable array of sections containing mutable arrays (!) of CBLQueryRow objects passed into the method */
+- (NSMutableArray *)couchTableSource:(CBLUITableSource *)source
+            sectionizeRows:(NSArray *)rows;
+
 /** Called after the query's results change, before the table view is reloaded. */
 - (void)couchTableSource:(CBLUITableSource*)source
      willUpdateFromQuery:(CBLLiveQuery*)query;
@@ -87,7 +98,14 @@
 /** Called after the query's results change to update the table view. If this method is not implemented by the delegate, reloadData is called on the table view.*/
 - (void)couchTableSource:(CBLUITableSource*)source
          updateFromQuery:(CBLLiveQuery*)query
-            previousRows:(NSArray *)previousRows;
+        previousSections:(NSArray *)previousSections;
+
+/** Called after the query's results change to update the table view. If this method is not implemented by the delegate, reloadData is called on the table view.
+    @attention This method only returns the rows from the first section, which is no problem if you do not sectionize the data.
+    @attention This method is **not** called when `couchTableSource:updateFromQuery:previousSections:` has been implemented. */
+- (void)couchTableSource:(CBLUITableSource*)source
+         updateFromQuery:(CBLLiveQuery*)query
+            previousRows:(NSArray *)previousRows;                       //DEPRECATED_ATTRIBUTE;
 
 /** Called from -tableView:cellForRowAtIndexPath: just before it returns, giving the delegate a chance to customize the new cell. */
 - (void)couchTableSource:(CBLUITableSource*)source
