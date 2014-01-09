@@ -193,12 +193,12 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 /** Creates a replication that will 'push' this database to a remote database at the given URL.
     This always creates a new replication, even if there is already one to the given URL.
     You must call -start on the replication to start it. */
-- (CBLReplication*) replicationToURL: (NSURL*)url;
+- (CBLReplication*) createPushReplication: (NSURL*)url;
 
 /** Creates a replication that will 'pull' from a remote database at the given URL to this database.
     This always creates a new replication, even if there is already one from the given URL.
     You must call -start on the replication to start it. */
-- (CBLReplication*) replicationFromURL: (NSURL*)url;
+- (CBLReplication*) createPullReplication: (NSURL*)url;
 
 
 #ifdef CBL_DEPRECATED
@@ -209,12 +209,14 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 - (CBLQuery*) queryAllDocuments __attribute__((deprecated("renamed -createAllDocumentsQuery")));
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock __attribute__((deprecated("renamed -setFilterNamed:asBlock:")));
 - (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock __attribute__((deprecated("renamed -setValidationNamed:asBlock:")));
+- (CBLReplication*) replicationToURL: (NSURL*)url __attribute__((deprecated("renamed createPushReplication:")));
+- (CBLReplication*) replicationFromURL: (NSURL*)url __attribute__((deprecated("renamed createPullReplication:")));
 - (CBLReplication*) pushToURL: (NSURL*)url
-        __attribute__((deprecated("use replicationToURL, then call -start")));
+        __attribute__((deprecated("use createPushReplication, then call -start")));
 - (CBLReplication*) pullFromURL: (NSURL*)url
-        __attribute__((deprecated("use replicationFromURL, then call -start")));
+        __attribute__((deprecated("use createPullReplication, then call -start")));
 - (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
-        __attribute__((deprecated("call replicationToURL: and replicationFromURL:")));
+        __attribute__((deprecated("call createPushReplication: and createPullReplication:")));
 #endif
 
 @end

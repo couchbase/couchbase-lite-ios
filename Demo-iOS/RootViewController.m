@@ -273,8 +273,8 @@
     [self forgetSync];
 
     if (newRemoteURL) {
-        _pull = [self.database replicationFromURL: newRemoteURL];
-        _push = [self.database replicationToURL: newRemoteURL];
+        _pull = [self.database createPullReplication: newRemoteURL];
+        _push = [self.database createPushReplication: newRemoteURL];
         _pull.continuous = _push.continuous = YES;
         NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
         [nctr addObserver: self selector: @selector(replicationProgress:)

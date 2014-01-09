@@ -237,8 +237,8 @@ int main (int argc, const char * argv[]) {
         [self stopObservingReplication: _pull];
     if (_push)
         [self stopObservingReplication: _push];
-    _pull = [_database replicationFromURL: otherDbURL];
-    _push = [_database replicationToURL: otherDbURL];
+    _pull = [_database createPullReplication: otherDbURL];
+    _push = [_database createPushReplication: otherDbURL];
     _pull.continuous = _push.continuous = YES;
     [self observeReplication: _pull];
     [self observeReplication: _push];

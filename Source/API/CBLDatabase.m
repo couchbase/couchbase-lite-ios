@@ -434,11 +434,11 @@ static NSString* makeLocalDocID(NSString* docID) {
 }
 
 
-- (CBLReplication*) replicationToURL: (NSURL*)url {
+- (CBLReplication*) createPushReplication: (NSURL*)url {
     return [[CBLReplication alloc] initWithDatabase: self remote: url pull: NO];
 }
 
-- (CBLReplication*) replicationFromURL: (NSURL*)url {
+- (CBLReplication*) createPullReplication: (NSURL*)url {
     return [[CBLReplication alloc] initWithDatabase: self remote: url pull: YES];
 }
 
@@ -466,11 +466,17 @@ static NSString* makeLocalDocID(NSString* docID) {
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
     [self setFilterNamed: filterName asBlock: filterBlock];
 }
+- (CBLReplication*) replicationToURL: (NSURL*)url {
+    return [self createPushReplication: url];
+}
+- (CBLReplication*) replicationFromURL: (NSURL*)url {
+    return [self createPullReplication: url];
+}
 - (CBLReplication*) pushToURL: (NSURL*)url {
-    return [self replicationToURL: url];
+    return [self createPushReplication: url];
 }
 - (CBLReplication*) pullFromURL: (NSURL*)url {
-    return [self replicationFromURL: url];
+    return [self createPullReplication: url];
 }
 - (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
     if (exclusively) {
@@ -480,10 +486,10 @@ static NSString* makeLocalDocID(NSString* docID) {
     }
     CBLReplication* pull = [self existingReplicationWithURL: otherDbURL pull: YES];
     if (!pull)
-        pull = [self replicationFromURL: otherDbURL];
+        pull = [self createPullReplication: otherDbURL];
     CBLReplication* push = [self existingReplicationWithURL: otherDbURL pull: NO];
     if (!push)
-        push = [self replicationToURL: otherDbURL];
+        push = [self createPushReplication: otherDbURL];
     return (pull && push) ? @[pull, push] : nil;
 }
 #endif
