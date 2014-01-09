@@ -104,11 +104,6 @@ int main (int argc, const char * argv[]) {
 }
 
 
-- (IBAction) applicationWillTerminate:(id)sender {
-    [_database.manager close];
-}
-
-
 - (IBAction) compact: (id)sender {
     [_database compact: NULL];
 }
@@ -237,15 +232,18 @@ int main (int argc, const char * argv[]) {
         [self stopObservingReplication: _pull];
     if (_push)
         [self stopObservingReplication: _push];
-    _pull = [_database createPullReplication: otherDbURL];
-    _push = [_database createPushReplication: otherDbURL];
-    _pull.continuous = _push.continuous = YES;
-    [self observeReplication: _pull];
-    [self observeReplication: _push];
-    [_pull start];
-    [_push start];
-    
-    _syncHostField.stringValue = otherDbURL ? $sprintf(@"⇄ %@", otherDbURL.host) : @"";
+    if (otherDbURL) {
+        _pull = [_database createPullReplication: otherDbURL];
+        _push = [_database createPushReplication: otherDbURL];
+        _pull.continuous = _push.continuous = YES;
+        [self observeReplication: _pull];
+        [self observeReplication: _push];
+        [_pull start];
+        [_push start];
+        _syncHostField.stringValue = $sprintf(@"⇄ %@", otherDbURL.host);
+    } else {
+        _syncHostField.stringValue = @"";
+    }
 #endif
 }
 
