@@ -17,15 +17,16 @@
 @protocol CBLCacheable;
 
 
-// CBLCache doesn't need hand-holding from its CBLCacheable objects if NSMapTable is available.
+// CBLCache doesn't need hand-holding from its CBLCacheable objects if NSMapTable is available
+// and supports weak references. (iOS 6, Mac OS X 10.8.)
 #if ! __has_feature(objc_arc)
-#define CBLCACHE_IS_SMART 0
+#  define CBLCACHE_IS_SMART 0
 #elif defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
-#define CBLCACHE_IS_SMART (__IPHONE_OS_VERSION_MIN_REQUIRED >= 60000)
+#  define CBLCACHE_IS_SMART (__IPHONE_OS_VERSION_MIN_REQUIRED >= 60000)
 #elif defined(TARGET_OS_MAC)
-#define CBLCACHE_IS_SMART 1
+#  define CBLCACHE_IS_SMART (__MAC_OS_X_VERSION_MIN_REQUIRED >= 1080)
 #else
-#define CBLCACHE_IS_SMART 0
+#  define CBLCACHE_IS_SMART 0
 #endif
 
 
