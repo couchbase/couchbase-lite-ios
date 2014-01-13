@@ -184,7 +184,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 - (BOOL) closeForDeletion {
     // There is no need to save any changes!
-    for (CBLModel* model in _unsavedModelsMutable)
+    for (CBLModel* model in _unsavedModelsMutable.copy)
         model.needsSave = false;
     _unsavedModelsMutable = nil;
     [self close];
