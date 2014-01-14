@@ -675,7 +675,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (SequenceNumber) lastSequenceNumber {
-    return [_fmdb longLongForQuery: @"SELECT MAX(sequence) FROM revs"];
+    // See http://www.sqlite.org/fileformat2.html#seqtab
+    return [_fmdb longLongForQuery: @"SELECT seq FROM sqlite_sequence WHERE name='revs'"];
 }
 
 
