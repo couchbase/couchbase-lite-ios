@@ -568,11 +568,14 @@ static inline BOOL isLocalDBName(NSString* url) {
         mode = tdReplicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
     
     // Communicate its state back to the main thread:
+    NSError* error = tdReplicator.error;
+    NSUInteger changesProcessed = tdReplicator.changesProcessed;
+    NSUInteger changesTotal = tdReplicator.changesTotal;
     MYOnThread(_mainThread, ^{
         [self updateMode: mode
-                   error: tdReplicator.error
-               processed: tdReplicator.changesProcessed
-                 ofTotal: tdReplicator.changesTotal];
+                   error: error
+               processed: changesProcessed
+                 ofTotal: changesTotal];
     });
     
     if (_bg_replicator && mode == kCBLReplicationStopped) {
