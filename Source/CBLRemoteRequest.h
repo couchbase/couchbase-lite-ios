@@ -47,6 +47,9 @@ typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
 @property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
 
+/** Applies GZip compression to the request body if appropriate. */
+- (BOOL) compressBody;
+
 /** In some cases a kCBLStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;
 

@@ -615,6 +615,12 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+- (BOOL) canSendCompressedRequests {
+    return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
+        && [_serverType compare: @"Couchbase Sync Gateway/0.92"] >= 0;
+}
+
+
 - (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)path
                                      body: (id)body
@@ -649,6 +655,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     req.delegate = self;
     req.timeoutInterval = self.requestTimeout;
     req.authorizer = _authorizer;
+
+    if (self.canSendCompressedRequests)
+        [req compressBody];
+
     [self addRemoteRequest: req];
     [req start];
     return req;

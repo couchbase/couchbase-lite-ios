@@ -24,6 +24,7 @@
 #import "Logging.h"
 #import "Test.h"
 #import "MYURLUtils.h"
+#import "GTMNSData+zlib.h"
 
 
 // Max number of retry attempts for a transient failure, and the backoff time formula
@@ -92,6 +93,19 @@
 
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
     // subclasses can override this.
+}
+
+
+- (BOOL) compressBody {
+    NSData* body = _request.HTTPBody;
+    if (body.length < 50 || [_request valueForHTTPHeaderField: @"Content-Encoding"] != nil)
+        return NO;
+    NSData* encoded = [NSData gtm_dataByGzippingData: body];
+    if (encoded.length >= body.length)
+        return NO;
+    _request.HTTPBody = encoded;
+    [_request setValue: @"gzip" forHTTPHeaderField: @"Content-Encoding"];
+    return YES;
 }
 
 
