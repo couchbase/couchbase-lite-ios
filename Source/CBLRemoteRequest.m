@@ -98,7 +98,7 @@
 
 - (BOOL) compressBody {
     NSData* body = _request.HTTPBody;
-    if (body.length < 50 || [_request valueForHTTPHeaderField: @"Content-Encoding"] != nil)
+    if (body.length < 100 || [_request valueForHTTPHeaderField: @"Content-Encoding"] != nil)
         return NO;
     NSData* encoded = [NSData gtm_dataByGzippingData: body];
     if (encoded.length >= body.length)

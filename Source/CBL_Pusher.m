@@ -25,6 +25,11 @@
 #import "CBLCanonicalJSON.h"
 #import "CBLRevision.h"
 #import "CBLDocument.h"
+#import "GTMNSData+zlib.h"
+
+
+// Don't compress JSON data shorter than this (not worth the CPU time, plus it might not shrink)
+#define kMinJSONDataLengthToCompress 100
 
 
 static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
@@ -385,14 +390,24 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
                 bodyStream = [[CBLMultipartWriter alloc] initWithContentType: @"multipart/related"
-                                                                      boundary: nil];
-                [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
+                                                                    boundary: nil];
+                NSMutableDictionary* headers = $mdict({@"Content-Type", @"application/json"});
                 // Use canonical JSON encoder so that _attachments keys will be written in the
                 // same order that this for loop is processing the attachments.
                 NSData* json = [CBLCanonicalJSON canonicalData: rev.properties];
+                if (json.length >= kMinJSONDataLengthToCompress && self.canSendCompressedRequests) {
+                    NSData* compressed = [NSData gtm_dataByGzippingData: json];
+                    if (compressed.length < json.length) {
+                        json = compressed;
+                        headers[@"Content-Encoding"] = @"gzip";
+                    }
+                }
+                [bodyStream setNextPartsHeaders: headers];
                 [bodyStream addData: json];
             }
-            NSString* disposition = $sprintf(@"attachment; filename=%@", CBLQuoteString(attachmentName));
+            // Add attachment as another MIME part:
+            NSString* disposition = $sprintf(@"attachment; filename=%@",
+                                             CBLQuoteString(attachmentName));
             NSString* contentType = attachment[@"type"];
             NSString* contentEncoding = attachment[@"encoding"];
             [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition},

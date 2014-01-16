@@ -52,6 +52,7 @@
 }
 
 
+// Overridden to prepend the MIME multipart separator+headers
 - (void) addInput: (id)part length:(UInt64)length {
     NSMutableString* headers = [NSMutableString stringWithFormat: @"\r\n--%@\r\n", _boundary];
     [headers appendFormat: @"Content-Length: %llu\r\n", length];
