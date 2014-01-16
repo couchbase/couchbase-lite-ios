@@ -21,6 +21,7 @@
 #import "CBLMisc.h"
 #import "CollectionUtils.h"
 #import "MYStreamUtils.h"
+#import "GTMNSData+zlib.h"
 
 
 @interface CBLMultipartDocumentReader () <CBLMultipartReaderDelegate, NSStreamDelegate>
@@ -31,7 +32,7 @@
 
 
 + (NSDictionary*) readData: (NSData*)data
-                    ofType: (NSString*)contentType
+                   headers: (NSDictionary*)headers
                 toDatabase: (CBLDatabase*)database
                     status: (CBLStatus*)outStatus
 {
@@ -41,7 +42,7 @@
     }
     NSDictionary* result = nil;
     CBLMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];
-    if ([reader setContentType: contentType]
+    if ([reader setHeaders: headers]
             && [reader appendData: data]
             && [reader finish]) {
         result = reader.document;
@@ -82,7 +83,8 @@
 }
 
 
-- (BOOL) setContentType: (NSString*)contentType {
+- (BOOL) setHeaders: (NSDictionary*)headers {
+    NSString* contentType = headers[@"Content-Type"];
     if ([contentType hasPrefix: @"multipart/"]) {
         // Multipart, so initialize the parser:
         LogTo(SyncVerbose, @"%@: has attachments, %@", self, contentType);
@@ -92,14 +94,23 @@
             _attachmentsByDigest = [[NSMutableDictionary alloc] init];
             return YES;
         }
-    } else if (contentType == nil || [contentType hasPrefix: @"application/json"]) {
-        // No multipart, so no attachments. Body is pure JSON:
-        _jsonBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
+    } else if (contentType == nil || [contentType hasPrefix: @"application/json"]
+                                  || [contentType hasPrefix: @"text/plain"]) {
+        // No multipart, so no attachments. Body is pure JSON. (We allow text/plain because CouchDB
+        // sends JSON responses using the wrong content-type.)
+        [self startJSONBufferWithHeaders: headers];
         return YES;
     }
     // Unknown/invalid MIME type:
     _status = kCBLStatusNotAcceptable;
     return NO;
+}
+
+
+- (void) startJSONBufferWithHeaders: (NSDictionary*)headers {
+    _jsonBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
+    NSString* contentEncoding = headers[@"Content-Encoding"];
+    _jsonCompressed = contentEncoding && [contentEncoding rangeOfString: @"gzip"].length > 0;
 }
 
 
@@ -146,20 +157,20 @@
 
 
 + (CBLStatus) readStream: (NSInputStream*)stream
-                 ofType: (NSString*)contentType
-             toDatabase: (CBLDatabase*)database
-                   then: (CBLMultipartDocumentReaderCompletionBlock)onCompletion
+                 headers: (NSDictionary*)headers
+              toDatabase: (CBLDatabase*)database
+                    then: (CBLMultipartDocumentReaderCompletionBlock)onCompletion
 {
     CBLMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];
-    return [reader readStream: stream ofType: contentType then: onCompletion];
+    return [reader readStream: stream headers: headers then: onCompletion];
 }
 
 
 - (CBLStatus) readStream: (NSInputStream*)stream
-                 ofType: (NSString*)contentType
-                   then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock
+                 headers: (NSDictionary*)headers
+                    then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock
 {
-    if ([self setContentType: contentType]) {
+    if ([self setHeaders: headers]) {
         LogTo(SyncVerbose, @"%@: Reading from input stream...", self);
           // balanced by release in -finishAsync:
         _completionBlock = [completionBlock copy];
@@ -222,9 +233,9 @@
 /** Callback: A part's headers have been parsed, but not yet its data. */
 - (void) startedPart: (NSDictionary*)headers {
     // First MIME part is the document's JSON body; the rest are attachments.
-    if (!_document)
-        _jsonBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
-    else {
+    if (!_document) {
+        [self startJSONBufferWithHeaders: headers];
+    } else {
         LogTo(SyncVerbose, @"%@: Starting attachment #%u...",
               self, (unsigned)_attachmentsByDigest.count + 1);
         _curAttachment = [_database attachmentWriter];
@@ -280,17 +291,25 @@
 
 
 - (BOOL) parseJSONBuffer {
-    id document = [CBLJSON JSONObjectWithData: _jsonBuffer
-                                     options: CBLJSONReadingMutableContainers
-                                       error: NULL];
+    NSData* json = _jsonBuffer;
+    _jsonBuffer = nil;
+    if (_jsonCompressed) {
+        json = [NSData gtm_dataByInflatingData: json];
+        if (!json) {
+            Warn(@"%@: received corrupt gzip-encoded JSON part", self);
+            _status = kCBLStatusUpstreamError;
+            return NO;
+        }
+    }
+    id document = [CBLJSON JSONObjectWithData: json
+                                       options: CBLJSONReadingMutableContainers
+                                         error: NULL];
     if (![document isKindOfClass: [NSDictionary class]]) {
         Warn(@"%@: received unparseable JSON data '%@'",
-             self, [_jsonBuffer my_UTF8ToString]);
-        _jsonBuffer = nil;
+             self, [json my_UTF8ToString]);
         _status = kCBLStatusUpstreamError;
         return NO;
     }
-    _jsonBuffer = nil;
     _document = document;
     return YES;
 }

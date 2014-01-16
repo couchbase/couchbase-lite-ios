@@ -82,6 +82,7 @@
     request.HTTPBody = [CBLJSON dataWithJSONObject: body options: 0 error: NULL];
     [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
     [request setValue: @"multipart/related" forHTTPHeaderField: @"Accept"];
+    [request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
 }
 
 
@@ -137,7 +138,7 @@
     Assert(!_docReader);
     LogTo(SyncVerbose, @"%@: Starting new document; ID=\"%@\"", self, headers[@"X-Doc-ID"]);
     _docReader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
-    _docReader.contentType = headers[@"Content-Type"];
+    _docReader.headers = headers;
 }
 
 /** This method is called to append data to a part's body. */

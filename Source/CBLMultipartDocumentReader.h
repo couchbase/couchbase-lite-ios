@@ -21,6 +21,7 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
     CBLStatus _status;
     CBLMultipartReader* _multipartReader;
     NSMutableData* _jsonBuffer;
+    BOOL _jsonCompressed;
     CBL_BlobStoreWriter* _curAttachment;
     NSMutableDictionary* _attachmentsByName;      // maps attachment name --> CBL_BlobStoreWriter
     NSMutableDictionary* _attachmentsByDigest;    // maps attachment MD5 --> CBL_BlobStoreWriter
@@ -30,15 +31,15 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
 
 // synchronous:
 + (NSDictionary*) readData: (NSData*)data
-                    ofType: (NSString*)contentType
+                   headers: (NSDictionary*)headers
                 toDatabase: (CBLDatabase*)database
                     status: (CBLStatus*)outStatus;
 
 // asynchronous:
 + (CBLStatus) readStream: (NSInputStream*)stream
-                 ofType: (NSString*)contentType
-             toDatabase: (CBLDatabase*)database
-                   then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock;
+                 headers: (NSDictionary*)headers
+              toDatabase: (CBLDatabase*)database
+                    then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database;
 
@@ -46,13 +47,13 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
 @property (readonly, nonatomic) NSDictionary* document;
 @property (readonly, nonatomic) NSUInteger attachmentCount;
 
-- (BOOL) setContentType: (NSString*)contentType;
+- (BOOL) setHeaders: (NSDictionary*)headers;
 
 - (BOOL) appendData: (NSData*)data;
 
 - (CBLStatus) readStream: (NSInputStream*)stream
-                 ofType: (NSString*)contentType
-                   then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock;
+                 headers: (NSDictionary*)headers
+                    then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock;
 
 - (BOOL) finish;
 
