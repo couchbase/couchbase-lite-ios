@@ -41,6 +41,18 @@
 
 static const CBLManagerOptions kCBLManagerDefaultOptions;
 
+
+#ifdef GNUSTEP
+static double CouchbaseLiteVersionNumber = 0.7;
+#else
+extern double CouchbaseLiteVersionNumber; // Defined in Xcode-generated CouchbaseLite_vers.c
+#endif
+
+NSString* CBLVersion( void ) {
+    return $sprintf(@"%g", CouchbaseLiteVersionNumber);
+}
+
+
 @interface CBLManager ()
 
 @property (nonatomic) NSMutableDictionary* customHTTPHeaders;

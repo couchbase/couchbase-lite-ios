@@ -557,7 +557,7 @@ static NSArray* splitPath( NSURL* url ) {
         return;
     _responseSent = YES;
 
-    _response[@"Server"] = $sprintf(@"CouchbaseLite %@", CBLVersionString());
+    _response[@"Server"] = $sprintf(@"CouchbaseLite %@", CBLVersion());
 
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];

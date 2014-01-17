@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "CBL_Revision.h"
 
-NSString* CBLVersionString( void );
 
 extern NSString* const CBLHTTPErrorDomain;
 

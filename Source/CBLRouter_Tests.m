@@ -116,7 +116,7 @@ TestCase(CBL_Router_Server) {
     CBLManager* server = createDBManager();
     Send(server, @"GET", @"/", kCBLStatusOK, $dict({@"CouchbaseLite", @"Welcome"},
                                           {@"couchdb", @"Welcome"},
-                                          {@"version", CBLVersionString()}));
+                                          {@"version", CBLVersion()}));
     Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[]);
     Send(server, @"GET", @"/non-existent", kCBLStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kCBLStatusBadID, nil);

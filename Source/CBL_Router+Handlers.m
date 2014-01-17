@@ -53,7 +53,7 @@
 - (CBLStatus) do_GETRoot {
     NSDictionary* info = $dict({@"CouchbaseLite", @"Welcome"},
                                {@"couchdb", @"Welcome"},        // for compatibility
-                               {@"version", CBLVersionString()});
+                               {@"version", CBLVersion()});
     _response.body = [CBL_Body bodyWithProperties: info];
     return kCBLStatusOK;
 }

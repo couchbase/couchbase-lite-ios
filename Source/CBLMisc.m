@@ -28,18 +28,6 @@
 #endif
 
 
-#ifdef GNUSTEP
-static double CouchbaseLiteVersionNumber = 0.7;
-#else
-extern double CouchbaseLiteVersionNumber; // Defined in Xcode-generated CouchbaseLite_vers.c
-#endif
-
-
-NSString* CBLVersionString( void ) {
-return $sprintf(@"%g", CouchbaseLiteVersionNumber);
-}
-
-
 NSString* CBLCreateUUID() {
 #ifdef GNUSTEP
     uuid_t uuid;

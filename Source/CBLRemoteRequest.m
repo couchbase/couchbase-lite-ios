@@ -39,7 +39,7 @@
 
 
 + (NSString*) userAgentHeader {
-    return $sprintf(@"CouchbaseLite/%@", CBLVersionString());
+    return $sprintf(@"CouchbaseLite/%@", CBLVersion());
 }
 
 
