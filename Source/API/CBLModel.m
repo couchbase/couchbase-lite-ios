@@ -389,6 +389,16 @@
 }
 
 
+- (void) markPropertyNeedsSave: (NSString*)property {
+    if (_properties[property] != nil && ![_changedNames containsObject: property]) {
+        if (!_changedNames)
+            _changedNames = [[NSMutableSet alloc] init];
+        [_changedNames addObject: property];
+        [self markNeedsSave];
+    }
+}
+
+
 - (id) getValueOfProperty: (NSString*)property {
     id value = _properties[property];
     if (!value && !_isNew && ![_changedNames containsObject: property]) {

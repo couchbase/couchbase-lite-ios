@@ -75,9 +75,20 @@ typedef NSUInteger CBLJSONWritingOptions;
 @end
 
 
+typedef void (^CBLOnMutateBlock)();
+
 /** Protocol for classes whose instances can encode themselves as JSON.
     Such classes can be used directly as property types in CBLModel subclasses. */
 @protocol CBLJSONEncoding <NSObject>
-- (id) initWIthJSON: (id)jsonObject;
+- (id) initWithJSON: (id)jsonObject;
 - (id) encodeAsJSON;
+
+@optional
+/** If an implementation has mutable persistent state, it should implement this method.
+    The implementation should save a copy of the block in an instance variable, and call the block
+    whenever the instance's state has changed such that -encodeAsJSON will now return a different
+    result.
+    This allows the object's owner (typically a CBLModel) to detect such changes and mark itself
+    as needing to be saved. */
+- (void) setOnMutate: (CBLOnMutateBlock)onMutate;
 @end
