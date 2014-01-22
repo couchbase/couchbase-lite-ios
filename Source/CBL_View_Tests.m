@@ -114,6 +114,7 @@ static CBLView* createView(CBLDatabase* db) {
     [view setMapBlock: MAPBLOCK({
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
+        CAssert([doc[@"_local_seq"] isKindOfClass: [NSNumber class]], @"Invalid _local_seq in %@", doc);
         if (doc[@"key"])
             emit(doc[@"key"], doc[@"_conflicts"]);
         if (doc[@"geoJSON"])
