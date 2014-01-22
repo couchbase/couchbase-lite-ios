@@ -303,7 +303,9 @@ TestCase(API_ModelEncodableProperties) {
     props = model3.propertiesToSave;
     CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Jens", @"last": @"Alfke"},
                                            @{@"first": @"Naomi", @"last": @"Pearl"}],
-                           @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"}}));
+                           @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"},
+                           @"_id": doc3.documentID,
+                           @"_rev": doc3.currentRevisionID}));
 
 }
 
@@ -508,6 +510,7 @@ TestCase(API_ModelAttachments) {
 
 TestCase(API_Model) {
     RequireTestCase(API_ModelDynamicProperties);
+    RequireTestCase(API_ModelEncodableProperties);
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);
