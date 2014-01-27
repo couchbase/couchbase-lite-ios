@@ -47,9 +47,10 @@
 
 - (instancetype) initWithBody: (CBL_Body*)body {
     Assert(body);
-    self = [self initWithDocID: body[@"_id"]
-                         revID: body[@"_rev"]
-                       deleted: body[@"_deleted"] == $true];
+    NSDictionary* props = body.properties;
+    self = [self initWithDocID: props.cbl_id
+                         revID: props.cbl_rev
+                       deleted: props.cbl_deleted];
     if (self) {
         _body = body;
     }
@@ -132,6 +133,10 @@
 
 - (id)objectForKeyedSubscript:(id)key {
     return [_body objectForKeyedSubscript: key];
+}
+
+- (NSDictionary*) attachments {
+    return self.properties.cbl_attachments;
 }
 
 - (NSData*) asJSON {

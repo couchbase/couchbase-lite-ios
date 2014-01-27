@@ -70,7 +70,7 @@
 
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[_id=\"%@\"]", self.class, _document[@"_id"]];
+    return [NSString stringWithFormat: @"%@[_id=\"%@\"]", self.class, _document.cbl_id];
 }
 
 
@@ -316,7 +316,7 @@
 
 
 - (BOOL) registerAttachments {
-    NSDictionary* attachments = _document[@"_attachments"];
+    NSDictionary* attachments = _document.cbl_attachments;
     if (attachments && ![attachments isKindOfClass: [NSDictionary class]]) {
         Warn(@"%@: _attachments property is not a dictionary", self);
         return NO;

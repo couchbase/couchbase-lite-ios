@@ -404,7 +404,7 @@
                                           docNumericID: docNumericID
                                         parentSequence: parentSequence
                                                current: YES
-                                        hasAttachments: (oldRev[@"_attachments"] != nil)
+                                        hasAttachments: (oldRev.attachments != nil)
                                                   JSON: json];
         if (!sequence) {
             // The insert failed. If it was due to a constraint violation, that means a revision
@@ -554,7 +554,7 @@
                                    docNumericID: docNumericID
                                  parentSequence: sequence
                                         current: current 
-                                 hasAttachments: (newRev[@"_attachments"] != nil)
+                                 hasAttachments: (newRev.attachments != nil)
                                            JSON: json];
                 if (sequence <= 0)
                     return self.lastDbError;

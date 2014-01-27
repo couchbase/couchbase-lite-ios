@@ -199,11 +199,11 @@ static id fromJSON( NSData* json ) {
                 SequenceNumber sequence = [r longLongIntForColumnIndex:3];
                 id docContents = nil;
                 if (options->includeDocs) {
-                    id value = fromJSON(valueData);
-                    NSString* linkedID = $castIf(NSDictionary, value)[@"_id"];
+                    NSDictionary* value = $castIf(NSDictionary, fromJSON(valueData));
+                    NSString* linkedID = value.cbl_id;
                     if (linkedID) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                        NSString* linkedRev = value[@"_rev"]; // usually nil
+                        NSString* linkedRev = value.cbl_rev; // usually nil
                         CBLStatus linkedStatus;
                         CBL_Revision* linked = [db getDocumentWithID: linkedID
                                                           revisionID: linkedRev

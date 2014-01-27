@@ -130,7 +130,7 @@ TestCase(CBLMultipartDownloader) {
          CAssertNil(error);
          CBLMultipartDownloader* request = result;
          Log(@"Got document: %@", request.document);
-         NSDictionary* attachments = (request.document)[@"_attachments"];
+         NSDictionary* attachments = (request.document).cbl_attachments;
          CAssert(attachments.count >= 1);
          CAssertEq(db.attachmentStore.count, 0u);
          for (NSDictionary* attachment in attachments.allValues) {

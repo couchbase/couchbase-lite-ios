@@ -233,7 +233,7 @@
         NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
         for (NSDictionary* doc in docs) {
             @autoreleasepool {
-                NSString* docID = doc[@"_id"];
+                NSString* docID = doc.cbl_id;
                 CBL_Revision* rev;
                 CBLStatus status;
                 CBL_Body* docBody = [CBL_Body bodyWithProperties: doc];
@@ -808,15 +808,16 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSString* prevRevID;
     
     if (!deleting) {
-        deleting = $castIf(NSNumber, body[@"_deleted"]).boolValue;
+        NSDictionary* properties = body.properties;
+        deleting = properties.cbl_deleted;
         if (!docID) {
             // POST's doc ID may come from the _id field of the JSON body.
-            docID = body[@"_id"];
+            docID = properties.cbl_id;
             if (!docID && deleting)
                 return kCBLStatusBadID;
         }
         // PUT's revision ID comes from the JSON body.
-        prevRevID = body[@"_rev"];
+        prevRevID = properties.cbl_rev;
     } else {
         // DELETE's revision ID comes from the ?rev= query param
         prevRevID = [self query: @"rev"];
@@ -859,7 +860,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 return 400;
         }
         if (revParam && body) {
-            id revProp = body[@"_rev"];
+            id revProp = body.properties.cbl_rev;
             if (!revProp) {
                 // No _rev property in body, so use ?rev= query param instead:
                 NSMutableDictionary* props = body.properties.mutableCopy;

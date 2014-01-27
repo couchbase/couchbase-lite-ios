@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CouchbaseLitePrivate.h"
+#import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
@@ -64,12 +65,8 @@
 }
 
 
-static inline BOOL isTruthy(id value) {
-    return value != nil && value != $false;
-}
-
 - (BOOL) isDeletion {
-    return isTruthy(self.properties[@"_deleted"]);
+    return self.properties.cbl_deleted;
 }
 
 #ifdef CBL_DEPRECATED
@@ -79,7 +76,7 @@ static inline BOOL isTruthy(id value) {
 #endif
 
 - (BOOL) isGone {
-    return isTruthy(self.properties[@"_deleted"]) || isTruthy(self.properties[@"_removed"]);
+    return self.properties.cbl_deleted || $castIf(NSNumber, self.properties[@"_removed"]).boolValue;
 }
 
 
@@ -93,7 +90,7 @@ static inline BOOL isTruthy(id value) {
 
 
 - (NSDictionary*) attachmentMetadata {
-    return $castIf(NSDictionary, (self.properties)[@"_attachments"]);
+    return $castIf(NSDictionary, (self.properties).cbl_attachments);
 }
 
 
@@ -343,7 +340,7 @@ static inline BOOL isTruthy(id value) {
 }
 
 - (void) _addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
-    NSMutableDictionary* atts = [_properties[@"_attachments"] mutableCopy];
+    NSMutableDictionary* atts = [_properties.cbl_attachments mutableCopy];
     if (!atts)
         atts = $mdict();
     [atts setValue: attachment forKey: name];

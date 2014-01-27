@@ -861,7 +861,6 @@ static BOOL sOnlyTrustAnchorCerts;
                       return;
                   if (error) {
                       // Failed to save checkpoint:
-                      Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
                       switch(CBLStatusFromNSError(error, 0)) {
                           case kCBLStatusNotFound:
                               self.remoteCheckpoint = nil; // doc deleted or db reset

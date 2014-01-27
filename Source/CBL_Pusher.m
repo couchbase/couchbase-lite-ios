@@ -271,7 +271,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                     properties = nuRev.properties;
 
                     // Strip any attachments already known to the target db:
-                    if (properties[@"_attachments"]) {
+                    if (properties.cbl_attachments) {
                         // Look for the latest common ancestor and stub out older attachments:
                         int minRevPos = findCommonAncestor(rev, possibleAncestors);
                         [CBLDatabase stubOutAttachmentsIn: nuRev beforeRevPos: minRevPos + 1
@@ -282,7 +282,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                             return nil;
                     }
                 }
-                Assert(properties[@"_id"]);
+                Assert(properties.cbl_id);
                 [revsToSend addRev: rev];
                 return properties;
             }];
@@ -383,7 +383,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     // It's important to scan the _attachments entries in the same order in which they will appear
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
     CBLMultipartWriter* bodyStream = nil;
-    NSDictionary* attachments = rev[@"_attachments"];
+    NSDictionary* attachments = rev.attachments;
     for (NSString* attachmentName in [CBLCanonicalJSON orderedKeys: attachments]) {
         NSDictionary* attachment = attachments[attachmentName];
         if (attachment[@"follows"]) {

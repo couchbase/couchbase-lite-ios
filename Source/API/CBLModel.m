@@ -16,6 +16,7 @@
 #import "CBLModel_Internal.h"
 #import "CBLModelFactory.h"
 #import "CBLModelArray.h"
+#import "CBLDatabase+Attachments.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
 #import "CBLBase64.h"
@@ -533,7 +534,7 @@
 
 
 - (NSDictionary*) attachmentDataToSave {
-    NSDictionary* attachments = (_document.properties)[@"_attachments"];
+    NSDictionary* attachments = (_document.properties).cbl_attachments;
     if (!_changedAttachments)
         return attachments;
     

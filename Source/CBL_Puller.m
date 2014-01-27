@@ -478,7 +478,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               __strong CBL_Puller *strongSelf = weakSelf;
               // Find the matching revision in 'remainingRevs' and get its sequence:
               CBL_Revision* rev;
-              if (props[@"_id"])
+              if (props.cbl_id)
                   rev = [CBL_Revision revisionWithProperties: props];
               else
                   rev = [[CBL_Revision alloc] initWithDocID: props[@"id"]
@@ -491,7 +491,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   Warn(@"%@: Received unexpected rev %@", self, rev);
               }
 
-              if (props[@"_id"]) {
+              if (props.cbl_id) {
                   // Add to batcher ... eventually it will be fed to -insertRevisions:.
                   [strongSelf asyncTaskStarted];
                   [rev.body compact];
@@ -555,7 +555,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                             self, (unsigned)rows.count);
                       for (NSDictionary* row in rows) {
                           NSDictionary* doc = $castIf(NSDictionary, row[@"doc"]);
-                          if (doc && !doc[@"_attachments"]) {
+                          if (doc && !doc.cbl_attachments) {
                               CBL_Revision* rev = [CBL_Revision revisionWithProperties: doc];
                               NSUInteger pos = [remainingRevs indexOfObject: rev];
                               if (pos != NSNotFound) {

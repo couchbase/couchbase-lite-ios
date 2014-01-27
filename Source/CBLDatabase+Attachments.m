@@ -378,7 +378,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 {
     NSDictionary* properties = rev.properties;
     NSMutableDictionary* editedProperties = nil;
-    NSDictionary* attachments = (id)properties[@"_attachments"];
+    NSDictionary* attachments = (id)properties.cbl_attachments;
     NSMutableDictionary* editedAttachments = nil;
     for (NSString* name in attachments) {
         @autoreleasepool {
@@ -500,7 +500,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
                                    status: (CBLStatus*)outStatus
 {
     // If there are no attachments in the new rev, there's nothing to do:
-    NSDictionary* revAttachments = $castIf(NSDictionary, rev[@"_attachments"]);
+    NSDictionary* revAttachments = rev.attachments;
     if (revAttachments.count == 0 || rev.deleted) {
         *outStatus = kCBLStatusOK;
         return @{};
@@ -584,7 +584,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     Assert(rev);
     
     // If there are no attachments in the new rev, there's nothing to do:
-    NSDictionary* revAttachments = rev[@"_attachments"];
+    NSDictionary* revAttachments = rev.attachments;
     if (revAttachments.count == 0 || rev.deleted)
         return kCBLStatusOK;
     
@@ -631,7 +631,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
                                                                       boundary: nil];
     [writer setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
     [writer addData: rev.asJSON];
-    NSDictionary* attachments = rev[@"_attachments"];
+    NSDictionary* attachments = rev.attachments;
     for (NSString* attachmentName in attachments) {
         NSDictionary* attachment = attachments[attachmentName];
         if (attachment[@"follows"]) {
@@ -675,7 +675,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     }
 
     // Update the _attachments dictionary:
-    NSMutableDictionary* attachments = [oldRev[@"_attachments"] mutableCopy];
+    NSMutableDictionary* attachments = [oldRev.attachments mutableCopy];
     if (!attachments)
         attachments = $mdict();
     if (body) {
