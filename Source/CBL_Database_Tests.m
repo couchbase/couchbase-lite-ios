@@ -390,6 +390,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, rev, history, false);
     CAssertEqual(change, announcement(rev, rev));
+    CAssert(!change.inConflict);
 
 
     CBL_MutableRevision* conflict = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO];
@@ -402,6 +403,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertEq(db.documentCount, 1u);
     verifyHistory(db, conflict, conflictHistory, false);
     CAssertEqual(change, announcement(conflict, conflict));
+    CAssert(change.inConflict);
 
     // Add an unrelated document:
     CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO];
@@ -410,6 +412,7 @@ TestCase(CBL_Database_RevTree) {
     status = [db forceInsert: other revisionHistory: @[other.revID] source: nil];
     CAssertEq(status, kCBLStatusCreated);
     CAssertEqual(change, announcement(other, other));
+    CAssert(!change.inConflict);
 
     // Fetch one of those phantom revisions with no body:
     CBL_Revision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too"];
@@ -461,6 +464,7 @@ TestCase(CBL_Database_RevTree) {
 
     CBL_Revision* maxDel = CBLCompareRevIDs(del1.revID, del2.revID) > 0 ? del1 : nil;
     CAssertEqual(change, announcement(del2, maxDel));
+    CAssert(!change.inConflict);
 
     NSUInteger nPruned;
     CAssertEq([db pruneRevsToMaxDepth: 2 numberPruned: &nPruned], 200);

@@ -530,7 +530,8 @@
                 if (sequence == localParentSequence) {
                     // This is the point where we branch off of the existing rev tree.
                     // If the branch wasn't from the single existing leaf, this creates a conflict.
-                    inConflict = inConflict || (!rev.deleted && !$equal(localParentRevID, revID));
+                    if (localRevs.count && !rev.deleted && !$equal(localParentRevID, revID))
+                        inConflict = YES;
                 }
 
                 CBL_MutableRevision* newRev;
