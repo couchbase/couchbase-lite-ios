@@ -526,14 +526,6 @@
                 
             } else {
                 // This revision isn't known, so add it:
-
-                if (sequence == localParentSequence) {
-                    // This is the point where we branch off of the existing rev tree.
-                    // If the branch wasn't from the single existing leaf, this creates a conflict.
-                    if (localRevs.count && !rev.deleted && !$equal(localParentRevID, revID))
-                        inConflict = YES;
-                }
-
                 CBL_MutableRevision* newRev;
                 NSData* json = nil;
                 BOOL current = NO;
@@ -582,9 +574,11 @@
 
         // Mark the latest local rev as no longer current:
         if (localParentSequence > 0) {
-            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
+            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=? AND current!=0",
                   @(localParentSequence)])
                 return self.lastDbError;
+            if (_fmdb.changes == 0)
+                inConflict = YES; // local parent wasn't a leaf, ergo we just created a branch
         }
 
         // Figure out what the new winning rev ID is:
