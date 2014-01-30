@@ -1324,16 +1324,15 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     
     // No CouchbaseLite view is defined, or it hasn't had a map block assigned;
     // see if there's a CouchDB view definition we can compile:
-    if (![CBLView compiler]) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    }
     NSString* language;
     NSDictionary* viewProps = $castIf(NSDictionary, [self getDesignDocFunction: tdViewName
                                                                            key: @"views"
                                                                       language: &language]);
     if (!viewProps) {
         *outStatus = kCBLStatusNotFound;
+        return nil;
+    } else if (![CBLView compiler]) {
+        *outStatus = kCBLStatusNotImplemented;
         return nil;
     }
     view = [self viewNamed: tdViewName];

@@ -25,7 +25,8 @@ typedef enum {
     kCBLStatusUnsupportedType= 415,
     
     kCBLStatusServerError    = 500,
-    
+    kCBLStatusNotImplemented = 501,
+
     // Non-HTTP errors:
     kCBLStatusBadEncoding    = 490,
     kCBLStatusBadAttachment  = 491,
