@@ -276,6 +276,20 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }
 
     BOOL changed = NO;
+    if (!$equal(error, _lastError)) {
+        self.lastError = error;
+        changed = YES;
+    }
+    if (changesProcessed != _completedChangesCount || changesTotal != _changesCount) {
+        // Change the two at the same time to avoid confusing KVO observers:
+        [self willChangeValueForKey: @"completedChangesCount"];
+        [self willChangeValueForKey: @"changesCount"];
+        _changesCount = (unsigned)changesTotal;
+        _completedChangesCount = (unsigned)changesProcessed;
+        [self didChangeValueForKey: @"changesCount"];
+        [self didChangeValueForKey: @"completedChangesCount"];
+        changed = YES;
+    }
     if (status != _status) {
         self.status = status;
         changed = YES;
@@ -285,18 +299,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         self.running = running;
         changed = YES;
     }
-    if (!$equal(error, _lastError)) {
-        self.lastError = error;
-        changed = YES;
-    }
-    if (changesProcessed != _completedChangesCount) {
-        self.completedChangesCount = changesProcessed;
-        changed = YES;
-    }
-    if (changesTotal != _changesCount) {
-        self.changesCount = changesTotal;
-        changed = YES;
-    }
+
     if (changed) {
         LogTo(CBLReplication, @"%@: status=%d, completed=%u, total=%u (changed=%d)",
               self, status, (unsigned)changesProcessed, (unsigned)changesTotal, changed);
