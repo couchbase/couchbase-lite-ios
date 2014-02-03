@@ -135,6 +135,8 @@
     return (CBLQueryOptions) {
         .startKey = _startKey,
         .endKey = _endKey,
+        .startKeyDocID = _startKeyDocID,
+        .endKeyDocID = _endKeyDocID,
         .keys = _keys,
         .fullTextQuery = _fullTextQuery,
         .fullTextSnippets = _fullTextSnippets,

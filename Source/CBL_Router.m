@@ -235,6 +235,12 @@
         options->endKey = [self retainQuery: [self jsonQuery: @"endkey" error: &error]];
         if (error)
             return NO;
+        options->startKeyDocID = [self retainQuery: [self jsonQuery: @"startkey_docid" error: &error]];
+        if (error)
+            return NO;
+        options->endKeyDocID = [self retainQuery: [self jsonQuery: @"endkey_docid" error: &error]];
+        if (error)
+            return NO;
     }
 
     // Nonstandard full-text search options 'full_text', 'snippets', 'ranking':

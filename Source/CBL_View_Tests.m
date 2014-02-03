@@ -392,6 +392,41 @@ TestCase(CBL_View_Query) {
     CAssert([db close]);
 }
 
+TestCase(CBL_View_QueryStartKeyDocID) {
+    RequireTestCase(CBL_View_Query);
+    CBLDatabase *db = createDB();
+    putDocs(db);
+    putDoc(db, $dict({@"_id", @"11112"}, {@"key", @"one"}));
+
+    CBLView* view = createView(db);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    options.startKey = @"one";
+    options.startKeyDocID = @"11112";
+    options.endKey = @"three";
+    CBLStatus status;
+    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* expectedRows = $array($dict({@"id",  @"11112"}, {@"key", @"one"}),
+                                   $dict({@"id",  @"33333"}, {@"key", @"three"}));
+    CAssertEqual(rows, expectedRows);
+
+    options = kDefaultCBLQueryOptions;
+    options.endKey = @"one";
+    options.endKeyDocID = @"11111";
+    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                          $dict({@"id",  @"44444"}, {@"key", @"four"}),
+                          $dict({@"id",  @"11111"}, {@"key", @"one"}));
+    CAssertEqual(rows, expectedRows);
+
+    options.startKey = @"one";
+    options.startKeyDocID = @"11111";
+    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
+    CAssertEqual(rows, expectedRows);
+}
+
 TestCase (CBL_View_NumericKeys) {
     CBLDatabase *db = createDB();
 
@@ -938,6 +973,8 @@ TestCase(CBL_View_FullTextQuery) {
 }
 
 TestCase(CBLView) {
+    RequireTestCase(CBL_View_Query);
+    RequireTestCase(CBL_View_QueryStartKeyDocID);
     RequireTestCase(CBL_View_MapConflicts);
     RequireTestCase(CBL_View_ConflictWinner);
     RequireTestCase(CBL_View_ConflictLoser);
