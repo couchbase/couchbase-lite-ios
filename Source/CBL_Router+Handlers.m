@@ -647,19 +647,22 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
     CBLContentOptions options = [self contentOptions];
-    NSString* acceptMultipart = self.multipartRequestType;
     NSString* openRevsParam = [self query: @"open_revs"];
+    BOOL mustSendJSON = [self explicitlyAcceptsType: @"application/json"];
     if (openRevsParam == nil || isLocalDoc) {
         // Regular GET:
         NSString* revID = [self query: @"rev"];  // often nil
         CBL_Revision* rev;
-        BOOL includeAttachments = NO;
+        BOOL includeAttachments = NO, sendMultipart = NO;
         if (isLocalDoc) {
             rev = [db getLocalDocumentWithID: docID revisionID: revID];
         } else {
             includeAttachments = (options & kCBLIncludeAttachments) != 0;
-            if (acceptMultipart)
-                options &= ~kCBLIncludeAttachments;
+            if (includeAttachments) {
+                sendMultipart = !mustSendJSON;
+                if (sendMultipart)
+                    options &= ~kCBLIncludeAttachments;
+            }
             CBLStatus status;
             rev = [db getDocumentWithID: docID revisionID: revID options: options status: &status];
             if (!rev) {
@@ -684,13 +687,13 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 minRevPos = [CBL_Revision generationFromRevID: ancestorID] + 1;
             CBL_MutableRevision* stubbedRev = rev.mutableCopy;
             [CBLDatabase stubOutAttachmentsIn: stubbedRev beforeRevPos: minRevPos
-                            attachmentsFollow: (acceptMultipart != nil)];
+                            attachmentsFollow: sendMultipart];
             rev = stubbedRev;
         }
 
-        if (acceptMultipart)
+        if (sendMultipart)
             [_response setMultipartBody: [db multipartWriterForRevision: rev
-                                                            contentType: acceptMultipart]];
+                                                            contentType: @"multipart/related"]];
         else
             _response.body = rev.body;
         
@@ -698,7 +701,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         // open_revs query:
         NSMutableArray* result;
         if ($equal(openRevsParam, @"all")) {
-            // Get all conflicting revisions:
+            // ?open_revs=all returns all current/leaf revisions:
             BOOL includeDeleted = [self boolQuery: @"include_deleted"];
             CBL_RevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
             result = [NSMutableArray arrayWithCapacity: allRevs.count];
@@ -717,7 +720,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             }
                 
         } else {
-            // ?open_revs=[...] returns an array of revisions of the document:
+            // ?open_revs=[...] returns an array of specific revisions of the document:
             NSArray* openRevs = $castIf(NSArray, [self jsonQuery: @"open_revs" error: NULL]);
             if (!openRevs)
                 return kCBLStatusBadParam;
@@ -734,10 +737,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                     [result addObject: $dict({@"missing", revID})];
             }
         }
-        if (acceptMultipart)
-            [_response setMultipartBody: result type: acceptMultipart];
-        else
+
+        // Response type defaults to multipart unless JSON is specified:
+        if (mustSendJSON)
             _response.bodyObject = result;
+        else
+            [_response setMultipartBody: result type: @"multipart/mixed"];
     }
     return kCBLStatusOK;
 }

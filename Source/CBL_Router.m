@@ -264,11 +264,9 @@
 }
 
 
-- (NSString*) multipartRequestType {
+- (BOOL) explicitlyAcceptsType: (NSString*)mimeType {
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
-    if ([accept hasPrefix: @"multipart/"])
-        return accept;
-    return nil;
+    return accept && [accept rangeOfString: mimeType].length > 0;
 }
 
 

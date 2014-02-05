@@ -73,7 +73,7 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) cacheWithEtag: (NSString*)etag;
 - (CBLContentOptions) contentOptions;
 - (BOOL) getQueryOptions: (struct CBLQueryOptions*)options;
-@property (readonly) NSString* multipartRequestType;
+- (BOOL) explicitlyAcceptsType: (NSString*)mimeType;
 @property (readonly) NSDictionary* bodyAsDictionary;
 @property (readonly) NSString* ifMatch;
 - (CBLStatus) openDB;
