@@ -48,6 +48,11 @@
 
     if (!_http) {
         NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: url];
+        if (self.usePOST) {
+            urlRequest.HTTPMethod = @"POST";
+            urlRequest.HTTPBody = self.changesFeedPOSTBody;
+            [urlRequest setValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+        }
         _http = [[WebSocketHTTPLogic alloc] initWithURLRequest: urlRequest];
         // Add headers from my .requestHeaders property:
         [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
@@ -66,7 +71,7 @@
     }
 
     // Now open the connection:
-    LogTo(SyncVerbose, @"%@: GET %@", self, url.resourceSpecifier);
+    LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)

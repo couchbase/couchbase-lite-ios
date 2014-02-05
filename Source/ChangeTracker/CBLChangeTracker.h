@@ -79,6 +79,7 @@ typedef enum CBLChangeTrackerMode {
 @property (weak, nonatomic) id<CBLChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
+@property (nonatomic) BOOL usePOST;
 
 @property (nonatomic) CBLChangeTrackerMode mode;
 @property (copy) NSString* filterName;
@@ -98,6 +99,7 @@ typedef enum CBLChangeTrackerMode {
 // Protected
 @property (readonly) NSString* feed;
 @property (readonly) NSString* changesFeedPath;
+@property (readonly) NSData* changesFeedPOSTBody;
 - (void) retryAfterDelay: (NSTimeInterval)retryDelay;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;

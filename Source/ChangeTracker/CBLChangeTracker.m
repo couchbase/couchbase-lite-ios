@@ -53,7 +53,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
-@synthesize docIDs = _docIDs, pollInterval=_pollInterval;
+@synthesize docIDs = _docIDs, pollInterval=_pollInterval, usePOST=_usePOST;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -95,6 +95,9 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 }
 
 - (NSString*) changesFeedPath {
+    if (_usePOST)
+        return @"_changes";
+    
     NSMutableString* path;
     path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=%.0f",
                                               self.feed, _heartbeat*1000.0];
@@ -142,6 +145,26 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 
 - (NSURL*) changesFeedURL {
     return CBLAppendToURL(_databaseURL, self.changesFeedPath);
+}
+
+- (NSData*) changesFeedPOSTBody {
+    if (!_usePOST)
+        return nil;
+    NSString* filterName = _filterName;
+    NSDictionary* filterParameters = _filterParameters;
+    if (_docIDs) {
+        filterName = @"_doc_ids";
+        filterParameters = @{@"doc_ids": _docIDs};
+    }
+    NSMutableDictionary* post = $mdict({@"feed", self.feed},
+                                       {@"heartbeat", @(_heartbeat*1000.0)},
+                                       {@"style", (_includeConflicts ? @"all_docs" : nil)},
+                                       {@"since", _lastSequenceID},
+                                       {@"limit", (_limit > 0 ? @(_limit) : nil)},
+                                       {@"filter", filterName});
+    if (filterName && filterParameters)
+        [post addEntriesFromDictionary: filterParameters];
+    return [CBLJSON dataWithJSONObject: post options: 0 error: NULL];
 }
 
 - (NSString*) description {

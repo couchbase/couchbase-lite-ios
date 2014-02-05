@@ -8,6 +8,7 @@
 
 #import "CBLWebSocketChangeTracker.h"
 #import "WebSocketClient.h"
+#import "CBLMisc.h"
 #import "MYBlockUtils.h"
 
 
@@ -24,12 +25,23 @@
 }
 
 
+- (NSURL*) changesFeedURL {
+    if (self.usePOST)
+        return CBLAppendToURL(_databaseURL, @"_changes?feed=websocket");
+    else
+        return super.changesFeedURL;
+}
+
+
 - (BOOL) start {
     if (_ws)
         return NO;
     LogTo(ChangeTracker, @"%@: Starting...", self);
     [super start];
 
+    // A WebSocket has to be opened with a GET request, not a POST (as defined in the RFC.)
+    // Instead of putting the options in the POST body as with HTTP, we will send them in an
+    // initial WebSocket message, in -webSocketDidOpen:, below.
     NSURL* url = self.changesFeedURL;
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.timeoutInterval = _heartbeat * 1.5;
@@ -39,7 +51,7 @@
         [request setValue: value forHTTPHeaderField: key];
     }];
 
-    LogTo(SyncVerbose, @"%@: GET %@", self, url.resourceSpecifier);
+    LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, url.resourceSpecifier);
     _ws = [[WebSocketClient alloc] initWithURLRequest: request];
     _ws.delegate = self;
     NSError* error;
@@ -75,6 +87,10 @@
 
 - (void) webSocketDidOpen: (WebSocket *)ws {
     LogTo(ChangeTrackerVerbose, @"%@: WebSocket opened", self);
+    // Now that the WebSocket is open, send the changes-feed options (the ones that would have
+    // gone in the POST body if this were HTTP-based.)
+    if (self.usePOST)
+        [ws sendBinaryMessage: self.changesFeedPOSTBody];
 }
 
 /** Called when a WebSocket receives a textual message from its peer. */

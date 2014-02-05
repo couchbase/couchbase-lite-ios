@@ -114,6 +114,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
+    _changeTracker.usePOST = [self serverIsSyncGatewayVersion: @"0.93"];
 
     unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
@@ -135,13 +136,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     id option = _options[@"websocket"];
     if (option)
         return [option boolValue];
-    BOOL isSG = [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
-             && [_serverType compare: @"Couchbase Sync Gateway/0.91"] >= 0;
-    if (!isSG)
-        return NO;
-    if (self.remote.my_proxySettings != nil)    // WebSocket class doesn't support proxies yet
-        return NO;
-    return YES;
+    return [self serverIsSyncGatewayVersion: @"0.91"]
+        && self.remote.my_proxySettings == nil;    // WebSocket class doesn't support proxies yet
 }
 
 
@@ -285,10 +281,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Process a bunch of remote revisions from the _changes feed at once
 - (void) processInbox: (CBL_RevisionList*)inbox {
-    if (!_canBulkGet) {
-        _canBulkGet = [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
-                   && [_serverType compare: @"Couchbase Sync Gateway/0.81"] >= 0;
-    }
+    if (!_canBulkGet)
+        _canBulkGet = [self serverIsSyncGatewayVersion: @"0.81"];
 
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);

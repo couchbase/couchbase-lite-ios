@@ -615,9 +615,14 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (BOOL) canSendCompressedRequests {
+- (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
-        && [_serverType compare: @"Couchbase Sync Gateway/0.92"] >= 0;
+        && [[_serverType substringFromIndex: 23] compare: minVersion] >= 0;
+}
+
+
+- (BOOL) canSendCompressedRequests {
+    return [self serverIsSyncGatewayVersion: @"0.92"];
 }
 
 
