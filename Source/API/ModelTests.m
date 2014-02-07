@@ -250,6 +250,7 @@ TestCase(API_ModelDynamicProperties) {
     CAssertEqual(model.data, data);
 
     Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
+    [db close];
 }
 
 
@@ -306,7 +307,23 @@ TestCase(API_ModelEncodableProperties) {
                            @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"},
                            @"_id": doc3.documentID,
                            @"_rev": doc3.currentRevisionID}));
+    [db close];
+}
 
+
+TestCase(API_ModelEncodablePropertiesNilValue) { // See #247
+    RequireTestCase(API_ModelEncodableProperties);
+    CBLDatabase* db = createEmptyDB();
+
+    TestModel* emptyModel = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+    AssertNil(emptyModel.mutableSubModel);
+    NSString* documentID = [[emptyModel document] documentID];
+    emptyModel = nil;
+    CBLDocument *document = [db documentWithID:documentID];
+    emptyModel = [[TestModel alloc] initWithDocument:document];
+    AssertNil(emptyModel.mutableSubModel);
+
+    [db close];
 }
 
 
@@ -511,6 +528,7 @@ TestCase(API_ModelAttachments) {
 TestCase(API_Model) {
     RequireTestCase(API_ModelDynamicProperties);
     RequireTestCase(API_ModelEncodableProperties);
+    RequireTestCase(API_ModelEncodablePropertiesNilValue);
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);

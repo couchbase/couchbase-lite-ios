@@ -47,6 +47,8 @@ static ValueConverter valueConverterToClass(Class toClass) {
         };
     } else if ([toClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
         return ^id(id rawValue, CBLModel* self, NSString* property) {
+            if (!rawValue)
+                return nil;
             id<CBLJSONEncoding> value = [(id<CBLJSONEncoding>)[toClass alloc] initWithJSON: rawValue];
             if ([value respondsToSelector: @selector(setOnMutate:)]) {
                 __weak CBLModel* weakSelf = self;
