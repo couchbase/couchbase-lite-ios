@@ -210,6 +210,25 @@
 }
 
 
+- (void) revertChanges {
+    if (!_needsSave)
+        return;
+
+    // Send KVO notifications about all changed properties:
+    NSArray* changedKeys = _changedNames.allObjects;
+    for (NSString* key in changedKeys)
+        [self willChangeValueForKey: key];
+
+    [_properties removeObjectsForKeys: changedKeys];
+    _changedNames = nil;
+    _changedAttachments = nil;
+    self.needsSave = NO;
+
+    for (NSString* key in changedKeys)
+        [self didChangeValueForKey: key];
+}
+
+
 #pragma mark - SAVING:
 
 

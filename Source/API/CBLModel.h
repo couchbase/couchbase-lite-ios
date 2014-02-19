@@ -67,6 +67,9 @@
     This is what will be written to the CBLDocument when the model is saved. */
 - (NSDictionary*) propertiesToSave;
 
+/** Removes any changes made to properties and attachments since the last save. */
+- (void) revertChanges;
+
 /** Deletes the document from the database. 
     You can still use the model object afterwards, but it will refer to the deleted revision. */
 - (BOOL) deleteDocument: (NSError**)outError;
