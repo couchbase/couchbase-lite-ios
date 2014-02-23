@@ -115,8 +115,10 @@ TestCase(CBL_Router_Server) {
     RequireTestCase(CBLManager);
     CBLManager* server = createDBManager();
     Send(server, @"GET", @"/", kCBLStatusOK, $dict({@"CouchbaseLite", @"Welcome"},
-                                          {@"couchdb", @"Welcome"},
-                                          {@"version", CBLVersion()}));
+                                                   {@"couchdb", @"Welcome"},
+                                                   {@"version", CBLVersion()},
+                                                   {@"vendor", @{@"name": @"Couchbase Lite (Objective-C)",
+                                                                 @"version": CBLVersion()}}));
     Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[]);
     Send(server, @"GET", @"/non-existent", kCBLStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kCBLStatusBadID, nil);

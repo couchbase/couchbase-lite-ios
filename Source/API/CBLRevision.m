@@ -128,6 +128,7 @@
 {
     CBL_Revision* _rev;
     BOOL _checkedProperties;
+    NSString* _parentRevID;   // Used only during validation, when parent may not be in DB
 }
 
 
@@ -164,12 +165,18 @@
 
 
 - (NSString*) parentRevisionID  {
-    return [_document.database getParentRevision: _rev].revID;
+    return _parentRevID ?: [_document.database getParentRevision: _rev].revID;
 }
 
 - (CBLSavedRevision*) parentRevision  {
+    if (_parentRevID)
+        return [_document revisionWithID: _parentRevID];
     CBLDocument* document = _document;
     return [document revisionFromRev: [document.database getParentRevision: _rev]];
+}
+
+- (void) _setParentRevisionID: (NSString*)parentRevID {
+    _parentRevID = parentRevID.copy;
 }
 
 

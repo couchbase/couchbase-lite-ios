@@ -161,7 +161,7 @@
 }
 
 - (CBL_MutableRevision*) mutableCopyWithDocID: (NSString*)docID revID: (NSString*)revID {
-    Assert(docID && revID);
+    Assert(docID);
     Assert(!_docID || $equal(_docID, docID));
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
                                                                   deleted: _deleted];

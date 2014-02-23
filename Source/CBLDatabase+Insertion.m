@@ -313,9 +313,12 @@
 
             if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
                 // Fetch the previous revision and validate the new one against it:
+                CBL_Revision* fakeNewRev = [oldRev mutableCopyWithDocID: oldRev.docID revID: nil];
                 CBL_Revision* prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
                                                                   deleted: NO];
-                CBLStatus status = [self validateRevision: oldRev previousRevision: prevRev];
+                CBLStatus status = [self validateRevision: fakeNewRev
+                                         previousRevision: prevRev
+                                              parentRevID: prevRevID];
                 if (CBLStatusIsError(status))
                     return status;
             }
@@ -329,7 +332,9 @@
             }
             
             // Validate:
-            CBLStatus status = [self validateRevision: oldRev previousRevision: nil];
+            CBLStatus status = [self validateRevision: oldRev
+                                     previousRevision: nil
+                                          parentRevID: nil];
             if (CBLStatusIsError(status))
                 return status;
 
@@ -458,6 +463,7 @@
                    source: (NSURL*)source
 {
     CBL_MutableRevision* rev = inRev.mutableCopy;
+    rev.sequence = 0;
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     if (![CBLDatabase isValidDocumentID: docID] || !revID)
@@ -496,7 +502,10 @@
                 if (oldRev)
                     break;
             }
-            CBLStatus status = [self validateRevision: rev previousRevision: oldRev];
+            NSString* parentRevID = (history.count > 1) ? history[1] : nil;
+            CBLStatus status = [self validateRevision: rev
+                                     previousRevision: oldRev
+                                          parentRevID: parentRevID];
             if (CBLStatusIsError(status))
                 return status;
         }
@@ -771,11 +780,15 @@
 #pragma mark - VALIDATION:
 
 
-- (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev {
+- (CBLStatus) validateRevision: (CBL_Revision*)newRev
+              previousRevision: (CBL_Revision*)oldRev
+                   parentRevID: (NSString*)parentRevID
+{
     NSDictionary* validations = [self.shared valuesOfType: @"validation" inDatabaseNamed: _name];
     if (validations.count == 0)
         return kCBLStatusOK;
     CBLSavedRevision* publicRev = [[CBLSavedRevision alloc] initWithDatabase: self revision: newRev];
+    [publicRev _setParentRevisionID: parentRevID];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];

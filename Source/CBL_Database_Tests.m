@@ -264,17 +264,20 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
 TestCase(CBL_Database_Validation) {
     CBLDatabase* db = createDB();
     __block BOOL validationCalled = NO;
+    __block NSString* expectedParentRevID = nil;
     [db setValidationNamed: @"hoopy" 
                  asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context)
     {
         CAssert(newRevision);
         CAssert(context);
         CAssert(newRevision.properties || newRevision.isDeletion);
+        CAssertNil(newRevision.revisionID);
         validationCalled = YES;
         BOOL hoopy = newRevision.isDeletion || newRevision[@"towel"] != nil;
         Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
         if (!hoopy)
             [context rejectWithMessage: @"Where's your towel?"];
+        AssertEqual(newRevision.parentRevisionID, expectedParentRevID);
     }];
     
     // POST a valid new document:
@@ -282,6 +285,7 @@ TestCase(CBL_Database_Validation) {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
     validationCalled = NO;
+    expectedParentRevID = nil;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusCreated);
@@ -290,6 +294,7 @@ TestCase(CBL_Database_Validation) {
     props[@"head_count"] = @3;
     rev = revBySettingProperties(rev, props);
     validationCalled = NO;
+    expectedParentRevID = rev.revID;
     rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusCreated);
@@ -298,7 +303,7 @@ TestCase(CBL_Database_Validation) {
     [props removeObjectForKey: @"towel"];
     rev = revBySettingProperties(rev, props);
     validationCalled = NO;
-#pragma unused (rev)  // tell analyzer to ignore dead stores below
+    expectedParentRevID = rev.revID;
     rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);
@@ -307,6 +312,7 @@ TestCase(CBL_Database_Validation) {
     props = $mdict({@"name", @"Vogon"}, {@"poetry", $true});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
+    expectedParentRevID = nil;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);
@@ -317,6 +323,7 @@ TestCase(CBL_Database_Validation) {
     validationCalled = NO;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
+    expectedParentRevID = nil;
     CAssertEq(status, kCBLStatusCreated);
     CAssertEqual(rev.docID, @"ford");
     
@@ -324,7 +331,8 @@ TestCase(CBL_Database_Validation) {
     rev = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     CAssert(rev.deleted);
     validationCalled = NO;
-    rev = [db putRevision: rev prevRevisionID:  rev.revID allowConflict: NO status: &status];
+    expectedParentRevID = rev.revID;
+    rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssert(validationCalled);
 
@@ -332,6 +340,7 @@ TestCase(CBL_Database_Validation) {
     props = $mdict({@"_id", @"petunias"}, {@"name", @"Pot of Petunias"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
+    expectedParentRevID = nil;
     rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);

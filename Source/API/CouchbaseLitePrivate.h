@@ -65,6 +65,7 @@
                          revision: (CBL_Revision*)rev               __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
 @property (readonly) BOOL propertiesAreLoaded;
+- (void) _setParentRevisionID: (NSString*)parentRevID;
 @end
 
 
