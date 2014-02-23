@@ -65,7 +65,7 @@
 
 /** The document's current properties (including unsaved changes) in externalized JSON format.
     This is what will be written to the CBLDocument when the model is saved. */
-- (NSDictionary*) propertiesToSave;
+@property (readonly, copy) NSDictionary* propertiesToSave;
 
 /** Removes any changes made to properties and attachments since the last save. */
 - (void) revertChanges;

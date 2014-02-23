@@ -17,13 +17,19 @@
     bool _needsSave :1;
     bool _saving    :1;
 
-    NSMutableDictionary* _properties;   // Cached property values, including changed values
+    NSMutableDictionary *_properties;
     NSMutableSet* _changedNames;        // Names of properties that have been changed but not saved
     NSMutableDictionary* _changedAttachments;
 }
 @property (readwrite, retain) CBLDocument* document;
 @property (readwrite) bool needsSave;
-@property (readonly) NSDictionary* currentProperties;
+
+/** Cached property values, including changed values */
+@property (readonly, nonatomic) NSMutableDictionary *properties;
+
+/** Copy of the currently cached property values, including changed values */
+@property (readonly) NSDictionary *currentProperties;
+
 - (void) cacheValue: (id)value ofProperty: (NSString*)property changed: (BOOL)changed;
 - (void) willSave: (NSSet*)changedProperties;   // overridable
 - (CBLModel*) modelWithDocID: (NSString*)docID
