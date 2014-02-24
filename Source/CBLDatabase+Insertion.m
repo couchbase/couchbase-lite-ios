@@ -522,7 +522,6 @@
         // in the local history:
         SequenceNumber sequence = 0;
         SequenceNumber localParentSequence = 0;
-        NSString* localParentRevID = nil;
         for (NSInteger i = historyCount - 1; i>=0; --i) {
             NSString* revID = history[i];
             CBL_Revision* localRev = [localRevs revWithDocID: docID revID: revID];
@@ -531,8 +530,7 @@
                 sequence = localRev.sequence;
                 Assert(sequence > 0);
                 localParentSequence = sequence;
-                localParentRevID = revID;
-                
+
             } else {
                 // This revision isn't known, so add it:
                 CBL_MutableRevision* newRev;
