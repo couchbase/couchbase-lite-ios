@@ -102,7 +102,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (BOOL) isDeleted {
-    return self.currentRevision.isDeletion;
+    return self.currentRevision == nil && [self getLeafRevisions: NULL].count > 0;
 }
 
 
@@ -162,7 +162,10 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     if (!rev)
         return; // current revision didn't change
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
-        _currentRevision = [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
+        if (!rev.deleted)
+            _currentRevision = [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
+        else
+            _currentRevision = nil;
     }
 
     [_modelObject CBLDocument: self didChange: change];

@@ -162,7 +162,7 @@
 
 
 - (NSDictionary*) propertiesToSaveForDeletion {
-    return @{@"_deleted": $true};
+    return @{@"_deleted": $true, @"_rev": _document.currentRevision.revisionID};
 }
 
 

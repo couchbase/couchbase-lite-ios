@@ -177,6 +177,7 @@ TestCase(API_CreateNewRevisions) {
     @"tag": @1337};
     CBLDatabase* db = createEmptyDB();
     CBLDocument* doc = [db createDocument];
+    CAssert(!doc.isDeleted);
     CBLUnsavedRevision* newRev = [doc newRevision];
 
     CBLDocument* newRevDocument = newRev.document;
@@ -200,6 +201,8 @@ TestCase(API_CreateNewRevisions) {
     CAssertEq(rev1.sequence, 1);
     CAssertNil(rev1.parentRevisionID);
     CAssertNil(rev1.parentRevision);
+    CAssertEqual(doc.currentRevision, rev1);
+    CAssert(!doc.isDeleted);
 
     newRev = [rev1 createRevision];
     newRevDocument = newRev.document;
@@ -230,12 +233,13 @@ TestCase(API_CreateNewRevisions) {
     newRev.isDeletion = true;
     CBLSavedRevision* rev3 = [newRev save: &error];
     CAssert(rev3, @"Save 2 failed: %@", error);
-    CAssertEqual(rev3, doc.currentRevision);
     CAssert([rev3.revisionID hasPrefix: @"3-"], @"Unexpected revID '%@'", rev3.revisionID);
     CAssertEq(rev3.sequence, 3);
     CAssert(rev3.isDeletion);
 
     CAssert(doc.isDeleted);
+    CAssertNil(doc.currentRevision);
+    CAssertEqual([doc getLeafRevisions: &error], @[rev3]);
     CBLDocument* doc2 = db[doc.documentID];
     CAssertEq(doc2, doc);
 
@@ -338,7 +342,10 @@ TestCase(API_DeleteDocument) {
     NSError* error;
     CAssert([doc deleteDocument: &error]);
     CAssert(doc.isDeleted);
-    CAssert(doc.currentRevision.isDeletion);
+    // This test used to check that doc.currentRevision.isDeletion. But having a non-nil
+    // currentRevision is inconsistent with a freshly-loaded CBLDocument's behavior, where if the
+    // document was previously deleted its currentRevision will initially be nil. (#265)
+    CAssertNil(doc.currentRevision);
     closeTestDB(db);
 }
 
