@@ -264,14 +264,18 @@
 
 
 - (BOOL) deleteDocumentsAtIndexes: (NSArray*)indexPaths error: (NSError**)outError {
-    NSArray* docs = [indexPaths my_map: ^(id path) {return [self documentAtIndexPath: path];}];
-    return [self deleteDocuments: docs atIndexes: indexPaths error: outError];
+    NSMutableArray* documents = [[NSMutableArray alloc] initWithCapacity: indexPaths.count];
+    for (NSIndexPath* path in indexPaths)
+        [documents addObject: [self documentAtIndexPath: path]];
+    return [self deleteDocuments: documents atIndexes: indexPaths error: outError];
 }
 
 
 - (BOOL) deleteDocuments: (NSArray*)documents error: (NSError**)outError {
-    NSArray* paths = [documents my_map: ^(id doc) {return [self indexPathForDocument: doc];}];
-    return [self deleteDocuments: documents atIndexes: paths error: outError];
+    NSMutableArray* indexPaths = [[NSMutableArray alloc] initWithCapacity: documents.count];
+    for (CBLDocument* doc in documents)
+        [indexPaths addObject: [self indexPathForDocument: doc]];
+    return [self deleteDocuments: documents atIndexes: indexPaths error: outError];
 }
 
 
@@ -292,7 +296,7 @@
     if (identifier) {
         NSUInteger i = 0;
         for (CBLQueryRow* row in _rows) {
-            if ($equal(row.key, identifier)) {
+            if ([row.key isEqual: identifier]) {
                 return [NSIndexPath indexPathForItem: i inSection: 0];
             }
             ++i;
