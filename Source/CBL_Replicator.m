@@ -78,6 +78,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     BOOL _suspended;
 }
 
+@synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
+
 + (NSString *)progressChangedNotification
 {
     return CBL_ReplicatorProgressChangedNotification;
@@ -377,6 +379,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [_host stop];
     _host = nil;
     _suspended = NO;
+    self.revisionBodyTransformationBlock = nil;
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -533,6 +536,20 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     ++_revisionsFailed;
 }
 
+
+- (CBL_Revision *) transformRevision:(CBL_Revision *)rev {
+    if(_revisionBodyTransformationBlock) {
+        @try {
+            CBL_Revision* xformed = _revisionBodyTransformationBlock(rev);
+            AssertEqual(xformed.docID, rev.docID);
+            AssertEqual(xformed.revID, rev.revID);
+            rev = xformed;
+        }@catch (NSException* x) {
+            Warn(@"%@: Exception transforming a revision of doc '%@': %@", self, rev.docID, x);
+        }
+    }
+    return rev;
+}
 
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {

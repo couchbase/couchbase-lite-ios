@@ -424,7 +424,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [strongSelf asyncTaskStarted];
                 [gotRev.body compact];
-                [_downloadsToInsert queueObject: gotRev];
+                [strongSelf queueDownloadedRevision:gotRev];
             }
             
             // Note that we've finished this task:
@@ -489,7 +489,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   // Add to batcher ... eventually it will be fed to -insertRevisions:.
                   [strongSelf asyncTaskStarted];
                   [rev.body compact];
-                  [strongSelf->_downloadsToInsert queueObject: rev];
+                  [strongSelf queueDownloadedRevision:rev];
               } else {
                   CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
                   strongSelf.error = CBLStatusToNSError(status, nil);
@@ -557,7 +557,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                   [remainingRevs removeObjectAtIndex: pos];
                                   [self asyncTaskStarted];
                                   [rev.body compact];
-                                  [_downloadsToInsert queueObject: rev];
+                                  [self queueDownloadedRevision:rev];
                               }
                           }
                       }
@@ -581,6 +581,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
      ];
 }
 
+// This invokes the tranformation block if one is installed and queues the resulting CBL_Revision
+- (void) queueDownloadedRevision: (CBL_Revision*)rev {
+    rev = [self transformRevision: rev];
+    [_downloadsToInsert queueObject: rev];
+}
 
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {

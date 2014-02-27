@@ -256,7 +256,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                         options |= kCBLBigAttachmentsFollow;
                     CBLStatus status;
                     rev = [db revisionByLoadingBody: rev options: options status: &status];
-                    CBL_MutableRevision* nuRev = [rev mutableCopy];
+                    CBL_MutableRevision* nuRev = [[self transformRevision: rev] mutableCopy];
                     rev = nuRev;
                     if (status >= 300) {
                         Warn(@"%@: Couldn't get local contents of %@", self, nuRev);

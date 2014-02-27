@@ -58,7 +58,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @synthesize headers=_headers, OAuth=_OAuth, facebookEmailAddress=_facebookEmailAddress;
 @synthesize personaEmailAddress=_personaEmailAddress, customProperties=_customProperties;
 @synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError=_lastError, status=_status;
-
+@synthesize propertiesTransformationBlock=_propertiesTransformationBlock;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
@@ -343,6 +343,24 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         }];
         return;
     }
+
+    CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
+    if (xformer) {
+        repl.revisionBodyTransformationBlock = ^(CBL_Revision* rev) {
+            NSDictionary* properties = rev.properties;
+            NSDictionary* xformedProperties = xformer(properties);
+            if (xformedProperties != properties) {
+                Assert(xformedProperties != nil);
+                AssertEqual(xformedProperties.cbl_id, properties.cbl_id);
+                AssertEqual(xformedProperties.cbl_rev, properties.cbl_rev);
+                CBL_MutableRevision* nuRev = rev.mutableCopy;
+                nuRev.properties = xformedProperties;
+                rev = nuRev;
+            }
+            return rev;
+        };
+    }
+
     [self bg_setReplicator: repl];
     [repl start];
     [self bg_updateProgress];

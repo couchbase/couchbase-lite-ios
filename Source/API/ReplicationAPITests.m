@@ -213,6 +213,41 @@ TestCase(ReplicationChannelsProperty) {
 }
 
 
+TestCase(ReplicationWithDecoding) {
+    RequireTestCase(RunPullReplication);
+    NSURL* remoteDbURL = RemoteTestDBURL(kPushThenPullDBName);
+    if (!remoteDbURL) {
+        Warn(@"Skipping test ReplicationWithDecoding (no remote test DB URL)");
+        return;
+    }
+    CBLDatabase* db = createEmptyManagerAndDb();
+
+    Log(@"Pulling...");
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    repl.propertiesTransformationBlock = ^NSDictionary*(NSDictionary* props) {
+        Assert(props.cbl_id);
+        Assert(props.cbl_rev);
+        NSInteger index = [props[@"index"] integerValue];
+        if (index % 2)
+            return props;
+        NSMutableDictionary* nuProps = [props mutableCopy];
+        nuProps[@"index"] = @(-index);
+        return nuProps;
+    };
+    runReplication(repl);
+    AssertNil(repl.lastError);
+
+    Log(@"Verifying documents...");
+    for (int i = 1; i <= kNDocuments; i++) {
+        CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+        int expectedIndex = (i%2) ? i : -i;
+        AssertEqual(doc[@"index"], @(expectedIndex));
+        AssertEqual(doc[@"bar"], $false);
+    }
+    [db.manager close];
+}
+
+
 TestCase(API_Replicator) {
     RequireTestCase(CreateReplicators);
     RequireTestCase(RunReplicationWithError);
