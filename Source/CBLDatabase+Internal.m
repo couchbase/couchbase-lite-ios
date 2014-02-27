@@ -122,6 +122,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _name = name ?: [path.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
         _fmdb = [[CBL_FMDatabase alloc] initWithPath: _path];
+        _fmdb.dispatchQueue = manager.dispatchQueue;
         _fmdb.busyRetryTimeout = kSQLiteBusyTimeout;
 #if DEBUG
         _fmdb.logsErrors = YES;
