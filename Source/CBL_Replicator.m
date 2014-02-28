@@ -541,9 +541,12 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     if(_revisionBodyTransformationBlock) {
         @try {
             CBL_Revision* xformed = _revisionBodyTransformationBlock(rev);
-            AssertEqual(xformed.docID, rev.docID);
-            AssertEqual(xformed.revID, rev.revID);
-            rev = xformed;
+            if (xformed != rev) {
+                AssertEqual(xformed.docID, rev.docID);
+                AssertEqual(xformed.revID, rev.revID);
+                AssertEqual(xformed[@"_revisions"], rev[@"_revisions"]);
+                rev = xformed;
+            }
         }@catch (NSException* x) {
             Warn(@"%@: Exception transforming a revision of doc '%@': %@", self, rev.docID, x);
         }
