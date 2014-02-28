@@ -240,6 +240,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
             // This runs on the server thread:
             [self bg_startReplicator: bgManager properties: properties];
         }];
+
+        // Initialize the status to something other than kCBLReplicationStopped:
+        [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0];
+
         [_database addReplication: self];
     }
 }
