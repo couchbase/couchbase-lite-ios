@@ -3677,6 +3677,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -3715,6 +3717,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_FILE = "$(PRODUCT_NAME)_vers.c";
@@ -3750,7 +3754,6 @@
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CouchbaseLite;
 				WRAPPER_EXTENSION = framework;
 			};
@@ -3778,7 +3781,6 @@
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CouchbaseLite;
 				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = framework;
@@ -3801,7 +3803,6 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/ @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -3817,7 +3818,6 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/ @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -3846,7 +3846,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = "Listener/CouchbaseLiteListener-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CouchbaseLiteListener;
 				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = framework;
@@ -3875,7 +3874,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = "Listener/CouchbaseLiteListener-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CouchbaseLiteListener;
 				PROVISIONING_PROFILE = "";
 				STRIP_INSTALLED_PRODUCT = YES;
@@ -3910,7 +3908,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				INFOPLIST_FILE = "LiteServ App/LiteServ App-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = LiteServ;
 				WRAPPER_EXTENSION = app;
@@ -3941,7 +3938,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				INFOPLIST_FILE = "LiteServ App/LiteServ App-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = LiteServ;
 				WRAPPER_EXTENSION = app;
 			};
@@ -3987,7 +3983,6 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LD_GENERATE_MAP_FILE = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Couchbase Lite Empty App";
@@ -4016,7 +4011,6 @@
 				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LD_GENERATE_MAP_FILE = YES;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
@@ -4052,6 +4046,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_FILE = "$(PRODUCT_NAME)_vers.c";
@@ -4088,7 +4084,6 @@
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CouchbaseLite;
 				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = framework;
@@ -4134,7 +4129,6 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
@@ -4157,7 +4151,6 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "Couchbase Lite Demo";
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
@@ -4182,7 +4175,6 @@
 				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Grocery Sync";
@@ -4213,7 +4205,6 @@
 				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LD_GENERATE_MAP_FILE = YES;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
@@ -4248,7 +4239,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = "Listener/CouchbaseLiteListener-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CouchbaseLiteListener;
 				PROVISIONING_PROFILE = "";
 				STRIP_INSTALLED_PRODUCT = YES;
@@ -4293,7 +4283,6 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
 				GCC_WARN_SIGN_COMPARE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
@@ -4313,7 +4302,6 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/ @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Release 64bit";
@@ -4342,7 +4330,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				INFOPLIST_FILE = "LiteServ App/LiteServ App-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = LiteServ;
 				WRAPPER_EXTENSION = app;
 			};
@@ -4375,7 +4362,6 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/CBLJSViewCompiler-Prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -4429,7 +4415,6 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
@@ -4453,7 +4438,6 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
@@ -4539,7 +4523,6 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Grocery Sync";
 				PROVISIONING_PROFILE = "";
@@ -4568,7 +4551,6 @@
 				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Grocery Sync";
@@ -4596,7 +4578,6 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "Couchbase Lite Demo";
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
@@ -4617,7 +4598,6 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = "Couchbase Lite Demo";
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
@@ -4711,7 +4691,6 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -4738,7 +4717,6 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/CBLJSViewCompiler-Prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -4764,7 +4742,6 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
 				GCC_WARN_SIGN_COMPARE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
@@ -4787,7 +4764,6 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
 				GCC_WARN_SIGN_COMPARE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;

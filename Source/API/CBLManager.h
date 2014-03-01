@@ -90,7 +90,7 @@ typedef struct CBLManagerOptions {
     manager was instantiated. By setting a dispatch queue, you can call the objects from within that
     queue no matter what the underlying thread is, and notifications will be posted on that queue
     as well. */
-@property dispatch_queue_t dispatchQueue;
+@property (strong) dispatch_queue_t dispatchQueue;
 
 /** Runs the block asynchronously on the database manager's dispatch queue or thread.
     Unlike the rest of the API, this can be called from any thread, and provides a limited form
