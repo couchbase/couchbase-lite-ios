@@ -304,6 +304,7 @@ TestCase(CBL_Database_Validation) {
     rev = revBySettingProperties(rev, props);
     validationCalled = NO;
     expectedParentRevID = rev.revID;
+#pragma unused(rev)
     rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);
