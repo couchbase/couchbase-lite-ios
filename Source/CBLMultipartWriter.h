@@ -34,6 +34,8 @@
 /** Call this before adding a new stream/data/file to specify the MIME headers that should go with it. */
 - (void) setNextPartsHeaders: (NSDictionary*)headers;
 
+- (void) addGZippedData: (NSData*)data;
+
 /** Attaches the writer to the URL request.
     This calls -openForInputStream and sets the resulting input stream as the HTTPBodyStream of the request. It also sets the Content-Type header of the request. */
 - (void) openForURLRequest: (NSMutableURLRequest*)request;
