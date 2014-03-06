@@ -68,3 +68,9 @@ NSURL* CBLURLWithoutQuery( NSURL* url ) __attribute__((nonnull));
 
 /** Appends path components to a URL. These will NOT be URL-escaped, so you can include queries. */
 NSURL* CBLAppendToURL(NSURL* baseURL, NSString* toAppend) __attribute__((nonnull));
+
+
+#if DEBUG
+NSString* CBLPathToTestFile(NSString* name);
+NSData* CBLContentsOfTestFile(NSString* name);
+#endif

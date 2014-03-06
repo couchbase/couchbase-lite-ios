@@ -397,3 +397,68 @@
 
 
 @end
+
+
+
+
+#if DEBUG
+#import "CBL_BlobStore.h"
+
+TestCase(CBLMultipartDocumentReader) {
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"cbl_test.sqlite3"];
+    CBLDatabase *db = [CBLDatabase createEmptyDBAtPath: path];
+    CAssert([db open: nil]);
+
+    NSData* mime = CBLContentsOfTestFile(@"Multipart1.mime");
+    NSDictionary* headers = @{@"Content-Type": @"multipart/mixed; boundary=\"BOUNDARY\""};
+    CBLStatus status;
+    NSDictionary* dict = [CBLMultipartDocumentReader readData: mime headers: headers toDatabase: db status: &status];
+    CAssert(!CBLStatusIsError(status));
+    CAssertEqual(dict, (@{@"_id": @"THX-1138",
+                         @"_rev": @"1-foobar",
+                         @"_attachments": @{
+                                 @"mary.txt": @{@"type": @"text/doggerel", @"length": @52,
+                                                @"follows": @YES,
+                                                @"digest": @"md5-1WWSGl9mJACzGjclAafpfQ=="}
+                                 }}));
+    NSDictionary* attachment = [dict[@"_attachments"] objectForKey: @"mary.txt"];
+    CBL_BlobStoreWriter* writer = [db attachmentWriterForAttachment: attachment];
+    Assert(writer);
+    AssertEq(writer.length, 52u);
+
+    mime = CBLContentsOfTestFile(@"MultipartBinary.mime");
+    headers = @{@"Content-Type": @"multipart/mixed; boundary=\"dc0bf3cdc9a6c6e4c46fe2a361c8c5d7\""};
+    dict = [CBLMultipartDocumentReader readData: mime headers: headers toDatabase: db status: &status];
+    CAssert(!CBLStatusIsError(status));
+    CAssertEqual(dict, (@{@"_id": @"038c536dc29ff0f4127705879700062c",
+                          @"_rev":@"3-e715bcf1865f8283ab1f0ba76e7a92ba",
+                          @"_attachments":@{
+                                  @"want3.jpg":@{
+                                          @"content_type":@"image/jpeg",
+                                          @"revpos":@3,
+                                          @"digest":@"md5-/rAceS7EjR+CDHdYp8zKOg==",
+                                          @"length":@24758,
+                                          @"follows":@YES},
+                                  @"Toad.gif":@{
+                                          @"content_type":@"image/gif",
+                                          @"revpos":@2,
+                                          @"digest":@"md5-6UpXIDR/olzgZrDhsMe7Sw==",
+                                          @"length":@6566,
+                                          @"follows":@YES}}}));
+    attachment = [dict[@"_attachments"] objectForKey: @"Toad.gif"];
+    writer = [db attachmentWriterForAttachment: attachment];
+    Assert(writer);
+    AssertEq(writer.length, 6566u);
+    attachment = [dict[@"_attachments"] objectForKey: @"want3.jpg"];
+    writer = [db attachmentWriterForAttachment: attachment];
+    Assert(writer);
+    AssertEq(writer.length, 24758u);
+
+    // Read data that's equivalent to the last one except the JSON is gzipped:
+    mime = CBLContentsOfTestFile(@"MultipartBinary.mime");
+    headers = @{@"Content-Type": @"multipart/mixed; boundary=\"dc0bf3cdc9a6c6e4c46fe2a361c8c5d7\""};
+    NSDictionary* unzippedDict = [CBLMultipartDocumentReader readData: mime headers: headers toDatabase: db status: &status];
+    CAssertEqual(unzippedDict, dict);
+}
+
+#endif
