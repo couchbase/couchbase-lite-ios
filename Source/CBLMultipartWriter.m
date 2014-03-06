@@ -121,6 +121,7 @@
 
 
 
+#if DEBUG
 
 TestCase(CBLMultipartWriter) {
     NSString* expectedOutput = @"\r\n--BOUNDARY\r\nContent-Length: 16\r\n\r\n<part the first>\r\n--BOUNDARY\r\nContent-Length: 10\r\nContent-Type: something\r\n\r\n<2nd part>\r\n--BOUNDARY--";
@@ -153,3 +154,5 @@ TestCase(CBLMultipartWriterGZipped) {
     NSData* output = [mp allOutput];
     AssertEqual(output, CBLContentsOfTestFile(@"MultipartStars.mime"));
 }
+
+#endif
