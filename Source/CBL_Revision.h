@@ -8,7 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLDatabase.h"
-@class CBL_Body, CBL_MutableRevision;
+#import "CBL_Body.h"
+@class CBL_MutableRevision;
 
 
 /** Database sequence ID */
@@ -36,6 +37,9 @@ typedef SInt64 SequenceNumber;
 @property (readonly,copy) NSData* asJSON;
 
 - (id) objectForKeyedSubscript: (NSString*)key;  // enables subscript access in Xcode 4.4+
+
+/** Returns the "_attachments" property, validating that it's a dictionary. */
+@property (readonly) NSDictionary* attachments;
 
 /** Revision's sequence number, or 0 if unknown.
     This property is settable, but only once. That is, it starts out zero and can be

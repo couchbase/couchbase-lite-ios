@@ -23,7 +23,6 @@
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Pusher.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
 #import "CBLPersonaAuthorizer.h"
@@ -43,6 +42,23 @@
 static const CBLManagerOptions kCBLManagerDefaultOptions;
 
 
+#ifdef GNUSTEP
+static double CouchbaseLiteVersionNumber = 0.7;
+#else
+extern double CouchbaseLiteVersionNumber; // Defined in Xcode-generated CouchbaseLite_vers.c
+#endif
+
+NSString* CBLVersion( void ) {
+    return $sprintf(@"%g", CouchbaseLiteVersionNumber);
+}
+
+
+@interface CBLManager ()
+
+@property (nonatomic) NSMutableDictionary* customHTTPHeaders;
+
+@end
+
 @implementation CBLManager
 {
     NSString* _dir;
@@ -50,7 +66,6 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
     NSThread* _thread;
     dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
-    CBL_ReplicatorManager* _replicatorManager;
     NSURL* _internalURL;
     NSMutableArray* _replications;
     __weak CBL_Shared *_shared;
@@ -58,7 +73,8 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 }
 
 
-@synthesize dispatchQueue=_dispatchQueue;
+@synthesize dispatchQueue=_dispatchQueue, directory = _dir;
+@synthesize customHTTPHeaders = _customHTTPHeaders;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -110,6 +126,9 @@ static CBLManager* sInstance;
                              error: &error];
     if (!self)
         Warn(@"Failed to create CBLManager: %@", error);
+    
+    _customHTTPHeaders = [NSMutableDictionary dictionary];
+    
     return self;
 }
 
@@ -140,17 +159,6 @@ static CBLManager* sInstance;
             }
         }
         [self upgradeOldDatabaseFiles];
-
-        if (!_options.noReplicator) {
-            // Don't start the replicator immediately; instead, give the app a chance to install
-            // filter and validation functions, otherwise persistent replications may behave
-            // incorrectly. The delayed-perform means the replicator won't start until after
-            // the caller (and its caller, etc.) returns back to the runloop.
-            LogTo(CBL_Server, @"%@ will start bg server", self);
-            MYAfterDelay(0.0, ^{
-                [self startPersistentReplications];
-            });
-        }
     }
     return self;
 }
@@ -194,9 +202,13 @@ static CBLManager* sInstance;
 
 
 - (id) copyWithZone: (NSZone*)zone {
-    return [[[self class] alloc] initWithDirectory: self.directory
+    CBLManager *managerCopy = [[[self class] alloc] initWithDirectory: self.directory
                                            options: &_options
-                                            shared: _shared];
+                                                               shared: _shared];
+    
+    managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
+    
+    return managerCopy;
 }
 
 - (instancetype) copy {
@@ -207,8 +219,6 @@ static CBLManager* sInstance;
 - (void) close {
     Assert(self != sInstance, @"Please don't close the sharedInstance!");
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
-    [_replicatorManager stop];
-    _replicatorManager = nil;
     for (CBLDatabase* db in _databases.allValues) {
         [db close];
     }
@@ -245,26 +255,6 @@ static CBLManager* sInstance;
         }
     }
 }
-
-
-- (void) startPersistentReplications {
-    if (!_shared)
-        return; // already closed
-    [self.backgroundServer tellDatabaseManager:^(CBLManager *bgMgr) {
-        [bgMgr startReplicatorManager];
-    }];
-}
-
-// This is internal and should only be called on the background manager
-- (void) startReplicatorManager {
-    if (!_replicatorManager) {
-        _replicatorManager = [[CBL_ReplicatorManager alloc] initWithDatabaseManager: self];
-        [_replicatorManager start];
-    }
-}
-
-
-@synthesize directory = _dir;
 
 
 - (NSString*) description {
@@ -332,11 +322,9 @@ static CBLManager* sInstance;
 
 
 + (BOOL) isValidDatabaseName: (NSString*)name {
-    if (name.length > 0 && name.length < 240        // leave room for filename suffixes
+    return name.length > 0 && name.length < 240        // leave room for filename suffixes
             && [name rangeOfCharacterFromSet: kIllegalNameChars].length == 0
-            && islower([name characterAtIndex: 0]))
-        return YES;
-    return $equal(name, kCBL_ReplicatorDatabaseName);
+            && islower([name characterAtIndex: 0]);
 }
 
 
@@ -415,102 +403,6 @@ static CBLManager* sInstance;
                                                 error: outError]) &&
             [db open: outError] &&
             [db replaceUUIDs: outError];
-}
-
-
-#pragma mark - REPLICATIONs (PUBLIC API):
-
-
-- (NSArray*) allReplications {
-    NSMutableArray* replications = [_replications mutableCopy];
-    CBLQuery* q = [self[@"_replicator"] createAllDocumentsQuery];
-    for (CBLQueryRow* row in [q run: NULL]) {
-        CBLReplication* repl = [CBLReplication modelForDocument: row.document];
-        if (![replications containsObject: repl])
-            [replications addObject: repl];
-    }
-    return replications;
-}
-
-
-- (CBLReplication*) replicationWithDatabase: (CBLDatabase*)db
-                                     remote: (NSURL*)remote
-                                       pull: (BOOL)pull
-                                     create: (BOOL)create
-                                      start: (BOOL)start
-{
-    for (CBLReplication* repl in self.allReplications) {
-        if (repl.localDatabase == db && $equal(repl.remoteURL, remote) && repl.pull == pull)
-            return repl;
-    }
-    if (!create)
-        return nil;
-    CBLReplication* repl = [[CBLReplication alloc] initWithDatabase: db
-                                                             remote: remote
-                                                               pull: pull];
-    [_replications addObject: repl];
-
-    if (start) {
-        // Give the caller a chance to customize parameters like .filter before calling -start,
-        // but make sure -start will be run even if the caller doesn't call it.
-        [db doAsync: ^{
-            [repl start];
-        }];
-    }
-    return repl;
-}
-
-
-- (NSArray*) createReplicationsBetween: (CBLDatabase*)database
-                                   and: (NSURL*)otherDbURL
-                           exclusively: (BOOL)exclusively
-                                 start: (BOOL)start
-{
-    CBLReplication* pull = nil, *push = nil;
-    if (otherDbURL) {
-        pull = [self replicationWithDatabase: database remote: otherDbURL
-                                        pull: YES create: YES start: start];
-        push = [self replicationWithDatabase: database remote: otherDbURL
-                                        pull: NO create: YES start: start];
-        if (!pull || !push)
-            return nil;
-        pull.continuous = push.continuous = YES;
-    }
-    if (exclusively) {
-        for (CBLReplication* repl in self.allReplications) {
-            if (repl.localDatabase == database && repl != pull && repl != push) {
-                [repl deleteDocument: nil];
-            }
-        }
-    }
-    return otherDbURL ? $array(pull, push) : nil;
-}
-
-
-- (void) deletePersistentReplicationsFor: (CBLDatabase*)db {
-    CBLDatabase* replicatorDB = [self existingDatabaseNamed: @"_replicator" error: NULL];
-    if (!replicatorDB)
-        return;
-    NSString* dbName = db.name;
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.includeDocs = YES;
-    for (CBLQueryRow* row in [replicatorDB getAllDocs: &options]) {
-        NSDictionary* docProps = row.documentProperties;
-        NSString* source = $castIf(NSString, docProps[@"source"]);
-        NSString* target = $castIf(NSString, docProps[@"target"]);
-        if ([source isEqualToString: dbName] || [target isEqualToString: dbName]) {
-            // Replication doc involves this database -- delete it:
-            LogTo(Sync, @"%@ deleting replication %@", self, docProps);
-            CBL_Revision* delRev = [[CBL_Revision alloc] initWithDocID: docProps[@"_id"]
-                                                                 revID: nil deleted: YES];
-            CBLStatus status;
-            if (![replicatorDB putRevision: delRev
-                            prevRevisionID: docProps[@"_rev"]
-                             allowConflict: NO status: &status]) {
-                Warn(@"CBL_ReplicatorManager: Couldn't delete replication doc %@", docProps);
-            }
-        }
-    }
 }
 
 
@@ -766,11 +658,6 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 }
 
 
-- (CBL_ReplicatorManager*) replicatorManager {
-    return _replicatorManager;
-}
-
-
 @end
 
 
@@ -782,7 +669,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 TestCase(CBLManager) {
     RequireTestCase(CBLDatabase);
 
-    for (NSString* name in @[@"f", @"foo123", @"foo/($12)", @"f+-_00/" @"_replicator"])
+    for (NSString* name in @[@"f", @"foo123", @"foo/($12)", @"f+-_00/"])
         CAssert([CBLManager isValidDatabaseName: name]);
     NSMutableString* longName = [@"long" mutableCopy];
     while (longName.length < 240)

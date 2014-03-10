@@ -9,19 +9,7 @@
 #import "CBLChangeTracker.h"
 
 
-/** CBLChangeTracker implementation that uses a raw TCP socket to read the chunk-mode HTTP response. */
+/** CBLChangeTracker implementation that uses a raw TCP socket to read the HTTP response. */
 @interface CBLSocketChangeTracker : CBLChangeTracker
-{
-    @private
-    NSInputStream* _trackingInput;
-    
-    NSMutableData* _inputBuffer;
-    NSMutableData* _changeBuffer;
-    CFHTTPMessageRef _unauthResponse;
-    NSURLCredential* _credential;
-    CFAbsoluteTime _startTime;
-    bool _gotResponseHeaders;
-    bool _inputAvailable;
-    bool _atEOF;
-}
+
 @end

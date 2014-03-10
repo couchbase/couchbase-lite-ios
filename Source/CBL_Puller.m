@@ -28,6 +28,7 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
+#import "MYURLUtils.h"
 
 
 // Maximum number of revisions to fetch simultaneously. (CFNetwork will only send about 5
@@ -95,23 +96,25 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     }
 
     CBLChangeTrackerMode mode;
-    if (_continuous && _caughtUp && pollInterval == 0.0)
-        mode = kLongPoll;
-    else
+    if (!_continuous || pollInterval > 0.0)
         mode = kOneShot;
-    
+    else if (self.canUseWebSockets)
+        mode = kWebSocket;
+    else
+        mode = _caughtUp ? kLongPoll : kOneShot;
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _remote
-                                                             mode: mode
-                                                        conflicts: YES
-                                                     lastSequence: _lastSequence
-                                                           client: self];
+                                                              mode: mode
+                                                         conflicts: YES
+                                                      lastSequence: _lastSequence
+                                                            client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
     _changeTracker.continuous = _continuous;
     _changeTracker.filterName = _filterName;
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
+    _changeTracker.usePOST = [self serverIsSyncGatewayVersion: @"0.93"];
 
     unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
@@ -129,8 +132,17 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
+- (BOOL) canUseWebSockets {
+    id option = _options[@"websocket"];
+    if (option)
+        return [option boolValue];
+    return [self serverIsSyncGatewayVersion: @"0.91"]
+        && self.remote.my_proxySettings == nil;    // WebSocket class doesn't support proxies yet
+}
+
+
 - (void) stop {
-    if (!_running)
+    if (!self.running)
         return;
     LogTo(Sync, @"%@ STOPPING...", self);
     if (_changeTracker) {
@@ -174,7 +186,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // If we were already online (i.e. server is reachable) but got a reachability-change event,
     // tell the tracker to retry in case it's in retry mode after a transient failure. (I.e. the
     // state of the network might be better now.)
-    if (_running && _online)
+    if (self.running && self.online)
         [_changeTracker retry];
     return NO;
 }
@@ -226,12 +238,17 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
-- (void) changeTrackerFinished {
+- (void) changeTrackerCaughtUp {
     if (!_caughtUp) {
         LogTo(Sync, @"%@: Caught up with changes!", self);
         _caughtUp = YES;
         [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
     }
+}
+
+
+- (void) changeTrackerFinished {
+    [self changeTrackerCaughtUp];
 }
 
 
@@ -247,7 +264,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (error) {
         if (CBLIsOfflineError(error))
             [self goOffline];
-        else if (!_error)
+        else if (!self.error)
             self.error = error;
     }
     
@@ -264,20 +281,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Process a bunch of remote revisions from the _changes feed at once
 - (void) processInbox: (CBL_RevisionList*)inbox {
-    if (!_canBulkGet) {
-        _canBulkGet = [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
-                   && [_serverType compare: @"Couchbase Sync Gateway/0.81"] >= 0;
-    }
+    if (!_canBulkGet)
+        _canBulkGet = [self serverIsSyncGatewayVersion: @"0.81"];
 
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
-    NSUInteger total = _changesTotal - inbox.count;
+    NSUInteger total = self.changesTotal - inbox.count;
     if (![_db findMissingRevisions: inbox]) {
         Warn(@"%@ failed to look up local revs", self);
         inbox = nil;
     }
-    if (_changesTotal != total + inbox.count)
+    if (self.changesTotal != total + inbox.count)
         self.changesTotal = total + inbox.count;
     
     if (inbox.count == 0) {
@@ -409,7 +424,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [strongSelf asyncTaskStarted];
                 [gotRev.body compact];
-                [_downloadsToInsert queueObject: gotRev];
+                [strongSelf queueDownloadedRevision:gotRev];
             }
             
             // Note that we've finished this task:
@@ -457,7 +472,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               __strong CBL_Puller *strongSelf = weakSelf;
               // Find the matching revision in 'remainingRevs' and get its sequence:
               CBL_Revision* rev;
-              if (props[@"_id"])
+              if (props.cbl_id)
                   rev = [CBL_Revision revisionWithProperties: props];
               else
                   rev = [[CBL_Revision alloc] initWithDocID: props[@"id"]
@@ -470,11 +485,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   Warn(@"%@: Received unexpected rev %@", self, rev);
               }
 
-              if (props[@"_id"]) {
+              if (props.cbl_id) {
                   // Add to batcher ... eventually it will be fed to -insertRevisions:.
                   [strongSelf asyncTaskStarted];
                   [rev.body compact];
-                  [strongSelf->_downloadsToInsert queueObject: rev];
+                  [strongSelf queueDownloadedRevision:rev];
               } else {
                   CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
                   strongSelf.error = CBLStatusToNSError(status, nil);
@@ -501,6 +516,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [self addRemoteRequest: dl];
     dl.timeoutInterval = self.requestTimeout;
     dl.authorizer = _authorizer;
+
+    if (self.canSendCompressedRequests)
+        [dl compressBody];
+
     [dl start];
 }
 
@@ -530,7 +549,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                             self, (unsigned)rows.count);
                       for (NSDictionary* row in rows) {
                           NSDictionary* doc = $castIf(NSDictionary, row[@"doc"]);
-                          if (doc && !doc[@"_attachments"]) {
+                          if (doc && !doc.cbl_attachments) {
                               CBL_Revision* rev = [CBL_Revision revisionWithProperties: doc];
                               NSUInteger pos = [remainingRevs indexOfObject: rev];
                               if (pos != NSNotFound) {
@@ -538,7 +557,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                   [remainingRevs removeObjectAtIndex: pos];
                                   [self asyncTaskStarted];
                                   [rev.body compact];
-                                  [_downloadsToInsert queueObject: rev];
+                                  [self queueDownloadedRevision:rev];
                               }
                           }
                       }
@@ -562,6 +581,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
      ];
 }
 
+// This invokes the tranformation block if one is installed and queues the resulting CBL_Revision
+- (void) queueDownloadedRevision: (CBL_Revision*)rev {
+    rev = [self transformRevision: rev];
+    [_downloadsToInsert queueObject: rev];
+}
 
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {

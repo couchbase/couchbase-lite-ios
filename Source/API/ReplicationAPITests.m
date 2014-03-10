@@ -8,6 +8,7 @@
 //
 
 #import "CouchbaseLite.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
 #import "Test.h"
 
@@ -52,7 +53,7 @@ static void runReplication(CBLReplication* repl) {
         lastTime = now;
     }
     Log(@"...replicator finished. mode=%d, progress %u/%u, error=%@",
-        repl.status, repl.completedChangesCount, repl.changesCount, repl.error);
+        repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
 }
 
 
@@ -62,16 +63,13 @@ TestCase(CreateReplicators) {
 
     // Create a replication:
     CAssertEqual(db.allReplications, @[]);
-    CBLReplication* r1 = [db replicationToURL: fakeRemoteURL];
+    CBLReplication* r1 = [db createPushReplication: fakeRemoteURL];
     CAssert(r1);
-    CAssertEqual(db.allReplications, @[r1]);
-    CAssertEq([db replicationToURL: fakeRemoteURL], r1);   // 2nd call returns same replicator instance
 
     // Check the replication's properties:
     CAssertEq(r1.localDatabase, db);
     CAssertEqual(r1.remoteURL, fakeRemoteURL);
     CAssert(!r1.pull);
-    CAssert(!r1.persistent);
     CAssert(!r1.continuous);
     CAssert(!r1.createTarget);
     CAssertNil(r1.filter);
@@ -87,23 +85,20 @@ TestCase(CreateReplicators) {
     CAssertNil(r1.lastError);
 
     // Create another replication:
-    CBLReplication* r2 = [db replicationFromURL: fakeRemoteURL];
+    CBLReplication* r2 = [db createPullReplication: fakeRemoteURL];
     CAssert(r2);
     CAssert(r2 != r1);
-    CAssertEqual(db.allReplications, (@[r1, r2]));
-    CAssertEq([db replicationFromURL: fakeRemoteURL], r2);
 
     // Check the replication's properties:
     CAssertEq(r2.localDatabase, db);
     CAssertEqual(r2.remoteURL, fakeRemoteURL);
     CAssert(r2.pull);
 
-    CBLReplication* r3 = [[CBLReplication alloc] initPullFromSourceURL: fakeRemoteURL
-                                                            toDatabase: db];
+    CBLReplication* r3 = [db createPullReplication: fakeRemoteURL];
     CAssert(r3 != r2);
     r3.documentIDs = @[@"doc1", @"doc2"];
     CBLStatus status;
-    CBL_Replicator* repl = [db.manager replicatorWithProperties: r3.propertiesToSave
+    CBL_Replicator* repl = [db.manager replicatorWithProperties: r3.properties
                                                          status: &status];
     AssertEqual(repl.docIDs, r3.documentIDs);
     [db.manager close];
@@ -135,10 +130,13 @@ TestCase(RunPushReplication) {
     }];
 
     Log(@"Pushing...");
-    CBLReplication* repl = [db replicationToURL: remoteDbURL];
+    CBLReplication* repl = [db createPushReplication: remoteDbURL];
     repl.createTarget = YES;
+    [repl start];
+    CAssertEqual(db.allReplications, @[repl]);
     runReplication(repl);
     AssertNil(repl.lastError);
+    CAssertEqual(db.allReplications, @[]);
     [db.manager close];
 }
 
@@ -153,7 +151,7 @@ TestCase(RunPullReplication) {
     CBLDatabase* db = createEmptyManagerAndDb();
 
     Log(@"Pulling...");
-    CBLReplication* repl = [db replicationFromURL: remoteDbURL];
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
     runReplication(repl);
     AssertNil(repl.lastError);
 
@@ -173,7 +171,7 @@ TestCase(RunReplicationWithError) {
     CBLDatabase* db = createEmptyManagerAndDb();
 
     // Create a replication:
-    CBLReplication* r1 = [db replicationFromURL: fakeRemoteURL];
+    CBLReplication* r1 = [db createPullReplication: fakeRemoteURL];
     runReplication(r1);
 
     // It should have failed with a 404:
@@ -190,7 +188,7 @@ TestCase(RunReplicationWithError) {
 TestCase(ReplicationChannelsProperty) {
     CBLDatabase* db = createEmptyManagerAndDb();
     NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://couchbase.com/no_such_db"];
-    CBLReplication* r1 = [db replicationFromURL: fakeRemoteURL];
+    CBLReplication* r1 = [db createPullReplication: fakeRemoteURL];
 
     CAssertNil(r1.channels);
     r1.filter = @"foo/bar";
@@ -211,6 +209,41 @@ TestCase(ReplicationChannelsProperty) {
     CAssertEqual(r1.filter, nil);
     CAssertEqual(r1.filterParams, nil);
 
+    [db.manager close];
+}
+
+
+TestCase(ReplicationWithDecoding) {
+    RequireTestCase(RunPullReplication);
+    NSURL* remoteDbURL = RemoteTestDBURL(kPushThenPullDBName);
+    if (!remoteDbURL) {
+        Warn(@"Skipping test ReplicationWithDecoding (no remote test DB URL)");
+        return;
+    }
+    CBLDatabase* db = createEmptyManagerAndDb();
+
+    Log(@"Pulling...");
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    repl.propertiesTransformationBlock = ^NSDictionary*(NSDictionary* props) {
+        Assert(props.cbl_id);
+        Assert(props.cbl_rev);
+        NSInteger index = [props[@"index"] integerValue];
+        if (index % 2)
+            return props;
+        NSMutableDictionary* nuProps = [props mutableCopy];
+        nuProps[@"index"] = @(-index);
+        return nuProps;
+    };
+    runReplication(repl);
+    AssertNil(repl.lastError);
+
+    Log(@"Verifying documents...");
+    for (int i = 1; i <= kNDocuments; i++) {
+        CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+        int expectedIndex = (i%2) ? i : -i;
+        AssertEqual(doc[@"index"], @(expectedIndex));
+        AssertEqual(doc[@"bar"], $false);
+    }
     [db.manager close];
 }
 

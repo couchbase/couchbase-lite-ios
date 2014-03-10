@@ -19,7 +19,6 @@
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartWriter.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
 #import "CBLMisc.h"
@@ -236,6 +235,12 @@
         options->endKey = [self retainQuery: [self jsonQuery: @"endkey" error: &error]];
         if (error)
             return NO;
+        options->startKeyDocID = [self retainQuery: [self jsonQuery: @"startkey_docid" error: &error]];
+        if (error)
+            return NO;
+        options->endKeyDocID = [self retainQuery: [self jsonQuery: @"endkey_docid" error: &error]];
+        if (error)
+            return NO;
     }
 
     // Nonstandard full-text search options 'full_text', 'snippets', 'ranking':
@@ -259,11 +264,9 @@
 }
 
 
-- (NSString*) multipartRequestType {
+- (BOOL) explicitlyAcceptsType: (NSString*)mimeType {
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
-    if ([accept hasPrefix: @"multipart/"])
-        return accept;
-    return nil;
+    return accept && [accept rangeOfString: mimeType].length > 0;
 }
 
 
@@ -280,8 +283,7 @@
 
 
 - (CBLStatus) openDB {
-    // As a special case, the _replicator db is created on demand (as though it already existed)
-    if (!_db.exists && !$equal(_db.name, kCBL_ReplicatorDatabaseName))
+    if (!_db.exists)
         return kCBLStatusNotFound;
     NSError* error;
     if (![_db open: &error])
@@ -559,7 +561,7 @@ static NSArray* splitPath( NSURL* url ) {
         return;
     _responseSent = YES;
 
-    _response[@"Server"] = $sprintf(@"CouchbaseLite %@", CBLVersionString());
+    _response[@"Server"] = $sprintf(@"CouchbaseLite %@", CBLVersion());
 
     // Check for a mismatch between the Accept request header and the response type:
     NSString* accept = [_request valueForHTTPHeaderField: @"Accept"];
@@ -580,6 +582,11 @@ static NSArray* splitPath( NSURL* url ) {
                                     $equal(_request.HTTPMethod, @"HEAD"))) {
         if (!_response[@"Cache-Control"])
             _response[@"Cache-Control"] = @"must-revalidate";
+    }
+
+    for (NSString *key in [_server.customHTTPHeaders allKeys])
+    {
+        _response[key] = _server.customHTTPHeaders[key];
     }
 
     if (_onResponseReady)

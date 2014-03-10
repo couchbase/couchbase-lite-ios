@@ -187,25 +187,18 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 
 #pragma mark - REPLICATION:
 
-/** Returns an array of all current CBLReplications involving this database. */
+/** Returns an array of all current, running CBLReplications involving this database. */
 - (NSArray*) allReplications;
 
-/** Creates a replication that will 'push' to a database at the given URL, or returns an existing
-    such replication if there already is one.
-    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (CBLReplication*) replicationToURL: (NSURL*)url;
+/** Creates a replication that will 'push' this database to a remote database at the given URL.
+    This always creates a new replication, even if there is already one to the given URL.
+    You must call -start on the replication to start it. */
+- (CBLReplication*) createPushReplication: (NSURL*)url;
 
-/** Creates a replication that will 'pull' from a database at the given URL, or returns an existing
-    such replication if there already is one.
-    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (CBLReplication*) replicationFromURL: (NSURL*)url;
-
-/** Creates a pair of replications to both pull and push to database at the given URL, or returns existing replications if there are any.
-    @param otherDbURL  The URL of the remote database, or nil for none.
-    @param exclusively  If YES, any previously existing replications to or from otherDbURL will be deleted.
-    @return  An array whose first element is the "pull" replication and second is the "push".
-    It will initially be non-persistent; set its .persistent property to YES to make it persist. */
-- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively;
+/** Creates a replication that will 'pull' from a remote database at the given URL to this database.
+    This always creates a new replication, even if there is already one from the given URL.
+    You must call -start on the replication to start it. */
+- (CBLReplication*) createPullReplication: (NSURL*)url;
 
 
 #ifdef CBL_DEPRECATED
@@ -216,12 +209,14 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 - (CBLQuery*) queryAllDocuments __attribute__((deprecated("renamed -createAllDocumentsQuery")));
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock __attribute__((deprecated("renamed -setFilterNamed:asBlock:")));
 - (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock __attribute__((deprecated("renamed -setValidationNamed:asBlock:")));
+- (CBLReplication*) replicationToURL: (NSURL*)url __attribute__((deprecated("renamed createPushReplication:")));
+- (CBLReplication*) replicationFromURL: (NSURL*)url __attribute__((deprecated("renamed createPullReplication:")));
 - (CBLReplication*) pushToURL: (NSURL*)url
-        __attribute__((deprecated("use replicationToURL, then call -start")));
+        __attribute__((deprecated("use createPushReplication, then call -start")));
 - (CBLReplication*) pullFromURL: (NSURL*)url
-        __attribute__((deprecated("use replicationFromURL, then call -start")));
-- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
-        __attribute__((deprecated("use replicationsWithURL:, then call -start")));
+        __attribute__((deprecated("use createPullReplication, then call -start")));
+- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
+        __attribute__((deprecated("call createPushReplication: and createPullReplication:")));
 #endif
 
 @end

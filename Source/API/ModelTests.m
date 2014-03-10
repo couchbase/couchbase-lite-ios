@@ -53,21 +53,36 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 
 @interface TestSubModel : NSObject <CBLJSONEncoding>
-@property (copy) NSString *firstName, *lastName;
+- (instancetype) initWithFirstName: (NSString*)firstName lastName: (NSString*)lastName;
+@property (readonly, copy, nonatomic) NSString *firstName, *lastName;
+@end
+
+
+@interface TestMutableSubModel : TestSubModel
+@property (copy, nonatomic) NSString *firstName, *lastName;
 @end
 
 
 @implementation TestSubModel
+{
+    @protected
+    NSString* _firstName, *_lastName;
+}
 
-@synthesize firstName, lastName;
+@synthesize firstName=_firstName, lastName=_lastName;
 
-- (id) initWIthJSON:(id)jsonObject {
+- (instancetype) initWithFirstName: (NSString*)first lastName: (NSString*)last {
     self = [super init];
     if (self) {
-        self.firstName = [jsonObject objectForKey: @"first"];
-        self.lastName = [jsonObject objectForKey: @"last"];
+        _firstName = first;
+        _lastName = last;
     }
     return self;
+}
+
+- (id) initWithJSON:(id)jsonObject {
+    return [self initWithFirstName: [jsonObject objectForKey: @"first"]
+                          lastName: [jsonObject objectForKey: @"last"]];
 }
 
 - (id) encodeAsJSON {
@@ -76,6 +91,28 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 - (BOOL) isEqual:(id)object {
     return [self.firstName isEqual: [object firstName]] && [self.lastName isEqual: [object lastName]];
+}
+
+@end
+
+
+@implementation TestMutableSubModel
+{
+    CBLOnMutateBlock _onMutate;
+}
+
+- (void) setOnMutate:(CBLOnMutateBlock)onMutate {
+    _onMutate = onMutate;
+}
+
+- (void) setFirstName:(NSString *)firstName {
+    _firstName = [firstName copy];
+    if (_onMutate) _onMutate();
+}
+
+- (void) setLastName:(NSString *)lastName {
+    _lastName = [lastName copy];
+    if (_onMutate) _onMutate();
 }
 
 @end
@@ -110,6 +147,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @property NSArray* others;
 
 @property TestSubModel* subModel;
+@property TestMutableSubModel* mutableSubModel;
 @property NSArray* subModels;
 
 @property int Capitalized;
@@ -123,7 +161,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
 @dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly;
 @dynamic str, data, date, decimal, other, strings, dates, others, Capitalized;
-@dynamic subModel, subModels;
+@dynamic subModel, subModels, mutableSubModel;
 @synthesize reloadCount;
 
 - (void) didLoadFromDocument {
@@ -212,6 +250,7 @@ TestCase(API_ModelDynamicProperties) {
     CAssertEqual(model.data, data);
 
     Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
+    [db close];
 }
 
 
@@ -219,9 +258,7 @@ TestCase(API_ModelEncodableProperties) {
     CBLDatabase* db = createEmptyDB();
     TestModel* model = [[TestModel alloc] initWithNewDocumentInDatabase: db];
 
-    TestSubModel* name = [[TestSubModel alloc] init];
-    name.firstName = @"Jens";
-    name.lastName = @"Alfke";
+    TestSubModel* name = [[TestSubModel alloc] initWithFirstName: @"Jens" lastName: @"Alfke"];
     model.subModel = name;
     AssertEq(model.subModel, name);
     AssertEq([model getValueOfProperty: @"subModel"], name);
@@ -234,22 +271,59 @@ TestCase(API_ModelEncodableProperties) {
     CAssertEqual(model2.subModel, name);
 
     // Now test array of encodable objects:
-    TestSubModel* name2 = [[TestSubModel alloc] init];
-    name2.firstName = @"Naomi";
-    name2.lastName = @"Pearl";
+    TestSubModel* name2 = [[TestSubModel alloc] initWithFirstName: @"Naomi" lastName: @"Pearl"];
     model.subModel = nil;
     NSArray* subModels = @[name, name2];
     model.subModels = subModels;
     AssertEqual(model.subModels, subModels);
     AssertEq([model getValueOfProperty: @"subModels"], subModels);
+
+    TestMutableSubModel* name3 = [[TestMutableSubModel alloc] initWithFirstName: @"Jed" lastName: @"Clampett"];
+    model.mutableSubModel = name3;
+    AssertEq(model.mutableSubModel, name3);
+    AssertEq([model getValueOfProperty: @"mutableSubModel"], name3);
+
     props = model.propertiesToSave;
     CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Jens", @"last": @"Alfke"},
-                                           @{@"first": @"Naomi", @"last": @"Pearl"}]}));
+                                           @{@"first": @"Naomi", @"last": @"Pearl"}],
+                           @"mutableSubModel": @{@"first": @"Jed", @"last": @"Clampett"}}));
 
     CBLDocument* doc3 = [db createDocument];
     CAssert([doc3 putProperties: props error: NULL]);
     TestModel* model3 = [[TestModel alloc] initWithDocument: doc3];
+    Assert(!model3.needsSave);
     CAssertEqual(model3.subModels, subModels);
+    CAssertEqual(model3.mutableSubModel, name3);
+
+    // Mutate the submodel in place and make sure the model's serialization changed:
+    name3 = model3.mutableSubModel;
+    AssertEqual(name3.lastName, @"Clampett");
+    Assert(!model3.needsSave);
+    name3.lastName = @"Pookie";
+    Assert(model3.needsSave);
+    props = model3.propertiesToSave;
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Jens", @"last": @"Alfke"},
+                                           @{@"first": @"Naomi", @"last": @"Pearl"}],
+                           @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"},
+                           @"_id": doc3.documentID,
+                           @"_rev": doc3.currentRevisionID}));
+    [db close];
+}
+
+
+TestCase(API_ModelEncodablePropertiesNilValue) { // See #247
+    RequireTestCase(API_ModelEncodableProperties);
+    CBLDatabase* db = createEmptyDB();
+
+    TestModel* emptyModel = [[TestModel alloc] initWithNewDocumentInDatabase: db];
+    AssertNil(emptyModel.mutableSubModel);
+    NSString* documentID = [[emptyModel document] documentID];
+    emptyModel = nil;
+    CBLDocument *document = [db documentWithID:documentID];
+    emptyModel = [[TestModel alloc] initWithDocument:document];
+    AssertNil(emptyModel.mutableSubModel);
+
+    [db close];
 }
 
 
@@ -453,6 +527,8 @@ TestCase(API_ModelAttachments) {
 
 TestCase(API_Model) {
     RequireTestCase(API_ModelDynamicProperties);
+    RequireTestCase(API_ModelEncodableProperties);
+    RequireTestCase(API_ModelEncodablePropertiesNilValue);
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);

@@ -54,6 +54,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     CBLCache* _docCache;
     CBLModelFactory* _modelFactory;  // used in category method in CBLModelFactory.m
     NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
+    NSMutableSet* _allReplications;
 }
 
 
@@ -69,6 +70,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     self = [self _initWithPath: path name: name manager: manager readOnly: readOnly];
     if (self) {
         _unsavedModelsMutable = [NSMutableSet set];
+        _allReplications = [[NSMutableSet alloc] init];
 #if TARGET_OS_IPHONE
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector: @selector(appBackgrounding:)
@@ -199,7 +201,6 @@ static id<CBLFilterCompiler> sFilterCompiler;
                                                         object: self];
     if (_isOpen && ![self closeForDeletion])
         return NO;
-    [_manager deletePersistentReplicationsFor: self];
     [_manager _forgetDatabase: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     if (!self.exists) {
@@ -421,28 +422,31 @@ static NSString* makeLocalDocID(NSString* docID) {
 
 
 - (NSArray*) allReplications {
-    NSMutableArray* result = $marray();
-    for (CBLReplication* repl in _manager.allReplications) {
-        if (repl.localDatabase == self)
-            [result addObject: repl];
-    }
-    return result;
+    return [_allReplications allObjects];
+}
+
+- (void) addReplication: (CBLReplication*)repl {
+    [_allReplications addObject: repl];
+}
+
+- (void) forgetReplication: (CBLReplication*)repl {
+    [_allReplications removeObject: repl];
 }
 
 
-- (CBLReplication*) replicationToURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: NO create: YES start: NO];
+- (CBLReplication*) createPushReplication: (NSURL*)url {
+    return [[CBLReplication alloc] initWithDatabase: self remote: url pull: NO];
 }
 
-- (CBLReplication*) replicationFromURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: YES create: YES start: NO];
+- (CBLReplication*) createPullReplication: (NSURL*)url {
+    return [[CBLReplication alloc] initWithDatabase: self remote: url pull: YES];
 }
 
-- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
-    return [_manager createReplicationsBetween: self and: otherDbURL
-                                   exclusively: exclusively start: NO];
+- (CBLReplication*) existingReplicationWithURL: (NSURL*)url pull: (BOOL)pull {
+    for (CBLReplication* repl in _allReplications)
+        if (repl.pull == pull && $equal(repl.remoteURL, url))
+            return repl;
+    return nil;
 }
 
 
@@ -462,17 +466,31 @@ static NSString* makeLocalDocID(NSString* docID) {
 - (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock {
     [self setFilterNamed: filterName asBlock: filterBlock];
 }
+- (CBLReplication*) replicationToURL: (NSURL*)url {
+    return [self createPushReplication: url];
+}
+- (CBLReplication*) replicationFromURL: (NSURL*)url {
+    return [self createPullReplication: url];
+}
 - (CBLReplication*) pushToURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: NO create: YES start: YES];
+    return [self createPushReplication: url];
 }
 - (CBLReplication*) pullFromURL: (NSURL*)url {
-    return [_manager replicationWithDatabase: self remote: url
-                                        pull: YES create: YES start: YES];
+    return [self createPullReplication: url];
 }
-- (NSArray*) replicateWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
-    return [_manager createReplicationsBetween: self and: otherDbURL
-                                   exclusively: exclusively start: YES];
+- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively {
+    if (exclusively) {
+        for (CBLReplication* repl in self.allReplications)
+            if (!$equal(repl.remoteURL, otherDbURL))
+                [repl stop];
+    }
+    CBLReplication* pull = [self existingReplicationWithURL: otherDbURL pull: YES];
+    if (!pull)
+        pull = [self createPullReplication: otherDbURL];
+    CBLReplication* push = [self existingReplicationWithURL: otherDbURL pull: NO];
+    if (!push)
+        push = [self createPushReplication: otherDbURL];
+    return (pull && push) ? @[pull, push] : nil;
 }
 #endif
 

@@ -269,6 +269,8 @@ static NSData* kCRLFCRLF;
 
 
 #if DEBUG  //// UNIT TESTS:
+#import "CBLMisc.h"
+#import "GTMNSData+zlib.h"
 
 
 @interface TestMultipartReaderDelegate : NSObject <CBLMultipartReaderDelegate>
@@ -354,6 +356,23 @@ TestCase(CBLMultipartReader_Simple) {
         CAssertEqual(delegate.partList, expectedParts);
         CAssertEqual(delegate.headerList, expectedHeaders);
     }
+}
+
+TestCase(CBLMultipartReader_GZipped) {
+    NSData* mime = CBLContentsOfTestFile(@"MultipartStars.mime");
+    TestMultipartReaderDelegate* delegate = [[TestMultipartReaderDelegate alloc] init];
+    CBLMultipartReader* reader = [[CBLMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: delegate];
+    [reader appendData: mime];
+    Assert(reader.finished);
+
+    CAssertEqual(delegate.headerList, (@[@{@"Content-Encoding": @"gzip",
+                                           @"Content-Length": @"24",
+                                           @"Content-Type": @"star-bellies"}]));
+
+    NSData* stars = [NSData gtm_dataByInflatingData: delegate.partList[0]];
+    AssertEq(stars.length, 100u);
+    for (int i=0; i<100; i++)
+        AssertEq(((char*)stars.bytes)[i], '*');
 }
 
 #endif

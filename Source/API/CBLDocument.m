@@ -55,8 +55,9 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 #if ! CBLCACHE_IS_SMART
 - (void)dealloc
 {
-    if (_modelObject)
-        Warn(@"Deallocing %@ while it still has a modelObject %@", self, _modelObject);
+    id model = _modelObject;
+    if (model)
+        Warn(@"Deallocing %@ while it still has a modelObject %@", self, model);
     [_owningCache resourceBeingDealloced: self];
 }
 #endif
@@ -101,7 +102,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (BOOL) isDeleted {
-    return self.currentRevision.isDeletion;
+    return self.currentRevision == nil && [self getLeafRevisions: NULL].count > 0;
 }
 
 
@@ -161,7 +162,10 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     if (!rev)
         return; // current revision didn't change
     if (_currentRevision && !$equal(rev.revID, _currentRevision.revisionID)) {
-        _currentRevision = [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
+        if (!rev.deleted)
+            _currentRevision = [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
+        else
+            _currentRevision = nil;
     }
 
     [_modelObject CBLDocument: self didChange: change];
@@ -236,12 +240,12 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
                       allowConflict: (BOOL)allowConflict
                               error: (NSError**)outError
 {
-    id idProp = [properties objectForKey: @"_id"];
+    id idProp = properties.cbl_id;
     if (idProp && ![idProp isEqual: self.documentID])
         Warn(@"Trying to PUT wrong _id to %@: %@", self, properties);
 
     // Process _attachments dict, converting CBLAttachments to dicts:
-    NSDictionary* attachments = properties[@"_attachments"];
+    NSDictionary* attachments = properties.cbl_attachments;
     if (attachments.count) {
         NSDictionary* expanded = [CBLAttachment installAttachmentBodies: attachments
                                                              intoDatabase: _database];
@@ -252,7 +256,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         }
     }
     
-    BOOL deleted = !properties || [properties[@"_deleted"] boolValue];
+    BOOL deleted = !properties || properties.cbl_deleted;
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID
                                                                     revID: nil
                                                                   deleted: deleted];
@@ -269,7 +273,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
-    NSString* prevID = properties[@"_rev"];
+    NSString* prevID = properties.cbl_rev;
     return [self putProperties: properties prevRevID: prevID allowConflict: NO error: outError];
 }
 

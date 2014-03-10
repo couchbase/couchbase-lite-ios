@@ -20,7 +20,6 @@
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
-#import "CBLModel_Internal.h"
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
@@ -39,8 +38,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 @interface CBLReplication ()
-@property (copy) id source, target;  // document properties
-
 @property (nonatomic, readwrite) BOOL running;
 @property (nonatomic, readwrite) CBLReplicationStatus status;
 @property (nonatomic, readwrite) unsigned completedChangesCount, changesCount;
@@ -50,109 +47,37 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 @implementation CBLReplication
 {
-    NSURL* _remoteURL;
-    BOOL _pull;
-    NSThread* _mainThread;
-    BOOL _started;
-    BOOL _running;
-    unsigned _completedChangesCount, _changesCount;
-    CBLReplicationStatus _status;
-    NSError* _lastError;
-
+    bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
-    NSString* _bg_documentID;           // ONLY used on the server thread
 }
 
 
-- (instancetype) initPullFromSourceURL: (NSURL*)source toDatabase: (CBLDatabase*)database {
-    return [self initWithDatabase: database remote: source pull: YES];
-}
+@synthesize localDatabase=_database, createTarget=_createTarget;
+@synthesize continuous=_continuous, filter=_filter, filterParams=_filterParams;
+@synthesize documentIDs=_documentIDs, network=_network, remoteURL=_remoteURL, pull=_pull;
+@synthesize headers=_headers, OAuth=_OAuth, facebookEmailAddress=_facebookEmailAddress;
+@synthesize personaEmailAddress=_personaEmailAddress, customProperties=_customProperties;
+@synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError=_lastError, status=_status;
+@synthesize propertiesTransformationBlock=_propertiesTransformationBlock;
 
-- (instancetype) initPushFromDatabase: (CBLDatabase*)database toTargetURL: (NSURL*)target {
-    return [self initWithDatabase: database remote: target pull: NO];
-}
-
-// Instantiate a new replication; it is not persistent yet
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
                              pull: (BOOL)pull
 {
     NSParameterAssert(database);
     NSParameterAssert(remote);
-    CBLDatabase* replicatorDB = [database.manager databaseNamed: @"_replicator" error: NULL];
-    if (!replicatorDB)
-        return nil;
-    self = [super initWithNewDocumentInDatabase: replicatorDB];
+    self = [super init];
     if (self) {
+        _database = database;
         _remoteURL = remote;
         _pull = pull;
-        self.autosaves = NO;
-        self.source = pull ? remote.absoluteString : database.name;
-        self.target = pull ? database.name : remote.absoluteString;
     }
     return self;
 }
 
 
-// Instantiate a persistent replication from an existing document in the _replicator db
-- (instancetype) initWithDocument:(CBLDocument *)document {
-    self = [super initWithDocument: document];
-    if (self) {
-        if (!self.isNew) {
-            // This is a persistent replication being loaded from the database:
-            self.autosaves = YES;  // turn on autosave for all persistent replications
-            NSString* urlStr = self.sourceURLStr;
-            if (isLocalDBName(urlStr))
-                urlStr = self.targetURLStr;
-            else
-                _pull = YES;
-            Assert(urlStr);
-            _remoteURL = [[NSURL alloc] initWithString: urlStr];
-            Assert(_remoteURL);
-            
-            [self observeReplicatorManager];
-        }
-    }
-    return self;
-}
-
-
-- (void)dealloc
-{
+- (void) dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
-    if (!self.persistent)
-        [self setNeedsSave: false];     // I'm ephemeral, so avoid warning about unsaved changes
-}
-
-
-// These are the JSON properties in the replication document:
-@dynamic source, target, continuous, filter, network;
-
-@synthesize remoteURL=_remoteURL, pull=_pull;
-
-
-- (BOOL) createTarget {
-    return $castIf(NSNumber, [self valueForKey: @"create_target"]).boolValue;
-}
-
-- (void) setCreateTarget:(BOOL)createTarget {
-    [self setValue: (createTarget ? $true : nil) forKey: @"create_target"];
-}
-
-- (NSDictionary*) filterParams {
-    return $castIf(NSDictionary, [self valueForKey: @"query_params"]);
-}
-
-- (void) setFilterParams:(NSDictionary *)filterParams {
-    [self setValue: filterParams forKey: @"query_params"];
-}
-
-- (NSArray*) documentIDs {
-    return $castIf(NSArray, [self valueForKey: @"doc_ids"]);
-}
-
-- (void) setDocumentIDs:(NSArray *)documentIDs {
-    [self setValue: documentIDs forKey: @"doc_ids"];
 }
 
 
@@ -161,103 +86,25 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                 self.class, (self.pull ? @"from" : @"to"), self.remoteURL.my_sanitizedString];
 }
 
-
-static inline BOOL isLocalDBName(NSString* url) {
-    return [url rangeOfString: @":"].length == 0;
-}
-
-
-- (BOOL) persistent {
-    return !self.isNew;  // i.e. if it's been saved to the database, it's persistent
-}
-
-- (void) setPersistent:(BOOL)persistent {
-    if (persistent == self.persistent)
-        return;
-    BOOL ok;
-    NSError* error;
-    if (persistent)
-        ok = [self save: &error];
-    else
-        ok = [self deleteDocument: &error];
-    if (!ok) {
-        Warn(@"Error changing persistence of %@: %@", self, error);
-        return;
-    }
-    self.autosaves = persistent;
-    if (persistent)
-        [self observeReplicatorManager];
-}
-
-
-- (NSString*) sourceURLStr {
-    id source = self.source;
-    if ([source isKindOfClass: [NSDictionary class]])
-        source = source[@"url"];
-    return $castIf(NSString, source);
-}
-
-
-- (NSString*) targetURLStr {
-    id target = self.target;
-    if ([target isKindOfClass: [NSDictionary class]])
-        target = target[@"url"];
-    return $castIf(NSString, target);
-}
-
-
-- (CBLDatabase*) localDatabase {
-    NSString* name = self.sourceURLStr;
-    if (!isLocalDBName(name))
-        name = self.targetURLStr;
-    return self.database.manager[name];
-}
-
-
-// The 'source' or 'target' dictionary, whichever is remote, if it's a dictionary not a string
-- (NSDictionary*) remoteDictionary {
-    id source = self.source;
-    if ([source isKindOfClass: [NSDictionary class]] 
-            && !isLocalDBName(source[@"url"]))
-        return source;
-    id target = self.target;
-    if ([target isKindOfClass: [NSDictionary class]] 
-            && !isLocalDBName(target[@"url"]))
-        return target;
-    return nil;
-}
-
-
-- (void) setRemote: (id)remote {
-    if (self.pull)
-        self.source = remote;
-    else
-        self.target = remote;
-}
-
-
-- (void) setRemoteDictionaryValue: (id)value forKey: (NSString*)key {
-    id oldRemote = self.pull ? self.source : self.target;
-    NSMutableDictionary* remote;
-    if ([oldRemote isKindOfClass: [NSString class]])
-        remote = [NSMutableDictionary dictionaryWithObject: oldRemote forKey: @"url"];
-    else
-        remote = [NSMutableDictionary dictionaryWithDictionary: oldRemote];
-    [remote setValue: value forKey: key];
-    if (!$equal(remote, oldRemote)) {
-        [self setRemote: remote];
+- (void) setContinuous:(bool)continuous {
+    if (continuous != _continuous) {
+        _continuous = continuous;
         [self restart];
     }
 }
 
-
-- (NSDictionary*) headers {
-    return (self.remoteDictionary)[@"headers"];
+- (void) setFilter:(NSString *)filter {
+    if (!$equal(filter, _filter)) {
+        _filter = filter;
+        [self restart];
+    }
 }
 
 - (void) setHeaders: (NSDictionary*)headers {
-    [self setRemoteDictionaryValue: headers forKey: @"headers"];
-    [self restart];
+    if (!$equal(headers, _headers)) {
+        _headers = headers;
+        [self restart];
+    }
 }
 
 
@@ -280,19 +127,6 @@ static inline BOOL isLocalDBName(NSString* url) {
 }
 
 
-- (void) willSave: (NSSet*)changedProperties {
-    // If any properties change that require the replication to restart, clear the
-    // _replication_state property too, which will cause the CBL_ReplicatorManager to restart it.
-    static NSSet* sRestartProperties;
-    if (!sRestartProperties)
-        sRestartProperties = [NSSet setWithObjects: @"filter", @"query_params", @"continuous",
-                                                    @"doc_ids", nil];
-    if ([changedProperties intersectsSet: sRestartProperties])
-        [self setValue: nil ofProperty: @"_replication_state"];
-    [super willSave: changedProperties];
-}
-
-
 #pragma mark - AUTHENTICATION:
 
 
@@ -304,7 +138,7 @@ static inline BOOL isLocalDBName(NSString* url) {
 - (void) setCredential:(NSURLCredential *)cred {
     // Hardcoded username doesn't mix with stored credentials.
     NSURL* url = self.remoteURL;
-    [self setRemote: url.my_URLByRemovingUser.absoluteString];
+    _remoteURL = url.my_URLByRemovingUser;
 
     NSURLProtectionSpace* space = [url my_protectionSpaceWithRealm: nil
                                             authenticationMethod: NSURLAuthenticationMethodDefault];
@@ -319,28 +153,6 @@ static inline BOOL isLocalDBName(NSString* url) {
     [self restart];
 }
 
-- (NSDictionary*) OAuth {
-    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
-    return auth[@"oauth"];
-}
-
-- (void) setOAuth: (NSDictionary*)oauth {
-    NSDictionary* auth = oauth ? @{@"oauth": oauth} : nil;
-    [self setRemoteDictionaryValue: auth forKey: @"auth"];
-}
-
-
-- (NSString*) facebookEmailAddress {
-    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
-    return auth[@"facebook"][@"email"];
-}
-
-- (void) setFacebookEmailAddress:(NSString *)email {
-    NSDictionary* auth = nil;
-    if (email)
-        auth = @{@"facebook": @{@"email": email}};
-    [self setRemoteDictionaryValue: auth forKey: @"auth"];
-}
 
 - (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
     if (![CBLFacebookAuthorizer registerToken: token forEmailAddress: email forSite: self.remoteURL])
@@ -353,18 +165,6 @@ static inline BOOL isLocalDBName(NSString* url) {
 
 - (NSURL*) personaOrigin {
     return self.remoteURL.my_baseURL;
-}
-
-- (NSString*) personaEmailAddress {
-    NSDictionary* auth = $castIf(NSDictionary, (self.remoteDictionary)[@"auth"]);
-    return auth[@"persona"][@"email"];
-}
-
-- (void) setPersonaEmailAddress:(NSString *)email {
-    NSDictionary* auth = nil;
-    if (email)
-        auth = @{@"persona": @{@"email": email}};
-    [self setRemoteDictionaryValue: auth forKey: @"auth"];
 }
 
 - (BOOL) registerPersonaAssertion: (NSString*)assertion {
@@ -387,108 +187,126 @@ static inline BOOL isLocalDBName(NSString* url) {
 #pragma mark - START/STOP:
 
 
+- (NSDictionary*) properties {
+    // This is basically the inverse of -[CBLManager parseReplicatorProperties:...]
+    NSMutableDictionary* props = $mdict({@"continuous", @(_continuous)},
+                                        {@"create_target", @(_createTarget)},
+                                        {@"filter", _filter},
+                                        {@"query_params", _filterParams},
+                                        {@"doc_ids", _documentIDs});
+    NSMutableDictionary* authDict = nil;
+    if (_OAuth || _facebookEmailAddress) {
+        authDict = $mdict({@"oauth", _OAuth});
+        if (_facebookEmailAddress)
+            authDict[@"facebook"] = @{@"email": _facebookEmailAddress};
+        if (_personaEmailAddress)
+            authDict[@"persona"] = @{@"email": _personaEmailAddress};
+    }
+    NSDictionary* remote = $dict({@"url", _remoteURL.absoluteString},
+                                 {@"headers", _headers},
+                                 {@"auth", authDict});
+    if (_pull) {
+        props[@"source"] = remote;
+        props[@"target"] = _database.name;
+    } else {
+        props[@"source"] = _database.name;
+        props[@"target"] = remote;
+    }
+
+    if (_customProperties)
+        [props addEntriesFromDictionary: _customProperties];
+    return props;
+}
+
+
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block {
 #if RUN_IN_BACKGROUND
-    [self.database.manager.backgroundServer tellDatabaseManager: block];
+    [_database.manager.backgroundServer tellDatabaseManager: block];
 #else
-    block(self.database.manager);
+    block(_database.manager);
 #endif
 }
 
 
-- (void) observeReplicatorManager {
-    _bg_documentID = self.document.documentID;
-    _mainThread = [NSThread currentThread];
-    // Observe *all* replication changes:
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(bg_replicationProgressChanged:)
-                                                 name: CBL_ReplicatorProgressChangedNotification
-                                               object: nil];
-}
-
-
 - (void) start {
-    if (!self.database.isOpen)  // Race condition: db closed before replication starts
+    if (!_database.isOpen)  // Race condition: db closed before replication starts
         return;
 
-    if (self.persistent) {
-        // Removing the _replication_state property triggers the replicator manager to start it.
-        [self setValue: nil ofProperty: @"_replication_state"];
-
-    } else if (!_started) {
-        // Non-persistent replications I run myself:
+    if (!_started) {
         _started = YES;
-        _mainThread = [NSThread currentThread];
 
-        NSDictionary* properties= self.currentProperties;
-        [self tellDatabaseManager:^(CBLManager* dbmgr) {
+        NSDictionary* properties= self.properties;
+        [self tellDatabaseManager: ^(CBLManager* bgManager) {
             // This runs on the server thread:
-            [self bg_startReplicator: dbmgr properties: properties];
+            [self bg_startReplicator: bgManager properties: properties];
         }];
+
+        // Initialize the status to something other than kCBLReplicationStopped:
+        [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0];
+
+        [_database addReplication: self];
     }
 }
 
 
 - (void) stop {
-    // This is a no-op for persistent replications
-    if (self.persistent)
-        return;
     [self tellDatabaseManager:^(CBLManager* dbmgr) {
         // This runs on the server thread:
         [self bg_stopReplicator];
     }];
     _started = NO;
+    [_database forgetReplication: self];
 }
 
 
 - (void) restart {
-    if (self.persistent) {
-        [self setValue: nil ofProperty: @"_replication_state"];
-    } else if (_started) {
+    if (_started) {
         [self stop];
         [self start];
     }
 }
 
 
-@synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError = _lastError, status=_status;
-
-
-- (void) updateMode: (CBLReplicationStatus)mode
-              error: (NSError*)error
-          processed: (NSUInteger)changesProcessed
-            ofTotal: (NSUInteger)changesTotal
+- (void) updateStatus: (CBLReplicationStatus)status
+                error: (NSError*)error
+            processed: (NSUInteger)changesProcessed
+              ofTotal: (NSUInteger)changesTotal
 {
-    if (!_started && !self.persistent)
+    if (!_started)
         return;
-    if (mode == kCBLReplicationStopped)
+    if (status == kCBLReplicationStopped) {
         _started = NO;
-    
+        [_database forgetReplication: self];
+    }
+
     BOOL changed = NO;
-    if (mode != _status) {
-        self.status = mode;
-        changed = YES;
-    }
-    BOOL running = (mode > kCBLReplicationStopped);
-    if (running != _running) {
-        self.running = running;
-        changed = YES;
-    }
     if (!$equal(error, _lastError)) {
         self.lastError = error;
         changed = YES;
     }
-    if (changesProcessed != _completedChangesCount) {
-        self.completedChangesCount = changesProcessed;
+    if (changesProcessed != _completedChangesCount || changesTotal != _changesCount) {
+        // Change the two at the same time to avoid confusing KVO observers:
+        [self willChangeValueForKey: @"completedChangesCount"];
+        [self willChangeValueForKey: @"changesCount"];
+        _changesCount = (unsigned)changesTotal;
+        _completedChangesCount = (unsigned)changesProcessed;
+        [self didChangeValueForKey: @"changesCount"];
+        [self didChangeValueForKey: @"completedChangesCount"];
         changed = YES;
     }
-    if (changesTotal != _changesCount) {
-        self.changesCount = changesTotal;
+    if (status != _status) {
+        self.status = status;
         changed = YES;
     }
+    BOOL running = (status > kCBLReplicationStopped);
+    if (running != _running) {
+        self.running = running;
+        changed = YES;
+    }
+
     if (changed) {
-        LogTo(CBLReplication, @"%@: mode=%d, completed=%u, total=%u (changed=%d)",
-              self, mode, (unsigned)changesProcessed, (unsigned)changesTotal, changed);
+        LogTo(CBLReplication, @"%@: status=%d, completed=%u, total=%u (changed=%d)",
+              self, status, (unsigned)changesProcessed, (unsigned)changesTotal, changed);
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
     }
@@ -522,16 +340,34 @@ static inline BOOL isLocalDBName(NSString* url) {
     CBLStatus status;
     CBL_Replicator* repl = [server_dbmgr replicatorWithProperties: properties status: &status];
     if (!repl) {
-        MYOnThread(_mainThread, ^{
-            [self updateMode: kCBLReplicationStopped
-                       error: CBLStatusToNSError(status, nil)
-                   processed: 0 ofTotal: 0];
-        });
+        [_database doAsync: ^{
+            [self updateStatus: kCBLReplicationStopped
+                         error: CBLStatusToNSError(status, nil)
+                     processed: 0 ofTotal: 0];
+        }];
         return;
     }
+
+    CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
+    if (xformer) {
+        repl.revisionBodyTransformationBlock = ^(CBL_Revision* rev) {
+            NSDictionary* properties = rev.properties;
+            NSDictionary* xformedProperties = xformer(properties);
+            if (xformedProperties != properties) {
+                Assert(xformedProperties != nil);
+                AssertEqual(xformedProperties.cbl_id, properties.cbl_id);
+                AssertEqual(xformedProperties.cbl_rev, properties.cbl_rev);
+                CBL_MutableRevision* nuRev = rev.mutableCopy;
+                nuRev.properties = xformedProperties;
+                rev = nuRev;
+            }
+            return rev;
+        };
+    }
+
     [self bg_setReplicator: repl];
     [repl start];
-    [self bg_updateProgress: _bg_replicator];
+    [self bg_updateProgress];
 }
 
 
@@ -544,48 +380,42 @@ static inline BOOL isLocalDBName(NSString* url) {
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_replicationProgressChanged: (NSNotification*)n
 {
-    CBL_Replicator* tdReplicator = n.object;
-    if (_bg_replicator) {
-        AssertEq(tdReplicator, _bg_replicator);
-    } else {
-        // Persistent replications get this notification for every CBL_Replicator,
-        // so weed out non-matching ones:
-        if (!$equal(tdReplicator.documentID, _bg_documentID))
-            return;
-    }
-    [self bg_updateProgress: tdReplicator];
+    AssertEq(n.object, _bg_replicator);
+    [self bg_updateProgress];
 }
 
 
 // CAREFUL: This is called on the server's background thread!
-- (void) bg_updateProgress: (CBL_Replicator*)tdReplicator {
-    CBLReplicationStatus mode;
-    if (!tdReplicator.running)
-        mode = kCBLReplicationStopped;
-    else if (!tdReplicator.online)
-        mode = kCBLReplicationOffline;
+- (void) bg_updateProgress {
+    CBLReplicationStatus status;
+    if (!_bg_replicator.running)
+        status = kCBLReplicationStopped;
+    else if (!_bg_replicator.online)
+        status = kCBLReplicationOffline;
     else
-        mode = tdReplicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
+        status = _bg_replicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
     
     // Communicate its state back to the main thread:
-    NSError* error = tdReplicator.error;
-    NSUInteger changesProcessed = tdReplicator.changesProcessed;
-    NSUInteger changesTotal = tdReplicator.changesTotal;
-    MYOnThread(_mainThread, ^{
-        [self updateMode: mode
-                   error: error
-               processed: changesProcessed
-                 ofTotal: changesTotal];
-    });
+    NSError* error = _bg_replicator.error;
+    NSUInteger changes = _bg_replicator.changesProcessed;
+    NSUInteger total = _bg_replicator.changesTotal;
+    [_database doAsync: ^{
+        [self updateStatus: status error: error processed: changes ofTotal: total];
+    }];
     
-    if (_bg_replicator && mode == kCBLReplicationStopped) {
+    if (status == kCBLReplicationStopped) {
         [self bg_setReplicator: nil];
     }
 }
 
 
 #ifdef CBL_DEPRECATED
-@dynamic create_target, query_params, doc_ids;
+- (bool) create_target  {return self.createTarget;}
+- (void) setCreate_target:(bool)create_target {self.createTarget = create_target;}
+- (NSDictionary*) query_params {return self.filterParams;}
+- (void) setQuery_params:(NSDictionary *)query_params {self.filterParams = query_params;}
+- (NSArray*) doc_ids    {return self.documentIDs;}
+- (void) setDoc_ids:(NSArray *)doc_ids {self.documentIDs = doc_ids;}
 - (CBLReplicationStatus) mode {return self.status;}
 - (NSError*) error      {return self.lastError;}
 - (unsigned) completed  {return self.completedChangesCount;}

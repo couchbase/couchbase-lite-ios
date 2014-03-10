@@ -29,7 +29,6 @@
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
 #import "CBL_Replicator.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBL_Pusher.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -52,9 +51,12 @@
 
 
 - (CBLStatus) do_GETRoot {
-    NSDictionary* info = $dict({@"CouchbaseLite", @"Welcome"},
-                               {@"couchdb", @"Welcome"},        // for compatibility
-                               {@"version", CBLVersionString()});
+    NSDictionary* info = @{@"couchdb": @"Welcome",        // for compatibility
+                           @"CouchbaseLite": @"Welcome",
+                           @"version": CBLVersion(),
+                           @"vendor": @{@"name": @"Couchbase Lite (Objective-C)",
+                                        @"version": CBLVersion()}
+                           };
     _response.body = [CBL_Body bodyWithProperties: info];
     return kCBLStatusOK;
 }
@@ -234,7 +236,7 @@
         NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
         for (NSDictionary* doc in docs) {
             @autoreleasepool {
-                NSString* docID = doc[@"_id"];
+                NSString* docID = doc.cbl_id;
                 CBL_Revision* rev;
                 CBLStatus status;
                 CBL_Body* docBody = [CBL_Body bodyWithProperties: doc];
@@ -640,24 +642,30 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                                          error: NULL]);
 }
 
+- (CBLStatus)do_OPTIONS: (CBLDatabase *)db docID:(NSString *)docID {
+    return kCBLStatusOK;
+}
 
 - (CBLStatus) do_GET: (CBLDatabase*)db docID: (NSString*)docID {
     // http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     BOOL isLocalDoc = [docID hasPrefix: @"_local/"];
     CBLContentOptions options = [self contentOptions];
-    NSString* acceptMultipart = self.multipartRequestType;
     NSString* openRevsParam = [self query: @"open_revs"];
+    BOOL mustSendJSON = [self explicitlyAcceptsType: @"application/json"];
     if (openRevsParam == nil || isLocalDoc) {
         // Regular GET:
         NSString* revID = [self query: @"rev"];  // often nil
         CBL_Revision* rev;
-        BOOL includeAttachments = NO;
+        BOOL includeAttachments = NO, sendMultipart = NO;
         if (isLocalDoc) {
             rev = [db getLocalDocumentWithID: docID revisionID: revID];
         } else {
             includeAttachments = (options & kCBLIncludeAttachments) != 0;
-            if (acceptMultipart)
-                options &= ~kCBLIncludeAttachments;
+            if (includeAttachments) {
+                sendMultipart = !mustSendJSON;
+                if (sendMultipart)
+                    options &= ~kCBLIncludeAttachments;
+            }
             CBLStatus status;
             rev = [db getDocumentWithID: docID revisionID: revID options: options status: &status];
             if (!rev) {
@@ -682,13 +690,13 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 minRevPos = [CBL_Revision generationFromRevID: ancestorID] + 1;
             CBL_MutableRevision* stubbedRev = rev.mutableCopy;
             [CBLDatabase stubOutAttachmentsIn: stubbedRev beforeRevPos: minRevPos
-                            attachmentsFollow: (acceptMultipart != nil)];
+                            attachmentsFollow: sendMultipart];
             rev = stubbedRev;
         }
 
-        if (acceptMultipart)
+        if (sendMultipart)
             [_response setMultipartBody: [db multipartWriterForRevision: rev
-                                                            contentType: acceptMultipart]];
+                                                            contentType: @"multipart/related"]];
         else
             _response.body = rev.body;
         
@@ -696,7 +704,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         // open_revs query:
         NSMutableArray* result;
         if ($equal(openRevsParam, @"all")) {
-            // Get all conflicting revisions:
+            // ?open_revs=all returns all current/leaf revisions:
             BOOL includeDeleted = [self boolQuery: @"include_deleted"];
             CBL_RevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
             result = [NSMutableArray arrayWithCapacity: allRevs.count];
@@ -715,7 +723,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             }
                 
         } else {
-            // ?open_revs=[...] returns an array of revisions of the document:
+            // ?open_revs=[...] returns an array of specific revisions of the document:
             NSArray* openRevs = $castIf(NSArray, [self jsonQuery: @"open_revs" error: NULL]);
             if (!openRevs)
                 return kCBLStatusBadParam;
@@ -732,10 +740,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                     [result addObject: $dict({@"missing", revID})];
             }
         }
-        if (acceptMultipart)
-            [_response setMultipartBody: result type: acceptMultipart];
-        else
+
+        // Response type defaults to multipart unless JSON is specified:
+        if (mustSendJSON)
             _response.bodyObject = result;
+        else
+            [_response setMultipartBody: result type: @"multipart/mixed"];
     }
     return kCBLStatusOK;
 }
@@ -806,15 +816,16 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSString* prevRevID;
     
     if (!deleting) {
-        deleting = $castIf(NSNumber, body[@"_deleted"]).boolValue;
+        NSDictionary* properties = body.properties;
+        deleting = properties.cbl_deleted;
         if (!docID) {
             // POST's doc ID may come from the _id field of the JSON body.
-            docID = body[@"_id"];
+            docID = properties.cbl_id;
             if (!docID && deleting)
                 return kCBLStatusBadID;
         }
         // PUT's revision ID comes from the JSON body.
-        prevRevID = body[@"_rev"];
+        prevRevID = properties.cbl_rev;
     } else {
         // DELETE's revision ID comes from the ?rev= query param
         prevRevID = [self query: @"rev"];
@@ -857,7 +868,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 return 400;
         }
         if (revParam && body) {
-            id revProp = body[@"_rev"];
+            id revProp = body.properties.cbl_rev;
             if (!revProp) {
                 // No _rev property in body, so use ?rev= query param instead:
                 NSMutableDictionary* props = body.properties.mutableCopy;
@@ -892,14 +903,14 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 - (CBLStatus) readDocumentBodyThen: (CBLStatus(^)(CBL_Body*))block {
     CBLStatus status;
-    NSString* contentType = [_request valueForHTTPHeaderField: @"Content-Type"];
+    NSDictionary* headers = _request.allHTTPHeaderFields;
     NSInputStream* bodyStream = _request.HTTPBodyStream;
     if (bodyStream) {
         block = [block copy];
         status = [CBLMultipartDocumentReader readStream: bodyStream
-                                                ofType: contentType
-                                            toDatabase: _db
-                                                  then: ^(CBLMultipartDocumentReader* reader) {
+                                                headers: headers
+                                             toDatabase: _db
+                                                   then: ^(CBLMultipartDocumentReader* reader) {
             // Called when the reader is done reading/parsing the stream:
             CBLStatus status = reader.status;
             if (!CBLStatusIsError(status)) {
@@ -920,9 +931,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
     } else {
         NSDictionary* properties = [CBLMultipartDocumentReader readData: _request.HTTPBody
-                                                                ofType: contentType
-                                                            toDatabase: _db
-                                                                status: &status];
+                                                                headers: headers
+                                                             toDatabase: _db
+                                                                 status: &status];
         if (CBLStatusIsError(status))
             return status;
         else if (!properties)

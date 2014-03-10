@@ -28,16 +28,20 @@
 #endif
 
 
-#ifdef GNUSTEP
-static double CouchbaseLiteVersionNumber = 0.7;
-#else
-extern double CouchbaseLiteVersionNumber; // Defined in Xcode-generated CouchbaseLite_vers.c
-#endif
-
-
-NSString* CBLVersionString( void ) {
-return $sprintf(@"%g", CouchbaseLiteVersionNumber);
+#if DEBUG
+NSString* CBLPathToTestFile(NSString* name) {
+    NSString* path = [[[@(__FILE__) stringByDeletingLastPathComponent]
+                stringByDeletingLastPathComponent] stringByAppendingPathComponent: @"TestData"];
+    return [path stringByAppendingPathComponent: name];
 }
+
+NSData* CBLContentsOfTestFile(NSString* name) {
+    NSError* error;
+    NSData* data = [NSData dataWithContentsOfFile: CBLPathToTestFile(name) options:0 error: &error];
+    Assert(data, @"Couldn't read test file '%@': %@", name, error);
+    return data;
+}
+#endif
 
 
 NSString* CBLCreateUUID() {

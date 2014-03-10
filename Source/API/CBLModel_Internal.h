@@ -29,5 +29,5 @@
 - (CBLModel*) modelWithDocID: (NSString*)docID
                  forProperty: (NSString*)property
                      ofClass: (Class)declaredClass;
-;
+- (void) markPropertyNeedsSave: (NSString*)property;
 @end

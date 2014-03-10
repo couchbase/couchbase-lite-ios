@@ -23,6 +23,7 @@
 - (instancetype) initWithManager: (CBLManager*)newManager;
 
 @property (readonly) NSString* directory;
+@property (readonly) NSDictionary *customHTTPHeaders;
 
 - (void) queue: (void(^)())block;
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block;

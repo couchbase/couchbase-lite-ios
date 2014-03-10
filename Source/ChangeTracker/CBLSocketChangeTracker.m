@@ -22,6 +22,7 @@
 #import "CBLBase64.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
+#import "WebSocketHTTPLogic.h"
 #import <string.h>
 
 
@@ -29,7 +30,12 @@
 
 
 @implementation CBLSocketChangeTracker
-
+{
+    WebSocketHTTPLogic* _http;
+    NSInputStream* _trackingInput;
+    CFAbsoluteTime _startTime;
+    bool _gotResponseHeaders;
+}
 
 - (BOOL) start {
     if (_trackingInput)
@@ -39,51 +45,25 @@
     [super start];
 
     NSURL* url = self.changesFeedURL;
-    CFHTTPMessageRef request = CFHTTPMessageCreateRequest(NULL, CFSTR("GET"),
-                                                          (__bridge CFURLRef)url,
-                                                          kCFHTTPVersion1_1);
-    Assert(request);
-    
-    // Add headers from my .requestHeaders property:
-    [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        CFHTTPMessageSetHeaderFieldValue(request, (__bridge CFStringRef)key, (__bridge CFStringRef)value);
-    }];
 
-    // Add cookie headers from the NSHTTPCookieStorage:
-    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: url];
-    NSDictionary* cookieHeaders = [NSHTTPCookie requestHeaderFieldsWithCookies: cookies];
-    for (NSString* headerName in cookieHeaders) {
-        CFHTTPMessageSetHeaderFieldValue(request,
-                                         (__bridge CFStringRef)headerName,
-                                         (__bridge CFStringRef)cookieHeaders[headerName]);
+    if (!_http) {
+        NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: url];
+        if (self.usePOST) {
+            urlRequest.HTTPMethod = @"POST";
+            urlRequest.HTTPBody = self.changesFeedPOSTBody;
+            [urlRequest setValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+        }
+        _http = [[WebSocketHTTPLogic alloc] initWithURLRequest: urlRequest];
+        // Add headers from my .requestHeaders property:
+        [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+            _http[key] = value;
+        }];
     }
 
-    // If this is a retry, set auth headers from the credential we got:
-    if (_unauthResponse && _credential) {
-        NSString* password = _credential.password;
-        if (!password) {
-            // For some reason the password sometimes isn't accessible, even though we checked
-            // .hasPassword when setting _credential earlier. (See #195.) Keychain bug??
-            // If this happens, try looking up the credential again:
-            LogTo(ChangeTracker, @"Huh, couldn't get password of %@; trying again", _credential);
-            _credential = [self credentialForAuthHeader:
-                                                [self authHeaderForResponse: _unauthResponse]];
-            password = _credential.password;
-        }
-        if (password) {
-            CFIndex unauthStatus = CFHTTPMessageGetResponseStatusCode(_unauthResponse);
-            Assert(CFHTTPMessageAddAuthentication(request, _unauthResponse,
-                                                  (__bridge CFStringRef)_credential.user,
-                                                  (__bridge CFStringRef)password,
-                                                  kCFHTTPAuthenticationSchemeBasic,
-                                                  unauthStatus == 407));
-        } else {
-            Warn(@"%@: Unable to get password of credential %@", self, _credential);
-            _credential = nil;
-            CFRelease(_unauthResponse);
-            _unauthResponse = NULL;
-        }
-    } else if (_authorizer) {
+    CFHTTPMessageRef request = [_http newHTTPRequest];
+
+    if (_authorizer && !_http.credential) {
+        // Let the Authorizer add its own credential:
         NSString* authHeader = [_authorizer authorizeHTTPMessage: request forRealm: nil];
         if (authHeader)
             CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"),
@@ -91,28 +71,22 @@
     }
 
     // Now open the connection:
-    LogTo(SyncVerbose, @"%@: GET %@", self, url.resourceSpecifier);
+    LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)
         return NO;
-    
+
     CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+    _http.handleRedirects = NO;  // CFStream will handle redirects instead
 
     // Configure HTTP proxy -- CFNetwork makes us do this manually, unlike NSURLConnection :-p
-    CFDictionaryRef proxySettings = CFNetworkCopySystemProxySettings();
-    if (proxySettings) {
-        CFArrayRef proxies = CFNetworkCopyProxiesForURL((__bridge CFURLRef)url, proxySettings);
-        if (proxies) {
-            if (CFArrayGetCount(proxies) > 0) {
-                CFTypeRef proxy = CFArrayGetValueAtIndex(proxies, 0);
-                LogTo(ChangeTracker, @"Changes feed using proxy %@", proxy);
-                bool ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxy);
-                Assert(ok);
-            }
-            CFRelease(proxies);
-        }
-        CFRelease(proxySettings);
+    NSDictionary* proxy = url.my_proxySettings;
+    if (proxy) {
+        LogTo(ChangeTracker, @"Changes feed using proxy %@", proxy);
+        bool ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy,
+                                          (CFDictionaryRef)proxy);
+        Assert(ok);
     }
 
     if (_databaseURL.my_isHTTPS) {
@@ -126,16 +100,14 @@
                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
     }
     
-    _gotResponseHeaders = _atEOF = _inputAvailable = false;
-    
-    _inputBuffer = [[NSMutableData alloc] initWithCapacity: kReadLength];
-    
+    _gotResponseHeaders = false;
+
     _trackingInput = (NSInputStream*)CFBridgingRelease(cfInputStream);
     [_trackingInput setDelegate: self];
     [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     [_trackingInput open];
     _startTime = CFAbsoluteTimeGetCurrent();
-    LogTo(ChangeTracker, @"%@: Started... <%@>", self, self.changesFeedURL);
+    LogTo(ChangeTracker, @"%@: Started... <%@>", self, url);
     return YES;
 }
 
@@ -144,9 +116,6 @@
     [_trackingInput close];
     [_trackingInput removeFromRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     _trackingInput = nil;
-    _inputBuffer = nil;
-    _changeBuffer = nil;
-    _inputAvailable = false;
 }
 
 
@@ -158,12 +127,6 @@
         [self clearConnection];
     }
     [super stop];
-}
-
-
-- (void)dealloc
-{
-    if (_unauthResponse) CFRelease(_unauthResponse);
 }
 
 
@@ -192,86 +155,28 @@
 }
 
 
-- (NSString*) authHeaderForResponse: (CFHTTPMessageRef)response {
-    return CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
-                                                               CFSTR("WWW-Authenticate")));
-}
-
-
-- (NSURLCredential*) credentialForAuthHeader: (NSString*)authHeader {
-    NSString* realm;
-    NSString* authenticationMethod;
-    
-    // Basic & digest auth: http://www.ietf.org/rfc/rfc2617.txt
-    if (!authHeader)
-        return nil;
-
-    // Get the auth type:
-    if ([authHeader hasPrefix: @"Basic"])
-        authenticationMethod = NSURLAuthenticationMethodHTTPBasic;
-    else if ([authHeader hasPrefix: @"Digest"])
-        authenticationMethod = NSURLAuthenticationMethodHTTPDigest;
-    else
-        return nil;
-    
-    // Get the realm:
-    NSRange r = [authHeader rangeOfString: @"realm=\""];
-    if (r.length == 0)
-        return nil;
-    NSUInteger start = NSMaxRange(r);
-    r = [authHeader rangeOfString: @"\"" options: 0
-                            range: NSMakeRange(start, authHeader.length - start)];
-    if (r.length == 0)
-        return nil;
-    realm = [authHeader substringWithRange: NSMakeRange(start, r.location - start)];
-    
-    NSURLCredential* cred;
-    cred = [_databaseURL my_credentialForRealm: realm authenticationMethod: authenticationMethod];
-    if (!cred.hasPassword)
-        cred = nil;     // TODO: Add support for client certs
-    return cred;
-}
-
-
 - (BOOL) readResponseHeader {
     CFHTTPMessageRef response;
     response = (CFHTTPMessageRef) CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
                                                            kCFStreamPropertyHTTPResponseHeader);
     Assert(response);
     _gotResponseHeaders = true;
-    NSDictionary* errorInfo = nil;
-
-    // Handle authentication failure (401 or 407 status):
-    CFIndex status = CFHTTPMessageGetResponseStatusCode(response);
-    LogTo(ChangeTracker, @"%@ got status %ld", self, status);
-    if (status == 401 || status == 407) {
-        NSString* authorization = [_requestHeaders objectForKey: @"Authorization"];
-        NSString* authResponse = [self authHeaderForResponse: response];
-        if (!_credential && !authorization) {
-            _credential = [self credentialForAuthHeader: authResponse];
-            LogTo(ChangeTracker, @"%@: Auth challenge; credential = %@", self, _credential);
-            if (_credential) {
-                // Recoverable auth failure -- close socket but try again with _credential:
-                _unauthResponse = response;
-                [self clearConnection];
-                [self retry];
-                return NO;
-            }
-        }
-        Log(@"%@: HTTP auth failed; sent Authorization: %@  ;  got WWW-Authenticate: %@",
-            self, authorization, authResponse);
-        errorInfo = $dict({@"HTTPAuthorization", authorization},
-                          {@"HTTPAuthenticateHeader", authResponse});
-    }
-
+    [_http receivedResponse: response];
     CFRelease(response);
-    if (status >= 300) {
-        self.error = CBLStatusToNSErrorWithInfo(status, self.changesFeedURL, errorInfo);
-        [self stop];
+
+    if (_http.shouldContinue) {
+        _retryCount = 0;
+        _http = nil;
+        return YES;
+    } else if (_http.shouldRetry) {
+        [self clearConnection];
+        [self retry];
+        return NO;
+    } else {
+        NSError* error = _http.error ?: CBLStatusToNSError(_http.httpStatus, _http.URL);
+        [self failedWithError: error];
         return NO;
     }
-    _retryCount = 0;
-    return YES;
 }
 
 
@@ -279,9 +184,6 @@
 
 
 - (void) readFromInput {
-    Assert(_inputAvailable);
-    _inputAvailable = false;
-    
     uint8_t buffer[kReadLength];
     NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
     if (bytesRead > 0)
@@ -290,8 +192,7 @@
 
 
 - (void) handleEOF {
-    _atEOF = true;
-    if (!_gotResponseHeaders || (_mode == kContinuous && _inputBuffer.length > 0)) {
+    if (!_gotResponseHeaders) {
         [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
                                                    code: NSURLErrorNetworkConnectionLost
                                                userInfo: nil]];
@@ -299,9 +200,13 @@
     }
     if (_mode == kContinuous) {
         [self stop];
-    } else if ([self endParsingData]) {
+    } else if ([self endParsingData] >= 0) {
         // Successfully reached end.
-        [_client changeTrackerFinished];
+        id<CBLChangeTrackerClient> client = _client;
+        if (!_caughtUp) {
+            _caughtUp = YES;
+            [client changeTrackerCaughtUp];
+        }
         [self clearConnection];
         if (_continuous) {
             if (_mode == kOneShot && _pollInterval == 0.0)
@@ -311,6 +216,7 @@
                       self, _pollInterval);
             [self retryAfterDelay: _pollInterval];       // Next poll...
         } else {
+            [client changeTrackerFinished];
             [self stopped];
         }
     } else {
@@ -358,12 +264,11 @@
     __unused id keepMeAround = self; // retain myself so I can't be dealloced during this method
     switch (eventCode) {
         case NSStreamEventHasBytesAvailable: {
-            LogTo(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);
+            LogTo(ChangeTrackerVerbose, @"%@: HasBytesAvailable %@", self, stream);
             if (!_gotResponseHeaders) {
                 if (![self checkSSLCert] || ![self readResponseHeader])
                     return;
             }
-            _inputAvailable = true;
             [self readFromInput];
             break;
         }

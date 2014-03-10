@@ -16,7 +16,6 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
 #import "CBLDatabase.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBLMisc.h"
 #import "CBLManager+Internal.h"
 #import "CBLInternal.h"
@@ -26,6 +25,7 @@
 
 @implementation CBL_Server
 
+@dynamic customHTTPHeaders;
 
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path {
@@ -43,6 +43,9 @@
 }
 #endif
 
+- (NSDictionary*) customHTTPHeaders {
+    return _manager.customHTTPHeaders;
+}
 
 - (instancetype) initWithManager: (CBLManager*)newManager {
     self = [super init];

@@ -263,7 +263,7 @@ int main (int argc, const char * argv[])
                 return 1;
         } else {
             Log(@"LiteServ %@ is listening%@ at <%@> ... relax!",
-                CBLVersionString(),
+                CBLVersion(),
                 (listener.readOnly ? @" in read-only mode" : @""),
                 listener.URL);
         }

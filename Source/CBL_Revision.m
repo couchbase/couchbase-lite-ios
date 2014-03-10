@@ -47,9 +47,10 @@
 
 - (instancetype) initWithBody: (CBL_Body*)body {
     Assert(body);
-    self = [self initWithDocID: body[@"_id"]
-                         revID: body[@"_rev"]
-                       deleted: body[@"_deleted"] == $true];
+    NSDictionary* props = body.properties;
+    self = [self initWithDocID: props.cbl_id
+                         revID: props.cbl_rev
+                       deleted: props.cbl_deleted];
     if (self) {
         _body = body;
     }
@@ -134,6 +135,10 @@
     return [_body objectForKeyedSubscript: key];
 }
 
+- (NSDictionary*) attachments {
+    return self.properties.cbl_attachments;
+}
+
 - (NSData*) asJSON {
     return _body.asJSON;
 }
@@ -156,7 +161,7 @@
 }
 
 - (CBL_MutableRevision*) mutableCopyWithDocID: (NSString*)docID revID: (NSString*)revID {
-    Assert(docID && revID);
+    Assert(docID);
     Assert(!_docID || $equal(_docID, docID));
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
                                                                   deleted: _deleted];

@@ -88,7 +88,6 @@ int main (int argc, const char * argv[]) {
     self.query = [[DemoQuery alloc] initWithQuery: q
                                        modelClass: _tableController.objectClass];
     
-    // Start watching any persistent replications already configured:
     [self startContinuousSyncWith: self.syncURL];
     
 #ifdef FOR_TESTING_PURPOSES
@@ -102,11 +101,6 @@ int main (int argc, const char * argv[]) {
     }];
 
 #endif
-}
-
-
-- (IBAction) applicationWillTerminate:(id)sender {
-    [_database.manager close];
 }
 
 
@@ -188,7 +182,7 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) resetReplication: (CBLReplication*)repl {
-    [repl setValue: @YES ofProperty: @"reset"];
+    repl.customProperties = @{@"reset": @YES};
     [repl restart];
 }
 
@@ -228,6 +222,7 @@ int main (int argc, const char * argv[]) {
     [repl removeObserver: self forKeyPath: @"changesCount"];
     [repl removeObserver: self forKeyPath: @"lastError"];
     [repl removeObserver: self forKeyPath: @"status"];
+    [repl stop];
 }
 
 
@@ -237,16 +232,18 @@ int main (int argc, const char * argv[]) {
         [self stopObservingReplication: _pull];
     if (_push)
         [self stopObservingReplication: _push];
-    NSArray* repls = [_database replicationsWithURL: otherDbURL exclusively: YES];
-    _pull = repls[0];
-    _push = repls[1];
-    _pull.continuous = _push.continuous = YES;
-    [self observeReplication: _pull];
-    [self observeReplication: _push];
-    [_pull start];
-    [_push start];
-    
-    _syncHostField.stringValue = otherDbURL ? $sprintf(@"⇄ %@", otherDbURL.host) : @"";
+    if (otherDbURL) {
+        _pull = [_database createPullReplication: otherDbURL];
+        _push = [_database createPushReplication: otherDbURL];
+        _pull.continuous = _push.continuous = YES;
+        [self observeReplication: _pull];
+        [self observeReplication: _push];
+        [_pull start];
+        [_push start];
+        _syncHostField.stringValue = $sprintf(@"⇄ %@", otherDbURL.host);
+    } else {
+        _syncHostField.stringValue = @"";
+    }
 #endif
 }
 

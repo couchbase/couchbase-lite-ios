@@ -36,6 +36,7 @@ _CBLGeoPointKey
 _CBLGeoRectKey
 _CBLGeoJSONKey
 _CBLTextKey
+_CBLVersion
 
 # Non-public symbols that are used by CBLRouter and CBLListener:
 .objc_class_name_CBL_BlobStore
@@ -55,12 +56,14 @@ _CBLTextKey
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
 
+.objc_class_name_GCDAsyncSocket
+.objc_class_name_WebSocket
+
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
 _CBLStatusFromNSError
 _CBLURLWithoutQuery
 _CBLSequenceCompare
-_CBLVersionString
 
 _CBL_DatabaseChangesNotification
 _CBL_DatabaseWillCloseNotification
@@ -69,4 +72,3 @@ _CBL_ReplicatorStoppedNotification
 
 _kDefaultCBLChangesOptions
 _kDefaultCBLQueryOptions
-_kCBL_ReplicatorDatabaseName

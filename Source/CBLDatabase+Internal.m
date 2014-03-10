@@ -122,6 +122,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _name = name ?: [path.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
         _fmdb = [[CBL_FMDatabase alloc] initWithPath: _path];
+        _fmdb.dispatchQueue = manager.dispatchQueue;
         _fmdb.busyRetryTimeout = kSQLiteBusyTimeout;
 #if DEBUG
         _fmdb.logsErrors = YES;
@@ -675,7 +676,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (SequenceNumber) lastSequenceNumber {
-    return [_fmdb longLongForQuery: @"SELECT MAX(sequence) FROM revs"];
+    // See http://www.sqlite.org/fileformat2.html#seqtab
+    return [_fmdb longLongForQuery: @"SELECT seq FROM sqlite_sequence WHERE name='revs'"];
 }
 
 
@@ -1323,16 +1325,15 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     
     // No CouchbaseLite view is defined, or it hasn't had a map block assigned;
     // see if there's a CouchDB view definition we can compile:
-    if (![CBLView compiler]) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    }
     NSString* language;
     NSDictionary* viewProps = $castIf(NSDictionary, [self getDesignDocFunction: tdViewName
                                                                            key: @"views"
                                                                       language: &language]);
     if (!viewProps) {
         *outStatus = kCBLStatusNotFound;
+        return nil;
+    } else if (![CBLView compiler]) {
+        *outStatus = kCBLStatusNotImplemented;
         return nil;
     }
     view = [self viewNamed: tdViewName];
@@ -1433,7 +1434,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             // Skip them, but collect their revIDs if the 'conflicts' option is set:
             NSMutableArray* conflicts = nil;
             while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == docNumericID) {
-                if (options->allDocsMode >= kCBLIncludeConflicts) {
+                if (options->allDocsMode >= kCBLShowConflicts) {
                     if (!conflicts)
                         conflicts = $marray(revID);
                     [conflicts addObject: [r stringForColumnIndex: 2]];

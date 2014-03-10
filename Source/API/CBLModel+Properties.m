@@ -23,31 +23,40 @@
 
 
 // A type of block that converts an input value to an output value, or nil if it can't.
-typedef id (^ValueConverter)(id input);
+typedef id (^ValueConverter)(id input, CBLModel* self, NSString* property);
 
 
 // Returns a block that will convert an input JSON value to an instance of the desired class,
 // or nil if the class isn't supported.
 static ValueConverter valueConverterToClass(Class toClass) {
     if (toClass == [NSData class]) {
-        return ^id(id rawValue) {
+        return ^id(id rawValue, CBLModel* self, NSString* property) {
             if ([rawValue isKindOfClass: [NSString class]])
                 return [CBLBase64 decode: rawValue];
             return nil;
         };
     } else if (toClass == [NSDate class]) {
-        return ^id(id rawValue) {
+        return ^id(id rawValue, CBLModel* self, NSString* property) {
             return [CBLJSON dateWithJSONObject: rawValue];
         };
     } else if (toClass == [NSDecimalNumber class]) {
-        return ^id(id rawValue) {
+        return ^id(id rawValue, CBLModel* self, NSString* property) {
             if ([rawValue isKindOfClass: [NSString class]])
                 return [NSDecimalNumber decimalNumberWithString: rawValue];
             return nil;
         };
     } else if ([toClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
-        return ^id(id rawValue) {
-            return [(id<CBLJSONEncoding>)[toClass alloc] initWIthJSON: rawValue];
+        return ^id(id rawValue, CBLModel* self, NSString* property) {
+            if (!rawValue)
+                return nil;
+            id<CBLJSONEncoding> value = [(id<CBLJSONEncoding>)[toClass alloc] initWithJSON: rawValue];
+            if ([value respondsToSelector: @selector(setOnMutate:)]) {
+                __weak CBLModel* weakSelf = self;
+                [value setOnMutate: ^{
+                    [weakSelf markPropertyNeedsSave: property];
+                }];
+            }
+            return value;
         };
     } else {
         return nil;
@@ -57,8 +66,10 @@ static ValueConverter valueConverterToClass(Class toClass) {
 
 // Returns a block that converts the items of an array using the given ValueConverter.
 static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
-    return ^id(id rawValue) {
-        return [$castIf(NSArray, rawValue) my_map: itemConverter];
+    return ^id(id rawValue, CBLModel* self, NSString* property) {
+        return [$castIf(NSArray, rawValue) my_map: ^id(id value) {
+            return itemConverter(value, self, property);
+        }];
     };
 }
 
@@ -71,7 +82,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
     NSData* value = _properties[property];
     if (!value && !_isNew && ![_changedNames containsObject: property]) { // see -getValueOfProperty:
         id rawValue = [_document propertyForKey: property];
-        value = converter(rawValue);
+        value = converter(rawValue, self, property);
         if (value)
             [self cacheValue: value ofProperty: property changed: NO];
         else if (rawValue)

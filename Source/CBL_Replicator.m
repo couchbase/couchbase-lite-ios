@@ -61,6 +61,24 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 @implementation CBL_Replicator
+{
+    BOOL _running, _online, _active;
+    BOOL _lastSequenceChanged;
+    NSString* _sessionID;
+    unsigned _revisionsFailed;
+    NSError* _error;
+    NSThread* _thread;
+    NSDictionary* _remoteCheckpoint;
+    BOOL _savingCheckpoint, _overdueForSave;
+    NSMutableArray* _remoteRequests;
+    int _asyncTaskCount;
+    NSUInteger _changesProcessed, _changesTotal;
+    CFAbsoluteTime _startTime;
+    CBLReachability* _host;
+    BOOL _suspended;
+}
+
+@synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
 
 + (NSString *)progressChangedNotification
 {
@@ -136,7 +154,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 @synthesize db=_db, remote=_remote, filterName=_filterName, filterParameters=_filterParameters, docIDs = _docIDs;
 @synthesize running=_running, online=_online, active=_active, continuous=_continuous;
-@synthesize error=_error, sessionID=_sessionID, documentID=_documentID, options=_options;
+@synthesize error=_error, sessionID=_sessionID, options=_options;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 @synthesize authorizer=_authorizer;
@@ -360,6 +378,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     _batcher = nil;
     [_host stop];
     _host = nil;
+    _suspended = NO;
+    self.revisionBodyTransformationBlock = nil;
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -415,26 +435,38 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) reachabilityChanged: (CBLReachability*)host {
-    LogTo(Sync, @"%@: Reachability state = %@ (%02X)", self, host, host.reachabilityFlags);
+    LogTo(Sync, @"%@: Reachability state = %@ (%02X), suspended=%d",
+          self, host, host.reachabilityFlags, _suspended);
 
+    BOOL reachable = host.reachable && !_suspended;
+    if (reachable) {
     // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
-    BOOL reachable = host.reachable;
     NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
                               lowercaseString];
-    if (network && reachable) {
-        BOOL wifi = host.reachableByWiFi;
-        if ($equal(network, @"wifi") || $equal(network, @"!cell"))
-            reachable = wifi;
-        else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
-            reachable = !wifi;
-        else
-            Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
+        if (network) {
+            BOOL wifi = host.reachableByWiFi;
+            if ($equal(network, @"wifi") || $equal(network, @"!cell"))
+                reachable = wifi;
+            else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
+                reachable = !wifi;
+            else
+                Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
+        }
     }
 
     if (reachable)
         [self goOnline];
-    else if (host.reachabilityKnown)
+    else if (host.reachabilityKnown || _suspended)
         [self goOffline];
+}
+
+// When suspended, the replicator acts as though it's offline, stopping all network activity.
+// This is used by the iOS backgrounding support (see CBLReplication+Backgrounding.m)
+- (void) setSuspended: (BOOL)suspended {
+    if (suspended != _suspended) {
+        _suspended = suspended;
+        [self reachabilityChanged: _host];
+    }
 }
 
 
@@ -505,13 +537,31 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+- (CBL_Revision *) transformRevision:(CBL_Revision *)rev {
+    if(_revisionBodyTransformationBlock) {
+        @try {
+            CBL_Revision* xformed = _revisionBodyTransformationBlock(rev);
+            if (xformed != rev) {
+                AssertEqual(xformed.docID, rev.docID);
+                AssertEqual(xformed.revID, rev.revID);
+                AssertEqual(xformed[@"_revisions"], rev[@"_revisions"]);
+                rev = xformed;
+            }
+        }@catch (NSException* x) {
+            Warn(@"%@: Exception transforming a revision of doc '%@': %@", self, rev.docID, x);
+        }
+    }
+    return rev;
+}
+
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {
     if (![_authorizer respondsToSelector: @selector(loginParametersForSite:)]) {
         [self fetchRemoteCheckpointDoc];
         return;
     }
-    [self checkSessionAtPath: @"/_session"];
+    // Sync Gateway session API is at /db/_session; try that first
+    [self checkSessionAtPath: @"_session"];
 }
 
 - (void) checkSessionAtPath: (NSString*)sessionPath {
@@ -522,9 +572,9 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                       body: nil
               onCompletion: ^(id result, NSError *error) {
                   if (error) {
-                      // CouchDB has /_session, but the Sync Gateway uses /db/_session
-                      if (error.code == kCBLStatusNotFound && $equal(sessionPath, @"/_session")) {
-                          [self checkSessionAtPath: @"_session"];
+                      // If not at /db/_session, try CouchDB location /_session
+                      if (error.code == kCBLStatusNotFound && $equal(sessionPath, @"_session")) {
+                          [self checkSessionAtPath: @"/_session"];
                           return;
                       }
                       LogTo(Sync, @"%@: Session check failed: %@", self, error);
@@ -585,6 +635,17 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+- (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
+    return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
+        && [[_serverType substringFromIndex: 23] compare: minVersion] >= 0;
+}
+
+
+- (BOOL) canSendCompressedRequests {
+    return [self serverIsSyncGatewayVersion: @"0.92"];
+}
+
+
 - (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)path
                                      body: (id)body
@@ -619,6 +680,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     req.delegate = self;
     req.timeoutInterval = self.requestTimeout;
     req.authorizer = _authorizer;
+
+    if (self.canSendCompressedRequests)
+        [req compressBody];
+
     [self addRemoteRequest: req];
     [req start];
     return req;
@@ -821,7 +886,6 @@ static BOOL sOnlyTrustAnchorCerts;
                       return;
                   if (error) {
                       // Failed to save checkpoint:
-                      Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
                       switch(CBLStatusFromNSError(error, 0)) {
                           case kCBLStatusNotFound:
                               self.remoteCheckpoint = nil; // doc deleted or db reset

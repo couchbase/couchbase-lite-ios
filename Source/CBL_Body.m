@@ -136,3 +136,14 @@
 }
 
 @end
+
+
+
+@implementation NSDictionary (CBL_Body)
+- (NSString*) cbl_id                {return $castIf(NSString, self[@"_id"]);}
+- (NSString*) cbl_rev               {return $castIf(NSString, self[@"_rev"]);}
+- (BOOL) cbl_deleted                {return $castIf(NSNumber, self[@"_deleted"]).boolValue;}
+- (NSDictionary*) cbl_attachments   {return $castIf(NSDictionary, self[@"_attachments"]);}
+@end
+
+

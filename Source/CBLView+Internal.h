@@ -16,6 +16,8 @@
 typedef struct CBLQueryOptions {
     __unsafe_unretained id startKey;
     __unsafe_unretained id endKey;
+    __unsafe_unretained NSString* startKeyDocID;
+    __unsafe_unretained NSString* endKeyDocID;
     __unsafe_unretained NSArray* keys;
     __unsafe_unretained NSString* fullTextQuery;
     const struct CBLGeoRect* bbox;

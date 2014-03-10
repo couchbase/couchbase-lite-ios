@@ -83,7 +83,7 @@ static CBLResponse* sLastResponse;
 
 static id SendBody(CBLManager* server, NSString* method, NSString* path, id bodyObj,
                    CBLStatus expectedStatus, id expectedResult) {
-    sLastResponse = SendRequest(server, method, path, nil, bodyObj);
+    sLastResponse = SendRequest(server, method, path, @{@"Accept": @"application/json"}, bodyObj);
     id result = ParseJSONResponse(sLastResponse);
     Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
     CAssert(result != nil);
@@ -115,8 +115,10 @@ TestCase(CBL_Router_Server) {
     RequireTestCase(CBLManager);
     CBLManager* server = createDBManager();
     Send(server, @"GET", @"/", kCBLStatusOK, $dict({@"CouchbaseLite", @"Welcome"},
-                                          {@"couchdb", @"Welcome"},
-                                          {@"version", CBLVersionString()}));
+                                                   {@"couchdb", @"Welcome"},
+                                                   {@"version", CBLVersion()},
+                                                   {@"vendor", @{@"name": @"Couchbase Lite (Objective-C)",
+                                                                 @"version": CBLVersion()}}));
     Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[]);
     Send(server, @"GET", @"/non-existent", kCBLStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kCBLStatusBadID, nil);
@@ -546,6 +548,10 @@ TestCase(CBL_Router_GetAttachment) {
     
     // Get the document with attachment data:
     response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil, nil);
+    CAssert([response.headers[@"Content-Type"] hasPrefix: @"multipart/related;"]);
+
+    response = SendRequest(server, @"GET", @"/db/doc1?attachments=true",
+                           @{@"Accept": @"application/json"}, nil);
     CAssertEq(response.status, kCBLStatusOK);
     CAssertEqual((response.body)[@"_attachments"],
                  $dict({@"attach", $dict({@"data", [CBLBase64 encode: attach1]}, 
@@ -683,12 +689,18 @@ TestCase(CBL_Router_OpenRevs) {
                                     {@"_rev", revID2},
                                     {@"message", @"goodbye"})})
                 ));
-    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"bogus"), kCBLStatusOK,
+    NSString* uri = $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"bogus");
+    Send(server, @"GET", uri, kCBLStatusOK,
          $array($dict({@"ok", $dict({@"_id", @"doc1"},
                                     {@"_rev", revID1},
                                     {@"message", @"hello"})}),
                 $dict({@"missing", @"bogus"})
                 ));
+
+    // We've been forcing JSON, but verify that open_revs defaults to multipart:
+    CBLResponse* response = SendRequest(server, @"GET", uri, nil, nil);
+    CAssert([response.headers[@"Content-Type"] hasPrefix: @"multipart/mixed;"]);
+
     [server close];
 }
 

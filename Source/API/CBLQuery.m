@@ -135,6 +135,8 @@
     return (CBLQueryOptions) {
         .startKey = _startKey,
         .endKey = _endKey,
+        .startKeyDocID = _startKeyDocID,
+        .endKeyDocID = _endKeyDocID,
         .keys = _keys,
         .fullTextQuery = _fullTextQuery,
         .fullTextSnippets = _fullTextSnippets,
@@ -533,26 +535,21 @@ static id fromJSON( NSData* json ) {
 
 - (NSString*) documentID {
     // _documentProperties may have been 'redirected' from a different document
-    return _documentProperties[@"_id"] ?: _sourceDocID;
+    return _documentProperties.cbl_id ?: _sourceDocID;
 }
 
 
 - (NSString*) documentRevisionID {
     // Get the revision id from either the embedded document contents,
     // or the '_rev' or 'rev' value key:
-    NSString* rev = _documentProperties[@"_rev"];
+    NSString* rev = _documentProperties.cbl_rev;
     if (!rev) {
-        id value = self.value;
-        if ([value isKindOfClass: [NSDictionary class]]) {      // $castIf would log a warning
-            rev = value[@"_rev"];
-            if (!rev)
-                rev = value[@"rev"];
-        }
+        NSDictionary* value = $castIf(NSDictionary, self.value);
+        rev = value.cbl_rev;
+        if (value && !rev)
+            rev = value[@"rev"];
     }
-    
-    if (![rev isKindOfClass: [NSString class]])                 // $castIf would log a warning
-        rev = nil;
-    return rev;
+    return $castIf(NSString, rev);
 }
 
 

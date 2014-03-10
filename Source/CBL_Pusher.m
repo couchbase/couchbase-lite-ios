@@ -53,10 +53,10 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         filter = [_db compileFilterNamed: _filterName status: &status];
         if (!filter) {
             Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
-            if (!_error) {
+            if (!self.error) {
                 self.error = CBLStatusToNSError(status, nil);
             }
-            [self stop];
+            [self stop]; // this is fatal; don't know what to push
         }
     } else if (_docIDs) {
         NSArray* docIDs = _docIDs;
@@ -80,7 +80,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
         if (error && error.code != kCBLStatusDuplicate) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
-            [self stop];
+            [self stop]; // this is fatal: no db to push to!
         } else {
             LogTo(Sync, @"Created remote db");
             _createTarget = NO;             // remember that I created the target
@@ -251,7 +251,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                         options |= kCBLBigAttachmentsFollow;
                     CBLStatus status;
                     rev = [db revisionByLoadingBody: rev options: options status: &status];
-                    CBL_MutableRevision* nuRev = [rev mutableCopy];
+                    CBL_MutableRevision* nuRev = [[self transformRevision: rev] mutableCopy];
                     rev = nuRev;
                     if (status >= 300) {
                         Warn(@"%@: Couldn't get local contents of %@", self, nuRev);
@@ -266,7 +266,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                     properties = nuRev.properties;
 
                     // Strip any attachments already known to the target db:
-                    if (properties[@"_attachments"]) {
+                    if (properties.cbl_attachments) {
                         // Look for the latest common ancestor and stub out older attachments:
                         int minRevPos = findCommonAncestor(rev, possibleAncestors);
                         [CBLDatabase stubOutAttachmentsIn: nuRev beforeRevPos: minRevPos + 1
@@ -277,7 +277,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                             return nil;
                     }
                 }
-                Assert(properties[@"_id"]);
+                Assert(properties.cbl_id);
                 [revsToSend addRev: rev];
                 return properties;
             }];
@@ -378,21 +378,26 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     // It's important to scan the _attachments entries in the same order in which they will appear
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
     CBLMultipartWriter* bodyStream = nil;
-    NSDictionary* attachments = rev[@"_attachments"];
+    NSDictionary* attachments = rev.attachments;
     for (NSString* attachmentName in [CBLCanonicalJSON orderedKeys: attachments]) {
         NSDictionary* attachment = attachments[attachmentName];
         if (attachment[@"follows"]) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
                 bodyStream = [[CBLMultipartWriter alloc] initWithContentType: @"multipart/related"
-                                                                      boundary: nil];
-                [bodyStream setNextPartsHeaders: $dict({@"Content-Type", @"application/json"})];
+                                                                    boundary: nil];
+                [bodyStream setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
                 // Use canonical JSON encoder so that _attachments keys will be written in the
                 // same order that this for loop is processing the attachments.
                 NSData* json = [CBLCanonicalJSON canonicalData: rev.properties];
-                [bodyStream addData: json];
+                if (self.canSendCompressedRequests)
+                    [bodyStream addGZippedData: json];
+                else
+                    [bodyStream addData: json];
             }
-            NSString* disposition = $sprintf(@"attachment; filename=%@", CBLQuoteString(attachmentName));
+            // Add attachment as another MIME part:
+            NSString* disposition = $sprintf(@"attachment; filename=%@",
+                                             CBLQuoteString(attachmentName));
             NSString* contentType = attachment[@"type"];
             NSString* contentEncoding = attachment[@"encoding"];
             [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition},

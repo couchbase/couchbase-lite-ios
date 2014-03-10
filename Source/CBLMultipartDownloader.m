@@ -48,6 +48,8 @@
 
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
     [request setValue: @"multipart/related, application/json" forHTTPHeaderField: @"Accept"];
+    [request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
+
     request.HTTPBody = body;
 }
 
@@ -67,12 +69,8 @@
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
         // Check the content type to see whether it's a multipart response:
-        NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
-        NSString* contentType = headers[@"Content-Type"];
-        if ([contentType hasPrefix: @"text/plain"])
-            contentType = nil;      // Workaround for CouchDB returning JSON docs with text/plain type
-        if (![_reader setContentType: contentType]) {
-            LogTo(RemoteRequest, @"%@ got invalid Content-Type '%@'", self, contentType);
+        if (![_reader setHeaders: [(NSHTTPURLResponse*)response allHeaderFields]]) {
+            LogTo(RemoteRequest, @"%@ got invalid Content-Type", self);
             [self cancelWithStatus: _reader.status];
             return;
         }
@@ -132,7 +130,7 @@ TestCase(CBLMultipartDownloader) {
          CAssertNil(error);
          CBLMultipartDownloader* request = result;
          Log(@"Got document: %@", request.document);
-         NSDictionary* attachments = (request.document)[@"_attachments"];
+         NSDictionary* attachments = (request.document).cbl_attachments;
          CAssert(attachments.count >= 1);
          CAssertEq(db.attachmentStore.count, 0u);
          for (NSDictionary* attachment in attachments.allValues) {

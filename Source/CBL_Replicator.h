@@ -8,9 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
-@class CBLDatabase, CBL_RevisionList, CBLBatcher, CBLReachability;
+@class CBLDatabase, CBL_Revision, CBL_RevisionList, CBLBatcher, CBLReachability;
 @protocol CBLAuthorizer;
 
+typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
 
 /** Posted when changesProcessed or changesTotal changes. */
 extern NSString* CBL_ReplicatorProgressChangedNotification;
@@ -24,36 +25,20 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 {
     @protected
     CBLDatabase* __weak _db;
-    NSThread* _thread;
     NSURL* _remote;
     BOOL _continuous;
     NSString* _filterName;
     NSDictionary* _filterParameters;
     NSArray* _docIDs;
     NSString* _lastSequence;
-    BOOL _lastSequenceChanged;
-    NSDictionary* _remoteCheckpoint;
-    BOOL _savingCheckpoint, _overdueForSave;
-    BOOL _running, _online, _active;
-    unsigned _revisionsFailed;
-    NSError* _error;
-    NSString* _sessionID;
-    NSString* _documentID;
     CBLBatcher* _batcher;
-    NSMutableArray* _remoteRequests;
-    int _asyncTaskCount;
-    NSUInteger _changesProcessed, _changesTotal;
-    CFAbsoluteTime _startTime;
     id<CBLAuthorizer> _authorizer;
     NSDictionary* _options;
     NSDictionary* _requestHeaders;
     NSString* _serverType;
-    @private
-    CBLReachability* _host;
 #if TARGET_OS_IPHONE
     NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;
 #endif
-
 }
 
 + (NSString *)progressChangedNotification;
@@ -111,9 +96,6 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** A unique-per-process string identifying this replicator instance. */
 @property (copy, nonatomic) NSString* sessionID;
 
-/** Document ID of the persistent replication this is associated with. */
-@property (copy, nonatomic) NSString* documentID;
-
 /** Number of changes (docs or other metadata) transferred so far. */
 @property (readonly, nonatomic) NSUInteger changesProcessed;
 
@@ -127,6 +109,11 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** Timeout interval for HTTP requests sent by this replicator.
     (Derived from options key "connection_timeout", in milliseconds.) */
 @property (readonly) NSTimeInterval requestTimeout;
+
+/** Hook for transforming document body, e.g., encryption and decryption during replication */
+@property (strong, nonatomic) RevisionBodyTransformationBlock revisionBodyTransformationBlock;
+
+- (CBL_Revision *) transformRevision:(CBL_Revision *)rev;
 
 @end
 

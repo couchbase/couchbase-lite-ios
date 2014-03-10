@@ -26,6 +26,7 @@
                                  docID: (NSString*)docID
                                 revIDs: (NSArray*)revIDs
                                deleted: (BOOL)deleted;
+- (void) changeTrackerCaughtUp;
 - (void) changeTrackerFinished;
 @optional
 - (void) changeTrackerStopped: (CBLChangeTracker*)tracker;
@@ -35,7 +36,8 @@
 typedef enum CBLChangeTrackerMode {
     kOneShot,
     kLongPoll,
-    kContinuous
+    kContinuous,
+    kWebSocket
 } CBLChangeTrackerMode;
 
 
@@ -58,6 +60,7 @@ typedef enum CBLChangeTrackerMode {
     NSDictionary* _requestHeaders;
     id<CBLAuthorizer> _authorizer;
     unsigned _retryCount;
+    BOOL _caughtUp;
 }
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
@@ -76,6 +79,7 @@ typedef enum CBLChangeTrackerMode {
 @property (weak, nonatomic) id<CBLChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
+@property (nonatomic) BOOL usePOST;
 
 @property (nonatomic) CBLChangeTrackerMode mode;
 @property (copy) NSString* filterName;
@@ -93,12 +97,14 @@ typedef enum CBLChangeTrackerMode {
 - (void) retry;
 
 // Protected
+@property (readonly) NSString* feed;
 @property (readonly) NSString* changesFeedPath;
+@property (readonly) NSData* changesFeedPOSTBody;
 - (void) retryAfterDelay: (NSTimeInterval)retryDelay;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
 - (void) stopped; // override this
 - (BOOL) parseBytes: (const void*)bytes length: (size_t)length;
-- (BOOL) endParsingData;
+- (NSInteger) endParsingData;
 
 @end

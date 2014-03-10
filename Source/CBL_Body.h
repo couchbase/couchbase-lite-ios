@@ -34,3 +34,14 @@
 - (BOOL) compact;
 
 @end
+
+
+
+@interface NSDictionary (CBL_Body)
+@property (readonly) NSString* cbl_id;
+@property (readonly) NSString* cbl_rev;
+@property (readonly) BOOL cbl_deleted;
+@property (readonly) NSDictionary* cbl_attachments;
+@end
+
+

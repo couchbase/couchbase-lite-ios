@@ -16,7 +16,6 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
-#import "CBL_ReplicatorManager.h"
 #import "CBL_Server.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Insertion.h"
@@ -437,94 +436,6 @@ TestCase(CBL_Puller_FromCouchApp) {
 }
 
 
-static CBL_Replicator* findActiveReplicator(CBLDatabase* db, NSURL* remote, BOOL isPush) {
-    for (CBL_Replicator* repl in db.activeReplicators) {
-        if (repl.db == db && $equal(repl.remote, remote) && repl.isPush == isPush)
-            return repl;
-    }
-    return nil;
-}
-
-
-TestCase(CBL_ReplicatorManager) {
-    RequireTestCase(ParseReplicatorProperties);
-    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
-    [server startReplicatorManager];
-    CAssert(server.replicatorManager);    // start the replicator
-    CBLDatabase* replicatorDb = [server databaseNamed: kCBL_ReplicatorDatabaseName
-                                                error: NULL];
-    CAssert(replicatorDb);
-    
-    // Try some bogus validation docs that will fail the validator function:
-    CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"source", @"foo"},
-                                                                {@"target", @7})];
-#pragma unused (rev) // some of the 'rev=' assignments below are unnecessary
-    CBLStatus status;
-    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusForbidden);
-
-    rev = [CBL_Revision revisionWithProperties: $dict({@"source", @"foo"},
-                                                    {@"target", @"http://foo.com"},
-                                                    {@"_internal", $true})];  // <--illegal prop
-    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusForbidden);
-    
-    CBLDatabase* sourceDB = [server databaseNamed: @"foo" error: NULL];
-    CAssert(sourceDB);
-
-    // Now try a valid replication document:
-    NSURL* remote = [NSURL URLWithString: @"http://localhost:9999/tdreplicator_test"];
-    rev = [CBL_Revision revisionWithProperties: $dict({@"source", @"foo"},
-                                                    {@"target", remote.absoluteString})];
-    rev = [replicatorDb putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusCreated);
-    
-    // Get back the document and verify it's been updated with replicator properties:
-    CBL_Revision* newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil];
-    Log(@"Updated doc = %@", newRev.properties);
-    CAssert(!$equal(newRev.revID, rev.revID), @"Replicator doc wasn't updated");
-    NSString* sessionID = newRev[@"_replication_id"];
-    CAssert([sessionID length] >= 10);
-    CAssertEqual(newRev[@"_replication_state"], @"triggered");
-    CAssert([newRev[@"_replication_state_time"] longLongValue] >= 1000);
-    
-    // Check that a CBL_Replicator exists:
-    CBL_Replicator* repl = findActiveReplicator(sourceDB, remote, YES);
-    CAssert(repl);
-    CAssertEqual(repl.sessionID, sessionID);
-    CAssert(repl.running);
-    
-    // Delete the _replication_state property, and add "reset" while we're at it:
-    NSMutableDictionary* updatedProps = [newRev.properties mutableCopy];
-    updatedProps[@"reset"] = $true;
-    [updatedProps removeObjectForKey: @"_replication_state"];
-    rev = [CBL_Revision revisionWithProperties: updatedProps];
-    rev = [replicatorDb putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusCreated);
-
-    // Get back the document and verify it's been updated with replicator properties:
-    newRev = [replicatorDb getDocumentWithID: rev.docID revisionID: nil];
-    Log(@"Updated doc = %@", newRev.properties);
-    sessionID = newRev[@"_replication_id"];
-    CAssert([sessionID length] >= 10);
-    CAssertEqual(newRev[@"_replication_state"], @"triggered");
-    CAssert([newRev[@"_replication_state_time"] longLongValue] >= 1000);
-    
-    // Check that this restarted the replicator:
-    CBL_Replicator* newRepl = findActiveReplicator(sourceDB, remote, YES);
-    CAssert(newRepl);
-    CAssert(newRepl != repl);
-    CAssertEqual(newRepl.sessionID, sessionID);
-    CAssert(newRepl.running);
-
-    // Now delete the database, and check that the replication doc is deleted too:
-    CAssert([sourceDB deleteDatabase: NULL]);
-    CAssertNil([replicatorDb getDocumentWithID: rev.docID revisionID: nil]);
-    
-    [server close];
-}
-
-
 @interface CBLManager (Seekrit)
 - (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
                             toDatabase: (CBLDatabase**)outDatabase   // may be NULL
@@ -537,7 +448,7 @@ TestCase(CBL_ReplicatorManager) {
 
 
 TestCase(ParseReplicatorProperties) {
-    CBLManager* dbManager = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorManagerTest"];
+    CBLManager* dbManager = [CBLManager createEmptyAtTemporaryPath: @"CBL_ParseReplicatorProperties"];
     CBLDatabase* localDB = [dbManager _databaseNamed: @"foo" mustExist: NO error: NULL];
 
     CBLDatabase* db = nil;
@@ -637,7 +548,6 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Puller_Continuous);
     RequireTestCase(CBL_Puller_FromCouchApp);
     RequireTestCase(CBLPuller_DocIDs);
-    RequireTestCase(CBL_ReplicatorManager);
     RequireTestCase(ParseReplicatorProperties);
 }
 

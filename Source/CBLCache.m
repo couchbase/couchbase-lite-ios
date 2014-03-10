@@ -33,10 +33,8 @@ static const NSUInteger kDefaultRetainLimit = 50;
 #if CBLCACHE_IS_SMART
         // Construct an NSMapTable with weak references to values, which automatically removes
         // key/value pairs when a value is dealloced.
-        _map = [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsStrongMemory |
-                                                       NSPointerFunctionsObjectPersonality
-                                         valueOptions: NSPointerFunctionsWeakMemory |
-                                                       NSPointerFunctionsObjectPersonality
+        _map = [[NSMapTable alloc] initWithKeyOptions: NSMapTableStrongMemory
+                                         valueOptions: NSMapTableWeakMemory
                                              capacity: 100];
 #else
         // Construct a CFDictionary that doesn't retain its values. It does _not_ automatically

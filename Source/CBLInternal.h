@@ -16,7 +16,7 @@
 #import "CBL_Replicator.h"
 #import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
-@class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange, CBL_ReplicatorManager;
+@class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
 
 
 @interface CBLDatabase (Insertion_Internal)
@@ -57,8 +57,6 @@
 
 @interface CBLManager (Testing)
 #if DEBUG
-- (void) startReplicatorManager;
-@property (readonly, nonatomic) CBL_ReplicatorManager* replicatorManager;
 + (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
 + (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
@@ -94,6 +92,8 @@
 - (void) addToInbox: (CBL_Revision*)rev;
 - (void) addRevsToInbox: (CBL_RevisionList*)revs;
 - (void) processInbox: (CBL_RevisionList*)inbox;  // override this
+- (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion;
+@property (readonly) BOOL canSendCompressedRequests;
 - (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)relativePath
                                      body: (id)body
@@ -110,6 +110,7 @@
 - (void) reachabilityChanged: (CBLReachability*)host;
 - (BOOL) goOffline;
 - (BOOL) goOnline;
+- (void) setSuspended: (BOOL)suspended;
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust forHost: (NSString*)host port: (UInt16)port;
 #if DEBUG
 @property (readonly) BOOL savingCheckpoint;

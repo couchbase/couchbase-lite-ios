@@ -13,8 +13,6 @@
 /** Option flags for CBLManager initialization. */
 typedef struct CBLManagerOptions {
     bool readOnly;      /**< No modifications to databases are allowed. */
-    bool noReplicator;  /**< Persistent replications will not run (until/unless
-                             -startPersistentReplications is called.) */
 } CBLManagerOptions;
 
 
@@ -92,7 +90,7 @@ typedef struct CBLManagerOptions {
     manager was instantiated. By setting a dispatch queue, you can call the objects from within that
     queue no matter what the underlying thread is, and notifications will be posted on that queue
     as well. */
-@property dispatch_queue_t dispatchQueue;
+@property (strong) dispatch_queue_t dispatchQueue;
 
 /** Runs the block asynchronously on the database manager's dispatch queue or thread.
     Unlike the rest of the API, this can be called from any thread, and provides a limited form
@@ -114,10 +112,6 @@ typedef struct CBLManagerOptions {
     This method is only available if you've linked with the CouchbaseLiteListener framework. */
 @property (readonly) NSURL* internalURL;
 
-/** If the manager was instantiated with the noReplicator option, persistent replications won't
-    run at startup. If you want to start them later, call this. */
-- (void) startPersistentReplications;
-
 /** Enables Couchbase Lite logging of the given type, process-wide. A partial list of types is here:
     http://docs.couchbase.com/couchbase-lite/cbl-ios/#useful-logging-channels 
     It's usually more convenient to enable logging via command-line args, as discussed on that
@@ -125,6 +119,7 @@ typedef struct CBLManagerOptions {
     other criteria to enable logging. */
 + (void) enableLogging: (NSString*)type;
 
+@property (readonly, nonatomic) NSMutableDictionary* customHTTPHeaders;
 
 #ifdef CBL_DEPRECATED
 - (CBLDatabase*) createDatabaseNamed: (NSString*)name
@@ -134,7 +129,11 @@ typedef struct CBLManagerOptions {
 
 
 /** Returns the version of Couchbase Lite */
-extern NSString* CBLVersionString( void );
+extern NSString* CBLVersion( void );
+
+#ifdef CBL_DEPRECATED
+static __attribute__((deprecated("renamed CBLVersion"))) inline NSString* CBLVersionString(void) {return CBLVersion();}
+#endif
 
 /** NSError domain used for HTTP status codes returned by a lot of Couchbase Lite APIs --
     for example code 404 is "not found", 403 is "forbidden", etc. */

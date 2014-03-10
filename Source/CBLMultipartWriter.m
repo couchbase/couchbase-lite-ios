@@ -15,8 +15,13 @@
 
 #import "CBLMultipartWriter.h"
 #import "CBLMisc.h"
+#import "GTMNSData+zlib.h"
 #import "CollectionUtils.h"
 #import "Test.h"
+
+
+// Don't compress data shorter than this (not worth the CPU time, plus it might not shrink)
+#define kMinDataLengthToCompress 100
 
 
 @implementation CBLMultipartWriter
@@ -51,7 +56,14 @@
     _nextPartsHeaders = headers;
 }
 
+- (void)setValue:(NSString *)value forNextPartsHeader:(NSString *)header {
+    NSMutableDictionary* headers = _nextPartsHeaders.mutableCopy ?: $mdict();
+    [headers setValue: value forKey: header];
+    _nextPartsHeaders = headers;
+}
 
+
+// Overridden to prepend the MIME multipart separator+headers
 - (void) addInput: (id)part length:(UInt64)length {
     NSMutableString* headers = [NSMutableString stringWithFormat: @"\r\n--%@\r\n", _boundary];
     [headers appendFormat: @"Content-Length: %llu\r\n", length];
@@ -71,6 +83,18 @@
 
     [super addInput: separator length: separator.length];
     [super addInput: part length: length];
+}
+
+
+- (void) addGZippedData: (NSData*)data {
+    if (data.length >= kMinDataLengthToCompress) {
+        NSData* compressed = [NSData gtm_dataByGzippingData: data];
+        if (compressed.length < data.length) {
+            data = compressed;
+            [self setValue: @"gzip" forNextPartsHeader: @"Content-Encoding"];
+        }
+    }
+    [self addData: data];
 }
 
 
@@ -97,6 +121,7 @@
 
 
 
+#if DEBUG
 
 TestCase(CBLMultipartWriter) {
     NSString* expectedOutput = @"\r\n--BOUNDARY\r\nContent-Length: 16\r\n\r\n<part the first>\r\n--BOUNDARY\r\nContent-Length: 10\r\nContent-Type: something\r\n\r\n<2nd part>\r\n--BOUNDARY--";
@@ -116,3 +141,18 @@ TestCase(CBLMultipartWriter) {
         [mp close];
     }
 }
+
+
+TestCase(CBLMultipartWriterGZipped) {
+    RequireTestCase(CBLMultipartWriter);
+    CBLMultipartWriter* mp = [[CBLMultipartWriter alloc] initWithContentType: @"foo/bar"
+                                                                    boundary: @"BOUNDARY"];
+    NSMutableData* data1 = [NSMutableData dataWithLength: 100];
+    memset(data1.mutableBytes, '*', data1.length);
+    [mp setNextPartsHeaders: @{@"Content-Type": @"star-bellies"}];
+    [mp addGZippedData: data1];
+    NSData* output = [mp allOutput];
+    AssertEqual(output, CBLContentsOfTestFile(@"MultipartStars.mime"));
+}
+
+#endif
