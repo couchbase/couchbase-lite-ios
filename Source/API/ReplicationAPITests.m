@@ -21,6 +21,31 @@
 #define kNDocuments 1000
 
 
+@interface ReplicationObserverHelper : NSObject
+@end
+
+
+@implementation ReplicationObserverHelper
+{
+}
+
+- (void) observeValueForKeyPath:(NSString *)keyPath
+                       ofObject:(id)object
+                         change:(NSDictionary *)change
+                        context:(void *)context
+{
+    if ([keyPath isEqualToString:@"status"]) {
+        CBLReplication *repl = (CBLReplication*) object;
+        if ([repl status] == kCBLReplicationStopped) {
+            Log(@"repl.completedChangesCount: %d repl.changesCount: %d", repl.completedChangesCount, repl.changesCount);
+            CAssert(repl.completedChangesCount <= repl.changesCount);
+        }
+    }
+}
+
+
+@end
+
 static CBLDatabase* createEmptyManagerAndDb(void) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
     NSError* error;
@@ -150,8 +175,14 @@ TestCase(RunPullReplication) {
     }
     CBLDatabase* db = createEmptyManagerAndDb();
 
+    ReplicationObserverHelper *observer = [[ReplicationObserverHelper alloc] init];
     Log(@"Pulling...");
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    [repl addObserver: observer
+           forKeyPath: @"status"
+              options: 0
+              context: NULL];
+    
     runReplication(repl);
     AssertNil(repl.lastError);
 
