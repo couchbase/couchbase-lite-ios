@@ -49,12 +49,12 @@
 @protocol CBLMultipartReaderDelegate <NSObject>
 
 /** This method is called when a part's headers have been parsed, before its data is parsed. */
-- (void) startedPart: (NSDictionary*)headers;
+- (BOOL) startedPart: (NSDictionary*)headers;
 
 /** This method is called to append data to a part's body. */
-- (void) appendToPart: (NSData*)data;
+- (BOOL) appendToPart: (NSData*)data;
 
 /** This method is called when a part is complete. */
-- (void) finishedPart;
+- (BOOL) finishedPart;
 
 @end
