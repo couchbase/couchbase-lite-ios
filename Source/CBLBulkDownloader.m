@@ -134,31 +134,36 @@
 
 
 /** This method is called when a part's headers have been parsed, before its data is parsed. */
-- (void) startedPart: (NSDictionary*)headers {
+- (BOOL) startedPart: (NSDictionary*)headers {
     Assert(!_docReader);
     LogTo(SyncVerbose, @"%@: Starting new document; ID=\"%@\"", self, headers[@"X-Doc-ID"]);
     _docReader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
     _docReader.headers = headers;
+    return YES;
 }
 
 /** This method is called to append data to a part's body. */
-- (void) appendToPart: (NSData*)data {
+- (BOOL) appendToPart: (NSData*)data {
     Assert(_docReader);
-    if (![_docReader appendData: data])
+    if (![_docReader appendData: data]) {
         [self cancelWithStatus: _docReader.status];
+        return NO;
+    }
+    return YES;
 }
 
 /** This method is called when a part is complete. */
-- (void) finishedPart {
+- (BOOL) finishedPart {
     LogTo(SyncVerbose, @"%@: Finished document", self);
     Assert(_docReader);
     if (![_docReader finish]) {
         [self cancelWithStatus: _docReader.status];
-        return;
+        return NO;
     }
     ++_docCount;
     _onDocument(_docReader.document);
     _docReader = nil;
+    return YES;
 }
 
 

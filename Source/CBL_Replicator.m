@@ -370,7 +370,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self endBackgrounding];
 #endif
     self.running = NO;
-    self.changesProcessed = self.changesTotal = 0;
     [[NSNotificationCenter defaultCenter]
         postNotificationName: CBL_ReplicatorStoppedNotification object: self];
     [self saveLastSequence];

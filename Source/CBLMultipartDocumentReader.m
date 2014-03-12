@@ -234,7 +234,7 @@
 
 
 /** Callback: A part's headers have been parsed, but not yet its data. */
-- (void) startedPart: (NSDictionary*)headers {
+- (BOOL) startedPart: (NSDictionary*)headers {
     // First MIME part is the document's JSON body; the rest are attachments.
     if (!_document) {
         [self startJSONBufferWithHeaders: headers];
@@ -254,20 +254,22 @@
                 _attachmentsByName[name] = _curAttachment;
         }
     }
+    return YES;
 }
 
 
 /** Callback: Append data to a MIME part's body. */
-- (void) appendToPart: (NSData*)data {
+- (BOOL) appendToPart: (NSData*)data {
     if (_jsonBuffer)
         [_jsonBuffer appendData: data];
     else
         [_curAttachment appendData: data];
+    return YES;
 }
 
 
 /** Callback: A MIME part is complete. */
-- (void) finishedPart {
+- (BOOL) finishedPart {
     if (_jsonBuffer) {
         [self parseJSONBuffer];
     } else {
@@ -287,6 +289,7 @@
         _attachmentsByDigest[md5Str] = _curAttachment;
         _curAttachment = nil;
     }
+    return YES;
 }
 
 
