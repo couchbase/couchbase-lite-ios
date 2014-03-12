@@ -22,29 +22,49 @@
 
 
 @interface ReplicationObserverHelper : NSObject
+- (instancetype) initWithReplication: (CBLReplication*)repl;
+@property NSUInteger expectedChangesCount;
 @end
 
 
 @implementation ReplicationObserverHelper
 {
+    CBLReplication* _repl;
 }
 
-- (void) observeValueForKeyPath:(NSString *)keyPath
-                       ofObject:(id)object
-                         change:(NSDictionary *)change
-                        context:(void *)context
-{
-    if ([keyPath isEqualToString:@"status"]) {
-        CBLReplication *repl = (CBLReplication*) object;
-        if ([repl status] == kCBLReplicationStopped) {
-            Log(@"repl.completedChangesCount: %d repl.changesCount: %d", repl.completedChangesCount, repl.changesCount);
-            CAssert(repl.completedChangesCount <= repl.changesCount);
-        }
+@synthesize expectedChangesCount=_expectedChangesCount;
+
+- (instancetype) initWithReplication: (CBLReplication*)repl {
+    self = [super init];
+    if (self) {
+        _repl = repl;
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector: @selector(replChanged:)
+                                                     name: kCBLReplicationChangeNotification
+                                                   object: _repl];
+    }
+    return self;
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+
+- (void) replChanged: (NSNotification*)n {
+    AssertEq(n.object, _repl);
+    Log(@"Replication status=%d; completedChangesCount=%u; changesCount=%u",
+        _repl.status, _repl.completedChangesCount, _repl.changesCount);
+    CAssert(_repl.completedChangesCount <= _repl.changesCount);
+    if (_repl.status == kCBLReplicationStopped) {
+        AssertEq(_repl.completedChangesCount, _repl.changesCount);
+        if (_expectedChangesCount > 0)
+            AssertEq(_repl.changesCount, _expectedChangesCount);
     }
 }
 
-
 @end
+
+
 
 static CBLDatabase* createEmptyManagerAndDb(void) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
@@ -55,8 +75,10 @@ static CBLDatabase* createEmptyManagerAndDb(void) {
 }
 
 
-static void runReplication(CBLReplication* repl) {
+static void runReplication(CBLReplication* repl, unsigned expectedChangesCount) {
     Log(@"Waiting for %@ to finish...", repl);
+    ReplicationObserverHelper *observer = [[ReplicationObserverHelper alloc] initWithReplication: repl];
+    observer.expectedChangesCount = expectedChangesCount;
     bool started = false, done = false;
     [repl start];
     CFAbsoluteTime lastTime = 0;
@@ -79,6 +101,7 @@ static void runReplication(CBLReplication* repl) {
     }
     Log(@"...replicator finished. mode=%d, progress %u/%u, error=%@",
         repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
+    observer = nil;
 }
 
 
@@ -159,7 +182,7 @@ TestCase(RunPushReplication) {
     repl.createTarget = YES;
     [repl start];
     CAssertEqual(db.allReplications, @[repl]);
-    runReplication(repl);
+    runReplication(repl, kNDocuments);
     AssertNil(repl.lastError);
     CAssertEqual(db.allReplications, @[]);
     [db.manager close];
@@ -175,15 +198,10 @@ TestCase(RunPullReplication) {
     }
     CBLDatabase* db = createEmptyManagerAndDb();
 
-    ReplicationObserverHelper *observer = [[ReplicationObserverHelper alloc] init];
     Log(@"Pulling...");
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
-    [repl addObserver: observer
-           forKeyPath: @"status"
-              options: 0
-              context: NULL];
-    
-    runReplication(repl);
+
+    runReplication(repl, kNDocuments);
     AssertNil(repl.lastError);
 
     Log(@"Verifying documents...");
@@ -203,7 +221,7 @@ TestCase(RunReplicationWithError) {
 
     // Create a replication:
     CBLReplication* r1 = [db createPullReplication: fakeRemoteURL];
-    runReplication(r1);
+    runReplication(r1, 0);
 
     // It should have failed with a 404:
     CAssertEq(r1.status, kCBLReplicationStopped);
@@ -265,7 +283,7 @@ TestCase(ReplicationWithDecoding) {
         nuProps[@"index"] = @(-index);
         return nuProps;
     };
-    runReplication(repl);
+    runReplication(repl, kNDocuments);
     AssertNil(repl.lastError);
 
     Log(@"Verifying documents...");

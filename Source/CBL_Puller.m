@@ -641,8 +641,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
           self, (unsigned)downloads.count, time, downloads.count/time);
     
     [self asyncTasksFinished: downloads.count];
-    Log(@"%@ insertDownloads updating changesProcessed from %d -> %d", self, self.changesProcessed, self.changesProcessed+downloads.count);
-
     self.changesProcessed += downloads.count;
 }
 
