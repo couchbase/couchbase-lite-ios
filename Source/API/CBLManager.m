@@ -674,7 +674,7 @@ TestCase(CBLManager) {
     NSMutableString* longName = [@"long" mutableCopy];
     while (longName.length < 240)
         [longName appendString: @"!"];
-    for (NSString* name in @[@"", @"0", @"123foo", @"Foo", @"/etc/passwd", @"foo " @"_foo", longName])
+    for (NSString* name in @[@"", @"0", @"123foo", @"Foo", @"/etc/passwd", @"foo ", @"_foo", longName])
         CAssert(![CBLManager isValidDatabaseName: name], @"Db name '%@' should not be valid", name);
 
     CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
