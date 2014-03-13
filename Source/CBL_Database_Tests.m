@@ -512,6 +512,7 @@ TestCase(CBL_Database_RevTreeConflict) {
     NSArray* history = @[rev.revID];
     change = nil;
     CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil];
+    CAssertEq(status, 201);
     CAssertEq(db.documentCount, 1u);
     CAssert(!change.inConflict);
     verifyHistory(db, rev, history, 0);
