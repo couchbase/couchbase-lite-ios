@@ -58,7 +58,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @synthesize headers=_headers, OAuth=_OAuth, facebookEmailAddress=_facebookEmailAddress;
 @synthesize personaEmailAddress=_personaEmailAddress, customProperties=_customProperties;
 @synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError=_lastError, status=_status;
-@synthesize propertiesTransformationBlock=_propertiesTransformationBlock;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote

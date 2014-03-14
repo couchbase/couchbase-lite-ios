@@ -363,10 +363,26 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 - (NSURL*) fileForAttachmentDict: (NSDictionary*)attachmentDict
 {
-    CBLBlobKey key;
-    if (!digestToBlobKey(attachmentDict[@"digest"], &key))
+    NSString* digest = $castIf(NSString, attachmentDict[@"digest"]);
+    if (!digest)
         return nil;
-    return [NSURL fileURLWithPath: [_attachments pathForKey: key]];
+    NSString* path = nil;
+    id pending = _pendingAttachmentsByDigest[digest];
+    if (pending) {
+        if ([pending isKindOfClass: [CBL_BlobStoreWriter class]]) {
+            path = [pending filePath];
+        } else {
+            CBLBlobKey key = *(CBLBlobKey*)[pending bytes];
+            path = [_attachments pathForKey: key];
+        }
+    } else {
+        // If it's an installed attachment, ask the blob-store for it:
+        CBLBlobKey key;
+        if (digestToBlobKey(digest, &key))
+            path = [_attachments pathForKey: key];
+    }
+
+    return path ? [NSURL fileURLWithPath: path] : nil;
 }
 
 

@@ -247,17 +247,18 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                     
                     // Get the revision's properties:
                     CBLContentOptions options = kCBLIncludeAttachments;
-                    if (!_dontSendMultipart)
+                    if (!_dontSendMultipart && self.revisionBodyTransformationBlock==nil)
                         options |= kCBLBigAttachmentsFollow;
                     CBLStatus status;
-                    rev = [db revisionByLoadingBody: rev options: options status: &status];
-                    CBL_MutableRevision* nuRev = [[self transformRevision: rev] mutableCopy];
-                    rev = nuRev;
+                    CBL_Revision* loadedRev = [db revisionByLoadingBody: rev options: options
+                                                                 status: &status];
                     if (status >= 300) {
-                        Warn(@"%@: Couldn't get local contents of %@", self, nuRev);
+                        Warn(@"%@: Couldn't get local contents of %@", self, rev);
                         [self revisionFailed];
                         return nil;
                     }
+                    CBL_MutableRevision* nuRev = [[self transformRevision: loadedRev] mutableCopy];
+                    rev = nuRev;
 
                     // Add the revision history:
                     NSArray* possibleAncestors = revResults[@"possible_ancestors"];

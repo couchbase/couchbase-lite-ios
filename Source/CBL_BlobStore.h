@@ -101,4 +101,8 @@ typedef struct {
 @property (readonly) NSString* MD5DigestString;
 @property (readonly) NSString* SHA1DigestString;
 
+/** The location of the temporary file containing the attachment contents.
+    Will be nil after -install is called. */
+@property (readonly) NSString* filePath;
+
 @end

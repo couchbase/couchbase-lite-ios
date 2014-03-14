@@ -422,8 +422,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: dl.document];
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                [strongSelf asyncTaskStarted];
-                [gotRev.body compact];
                 [strongSelf queueDownloadedRevision:gotRev];
             }
             
@@ -487,8 +485,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
               if (props.cbl_id) {
                   // Add to batcher ... eventually it will be fed to -insertRevisions:.
-                  [strongSelf asyncTaskStarted];
-                  [rev.body compact];
                   [strongSelf queueDownloadedRevision:rev];
               } else {
                   CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
@@ -555,8 +551,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                               if (pos != NSNotFound) {
                                   rev.sequence = [remainingRevs[pos] sequence];
                                   [remainingRevs removeObjectAtIndex: pos];
-                                  [self asyncTaskStarted];
-                                  [rev.body compact];
                                   [self queueDownloadedRevision:rev];
                               }
                           }
@@ -583,7 +577,30 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // This invokes the tranformation block if one is installed and queues the resulting CBL_Revision
 - (void) queueDownloadedRevision: (CBL_Revision*)rev {
-    rev = [self transformRevision: rev];
+    if (self.revisionBodyTransformationBlock) {
+        // Add 'file' properties to attachments pointing to their bodies:
+        [rev[@"_attachments"] enumerateKeysAndObjectsUsingBlock:^(NSString* name,
+                                                                  NSMutableDictionary* attachment,
+                                                                  BOOL *stop) {
+            [attachment removeObjectForKey: @"file"];
+            if (attachment[@"follows"] && !attachment[@"data"]) {
+                NSString* filePath = [[_db fileForAttachmentDict: attachment] path];
+                if (filePath)
+                    attachment[@"file"] = filePath;
+            }
+        }];
+
+        rev = [self transformRevision: rev];
+
+        // Clean up afterwards
+        [rev[@"_attachments"] enumerateKeysAndObjectsUsingBlock:^(NSString* name,
+                                                                  NSMutableDictionary* attachment,
+                                                                  BOOL *stop) {
+            [attachment removeObjectForKey: @"file"];
+        }];
+}
+    [rev.body compact];
+    [self asyncTaskStarted];
     [_downloadsToInsert queueObject: rev];
 }
 

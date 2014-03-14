@@ -19,11 +19,6 @@ typedef enum {
 } CBLReplicationStatus;
 
 
-/** A callback block for transforming revision bodies during replication.
-    See CBLReplication.propertiesTransformationBlock's documentation for details. */
-typedef NSDictionary *(^CBLPropertiesTransformationBlock)(NSDictionary *);
-
-
 /** A 'push' or 'pull' replication between a local and a remote database.
     Replications can be one-shot or continuous. */
 @interface CBLReplication : NSObject
