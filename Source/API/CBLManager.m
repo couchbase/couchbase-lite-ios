@@ -362,13 +362,6 @@ static CBLManager* sInstance;
     return db;
 }
 
-#ifdef CBL_DEPRECATED
-- (CBLDatabase*) createDatabaseNamed: (NSString*)name error: (NSError**)outError {
-    return [self databaseNamed: name error: outError];
-}
-#endif
-
-
 #if DEBUG
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = _databases[name];

@@ -41,13 +41,4 @@
     This file must be treated as read-only! DO NOT MODIFY OR DELETE IT. */
 @property (readonly) NSURL* contentURL;
 
-#ifdef CBL_DEPRECATED
-- (instancetype) initWithContentType: (NSString*)contentType
-                                body: (id)body __attribute__((deprecated("use CBLNewRevision or CBLModel's -addAttachmentNamed:")));
-@property (readonly) NSData* body __attribute__((deprecated("use content")));
-@property (readonly) NSURL* bodyURL __attribute__((deprecated("use contentURL")));
-- (CBLSavedRevision*) updateBody: (NSData*)body
-                     contentType: (NSString*)contentType
-                           error: (NSError**)outError __attribute__((deprecated("create a new revision and update the attachment there")));
-#endif
 @end

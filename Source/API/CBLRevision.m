@@ -69,12 +69,6 @@
     return self.properties.cbl_deleted;
 }
 
-#ifdef CBL_DEPRECATED
-- (BOOL) isDeleted {
-    return self.isDeletion;
-}
-#endif
-
 - (BOOL) isGone {
     return self.properties.cbl_deleted || $castIf(NSNumber, self.properties[@"_removed"]).boolValue;
 }
@@ -252,15 +246,6 @@
 }
 
 
-#ifdef CBL_DEPRECATED
-- (CBLUnsavedRevision*) newRevision {
-    return [self createRevision];
-}
-- (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
-    return [self createRevisionWithProperties: properties error: outError];
-}
-#endif
-
 @end
 
 
@@ -360,12 +345,5 @@
     [self _addAttachment: nil named: name];
 }
 
-
-#ifdef CBL_DEPRECATED
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
-    Assert(attachment.revision == nil);
-    [self _addAttachment: attachment named: name];
-}
-#endif
 
 @end

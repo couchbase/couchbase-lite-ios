@@ -205,30 +205,6 @@
 }
 
 
-#ifdef CBL_DEPRECATED
-@synthesize error=_deprecatedError;
-- (BOOL) includeDeleted {
-    return _allDocsMode == kCBLIncludeDeleted;
-}
-- (void) setIncludeDeleted:(BOOL)includeDeleted {
-    _allDocsMode = includeDeleted ? kCBLIncludeDeleted : kCBLAllDocs;
-}
-- (CBLIndexUpdateMode) stale {return self.indexUpdateMode;}
-- (void) setStale:(CBLIndexUpdateMode)stale {self.indexUpdateMode = stale;}
-- (CBLQueryEnumerator*) rows {
-    NSError* error;
-    CBLQueryEnumerator* result = [self run: &error];
-    _deprecatedError = error;
-    return result;
-}
-- (CBLQueryEnumerator*) rowsIfChanged {
-    if (_database.lastSequenceNumber == _lastSequence)
-        return nil;
-    return [self run: nil];
-}
-#endif
-
-
 @end
 
 
@@ -611,12 +587,6 @@ static id fromJSON( NSData* json ) {
             [CBLJSON stringWithJSONObject: self.value options: CBLJSONWritingAllowFragments error: nil],
             self.documentID];
 }
-
-
-#ifdef CBL_DEPRECATED
-- (UInt64) localSequence {return _sequence;}
-- (NSString*) documentRevision {return self.documentRevisionID;}
-#endif
 
 
 @end

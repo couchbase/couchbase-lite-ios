@@ -99,8 +99,4 @@ id CBLTextKey(NSString* text);
 /** The registered object, if any, that can compile map/reduce functions from source code. */
 + (id<CBLViewCompiler>) compiler;
 
-#ifdef CBL_DEPRECATED
-- (void) removeIndex __attribute__((deprecated("renamed -deleteIndex")));
-- (CBLQuery*) query __attribute__((deprecated("renamed createQuery")));
-#endif
 @end

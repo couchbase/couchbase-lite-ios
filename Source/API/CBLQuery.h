@@ -105,15 +105,6 @@ typedef enum {
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;
 
-
-
-#ifdef CBL_DEPRECATED
-@property BOOL includeDeleted __attribute__((deprecated("use allDocsMode instead")));
-@property CBLIndexUpdateMode stale __attribute__((deprecated("renamed indexUpdateMode")));
-- (CBLQueryEnumerator*) rows __attribute__((deprecated("renamed run:")));
-- (CBLQueryEnumerator*) rowsIfChanged __attribute__((deprecated("use CBLQueryEnumerator.stale")));
-@property (readonly) NSError* error __attribute__((deprecated("use error returned by run:")));
-#endif
 @end
 
 
@@ -140,10 +131,6 @@ typedef enum {
 /** If non-nil, the error of the last execution of the query.
     If nil, the last execution of the query was successful. */
 @property (readonly) NSError* lastError;
-
-#ifdef CBL_DEPRECATED
-@property (readonly) NSError* error __attribute__((deprecated("renamed lastError")));
-#endif
 
 @end
 
@@ -228,13 +215,4 @@ typedef enum {
     or kCBLOnlyConflicts; otherwise it returns nil. */
 @property (readonly) NSArray* conflictingRevisions;
 
-#ifdef CBL_DEPRECATED
-@property (readonly) NSString* documentRevision __attribute__((deprecated("renamed documentRevisionID")));
-@property (readonly) UInt64 localSequence __attribute__((deprecated("renamed sequenceNumber")));
-#endif
 @end
-
-
-#ifdef CBL_DEPRECATED
-typedef CBLIndexUpdateMode CBLStaleness __attribute__((deprecated("renamed CBLIndexUpdateMode")));
-#endif

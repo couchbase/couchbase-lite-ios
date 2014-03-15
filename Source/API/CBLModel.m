@@ -556,17 +556,8 @@
 }
 
 - (void) removeAttachmentNamed: (NSString*)name {
-    [self addAttachment: nil named: name];
+    [self _addAttachment: nil named: name];
 }
-
-#ifdef CBL_DEPRECATED
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
-    Assert(!attachment.name, @"Attachment already attached to another revision");
-    if (attachment == [self attachmentNamed: name])
-        return;
-    [self _addAttachment: attachment named: name];
-}
-#endif
 
 
 - (NSDictionary*) attachmentDataToSave {

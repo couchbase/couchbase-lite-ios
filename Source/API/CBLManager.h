@@ -121,19 +121,11 @@ typedef struct CBLManagerOptions {
 
 @property (readonly, nonatomic) NSMutableDictionary* customHTTPHeaders;
 
-#ifdef CBL_DEPRECATED
-- (CBLDatabase*) createDatabaseNamed: (NSString*)name
-                               error: (NSError**)outError __attribute__((deprecated("use databaseNamed:error:")));
-#endif
 @end
 
 
 /** Returns the version of Couchbase Lite */
 extern NSString* CBLVersion( void );
-
-#ifdef CBL_DEPRECATED
-static __attribute__((deprecated("renamed CBLVersion"))) inline NSString* CBLVersionString(void) {return CBLVersion();}
-#endif
 
 /** NSError domain used for HTTP status codes returned by a lot of Couchbase Lite APIs --
     for example code 404 is "not found", 403 is "forbidden", etc. */

@@ -178,14 +178,6 @@
     than overriding this one. */
 + (Class) itemClassForArrayProperty: (NSString*)property;
 
-#ifdef CBL_DEPRECATED
-/** Creates or updates an attachment (in memory).
-    The attachment data will be written to the database at the same time as property changes are saved.
-    @param attachment  A newly-created CBLAttachment (not yet associated with any revision)
-    @param name  The attachment name. */
-- (void) addAttachment: (CBLAttachment*)attachment
-                 named: (NSString*)name __attribute__((deprecated("use setAttachmentNamed: instead")));
-#endif
 @end
 
 

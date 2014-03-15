@@ -408,17 +408,4 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-#ifdef CBL_DEPRECATED
-- (bool) create_target  {return self.createTarget;}
-- (void) setCreate_target:(bool)create_target {self.createTarget = create_target;}
-- (NSDictionary*) query_params {return self.filterParams;}
-- (void) setQuery_params:(NSDictionary *)query_params {self.filterParams = query_params;}
-- (NSArray*) doc_ids    {return self.documentIDs;}
-- (void) setDoc_ids:(NSArray *)doc_ids {self.documentIDs = doc_ids;}
-- (CBLReplicationStatus) mode {return self.status;}
-- (NSError*) error      {return self.lastError;}
-- (unsigned) completed  {return self.completedChangesCount;}
-- (unsigned) total      {return self.changesCount;}
-#endif
-
 @end

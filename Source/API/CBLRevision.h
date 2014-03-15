@@ -69,9 +69,6 @@
 /** All attachments, as CBLAttachment objects. */
 @property (readonly) NSArray* attachments;
 
-#ifdef CBL_DEPRECATED
-@property (readonly) BOOL isDeleted __attribute__((deprecated("use isDeletion")));
-#endif
 @end
 
 
@@ -95,11 +92,6 @@
 /** Deletes the document by creating a new deletion-marker revision. */
 - (CBLSavedRevision*) deleteDocument: (NSError**)outError;
 
-#ifdef CBL_DEPRECATED
-- (CBLUnsavedRevision*) newRevision __attribute__((deprecated("use -createRevision:")));
-- (CBLSavedRevision*) putProperties: (NSDictionary*)properties
-                              error: (NSError**)outError __attribute__((deprecated("use -createRevisionWithProperties:error:")));
-#endif
 @end
 
 
@@ -151,14 +143,4 @@
     still be present in the parent revision, until the database is next compacted. */
 - (void) removeAttachmentNamed: (NSString*)name;
 
-#ifdef CBL_DEPRECATED
-- (void) addAttachment: (CBLAttachment*)attachment
-                 named: (NSString*)name __attribute__((deprecated("use setAttachmentNamed:withContentType:content:")));
-#endif
 @end
-
-
-#ifdef CBL_DEPRECATED
-typedef CBLRevision CBLRevisionBase __attribute__((deprecated("renamed CCBLRevision")));
-typedef CBLUnsavedRevision CBLNewRevision __attribute__((deprecated("renamed CCBLUnsavedRevision")));
-#endif

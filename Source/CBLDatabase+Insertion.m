@@ -895,30 +895,5 @@
     return YES;
 }
 
-#ifdef CBL_DEPRECATED
-- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator {
-    return [self validateChanges: enumerator];
-}
-
-- (BOOL) allowChangesOnlyTo: (NSArray*)keys {
-    for (NSString* key in self.changedKeys) {
-        if (![keys containsObject: key]) {
-            [self rejectWithMessage: $sprintf(@"The '%@' property may not be changed", key)];
-            return NO;
-        }
-    }
-    return YES;
-}
-
-- (BOOL) disallowChangesTo: (NSArray*)keys {
-    for (NSString* key in self.changedKeys) {
-        if ([keys containsObject: key]) {
-            [self rejectWithMessage: $sprintf(@"The '%@' property may not be changed", key)];
-            return NO;
-        }
-    }
-    return YES;
-}
-#endif
 
 @end
