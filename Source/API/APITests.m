@@ -526,6 +526,15 @@ TestCase(API_Attachments) {
     CBLUnsavedRevision *rev2 = [doc newRevision];
     [rev2 setAttachmentNamed: @"index.html" withContentType: @"text/plain; charset=utf-8" content:body];
 
+    CAssertEq(rev2.attachments.count, (NSUInteger)1);
+    CAssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
+    CBLAttachment* attach = [rev2 attachmentNamed:@"index.html"];
+    CAssertEq(attach.document, doc);
+    CAssertEqual(attach.name, @"index.html");
+    CAssertEqual(attach.contentType, @"text/plain; charset=utf-8");
+    CAssertEqual(attach.content, body);
+    CAssertEq(attach.length, (UInt64)body.length);
+
     NSError * error;
     CBLSavedRevision *rev3 = [rev2 save:&error];
     
@@ -534,7 +543,7 @@ TestCase(API_Attachments) {
     CAssertEq(rev3.attachments.count, (NSUInteger)1);
     CAssertEq(rev3.attachmentNames.count, (NSUInteger)1);
 
-    CBLAttachment* attach = [rev3 attachmentNamed:@"index.html"];
+    attach = [rev3 attachmentNamed:@"index.html"];
     CAssert(attach);
     CAssertEq(attach.document, doc);
     CAssertEqual(attach.name, @"index.html");

@@ -57,7 +57,13 @@
            @"Invalid attachment body: %@", body);
     self = [super init];
     if (self) {
+        NSNumber* lengthObj = nil;
+        if ([body isKindOfClass: [NSData class]])
+            lengthObj = @([body length]);
+        else
+            [(NSURL*)body getResourceValue: &lengthObj forKey: NSURLFileSizeKey error: NULL];
         _metadata = $dict({@"content_type", contentType},
+                          {@"length", lengthObj},
                           {@"follows", $true});
         _body = body;
     }
@@ -66,6 +72,13 @@
 
 
 @synthesize revision=_rev, name=_name, metadata=_metadata;
+
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@[%@, %lld bytes]",
+            [self class], self.contentType, self.length];
+}
 
 
 - (CBLDocument*) document {

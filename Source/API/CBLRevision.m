@@ -89,7 +89,11 @@
 
 
 - (NSDictionary*) attachmentMetadataFor: (NSString*)name {
-    return $castIf(NSDictionary, (self.attachmentMetadata)[name]);
+    id attachment = self.attachmentMetadata[name];
+    if ([attachment isKindOfClass: [CBLAttachment class]])
+        return [(CBLAttachment*)attachment metadata];
+    else
+        return $castIf(NSDictionary, attachment);
 }
 
 
@@ -99,10 +103,14 @@
 
 
 - (CBLAttachment*) attachmentNamed: (NSString*)name {
-    NSDictionary* metadata = [self attachmentMetadataFor: name];
-    if (!metadata)
+    id attachment = self.attachmentMetadata[name];
+    if ([attachment isKindOfClass: [CBLAttachment class]])
+        return attachment;
+    else if ([attachment isKindOfClass: [NSDictionary class]]) {
+        return [[CBLAttachment alloc] initWithRevision: self name: name metadata: attachment];
+    } else {
         return nil;
-    return [[CBLAttachment alloc] initWithRevision: self name: name metadata: metadata];
+    }
 }
 
 
