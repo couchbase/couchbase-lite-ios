@@ -120,10 +120,15 @@
     }
     
     MD5_Update(&ctx, json.bytes, json.length);
-        
     MD5_Final(digestBytes, &ctx);
-    NSString* digest = CBLHexFromBytes(digestBytes, sizeof(digestBytes));
-    return [NSString stringWithFormat: @"%u-%@", generation+1, digest];
+
+    char hex[11 + 2*MD5_DIGEST_LENGTH + 1];
+    char *dst = hex + sprintf(hex, "%u-", generation+1);
+    for( size_t i=0; i<MD5_DIGEST_LENGTH; i+=1 )
+        dst += sprintf(dst,"%02x", digestBytes[i]); // important: generates lowercase!
+    return [[NSString alloc] initWithBytes: hex
+                                    length: dst - hex
+                                  encoding: NSASCIIStringEncoding];
 }
 
 

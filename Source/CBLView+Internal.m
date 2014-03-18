@@ -127,7 +127,7 @@ id CBLGeoJSONKey(NSDictionary* geoJSON) {
 #pragma mark - INDEXING:
 
 
-static NSString* toJSONString( id object ) {
+static inline NSString* toJSONString( id object ) {
     if (!object)
         return nil;
     return [CBLJSON stringWithJSONObject: object
