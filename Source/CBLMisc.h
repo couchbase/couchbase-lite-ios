@@ -46,6 +46,11 @@ NSString* CBLUnquoteString( NSString* param );
 /** Abbreviates a string to 10 characters or less by replacing its middle with "..". */
 NSString* CBLAbbreviate( NSString* str );
 
+/** Parses a string to an integer. Returns YES on success, NO on failure.
+    Fails on strings that start numeric but contain junk afterwards, like "123*foo".
+    You may pass NULL for outInt if you don't care about the numeric value. */
+BOOL CBLParseInteger(NSString* str, NSInteger* outInt);
+
 /** Returns YES if this error appears to be due to the computer being offline or the remote host being unreachable. */
 BOOL CBLIsOfflineError( NSError* error );
 
