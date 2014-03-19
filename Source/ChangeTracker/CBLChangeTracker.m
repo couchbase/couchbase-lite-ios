@@ -157,8 +157,6 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     NSInteger n;
     if ([since isKindOfClass: [NSString class]] && CBLParseInteger(since, &n) && n >= 0)
         since = @(n);
-    Assert(!CBLParseInteger(@"43:foo",NULL));
-    Assert(!CBLParseInteger(@":43 ",NULL));
 
     NSString* filterName = _filterName;
     NSDictionary* filterParameters = _filterParameters;
