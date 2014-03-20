@@ -358,12 +358,12 @@ static const yajl_callbacks kCallbacks = {
 
 #if DEBUG
 
-@interface GenericObjectMatcher : CBLJSONMatcher
+@interface CBL_GenericObjectMatcher : CBLJSONMatcher
 @property Class arrayMatcherClass;
 @property Class dictMatcherClass;
 @end
 
-@implementation GenericObjectMatcher
+@implementation CBL_GenericObjectMatcher
 {
     id _value;
     Class _arrayMatcherClass, _dictMatcherClass;
@@ -410,7 +410,7 @@ TestCase(CBLJSONMatcher) {
 TestCase(CBLJSONMatcher_Object) {
     NSString* const kJSON = @"{\"foo\": 1, \"bar\": 2}";
 
-    GenericObjectMatcher* matcher = [[GenericObjectMatcher alloc] init];
+    CBL_GenericObjectMatcher* matcher = [[CBL_GenericObjectMatcher alloc] init];
 
     CBLJSONReader* parser = [[CBLJSONReader alloc] initWithMatcher: matcher];
     CAssert([parser parseData: [kJSON dataUsingEncoding: NSUTF8StringEncoding]]);

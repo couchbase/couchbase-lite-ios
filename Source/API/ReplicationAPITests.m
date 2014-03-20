@@ -24,13 +24,13 @@
 #define kEncodedDBName @"cbl_replicator_encoding"
 
 
-@interface ReplicationObserverHelper : NSObject
+@interface CBL_ReplicationObserverHelper : NSObject
 - (instancetype) initWithReplication: (CBLReplication*)repl;
 @property NSUInteger expectedChangesCount;
 @end
 
 
-@implementation ReplicationObserverHelper
+@implementation CBL_ReplicationObserverHelper
 {
     CBLReplication* _repl;
 }
@@ -80,7 +80,7 @@ static CBLDatabase* createEmptyManagerAndDb(void) {
 
 static void runReplication(CBLReplication* repl, unsigned expectedChangesCount) {
     Log(@"Waiting for %@ to finish...", repl);
-    ReplicationObserverHelper *observer = [[ReplicationObserverHelper alloc] initWithReplication: repl];
+    CBL_ReplicationObserverHelper *observer = [[CBL_ReplicationObserverHelper alloc] initWithReplication: repl];
     observer.expectedChangesCount = expectedChangesCount;
     bool started = false, done = false;
     [repl start];
