@@ -160,6 +160,10 @@
     You don't normally need to call this, since property setters call it for you. One case where you'd need to call it is if you want to manage mutable state in your own properties and not store the changes into dynamic properties until it's time to save. In that case you should also override -propertiesToSave and update the dynamic properties accordingly before chaining to the superclass method. */
 - (void) markNeedsSave;
 
+/** Called while saving a document, before building the new revision's dictionary.
+    This method can modify property values if it wants to. */
+- (void) willSave: (NSSet*)changedPropertyNames;
+
 /** If you want properties to be saved in the document when it's deleted (in addition to the required "_deleted":true) override this method to return those properties.
     This is called by -deleteDocument:. The default implementation returns {"_deleted":true}. */
 - (NSDictionary*) propertiesToSaveForDeletion;

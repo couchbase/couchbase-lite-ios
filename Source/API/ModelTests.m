@@ -262,8 +262,10 @@ TestCase(API_ModelEncodableProperties) {
     model.subModel = name;
     AssertEq(model.subModel, name);
     AssertEq([model getValueOfProperty: @"subModel"], name);
-    NSDictionary* props = model.propertiesToSave;
-    CAssertEqual(props, (@{@"subModel": @{@"first": @"Jens", @"last": @"Alfke"}}));
+    NSMutableDictionary* props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    CAssertEqual(props, (@{@"subModel": @{@"first": @"Jens",
+                                          @"last": @"Alfke"}}));
 
     CBLDocument* doc2 = [db createDocument];
     CAssert([doc2 putProperties: props error: NULL]);
@@ -283,7 +285,8 @@ TestCase(API_ModelEncodableProperties) {
     AssertEq(model.mutableSubModel, name3);
     AssertEq([model getValueOfProperty: @"mutableSubModel"], name3);
 
-    props = model.propertiesToSave;
+    props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
     CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Jens", @"last": @"Alfke"},
                                            @{@"first": @"Naomi", @"last": @"Pearl"}],
                            @"mutableSubModel": @{@"first": @"Jed", @"last": @"Clampett"}}));
@@ -301,7 +304,7 @@ TestCase(API_ModelEncodableProperties) {
     Assert(!model3.needsSave);
     name3.lastName = @"Pookie";
     Assert(model3.needsSave);
-    props = model3.propertiesToSave;
+    props = [model3.propertiesToSave mutableCopy];
     CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Jens", @"last": @"Alfke"},
                                            @{@"first": @"Naomi", @"last": @"Pearl"}],
                            @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"},
@@ -369,8 +372,8 @@ TestCase(API_SaveModel) {
         CAssert(model != nil);
         CAssert(model.isNew);
         CAssert(!model.needsSave);
-        CAssertEq(model.propertiesToSave.count, 0u);
         modelID = model.document.documentID;
+        CAssertEqual(model.propertiesToSave, @{@"_id": modelID});
 
         // Create and populate a TestModel:
         model.number = 1337;
@@ -383,7 +386,8 @@ TestCase(API_SaveModel) {
 
         CAssert(model.isNew);
         CAssert(model.needsSave);
-        CAssertEqual(model.propertiesToSave, (@{@"number": @(1337),
+        CAssertEqual(model.propertiesToSave, (@{@"_id": model.document.documentID,
+                                                @"number": @(1337),
                                                 @"str": @"LEET",
                                                 @"strings": @[@"fee", @"fie", @"foe", @"fum"],
                                                 @"data": @"QVNDSUk=",

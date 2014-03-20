@@ -56,6 +56,7 @@
 
 @interface CBLRevision ()
 @property (readonly) SequenceNumber sequence;
+@property (readonly) NSDictionary* attachmentMetadata;
 @end
 
 
