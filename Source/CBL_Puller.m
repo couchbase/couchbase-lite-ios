@@ -590,7 +590,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             }
         }];
 
-        rev = [self transformRevision: rev];
+        CBL_Revision* xformed = [self transformRevision: rev];
+        if (xformed == nil) {
+            LogTo(Sync, @"%@: Transformer rejected revision %@", self, rev);
+            [_pendingSequences removeSequence: rev.sequence];
+            return;
+        }
+        rev = xformed;
 
         // Clean up afterwards
         [rev[@"_attachments"] enumerateKeysAndObjectsUsingBlock:^(NSString* name,
@@ -598,7 +604,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                                   BOOL *stop) {
             [attachment removeObjectForKey: @"file"];
         }];
-}
+    }
     [rev.body compact];
     [self asyncTaskStarted];
     [_downloadsToInsert queueObject: rev];

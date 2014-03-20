@@ -540,10 +540,25 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     if(_revisionBodyTransformationBlock) {
         @try {
             CBL_Revision* xformed = _revisionBodyTransformationBlock(rev);
+            if (xformed == nil)
+                return nil;
             if (xformed != rev) {
                 AssertEqual(xformed.docID, rev.docID);
                 AssertEqual(xformed.revID, rev.revID);
                 AssertEqual(xformed[@"_revisions"], rev[@"_revisions"]);
+                if (xformed[@"_attachments"]) {
+                    // Insert 'revpos' properties into any attachments added by the callback:
+                    CBL_MutableRevision* mx = xformed.mutableCopy;
+                    xformed = mx;
+                    [mx mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *info) {
+                        if (info[@"revpos"])
+                            return info;
+                        Assert(info[@"data"], @"Transformer added attachment without adding data");
+                        NSMutableDictionary* nuInfo = info.mutableCopy;
+                        nuInfo[@"revpos"] = @(rev.generation);
+                        return nuInfo;
+                    }];
+                }
                 rev = xformed;
             }
         }@catch (NSException* x) {

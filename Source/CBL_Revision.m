@@ -217,6 +217,40 @@
     return rev;
 }
 
+// Calls the block on every attachment dictionary. The block can return a different dictionary,
+// which will be replaced in the rev's properties. If it returns nil, the operation aborts.
+// Returns YES if any changes were made.
+- (BOOL) mutateAttachments: (NSDictionary*(^)(NSString*, NSDictionary*))block
+{
+    NSDictionary* properties = self.properties;
+    NSMutableDictionary* editedProperties = nil;
+    NSDictionary* attachments = (id)properties.cbl_attachments;
+    NSMutableDictionary* editedAttachments = nil;
+    for (NSString* name in attachments) {
+        @autoreleasepool {
+            NSDictionary* attachment = attachments[name];
+            NSDictionary* editedAttachment = block(name, attachment);
+            if (!editedAttachment) {
+                return NO;  // block canceled
+            }
+            if (editedAttachment != attachment) {
+                if (!editedProperties) {
+                    // Make the document properties and _attachments dictionary mutable:
+                    editedProperties = [properties mutableCopy];
+                    editedAttachments = [attachments mutableCopy];
+                    editedProperties[@"_attachments"] = editedAttachments;
+                }
+                editedAttachments[name] = editedAttachment;
+            }
+        }
+    }
+    if (editedProperties) {
+        self.properties = editedProperties;
+        return YES;
+    }
+    return NO;
+}
+
 @end
 
 

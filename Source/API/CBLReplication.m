@@ -352,7 +352,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         repl.revisionBodyTransformationBlock = ^(CBL_Revision* rev) {
             NSDictionary* properties = rev.properties;
             NSDictionary* xformedProperties = xformer(properties);
-            if (xformedProperties != properties) {
+            if (xformedProperties == nil) {
+                rev = nil;
+            } else if (xformedProperties != properties) {
                 Assert(xformedProperties != nil);
                 AssertEqual(xformedProperties.cbl_id, properties.cbl_id);
                 AssertEqual(xformedProperties.cbl_rev, properties.cbl_rev);
