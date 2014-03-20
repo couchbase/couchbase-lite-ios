@@ -86,11 +86,13 @@
 // THESE ARE CALLED ON THE WEBSOCKET'S DISPATCH QUEUE, NOT MY THREAD!!
 
 - (void) webSocketDidOpen: (WebSocket *)ws {
-    LogTo(ChangeTrackerVerbose, @"%@: WebSocket opened", self);
-    // Now that the WebSocket is open, send the changes-feed options (the ones that would have
-    // gone in the POST body if this were HTTP-based.)
-    if (self.usePOST)
-        [ws sendBinaryMessage: self.changesFeedPOSTBody];
+    MYOnThread(_thread, ^{
+        LogTo(ChangeTrackerVerbose, @"%@: WebSocket opened", self);
+        // Now that the WebSocket is open, send the changes-feed options (the ones that would have
+        // gone in the POST body if this were HTTP-based.)
+        if (self.usePOST)
+            [ws sendBinaryMessage: self.changesFeedPOSTBody];
+    });
 }
 
 /** Called when a WebSocket receives a textual message from its peer. */
