@@ -594,6 +594,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         if (xformed == nil) {
             LogTo(Sync, @"%@: Transformer rejected revision %@", self, rev);
             [_pendingSequences removeSequence: rev.sequence];
+            self.lastSequence = _pendingSequences.checkpointedValue;
             return;
         }
         rev = xformed;
