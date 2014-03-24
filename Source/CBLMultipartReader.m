@@ -146,15 +146,17 @@ static NSData* kCRLFCRLF;
     [_buffer replaceBytesInRange: NSMakeRange(0, NSMaxRange(r)) withBytes: NULL length: 0];
 }
 
-- (void) trimBuffer {
+- (BOOL) appendAndTrimBuffer {
     NSUInteger bufLen = _buffer.length;
     NSUInteger boundaryLen = _boundary.length;
     if (bufLen > boundaryLen) {
         // Leave enough bytes in _buffer that we can find an incomplete boundary string
         NSRange trim = NSMakeRange(0, bufLen - boundaryLen);
-        [_delegate appendToPart: [_buffer subdataWithRange: trim]];
+        if (![_delegate appendToPart: [_buffer subdataWithRange: trim]])
+            return NO;
         [self deleteUpThrough: trim];
     }
+    return YES;
 }
 
 
@@ -221,7 +223,10 @@ static NSData* kCRLFCRLF;
                     [self deleteUpThrough: r];
                     nextState = kInHeaders;
                 } else {
-                    [self trimBuffer];
+                    if (![self appendAndTrimBuffer]) {
+                        [self stop];
+                        break;
+                    }
                 }
                 break;
             }
