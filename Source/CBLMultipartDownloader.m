@@ -68,8 +68,16 @@
     _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
+        NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
+        // If we let the reader see the Content-Encoding header it might decide to un-gzip the
+        // data, but it's already been decoded by NSURLConnection! So remove that header:
+        if (headers[@"Content-Encoding"]) {
+            NSMutableDictionary* nuHeaders = [headers mutableCopy];
+            [nuHeaders removeObjectForKey: @"Content-Encoding"];
+            headers = nuHeaders;
+        }
         // Check the content type to see whether it's a multipart response:
-        if (![_reader setHeaders: [(NSHTTPURLResponse*)response allHeaderFields]]) {
+        if (![_reader setHeaders: headers]) {
             LogTo(RemoteRequest, @"%@ got invalid Content-Type", self);
             [self cancelWithStatus: _reader.status];
             return;
