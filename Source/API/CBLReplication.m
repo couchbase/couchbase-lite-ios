@@ -304,8 +304,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }
 
     if (changed) {
-        LogTo(CBLReplication, @"%@: status=%d, completed=%u, total=%u (changed=%d)",
-              self, status, (unsigned)changesProcessed, (unsigned)changesTotal, changed);
+        LogTo(Sync, @"%@: Notified status = %d, progress = %u / %u",
+              self, status, (unsigned)changesProcessed, (unsigned)changesTotal);
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
     }
