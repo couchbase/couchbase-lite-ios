@@ -112,10 +112,8 @@
 
 - (void) startJSONBufferWithHeaders: (NSDictionary*)headers {
     _jsonBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
-    if (_multipartReader != nil) {
-        NSString* contentEncoding = headers[@"Content-Encoding"];
-        _jsonCompressed = contentEncoding && [contentEncoding rangeOfString: @"gzip"].length > 0;
-    }
+    NSString* contentEncoding = headers[@"Content-Encoding"];
+    _jsonCompressed = contentEncoding && [contentEncoding rangeOfString: @"gzip"].length > 0;
 }
 
 
@@ -314,7 +312,7 @@
                                          error: NULL];
     if (![document isKindOfClass: [NSDictionary class]]) {
         Warn(@"%@: received unparseable JSON data '%@'",
-             self, [json my_UTF8ToString]);
+             self, ([json my_UTF8ToString] ?: json));
         _status = kCBLStatusUpstreamError;
         return NO;
     }
@@ -464,15 +462,6 @@ TestCase(CBLMultipartDocumentReader) {
     headers = @{@"Content-Type": @"multipart/mixed; boundary=\"dc0bf3cdc9a6c6e4c46fe2a361c8c5d7\""};
     NSDictionary* unzippedDict = [CBLMultipartDocumentReader readData: mime headers: headers toDatabase: db status: &status];
     CAssertEqual(unzippedDict, dict);
-
-    // Make sure we don't get confused by an all-JSON document with Content-Encoding header:
-    NSData* json = [@"{\"_id\":\"justjson\"}" dataUsingEncoding: NSUTF8StringEncoding];
-    headers = @{@"Content-Type": @"application/json",
-                @"Content-Encoding": @"gzip"};
-    dict = [CBLMultipartDocumentReader readData: json headers: headers toDatabase: db status: &status];
-    CAssert(!CBLStatusIsError(status));
-    CAssertEqual(dict, (@{@"_id": @"justjson"}));
-
 }
 
 #endif
