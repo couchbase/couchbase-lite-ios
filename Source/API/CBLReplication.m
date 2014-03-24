@@ -304,8 +304,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }
 
     if (changed) {
-        LogTo(Sync, @"%@: Notified status = %d, progress = %u / %u",
-              self, status, (unsigned)changesProcessed, (unsigned)changesTotal);
+        static const char* kStatusNames[] = {"stopped", "offline", "idle", "active"};
+        LogTo(Sync, @"%@: %s, progress = %u / %u, err: %@",
+              self, kStatusNames[status], (unsigned)changesProcessed, (unsigned)changesTotal,
+              error.localizedDescription);
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
     }
