@@ -23,6 +23,11 @@ typedef struct CBLGeoRect {
 } CBLGeoRect;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /** Compares two rectangles for equality. */
 static inline BOOL CBLGeoRectEqual(CBLGeoRect a, CBLGeoRect b) {
     return a.min.x == b.min.x && a.min.y == b.min.y && a.max.x == b.max.x && a.max.y == b.max.y;
@@ -75,3 +80,8 @@ id CBLGeoRectKey(double x0, double y0, double x1, double y1);
     shape. Currently only its bounding box is stored. 
     Only points and polygons are supported; other shapes return nil. */
 id CBLGeoJSONKey(NSDictionary* geoJSON);
+
+
+#ifdef __cplusplus
+}
+#endif
