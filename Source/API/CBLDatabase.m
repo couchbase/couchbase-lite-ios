@@ -252,8 +252,11 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 - (CBLDocument*) documentWithID: (NSString*)docID mustExist: (BOOL)mustExist {
     CBLDocument* doc = (CBLDocument*) [_docCache resourceWithCacheKey: docID];
-    if (doc)
+    if (doc) {
+        if (mustExist && doc.currentRevision == nil)  // loads current revision from db
+            return nil;
         return doc;
+    }
     if (docID.length == 0)
         return nil;
     doc = [[CBLDocument alloc] initWithDatabase: self documentID: docID];

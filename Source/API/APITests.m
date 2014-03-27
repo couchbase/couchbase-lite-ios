@@ -125,6 +125,18 @@ TestCase(API_CreateDocument) {
 }
 
 
+TestCase(API_ExistingDocument) {
+    CBLDatabase* db = createEmptyDB();
+
+    AssertNil([db existingDocumentWithID: @"missing"]);
+    CBLDocument* doc = [db documentWithID: @"missing"];
+    Assert(doc != nil);
+    AssertNil([db existingDocumentWithID: @"missing"]);
+
+    closeTestDB(db);
+}
+
+
 TestCase(API_CreateRevisions) {
     RequireTestCase(API_CreateDocument);
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
