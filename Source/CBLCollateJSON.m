@@ -255,7 +255,6 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
     @autoreleasepool {
         NSString* str1 = createStringFromJSON(in1);
         NSString* str2 = createStringFromJSON(in2);
-        NSLog(@"*** Slow comparison of '%@' and '%@'", str1, str2);//TEMP
         return (int)[str1 localizedCompare: str2];
     }
 }
