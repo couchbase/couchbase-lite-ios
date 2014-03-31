@@ -62,6 +62,9 @@ typedef NSUInteger CBLJSONWritingOptions;
     If the object is not a string, or not valid Base64, it returns nil. */
 + (NSData*) dataWithBase64String: (id)jsonObject;
 
+/** Estimates the amount of memory used by the object and those it references. */
++ (size_t) estimateMemorySize: (id)object;
+
 @end
 
 
