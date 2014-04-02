@@ -116,9 +116,9 @@ static CBLView* createView(CBLDatabase* db) {
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
         CAssert([doc[@"_local_seq"] isKindOfClass: [NSNumber class]], @"Invalid _local_seq in %@", doc);
         if (doc[@"key"])
-            emit(doc[@"key"], doc[@"_conflicts"]);
+            emit(doc[@"key"], nil);
         if (doc[@"geoJSON"])
-            emit(CBLGeoJSONKey(doc[@"geoJSON"]), doc[@"_conflicts"]);
+            emit(CBLGeoJSONKey(doc[@"geoJSON"]), nil);
     }) reduceBlock: NULL version: @"1"];
     return view;
 }
@@ -189,41 +189,6 @@ TestCase(CBL_View_Index) {
 }
 
 
-TestCase(CBL_View_MapConflicts) {
-    RequireTestCase(CBL_View_Index);
-    CBLDatabase *db = createDB();
-    NSArray* docs = putDocs(db);
-    CBL_Revision* leaf1 = docs[1];
-    
-    // Create a conflict:
-    NSDictionary* props = $dict({@"_id", @"44444"},
-                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
-                                {@"key", @"40ur"});
-    CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
-    CAssert(status < 300);
-    CAssertEqual(leaf1.docID, leaf2.docID);
-    
-    CBLView* view = [db viewNamed: @"conflicts"];
-    [view setMapBlock: MAPBLOCK({
-        NSString* docID = doc[@"_id"];
-        NSArray* conflicts = $cast(NSArray, doc[@"_conflicts"]);
-        if (conflicts) {
-            Log(@"Doc %@, _conflicts = %@", docID, conflicts);
-            emit(docID, conflicts);
-        }
-    }) reduceBlock: NULL version: @"1"];
-    
-    CAssertEq([view updateIndex], kCBLStatusOK);
-    NSArray* dump = [view dump];
-    Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"44444\""},
-                                    {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)},
-                                    {@"seq", @6}) ));
-    CAssert([db close]);
-}
-
-
 TestCase(CBL_View_ConflictWinner) {
     // If a view is re-indexed, and a document in the view has gone into conflict,
     // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
@@ -255,8 +220,7 @@ TestCase(CBL_View_ConflictWinner) {
     CAssertEq([view updateIndex], kCBLStatusOK);
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6},
-                                    {@"value", $sprintf(@"[\"%@\"]", leaf1.revID)}),
+    CAssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6}),
                               $dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
@@ -268,7 +232,7 @@ TestCase(CBL_View_ConflictWinner) {
 TestCase(CBL_View_ConflictLoser) {
     // Like the ConflictWinner test, except the newer revision is the loser,
     // so it shouldn't be indexed at all. Instead, the older still-winning revision
-    // should be indexed again, this time with a '_conflicts' property.
+    // should be indexed again.
     CBLDatabase *db = createDB();
     NSArray* docs = putDocs(db);
     CBL_Revision* leaf1 = docs[1];
@@ -297,8 +261,7 @@ TestCase(CBL_View_ConflictLoser) {
     dump = [view dump];
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
-                              $dict({@"key", @"\"four\""}, {@"seq", @2},
-                                    {@"value", @"[\"1-....\"]"}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @2}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
