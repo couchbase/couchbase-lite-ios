@@ -68,6 +68,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     unsigned _revisionsFailed;
     NSError* _error;
     NSThread* _thread;
+    NSString* _remoteCheckpointDocID;
     NSDictionary* _remoteCheckpoint;
     BOOL _savingCheckpoint, _overdueForSave;
     NSMutableArray* _remoteRequests;
@@ -781,17 +782,20 @@ static BOOL sOnlyTrustAnchorCerts;
     It's based on the local database UUID (the private one, to make the result unguessable),
     the remote database's URL, and the filter name and parameters (if any). */
 - (NSString*) remoteCheckpointDocID {
-    // Needs to be consistent with -hasSameSettingsAs: --
-    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
-    NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
-                                       {@"remoteURL", _remote.absoluteString},
-                                       {@"push", @(self.isPush)},
-                                       {@"continuous", (self.continuous ? nil : $false)},
-                                       {@"filter", _filterName},
-                                       {@"filterParams", _filterParameters},
-                                     //{@"headers", _requestHeaders}, (removed; see #143)
-                                       {@"docids", _docIDs});
-    return CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
+    if (!_remoteCheckpointDocID) {
+        // Needs to be consistent with -hasSameSettingsAs: --
+        // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
+        NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
+                                           {@"remoteURL", _remote.absoluteString},
+                                           {@"push", @(self.isPush)},
+                                           {@"continuous", (self.continuous ? nil : $false)},
+                                           {@"filter", _filterName},
+                                           {@"filterParams", _filterParameters},
+                                         //{@"headers", _requestHeaders}, (removed; see #143)
+                                           {@"docids", _docIDs});
+        _remoteCheckpointDocID = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
+    }
+    return _remoteCheckpointDocID;
 }
 
 
