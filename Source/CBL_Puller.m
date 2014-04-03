@@ -476,12 +476,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   rev = [[CBL_Revision alloc] initWithDocID: props[@"id"]
                                                       revID: props[@"rev"] deleted: NO];
               NSUInteger pos = [remainingRevs indexOfObject: rev];
-              if (pos != NSNotFound) {
-                  rev.sequence = [remainingRevs[pos] sequence];
-                  [remainingRevs removeObjectAtIndex: pos];
-              } else {
-                  Warn(@"%@: Received unexpected rev %@", self, rev);
+              if (pos == NSNotFound) {
+                  Warn(@"%@: Received unexpected rev %@; ignoring", self, rev);
+                  return;
               }
+              rev.sequence = [remainingRevs[pos] sequence];
+              [remainingRevs removeObjectAtIndex: pos];
 
               if (props.cbl_id) {
                   // Add to batcher ... eventually it will be fed to -insertRevisions:.
@@ -500,8 +500,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               if (error) {
                   strongSelf.error = error;
                   [strongSelf revisionFailed];
-                  strongSelf.changesProcessed += remainingRevs.count;
+              } else if (remainingRevs.count > 0) {
+                  Warn(@"%@: %u revs not returned from _bulk_get: %@",
+                       self, (unsigned)remainingRevs.count, remainingRevs);
               }
+              strongSelf.changesProcessed += remainingRevs.count;
               // Note that we've finished this task:
               [self asyncTasksFinished: 1];
               --_httpConnectionCount;
