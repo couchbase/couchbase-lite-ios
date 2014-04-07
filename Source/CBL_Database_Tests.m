@@ -813,6 +813,46 @@ TestCase(CBL_Database_PutAttachment) {
 }
 
 
+// Test that updating an attachment via a PUT correctly updates its revpos.
+TestCase(CBL_Database_AttachmentRevPos) {
+    RequireTestCase(CBL_Database_PutAttachment);
+    CBLDatabase* db = createDB();
+
+    // Put a revision that includes an _attachments dict:
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* base64 = [CBLBase64 encode: attach1];
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"data", base64})});
+    NSDictionary* props = $dict({@"foo", @1},
+                                {@"bar", $false},
+                                {@"_attachments", attachmentDict});
+    CBL_Revision* rev1;
+    CBLStatus status;
+    rev1 = [db putRevision: [CBL_Revision revisionWithProperties: props]
+            prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusCreated);
+
+    CAssertEqual([[rev1[@"_attachments"] objectForKey: @"attach"] objectForKey: @"revpos"], @1);
+
+    // Update the attachment with another PUT:
+    NSData* attach2 = [@"This WAS the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    base64 = [CBLBase64 encode: attach2];
+    attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                             {@"data", base64})});
+    props = $dict({@"_id", rev1.docID},
+                  {@"foo", @2},
+                  {@"bar", $true},
+                  {@"_attachments", attachmentDict});
+    CBL_Revision* rev2;
+    rev2 = [db putRevision: [CBL_Revision revisionWithProperties: props]
+            prevRevisionID: rev1.revID allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusCreated);
+
+    // The punch line: Did the revpos get incremented to 2?
+    CAssertEqual([[rev2[@"_attachments"] objectForKey: @"attach"] objectForKey: @"revpos"], @2);
+}
+
+
 TestCase(CBL_Database_EncodedAttachment) {
     RequireTestCase(CBL_Database_Attachments);
     // Start with a fresh database in /tmp:
