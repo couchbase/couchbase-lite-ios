@@ -187,11 +187,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
            @"Critical Couchbase Lite code has been stripped from the app binary! "
             "Please make sure to build using the -ObjC linker flag!");
 
-    int flags =  SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
+    int flags =  SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN | SQLITE_OPEN_SHAREDCACHE;
     if (_readOnly)
-        flags |= SQLITE_OPEN_READONLY;
+        flags |= SQLITE_OPEN_READONLY | SQLITE_OPEN_SHAREDCACHE;
     else
-        flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_SHAREDCACHE;
     LogTo(CBLDatabase, @"Open %@ (flags=%X)", _path, flags);
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
