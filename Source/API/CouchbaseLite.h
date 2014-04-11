@@ -14,6 +14,8 @@
 //  and limitations under the License.
 
 
+#define CBL_DEPRECATED  // Enable deprecated methods.
+
 #import "CBLManager.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseChange.h"

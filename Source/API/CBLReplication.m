@@ -55,9 +55,11 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @synthesize localDatabase=_database, createTarget=_createTarget;
 @synthesize continuous=_continuous, filter=_filter, filterParams=_filterParams;
 @synthesize documentIDs=_documentIDs, network=_network, remoteURL=_remoteURL, pull=_pull;
-@synthesize headers=_headers, OAuth=_OAuth, facebookEmailAddress=_facebookEmailAddress;
-@synthesize personaEmailAddress=_personaEmailAddress, customProperties=_customProperties;
-@synthesize running = _running, completedChangesCount=_completedChangesCount, changesCount=_changesCount, lastError=_lastError, status=_status;
+@synthesize headers=_headers, OAuth=_OAuth, customProperties=_customProperties;
+@synthesize running = _running, completedChangesCount=_completedChangesCount;
+@synthesize changesCount=_changesCount, lastError=_lastError, status=_status;
+@synthesize authenticator=_authenticator;
+
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
@@ -143,6 +145,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                                             authenticationMethod: NSURLAuthenticationMethodDefault];
     NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
     if (cred) {
+        self.authenticator = nil;
         [storage setDefaultCredential: cred forProtectionSpace: space];
     } else {
         cred = [storage defaultCredentialForProtectionSpace: space];
@@ -153,6 +156,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
+#ifdef CBL_DEPRECATED
+
+@synthesize facebookEmailAddress=_facebookEmailAddress;
+
 - (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
     if (![CBLFacebookAuthorizer registerToken: token forEmailAddress: email forSite: self.remoteURL])
         return false;
@@ -160,11 +167,16 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     [self restart];
     return true;
 }
+#endif
 
 
 - (NSURL*) personaOrigin {
     return self.remoteURL.my_baseURL;
 }
+
+
+#ifdef CBL_DEPRECATED
+@synthesize personaEmailAddress=_personaEmailAddress;
 
 - (BOOL) registerPersonaAssertion: (NSString*)assertion {
     NSString* email = [CBLPersonaAuthorizer registerAssertion: assertion];
@@ -176,6 +188,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     [self restart];
     return true;
 }
+#endif
 
 
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
@@ -193,15 +206,19 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                                         {@"filter", _filter},
                                         {@"query_params", _filterParams},
                                         {@"doc_ids", _documentIDs});
+    NSURL* remoteURL = _remoteURL;
     NSMutableDictionary* authDict = nil;
-    if (_OAuth || _facebookEmailAddress) {
+    if (_authenticator) {
+        remoteURL = remoteURL.my_URLByRemovingUser;
+    } else if (_OAuth || _facebookEmailAddress || _personaEmailAddress) {
+        remoteURL = remoteURL.my_URLByRemovingUser;
         authDict = $mdict({@"oauth", _OAuth});
         if (_facebookEmailAddress)
             authDict[@"facebook"] = @{@"email": _facebookEmailAddress};
         if (_personaEmailAddress)
             authDict[@"persona"] = @{@"email": _personaEmailAddress};
     }
-    NSDictionary* remote = $dict({@"url", _remoteURL.absoluteString},
+    NSDictionary* remote = $dict({@"url", remoteURL.absoluteString},
                                  {@"headers", _headers},
                                  {@"auth", authDict});
     if (_pull) {
@@ -235,9 +252,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         _started = YES;
 
         NSDictionary* properties= self.properties;
+        id<CBLAuthorizer> auth = (id<CBLAuthorizer>)_authenticator;
         [self tellDatabaseManager: ^(CBLManager* bgManager) {
             // This runs on the server thread:
-            [self bg_startReplicator: bgManager properties: properties];
+            [self bg_startReplicator: bgManager properties: properties auth: auth];
         }];
 
         // Initialize the status to something other than kCBLReplicationStopped:
@@ -336,6 +354,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_startReplicator: (CBLManager*)server_dbmgr
                  properties: (NSDictionary*)properties
+                       auth: (id<CBLAuthorizer>)auth
 {
     // The setup should use properties, not ivars, because the ivars may change on the main thread.
     CBLStatus status;
@@ -348,6 +367,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         }];
         return;
     }
+    if (auth)
+        repl.authorizer = auth;
 
     CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
     if (xformer) {

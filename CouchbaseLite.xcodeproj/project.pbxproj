@@ -104,6 +104,12 @@
 		272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */; };
 		272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
 		272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
+		2733022A18F8572700A488F7 /* CBLAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022818F8572700A488F7 /* CBLAuthenticator.h */; };
+		2733022B18F8572700A488F7 /* CBLAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022918F8572700A488F7 /* CBLAuthenticator.m */; };
+		2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022918F8572700A488F7 /* CBLAuthenticator.m */; };
+		2733022F18F86C9800A488F7 /* CBLTokenAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */; };
+		2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
+		2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
 		27411445179744F6005EF2F8 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		27411446179744FE005EF2F8 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		2741144717974555005EF2F8 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
@@ -918,6 +924,10 @@
 		272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLWebSocketChangeTracker.m; sourceTree = "<group>"; };
 		272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFacebookAuthorizer.h; sourceTree = "<group>"; };
 		272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFacebookAuthorizer.m; sourceTree = "<group>"; };
+		2733022818F8572700A488F7 /* CBLAuthenticator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAuthenticator.h; sourceTree = "<group>"; };
+		2733022918F8572700A488F7 /* CBLAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthenticator.m; sourceTree = "<group>"; };
+		2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLTokenAuthorizer.h; sourceTree = "<group>"; };
+		2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLTokenAuthorizer.m; sourceTree = "<group>"; };
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
 		274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmptyAppDelegate.m; sourceTree = "<group>"; };
 		274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Attachments.m"; sourceTree = "<group>"; };
@@ -1627,6 +1637,34 @@
 			name = "WebSockets-Cocoa";
 			sourceTree = "<group>";
 		};
+		2733023218F884DD00A488F7 /* Replication */ = {
+			isa = PBXGroup;
+			children = (
+				27E2E5CB159533A5005B9234 /* CBLReplication.h */,
+				27E2E5CC159533A5005B9234 /* CBLReplication.m */,
+				2733022818F8572700A488F7 /* CBLAuthenticator.h */,
+				2733022918F8572700A488F7 /* CBLAuthenticator.m */,
+				2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */,
+				2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */,
+			);
+			name = Replication;
+			sourceTree = "<group>";
+		};
+		2733023318F884EE00A488F7 /* Views/Queries */ = {
+			isa = PBXGroup;
+			children = (
+				27DA434815912AFD00F9E7B5 /* CBLView.h */,
+				27DA434915912AFD00F9E7B5 /* CBLView.m */,
+				27DA4310158FB79E00F9E7B5 /* CBLQuery.h */,
+				27DA4311158FB79E00F9E7B5 /* CBLQuery.m */,
+				277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */,
+				277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */,
+				277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */,
+				277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */,
+			);
+			name = Views/Queries;
+			sourceTree = "<group>";
+		};
 		2753154D14ACEF350065964D /* vendor */ = {
 			isa = PBXGroup;
 			children = (
@@ -1798,6 +1836,8 @@
 				272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */,
 				2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */,
 				2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */,
+				2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */,
+				2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */,
 			);
 			name = Auth;
 			sourceTree = "<group>";
@@ -2195,18 +2235,8 @@
 				27DA42F7158E66DD00F9E7B5 /* CBLRevision.m */,
 				27E2E5A1159383E9005B9234 /* CBLAttachment.h */,
 				27E2E5A2159383E9005B9234 /* CBLAttachment.m */,
-				27DA434815912AFD00F9E7B5 /* CBLView.h */,
-				27DA434915912AFD00F9E7B5 /* CBLView.m */,
-				27DA4310158FB79E00F9E7B5 /* CBLQuery.h */,
-				27DA4311158FB79E00F9E7B5 /* CBLQuery.m */,
-				277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */,
-				277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */,
-				277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */,
-				277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */,
-				27E2E5CB159533A5005B9234 /* CBLReplication.h */,
-				27E2E5CC159533A5005B9234 /* CBLReplication.m */,
-				2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */,
-				2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */,
+				2733023318F884EE00A488F7 /* Views/Queries */,
+				2733023218F884DD00A488F7 /* Replication */,
 				27726AAA1889835F00AE6931 /* CBLJSON.h */,
 				27726AAB1889835F00AE6931 /* CBLJSON.m */,
 				27726AA81889835F00AE6931 /* CBLGeometry.h */,
@@ -2417,6 +2447,7 @@
 				27821BBE14906FB60099B373 /* CouchbaseLitePrefix.h in Headers */,
 				279EB2D11491442500E74185 /* CBLInternal.h in Headers */,
 				272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */,
+				2733022F18F86C9800A488F7 /* CBLTokenAuthorizer.h in Headers */,
 				277B5DCB1821A8B60088881E /* yajl_version.h in Headers */,
 				279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */,
 				27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */,
@@ -2485,6 +2516,7 @@
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */,
 				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
+				2733022A18F8572700A488F7 /* CBLAuthenticator.h in Headers */,
 				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
 				2766EFF814DB7F9F009ECCA8 /* CBLMultipartWriter.h in Headers */,
 				2766EFFD14DC7B37009ECCA8 /* CBLMultiStreamWriter.h in Headers */,
@@ -3164,6 +3196,7 @@
 				272401B51860CB4B0080E082 /* WebSocket.m in Sources */,
 				272401B81860CB4B0080E082 /* WebSocketClient.m in Sources */,
 				277B5D301821A8380088881E /* yajl_buf.c in Sources */,
+				2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */,
 				276F25FC18A3386100A70679 /* DDData.m in Sources */,
 				277B5D291821A8380088881E /* yajl.c in Sources */,
 				277B5D341821A8380088881E /* yajl_encode.c in Sources */,
@@ -3209,6 +3242,7 @@
 				277EF45617F4DF3700F7B7F7 /* stem_KOI8_R_russian.c in Sources */,
 				277EF42F17F4DF3700F7B7F7 /* stem_ISO_8859_1_dutch.c in Sources */,
 				277EF45017F4DF3700F7B7F7 /* stem_ISO_8859_1_swedish.c in Sources */,
+				2733022B18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
 				277EF43B17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
 				277EF45C17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 			);
@@ -3302,6 +3336,7 @@
 				27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
+				2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
@@ -3412,6 +3447,7 @@
 				272401CD1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */,
 				277EF45D17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 				277EF44E17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
+				2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */,
 				277EF48D17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

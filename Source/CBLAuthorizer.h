@@ -6,11 +6,12 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLAuthenticator.h"
 
 
-/** Protocol for adding authorization to HTTP requests. */
-@protocol CBLAuthorizer <NSObject>
+/** Internal protocol for authenticating a user to a server.
+    (The word "authorization" here is a misnomer, but HTTP uses it for historical reasons.) */
+@protocol CBLAuthorizer <CBLAuthenticator>
 
 /** Should generate and return an authorization string for the given request.
     The string, if non-nil, will be set as the value of the "Authorization:" HTTP header. */
@@ -47,6 +48,7 @@
 
 
 
+#if 0 // UNUSED
 /** Implementation of CBLAuthorizer that supports MAC authorization as used in OAuth 2. */
 @interface CBLMACAuthorizer : NSObject <CBLAuthorizer>
 {
@@ -64,3 +66,4 @@
                    issueTime: (NSDate*)issueTime;
 
 @end
+#endif

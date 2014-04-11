@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLDatabase;
+@protocol CBLAuthenticator;
 
 
 /** Describes the current status of a replication. */
@@ -79,6 +80,11 @@ typedef enum {
 
 #pragma mark - AUTHENTICATION:
 
+/** An object that knows how to authenticate with a remote server.
+    CBLAuthenticator is an opaque protocol; instances can be created by calling the factory methods
+    of the class of the same name. */
+@property id<CBLAuthenticator> authenticator;
+
 /** The credential (generally username+password) to use to authenticate to the remote database.
     This can either come from the URL itself (if it's of the form "http://user:pass@example.com")
     or be stored in the NSURLCredentialStore, which is a wrapper around the Keychain. */
@@ -89,38 +95,9 @@ typedef enum {
     and optionally "signature_method". */
 @property (nonatomic, copy) NSDictionary* OAuth;
 
-/** Email address for login with Facebook credentials.
-    In addition to this, you also need to get a token from Facebook's servers,
-    which you then pass to -registerFacebookToken:forEmailAddress. */
-@property (nonatomic, copy) NSString* facebookEmailAddress;
-
-/** Registers a Facebook login token that will be used on the next login to the remote server.
-    This also sets facebookEmailAddress. 
-    For security reasons the token is not stored in the replication document, but instead kept
-    in an in-memory registry private to the Facebook authorizer. On login the token is sent to
-    the server, and the server will respond with a session cookie. After that the token isn't
-    needed again until the session expires. At that point you'll need to recover or regenerate
-    the token and register it again. */
-- (BOOL) registerFacebookToken: (NSString*)token
-               forEmailAddress: (NSString*)email                        __attribute__((nonnull));
-
 /** The base URL of the remote server, for use as the "origin" parameter when requesting Persona or
     Facebook authentication. */
 @property (readonly) NSURL* personaOrigin;
-
-/** Email address for remote login with Persona (aka BrowserID).
-    In addition to this, you also need to go through the Persona protocol to get a signed assertion,
-    which you then pass to the -registerPersonaAssertion: method.)*/
-@property (nonatomic, copy) NSString* personaEmailAddress;
-
-/** Registers a Persona 'assertion' (ID verification) string that will be used on the next login to the remote server. This also sets personaEmailAddress.
-    Note: An assertion is a type of certificate and typically has a very short lifespan (like, a
-    few minutes.) For this reason it's not stored in the replication document, but instead kept
-    in an in-memory registry private to the Persona authorizer. You should initiate a replication
-    immediately after registering the assertion, so that the replicator engine can use it to
-    authenticate before it expires. After that, the replicator will have a login session cookie
-    that should last significantly longer before needing to be renewed. */
-- (BOOL) registerPersonaAssertion: (NSString*)assertion               __attribute__((nonnull));
 
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.
@@ -163,6 +140,18 @@ typedef enum {
 
 /** The total number of changes to be processed, if the task is active, else 0 (observable). */
 @property (nonatomic, readonly) unsigned changesCount;
+
+
+#ifdef CBL_DEPRECATED
+@property (nonatomic, copy) NSString* facebookEmailAddress
+    __attribute__((deprecated("set authenticator property instead")));
+- (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email
+    __attribute__((deprecated("set authenticator property instead")));
+- (BOOL) registerPersonaAssertion: (NSString*)assertion
+    __attribute__((deprecated("set authenticator property instead")));
+@property (nonatomic, copy) NSString* personaEmailAddress
+    __attribute__((deprecated("set authenticator property instead")));
+#endif
 
 @end
 
