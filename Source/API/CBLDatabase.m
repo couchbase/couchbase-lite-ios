@@ -27,6 +27,7 @@
 #import "CBLManager+Internal.h"
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
+#import "ExceptionUtils.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIApplication.h>
@@ -133,19 +134,26 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
+static void catchInBlock(void (^block)()) {
+    @try {
+        block();
+    }catchAndReport(@"-[CBLDatabase doAsync:]");
+}
+
+
 - (void) doAsync: (void (^)())block {
     if (_dispatchQueue)
-        dispatch_async(_dispatchQueue, block);
+        dispatch_async(_dispatchQueue, ^{catchInBlock(block);});
     else
-        MYOnThread(_thread, block);
+        MYOnThread(_thread, ^{catchInBlock(block);});
 }
 
 
 - (void) doSync: (void (^)())block {
     if (_dispatchQueue)
-        dispatch_sync(_dispatchQueue, block);
+        dispatch_sync(_dispatchQueue, ^{catchInBlock(block);});
     else
-        MYOnThreadSynchronously(_thread, block);
+        MYOnThreadSynchronously(_thread, ^{catchInBlock(block);});
 }
 
 
@@ -155,7 +163,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
         dispatch_after(popTime, _dispatchQueue, block);
     } else {
         //FIX: This schedules on the _current_ thread, not _thread!
-        MYAfterDelay(delay, block);
+        MYAfterDelay(delay, ^{catchInBlock(block);});
     }
 }
 

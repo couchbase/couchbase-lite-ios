@@ -38,6 +38,7 @@
 @synthesize expectedChangesCount=_expectedChangesCount;
 
 - (instancetype) initWithReplication: (CBLReplication*)repl {
+    Assert(repl);
     self = [super init];
     if (self) {
         _repl = repl;
