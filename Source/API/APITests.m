@@ -125,6 +125,18 @@ TestCase(API_CreateDocument) {
 }
 
 
+TestCase(API_ExistingDocument) {
+    CBLDatabase* db = createEmptyDB();
+
+    AssertNil([db existingDocumentWithID: @"missing"]);
+    CBLDocument* doc = [db documentWithID: @"missing"];
+    Assert(doc != nil);
+    AssertNil([db existingDocumentWithID: @"missing"]);
+
+    closeTestDB(db);
+}
+
+
 TestCase(API_CreateRevisions) {
     RequireTestCase(API_CreateDocument);
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
@@ -507,6 +519,63 @@ TestCase(API_Conflict) {
     closeTestDB(db);
 }
 
+TestCase(API_Resolve_Conflict) {
+    
+    RequireTestCase(API_History);
+    CBLDatabase* db = createEmptyDB();
+    CBLDocument* doc = createDocumentWithProperties(db, @{@"foo": @"bar"});
+    CBLSavedRevision* rev1 = doc.currentRevision;
+    
+    NSError* error;
+    
+    AssertEq([[doc getLeafRevisions: &error] count], 1u);
+    AssertEq([[doc getConflictingRevisions: &error] count], 1u);
+    CAssertNil(error);
+    
+    NSMutableDictionary* properties = doc.properties.mutableCopy;
+    properties[@"tag"] = @2;
+    
+    CBLSavedRevision* rev2a = [doc putProperties: properties error: &error];
+    
+    properties = rev1.properties.mutableCopy;
+    properties[@"tag"] = @3;
+    CBLUnsavedRevision* newRev = [rev1 createRevision];
+    newRev.properties = properties;
+    CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
+    CAssert(rev2b, @"Failed to create a a conflict: %@", error);
+    
+    CAssertEqual([doc getConflictingRevisions: &error], (@[rev2b, rev2a]));
+    CAssertEqual([doc getLeafRevisions: &error], (@[rev2b, rev2a]));
+    
+    CBLSavedRevision* defaultRev, *otherRev;
+    if ([rev2a.revisionID compare: rev2b.revisionID] > 0) {
+        defaultRev = rev2a; otherRev = rev2b;
+    } else {
+        defaultRev = rev2b; otherRev = rev2a;
+    }
+    AssertEqual(doc.currentRevision, defaultRev);
+    
+    [defaultRev deleteDocument:&error];
+    CAssertNil(error);
+    AssertEq([[doc getConflictingRevisions: &error] count], 1u);
+    CAssertNil(error);
+    AssertEq([[doc getLeafRevisions: &error] count], 2u);
+    CAssertNil(error);
+    
+    newRev = [otherRev createRevision];
+    properties[@"tag"] = @4;
+    newRev.properties = properties;
+    CBLSavedRevision* newRevSaved = [newRev save: &error];
+    CAssertNil(error);
+    AssertEq([[doc getLeafRevisions: &error] count], 2u);
+    AssertEq([[doc getConflictingRevisions: &error] count], 1u);
+    AssertEqual(doc.currentRevision, newRevSaved);
+    
+    closeTestDB(db);
+
+}
+
+
 
 #pragma mark - ATTACHMENTS
 
@@ -526,6 +595,15 @@ TestCase(API_Attachments) {
     CBLUnsavedRevision *rev2 = [doc newRevision];
     [rev2 setAttachmentNamed: @"index.html" withContentType: @"text/plain; charset=utf-8" content:body];
 
+    CAssertEq(rev2.attachments.count, (NSUInteger)1);
+    CAssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
+    CBLAttachment* attach = [rev2 attachmentNamed:@"index.html"];
+    CAssertEq(attach.document, doc);
+    CAssertEqual(attach.name, @"index.html");
+    CAssertEqual(attach.contentType, @"text/plain; charset=utf-8");
+    CAssertEqual(attach.content, body);
+    CAssertEq(attach.length, (UInt64)body.length);
+
     NSError * error;
     CBLSavedRevision *rev3 = [rev2 save:&error];
     
@@ -534,7 +612,7 @@ TestCase(API_Attachments) {
     CAssertEq(rev3.attachments.count, (NSUInteger)1);
     CAssertEq(rev3.attachmentNames.count, (NSUInteger)1);
 
-    CBLAttachment* attach = [rev3 attachmentNamed:@"index.html"];
+    attach = [rev3 attachmentNamed:@"index.html"];
     CAssert(attach);
     CAssertEq(attach.document, doc);
     CAssertEqual(attach.name, @"index.html");

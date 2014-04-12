@@ -73,6 +73,11 @@ typedef SInt64 SequenceNumber;
 
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key;  // subscript access in Xcode 4.4+
 
+/** Calls the block on every attachment dictionary. The block can return a different dictionary,
+    which will be replaced in the rev's properties. If it returns nil, the operation aborts.
+    Returns YES if any changes were made. */
+- (BOOL) mutateAttachments: (NSDictionary*(^)(NSString*, NSDictionary*))block;
+
 @end
 
 

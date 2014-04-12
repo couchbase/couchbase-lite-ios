@@ -201,24 +201,6 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 - (CBLReplication*) createPullReplication: (NSURL*)url;
 
 
-#ifdef CBL_DEPRECATED
-- (CBLDocument*) untitledDocument __attribute__((deprecated("renamed -createDocument")));
-- (CBLDocument*) cachedDocumentWithID: (NSString*)docID __attribute__((deprecated("you shouldn't need to use this")));
-- (void) clearDocumentCache __attribute__((deprecated("you shouldn't need to use this")));
-- (NSDictionary*) getLocalDocumentWithID: (NSString*)localDocID __attribute__((deprecated("renamed -existingLocalDocumentWithID:")));
-- (CBLQuery*) queryAllDocuments __attribute__((deprecated("renamed -createAllDocumentsQuery")));
-- (void) defineFilter: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock __attribute__((deprecated("renamed -setFilterNamed:asBlock:")));
-- (void) defineValidation: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock __attribute__((deprecated("renamed -setValidationNamed:asBlock:")));
-- (CBLReplication*) replicationToURL: (NSURL*)url __attribute__((deprecated("renamed createPushReplication:")));
-- (CBLReplication*) replicationFromURL: (NSURL*)url __attribute__((deprecated("renamed createPullReplication:")));
-- (CBLReplication*) pushToURL: (NSURL*)url
-        __attribute__((deprecated("use createPushReplication, then call -start")));
-- (CBLReplication*) pullFromURL: (NSURL*)url
-        __attribute__((deprecated("use createPullReplication, then call -start")));
-- (NSArray*) replicationsWithURL: (NSURL*)otherDbURL exclusively: (bool)exclusively
-        __attribute__((deprecated("call createPushReplication: and createPullReplication:")));
-#endif
-
 @end
 
 
@@ -262,9 +244,4 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
     NO; else the method returns YES. */
 - (BOOL) validateChanges: (CBLChangeEnumeratorBlock)enumerator;
 
-#ifdef CBL_DEPRECATED
-- (BOOL) allowChangesOnlyTo: (NSArray*)allowedKeys __attribute__((deprecated()));
-- (BOOL) disallowChangesTo: (NSArray*)disallowedKeys __attribute__((deprecated()));
-- (BOOL) enumerateChanges: (CBLChangeEnumeratorBlock)enumerator __attribute__((deprecated("renamed validateChanges:")));
-#endif
 @end

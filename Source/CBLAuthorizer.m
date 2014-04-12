@@ -92,6 +92,7 @@
 @end
 
 
+#if 0 // UNUSED
 @implementation CBLMACAuthorizer
 
 - (instancetype) initWithKey: (NSString*)key
@@ -173,3 +174,4 @@
 
 
 @end
+#endif

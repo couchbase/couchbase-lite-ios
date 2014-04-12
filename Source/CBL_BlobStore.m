@@ -238,7 +238,7 @@
 
 @implementation CBL_BlobStoreWriter
 
-@synthesize length=_length, blobKey=_blobKey;
+@synthesize length=_length, blobKey=_blobKey, filePath=_tempPath;
 
 - (instancetype) initWithStore: (CBL_BlobStore*)store {
     self = [super init];

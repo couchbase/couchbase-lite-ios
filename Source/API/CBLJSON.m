@@ -85,6 +85,35 @@ static NSTimeInterval k1970ToReferenceDate;
 }
 
 
+#define kObjectOverhead 20
+
+static size_t estimate(id object) {
+    if ([object isKindOfClass: [NSString class]]) {
+        return kObjectOverhead + 2*[object length];
+    } else if ([object isKindOfClass: [NSNumber class]]) {
+        return kObjectOverhead + 8;
+    } else if ([object isKindOfClass: [NSDictionary class]]) {
+        size_t size = kObjectOverhead + sizeof(NSUInteger);
+        for (NSString* key in object)
+            size += (kObjectOverhead + 2*[key length]) + estimate([object objectForKey: key]);
+        return size;
+    } else if ([object isKindOfClass: [NSArray class]]) {
+        size_t size = kObjectOverhead + sizeof(NSUInteger);
+        for (id item in object)
+            size += estimate(item);
+        return size;
+    } else if ([object isKindOfClass: [NSNull class]]) {
+        return kObjectOverhead;
+    } else {
+        Assert(NO, @"Illegal object type %@ in JSON", [object class]);
+    }
+}
+
++ (size_t) estimateMemorySize: (id)object {
+    return object ? estimate(object) : 0;
+}
+
+
 #pragma mark - DATE CONVERSION:
 
 

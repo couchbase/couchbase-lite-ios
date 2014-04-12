@@ -68,6 +68,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     unsigned _revisionsFailed;
     NSError* _error;
     NSThread* _thread;
+    NSString* _remoteCheckpointDocID;
     NSDictionary* _remoteCheckpoint;
     BOOL _savingCheckpoint, _overdueForSave;
     NSMutableArray* _remoteRequests;
@@ -540,10 +541,25 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     if(_revisionBodyTransformationBlock) {
         @try {
             CBL_Revision* xformed = _revisionBodyTransformationBlock(rev);
+            if (xformed == nil)
+                return nil;
             if (xformed != rev) {
                 AssertEqual(xformed.docID, rev.docID);
                 AssertEqual(xformed.revID, rev.revID);
                 AssertEqual(xformed[@"_revisions"], rev[@"_revisions"]);
+                if (xformed[@"_attachments"]) {
+                    // Insert 'revpos' properties into any attachments added by the callback:
+                    CBL_MutableRevision* mx = xformed.mutableCopy;
+                    xformed = mx;
+                    [mx mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *info) {
+                        if (info[@"revpos"])
+                            return info;
+                        Assert(info[@"data"], @"Transformer added attachment without adding data");
+                        NSMutableDictionary* nuInfo = info.mutableCopy;
+                        nuInfo[@"revpos"] = @(rev.generation);
+                        return nuInfo;
+                    }];
+                }
                 rev = xformed;
             }
         }@catch (NSException* x) {
@@ -766,17 +782,20 @@ static BOOL sOnlyTrustAnchorCerts;
     It's based on the local database UUID (the private one, to make the result unguessable),
     the remote database's URL, and the filter name and parameters (if any). */
 - (NSString*) remoteCheckpointDocID {
-    // Needs to be consistent with -hasSameSettingsAs: --
-    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
-    NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
-                                       {@"remoteURL", _remote.absoluteString},
-                                       {@"push", @(self.isPush)},
-                                       {@"continuous", (self.continuous ? nil : $false)},
-                                       {@"filter", _filterName},
-                                       {@"filterParams", _filterParameters},
-                                     //{@"headers", _requestHeaders}, (removed; see #143)
-                                       {@"docids", _docIDs});
-    return CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
+    if (!_remoteCheckpointDocID) {
+        // Needs to be consistent with -hasSameSettingsAs: --
+        // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
+        NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
+                                           {@"remoteURL", _remote.absoluteString},
+                                           {@"push", @(self.isPush)},
+                                           {@"continuous", (self.continuous ? nil : $false)},
+                                           {@"filter", _filterName},
+                                           {@"filterParams", _filterParameters},
+                                         //{@"headers", _requestHeaders}, (removed; see #143)
+                                           {@"docids", _docIDs});
+        _remoteCheckpointDocID = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
+    }
+    return _remoteCheckpointDocID;
 }
 
 

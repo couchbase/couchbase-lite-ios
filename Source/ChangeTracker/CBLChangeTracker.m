@@ -150,6 +150,14 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 - (NSData*) changesFeedPOSTBody {
     if (!_usePOST)
         return nil;
+
+    // The replicator always stores the last sequence as a string, but the server may treat it as
+    // an integer. As a heuristic, convert it to a number if it looks like one:
+    id since = _lastSequenceID;
+    NSInteger n;
+    if ([since isKindOfClass: [NSString class]] && CBLParseInteger(since, &n) && n >= 0)
+        since = @(n);
+
     NSString* filterName = _filterName;
     NSDictionary* filterParameters = _filterParameters;
     if (_docIDs) {
@@ -159,7 +167,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     NSMutableDictionary* post = $mdict({@"feed", self.feed},
                                        {@"heartbeat", @(_heartbeat*1000.0)},
                                        {@"style", (_includeConflicts ? @"all_docs" : nil)},
-                                       {@"since", _lastSequenceID},
+                                       {@"since", since},
                                        {@"limit", (_limit > 0 ? @(_limit) : nil)},
                                        {@"filter", filterName});
     if (filterName && filterParameters)

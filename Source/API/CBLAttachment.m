@@ -57,23 +57,28 @@
            @"Invalid attachment body: %@", body);
     self = [super init];
     if (self) {
+        NSNumber* lengthObj = nil;
+        if ([body isKindOfClass: [NSData class]])
+            lengthObj = @([body length]);
+        else
+            [(NSURL*)body getResourceValue: &lengthObj forKey: NSURLFileSizeKey error: NULL];
         _metadata = $dict({@"content_type", contentType},
+                          {@"length", lengthObj},
                           {@"follows", $true});
         _body = body;
     }
     return self;
 }
 
-#ifdef CBL_DEPRECATED
-- (instancetype) initWithContentType: (NSString*)contentType
-                                body: (id)body
-{
-    return [self _initWithContentType: contentType body: body];
-}
-#endif
-
 
 @synthesize revision=_rev, name=_name, metadata=_metadata;
+
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@[%@, %lld bytes]",
+            [self class], self.contentType, self.length];
+}
 
 
 - (CBLDocument*) document {
@@ -96,7 +101,7 @@
 
 
 - (NSData*) bodyIfNew {
-    return _body ? self.body : nil;
+    return _body ? self.content : nil;
 }
 
 
@@ -173,31 +178,5 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* bo
     }];
 }
 
-
-#ifdef CBL_DEPRECATED
-- (NSData*) body {return self.content;}
-- (NSURL*) bodyURL {return self.contentURL;}
-
-- (CBLSavedRevision*) updateBody: (NSData*)body
-                     contentType: (NSString*)contentType
-                           error: (NSError**)outError
-{
-    Assert(_rev);
-    CBL_BlobStoreWriter* writer = body ? blobStoreWriterForBody(_rev.database, body) : nil;
-    CBLStatus status;
-    CBL_Revision* newRev = [_rev.database updateAttachment: _name
-                                                          body: writer
-                                                          type: contentType ?: self.contentType
-                                                      encoding: kCBLAttachmentEncodingNone
-                                                       ofDocID: _rev.document.documentID
-                                                         revID: _rev.revisionID
-                                                        status: &status];
-    if (!newRev) {
-        if (outError) *outError = CBLStatusToNSError(status, nil);
-        return nil;
-    }
-    return [[CBLSavedRevision alloc] initWithDocument: self.document revision: newRev];
-}
-#endif
 
 @end

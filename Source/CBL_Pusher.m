@@ -27,6 +27,9 @@
 #import "CBLDocument.h"
 
 
+#define kMaxBulkDocsObjectSize (5*1000*1000) // Max in-memory size of buffered bulk_docs dictionary
+
+
 static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 
@@ -200,8 +203,10 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
             CBLFilterBlock filter = self.filter;
             if (filter && ![_db runFilter: filter params: _filterParameters onRevision: rev])
                 continue;
-            LogTo(SyncVerbose, @"%@: Queuing #%lld %@", self, rev.sequence, rev);
-            [self addToInbox: rev];
+            CBL_MutableRevision* nuRev = [rev mutableCopy];
+            nuRev.body = nil; // save memory
+            LogTo(SyncVerbose, @"%@: Queuing #%lld %@", self, nuRev.sequence, nuRev);
+            [self addToInbox: nuRev];
         }
     }
 }
@@ -233,54 +238,65 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
             // Go through the list of local changes again, selecting the ones the destination server
             // said were missing and mapping them to a JSON dictionary in the form _bulk_docs wants:
             CBLDatabase* db = _db;
+            NSMutableArray* docsToSend = $marray();
             CBL_RevisionList* revsToSend = [[CBL_RevisionList alloc] init];
-            NSArray* docsToSend = [changes.allRevisions my_map: ^id(CBL_Revision* rev) {
-                NSDictionary* properties;
+            size_t bufferedSize = 0;
+            for (CBL_Revision* rev in changes.allRevisions) {
                 @autoreleasepool {
                     // Is this revision in the server's 'missing' list?
                     NSDictionary* revResults = results[rev.docID];
                     NSArray* missing = revResults[@"missing"];
                     if (![missing containsObject: [rev revID]]) {
                         [self removePending: rev];
-                        return nil;
+                        continue;
                     }
-                    
+
                     // Get the revision's properties:
-                    CBLContentOptions options = kCBLIncludeAttachments;
-                    if (!_dontSendMultipart)
-                        options |= kCBLBigAttachmentsFollow;
-                    CBLStatus status;
-                    rev = [db revisionByLoadingBody: rev options: options status: &status];
-                    CBL_MutableRevision* nuRev = [[self transformRevision: rev] mutableCopy];
-                    rev = nuRev;
-                    if (status >= 300) {
-                        Warn(@"%@: Couldn't get local contents of %@", self, nuRev);
-                        [self revisionFailed];
-                        return nil;
+                    NSDictionary* properties;
+                    {
+                        CBLContentOptions options = kCBLIncludeAttachments;
+                        if (!_dontSendMultipart && self.revisionBodyTransformationBlock==nil)
+                            options |= kCBLBigAttachmentsFollow;
+                        CBLStatus status;
+                        CBL_Revision* loadedRev = [db revisionByLoadingBody: rev options: options
+                                                                     status: &status];
+                        if (status >= 300) {
+                            Warn(@"%@: Couldn't get local contents of %@", self, rev);
+                            [self revisionFailed];
+                            continue;
+                        }
+                        CBL_MutableRevision* populatedRev = [[self transformRevision: loadedRev] mutableCopy];
+
+                        // Add the revision history:
+                        NSArray* possibleAncestors = revResults[@"possible_ancestors"];
+                        populatedRev[@"_revisions"] = [db getRevisionHistoryDict: populatedRev
+                                                               startingFromAnyOf: possibleAncestors];
+                        properties = populatedRev.properties;
+
+                        // Strip any attachments already known to the target db:
+                        if (properties.cbl_attachments) {
+                            // Look for the latest common ancestor and stub out older attachments:
+                            int minRevPos = findCommonAncestor(rev, possibleAncestors);
+                            [CBLDatabase stubOutAttachmentsIn: populatedRev beforeRevPos: minRevPos + 1
+                                            attachmentsFollow: NO];
+                            properties = populatedRev.properties;
+                            // If the rev has huge attachments, send it under separate cover:
+                            if (!_dontSendMultipart && [self uploadMultipartRevision: populatedRev])
+                                continue;
+                        }
                     }
-
-                    // Add the revision history:
-                    NSArray* possibleAncestors = revResults[@"possible_ancestors"];
-                    nuRev[@"_revisions"] = [db getRevisionHistoryDict: nuRev
-                                                     startingFromAnyOf: possibleAncestors];
-                    properties = nuRev.properties;
-
-                    // Strip any attachments already known to the target db:
-                    if (properties.cbl_attachments) {
-                        // Look for the latest common ancestor and stub out older attachments:
-                        int minRevPos = findCommonAncestor(rev, possibleAncestors);
-                        [CBLDatabase stubOutAttachmentsIn: nuRev beforeRevPos: minRevPos + 1
-                                        attachmentsFollow: NO];
-                        properties = nuRev.properties;
-                        // If the rev has huge attachments, send it under separate cover:
-                        if (!_dontSendMultipart && [self uploadMultipartRevision: nuRev])
-                            return nil;
+                    Assert(properties.cbl_id);
+                    [revsToSend addRev: rev];
+                    [docsToSend addObject: properties];
+                    bufferedSize += [CBLJSON estimateMemorySize: properties];
+                    if (bufferedSize > kMaxBulkDocsObjectSize) {
+                        [self uploadBulkDocs: docsToSend changes: revsToSend];
+                        docsToSend = $marray();
+                        revsToSend = [[CBL_RevisionList alloc] init];
+                        bufferedSize = 0;
                     }
                 }
-                Assert(properties.cbl_id);
-                [revsToSend addRev: rev];
-                return properties;
-            }];
+            }
             
             // Post the revisions to the destination:
             [self uploadBulkDocs: docsToSend changes: revsToSend];

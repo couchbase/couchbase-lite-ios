@@ -681,33 +681,35 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-/** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
+/** Inserts the _id, _rev, _attachments etc. properties into the dictionary 'dst'.
     Rev must already have its revID and sequence properties set. */
-- (NSDictionary*) extraPropertiesForRevision: (CBL_Revision*)rev options: (CBLContentOptions)options
+- (void) extraPropertiesForRevision: (CBL_Revision*)rev
+                            options: (CBLContentOptions)options
+                               into: (NSMutableDictionary*)dst
 {
-    NSString* docID = rev.docID;
-    NSString* revID = rev.revID;
-    SequenceNumber sequence = rev.sequence;
-    Assert(revID);
-    Assert(sequence > 0);
-    
+    dst[@"_id"] = rev.docID;
+    dst[@"_rev"] = rev.revID;
+    if (rev.deleted)
+        dst[@"_deleted"] = $true;
+
     // Get attachment metadata, and optionally the contents:
-    NSDictionary* attachmentsDict = nil;
-    if (!(options & kCBLNoAttachments))
-        attachmentsDict = [self getAttachmentDictForSequence: sequence options: options];
+    if (!(options & kCBLNoAttachments)) {
+        NSDictionary* attachments = [self getAttachmentDictForSequence: rev.sequence
+                                                               options: options];
+        if (attachments)
+            dst[@"_attachments"] = attachments;
+    }
     
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
-    id localSeq=nil, revs=nil, revsInfo=nil, conflicts=nil;
     if (options & kCBLIncludeLocalSeq)
-        localSeq = @(sequence);
+        dst[@"_local_seq"] = @(rev.sequence);
 
-    if (options & kCBLIncludeRevs) {
-        revs = [self getRevisionHistoryDict: rev startingFromAnyOf: nil];
-    }
+    if (options & kCBLIncludeRevs)
+        dst[@"_revisions"] = [self getRevisionHistoryDict: rev startingFromAnyOf: nil];
     
     if (options & kCBLIncludeRevsInfo) {
-        revsInfo = [[self getRevisionHistory: rev] my_map: ^id(CBL_Revision* rev) {
+        dst[@"_revs_info"] = [[self getRevisionHistory: rev] my_map: ^id(CBL_Revision* rev) {
             NSString* status = @"available";
             if (rev.deleted)
                 status = @"deleted";
@@ -718,22 +720,13 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     }
     
     if (options & kCBLIncludeConflicts) {
-        CBL_RevisionList* revs = [self getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
+        CBL_RevisionList* revs = [self getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES];
         if (revs.count > 1) {
-            conflicts = [revs.allRevisions my_map: ^(id aRev) {
+            dst[@"_conflicts"] = [revs.allRevisions my_map: ^(id aRev) {
                 return ($equal(aRev, rev) || [(CBL_Revision*)aRev deleted]) ? nil : [aRev revID];
             }];
         }
     }
-
-    return $dict({@"_id", docID},
-                 {@"_rev", revID},
-                 {@"_deleted", (rev.deleted ? $true : nil)},
-                 {@"_attachments", attachmentsDict},
-                 {@"_local_seq", localSeq},
-                 {@"_revisions", revs},
-                 {@"_revs_info", revsInfo},
-                 {@"_conflicts", conflicts});
 }
 
 
@@ -743,7 +736,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
              intoRevision: (CBL_MutableRevision*)rev
                   options: (CBLContentOptions)options
 {
-    NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
+    NSMutableDictionary* extra = $mdict();
+    [self extraPropertiesForRevision: rev options: options into: extra];
     if (json.length > 0) {
         rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
     } else {
@@ -765,17 +759,19 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                                                   deleted: deleted];
     rev.sequence = sequence;
     rev.missing = (json == nil);
-    NSDictionary* extra = [self extraPropertiesForRevision: rev options: options];
+    NSMutableDictionary* docProperties;
     if (json.length == 0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
-        return extra;      // optimization, and workaround for issue #44
-    NSMutableDictionary* docProperties = [CBLJSON JSONObjectWithData: json
-                                                            options: CBLJSONReadingMutableContainers
-                                                              error: NULL];
-    if (!docProperties) {
-        Warn(@"Unparseable JSON for doc=%@, rev=%@: %@", docID, revID, [json my_UTF8ToString]);
-        return extra;
+        docProperties = $mdict();      // optimization, and workaround for issue #44
+    else {
+        docProperties = [CBLJSON JSONObjectWithData: json
+                                            options: CBLJSONReadingMutableContainers
+                                              error: NULL];
+        if (!docProperties) {
+            Warn(@"Unparseable JSON for doc=%@, rev=%@: %@", docID, revID, [json my_UTF8ToString]);
+            docProperties = $mdict();
+        }
     }
-    [docProperties addEntriesFromDictionary: extra];
+    [self extraPropertiesForRevision: rev options: options into: docProperties];
     return docProperties;
 }
 

@@ -174,9 +174,4 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 
-#ifdef CBL_DEPRECATED
-- (void) removeIndex    {[self deleteIndex];}
-- (CBLQuery*) query     {return [self createQuery];}
-#endif
-
 @end

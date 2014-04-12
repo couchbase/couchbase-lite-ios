@@ -69,12 +69,6 @@
     return self.properties.cbl_deleted;
 }
 
-#ifdef CBL_DEPRECATED
-- (BOOL) isDeleted {
-    return self.isDeletion;
-}
-#endif
-
 - (BOOL) isGone {
     return self.properties.cbl_deleted || $castIf(NSNumber, self.properties[@"_removed"]).boolValue;
 }
@@ -95,7 +89,11 @@
 
 
 - (NSDictionary*) attachmentMetadataFor: (NSString*)name {
-    return $castIf(NSDictionary, (self.attachmentMetadata)[name]);
+    id attachment = self.attachmentMetadata[name];
+    if ([attachment isKindOfClass: [CBLAttachment class]])
+        return [(CBLAttachment*)attachment metadata];
+    else
+        return $castIf(NSDictionary, attachment);
 }
 
 
@@ -105,10 +103,14 @@
 
 
 - (CBLAttachment*) attachmentNamed: (NSString*)name {
-    NSDictionary* metadata = [self attachmentMetadataFor: name];
-    if (!metadata)
+    id attachment = self.attachmentMetadata[name];
+    if ([attachment isKindOfClass: [CBLAttachment class]])
+        return attachment;
+    else if ([attachment isKindOfClass: [NSDictionary class]]) {
+        return [[CBLAttachment alloc] initWithRevision: self name: name metadata: attachment];
+    } else {
         return nil;
-    return [[CBLAttachment alloc] initWithRevision: self name: name metadata: metadata];
+    }
 }
 
 
@@ -252,15 +254,6 @@
 }
 
 
-#ifdef CBL_DEPRECATED
-- (CBLUnsavedRevision*) newRevision {
-    return [self createRevision];
-}
-- (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
-    return [self createRevisionWithProperties: properties error: outError];
-}
-#endif
-
 @end
 
 
@@ -360,12 +353,5 @@
     [self _addAttachment: nil named: name];
 }
 
-
-#ifdef CBL_DEPRECATED
-- (void) addAttachment: (CBLAttachment*)attachment named: (NSString*)name {
-    Assert(attachment.revision == nil);
-    [self _addAttachment: attachment named: name];
-}
-#endif
 
 @end

@@ -288,7 +288,7 @@ static NSData* kCRLFCRLF;
 #import "GTMNSData+zlib.h"
 
 
-@interface TestMultipartReaderDelegate : NSObject <CBLMultipartReaderDelegate>
+@interface CBL_TestMultipartReaderDelegate : NSObject <CBLMultipartReaderDelegate>
 {
     NSMutableData* _currentPartData;
     NSMutableArray* _partList, *_headersList;
@@ -297,7 +297,7 @@ static NSData* kCRLFCRLF;
 @end
 
 
-@implementation TestMultipartReaderDelegate
+@implementation CBL_TestMultipartReaderDelegate
 
 @synthesize partList=_partList, headerList=_headersList;
 
@@ -358,7 +358,7 @@ TestCase(CBLMultipartReader_Simple) {
 
     for (NSUInteger chunkSize = 1; chunkSize <= mime.length; ++chunkSize) {
         Log(@"--- chunkSize = %u", (unsigned)chunkSize);
-        TestMultipartReaderDelegate* delegate = [[TestMultipartReaderDelegate alloc] init];
+        CBL_TestMultipartReaderDelegate* delegate = [[CBL_TestMultipartReaderDelegate alloc] init];
         CBLMultipartReader* reader = [[CBLMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: delegate];
         CAssert(!reader.finished);
         
@@ -377,7 +377,7 @@ TestCase(CBLMultipartReader_Simple) {
 
 TestCase(CBLMultipartReader_GZipped) {
     NSData* mime = CBLContentsOfTestFile(@"MultipartStars.mime");
-    TestMultipartReaderDelegate* delegate = [[TestMultipartReaderDelegate alloc] init];
+    CBL_TestMultipartReaderDelegate* delegate = [[CBL_TestMultipartReaderDelegate alloc] init];
     CBLMultipartReader* reader = [[CBLMultipartReader alloc] initWithContentType: @"multipart/related; boundary=\"BOUNDARY\"" delegate: delegate];
     [reader appendData: mime];
     Assert(reader.finished);

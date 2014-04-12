@@ -127,7 +127,7 @@ id CBLGeoJSONKey(NSDictionary* geoJSON) {
 #pragma mark - INDEXING:
 
 
-static NSString* toJSONString( id object ) {
+static inline NSString* toJSONString( id object ) {
     if (!object)
         return nil;
     return [CBLJSON stringWithJSONObject: object
@@ -257,59 +257,39 @@ static NSString* toJSONString( id object ) {
                 NSData* json = [r dataForColumnIndex: 4];
                 BOOL noAttachments = [r boolForColumnIndex: 5];
             
-                // Iterate over following rows with the same doc_id -- these are conflicts.
-                // Skip them, but collect their revIDs:
-                NSMutableArray* conflicts = nil;
+                // Skip rows with the same doc_id -- these are losing conflicts.
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
-                    if (!conflicts)
-                        conflicts = $marray();
-                    [conflicts addObject: [r stringForColumnIndex: 3]];
                 }
             
                 if (lastSequence > 0) {
                     // Find conflicts with documents from previous indexings.
-                    BOOL first = YES;
                     CBL_FMResultSet* r2 = [fmdb executeQuery:
                                     @"SELECT revid, sequence FROM revs "
                                      "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
-                                     "ORDER BY revID DESC",
+                                     "ORDER BY revID DESC "
+                                     "LIMIT 1",
                                     @(doc_id), @(lastSequence)];
                     if (!r2) {
                         [r close];
                         return db.lastDbError;
                     }
-                    while ([r2 next]) {
+                    if ([r2 next]) {
                         NSString* oldRevID = [r2 stringForColumnIndex:0];
-                        if (!conflicts)
-                            conflicts = $marray();
-                        [conflicts addObject: oldRevID];
-                        if (first) {
-                            // This is the revision that used to be the 'winner'.
-                            // Remove its emitted rows:
-                            first = NO;
-                            SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
-                            [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
-                                                 @(_viewID), @(oldSequence)];
-                            if (CBLCompareRevIDs(oldRevID, revID) > 0) {
-                                // It still 'wins' the conflict, so it's the one that
-                                // should be mapped [again], not the current revision!
-                                [conflicts removeObject: oldRevID];
-                                [conflicts addObject: revID];
-                                revID = oldRevID;
-                                sequence = oldSequence;
-                                json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
-                                        @(sequence)];
-                            }
+                        // This is the revision that used to be the 'winner'.
+                        // Remove its emitted rows:
+                        SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
+                        [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
+                                             @(_viewID), @(oldSequence)];
+                        if (CBLCompareRevIDs(oldRevID, revID) > 0) {
+                            // It still 'wins' the conflict, so it's the one that
+                            // should be mapped [again], not the current revision!
+                            revID = oldRevID;
+                            sequence = oldSequence;
+                            json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
+                                    @(sequence)];
                         }
                     }
                     [r2 close];
-                    
-                    if (!first) {
-                        // Re-sort the conflict array if we added more revisions to it:
-                        [conflicts sortUsingComparator: ^(NSString *r1, NSString* r2) {
-                            return CBLCompareRevIDs(r2, r1);
-                        }];
-                    }
                 }
                 
                 // Get the document properties, to pass to the map function:
@@ -324,13 +304,6 @@ static NSString* toJSONString( id object ) {
                 if (!properties) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
-                }
-                
-                if (conflicts) {
-                    // Add a "_conflicts" property if there were conflicting revisions:
-                    NSMutableDictionary* mutableProps = [properties mutableCopy];
-                    mutableProps[@"_conflicts"] = conflicts;
-                    properties = mutableProps;
                 }
                 
                 // Call the user-defined map() to emit new key/value pairs from this revision:

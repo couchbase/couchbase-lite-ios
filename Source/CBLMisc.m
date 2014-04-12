@@ -213,6 +213,12 @@ NSString* CBLAbbreviate( NSString* str ) {
 }
 
 
+BOOL CBLParseInteger(NSString* str, NSInteger* outInt) {
+    NSScanner* scanner = [[NSScanner alloc] initWithString: str];
+    return [scanner scanInteger: outInt] && [scanner isAtEnd];
+}
+
+
 BOOL CBLIsOfflineError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
