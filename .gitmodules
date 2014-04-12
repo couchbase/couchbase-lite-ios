@@ -19,3 +19,6 @@
 [submodule "vendor/WebSockets-Cocoa"]
 	path = vendor/WebSockets-Cocoa
 	url = git://github.com/couchbaselabs/WebSockets-Cocoa.git
+[submodule "vendor/CBForest"]
+	path = vendor/CBForest
+	url = git@github.com:couchbaselabs/cbforest-ios.git

@@ -27,6 +27,8 @@
 #import "CBLDatabase.h"
 #import "CouchbaseLitePrivate.h"
 
+#import <CBForest/CBForest.h>
+
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "MYBlockUtils.h"
@@ -87,22 +89,16 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-+ (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbPath error: (NSError**)outError {
-    // Make sure to delete the SQLite side-files as well as the main db file!
-    return CBLRemoveFileIfExists(dbPath, outError)
-        && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-wal"], outError)
-        && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-shm"], outError)
-        && CBLRemoveFileIfExists([self attachmentStorePath: dbPath], outError);
++ (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbDir error: (NSError**)outError {
+    return CBLRemoveFileIfExists(dbDir, outError);
 }
 
 
 #if DEBUG
-+ (instancetype) createEmptyDBAtPath: (NSString*)path {
-    if (![self deleteDatabaseFilesAtPath: path error: NULL])
++ (instancetype) createEmptyDBAtPath: (NSString*)dir {
+    if (![self deleteDatabaseFilesAtPath: dir error: NULL])
         return nil;
-    CBLDatabase *db = [[self alloc] initWithPath: path name: nil manager: nil readOnly: NO];
-    if (!CBLRemoveFileIfExists(db.attachmentStorePath, NULL))
-        return nil;
+    CBLDatabase *db = [[self alloc] initWithDir: dir name: nil manager: nil readOnly: NO];
     if (![db open: nil])
         return nil;
     return db;
@@ -110,18 +106,20 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #endif
 
 
-- (instancetype) _initWithPath: (NSString*)path
-                          name: (NSString*)name
-                       manager: (CBLManager*)manager
-                      readOnly: (BOOL)readOnly
+- (instancetype) _initWithDir: (NSString*)dirPath
+                         name: (NSString*)name
+                      manager: (CBLManager*)manager
+                     readOnly: (BOOL)readOnly
 {
     if (self = [super init]) {
-        Assert([path hasPrefix: @"/"], @"Path must be absolute");
-        _path = [path copy];
+        Assert([dirPath hasPrefix: @"/"], @"Path must be absolute");
+        _dir = [dirPath copy];
         _manager = manager;
-        _name = name ?: [path.lastPathComponent.stringByDeletingPathExtension copy];
+        _name = name ?: [dirPath.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
-        _fmdb = [[CBL_FMDatabase alloc] initWithPath: _path];
+
+        NSString* fmdbPath = [dirPath stringByAppendingPathComponent: @"db.sqlite"];
+        _fmdb = [[CBL_FMDatabase alloc] initWithPath: fmdbPath];
         _fmdb.dispatchQueue = manager.dispatchQueue;
         _fmdb.busyRetryTimeout = kSQLiteBusyTimeout;
 #if DEBUG
@@ -150,7 +148,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 - (BOOL) exists {
-    return [[NSFileManager defaultManager] fileExistsAtPath: _path];
+    return [[NSFileManager defaultManager] fileExistsAtPath: _dir];
 }
 
 
@@ -166,12 +164,26 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             if (outError) *outError = self.fmdbError;
             Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
-                  "SQLite error: %@", _path, _fmdb.lastErrorMessage);
+                  "SQLite error: %@", _dir, _fmdb.lastErrorMessage);
             [_fmdb close];
             return NO;
         }
     }
     return YES;
+}
+
+
+- (BOOL) openForest: (NSError**)outError {
+#if 1
+    return YES;
+#else
+    NSString* forestPath = [_dir stringByAppendingPathComponent: @"db.forest"];
+    CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
+    _forest = [[CBForestDB alloc] initWithFile: forestPath
+                                       options: options
+                                         error: outError];
+    return (_forest != nil);
+#endif
 }
 
 
@@ -192,7 +204,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         flags |= SQLITE_OPEN_READONLY;
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    LogTo(CBLDatabase, @"Open %@ (flags=%X)", _path, flags);
+    LogTo(CBLDatabase, @"Open %@ (flags=%X)", _dir, flags);
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
         return NO;
@@ -221,6 +233,16 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (_isOpen)
         return YES;
     LogTo(CBLDatabase, @"Opening %@", self);
+
+    if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
+                                   withIntermediateDirectories: YES
+                                                    attributes: nil
+                                                         error: outError])
+        return NO;
+
+    if (![self openForest: outError])
+        return NO;
+
     if (![self openFMDB: outError])
         return NO;
     
@@ -435,7 +457,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (!_isOpen)
         return NO;
     
-    LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
+    LogTo(CBLDatabase, @"Closing <%p> %@", self, _dir);
     Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
             _transactionLevel);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
@@ -487,10 +509,20 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (UInt64) totalDataSize {
-    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _path error: NULL];
+    UInt64 size = 0;
+    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _forest.filename
+                                                                           error: NULL];
     if (!attrs)
         return 0;
-    return attrs.fileSize + _attachments.totalDataSize;
+    size = attrs.fileSize;
+
+    NSString* fmdbPath = [_dir stringByAppendingPathComponent: @"db.sqlite"];
+    attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: fmdbPath error: NULL];
+    if (!attrs)
+        return 0;
+    size += attrs.fileSize;
+
+    return size + _attachments.totalDataSize;
 }
 
 
@@ -635,7 +667,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (void) dbChanged: (NSNotification*)n {
     CBLDatabase* senderDB = n.object;
     // Was this posted by a _different_ CBLDatabase instance on the same database as me?
-    if (senderDB != self && [senderDB.path isEqualToString: _path]) {
+    if (senderDB != self && [senderDB.dir isEqualToString: _dir]) {
         // Careful: I am being called on senderDB's thread, not my own!
         if ([[n name] isEqualToString: CBL_DatabaseChangesNotification]) {
             NSMutableArray* echoedChanges = $marray();

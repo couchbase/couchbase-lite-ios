@@ -64,13 +64,13 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 
 + (NSString*) attachmentStorePath: (NSString*)dbPath {
-    return [[dbPath stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
+    return [dbPath stringByAppendingPathComponent: @"attachments"];
 
 }
 
 
 - (NSString*) attachmentStorePath {
-    return [[self class] attachmentStorePath: _path];
+    return [[self class] attachmentStorePath: _dir];
 }
 
 

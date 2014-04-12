@@ -76,6 +76,7 @@ static void createDocuments(CBLDatabase* db, unsigned n) {
 TestCase(API_Manager) {
     CBLManager* dbmgr = [CBLManager sharedInstance];
     CAssert(dbmgr);
+    createEmptyDB();
     for (NSString* name in dbmgr.allDatabaseNames) {
         CBLDatabase* db = dbmgr[name];
         Log(@"Database '%@': %u documents", db.name, (unsigned)db.documentCount);

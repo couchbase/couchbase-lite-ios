@@ -9,7 +9,9 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
+@class CBL_FMDatabase;
+@class CBForestDB;
+@class CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
@@ -58,9 +60,10 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @interface CBLDatabase ()
 {
     @private
-    NSString* _path;
+    NSString* _dir;
     NSString* _name;
     CBLManager* _manager;
+    CBForestDB* _forest;
     CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
@@ -81,7 +84,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 }
 
 @property (nonatomic, readwrite, copy) NSString* name;  // make it settable
-@property (nonatomic, readonly) NSString* path;
+@property (nonatomic, readonly) NSString* dir;
 @property (nonatomic, readonly) BOOL isOpen;
 
 - (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
@@ -95,10 +98,10 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 // Internal API
 @interface CBLDatabase (Internal)
 
-- (instancetype) _initWithPath: (NSString*)path
-                          name: (NSString*)name
-                       manager: (CBLManager*)manager
-                      readOnly: (BOOL)readOnly;
+- (instancetype) _initWithDir: (NSString*)dirPath
+                         name: (NSString*)name
+                      manager: (CBLManager*)manager
+                     readOnly: (BOOL)readOnly;
 + (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbPath error: (NSError**)outError;
 #if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)path;

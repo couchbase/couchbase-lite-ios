@@ -36,7 +36,7 @@
 
 
 #define kOldDBExtension @"touchdb" // Used before CBL beta 1
-#define kDBExtension @"cblite"
+#define kDBExtension @"cblite2"
 
 
 static const CBLManagerOptions kCBLManagerDefaultOptions;
@@ -379,21 +379,16 @@ static CBLManager* sInstance;
 
 
 - (BOOL) replaceDatabaseNamed: (NSString*)databaseName
-             withDatabaseFile: (NSString*)databasePath
-              withAttachments: (NSString*)attachmentsPath
+             withDatabaseDir: (NSString*)databaseDir
                         error: (NSError**)outError
 {
     CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
     if (!db)
         return NO;
     Assert(!db.isOpen, @"Already-open database cannot be replaced");
-    NSString* dstAttachmentsPath = db.attachmentStorePath;
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    return [fmgr copyItemAtPath: databasePath toPath: db.path error: outError] &&
-            CBLRemoveFileIfExists(dstAttachmentsPath, outError) &&
-            (!attachmentsPath || [fmgr copyItemAtPath: attachmentsPath
-                                               toPath: dstAttachmentsPath
-                                                error: outError]) &&
+    return CBLRemoveFileIfExists(db.dir, outError) &&
+            [fmgr copyItemAtPath: databaseDir toPath: db.dir error: outError] &&
             [db open: outError] &&
             [db replaceUUIDs: outError];
 }
@@ -428,10 +423,10 @@ static CBLManager* sInstance;
                 *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
             return nil;
         }
-        db = [[CBLDatabase alloc] initWithPath: [self pathForDatabaseNamed: name]
-                                          name: name
-                                       manager: self
-                                      readOnly: _options.readOnly];
+        db = [[CBLDatabase alloc] initWithDir: [self pathForDatabaseNamed: name]
+                                         name: name
+                                      manager: self
+                                     readOnly: _options.readOnly];
         if (mustExist && !db.exists) {
             if (outError)
                 *outError = CBLStatusToNSError(kCBLStatusNotFound, nil);
@@ -678,7 +673,7 @@ TestCase(CBLManager) {
     db = [dbm databaseNamed: @"foo" error: NULL];
     CAssert(db != nil);
     CAssertEqual(db.name, @"foo");
-    CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);
+    CAssertEqual(db.dir.stringByDeletingLastPathComponent, dbm.directory);
     CAssert(db.exists);
     CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);
 
