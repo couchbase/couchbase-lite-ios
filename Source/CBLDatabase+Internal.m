@@ -174,16 +174,13 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (BOOL) openForest: (NSError**)outError {
-#if 1
-    return YES;
-#else
     NSString* forestPath = [_dir stringByAppendingPathComponent: @"db.forest"];
     CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
     _forest = [[CBForestDB alloc] initWithFile: forestPath
                                        options: options
                                          error: outError];
+    _forest.documentClass = [CBForestVersions class];
     return (_forest != nil);
-#endif
 }
 
 
@@ -476,8 +473,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         [repl databaseClosing];
     
     _activeReplicators = nil;
-    
-    if (![_fmdb close])
+
+    [_forest close];
+
+    if (_fmdb && ![_fmdb close])
         return NO;
     _isOpen = NO;
     _transactionLevel = 0;
