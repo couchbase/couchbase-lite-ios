@@ -474,6 +474,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     
     _activeReplicators = nil;
 
+    [_forest commit: NULL];
     [_forest close];
 
     if (_fmdb && ![_fmdb close])

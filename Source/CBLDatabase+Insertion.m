@@ -263,6 +263,7 @@
         *outStatus = kCBLStatusDBError;
         return nil;
     }
+    doc.maxDepth = (unsigned)self.maxRevTreeDepth;
 
     if (prevRevID) {
         // Updating an existing revision; make sure it exists and is a leaf:
@@ -607,10 +608,82 @@
 
 
 /** Add an existing revision of a document (probably being pulled) plus its ancestors. */
+- (CBLStatus) forestForceInsert: (CBL_Revision*)inRev
+                revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
+                         source: (NSURL*)source
+{
+    CBL_MutableRevision* rev = inRev.mutableCopy;
+    rev.sequence = 0;
+    NSString* docID = rev.docID;
+    NSString* revID = rev.revID;
+    if (![CBLDatabase isValidDocumentID: docID] || !revID)
+        return kCBLStatusBadID;
+    
+    NSUInteger historyCount = history.count;
+    if (historyCount == 0) {
+        history = @[revID];
+        historyCount = 1;
+    } else if (!$equal(history[0], revID)) {
+        return kCBLStatusBadID;
+    }
+
+    // First get the CBForest doc:
+    NSError* error;
+    CBForestVersions* doc = (CBForestVersions*)[_forest documentWithID: docID
+                                                               options: kCBForestDBCreateDoc
+                                                                 error: &error];
+    if (!doc)
+        return kCBLStatusDBError;
+    doc.maxDepth = (unsigned)self.maxRevTreeDepth;
+
+    // Add the revision & ancestry to the doc:
+    NSData* json = [self encodeDocumentJSON: inRev];
+    if (!json)
+        return kCBLStatusBadJSON;
+    NSInteger common = [doc addRevision: json
+                               deletion: inRev.deleted
+                                history: history];
+    if (common < 0)
+        return kCBLStatusDBError;   //FIX: Get a more detailed status
+    if (common == 0)
+        return kCBLStatusOK;      // No-op: No new revisions were inserted.
+
+    // Validate against the common ancestor:
+    if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
+        NSString* commonAncestor = history[common];
+        CBL_Revision* prev = [[CBL_Revision alloc] initWithDocID: docID
+                                                           revID: commonAncestor
+                                                         deleted: [doc isRevisionDeleted: commonAncestor]];
+        NSString* parentRevID = (history.count > 1) ? history[1] : nil;
+        CBLStatus status = [self validateRevision: rev
+                                 previousRevision: prev
+                                      parentRevID: parentRevID];
+        if (CBLStatusIsError(status))
+            return status;
+    }
+
+    // Save updated doc back to the database:
+    if (![doc save: &error])
+        return kCBLStatusDBError;
+#if 0 // TODO: After removing SQLite
+    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
+                                                         winningRevision: winningRev
+                                                              inConflict: inConflict
+                                                                  source: source]];
+#endif
+    return kCBLStatusCreated;
+}
+
+/** Add an existing revision of a document (probably being pulled) plus its ancestors. */
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
           revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
                    source: (NSURL*)source
 {
+    // FORESTDB:
+    CBLStatus fStatus = [self forestForceInsert: inRev revisionHistory: history source: source];
+    if (CBLStatusIsError(fStatus))
+        return fStatus;
+
     CBL_MutableRevision* rev = inRev.mutableCopy;
     rev.sequence = 0;
     NSString* docID = rev.docID;

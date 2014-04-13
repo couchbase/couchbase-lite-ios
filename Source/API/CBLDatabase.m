@@ -56,6 +56,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     CBLModelFactory* _modelFactory;  // used in category method in CBLModelFactory.m
     NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
     NSMutableSet* _allReplications;
+    NSUInteger _maxRevTreeDepth;
 }
 
 
@@ -233,12 +234,18 @@ static void catchInBlock(void (^block)()) {
 }
 
 - (NSUInteger) maxRevTreeDepth {
-    return [[self infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+    if (_maxRevTreeDepth == 0)
+        _maxRevTreeDepth = [[self infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+    return _maxRevTreeDepth;
 }
 
 - (void) setMaxRevTreeDepth: (NSUInteger)maxRevs {
-    [self setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];
-    // This property is looked up by pruneRevsToMaxDepth:
+    if (maxRevs == 0)
+        maxRevs = kDefaultMaxRevs;
+    if (maxRevs != self.maxRevTreeDepth) {
+        _maxRevTreeDepth = maxRevs;
+        [self setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];
+    }
 }
 
 
