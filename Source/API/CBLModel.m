@@ -391,9 +391,20 @@
             value = [value docIDs];
         else
             value = [value my_map:^id(id obj) { return [self externalizePropertyValue: obj]; }];
+    } else if([value isKindOfClass:[NSDictionary class]]) {
+        NSDictionary* oldDict = (NSDictionary*)value;
+        NSMutableDictionary* dictionary = [NSMutableDictionary dictionaryWithCapacity:[value count]];
+        [oldDict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+            dictionary[key] = [self externalizePropertyValue:obj];
+        }];
+        
+        value = [dictionary copy];
     } else if ([value conformsToProtocol: @protocol(CBLJSONEncoding)]) {
         value = [(id<CBLJSONEncoding>)value encodeAsJSON];
+    } else if ([value isKindOfClass:[CBLNestedModel class]]) {
+        value = [(CBLNestedModel*)value encodeToJSON];
     }
+    
     return value;
 }
 

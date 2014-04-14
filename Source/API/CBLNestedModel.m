@@ -7,7 +7,12 @@
 //
 
 #import "CBLNestedModel.h"
-#import<objc/runtime.h>
+#import <objc/runtime.h>
+#import <objc/message.h>
+#import "CBLDatabase.h"
+#import "CBLManager.h"
+#import "CBLModel.h"
+#import "CBLModelFactory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,6 +23,7 @@
 @end
 
 @implementation CBLNestedModelModification
+@synthesize onMutateBlock;
 
 - (id)init {
     self = [super init];
@@ -38,13 +44,10 @@
 
 @interface CBLNestedModel ()
 @property (strong, nonatomic) CBLNestedModelModification* modObject;
-
-- (id)convertValueFromJSON:(id)jsonObject toDesiredClass:(Class)desiredPropertyClass representedByPropertyName:(NSString*)propertyName;
-+ (id)convertValueToJSON:(id)value;
-
 @end
 
 @implementation CBLNestedModel
+@synthesize modObject;
 
 - (id)init {
     self = [super init];
@@ -54,6 +57,24 @@
     
     return self;
 }
+
+- (void)setParent:(CBLNestedModel*)parent {
+    if(!parent) {
+        NSLog(@"Warning: CBLNestedModel parent should never be nil");
+    } else {
+        self.modObject = [parent modObject];
+    }
+}
+
+- (void)modified {
+    [self.modObject modified];
+}
+
+@end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+@implementation CBLNestedModel (CBLModel)
 
 #pragma mark - Decoding Methods (JSON --> class)
 
@@ -73,7 +94,7 @@
                 if(value) {
                     [self setValue:value forKey:propertyName];
                 } else {
-                    NSLog(@"No property name found that matches key: %@. Keeping default value.", propertyName);
+                    NSLog(@"No existing value for property found that matches key: %@. Keeping default value.", propertyName);
                 }
             }];
         }
@@ -89,22 +110,17 @@
     id value = nil;
     
     // Block used by collection JSON objects to determine what class to convert values to
-    Class(^CollectionClassTypeBlock)(Class klass, NSString* propertyName) = ^Class(Class klass, NSString* propertyName) {
-        if(!(klass == [NSArray class] || klass == [NSDictionary class])) {
-            // Objects are not collection classes
-            klass = [CBLModel itemClassForArrayProperty:propertyName];
-            if(!klass) {
-                // There is no designated class, default to NSString
-                klass = [NSString class];
-            }
-        }
-        
+    Class(^CollectionClassTypeBlock)(Class klass, NSString* propertyName) = ^Class(Class objClass, NSString* propertyName) {        
+        Class klass = [[self class] itemClassForArrayProperty:propertyName];
+        if(!klass)
+            klass = objClass;
+
         return klass;
     };
     
     if(desiredPropertyClass == [NSNumber class] ||
        desiredPropertyClass == [NSNull class] ||
-       desiredPropertyClass == [NSString class]) {
+       [desiredPropertyClass isSubclassOfClass:[NSString class]]) {
         // JSON compatible objects will be mapped directly to the class variables
         value = jsonObject;
     } else if(desiredPropertyClass == [NSDate class]) {
@@ -148,9 +164,9 @@
         NSMutableArray* objectArray = [NSMutableArray arrayWithCapacity:[jsonArray count]];
         [jsonArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             id collectionValue = [self convertValueFromJSON:obj toDesiredClass:CollectionClassTypeBlock([obj class], propertyName) representedByPropertyName:propertyName];
-                
+            
             if(collectionValue) {
-               [objectArray addObject:collectionValue];
+                [objectArray addObject:collectionValue];
             }
         }];
         
@@ -237,22 +253,16 @@
     return value;
 }
 
-- (void)reparent:(CBLNestedModel*)parent {
-    if(!parent) {
-        NSLog(@"Warning: CBLNestedModel parent should never be nil");
-    } else {
-        self.modObject = [parent modObject];
-    }
-}
-
-@end
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-@implementation CBLNestedModel (CBLModel)
-
 - (void)setOnMutate:(CBLOnMutateBlock)onMutate {
     self.modObject.onMutateBlock = onMutate;
+}
+
++ (Class) itemClassForArrayProperty: (NSString*)property {
+    SEL sel = NSSelectorFromString([property stringByAppendingString: @"ItemClass"]);
+    if ([self respondsToSelector: sel]) {
+        return (Class)objc_msgSend(self, sel);
+    }
+    return Nil;
 }
 
 @end
@@ -264,19 +274,24 @@
 - (NSDictionary*)allProperties {
     NSMutableDictionary* dictionary = [NSMutableDictionary dictionary];
     
-    unsigned count;
-    objc_property_t* properties = class_copyPropertyList([self class], &count);
-    for (unsigned i = 0; i < count; i++) {
-        objc_property_t property = properties[i];
-        
-        NSString* propertyName = [NSString stringWithUTF8String:property_getName(property)];
-        NSMutableArray* propertyAttr = [[[NSString stringWithUTF8String:property_getAttributes(property)] componentsSeparatedByString:@","] mutableCopy];
-        
-        dictionary[propertyName] = propertyAttr;
+    // Get all properties we have until we hit CBLNestedModel
+    // Allows us to have multiple subclasses of CBLNestedModel, but does not support polymorphism.
+    Class klass = [self class];
+    while(klass != [CBLNestedModel class]) {
+        unsigned count;
+        objc_property_t* properties = class_copyPropertyList(klass, &count);
+        for (unsigned i = 0; i < count; i++) {
+            objc_property_t property = properties[i];
+            
+            NSString* propertyName = [NSString stringWithUTF8String:property_getName(property)];
+            NSMutableArray* propertyAttr = [[[NSString stringWithUTF8String:property_getAttributes(property)] componentsSeparatedByString:@","] mutableCopy];
+            
+            dictionary[propertyName] = propertyAttr;
+        }
+        free(properties);
+        klass = [klass superclass];
     }
-    
-    free(properties);
-    
+
     return dictionary;
 }
 

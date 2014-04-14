@@ -18,6 +18,7 @@
 #import "CBLModelArray.h"
 #import "CBLBase64.h"
 #import "CBLJSON.h"
+#import "CBLNestedModel.h"
 
 #import <objc/message.h>
 
@@ -58,6 +59,18 @@ static ValueConverter valueConverterToClass(Class toClass) {
             }
             return value;
         };
+    } else if ([toClass isSubclassOfClass:[CBLNestedModel class]]) {
+        return ^id(id rawValue, CBLModel* self, NSString* property) {
+            if (!rawValue)
+                return nil;
+            CBLNestedModel* value = [(CBLNestedModel*)[toClass alloc] initFromJSON: rawValue];
+            __weak CBLModel* weakSelf = self;
+            [value setOnMutate: ^{
+                [weakSelf markPropertyNeedsSave: property];
+            }];
+            
+            return value;
+        };
     } else {
         return nil;
     }
@@ -73,6 +86,17 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
     };
 }
 
+static ValueConverter dictionaryValueConverter(ValueConverter itemConverter) {
+    return ^id(id rawValue, CBLModel* self, NSString* property) {
+        NSDictionary* oldDict = (NSDictionary*)rawValue;
+        NSMutableDictionary* dictionary = [NSMutableDictionary dictionaryWithCapacity:[rawValue count]];
+        [oldDict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+            dictionary[key] = itemConverter(obj, self, property);
+        }];
+        
+        return dictionary;
+    };
+}
 
 @implementation CBLModel (Properties)
 
@@ -184,8 +208,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
     id (^impBlock)(CBLModel*) = nil;
     
     if (propertyClass == Nil || propertyClass == [NSString class]
-             || propertyClass == [NSNumber class]
-             || propertyClass == [NSDictionary class]) {
+             || propertyClass == [NSNumber class]) {
         // Basic classes (including 'id')
         return [super impForGetterOfProperty: property ofClass: propertyClass];
     } else if (propertyClass == [NSArray class]) {
@@ -203,6 +226,22 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             ValueConverter itemConverter = valueConverterToClass(itemClass);
             if (itemConverter) {
                 ValueConverter converter = arrayValueConverter(itemConverter);
+                impBlock = ^id(CBLModel* receiver) {
+                    return [receiver getProperty: property withConverter: converter];
+                };
+            }
+        }
+    } else if (propertyClass == [NSDictionary class]) {
+        // Does not support CBLModels yet
+        Class itemClass = [self itemClassForArrayProperty: property];   // Uses same item class declaration as for arrays
+        if (itemClass == nil) {
+            // Untyped array:
+            return [super impForGetterOfProperty: property ofClass: propertyClass];
+        }else {
+            // Typed array of scalar class:
+            ValueConverter itemConverter = valueConverterToClass(itemClass);
+            if (itemConverter) {
+                ValueConverter converter = dictionaryValueConverter(itemConverter);
                 impBlock = ^id(CBLModel* receiver) {
                     return [receiver getProperty: property withConverter: converter];
                 };
@@ -246,9 +285,44 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             impBlock = ^(CBLModel* receiver, NSArray* value) {
                 [receiver setArray: value forProperty: property ofModelClass: itemClass];
             };
+        } else if ([itemClass isSubclassOfClass: [CBLNestedModel class]]) {
+            // Array of nested models
+            impBlock = ^(CBLModel* receiver, NSArray* value) {
+                [value enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+                    __weak CBLModel* weakSelf = receiver;
+                    [obj setOnMutate: ^{
+                        [weakSelf markPropertyNeedsSave: property];
+                    }];
+                }];
+                
+                [receiver setValue: value ofProperty: property];
+            };
         } else {
             // Scalar-valued array:
             impBlock = ^(CBLModel* receiver, NSArray* value) {
+                [receiver setValue: value ofProperty: property];
+            };
+        }
+    } else if ([propertyClass isSubclassOfClass: [NSDictionary class]]) {
+        Class itemClass = [self itemClassForArrayProperty: property];
+        if (itemClass == nil) {
+            // Untyped array:
+            return [super impForSetterOfProperty: property ofClass: propertyClass];
+        } else if ([itemClass isSubclassOfClass: [CBLNestedModel class]]) {
+            // Dictionary of nested models
+            impBlock = ^(CBLModel* receiver, NSDictionary* value) {
+                [value enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+                    __weak CBLModel* weakSelf = receiver;
+                    [obj setOnMutate: ^{
+                        [weakSelf markPropertyNeedsSave: property];
+                    }];
+                }];
+                
+                [receiver setValue: value ofProperty: property];
+            };
+        } else {
+            // Scalar-valued array:
+            impBlock = ^(CBLModel* receiver, NSDictionary* value) {
                 [receiver setValue: value ofProperty: property];
             };
         }
@@ -261,6 +335,15 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                     [strongSelf markPropertyNeedsSave: property];
                 }];
             }
+            
+            [receiver setValue:value ofProperty:property];
+        };
+    } else if ([propertyClass isSubclassOfClass: [CBLNestedModel class]]) {
+        impBlock = ^(CBLModel* receiver, id<CBLJSONEncoding> value) {
+            __weak CBLModel* weakSelf = receiver;
+            [value setOnMutate: ^{
+                [weakSelf markPropertyNeedsSave: property];
+            }];
             
             [receiver setValue:value ofProperty:property];
         };

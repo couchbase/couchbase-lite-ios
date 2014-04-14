@@ -30,8 +30,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		0377B5AE18FBAA83005C04C9 /* CBLNestedModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */; };
-		0377B5AF18FBAA83005C04C9 /* CBLNestedModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */; };
+		0377B5AE18FBAA83005C04C9 /* CBLNestedModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0377B5AF18FBAA83005C04C9 /* CBLNestedModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0377B5B018FBAA83005C04C9 /* CBLNestedModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0377B5AD18FBAA83005C04C9 /* CBLNestedModel.m */; };
 		0377B5B118FBAA83005C04C9 /* CBLNestedModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0377B5AD18FBAA83005C04C9 /* CBLNestedModel.m */; };
 		0377B5B218FBAA83005C04C9 /* CBLNestedModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0377B5AD18FBAA83005C04C9 /* CBLNestedModel.m */; };

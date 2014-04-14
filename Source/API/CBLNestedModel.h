@@ -6,26 +6,49 @@
 //  Copyright (c) 2014 RVijay007. All rights reserved.
 //
 
-#import <CouchbaseLite/CouchbaseLite.h>
+#import <Foundation/Foundation.h>
+#import "CBLJSON.h"
 
 @interface CBLNestedModel : NSObject
 
+/**
+ * Override this as the designated initializer and set instance variables to their initial values
+ */
+- (id)init;
+
+/**
+ * If this object is going to be stored in a property, or in an NSArray/NSDictionary which is a property, of a CBLNestedModel,
+ * then you must call setParent with the CBLNestedModel parent. You do not have to do anything if it will be stored in a CBLModel
+ */
+- (void)setParent:(CBLNestedModel*)parent;
+
+/**
+ * Anytime you change a property's value for a CBLNestedModel, you must call modified so that the parent CBLModel
+ * knows that this is dirty and has information that needs to be saved
+ */
+- (void)modified;
+
+@end
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+@interface CBLNestedModel (CBLModel)
+// Used by CBL Model to create CBLNestedModels from database
 - (id)initFromJSON:(id)jsonObject;
 - (id)encodeToJSON;
 
-- (void)reparent:(CBLNestedModel*)parent;
-
-@end
-
-@interface CBLNestedModel (CBLModel)
-
 - (void)setOnMutate:(CBLOnMutateBlock)onMutate;
 
+- (id)convertValueFromJSON:(id)jsonObject toDesiredClass:(Class)desiredPropertyClass representedByPropertyName:(NSString*)propertyName;
++ (id)convertValueToJSON:(id)value;
+
 @end
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 @interface CBLNestedModel (NSObject)
 
-- (NSDictionary*)allProperties;     // PropertyName --> [Attributes]
+- (NSDictionary*)allProperties;     // PropertyName --> [Attributes], recursive to all superclasses until CBLNestedModel
 
 /**
  * Converts a property attribute to the class it refers to
