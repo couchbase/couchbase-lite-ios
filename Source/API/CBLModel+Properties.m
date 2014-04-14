@@ -252,6 +252,18 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                 [receiver setValue: value ofProperty: property];
             };
         }
+    } else if ([propertyClass conformsToProtocol:@protocol(CBLJSONEncoding)]) {
+        impBlock = ^(CBLModel* receiver, id<CBLJSONEncoding> value) {
+            if ([value respondsToSelector: @selector(setOnMutate:)]) {
+                __weak CBLModel* weakSelf = receiver;
+                [value setOnMutate: ^{
+                    CBLModel* strongSelf = weakSelf;
+                    [strongSelf markPropertyNeedsSave: property];
+                }];
+            }
+            
+            [receiver setValue:value ofProperty:property];
+        };
     } else {
         return [super impForSetterOfProperty: property ofClass: propertyClass];
     }
