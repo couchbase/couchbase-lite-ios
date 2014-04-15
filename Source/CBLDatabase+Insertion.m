@@ -236,10 +236,23 @@
 }
 
 
-- (CBL_Revision*) forestPutRevision: (CBL_Revision*)oldRev
-                     prevRevisionID: (NSString*)inputPrevRevID
-                      allowConflict: (BOOL)allowConflict
-                             status: (CBLStatus*)outStatus
+- (void) notifyChange: (CBL_Revision*)inRev doc: (CBForestVersions*)doc source: (NSURL*)source {
+    CBL_Revision* winningRev = inRev;
+    if (!$equal(doc.revID, inRev.revID))
+        winningRev = [[CBL_Revision alloc] initWithDocID: doc.docID revID: doc.revID
+                                                 deleted: (doc.flags & kCBForestDocDeleted) != 0];
+    BOOL inConflict = (doc.flags & kCBForestDocConflicted) != 0;
+    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
+                                                         winningRevision: winningRev
+                                                              inConflict: inConflict
+                                                                  source: source]];
+}
+
+
+- (CBL_Revision*) putRevision: (CBL_Revision*)oldRev
+               prevRevisionID: (NSString*)inputPrevRevID
+                allowConflict: (BOOL)allowConflict
+                       status: (CBLStatus*)outStatus
 {
     LogTo(CBLDatabase, @"PUT rev=%@, prevRevID=%@, allowConflict=%d", oldRev,
           inputPrevRevID, allowConflict);
@@ -265,13 +278,14 @@
     }
     doc.maxDepth = (unsigned)self.maxRevTreeDepth;
 
+    CBForestRevisionFlags prevRevFlags = [doc flagsOfRevision: prevRevID];
     if (prevRevID) {
         // Updating an existing revision; make sure it exists and is a leaf:
-        BOOL parentIsLeaf;
-        if (![doc hasRevision: prevRevID isLeaf: &parentIsLeaf]) {
+        CBForestRevisionFlags revFlags = [doc flagsOfRevision: prevRevID];
+        if (!(revFlags & kCBForestRevisionKnown)) {
             *outStatus = kCBLStatusNotFound;
             return nil;
-        } else if (!parentIsLeaf) {
+        } else if (!(revFlags & kCBForestRevisionLeaf)) {
             *outStatus = kCBLStatusConflict;
             return nil;
         }
@@ -283,11 +297,11 @@
             return nil;
         }
         // If doc exists, it must be in a deleted state:
-        prevRevID = doc.revID;
-        if (prevRevID && ![doc isRevisionDeleted: prevRevID]) {
+        if ((prevRevFlags & kCBForestRevisionKnown) && !(prevRevFlags & kCBForestRevisionDeleted)) {
             *outStatus = kCBLStatusConflict;
             return nil;
         }
+        prevRevID = doc.revID;
     }
 
     // Run any validation blocks:
@@ -344,6 +358,7 @@
         *outStatus = kCBLStatusDBError;
         return nil;
     }
+    newRev.sequence = doc.sequence;
 
     /* FIX: What's the replacement for this?
     // Store any attachments:
@@ -356,261 +371,17 @@
 
     LogTo(CBLDatabase, @"--> created %@", newRev);
 
-#if 0 // Not till I switch off FMDB
     // Epilogue: A change notification is sent:
-    CBL_Revision* winningRev = newRev;
-    if (!$equal(doc.revID, newRevID))
-        winningRev = [[CBL_Revision alloc] initWithDocID: docID revID: doc.revID
-                                                 deleted: (doc.flags & kCBForestDocDeleted) != 0];
-    BOOL inConflict = (doc.flags & kCBForestDocConflicted) != 0;
-    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
-                                                         winningRevision: winningRev
-                                                              inConflict: inConflict
-                                                                  source: nil]];
-#endif
-    *outStatus = kCBLStatusCreated;
-    return newRev;
-}
-
-
-// Raw row insertion. Returns new sequence, or 0 on error
-- (SequenceNumber) insertRevision: (CBL_Revision*)rev
-                     docNumericID: (SInt64)docNumericID
-                   parentSequence: (SequenceNumber)parentSequence
-                          current: (BOOL)current
-                   hasAttachments: (BOOL)hasAttachments
-                             JSON: (NSData*)json
-{
-    if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, "
-                                                  "no_attachments, json) "
-                                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                               @(docNumericID),
-                               rev.revID,
-                               (parentSequence ? @(parentSequence) : nil ),
-                               @(current),
-                               @(rev.deleted),
-                               @(!hasAttachments),
-                               json])
-        return 0;
-    return rev.sequence = _fmdb.lastInsertRowId;
-}
-
-
-/** Top-level method to add a new revision of a document. */
-- (CBL_Revision*) putRevision: (CBL_Revision*)oldRev
-               prevRevisionID: (NSString*)inputPrevRevID   // rev ID being replaced, nil if insert
-                allowConflict: (BOOL)allowConflict
-                       status: (CBLStatus*)outStatus
-{
-    // FORESTDB:
-    CBL_Revision* forestCreatedRev = [self forestPutRevision: oldRev prevRevisionID: inputPrevRevID allowConflict:allowConflict status: outStatus];
-    if (!forestCreatedRev)
-        return nil;
-
-//    LogTo(CBLDatabase, @"PUT rev=%@, prevRevID=%@, allowConflict=%d", oldRev,
-//          inputPrevRevID, allowConflict);
-    Assert(outStatus);
-    NSString* inputDocID = oldRev.docID;
-    BOOL deleted = oldRev.deleted;
-    if (!oldRev || (inputPrevRevID && !inputDocID) || (deleted && !inputDocID)
-             || (inputDocID && ![CBLDatabase isValidDocumentID: inputDocID])) {
-        *outStatus = kCBLStatusBadID;
-        return nil;
-    }
-
-    __block CBL_MutableRevision* newRev = nil;
-    __block CBL_Revision* winningRev = nil;
-    __block BOOL inConflict = NO;
-
-    *outStatus = [self _inTransaction: ^CBLStatus {
-        // Remember, this block may be called multiple times if I have to retry the transaction.
-        newRev = nil;
-        winningRev = nil;
-        inConflict = NO;
-        NSString* prevRevID = inputPrevRevID;
-        NSString* docID = oldRev.docID;
-
-        //// PART I: In which are performed lookups and validations prior to the insert...
-
-        // Get the doc's numeric ID (doc_id) and its current winning revision:
-        SInt64 docNumericID = docID ? [self getDocNumericID: docID] : 0;
-        BOOL oldWinnerWasDeletion = NO;
-        BOOL wasConflicted = NO;
-        NSString* oldWinningRevID = nil;
-        if (docNumericID > 0) {
-            // Look up which rev is the winner, before this insertion
-            //OPT: This rev ID could be cached in the 'docs' row
-            oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                     isDeleted: &oldWinnerWasDeletion
-                                                    isConflict: &wasConflicted];
-        }
-
-        SequenceNumber parentSequence = 0;
-        if (prevRevID) {
-            // Replacing: make sure given prevRevID is current & find its sequence number:
-            if (docNumericID <= 0)
-                return kCBLStatusNotFound;
-            parentSequence = [self getSequenceOfDocument: docNumericID revision: prevRevID
-                                             onlyCurrent: !allowConflict];
-            if (parentSequence == 0) {
-                // Not found: kCBLStatusNotFound or a kCBLStatusConflict, depending on whether there is any current revision
-                if (!allowConflict && [self existsDocumentWithID: docID revisionID: nil])
-                    return kCBLStatusConflict;
-                else
-                    return kCBLStatusNotFound;
-            }
-
-            if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
-                // Fetch the previous revision and validate the new one against it:
-                CBL_Revision* fakeNewRev = [oldRev mutableCopyWithDocID: oldRev.docID revID: nil];
-                CBL_Revision* prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
-                                                                  deleted: NO];
-                CBLStatus status = [self validateRevision: fakeNewRev
-                                         previousRevision: prevRev
-                                              parentRevID: prevRevID];
-                if (CBLStatusIsError(status))
-                    return status;
-            }
-            
-        } else {
-            // Inserting first revision.
-            if (deleted && docID) {
-                // Didn't specify a revision to delete: NotFound or a Conflict, depending
-                return [self existsDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict
-                                                                          : kCBLStatusNotFound;
-            }
-            
-            // Validate:
-            CBLStatus status = [self validateRevision: oldRev
-                                     previousRevision: nil
-                                          parentRevID: nil];
-            if (CBLStatusIsError(status))
-                return status;
-
-            if (docID) {
-                // Inserting first revision, with docID given (PUT):
-                if (docNumericID <= 0) {
-                    // Doc ID doesn't exist at all; create it:
-                    docNumericID = [self insertDocumentID: docID];
-                    if (docNumericID <= 0)
-                        return self.lastDbError;
-                } else {
-                    // Doc ID exists; check whether current winning revision is deleted:
-                    if (oldWinnerWasDeletion) {
-                        prevRevID = oldWinningRevID;
-                        parentSequence = [self getSequenceOfDocument: docNumericID
-                                                            revision: prevRevID
-                                                         onlyCurrent: NO];
-                    } else if (oldWinningRevID) {
-                        // The current winning revision is not deleted, so this is a conflict
-                        return kCBLStatusConflict;
-                    }
-                }
-            } else {
-                // Inserting first revision, with no docID given (POST): generate a unique docID:
-                //docID = [[self class] generateDocumentID];
-                docID = forestCreatedRev.docID;
-                docNumericID = [self insertDocumentID: docID];
-                if (docNumericID <= 0)
-                    return self.lastDbError;
-            }
-        }
-
-        // There may be a conflict if (a) the document was already in conflict, or
-        // (b) a conflict is created by adding a non-deletion child of a non-winning rev.
-        inConflict = wasConflicted || (!deleted && !$equal(prevRevID, oldWinningRevID));
-
-        //// PART II: In which we prepare for insertion...
-        
-        // Get the attachments:
-        CBLStatus status;
-        NSDictionary* attachments = [self attachmentsFromRevision: oldRev status: &status];
-        if (!attachments)
-            return status;
-
-        // Bump the revID and update the JSON:
-        NSData* json = nil;
-        if (oldRev.properties) {
-            json = [self encodeDocumentJSON: oldRev];
-            if (!json)
-                return kCBLStatusBadJSON;
-            if (json.length == 2 && memcmp(json.bytes, "{}", 2)==0)
-                json = nil;
-        }
-        NSString* newRevID = [self generateIDForRevision: oldRev
-                                                withJSON: json
-                                             attachments: attachments
-                                                  prevID: prevRevID];
-        if (!newRevID)
-            return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
-        Assert(docID);
-        newRev = [oldRev mutableCopyWithDocID: docID revID: newRevID];
-        [CBLDatabase stubOutAttachments: attachments inRevision: newRev];
-        
-        // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
-        // is missing due to compaction or replication.
-        // Instead, store an empty zero-length blob.
-        if (json == nil)
-            json = [NSData data];
-        
-        //// PART III: In which the actual insertion finally takes place:
-        
-        SequenceNumber sequence = [self insertRevision: newRev
-                                          docNumericID: docNumericID
-                                        parentSequence: parentSequence
-                                               current: YES
-                                        hasAttachments: (oldRev.attachments != nil)
-                                                  JSON: json];
-        if (!sequence) {
-            // The insert failed. If it was due to a constraint violation, that means a revision
-            // already exists with identical contents and the same parent rev. We can ignore this
-            // insert call, then.
-            if (_fmdb.lastErrorCode != SQLITE_CONSTRAINT)
-                return self.lastDbError;
-            LogTo(CBLDatabase, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
-            newRev.body = nil;
-            return kCBLStatusOK;
-        }
-        
-        // Make replaced rev non-current:
-        if (parentSequence > 0) {
-            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
-                                       @(parentSequence)])
-                return self.lastDbError;
-        }
-
-        // Store any attachments:
-        status = [self processAttachments: attachments
-                              forRevision: newRev
-                       withParentSequence: parentSequence];
-        if (CBLStatusIsError(status))
-            return status;
-
-        // Figure out what the new winning rev ID is:
-        winningRev = [self winnerWithDocID: docNumericID
-                                 oldWinner: oldWinningRevID oldDeleted: oldWinnerWasDeletion
-                                    newRev: newRev];
-
-        // Success!
-        return deleted ? kCBLStatusOK : kCBLStatusCreated;
-    }];
-    
-    if (CBLStatusIsError(*outStatus)) 
-        return nil;
-    
-    //// EPILOGUE: A change notification is sent...
-    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
-                                                         winningRevision: winningRev
-                                                              inConflict: inConflict
-                                                                  source: nil]];
+    [self notifyChange: newRev doc: doc source: nil];
+    *outStatus = deleted ?kCBLStatusOK : kCBLStatusCreated;
     return newRev;
 }
 
 
 /** Add an existing revision of a document (probably being pulled) plus its ancestors. */
-- (CBLStatus) forestForceInsert: (CBL_Revision*)inRev
-                revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
-                         source: (NSURL*)source
+- (CBLStatus) forceInsert: (CBL_Revision*)inRev
+          revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
+                   source: (NSURL*)source
 {
     CBL_MutableRevision* rev = inRev.mutableCopy;
     rev.sequence = 0;
@@ -651,9 +422,11 @@
     // Validate against the common ancestor:
     if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
         NSString* commonAncestor = history[common];
+        CBForestRevisionFlags flags = [doc flagsOfRevision: commonAncestor];
+        BOOL deleted = (flags & kCBForestRevisionDeleted) != 0;
         CBL_Revision* prev = [[CBL_Revision alloc] initWithDocID: docID
                                                            revID: commonAncestor
-                                                         deleted: [doc isRevisionDeleted: commonAncestor]];
+                                                         deleted: deleted];
         NSString* parentRevID = (history.count > 1) ? history[1] : nil;
         CBLStatus status = [self validateRevision: rev
                                  previousRevision: prev
@@ -665,166 +438,8 @@
     // Save updated doc back to the database:
     if (![doc save: &error])
         return kCBLStatusDBError;
-#if 0 // TODO: After removing SQLite
-    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
-                                                         winningRevision: winningRev
-                                                              inConflict: inConflict
-                                                                  source: source]];
-#endif
+    [self notifyChange: inRev doc: doc source: source];
     return kCBLStatusCreated;
-}
-
-/** Add an existing revision of a document (probably being pulled) plus its ancestors. */
-- (CBLStatus) forceInsert: (CBL_Revision*)inRev
-          revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
-                   source: (NSURL*)source
-{
-    // FORESTDB:
-    CBLStatus fStatus = [self forestForceInsert: inRev revisionHistory: history source: source];
-    if (CBLStatusIsError(fStatus))
-        return fStatus;
-
-    CBL_MutableRevision* rev = inRev.mutableCopy;
-    rev.sequence = 0;
-    NSString* docID = rev.docID;
-    NSString* revID = rev.revID;
-    if (![CBLDatabase isValidDocumentID: docID] || !revID)
-        return kCBLStatusBadID;
-    
-    NSUInteger historyCount = history.count;
-    if (historyCount == 0) {
-        history = @[revID];
-        historyCount = 1;
-    } else if (!$equal(history[0], revID))
-        return kCBLStatusBadID;
-    
-    __block CBL_Revision* winningRev = nil;
-    __block BOOL inConflict = NO;
-    CBLStatus status = [self _inTransaction: ^CBLStatus {
-        // First look up the document's row-id and all locally-known revisions of it:
-        CBL_RevisionList* localRevs = nil;
-        SInt64 docNumericID = [self getDocNumericID: docID];
-        if (docNumericID > 0) {
-            localRevs = [self getAllRevisionsOfDocumentID: docID
-                                                numericID: docNumericID
-                                              onlyCurrent: NO];
-            if (!localRevs)
-                return self.lastDbError;
-        } else {
-            docNumericID = [self insertDocumentID: docID];
-            if (docNumericID <= 0)
-                return self.lastDbError;
-        }
-
-        // Validate against the latest common ancestor:
-        if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
-            CBL_Revision* oldRev = nil;
-            for (NSUInteger i = 1; i<historyCount; ++i) {
-                oldRev = [localRevs revWithDocID: docID revID: history[i]];
-                if (oldRev)
-                    break;
-            }
-            NSString* parentRevID = (history.count > 1) ? history[1] : nil;
-            CBLStatus status = [self validateRevision: rev
-                                     previousRevision: oldRev
-                                          parentRevID: parentRevID];
-            if (CBLStatusIsError(status))
-                return status;
-        }
-        
-        // Look up which rev is the winner, before this insertion
-        //OPT: This rev ID could be cached in the 'docs' row
-        BOOL oldWinnerWasDeletion;
-        NSString* oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                           isDeleted: &oldWinnerWasDeletion
-                                                          isConflict: &inConflict];
-
-        // Walk through the remote history in chronological order, matching each revision ID to
-        // a local revision. When the list diverges, start creating blank local revisions to fill
-        // in the local history:
-        SequenceNumber sequence = 0;
-        SequenceNumber localParentSequence = 0;
-        for (NSInteger i = historyCount - 1; i>=0; --i) {
-            NSString* revID = history[i];
-            CBL_Revision* localRev = [localRevs revWithDocID: docID revID: revID];
-            if (localRev) {
-                // This revision is known locally. Remember its sequence as the parent of the next one:
-                sequence = localRev.sequence;
-                Assert(sequence > 0);
-                localParentSequence = sequence;
-
-            } else {
-                // This revision isn't known, so add it:
-                CBL_MutableRevision* newRev;
-                NSData* json = nil;
-                BOOL current = NO;
-                if (i==0) {
-                    // Hey, this is the leaf revision we're inserting:
-                    newRev = rev;
-                    json = [self encodeDocumentJSON: rev];
-                    if (!json)
-                        return kCBLStatusBadJSON;
-                    current = YES;
-                } else {
-                    // It's an intermediate parent, so insert a stub:
-                    newRev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
-                                                                deleted: NO];
-                }
-
-                // Insert it:
-                sequence = [self insertRevision: newRev
-                                   docNumericID: docNumericID
-                                 parentSequence: sequence
-                                        current: current 
-                                 hasAttachments: (newRev.attachments != nil)
-                                           JSON: json];
-                if (sequence <= 0)
-                    return self.lastDbError;
-
-                if (i==0) {
-                    // Write any changed attachments for the new revision. As the parent sequence use
-                    // the latest local revision (this is to copy attachments from):
-                    CBLStatus status;
-                    NSDictionary* attachments = [self attachmentsFromRevision: rev status: &status];
-                    if (attachments) {
-                        status = [self processAttachments: attachments
-                                              forRevision: rev
-                                       withParentSequence: localParentSequence];
-                        [CBLDatabase stubOutAttachments: attachments inRevision: rev];
-                    }
-                    if (CBLStatusIsError(status))
-                        return status;
-                }
-            }
-        }
-
-        if (localParentSequence == sequence)
-            return kCBLStatusOK;      // No-op: No new revisions were inserted.
-
-        // Mark the latest local rev as no longer current:
-        if (localParentSequence > 0) {
-            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=? AND current!=0",
-                  @(localParentSequence)])
-                return self.lastDbError;
-            if (_fmdb.changes == 0)
-                inConflict = YES; // local parent wasn't a leaf, ergo we just created a branch
-        }
-
-        // Figure out what the new winning rev ID is:
-        winningRev = [self winnerWithDocID: docNumericID
-                                 oldWinner: oldWinningRevID oldDeleted: oldWinnerWasDeletion
-                                    newRev: rev];
-
-        return kCBLStatusCreated;
-    }];
-
-    if (!CBLStatusIsError(status)) {
-        [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: rev
-                                                             winningRevision: winningRev
-                                                                  inConflict: inConflict
-                                                                      source: source]];
-    }
-    return status;
 }
 
 

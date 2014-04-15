@@ -29,6 +29,8 @@
 #import "MYBlockUtils.h"
 #import "ExceptionUtils.h"
 
+#import <CBForest/CBForest.h>
+
 #if TARGET_OS_IPHONE
 #import <UIKit/UIApplication.h>
 #endif
@@ -220,6 +222,10 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) compact: (NSError**)outError {
+    // FORESTDB:
+    if (![_forest compact: outError])
+        return NO;
+
     NSUInteger pruned;
     CBLStatus status = [self pruneRevsToMaxDepth: 0 numberPruned: &pruned];
     if (status == kCBLStatusOK)

@@ -323,8 +323,8 @@
             }
         }
         CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
-        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0 hasAttachment: NULL];
-        if (ancestors)
+        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0 onlyAttachments: NO];
+        if (ancestors.count > 0)
             docInfo[@"possible_ancestors"] = ancestors;
     }
                                     

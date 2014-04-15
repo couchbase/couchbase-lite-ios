@@ -18,6 +18,7 @@
 #import "CBL_Puller.h"
 #import "MYBlockUtils.h"
 
+#import <CBForest/CBForest.h>
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 
@@ -105,27 +106,15 @@
 
 
 - (BOOL) findMissingRevisions: (CBL_RevisionList*)revs {
-    if (revs.count == 0)
-        return YES;
-    NSString* sql = $sprintf(@"SELECT docid, revid FROM revs, docs "
-                              "WHERE revid in (%@) AND docid IN (%@) "
-                              "AND revs.doc_id == docs.doc_id",
-                             [CBLDatabase joinQuotedStrings: revs.allRevIDs],
-                             [CBLDatabase joinQuotedStrings: revs.allDocIDs]);
-    _fmdb.shouldCacheStatements = NO;
-    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
-    _fmdb.shouldCacheStatements = YES;
-    if (!r)
-        return NO;
-    while ([r next]) {
-        @autoreleasepool {
-            CBL_Revision* rev = [revs revWithDocID: [r stringForColumnIndex: 0]
-                                           revID: [r stringForColumnIndex: 1]];
-            if (rev)
-                [revs removeRev: rev];
-        }
+    [revs sortByDocID];
+    CBForestVersions* doc = nil;
+    for (NSInteger i = revs.count-1; i >= 0; i--) {
+        CBL_Revision* rev = revs[i];
+        if (!$equal(rev.docID, doc.docID))
+            doc = (CBForestVersions*)[_forest documentWithID: rev.docID options: 0 error: NULL];
+        if (doc && [doc flagsOfRevision: rev.revID] != 0)
+            [revs removeRev: rev];
     }
-    [r close];
     return YES;
 }
 

@@ -102,9 +102,11 @@ typedef SInt64 SequenceNumber;
 
 - (void) addRev: (CBL_Revision*)rev;
 - (void) removeRev: (CBL_Revision*)rev;
+- (void) removeObjectAtIndex: (NSUInteger)index;
 
 - (void) limit: (NSUInteger)limit;
 - (void) sortBySequence;
+- (void) sortByDocID;
 
 @end
 

@@ -301,6 +301,10 @@
     [_revs removeObject: rev];
 }
 
+- (void) removeObjectAtIndex: (NSUInteger)index {
+    [_revs removeObjectAtIndex: index];
+}
+
 - (CBL_Revision*) revWithDocID: (NSString*)docID revID: (NSString*)revID {
     for (CBL_Revision* rev in _revs) {
         if ($equal(rev.docID, docID) && $equal(rev.revID, revID))
@@ -335,6 +339,12 @@
 
 - (void) sortBySequence {
     [_revs sortUsingSelector: @selector(compareSequences:)];
+}
+
+- (void) sortByDocID {
+    [_revs sortUsingComparator: ^NSComparisonResult(CBL_Revision* r1, CBL_Revision* r2) {
+        return [r1.docID compare: r2.docID];
+    }];
 }
 
 

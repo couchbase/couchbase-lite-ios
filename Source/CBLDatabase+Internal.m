@@ -576,7 +576,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         Warn(@"Failed to release transaction!");
         ok = NO;
     }
+
     --_transactionLevel;
+
+    if (_transactionLevel == 0)
+        [_forest commit: NULL];
+
     [self postChangeNotifications];
     return ok;
 }
@@ -696,20 +701,13 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (NSUInteger) documentCount {
-    NSUInteger result = NSNotFound;
-    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT COUNT(DISTINCT doc_id) FROM revs "
-                                           "WHERE current=1 AND deleted=0"];
-    if ([r next]) {
-        result = [r intForColumnIndex: 0];
-    }
-    [r close];
-    return result;    
+    [_forest commit: NULL]; //FIX: This is a workaround for a ForestDB bug
+    return _forest.info.documentCount;
 }
 
 
 - (SequenceNumber) lastSequenceNumber {
-    // See http://www.sqlite.org/fileformat2.html#seqtab
-    return [_fmdb longLongForQuery: @"SELECT seq FROM sqlite_sequence WHERE name='revs'"];
+    return _forest.info.lastSequence;
 }
 
 
@@ -808,52 +806,63 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
+- (CBForestVersions*) _forestDocWithID: (NSString*)docID
+                                status: (CBLStatus*)outStatus
+{
+    NSError* error;
+    CBForestVersions* doc = (CBForestVersions*)[_forest documentWithID: docID
+                                                               options: 0 error: &error];
+    if (outStatus != NULL) {
+        if (doc)
+            *outStatus = kCBLStatusOK;
+        else if (error)
+            *outStatus = kCBLStatusDBError;
+        else
+            *outStatus = kCBLStatusNotFound;
+    }
+    return doc;
+}
+
+
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
                        revisionID: (NSString*)revID
                           options: (CBLContentOptions)options
                            status: (CBLStatus*)outStatus
 {
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID <= 0) {
-        if (outStatus) *outStatus = kCBLStatusNotFound;
+    CBForestVersions* doc = [self _forestDocWithID: docID status: outStatus];
+    if (!doc)
+        return nil;
+    CBForestRevisionFlags revFlags = [doc flagsOfRevision: revID];
+    if (!(revFlags & kCBForestRevisionHasBody)) {
+        *outStatus = kCBLStatusNotFound;
         return nil;
     }
-
-    CBL_MutableRevision* result = nil;
-    CBLStatus status;
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence, no_attachments"];
-    if (!(options & kCBLNoBody))
-        [sql appendString: @", json"];
-    if (revID)
-        [sql appendString: @" FROM revs WHERE revs.doc_id=? AND revid=? AND json notnull LIMIT 1"];
-    else
-        [sql appendString: @" FROM revs WHERE revs.doc_id=? and current=1 and deleted=0 "
-                            "ORDER BY revid DESC LIMIT 1"];
-    CBL_FMResultSet *r = [_fmdb executeQuery: sql, @(docNumericID), revID];
-    if (!r) {
-        status = self.lastDbError;
-    } else if (![r next]) {
-        status = revID ? kCBLStatusNotFound : kCBLStatusDeleted;
-    } else {
-        if (!revID)
-            revID = [r stringForColumnIndex: 0];
-        BOOL deleted = [r boolForColumnIndex: 1];
-        result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
-        result.sequence = [r longLongIntForColumnIndex: 2];
-        
-        if (options != kCBLNoBody) {
-            NSData* json = nil;
-            if (!(options & kCBLNoBody))
-                json = [r dataNoCopyForColumnIndex: 4];
-            if ([r boolForColumnIndex: 3]) // no_attachments == true
-                options |= kCBLNoAttachments;
-            [self expandStoredJSON: json intoRevision: result options: options];
+    if (revID == nil) {
+        if (revFlags & kCBForestRevisionDeleted) {
+            *outStatus = kCBLStatusDeleted;
+            return nil;
         }
-        status = kCBLStatusOK;
+        revID = doc.currentRevisionID;
     }
-    [r close];
-    if (outStatus)
-        *outStatus = status;
+
+    BOOL deleted = (revFlags & kCBForestRevisionDeleted) != 0;
+    CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                       revID: revID
+                                                                     deleted: deleted];
+    result.sequence = doc.sequence;
+
+    if (options != kCBLNoBody) {
+        NSData* json = nil;
+        if (!(options & kCBLNoBody)) {
+            json = [doc dataOfRevision: revID];
+            if (!json) {
+                *outStatus = kCBLStatusNotFound;
+                return nil;
+            }
+        }
+        [self expandStoredJSON: json intoRevision: result options: options];
+    }
+    *outStatus = kCBLStatusOK;
     return result;
 }
 
@@ -875,26 +884,18 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
                        options: (CBLContentOptions)options
 {
-    if (rev.body && options==0 && rev.sequence)
+    if (rev.body && options==0)
         return kCBLStatusOK;  // no-op
     Assert(rev.docID && rev.revID);
-    SInt64 docNumericID = [self getDocNumericID: rev.docID];
-    if (docNumericID <= 0)
+
+    CBLStatus status;
+    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: &status];
+    if (!doc)
+        return status;
+    if ([doc flagsOfRevision: rev.revID] == 0)
         return kCBLStatusNotFound;
-    CBL_FMResultSet *r = [_fmdb executeQuery: @"SELECT sequence, json FROM revs "
-                            "WHERE doc_id=? AND revid=? LIMIT 1",
-                            @(docNumericID), rev.revID];
-    if (!r)
-        return self.lastDbError;
-    CBLStatus status = kCBLStatusNotFound;
-    if ([r next]) {
-        // Found the rev. But the JSON still might be null if the database has been compacted.
-        status = kCBLStatusOK;
-        rev.sequence = [r longLongIntForColumnIndex: 0];
-        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 1] intoRevision: rev options: options];
-    }
-    [r close];
-    return status;
+    [self expandStoredJSON: [doc dataOfRevision: rev.revID] intoRevision: rev options: options];
+    return kCBLStatusOK;
 }
 
 
@@ -902,7 +903,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus
 {
-    if (rev.body && options==0 && rev.sequence)
+    if (rev.body && options==0)
         return rev;  // no-op
     CBL_MutableRevision* nuRev = rev.mutableCopy;
     CBLStatus status = [self loadRevisionBody: nuRev options: options];
@@ -914,6 +915,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
+// FORESTDB: Delete this
 - (SInt64) getDocNumericID: (NSString*)docID {
     NSNumber* cached = [_docIDs objectForKey: docID];
     if (cached) {
@@ -928,6 +930,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
+// FORESTDB: Delete this
 - (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
                                 revision: (NSString*)revID
                              onlyCurrent: (BOOL)onlyCurrent
@@ -949,122 +952,80 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev {
-    // First get the parent's sequence:
-    SequenceNumber seq = rev.sequence;
-    if (seq) {
-        seq = [_fmdb longLongForQuery: @"SELECT parent FROM revs WHERE sequence=?",
-                                @(seq)];
-    } else {
-        SInt64 docNumericID = [self getDocNumericID: rev.docID];
-        if (!docNumericID)
-            return nil;
-        seq = [_fmdb longLongForQuery: @"SELECT parent FROM revs WHERE doc_id=? and revid=?",
-                                @(docNumericID), rev.revID];
-    }
-    if (seq == 0)
+    Assert(rev.docID && rev.revID);
+    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
+    if (!doc)
         return nil;
-
-    // Now get its revID and deletion status:
-    CBL_Revision* result = nil;
-    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs WHERE sequence=?",
-                               @(seq)];
-    if ([r next]) {
-        result = [[CBL_Revision alloc] initWithDocID: rev.docID
-                                               revID: [r stringForColumnIndex: 0]
-                                             deleted: [r boolForColumnIndex: 1]];
-        result.sequence = seq;
-    }
-    [r close];
-    return result;
+    NSString* parentID = [doc parentIDOfRevision: rev.revID];
+    if (!parentID)
+        return nil;
+    BOOL parentDeleted = ([doc flagsOfRevision: parentID] & kCBForestRevisionDeleted) != 0;
+    return [[CBL_Revision alloc] initWithDocID: rev.docID
+                                         revID: parentID
+                                       deleted: parentDeleted];
 }
 
 
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                        numericID: (SInt64)docNumericID
                                       onlyCurrent: (BOOL)onlyCurrent
 {
-    NSString* sql;
-    if (onlyCurrent)
-        sql = @"SELECT sequence, revid, deleted FROM revs "
-               "WHERE doc_id=? AND current ORDER BY sequence DESC";
-    else
-        sql = @"SELECT sequence, revid, deleted FROM revs "
-               "WHERE doc_id=? ORDER BY sequence DESC";
-    CBL_FMResultSet* r = [_fmdb executeQuery: sql, @(docNumericID)];
-    if (!r)
+    CBForestVersions* doc = [self _forestDocWithID: docID status: NULL];
+    if (!doc)
         return nil;
+    NSArray* revIDs = onlyCurrent ? doc.currentRevisionIDs : doc.allRevisionIDs;
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] init];
-    while ([r next]) {
-        CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID
-                                              revID: [r stringForColumnIndex: 1]
-                                            deleted: [r boolForColumnIndex: 2]];
-        rev.sequence = [r longLongIntForColumnIndex: 0];
-        [revs addRev: rev];
+        for (NSString* revID in revIDs) {
+        [revs addRev: [[CBL_Revision alloc] initWithDocID: docID
+                                                    revID: revID
+                                                  deleted: [doc isRevisionDeleted: revID]]];
     }
-    [r close];
     return revs;
-}
-
-- (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                    onlyCurrent: (BOOL)onlyCurrent
-{
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID < 0)
-        return nil;
-    else if (docNumericID == 0)
-        return [[CBL_RevisionList alloc] init];  // no such document
-    else
-        return [self getAllRevisionsOfDocumentID: docID
-                                       numericID: docNumericID
-                                     onlyCurrent: onlyCurrent];
 }
 
 
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
-                              hasAttachment: (BOOL*)outHasAttachment
+                            onlyAttachments: (BOOL)onlyAttachments // unimplemented
 {
-    if (outHasAttachment)
-        *outHasAttachment = NO;
-    int generation = rev.generation;
+    unsigned generation = rev.generation;
     if (generation <= 1)
         return nil;
-    SInt64 docNumericID = [self getDocNumericID: rev.docID];
-    if (docNumericID <= 0)
-        return nil;
-    int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
-    CBL_FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
-                       " and deleted=0 and json not null"
-                       " ORDER BY sequence DESC LIMIT ?",
-                      @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
-    if (!r)
+
+    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
+    if (!doc)
         return nil;
     NSMutableArray* revIDs = $marray();
-    while ([r next]) {
-        if (outHasAttachment && revIDs.count == 0)
-            *outHasAttachment = [self sequenceHasAttachments: [r longLongIntForColumnIndex: 1]];
-        [revIDs addObject: [r stringForColumnIndex: 0]];
+    for (NSString* possibleRevID in doc.allRevisionIDs) {
+        if ([CBL_Revision generationFromRevID: possibleRevID] < generation) {
+            [revIDs addObject: possibleRevID];
+            if (limit && revIDs.count >= limit)
+                break;
+        }
     }
-    [r close];
     return revIDs;
 }
 
 
 - (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs {
-    if (revIDs.count == 0)
+    unsigned generation = rev.generation;
+    if (generation <= 1)
         return nil;
-    SInt64 docNumericID = [self getDocNumericID: rev.docID];
-    if (docNumericID <= 0)
+
+    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
+    if (!doc)
         return nil;
-    NSString* sql = $sprintf(@"SELECT revid FROM revs "
-                              "WHERE doc_id=? and revid in (%@) and revid <= ? "
-                              "ORDER BY revid DESC LIMIT 1", 
-                              [CBLDatabase joinQuotedStrings: revIDs]);
-    _fmdb.shouldCacheStatements = NO;
-    NSString* ancestor = [_fmdb stringForQuery: sql, @(docNumericID), rev.revID];
-    _fmdb.shouldCacheStatements = YES;
-    return ancestor;
+
+    revIDs = [revIDs sortedArrayUsingComparator: ^NSComparisonResult(NSString* id1, NSString* id2) {
+        return CBLCompareRevIDs(id2, id1); // descending order of generation
+    }];
+    for (NSString* possibleRevID in revIDs) {
+        if ([doc flagsOfRevision: possibleRevID] != 0) {
+            if ([CBL_Revision generationFromRevID: possibleRevID] < generation) {
+                return possibleRevID;
+            }
+        }
+    }
+    return nil;
 }
     
 
@@ -1073,41 +1034,20 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     NSString* revID = rev.revID;
     Assert(revID && docID);
 
-    SInt64 docNumericID = [self getDocNumericID: docID];
-    if (docNumericID < 0)
-        return nil;
-    else if (docNumericID == 0)
+    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
+    if (!doc)
         return @[];
-    
-    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted, json isnull "
-                                           "FROM revs WHERE doc_id=? ORDER BY sequence DESC",
-                                          @(docNumericID)];
-    if (!r)
-        return nil;
-    SequenceNumber lastSequence = 0;
+
     NSMutableArray* history = $marray();
-    while ([r next]) {
-        SequenceNumber sequence = [r longLongIntForColumnIndex: 0];
-        BOOL matches;
-        if (lastSequence == 0)
-            matches = ($equal(revID, [r stringForColumnIndex: 2]));
-        else
-            matches = (sequence == lastSequence);
-        if (matches) {
-            NSString* revID = [r stringForColumnIndex: 2];
-            BOOL deleted = [r boolForColumnIndex: 3];
-            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                                            revID: revID
-                                                                          deleted: deleted];
-            rev.sequence = sequence;
-            rev.missing = [r boolForColumnIndex: 4];
-            [history addObject: rev];
-            lastSequence = [r longLongIntForColumnIndex: 1];
-            if (lastSequence == 0)
-                break;
-        }
+    for (NSString* ancestorID in [doc historyOfRevision: revID]) {
+        CBForestRevisionFlags flags = [doc flagsOfRevision: ancestorID];
+        BOOL deleted = (flags & kCBForestRevisionDeleted) != 0;
+        CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                        revID: ancestorID
+                                                                      deleted: deleted];
+        rev.missing = (flags & kCBForestRevisionHasBody) == 0;
+        [history addObject: rev];
     }
-    [r close];
     return history;
 }
 
@@ -1160,14 +1100,7 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 }
 
 
-- (NSString*) getParentRevID: (CBL_Revision*)rev {
-    Assert(rev.sequence > 0);
-    return [_fmdb stringForQuery: @"SELECT parent.revid FROM revs, revs as parent"
-                                   " WHERE revs.sequence=? and parent.sequence=revs.parent",
-                                  @(rev.sequence)];
-}
-
-
+// FORESTDB: DELETE
 /** Returns the rev ID of the 'winning' revision of this document, and whether it's deleted. */
 - (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
                                isDeleted: (BOOL*)outIsDeleted
@@ -1199,55 +1132,61 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
-                                 options: (const CBLChangesOptions*)options
-                                  filter: (CBLFilterBlock)filter
-                                  params: (NSDictionary*)filterParams
+                                   options: (const CBLChangesOptions*)options
+                                    filter: (CBLFilterBlock)filter
+                                    params: (NSDictionary*)filterParams
 {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     if (!options) options = &kDefaultCBLChangesOptions;
-    BOOL includeDocs = options->includeDocs || (filter != NULL);
+    CBForestEnumerationOptions forestOpts = {
+        .limit = options->limit,
+        .inclusiveEnd = YES,
+        .includeDeleted = YES,
+    };
+    BOOL includeDocs = options->includeDocs || options->includeConflicts || (filter != NULL);
+    if (!includeDocs)
+        forestOpts.contentOptions |= kCBForestDBMetaOnly;
 
-    NSString* sql = $sprintf(@"SELECT sequence, revs.doc_id, docid, revid, deleted %@ FROM revs, docs "
-                             "WHERE sequence > ? AND current=1 "
-                             "AND revs.doc_id = docs.doc_id "
-                             "ORDER BY revs.doc_id, revid DESC",
-                             (includeDocs ? @", json" : @""));
-    CBL_FMResultSet* r = [_fmdb executeQuery: sql, @(lastSequence)];
-    if (!r)
-        return nil;
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
-    int64_t lastDocID = 0;
-    while ([r next]) {
-        @autoreleasepool {
-            if (!options->includeConflicts) {
-                // Only count the first rev for a given doc (the rest will be losing conflicts):
-                int64_t docNumericID = [r longLongIntForColumnIndex: 1];
-                if (docNumericID == lastDocID)
-                    continue;
-                lastDocID = docNumericID;
-            }
-            
-            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
-                                                          revID: [r stringForColumnIndex: 3]
-                                                        deleted: [r boolForColumnIndex: 4]];
-            rev.sequence = [r longLongIntForColumnIndex: 0];
+    [_forest enumerateDocsFromSequence: lastSequence+1
+                            toSequence: kCBForestMaxSequence
+                               options: &forestOpts error: NULL
+                             withBlock: ^(CBForestDocument *baseDoc, BOOL *stop)
+    {
+        CBForestVersions* doc = (CBForestVersions*)baseDoc;
+        NSArray* revisions;
+        if (options->includeConflicts) {
+            revisions = doc.currentRevisionIDs;
+            revisions = [revisions sortedArrayUsingComparator:^NSComparisonResult(id r1, id r2) {
+                return CBLCompareRevIDs(r1, r2);
+            }];
+        } else {
+            revisions = @[doc.revID];
+        }
+        for (NSString* revID in revisions) {
+            BOOL deleted;
+            if (options->includeConflicts)
+                deleted = [doc isRevisionDeleted: revID];
+            else
+                deleted = (doc.flags & kCBForestDocDeleted) != 0;
+            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: doc.docID
+                                                                            revID: revID
+                                                                          deleted: deleted];
+            rev.sequence = doc.sequence; //FIX ???
             if (includeDocs) {
-                [self expandStoredJSON: [r dataNoCopyForColumnIndex: 5]
+                [self expandStoredJSON: [doc dataOfRevision: revID]
                           intoRevision: rev
                                options: options->contentOptions];
             }
             if ([self runFilter: filter params: filterParams onRevision: rev])
                 [changes addRev: rev];
         }
-    }
-    [r close];
-    
-    if (options->sortBySequence) {
-        [changes sortBySequence];
-        [changes limit: options->limit];
-    }
+    }];
     return changes;
 }
+
+
+#pragma mark - FILTERS:
 
 
 - (BOOL) runFilter: (CBLFilterBlock)filter
@@ -1264,9 +1203,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         return NO;
     }
 }
-
-
-#pragma mark - FILTERS:
 
 
 - (id) getDesignDocFunction: (NSString*)fnName

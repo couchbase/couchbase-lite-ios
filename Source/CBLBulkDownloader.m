@@ -48,11 +48,10 @@
 {
     // Build up a JSON body describing what revisions we want:
     NSArray* keys = [revs my_map: ^(CBL_Revision* rev) {
-        BOOL hasAttachment;
         NSArray* attsSince = [_db getPossibleAncestorRevisionIDs: rev
                                                            limit: kMaxNumberOfAttsSince
-                                                   hasAttachment: &hasAttachment];
-        if (!hasAttachment || attsSince.count == 0)
+                                                 onlyAttachments: YES];
+        if (!attsSince.count == 0)
             attsSince = nil;
         return $dict({@"id", rev.docID},
                      {@"rev", rev.revID},

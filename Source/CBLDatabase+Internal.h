@@ -166,9 +166,6 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
                                 revision: (NSString*)revID
                              onlyCurrent: (BOOL)onlyCurrent;
-- (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                      numericID: (SInt64)docNumericID
-                                    onlyCurrent: (BOOL)onlyCurrent;
 - (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
                                               docID: (NSString*)docID
                                               revID: (NSString*)revID
@@ -197,7 +194,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     Does not return revisions whose bodies have been compacted away, or deletion markers. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
-                              hasAttachment: (BOOL*)outHasAttachment;
+                            onlyAttachments: (BOOL)onlyAttachments;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
 - (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs;

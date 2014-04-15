@@ -394,12 +394,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // If the document has attachments, add an 'atts_since' param with a list of
     // already-known revisions, so the server can skip sending the bodies of any
     // attachments we already have locally:
-    BOOL hasAttachment;
     CBLDatabase* db = _db;
     NSArray* knownRevs = [db getPossibleAncestorRevisionIDs: rev
                                                       limit: kMaxNumberOfAttsSince
-                                              hasAttachment: &hasAttachment];
-    if (hasAttachment && knownRevs.count > 0)
+                                            onlyAttachments: YES];
+    if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
     
