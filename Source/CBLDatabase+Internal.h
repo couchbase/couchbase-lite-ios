@@ -10,7 +10,7 @@
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
 @class CBL_FMDatabase;
-@class CBForestDB;
+@class CBForestDB, CBForestVersions;
 @class CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
@@ -145,6 +145,9 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (void) notifyChange: (CBLDatabaseChange*)change;
 
 // DOCUMENTS:
+
+- (CBForestVersions*) _forestDocWithID: (NSString*)docID
+                                status: (CBLStatus*)outStatus;
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID

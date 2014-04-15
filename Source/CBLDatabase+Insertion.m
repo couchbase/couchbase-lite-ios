@@ -496,10 +496,11 @@
         return kCBLStatusOK;
     return [self _inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
-            SInt64 docNumericID = [self getDocNumericID: docID];
-            if (!docNumericID) {
-                continue;  // no such document; skip it
-            }
+            CBLStatus status;
+            CBForestVersions* doc = [self _forestDocWithID: docID status: &status];
+            if (!doc && status != kCBLStatusOK)
+                return status;
+
             NSArray* revsPurged;
             NSArray* revIDs = $castIf(NSArray, docsToRevs[docID]);
             if (!revIDs) {
@@ -508,63 +509,12 @@
                 revsPurged = @[];
             } else if ([revIDs containsObject: @"*"]) {
                 // Delete all revisions if magic "*" revision ID is given:
-                if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=?",
-                                           @(docNumericID)]) {
-                    return self.lastDbError;
-                }
+                [_forest deleteDocument: doc error: NULL];
                 revsPurged = @[@"*"];
-                
             } else {
-                // Iterate over all the revisions of the doc, in reverse sequence order.
-                // Keep track of all the sequences to delete, i.e. the given revs and ancestors,
-                // but not any non-given leaf revs or their ancestors.
-                CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, sequence, parent FROM revs "
-                                                       "WHERE doc_id=? ORDER BY sequence DESC",
-                                  @(docNumericID)];
-                if (!r)
-                    return self.lastDbError;
-                NSMutableSet* seqsToPurge = [NSMutableSet set];
-                NSMutableSet* seqsToKeep = [NSMutableSet set];
-                NSMutableSet* revsToPurge = [NSMutableSet set];
-                while ([r next]) {
-                    NSString* revID = [r stringForColumnIndex: 0];
-                    id sequence = @([r longLongIntForColumnIndex: 1]);
-                    id parent = @([r longLongIntForColumnIndex: 2]);
-                    if (([seqsToPurge containsObject: sequence] || [revIDs containsObject:revID]) &&
-                            ![seqsToKeep containsObject: sequence]) {
-                        // Purge it and maybe its parent:
-                        [seqsToPurge addObject: sequence];
-                        [revsToPurge addObject: revID];
-                        if ([parent longLongValue] > 0)
-                            [seqsToPurge addObject: parent];
-                    } else {
-                        // Keep it and its parent:
-                        [seqsToPurge removeObject: sequence];
-                        [revsToPurge removeObject: revID];
-                        [seqsToKeep addObject: parent];
-                    }
-                }
-                [r close];
-                [seqsToPurge minusSet: seqsToKeep];
-
-                LogTo(CBLDatabase, @"Purging doc '%@' revs (%@); asked for (%@)",
-                      docID, [revsToPurge.allObjects componentsJoinedByString: @", "],
-                      [revIDs componentsJoinedByString: @", "]);
-
-                if (seqsToPurge.count) {
-                    // Now delete the sequences to be purged.
-                    NSString* sql = $sprintf(@"DELETE FROM revs WHERE sequence in (%@)",
-                                           [seqsToPurge.allObjects componentsJoinedByString: @","]);
-                    _fmdb.shouldCacheStatements = NO;
-                    BOOL ok = [_fmdb executeUpdate: sql];
-                    _fmdb.shouldCacheStatements = YES;
-                    if (!ok)
-                        return self.lastDbError;
-                    if ((NSUInteger)_fmdb.changes != seqsToPurge.count)
-                        Warn(@"purgeRevisions: Only %i sequences deleted of (%@)",
-                             _fmdb.changes, [seqsToPurge.allObjects componentsJoinedByString:@","]);
-                }
-                revsPurged = revsToPurge.allObjects;
+                revsPurged = [doc purgeRevisions: revIDs];
+                if (![doc save: NULL])
+                    revsPurged = @[];
             }
             result[docID] = revsPurged;
         }
