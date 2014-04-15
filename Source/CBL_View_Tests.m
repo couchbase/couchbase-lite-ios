@@ -478,11 +478,13 @@ TestCase(CBL_View_AllDocsQuery) {
 
     // Create a conflict, won by the old revision:
     NSDictionary* props = $dict({@"_id", @"44444"},
-                                {@"_rev", @"1-...."},  // lower revID, will lose conflict
+                                {@"_rev", @"1-00"},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
+
+    AssertEqual([db getDocumentWithID: @"44444" revisionID: nil].revID, [docs[1] revID]);
 
     // Query all rows:
     CBLQueryOptions options = kDefaultCBLQueryOptions;
@@ -542,7 +544,7 @@ TestCase(CBL_View_AllDocsQuery) {
     NSDictionary* expectedConflict1 = $dict({@"id",  @"44444"},
                                             {@"key", @"44444"},
                                             {@"value", $dict({@"rev", [docs[1] revID]},
-                                                             {@"_conflicts", @[curRevID, @"1-...."]})} );
+                                                             {@"_conflicts", @[curRevID, @"1-00"]})} );
     expectedRows = $array(expectedRow[2], expectedRow[3], expectedConflict1, expectedRow[4]);
     CAssertEqual(rowsToDicts(query), expectedRows);
 

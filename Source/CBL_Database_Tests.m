@@ -199,7 +199,7 @@ TestCase(CBL_Database_CRUD) {
 
 
 TestCase(CBL_Database_EmptyDoc) {
-    // Test case for issue #44, which is caused by a bug in CBLJSON.
+    // Test case for issue #44, which is caused by a bug in NSJSONSerialization.
     CBLDatabase* db = createDB();
     CBL_Revision* rev = putDoc(db, $dict());
     CBLQueryOptions options = kDefaultCBLQueryOptions;
@@ -1117,6 +1117,7 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_FindMissingRevisions);
     RequireTestCase(CBL_Database_Purge);
     RequireTestCase(CBL_Database_ReplicatorSequences);
+    RequireTestCase(CBL_Database_EmptyDoc);
     RequireTestCase(CBL_Database_Attachments);
     RequireTestCase(CBL_Database_PutAttachment);
     RequireTestCase(CBL_Database_EncodedAttachment);

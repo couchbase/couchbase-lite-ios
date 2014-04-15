@@ -1313,141 +1313,94 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 - (NSArray*) getAllDocs: (const CBLQueryOptions*)options {
     if (!options)
         options = &kDefaultCBLQueryOptions;
-    BOOL includeDeletedDocs = (options->allDocsMode == kCBLIncludeDeleted);
-    
-    // Generate the SELECT statement, based on the options:
-    BOOL cacheQuery = YES;
-    NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid, sequence" mutableCopy];
-    if (options->includeDocs)
-        [sql appendString: @", json"];
-    if (includeDeletedDocs)
-        [sql appendString: @", deleted"];
-    [sql appendString: @" FROM revs, docs WHERE"];
-    if (options->keys) {
-        if (options->keys.count == 0)
-            return @[];
-        [sql appendFormat: @" revs.doc_id IN (SELECT doc_id FROM docs WHERE docid IN (%@)) AND", [CBLDatabase joinQuotedStrings: options->keys]];
-        cacheQuery = NO; // we've put hardcoded key strings in the query
-    }
-    [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
-    if (!includeDeletedDocs)
-        [sql appendString: @" AND deleted=0"];
-
-    NSMutableArray* args = $marray();
+    CBForestEnumerationOptions forestOpts = {
+        .skip = options->skip,
+        .limit = options->limit,
+        .inclusiveEnd = options->inclusiveEnd,
+        .onlyConflicts = (options->allDocsMode == kCBLOnlyConflicts),
+    };
     id minKey = options->startKey, maxKey = options->endKey;
-    BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
+    __block BOOL inclusiveMin = YES;
     if (options->descending) {
         minKey = maxKey;
         maxKey = options->startKey;
-        inclusiveMin = inclusiveMax;
-        inclusiveMax = YES;
+        inclusiveMin = options->inclusiveEnd;
+        forestOpts.inclusiveEnd = YES;
     }
-    if (minKey) {
-        Assert([minKey isKindOfClass: [NSString class]]);
-        [sql appendString: (inclusiveMin ? @" AND docid >= ?" :  @" AND docid > ?")];
-        [args addObject: minKey];
-    }
-    if (maxKey) {
-        Assert([maxKey isKindOfClass: [NSString class]]);
-        [sql appendString: (inclusiveMax ? @" AND docid <= ?" :  @" AND docid < ?")];
-        [args addObject: maxKey];
-    }
-    
-    [sql appendFormat: @" ORDER BY docid %@, %@ revid DESC LIMIT ? OFFSET ?",
-                       (options->descending ? @"DESC" : @"ASC"),
-                       (includeDeletedDocs ? @"deleted ASC," : @"")];
-    [args addObject: @(options->limit)];
-    [args addObject: @(options->skip)];
-    
-    // Now run the database query:
-    if (!cacheQuery)
-        _fmdb.shouldCacheStatements = NO;
-    CBL_FMResultSet* r = [_fmdb executeQuery: sql withArgumentsInArray: args];
-    if (!cacheQuery)
-        _fmdb.shouldCacheStatements = YES;
-    if (!r)
-        return nil;
-    
+
+    // Here's the block that adds a document to the output:
     NSMutableArray* rows = $marray();
-    NSMutableDictionary* docs = options->keys ? $mdict() : nil;
-
-    BOOL keepGoing = [r next]; // Go to first result row
-    while (keepGoing) {
-        @autoreleasepool {
-            // Get row values now, before the code below advances 'r':
-            int64_t docNumericID = [r longLongIntForColumnIndex: 0];
-            NSString* docID = [r stringForColumnIndex: 1];
-            NSString* revID = [r stringForColumnIndex: 2];
-            SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
-            BOOL deleted = includeDeletedDocs && [r boolForColumn: @"deleted"];
-
-            NSDictionary* docContents = nil;
-            if (options->includeDocs) {
-                // Fill in the document contents:
-                NSData* json = [r dataNoCopyForColumnIndex: 4];
-                docContents = [self documentPropertiesFromJSON: json
-                                                         docID: docID
-                                                         revID: revID
-                                                       deleted: deleted
-                                                      sequence: sequence
-                                                       options: options->content];
-                Assert(docContents);
-            }
-            
-            // Iterate over following rows with the same doc_id -- these are conflicts.
-            // Skip them, but collect their revIDs if the 'conflicts' option is set:
-            NSMutableArray* conflicts = nil;
-            while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == docNumericID) {
-                if (options->allDocsMode >= kCBLShowConflicts) {
-                    if (!conflicts)
-                        conflicts = $marray(revID);
-                    [conflicts addObject: [r stringForColumnIndex: 2]];
-                }
-            }
-            if (options->allDocsMode == kCBLOnlyConflicts && !conflicts)
-                continue;
-
-            NSDictionary* value = $dict({@"rev", revID},
-                                        {@"deleted", (deleted ?$true : nil)},
-                                        {@"_conflicts", conflicts});  // (not found in CouchDB)
-            CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                         sequence: sequence
-                                                              key: docID
-                                                            value: value
-                                                    docProperties: docContents];
-            if (options->keys)
-                docs[docID] = row;
-            else
-                [rows addObject: row];
+    CBForestDocIterator addDocBlock = ^(CBForestDocument *baseDoc, BOOL *stop)
+    {
+        CBForestVersions* doc = (CBForestVersions*)baseDoc;
+        if (!inclusiveMin) {
+            inclusiveMin = YES;
+            if (minKey && [doc.docID isEqual: minKey])
+                return;
         }
-    }
-    [r close];
 
-    // If given doc IDs, sort the output into that order, and add entries for missing docs:
+        NSString *docID = doc.docID, *revID = doc.revID;
+        BOOL deleted = (doc.flags & kCBForestDocDeleted) != 0;
+        SequenceNumber sequence = doc.sequence;
+
+        NSDictionary* docContents = nil;
+        if (options->includeDocs) {
+            // Fill in the document contents:
+            NSData* json = [doc dataOfRevision: nil];
+            docContents = [self documentPropertiesFromJSON: json
+                                                     docID: docID
+                                                     revID: revID
+                                                   deleted: deleted
+                                                  sequence: sequence
+                                                   options: options->content];
+            Assert(docContents);
+        }
+
+        NSArray* conflicts = nil;
+        if (options->allDocsMode >= kCBLShowConflicts) {
+            conflicts = doc.currentRevisionIDs;
+            if (conflicts.count == 1)
+                conflicts = nil;
+        }
+
+        NSDictionary* value = $dict({@"rev", revID},
+                                    {@"deleted", (deleted ?$true : nil)},
+                                    {@"_conflicts", conflicts});  // (not found in CouchDB)
+        CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                     sequence: sequence
+                                                          key: docID
+                                                        value: value
+                                                docProperties: docContents];
+        if (options->descending)
+            [rows insertObject: row atIndex: 0];
+        else
+            [rows addObject: row];
+    };
+
     if (options->keys) {
+        // If given keys, look up each doc and add it:
         for (NSString* docID in options->keys) {
-            CBLQueryRow* change = docs[docID];
-            if (!change) {
-                NSDictionary* value = nil;
-                SInt64 docNumericID = [self getDocNumericID: docID];
-                if (docNumericID > 0) {
-                    BOOL deleted;
-                    NSString* revID = [self winningRevIDOfDocNumericID: docNumericID
-                                                             isDeleted: &deleted
-                                                            isConflict: NULL];
-                    if (revID)
-                        value = $dict({@"rev", revID}, {@"deleted", $true});
+            @autoreleasepool {
+                CBForestVersions* doc = (CBForestVersions*)[_forest documentWithID: docID
+                                                                           options: 0
+                                                                             error: NULL];
+                if (doc) {
+                    addDocBlock(doc, NULL);
+                } else {
+                    // Add a placeholder for for a nonexistent doc:
+                    [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
+                                                               sequence: 0
+                                                                    key: docID
+                                                                  value: nil
+                                                          docProperties: nil]];
                 }
-                change = [[CBLQueryRow alloc] initWithDocID: (value ?docID :nil)
-                                                   sequence: 0
-                                                        key: docID
-                                                      value: value
-                                              docProperties: nil];
             }
-            [rows addObject: change];
         }
+    } else {
+        // If not given keys, enumerate all docs from minKey to maxKey:
+        [_forest enumerateDocsFromID: minKey toID: maxKey options: &forestOpts error: NULL
+                           withBlock: addDocBlock];
     }
-
     return rows;
 }
 
