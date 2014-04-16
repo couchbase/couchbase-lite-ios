@@ -797,9 +797,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                       revisionID: (NSString*)revID
-                          options: (CBLContentOptions)options
-                           status: (CBLStatus*)outStatus
+                         revisionID: (NSString*)revID
+                            options: (CBLContentOptions)options
+                             status: (CBLStatus*)outStatus
 {
     CBForestVersions* doc = [self _forestDocWithID: docID status: outStatus];
     if (!doc)
@@ -1227,39 +1227,20 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 // Note: Public view methods like -viewNamed: are in CBLDatabase.m.
 
 
-static inline NSString* fileNameToViewName(NSString* fileName) {
-    return fileName.stringByDeletingPathExtension;
-}
-
-static inline NSString* viewNameToFileName(NSString* viewName) {
-    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @"/"].length > 0)
-        return nil;
-    return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
-}
-
-
 - (NSArray*) allViews {
     NSArray* filenames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir
                                                                              error: NULL];
     return [filenames my_map: ^id(NSString* filename) {
-        if ([filename.pathExtension isEqualToString: kViewIndexPathExtension])
-            return [self existingViewNamed: fileNameToViewName(filename)];
-        else
+        NSString* viewName = [CBLView fileNameToViewName: filename];
+        if (!viewName)
             return nil;
+        return [self existingViewNamed: viewName];
     }];
 }
 
 
-- (CBLStatus) deleteViewNamed: (NSString*)name {
-    NSString* filename = viewNameToFileName(name);
-    if (!filename)
-        return kCBLStatusBadID;
-    NSString* path = [_dir stringByAppendingPathComponent: filename];
-    NSError* error;
-    if (![[NSFileManager defaultManager] removeItemAtPath: path error: &error])
-        return CBLIsFileNotFoundError(error) ? kCBLStatusNotFound : kCBLStatusDBError;
+- (void) forgetViewNamed: (NSString*)name {
     [_views removeObjectForKey: name];
-    return kCBLStatusOK;
 }
 
 

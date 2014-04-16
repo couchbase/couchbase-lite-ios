@@ -28,13 +28,25 @@
 
 
 static inline NSString* viewNameToFileName(NSString* viewName) {
-    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @"/"].length > 0)
+    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @":"].length > 0)
         return nil;
+    viewName = [viewName stringByReplacingOccurrencesOfString: @"/" withString: @":"];
     return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
 }
 
 
 @implementation CBLView
+
+
++ (NSString*) fileNameToViewName: (NSString*)fileName {
+    if (![fileName.pathExtension isEqualToString: kViewIndexPathExtension])
+        return nil;
+    if ([fileName hasPrefix: @"."])
+        return nil;
+    NSString* viewName = fileName.stringByDeletingPathExtension;
+    viewName = [viewName stringByReplacingOccurrencesOfString: @":" withString: @"/"];
+    return viewName;
+}
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create {
@@ -148,9 +160,11 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 - (void) deleteView {
+    NSString* path = _index.filename;
     [_index close];
     _index = nil;
-    [_weakDB deleteViewNamed: _name];
+    [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
+    [_weakDB forgetViewNamed: _name];
 }
 
 

@@ -67,6 +67,8 @@ typedef enum {
 
 - (void) databaseClosing;
 
++ (NSString*) fileNameToViewName: (NSString*)fileName;
+
 @end
 
 

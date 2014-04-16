@@ -208,7 +208,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 /** An array of all existing views. */
 @property (readonly) NSArray* allViews;
 
-- (CBLStatus) deleteViewNamed: (NSString*)name;
+- (void) forgetViewNamed: (NSString*)name;
 
 /** Returns the value of an _all_docs query, as an array of CBLQueryRow. */
 - (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;

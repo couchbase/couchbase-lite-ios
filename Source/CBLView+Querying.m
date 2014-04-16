@@ -55,26 +55,52 @@ typedef CBLStatus (^QueryRowBlock)(id key, id value, NSString* docID, SequenceNu
 - (CBLStatus) _runQueryWithOptions: (const CBLQueryOptions*)options
                              onRow: (QueryRowBlock)onRow
 {
-    if (!options)
-        options = &kDefaultCBLQueryOptions;
-    CBForestEnumerationOptions forestOpts = {
-        .skip = options->skip,
-        .limit = options->limit,
-        .descending = options->descending,
-        .inclusiveEnd = options->inclusiveEnd,
-    };
     __block CBLStatus status = kCBLStatusOK;
-    NSError* error;
-    BOOL ok = [_index queryStartKey: options->startKey endKey: options->endKey
-                            options: &forestOpts error: &error
-                              block: ^(id key, id value, NSString *docID, uint64_t sequence,
-                                       BOOL *stop)
-    {
-        status = onRow(key, value, docID, sequence);
-        *stop = CBLStatusIsError(status);
-    }];
-    if (!ok)
-        status = kCBLStatusDBError;
+    if (options->keys) {
+        // If given keys, look up each key:
+        for (id key in options->keys) {
+            NSError* error;
+            BOOL ok = [_index queryStartKey: key startDocID: nil
+                                     endKey: key endDocID: nil
+                                    options: NULL
+                                      error: &error
+                                      block: ^(id key, id value, NSString *docID, uint64_t sequence,
+                                               BOOL *stop)
+            {
+               status = onRow(key, value, docID, sequence);
+               *stop = CBLStatusIsError(status);
+            }];
+            if (!ok)
+                status = kCBLStatusDBError;
+            if (CBLStatusIsError(status))
+                break;
+        }
+
+    } else {
+        // Regular range query:
+        CBForestEnumerationOptions forestOpts = {
+            .skip = options->skip,
+            .limit = options->limit,
+            .descending = options->descending,
+            .inclusiveEnd = options->inclusiveEnd,
+        };
+        __block CBLStatus status = kCBLStatusOK;
+        NSError* error;
+        BOOL ok = [_index queryStartKey: options->startKey
+                             startDocID: options->startKeyDocID
+                                 endKey: options->endKey
+                               endDocID: options->endKeyDocID
+                                options: &forestOpts
+                                  error: &error
+                                  block: ^(id key, id value, NSString *docID, uint64_t sequence,
+                                           BOOL *stop)
+        {
+            status = onRow(key, value, docID, sequence);
+            *stop = CBLStatusIsError(status);
+        }];
+        if (!ok)
+            status = kCBLStatusDBError;
+    }
     return status;
 }
 
@@ -134,8 +160,9 @@ typedef CBLStatus (^QueryRowBlock)(id key, id value, NSString* docID, SequenceNu
                 docContents = linked ? linked.properties : $null;
                 sequence = linked.sequence;
             } else {
+                CBLStatus status;
                 CBL_Revision* rev = [db getDocumentWithID: docID revisionID: nil
-                                                  options: options->content status: NULL];
+                                                  options: options->content status: &status];
                 docContents = rev.properties;
             }
         }
@@ -293,7 +320,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (!_index)
         return nil;
     NSMutableArray* result = $marray();
-    [_index queryStartKey: nil endKey: nil options: NULL error: NULL
+    [_index queryStartKey: nil startDocID: nil
+                   endKey: nil endDocID: nil
+                  options: NULL error: NULL
                     block: ^(id key, id value, NSString *docID, uint64_t sequence, BOOL *stop)
     {
         [result addObject: $dict({@"key", toJSONString(key)},

@@ -63,7 +63,7 @@ static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
     CBL_Revision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssert(status < 300);
+    CAssert(status < 300, @"Status %d from putDoc(%@)", status, props);
     return result;
 }
 
@@ -249,7 +249,7 @@ TestCase(CBL_View_ConflictLoser) {
     
     // Create a conflict, won by the new revision:
     NSDictionary* props = $dict({@"_id", @"44444"},
-                                {@"_rev", @"1-...."},  // lower revID, will lose conflict
+                                {@"_rev", @"1-00"},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
@@ -261,7 +261,7 @@ TestCase(CBL_View_ConflictLoser) {
     dump = [view dump];
     Log(@"View dump: %@", dump);
     CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
-                              $dict({@"key", @"\"four\""}, {@"seq", @2}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @6}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
@@ -343,13 +343,13 @@ TestCase(CBL_View_Query) {
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
 
-    // Specific keys:
+    // Specific keys: (note that rows should be in same order as input keys, not sorted)
     options = kDefaultCBLQueryOptions;
     NSArray* keys = @[@"two", @"four"];
     options.keys = keys;
     rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
-    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
-                          $dict({@"id",  @"22222"}, {@"key", @"two"}));
+    expectedRows = $array($dict({@"id",  @"22222"}, {@"key", @"two"}),
+                          $dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
 
     CAssert([db close]);
@@ -388,6 +388,8 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
+
+    CAssert([db close]);
 }
 
 TestCase (CBL_View_NumericKeys) {
@@ -940,14 +942,13 @@ TestCase(CBL_View_FullTextQuery) {
 TestCase(CBLView) {
     RequireTestCase(CBL_View_Query);
     RequireTestCase(CBL_View_QueryStartKeyDocID);
-    RequireTestCase(CBL_View_MapConflicts);
     RequireTestCase(CBL_View_ConflictWinner);
     RequireTestCase(CBL_View_ConflictLoser);
     RequireTestCase(CBL_View_LinkedDocs);
     RequireTestCase(CBL_View_Collation);
     RequireTestCase(CBL_View_CollationRaw);
-    RequireTestCase(CBL_View_GeoQuery);
-    RequireTestCase(CBL_View_FullTextQuery);
+//TEMP    RequireTestCase(CBL_View_GeoQuery);
+//TEMP    RequireTestCase(CBL_View_FullTextQuery);
 }
 
 
