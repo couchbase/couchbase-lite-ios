@@ -18,90 +18,130 @@
 #import "CBL_Body.h"
 #import "CBLInternal.h"
 
-#import "FMDatabase.h"
+#import <CBForest/CBForest.h>
+
+
+// Close the local docs db after its inactive this many seconds
+#define kCloseDelay 15.0
 
 
 @implementation CBLDatabase (LocalDocs)
 
 
+- (CBForestDB*) localDocs {
+    if (!_localDocs) {
+        NSString* path = [_dir stringByAppendingPathComponent: @"local.forest"];
+        _localDocs = [[CBForestDB alloc] initWithFile: path options: kCBForestDBCreate
+                                                error: NULL];
+        LogTo(CBLDatabase, @"%@: Opened _local docs db", self);
+    }
+    [self closeLocalDocsSoon];
+    return _localDocs;
+}
+
+- (void) closeLocalDocs {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeLocalDocs)
+                                               object: nil];
+    if (_localDocs) {
+        [_localDocs close];
+        _localDocs = nil;
+        LogTo(CBLDatabase, @"%@: Closed _local docs db", self);
+    }
+}
+
+- (void) closeLocalDocsSoon {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeLocalDocs)
+                                               object: nil];
+    [self performSelector: @selector(closeLocalDocs) withObject: nil afterDelay: kCloseDelay];
+}
+
+
+static NSString* getDocRevID(CBForestDocument* doc) {
+    NSData* meta = doc.metadata;
+    if (!meta)
+        return nil;
+    return [[NSString alloc] initWithData: meta encoding: NSUTF8StringEncoding];
+}
+
+
+static NSDictionary* getDocProperties(CBForestDocument* doc) {
+    NSData* bodyData = [doc readBody: NULL];
+    if (!bodyData)
+        return nil;
+    return [CBLJSON JSONObjectWithData: bodyData options: 0 error: NULL];
+}
+
+
 - (CBL_Revision*) getLocalDocumentWithID: (NSString*)docID 
                               revisionID: (NSString*)revID
 {
-    CBL_MutableRevision* result = nil;
-    CBL_FMResultSet *r = [_fmdb executeQuery: @"SELECT revid, json FROM localdocs WHERE docid=?",docID];
-    if ([r next]) {
-        NSString* gotRevID = [r stringForColumnIndex: 0];
-        if (revID && !$equal(revID, gotRevID))
-            return nil;
-        NSData* json = [r dataNoCopyForColumnIndex: 1];
-        NSMutableDictionary* properties;
-        if (json.length==0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
-            properties = $mdict();      // workaround for issue #44
-        else {
-            properties = [CBLJSON JSONObjectWithData: json
-                                            options:CBLJSONReadingMutableContainers
-                                              error: NULL];
-            if (!properties)
-                return nil;
-        }
-        properties[@"_id"] = docID;
-        properties[@"_rev"] = gotRevID;
-        result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO];
-        result.properties = properties;
-    }
-    [r close];
+    CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: NULL];
+    NSString* gotRevID = getDocRevID(doc);
+    if (revID && !$equal(revID, gotRevID))
+        return nil;
+    NSMutableDictionary* properties = [getDocProperties(doc) mutableCopy];
+    if (!properties)
+        return nil;
+    properties[@"_id"] = docID;
+    properties[@"_rev"] = gotRevID;
+    CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: gotRevID
+                                                                     deleted: NO];
+    result.properties = properties;
     return result;
 }
 
 
 - (CBL_Revision*) putLocalRevision: (CBL_Revision*)revision
-                  prevRevisionID: (NSString*)prevRevID
-                          status: (CBLStatus*)outStatus
+                    prevRevisionID: (NSString*)prevRevID
+                            status: (CBLStatus*)outStatus
 {
     NSString* docID = revision.docID;
     if (![docID hasPrefix: @"_local/"]) {
         *outStatus = kCBLStatusBadID;
         return nil;
     }
-    if (!revision.deleted) {
+    if (revision.deleted) {
+        // DELETE:
+        *outStatus = [self deleteLocalDocumentWithID: docID revisionID: prevRevID];
+        return *outStatus < 300 ? revision : nil;
+    } else {
         // PUT:
-        NSData* json = [self encodeDocumentJSON: revision];
-        NSString* newRevID;
+        NSError* error;
+        CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
+        if (!doc && error && error.code != kCBForestErrorNotFound) {
+            *outStatus = kCBLStatusDBError;
+            return nil;
+        }
+
+        unsigned generation = 0;
         if (prevRevID) {
-            unsigned generation = [CBL_Revision generationFromRevID: prevRevID];
+            if (!$equal(prevRevID, getDocRevID(doc))) {
+                *outStatus = kCBLStatusConflict;
+                return nil;
+            }
+            generation = [CBL_Revision generationFromRevID: prevRevID];
             if (generation == 0) {
                 *outStatus = kCBLStatusBadID;
                 return nil;
             }
-            newRevID = $sprintf(@"%d-local", ++generation);
-            if (![_fmdb executeUpdate: @"UPDATE localdocs SET revid=?, json=? "
-                                        "WHERE docid=? AND revid=?", 
-                                       newRevID, json, docID, prevRevID]) {
-                *outStatus = self.lastDbError;
-                return nil;
-            }
         } else {
-            newRevID = @"1-local";
-            // The docid column is unique so the insert will be a no-op if there is already
-            // a doc with this ID.
-            if (![_fmdb executeUpdate: @"INSERT OR IGNORE INTO localdocs (docid, revid, json) "
-                                        "VALUES (?, ?, ?)",
-                                   docID, newRevID, json]) {
-                *outStatus = self.lastDbError;
+            if (doc) {
+                *outStatus = kCBLStatusConflict;
                 return nil;
             }
+            doc = [self.localDocs makeDocumentWithID: docID];
         }
-        if (_fmdb.changes == 0) {
-            *outStatus = kCBLStatusConflict;
+        NSString* newRevID = $sprintf(@"%d-local", ++generation);
+
+        if (![doc writeBody: [self encodeDocumentJSON: revision]
+                   metadata: [newRevID dataUsingEncoding: NSUTF8StringEncoding]
+                      error: &error]) {
+            *outStatus = kCBLStatusDBError;
             return nil;
         }
+        [_localDocs commit: NULL];
         *outStatus = kCBLStatusCreated;
         return [revision mutableCopyWithDocID: docID revID: newRevID];
-        
-    } else {
-        // DELETE:
-        *outStatus = [self deleteLocalDocumentWithID: docID revisionID: prevRevID];
-        return *outStatus < 300 ? revision : nil;
     }
 }
 
@@ -113,10 +153,20 @@
         // Didn't specify a revision to delete: kCBLStatusNotFound or a kCBLStatusConflict, depending
         return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
     }
-    if (![_fmdb executeUpdate: @"DELETE FROM localdocs WHERE docid=? AND revid=?", docID, revID])
-        return self.lastDbError;
-    if (_fmdb.changes == 0)
-        return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
+
+    NSError* error;
+    CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
+    if (!doc) {
+        if (!error || error.code == kCBForestErrorNotFound)
+            return kCBLStatusNotFound;
+        else
+            return kCBLStatusDBError;
+    }
+    if (!$equal(getDocRevID(doc), revID))
+        return kCBLStatusConflict;
+    if (![self.localDocs deleteDocument: doc error: &error])
+        return kCBLStatusDBError;
+    [_localDocs commit: NULL];
     return kCBLStatusOK;
 }
 

@@ -23,4 +23,6 @@
 - (CBLStatus) deleteLocalDocumentWithID: (NSString*)docID
                             revisionID: (NSString*)revID;
 
+- (void) closeLocalDocs;
+
 @end

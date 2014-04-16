@@ -15,6 +15,7 @@
 
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+LocalDocs.h"
 #import "CBLInternal.h"
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
@@ -448,6 +449,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     [_forest commit: NULL];
     [_forest close];
+
+    [self closeLocalDocs];
 
     if (_fmdb && ![_fmdb close])
         return NO;

@@ -64,6 +64,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     NSString* _name;
     CBLManager* _manager;
     CBForestDB* _forest;
+    CBForestDB* _localDocs;
     CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
