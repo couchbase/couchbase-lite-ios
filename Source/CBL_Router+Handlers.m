@@ -334,8 +334,10 @@
 
 
 - (CBLStatus) do_POST_compact: (CBLDatabase*)db {
-    CBLStatus status = [db compact];
-    return status<300 ? kCBLStatusAccepted : status;   // CouchDB returns 202 'cause it's async
+    if ([db compact: NULL])
+        return kCBLStatusAccepted;   // CouchDB returns 202 'cause it's async
+    else
+        return kCBLStatusDBError;
 }
 
 - (CBLStatus) do_POST_ensure_full_commit: (CBLDatabase*)db {

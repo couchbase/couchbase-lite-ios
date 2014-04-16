@@ -85,4 +85,10 @@ typedef enum {
                          ofDocID: (NSString*)docID
                            revID: (NSString*)oldRevID
                           status: (CBLStatus*)outStatus;
+
+#if DEBUG
+// Grotesque hack, for some attachment unit-tests only!
+- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence;
+#endif
+
 @end

@@ -69,6 +69,8 @@ typedef enum {
 
 + (NSString*) fileNameToViewName: (NSString*)fileName;
 
+@property (readonly) NSString* mapVersion;
+
 @end
 
 

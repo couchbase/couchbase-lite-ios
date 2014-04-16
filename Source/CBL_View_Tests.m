@@ -189,6 +189,42 @@ TestCase(CBL_View_Index) {
 }
 
 
+TestCase(CBL_View_ChangeMapFn) {
+    RequireTestCase(CBL_View_Index);
+    CBLDatabase *db = createDB();
+    putDoc(db, $dict({@"key", @"one"}));
+    putDoc(db, $dict({@"key", @"two"}));
+    putDoc(db, $dict({@"key", @"three"}));
+    putDoc(db, $dict({@"_id", @"_design/foo"}));
+    putDoc(db, $dict({@"clef", @"quatre"}));
+
+    CBLView* view = createView(db);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", @1}),
+                              $dict({@"key", @"\"three\""}, {@"seq", @3}),
+                              $dict({@"key", @"\"two\""}, {@"seq", @2}) ));
+
+    // Change the map function/version:
+    [view setMapBlock: MAPBLOCK({
+        if (doc[@"key"])
+            emit([doc[@"key"] substringFromIndex: 2], nil);
+    }) reduceBlock: NULL version: @"2"];
+
+    CAssert(view.stale);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"e\""}, {@"seq", @1}),
+                              $dict({@"key", @"\"o\""}, {@"seq", @2}),
+                              $dict({@"key", @"\"ree\""}, {@"seq", @3}) ));
+    CAssert([db close]);
+}
+
+
 TestCase(CBL_View_ConflictWinner) {
     // If a view is re-indexed, and a document in the view has gone into conflict,
     // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
@@ -941,6 +977,7 @@ TestCase(CBL_View_FullTextQuery) {
 
 TestCase(CBLView) {
     RequireTestCase(CBL_View_Query);
+    RequireTestCase(CBL_View_ChangeMapFn);
     RequireTestCase(CBL_View_QueryStartKeyDocID);
     RequireTestCase(CBL_View_ConflictWinner);
     RequireTestCase(CBL_View_ConflictLoser);

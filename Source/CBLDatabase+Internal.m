@@ -887,32 +887,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-// FORESTDB: Delete this
-- (SInt64) getDocNumericID: (NSString*)docID {
-    NSNumber* cached = [_docIDs objectForKey: docID];
-    if (cached) {
-        return cached.longLongValue;
-    } else {
-        SInt64 result = [_fmdb longLongForQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
-        if (result <= 0)
-            return result;
-        [_docIDs setObject: @(result) forKey: docID];
-        return result;
-    }
-}
-
-
-// FORESTDB: Delete this
-- (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
-                                revision: (NSString*)revID
-                             onlyCurrent: (BOOL)onlyCurrent
-{
-    NSString* sql = $sprintf(@"SELECT sequence FROM revs WHERE doc_id=? AND revid=? %@ LIMIT 1",
-                             (onlyCurrent ? @"AND current=1" : @""));
-    return [_fmdb longLongForQuery: sql, @(docNumericID), revID];
-}
-
-
 - (NSString*) _indexedTextWithID: (UInt64)fullTextID {
     if (fullTextID == 0)
         return nil;
@@ -1069,34 +1043,6 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
         }
     }
     return makeRevisionHistoryDict(history);
-}
-
-
-// FORESTDB: DELETE
-/** Returns the rev ID of the 'winning' revision of this document, and whether it's deleted. */
-- (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
-                               isDeleted: (BOOL*)outIsDeleted
-                              isConflict: (BOOL*)outIsConflict // optional
-{
-    Assert(docNumericID > 0);
-    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs"
-                                           " WHERE doc_id=? and current=1"
-                                           " ORDER BY deleted asc, revid desc LIMIT 2",
-                                          @(docNumericID)];
-    NSString* revID = nil;
-    if ([r next]) {
-        revID = [r stringForColumnIndex: 0];
-        *outIsDeleted = [r boolForColumnIndex: 1];
-        // The document is in conflict if there are two+ result rows that are not deletions.
-        if (outIsConflict)
-            *outIsConflict = !*outIsDeleted && [r next] && ![r boolForColumnIndex: 1];
-    } else {
-        *outIsDeleted = NO;
-        if (outIsConflict)
-            *outIsConflict = NO;
-    }
-    [r close];
-    return revID;
 }
 
 

@@ -709,4 +709,15 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
+#if DEBUG
+// Grotesque hack, for some attachment unit-tests only!
+- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence {
+    if (![_fmdb executeUpdate: @"UPDATE revs SET no_attachments=? WHERE sequence=?",
+          @(noAttachments), @(sequence)])
+        return self.lastDbError;
+    return kCBLStatusOK;
+}
+#endif
+
+
 @end

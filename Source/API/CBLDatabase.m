@@ -222,15 +222,10 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) compact: (NSError**)outError {
-    // FORESTDB:
     if (![_forest compact: outError])
         return NO;
 
-    NSUInteger pruned;
-    CBLStatus status = [self pruneRevsToMaxDepth: 0 numberPruned: &pruned];
-    if (status == kCBLStatusOK)
-        status = [self compact];
-    
+    CBLStatus status = [self garbageCollectAttachments];
     if (CBLStatusIsError(status)) {
         if (outError)
             *outError = CBLStatusToNSError(status, nil);

@@ -166,19 +166,12 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus;
 
-- (SInt64) getDocNumericID: (NSString*)docID;
-- (SequenceNumber) getSequenceOfDocument: (SInt64)docNumericID
-                                revision: (NSString*)revID
-                             onlyCurrent: (BOOL)onlyCurrent;
 - (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
                                               docID: (NSString*)docID
                                               revID: (NSString*)revID
                                             deleted: (BOOL)deleted
                                            sequence: (SequenceNumber)sequence
                                             options: (CBLContentOptions)options;
-- (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
-                               isDeleted: (BOOL*)outIsDeleted
-                              isConflict: (BOOL*)outIsConflict;
 
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
 

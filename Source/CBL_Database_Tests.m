@@ -447,7 +447,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertEqual(changes.allRevisions, (@[rev, conflict, other]));
 
     // Verify that compaction leaves the document history:
-    [db compact];
+    Assert([db compact: NULL]);
     verifyHistory(db, conflict, conflictHistory, 0);
 
     // Delete the current winning rev, leaving the other one:
@@ -696,7 +696,7 @@ TestCase(CBL_Database_Attachments) {
                                              [CBL_BlobStore keyDataForBlob: attach2], nil];
     CAssertEqual([NSSet setWithArray: attachments.allKeys], expected);
     
-    CAssertEq([db compact], kCBLStatusOK);  // This clears the body of the first revision
+    CAssert([db compact: NULL]);  // This clears the body of the first revision
     CAssertEq(attachments.count, 1u);
     CAssertEqual(attachments.allKeys, @[[CBL_BlobStore keyDataForBlob: attach2]]);
     CAssert([db close]);

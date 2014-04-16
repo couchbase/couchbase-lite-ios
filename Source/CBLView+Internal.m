@@ -95,6 +95,7 @@
         return kCBLStatusNotFound;
 
     _index.sourceDatabase = db.forestDB;
+    _index.mapVersion = self.mapVersion;
     _index.map = ^(CBForestDocument* baseDoc, CBForestIndexEmitBlock emit) {
         CBForestVersions* doc = (CBForestVersions*)baseDoc;
         NSString *docID=doc.docID, *revID=doc.revID;

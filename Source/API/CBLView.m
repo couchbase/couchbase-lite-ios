@@ -22,9 +22,6 @@
 #import "CBLMisc.h"
 
 #import <CBForest/CBForest.h>
-#import "FMDatabase.h"
-#import "FMDatabaseAdditions.h"
-#import "FMResultSet.h"
 
 
 static inline NSString* viewNameToFileName(NSString* viewName) {
@@ -84,6 +81,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 - (SequenceNumber) lastSequenceIndexed {
+    _index.mapVersion = self.mapVersion; // Because change of mapVersion resets lastSequenceIndexed
     return _index.lastSequenceIndexed;
 }
 
@@ -91,6 +89,11 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (CBLMapBlock) mapBlock {
     CBLDatabase* db = _weakDB;
     return [db.shared valueForType: @"map" name: _name inDatabaseNamed: db.name];
+}
+
+- (NSString*) mapVersion {
+    CBLDatabase* db = _weakDB;
+    return [db.shared valueForType: @"mapVersion" name: _name inDatabaseNamed: db.name];
 }
 
 - (CBLReduceBlock) reduceBlock {
@@ -106,29 +109,17 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     Assert(mapBlock);
     Assert(version);
 
+    BOOL changed = ![version isEqualToString: self.mapVersion];
+
     CBLDatabase* db = _weakDB;
     CBL_Shared* shared = db.shared;
     [shared setValue: [mapBlock copy]
              forType: @"map" name: _name inDatabaseNamed: db.name];
+    [shared setValue: version
+             forType: @"mapVersion" name: _name inDatabaseNamed: db.name];
     [shared setValue: [reduceBlock copy]
              forType: @"reduce" name: _name inDatabaseNamed: db.name];
-
-    if (![db open: nil])
-        return NO;
-
-    // Update the version column in the db. This is a little weird looking because we want to
-    // avoid modifying the db if the version didn't change, and because the row might not exist yet.
-    CBL_FMDatabase* fmdb = db.fmdb;
-    if (![fmdb executeUpdate: @"INSERT OR IGNORE INTO views (name, version) VALUES (?, ?)", 
-                              _name, version])
-        return NO;
-    if (fmdb.changes)
-        return YES;     // created new view
-    if (![fmdb executeUpdate: @"UPDATE views SET version=?, lastSequence=0 "
-                               "WHERE name=? AND version!=?", 
-                              version, _name, version])
-        return NO;
-    return (fmdb.changes > 0);
+    return changed;
 }
 
 
@@ -143,27 +134,15 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 - (void) deleteIndex {
-    if (!_index)
-        return;
-    NSString* path = _index.filename;
-    [_index close];
-    _index = nil;
     NSError* error;
-    if( ![[NSFileManager defaultManager] removeItemAtPath: path error: &error])
-        Warn(@"Error removing index of %@: %@", self, error);
-    _index = [[CBForestMapReduceIndex alloc] initWithFile: path
-                                                  options: kCBForestDBCreate
-                                                    error: NULL];
-    if (!_index)
-        Warn(@"Error re-opening index of %@: %@", self, error);
+    if (_index && ![_index erase: &error])
+        Warn(@"Error deleting index of %@: %@", self, error);
 }
 
 
 - (void) deleteView {
-    NSString* path = _index.filename;
-    [_index close];
+    [_index delete: NULL];
     _index = nil;
-    [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     [_weakDB forgetViewNamed: _name];
 }
 

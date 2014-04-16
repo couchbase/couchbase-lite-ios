@@ -134,18 +134,6 @@
 }
 
 
-/** Adds a new document ID to the 'docs' table. */
-- (SInt64) insertDocumentID: (NSString*)docID {
-    Assert([CBLDatabase isValidDocumentID: docID]);  // this should be caught before I get here
-    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
-        return -1;
-    SInt64 row = _fmdb.lastInsertRowId;
-    Assert(![_docIDs objectForKey: docID]);
-    [_docIDs setObject: @(row) forKey: docID];
-    return row;
-}
-
-
 /** Extracts the history of revision IDs (in reverse chronological order) from the _revisions key */
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties {
     NSDictionary* revisions = $castIf(NSDictionary,
@@ -198,41 +186,6 @@
     // result in equal revision IDs.
     NSData* json = [CBLCanonicalJSON canonicalData: properties];
     return json;
-}
-
-
-- (CBL_Revision*) winnerWithDocID: (SInt64)docNumericID
-                      oldWinner: (NSString*)oldWinningRevID
-                     oldDeleted: (BOOL)oldWinnerWasDeletion
-                         newRev: (CBL_Revision*)newRev
-{
-    if (!oldWinningRevID)
-        return newRev;
-    NSString* newRevID = newRev.revID;
-    if (!newRev.deleted) {
-        if (oldWinnerWasDeletion || CBLCompareRevIDs(newRevID, oldWinningRevID) > 0)
-            return newRev;   // this is now the winning live revision
-    } else if (oldWinnerWasDeletion) {
-        if (CBLCompareRevIDs(newRevID, oldWinningRevID) > 0)
-            return newRev;  // doc still deleted, but this beats previous deletion rev
-    } else {
-        // Doc was alive. How does this deletion affect the winning rev ID?
-        BOOL deleted;
-        NSString* winningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                        isDeleted: &deleted
-                                                       isConflict: NULL];
-        if (!$equal(winningRevID, oldWinningRevID)) {
-            if ($equal(winningRevID, newRev.revID))
-                return newRev;
-            else {
-                CBL_Revision* winningRev = [[CBL_Revision alloc] initWithDocID: newRev.docID
-                                                                      revID: winningRevID
-                                                                    deleted: NO];
-                return winningRev;
-            }
-        }
-    }
-    return nil; // no change
 }
 
 
@@ -443,46 +396,7 @@
 }
 
 
-#if DEBUG
-// Grotesque hack, for some attachment unit-tests only!
-- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence {
-    if (![_fmdb executeUpdate: @"UPDATE revs SET no_attachments=? WHERE sequence=?",
-                               @(noAttachments), @(sequence)])
-        return self.lastDbError;
-    return kCBLStatusOK;
-}
-#endif
-
-
 #pragma mark - PURGING / COMPACTING:
-
-
-- (CBLStatus) compact {
-    // Can't delete any rows because that would lose revision tree history.
-    // But we can remove the JSON of non-current revisions, which is most of the space.
-    Log(@"CBLDatabase: Deleting JSON of old revisions...");
-    if (![_fmdb executeUpdate: @"UPDATE revs SET json=null WHERE current=0"])
-        return self.lastDbError;
-
-    Log(@"Deleting old attachments...");
-    CBLStatus status = [self garbageCollectAttachments];
-
-    Log(@"Flushing SQLite WAL...");
-    if (![_fmdb executeUpdate: @"PRAGMA wal_checkpoint(RESTART)"])
-        return self.lastDbError;
-
-    Log(@"Vacuuming SQLite database...");
-    if (![_fmdb executeUpdate: @"VACUUM"])
-        return self.lastDbError;
-
-    Log(@"Closing and re-opening database...");
-    [_fmdb close];
-    if (![self openFMDB: nil])
-        return self.lastDbError;
-
-    Log(@"...Finished database compaction.");
-    return status;
-}
 
 
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
@@ -517,45 +431,6 @@
                     revsPurged = @[];
             }
             result[docID] = revsPurged;
-        }
-        return kCBLStatusOK;
-    }];
-}
-
-
-- (CBLStatus) pruneRevsToMaxDepth: (NSUInteger)maxDepth numberPruned: (NSUInteger*)outPruned {
-    // TODO: This implementation is a bit simplistic. It won't do quite the right thing in
-    // histories with branches, if one branch stops much earlier than another. The shorter branch
-    // will be deleted entirely except for its leaf revision. A more accurate pruning
-    // would require an expensive full tree traversal. Hopefully this way is good enough.
-    if (maxDepth == 0)
-        maxDepth = self.maxRevTreeDepth;
-
-    *outPruned = 0;
-    // First find which docs need pruning, and by how much:
-    NSMutableDictionary* toPrune = $mdict();
-    NSString* sql = @"SELECT doc_id, MIN(revid), MAX(revid) FROM revs GROUP BY doc_id";
-    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
-    while ([r next]) {
-        UInt64 docNumericID = [r longLongIntForColumnIndex: 0];
-        unsigned minGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 1]];
-        unsigned maxGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 2]];
-        if ((maxGen - minGen + 1) > maxDepth)
-            toPrune[@(docNumericID)] = @(maxGen - maxDepth);
-    }
-    [r close];
-
-    if (toPrune.count == 0)
-        return kCBLStatusOK;
-
-    // Now prune:
-    return [self _inTransaction:^CBLStatus{
-        for (id docNumericID in toPrune) {
-            NSString* minIDToKeep = $sprintf(@"%d-", [toPrune[docNumericID] intValue] + 1);
-            if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
-                                       docNumericID, minIDToKeep])
-                return self.lastDbError;
-            *outPruned += _fmdb.changes;
         }
         return kCBLStatusOK;
     }];
