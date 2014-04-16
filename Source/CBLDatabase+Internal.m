@@ -694,14 +694,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (rev.deleted)
         dst[@"_deleted"] = $true;
 
-    // Get attachment metadata, and optionally the contents:
-    if (!(options & kCBLNoAttachments)) {
-        NSDictionary* attachments = [self getAttachmentDictForSequence: rev.sequence
-                                                               options: options];
-        if (attachments)
-            dst[@"_attachments"] = attachments;
-    }
-    
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
     if (options & kCBLIncludeLocalSeq)
@@ -733,7 +725,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
- Rev must already have its revID and sequence properties set. */
+    Rev must already have its revID and sequence properties set. */
 - (void) expandStoredJSON: (NSData*)json
              intoRevision: (CBL_MutableRevision*)rev
                   options: (CBLContentOptions)options
@@ -787,10 +779,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (outStatus != NULL) {
         if (doc)
             *outStatus = kCBLStatusOK;
-        else if (error)
-            *outStatus = kCBLStatusDBError;
-        else
+        else if (!error || error.code == kCBForestErrorNotFound)
             *outStatus = kCBLStatusNotFound;
+        else
+            *outStatus = kCBLStatusDBError;
     }
     return doc;
 }

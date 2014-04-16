@@ -984,8 +984,8 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_LinkedDocs);
     RequireTestCase(CBL_View_Collation);
     RequireTestCase(CBL_View_CollationRaw);
-//TEMP    RequireTestCase(CBL_View_GeoQuery);
-//TEMP    RequireTestCase(CBL_View_FullTextQuery);
+//  RequireTestCase(CBL_View_GeoQuery);
+//  RequireTestCase(CBL_View_FullTextQuery);
 }
 
 

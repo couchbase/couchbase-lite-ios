@@ -90,13 +90,17 @@ TestCase(CBL_Database_CRUD) {
                            CAssertEqual(rev[@"_rev"], rev.revID);
                        }
                    }];
+
+    // Get a nonexistent document:
+    CBLStatus status;
+    AssertNil([db getDocumentWithID: @"nonexistent" revisionID: nil options: 0 status: &status]);
+    AssertEq(status, kCBLStatusNotFound);
     
     // Create a document:
     NSMutableDictionary* props = $mdict({@"foo", @1}, {@"bar", $false});
     CBL_Body* doc = [[CBL_Body alloc] initWithProperties: props];
     CBL_Revision* rev1 = [[CBL_Revision alloc] initWithBody: doc];
     CAssert(rev1);
-    CBLStatus status;
     rev1 = [db putRevision: rev1 prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
     Log(@"Created: %@", rev1);
@@ -474,13 +478,7 @@ TestCase(CBL_Database_RevTree) {
     CBL_Revision* maxDel = CBLCompareRevIDs(del1.revID, del2.revID) > 0 ? del1 : nil;
     CAssertEqual(change, announcement(del2, maxDel));
     CAssert(!change.inConflict);
-/* TEMP
-    NSUInteger nPruned;
-    CAssertEq([db pruneRevsToMaxDepth: 2 numberPruned: &nPruned], 200);
-    CAssertEq(nPruned, 6u);
-    CAssertEq([db pruneRevsToMaxDepth: 2 numberPruned: &nPruned], 200);
-    CAssertEq(nPruned, 0u);
-*/
+
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
     CAssert([db close]);
 }
@@ -568,12 +566,13 @@ TestCase(CBL_Database_DuplicateRev) {
 #pragma mark - ATTACHMENTS:
 
 
+#if 0
 static void insertAttachment(CBLDatabase* db, NSData* blob,
-                                 SequenceNumber sequence,
-                                 NSString* name, NSString* type,
-                                 CBLAttachmentEncoding encoding,
-                                 UInt64 length, UInt64 encodedLength,
-                                 unsigned revpos)
+                             SequenceNumber sequence,
+                             NSString* name, NSString* type,
+                             CBLAttachmentEncoding encoding,
+                             UInt64 length, UInt64 encodedLength,
+                             unsigned revpos)
 {
     CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name contentType: type];
     CAssert([db storeBlob: blob creatingKey: &attachment->blobKey], @"Failed to store blob");
@@ -701,6 +700,7 @@ TestCase(CBL_Database_Attachments) {
     CAssertEqual(attachments.allKeys, @[[CBL_BlobStore keyDataForBlob: attach2]]);
     CAssert([db close]);
 }
+#endif
 
 
 static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
@@ -712,7 +712,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 
 
 TestCase(CBL_Database_PutAttachment) {
-    RequireTestCase(CBL_Database_Attachments);
+    RequireTestCase(CBL_Database_CRUD);
     // Start with a fresh database in /tmp:
     CBLDatabase* db = createDB();
     
@@ -780,9 +780,8 @@ TestCase(CBL_Database_PutAttachment) {
                                                          {@"stub", $true},
                                                          {@"revpos", @2})}));
 
-    NSData* gotAttach = [db getAttachmentForSequence: gotRev2.sequence named: @"attach"
-                                                type: NULL encoding: NULL status: &status];
-    CAssertEqual(gotAttach, attachv2);
+    CBL_Attachment* gotAttach = [db attachmentForRevision: gotRev2 named: @"attach" status: &status];
+    CAssertEqual(gotAttach.data, attachv2);
     
     // Delete the attachment:
     [db updateAttachment: @"nosuchattach" body: nil type: nil
@@ -796,9 +795,9 @@ TestCase(CBL_Database_PutAttachment) {
                   status: &status];
     CAssertEq(status, kCBLStatusNotFound);
     CBL_Revision* rev3 = [db updateAttachment: @"attach" body: nil type: nil
-                                   encoding: kCBLAttachmentEncodingNone
-                                    ofDocID: rev2.docID revID: rev2.revID
-                                     status: &status];
+                                     encoding: kCBLAttachmentEncodingNone
+                                      ofDocID: rev2.docID revID: rev2.revID
+                                       status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssertEqual(rev3.docID, rev2.docID);
     CAssertEq(rev3.generation, 3u);
@@ -850,8 +849,9 @@ TestCase(CBL_Database_AttachmentRevPos) {
 }
 
 
+#if 0
 TestCase(CBL_Database_EncodedAttachment) {
-    RequireTestCase(CBL_Database_Attachments);
+    RequireTestCase(CBL_Database_CRUD);
     // Start with a fresh database in /tmp:
     CBLDatabase* db = createDB();
 
@@ -924,6 +924,7 @@ TestCase(CBL_Database_EncodedAttachment) {
     CAssertEqual(gotRev1[@"_attachments"], attachmentDict);
     CAssert([db close]);
 }
+#endif
 
 
 TestCase(CBL_Database_StubOutAttachmentsBeforeRevPos) {
@@ -1118,10 +1119,9 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_Purge);
     RequireTestCase(CBL_Database_ReplicatorSequences);
     RequireTestCase(CBL_Database_EmptyDoc);
-//TEMP    RequireTestCase(CBL_Database_Attachments);
-//TEMP    RequireTestCase(CBL_Database_PutAttachment);
-//TEMP    RequireTestCase(CBL_Database_EncodedAttachment);
-//TEMP    RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
+    RequireTestCase(CBL_Database_PutAttachment);
+//    RequireTestCase(CBL_Database_EncodedAttachment);
+    RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
 }
 
 

@@ -119,9 +119,10 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 #endif
 
 
-- (CBLStatus) installAttachment: (CBL_Attachment*)attachment
-                       forInfo: (NSDictionary*)attachInfo {
-    NSString* digest = $castIf(NSString, attachInfo[@"digest"]);
+// Given a decoded attachment with a "follows" property, find the associated CBL_BlobStoreWriter
+// and install it into the blob-store.
+- (CBLStatus) installAttachment: (CBL_Attachment*)attachment {
+    NSString* digest = attachment.digest;
     if (!digest)
         return kCBLStatusBadAttachment;
     id writer = _pendingAttachmentsByDigest[digest];
@@ -131,7 +132,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         if (![writer install])
             return kCBLStatusAttachmentError;
         attachment->blobKey = [writer blobKey];
-        attachment->length = [writer length];
+        attachment.possiblyEncodedLength = [writer length];
         // Remove the writer but leave the blob-key behind for future use:
         [self rememberPendingKey: attachment->blobKey forDigest: digest];
         return kCBLStatusOK;
@@ -139,10 +140,6 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     } else if ([writer isKindOfClass: [NSData class]]) {
         // This attachment was already added, but the key was left behind in the dictionary:
         attachment->blobKey = *(CBLBlobKey*)[writer bytes];
-        NSNumber* lengthObj = $castIf(NSNumber, attachInfo[@"length"]);
-        if (!lengthObj)
-            return kCBLStatusBadAttachment;
-        attachment->length = lengthObj.unsignedLongLongValue;
         return kCBLStatusOK;
         
     } else {
@@ -152,212 +149,42 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
-- (BOOL) storeBlob: (NSData*)blob creatingKey: (CBLBlobKey*)outKey {
-    return [_attachments storeBlob: blob creatingKey: outKey];
-}
-
-
-- (CBLStatus) insertAttachment: (CBL_Attachment*)attachment
-                  forSequence: (SequenceNumber)sequence
+/** Returns a CBL_Attachment for an attachment in a stored revision. */
+- (CBL_Attachment*) attachmentForRevision: (CBL_Revision*)rev
+                                    named: (NSString*)filename
+                                   status: (CBLStatus*)outStatus
 {
-    Assert(sequence > 0);
-    Assert(attachment.isValid);
-    NSData* keyData = [NSData dataWithBytes: &attachment->blobKey length: sizeof(CBLBlobKey)];
-    id encodedLengthObj = attachment->encoding ? @(attachment->encodedLength) : nil;
-    if (![_fmdb executeUpdate: @"INSERT INTO attachments "
-                                  "(sequence, filename, key, type, encoding, length, encoded_length, revpos) "
-                                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                                 @(sequence), attachment.name, keyData,
-                                 attachment.contentType, @(attachment->encoding),
-                                 @(attachment->length), encodedLengthObj,
-                                 @(attachment->revpos)]) {
-        return self.lastDbError;
+    Assert(rev);
+    Assert(filename);
+    NSDictionary* properties = rev.properties;
+    if (!properties) {
+        CBL_MutableRevision* mrev = [rev mutableCopy];
+        *outStatus = [self loadRevisionBody: mrev options: 0];
+        if (CBLStatusIsError(*outStatus))
+            return nil;
+        rev = mrev;
+        properties = mrev.properties;
     }
-    return kCBLStatusCreated;
-}
 
-
-- (CBLStatus) copyAttachmentNamed: (NSString*)name
-                    fromSequence: (SequenceNumber)fromSequence
-                      toSequence: (SequenceNumber)toSequence
-{
-    Assert(name);
-    Assert(toSequence > 0);
-    Assert(toSequence > fromSequence);
-    if (fromSequence <= 0)
-        return kCBLStatusNotFound;
-    if (![_fmdb executeUpdate: @"INSERT INTO attachments "
-                    "(sequence, filename, key, type, encoding, encoded_Length, length, revpos) "
-                    "SELECT ?, ?, key, type, encoding, encoded_Length, length, revpos "
-                        "FROM attachments WHERE sequence=? AND filename=?",
-                    @(toSequence), name,
-                    @(fromSequence), name]) {
-        return self.lastDbError;
+    NSDictionary* info = rev.attachments[filename];
+    if (!info) {
+        *outStatus = kCBLStatusNotFound;
+        return nil;
     }
-    if (_fmdb.changes == 0) {
-        // Oops. This means a glitch in our attachment-management or pull code,
-        // or else a bug in the upstream server.
-        Warn(@"Can't find inherited attachment '%@' from seq#%lld to copy to #%lld",
-             name, fromSequence, toSequence);
-        return kCBLStatusNotFound;         // Fail if there is no such attachment on fromSequence
-    }
-    return kCBLStatusOK;
-}
-
-
-- (NSData*) decodeAttachment: (NSData*)attachment encoding: (CBLAttachmentEncoding)encoding {
-    switch (encoding) {
-        case kCBLAttachmentEncodingNone:
-            break;
-        case kCBLAttachmentEncodingGZIP:
-            attachment = [NSData gtm_dataByInflatingData: attachment];
-    }
-    if (!attachment)
-        Warn(@"Unable to decode attachment!");
+    CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: filename
+                                                                 info: info
+                                                               status: outStatus];
+    attachment.database = self;
     return attachment;
 }
 
 
-/** Returns the location of an attachment's file in the blob store. */
-- (NSString*) getAttachmentPathForSequence: (SequenceNumber)sequence
-                                     named: (NSString*)filename
-                                      type: (NSString**)outType
-                                  encoding: (CBLAttachmentEncoding*)outEncoding
-                                    status: (CBLStatus*)outStatus
+- (NSData*) dataForAttachmentDict: (NSDictionary*)attachmentDict
 {
-    Assert(sequence > 0);
-    Assert(filename);
-    NSString* filePath = nil;
-    CBL_FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT key, type, encoding FROM attachments WHERE sequence=? AND filename=?",
-                      @(sequence), filename];
-    if (!r) {
-        *outStatus = self.lastDbError;
+    NSURL* url = [self fileForAttachmentDict: attachmentDict];
+    if (!url)
         return nil;
-    }
-    @try {
-        if (![r next]) {
-            *outStatus = kCBLStatusNotFound;
-            return nil;
-        }
-        NSData* keyData = [r dataNoCopyForColumnIndex: 0];
-        if (keyData.length != sizeof(CBLBlobKey)) {
-            Warn(@"%@: Attachment %lld.'%@' has bogus key size %u",
-                 self, sequence, filename, (unsigned)keyData.length);
-            *outStatus = kCBLStatusCorruptError;
-            return nil;
-        }
-        filePath = [_attachments pathForKey: *(CBLBlobKey*)keyData.bytes];
-        *outStatus = kCBLStatusOK;
-        if (outType)
-            *outType = [r stringForColumnIndex: 1];
-        if (outEncoding)
-            *outEncoding = [r intForColumnIndex: 2];
-    } @finally {
-        [r close];
-    }
-    return filePath;
-}
-
-
-/** Returns the content and MIME type of an attachment */
-- (NSData*) getAttachmentForSequence: (SequenceNumber)sequence
-                               named: (NSString*)filename
-                                type: (NSString**)outType
-                            encoding: (CBLAttachmentEncoding*)outEncoding
-                              status: (CBLStatus*)outStatus
-{
-    CBLAttachmentEncoding encoding;
-    NSString* filePath = [self getAttachmentPathForSequence: sequence
-                                                      named: filename
-                                                       type: outType
-                                                   encoding: &encoding
-                                                     status: outStatus];
-    if (!filePath)
-        return nil;
-    NSError* error;
-    NSData* contents = [NSData dataWithContentsOfFile: filePath options: NSDataReadingMappedIfSafe
-                                                error: &error];
-    if (!contents) {
-        Warn(@"%@: Failed to load attachment %lld.'%@' -- %@", self, sequence, filename, error);
-        *outStatus = kCBLStatusCorruptError;
-        return nil;
-    }
-    if (outEncoding)
-        *outEncoding = encoding;
-    else
-        contents = [self decodeAttachment: contents encoding: encoding];
-    return contents;
-}
-
-
-- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence {
-    return [_fmdb boolForQuery: @"SELECT 1 FROM attachments WHERE sequence=? LIMIT 1", @(sequence)];
-}
-
-
-/** Constructs an "_attachments" dictionary for a revision, to be inserted in its JSON body. */
-- (NSDictionary*) getAttachmentDictForSequence: (SequenceNumber)sequence
-                                       options: (CBLContentOptions)options
-{
-    Assert(sequence > 0);
-    CBL_FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT filename, key, type, encoding, length, encoded_length, revpos "
-                       "FROM attachments WHERE sequence=?",
-                      @(sequence)];
-    if (!r)
-        return nil;
-    if (![r next]) {
-        [r close];
-        return nil;
-    }
-    BOOL decodeAttachments = !(options & kCBLLeaveAttachmentsEncoded);
-    NSMutableDictionary* attachments = $mdict();
-    do {
-        NSData* keyData = [r dataNoCopyForColumnIndex: 1];
-        NSString* digestStr = blobKeyToDigest(*(CBLBlobKey*)keyData.bytes);
-        CBLAttachmentEncoding encoding = [r intForColumnIndex: 3];
-        UInt64 length = [r longLongIntForColumnIndex: 4];
-        UInt64 encodedLength = [r longLongIntForColumnIndex: 5];
-        
-        // Get the attachment contents if asked to:
-        NSData* data = nil;
-        BOOL dataSuppressed = NO;
-        if (options & kCBLIncludeAttachments) {
-            UInt64 effectiveLength = (encoding && !decodeAttachments) ? encodedLength : length;
-            if ((options & kCBLBigAttachmentsFollow) && effectiveLength >= kBigAttachmentLength) {
-                dataSuppressed = YES;
-            } else {
-                data = [_attachments blobForKey: *(CBLBlobKey*)keyData.bytes];
-                if (!data)
-                    Warn(@"CBLDatabase: Failed to get attachment for key %@", keyData);
-            }
-        }
-        
-        NSString* encodingStr = nil;
-        id encodedLengthObj = nil;
-        if (encoding != kCBLAttachmentEncodingNone) {
-            // Decode the attachment if it's included in the dict:
-            if (data && decodeAttachments) {
-                data = [self decodeAttachment: data encoding: encoding];
-            } else {
-                encodingStr = @"gzip";  // the only encoding I know
-                encodedLengthObj = @(encodedLength);
-            }
-        }
-
-        attachments[[r stringForColumnIndex: 0]] = $dict({@"stub", ((data || dataSuppressed) ? nil : $true)},
-                                      {@"data", (data ? [CBLBase64 encode: data] : nil)},
-                                      {@"follows", (dataSuppressed ? $true : nil)},
-                                      {@"digest", digestStr},
-                                      {@"content_type", [r stringForColumnIndex: 2]},
-                                      {@"encoding", encodingStr},
-                                      {@"length", @(length)},
-                                      {@"encoded_length", encodedLengthObj},
-                                      {@"revpos", @([r intForColumnIndex: 6])});
-    } while ([r next]);
-    [r close];
-    return attachments;
+    return [NSData dataWithContentsOfURL: url options: NSDataReadingMappedIfSafe error: NULL];
 }
 
 
@@ -383,30 +210,6 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     }
 
     return path ? [NSURL fileURLWithPath: path] : nil;
-}
-
-
-+ (void) stubOutAttachments: (NSDictionary*)attachments
-                 inRevision: (CBL_MutableRevision*)rev
-{
-    [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachment) {
-        if (attachment[@"follows"] || attachment[@"data"]) {
-            NSMutableDictionary* editedAttachment = [attachment mutableCopy];
-            [editedAttachment removeObjectForKey: @"follows"];
-            [editedAttachment removeObjectForKey: @"data"];
-            editedAttachment[@"stub"] = $true;
-            if (!editedAttachment[@"revpos"])
-                editedAttachment[@"revpos"] = @(rev.generation);
-
-            CBL_Attachment* attachmentObject = attachments[name];
-            if (attachmentObject) {
-                editedAttachment[@"length"] = @(attachmentObject->length);
-                editedAttachment[@"digest"] = blobKeyToDigest(attachmentObject->blobKey);
-            }
-            attachment = editedAttachment;
-        }
-        return attachment;
-    }];
 }
 
 
@@ -471,133 +274,57 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
-/** Given a revision, read its _attachments dictionary (if any), convert each non-stub
-    attachment to a CBL_Attachment object, and return a dictionary names->CBL_Attachments. */
-- (NSDictionary*) attachmentsFromRevision: (CBL_Revision*)rev
-                                   status: (CBLStatus*)outStatus
+/** Given a revision, updates its _attachments dictionary for storage in the database, returning an
+    updated copy of the revision (or nil on error.) */
+- (CBL_Revision*) processAttachmentsForRevision: (CBL_Revision*)rev
+                                     generation: (unsigned)generation
+                                         status: (CBLStatus*)outStatus
 {
-    // If there are no attachments in the new rev, there's nothing to do:
+    *outStatus = kCBLStatusOK;
     NSDictionary* revAttachments = rev.attachments;
-    if (revAttachments.count == 0 || rev.deleted) {
-        *outStatus = kCBLStatusOK;
-        return @{};
-    }
-    
-    CBLStatus status = kCBLStatusOK;
-    NSMutableDictionary* attachments = $mdict();
-    for (NSString* name in revAttachments) {
-        // Create a CBL_Attachment object:
-        NSDictionary* attachInfo = revAttachments[name];
-        NSString* contentType = $castIf(NSString, attachInfo[@"content_type"]);
-        CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name
-                                                           contentType: contentType];
+    if (revAttachments == nil)
+        return rev;  // no-op: no attachments
 
-        NSString* newContentsBase64 = $castIf(NSString, attachInfo[@"data"]);
-        if (newContentsBase64) {
+    // Deletions can't have attachments:
+    CBL_MutableRevision* nuRev = [rev mutableCopy];
+    if (nuRev.deleted || revAttachments.count == 0) {
+        NSMutableDictionary* body = [nuRev.properties mutableCopy];
+        [body removeObjectForKey: @"_attachments"];
+        nuRev.properties = body;
+        return nuRev;
+    }
+
+    BOOL ok;
+    ok = [nuRev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
+        CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name
+                                                                     info: attachInfo
+                                                                   status: outStatus];
+        if (attachment == nil) {
+            return nil;
+        } else if (attachment.data) {
             // If there's inline attachment data, decode and store it:
-            @autoreleasepool {
-                NSData* newContents = [CBLBase64 decode: newContentsBase64];
-                if (!newContents) {
-                    status = kCBLStatusBadEncoding;
-                    break;
-                }
-                attachment->length = newContents.length;
-                if (![self storeBlob: newContents creatingKey: &attachment->blobKey]) {
-                    status = kCBLStatusAttachmentError;
-                    break;
-                }
+            if (![_attachments storeBlob: attachment.data creatingKey: &attachment->blobKey]) {
+                *outStatus = kCBLStatusAttachmentError;
+                return nil;
             }
         } else if ([attachInfo[@"follows"] isEqual: $true]) {
             // "follows" means the uploader provided the attachment in a separate MIME part.
             // This means it's already been registered in _pendingAttachmentsByDigest;
             // I just need to look it up by its "digest" property and install it into the store:
-            status = [self installAttachment: attachment forInfo: attachInfo];
-            if (CBLStatusIsError(status))
-                break;
-        } else {
-            // This item is just a stub; validate and skip it
-            if (![attachInfo[@"stub"] isEqual: $true]) {
-                *outStatus = kCBLStatusBadAttachment;
+            *outStatus = [self installAttachment: attachment];
+            if (CBLStatusIsError(*outStatus))
                 return nil;
-            }
-            id revPosObj = attachInfo[@"revpos"];
-            if (revPosObj) {
-                int revPos = [$castIf(NSNumber, revPosObj) intValue];
-                if (revPos <= 0) {
-                    *outStatus = kCBLStatusBadAttachment;
-                    return nil;
-                }
-            }
-            continue;
         }
-        
-        // Handle encoded attachment:
-        NSString* encodingStr = attachInfo[@"encoding"];
-        if (encodingStr) {
-            if ($equal(encodingStr, @"gzip"))
-                attachment->encoding = kCBLAttachmentEncodingGZIP;
-            else {
-                status = kCBLStatusBadEncoding;
-                break;
-            }
-            
-            attachment->encodedLength = attachment->length;
-            attachment->length = $castIf(NSNumber, attachInfo[@"length"]).unsignedLongLongValue;
+        // Set or validate the revpos:
+        if (attachment->revpos == 0) {
+            attachment->revpos = generation;
+        } else if (attachment->revpos >= generation) {
+            *outStatus = kCBLStatusBadAttachment;
+            return nil;
         }
-        
-        attachment->revpos = $castIf(NSNumber, attachInfo[@"revpos"]).unsignedIntValue;
-        attachments[name] = attachment;
-    }
-
-    *outStatus = status;
-    return status<300 ? attachments : nil;
-}
-
-
-- (CBLStatus) processAttachments: (NSDictionary*)attachments
-                    forRevision: (CBL_Revision*)rev
-             withParentSequence: (SequenceNumber)parentSequence
-{
-    Assert(rev);
-    
-    // If there are no attachments in the new rev, there's nothing to do:
-    NSDictionary* revAttachments = rev.attachments;
-    if (revAttachments.count == 0 || rev.deleted)
-        return kCBLStatusOK;
-    
-    SequenceNumber newSequence = rev.sequence;
-    Assert(newSequence > 0);
-    Assert(newSequence > parentSequence);
-    unsigned generation = rev.generation;
-    Assert(generation > 0, @"Missing generation in rev %@", rev);
-
-    for (NSString* name in revAttachments) {
-        CBLStatus status;
-        CBL_Attachment* attachment = attachments[name];
-        if (attachment) {
-            // Determine the revpos, i.e. generation # this was added in. Usually this is
-            // implicit, but a rev being pulled in replication will have it set already.
-            if (attachment->revpos == 0)
-                attachment->revpos = generation;
-            else if (attachment->revpos > generation) {
-                Warn(@"Attachment %@ . '%@' has weird revpos %u; setting to %u",
-                     rev, name, attachment->revpos, generation);
-                attachment->revpos = generation;
-            }
-
-            // Finally insert the attachment:
-            status = [self insertAttachment: attachment forSequence: newSequence];
-        } else {
-            // It's just a stub, so copy the previous revision's attachment entry:
-            //? Should I enforce that the type and digest (if any) match?
-            status = [self copyAttachmentNamed: name
-                                  fromSequence: parentSequence
-                                    toSequence: newSequence];
-        }
-        if (CBLStatusIsError(status))
-            return status;
-    }
-    return kCBLStatusOK;
+        return attachment.asStubDictionary;
+    }];
+    return ok ? nuRev : nil;
 }
 
 
@@ -707,17 +434,6 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     Log(@"Deleted %d attachments", (int)numDeleted);
     return kCBLStatusOK;
 }
-
-
-#if DEBUG
-// Grotesque hack, for some attachment unit-tests only!
-- (CBLStatus) _setNoAttachments: (BOOL)noAttachments forSequence: (SequenceNumber)sequence {
-    if (![_fmdb executeUpdate: @"UPDATE revs SET no_attachments=? WHERE sequence=?",
-          @(noAttachments), @(sequence)])
-        return self.lastDbError;
-    return kCBLStatusOK;
-}
-#endif
 
 
 @end

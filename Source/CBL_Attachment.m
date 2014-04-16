@@ -14,12 +14,34 @@
 //  and limitations under the License.
 
 #import "CBL_Attachment.h"
+#import "CBLBase64.h"
+#import "CBLDatabase+Internal.h"
+#import "CBL_BlobStore.h"
+#import "GTMNSData+zlib.h"
+
+
+static NSString* blobKeyToDigest(CBLBlobKey key) {
+    return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key length: sizeof(key)]];
+}
+
+static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
+    if (![digest hasPrefix: @"sha1-"])
+        return false;
+    NSData* keyData = [CBLBase64 decode: [digest substringFromIndex: 5]];
+    if (!keyData || keyData.length != sizeof(CBLBlobKey))
+        return nil;
+    *key = *(CBLBlobKey*)keyData.bytes;
+    return true;
+}
 
 
 @implementation CBL_Attachment
+{
+    NSData* _data;
+}
 
 
-@synthesize name=_name, contentType=_contentType;
+@synthesize name=_name, contentType=_contentType, database=_database;
 
 
 - (instancetype) initWithName: (NSString*)name contentType: (NSString*)contentType {
@@ -33,26 +55,151 @@
 }
 
 
+- (instancetype) initWithName: (NSString*)name
+                         info: (NSDictionary*)attachInfo
+                       status: (CBLStatus*)outStatus
+{
+    self = [self initWithName: name contentType: $castIf(NSString, attachInfo[@"content_type"])];
+    if (self) {
+        NSNumber* explicitLength = $castIf(NSNumber, attachInfo[@"length"]);
+        self->length = explicitLength.unsignedLongLongValue;
 
+        NSString* digest = $castIf(NSString, attachInfo[@"digest"]);
+        if (digest) {
+            if (!digestToBlobKey(digest, &blobKey))
+                digest = nil;
+        }
 
-- (bool) isValid {
-    if (encoding) {
-        if (encodedLength == 0 && length > 0)
-            return false;
-    } else if (encodedLength > 0) {
-        return false;
+        NSString* encodingStr = $castIf(NSString, attachInfo[@"encoding"]);
+        if (encodingStr) {
+            if ($equal(encodingStr, @"gzip")) {
+                self->encoding = kCBLAttachmentEncodingGZIP;
+            } else {
+                *outStatus = kCBLStatusBadEncoding;
+                return nil;
+            }
+        }
+
+        NSString* dataBase64 = $castIf(NSString, attachInfo[@"data"]);
+        if (dataBase64) {
+            // If there's inline attachment data, decode and store it:
+            @autoreleasepool {
+                _data = [CBLBase64 decode: dataBase64];
+                if (!_data) {
+                    *outStatus = kCBLStatusBadEncoding;
+                    return nil;
+                }
+                self.possiblyEncodedLength = _data.length;
+            }
+        } else if ([attachInfo[@"stub"] isEqual: $true]) {
+            // This item is just a stub; validate and skip it
+            id revPosObj = attachInfo[@"revpos"];
+            if (revPosObj) {
+                int revPos = [$castIf(NSNumber, revPosObj) intValue];
+                if (revPos <= 0) {
+                    *outStatus = kCBLStatusBadAttachment;
+                    return nil;
+                }
+                self->revpos = (unsigned)revPos;
+            }
+            return self; // skip
+        } else if ([attachInfo[@"follows"] isEqual: $true]) {
+            // I can't handle this myself; my caller will look it up from the digest
+            if (!self.hasBlobKey) {
+                *outStatus = kCBLStatusBadAttachment;
+                return nil;
+            }
+        } else {
+            *outStatus = kCBLStatusBadAttachment;
+            return nil;
+        }
     }
-    if (revpos == 0)
-        return false;
-#if DEBUG
+    return self;
+}
+
+
+- (void) setPossiblyEncodedLength: (UInt64)len {
+    if (self->encoding)
+        self->encodedLength = len;
+    else
+        self->length = len;
+}
+
+
+- (BOOL) hasBlobKey {
     size_t i;
     for (i=0; i<sizeof(CBLBlobKey); i++)
         if (blobKey.bytes[i])
             return true;
     return false;
-#else
-    return true;
+}
+
+
+- (NSString*) digest {
+    return self.hasBlobKey ? blobKeyToDigest(blobKey) : nil;
+}
+
+
+- (BOOL) isValid {
+    if (encoding) {
+        if (encodedLength == 0 && length > 0)
+            return false;
+    } else if (encodedLength > 0)
+        return false;
+    else if (revpos == 0)
+        return false;
+#if DEBUG
+    else if (!self.hasBlobKey)
+        return false;
 #endif
+    return true;
+}
+
+
+- (NSDictionary*) asStubDictionary {
+    NSMutableDictionary* dict = $mdict({@"stub", $true},
+                                       {@"digest", blobKeyToDigest(blobKey)},
+                                       {@"content_type", _contentType},
+                                       {@"revpos", @(revpos)},
+                                       {@"length", @(length)});
+    if (encodedLength > 0)
+        dict[@"encoded_length"] = @(encodedLength);
+    switch (encoding) {
+        case kCBLAttachmentEncodingGZIP:
+            dict[@"encoding"] = @"gzip";
+            break;
+        case kCBLAttachmentEncodingNone:
+            break;
+    }
+    return dict;
+}
+
+
+- (NSData*) data {
+    if (_data)
+        return _data;
+    else
+        return [_database.attachmentStore blobForKey: self->blobKey];
+}
+
+
+- (NSData*) decodedData {
+    NSData* data = self.data;
+    switch (encoding) {
+        case kCBLAttachmentEncodingNone:
+            break;
+        case kCBLAttachmentEncodingGZIP:
+            data = [NSData gtm_dataByInflatingData: data];
+    }
+    if (!data)
+        Warn(@"Unable to decode attachment!");
+    return data;
+}
+
+
+- (NSURL*) dataURL {
+    NSString* path = [_database.attachmentStore pathForKey: self->blobKey];
+    return path ? [NSURL fileURLWithPath: path] : nil;
 }
 
 

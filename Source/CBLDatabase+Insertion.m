@@ -84,10 +84,9 @@
 
 /** Given an existing revision ID, generates an ID for the next revision.
     Returns nil if prevID is invalid. */
-- (NSString*) generateIDForRevision: (CBL_Revision*)rev
-                           withJSON: (NSData*)json
-                        attachments: (NSDictionary*)attachments
-                             prevID: (NSString*) prevID
+- (NSString*) generateRevIDForJSON: (NSData*)json
+                           deleted: (BOOL)deleted
+                         prevRevID: (NSString*) prevID
 {
     // Revision IDs have a generation count, a hyphen, and a hex digest.
     unsigned generation = 0;
@@ -113,13 +112,8 @@
     if (length > 0)
         MD5_Update(&ctx, prevIDUTF8.bytes, length);
     
-    uint8_t deletedByte = rev.deleted != NO;
+    uint8_t deletedByte = deleted != NO;
     MD5_Update(&ctx, &deletedByte, 1);
-    
-    for (NSString* attName in [attachments.allKeys sortedArrayUsingSelector: @selector(compare:)]) {
-        CBL_Attachment* attachment = attachments[attName];
-        MD5_Update(&ctx, &attachment->blobKey, sizeof(attachment->blobKey));
-    }
     
     MD5_Update(&ctx, json.bytes, json.length);
     MD5_Final(digestBytes, &ctx);
@@ -157,12 +151,11 @@
 - (NSData*) encodeDocumentJSON: (CBL_Revision*)rev {
     static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
     if (!sSpecialKeysToRemove) {
-        sSpecialKeysToRemove = [[NSSet alloc] initWithObjects: @"_id", @"_rev", @"_attachments",
+        sSpecialKeysToRemove = [[NSSet alloc] initWithObjects: @"_id", @"_rev",
             @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts",
             @"_local_seq", nil];
         sSpecialKeysToLeave = [[NSSet alloc] initWithObjects:
-            @"_removed",
-            @"_replication_id", @"_replication_state", @"_replication_state_time", nil];
+            @"_attachments", @"_removed", nil];
     }
 
     NSDictionary* origProps = rev.properties;
@@ -272,12 +265,14 @@
             return nil;
     }
 
-
-    NSDictionary* attachments = [self attachmentsFromRevision: oldRev status: outStatus];
-    if (!attachments)
+    // Add any new attachments to the blob-store, and turn all of them into stubs:
+    oldRev = [self processAttachmentsForRevision: oldRev
+                                      generation: [CBL_Revision generationFromRevID: prevRevID] + 1
+                                          status: outStatus];
+    if (!oldRev)
         return nil;
 
-    // Bump the revID and update the JSON:
+    // Encode the body as JSON:
     NSData* json = nil;
     if (oldRev.properties) {
         json = [self encodeDocumentJSON: oldRev];
@@ -286,19 +281,15 @@
             return nil;
         }
     }
-    NSString* newRevID = [self generateIDForRevision: oldRev
-                                            withJSON: json
-                                         attachments: attachments
-                                              prevID: prevRevID];
+
+    // Compute the new revID:
+    NSString* newRevID = [self generateRevIDForJSON: json deleted: deleted prevRevID: prevRevID];
     if (!newRevID) {
         *outStatus = kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
         return nil;
     }
-    Assert(docID);
-    CBL_MutableRevision* newRev = [oldRev mutableCopyWithDocID: docID revID: newRevID];
-    [CBLDatabase stubOutAttachments: attachments inRevision: newRev];
 
-    // Add it!!
+    // Add the revision to the database!!
     if (![doc addRevision: json
                  deletion: oldRev.deleted
                    withID: newRevID
@@ -311,16 +302,9 @@
         *outStatus = kCBLStatusDBError;
         return nil;
     }
-    newRev.sequence = doc.sequence;
 
-    /* FIX: What's the replacement for this?
-    // Store any attachments:
-    *outStatus = [self processAttachments: attachments
-                              forRevision: newRev
-                       withParentSequence: parentSequence];
-    if (CBLStatusIsError(*outStatus))
-        return nil;
-     */
+    CBL_MutableRevision* newRev = [oldRev mutableCopyWithDocID: docID revID: newRevID];
+    newRev.sequence = doc.sequence;
 
     LogTo(CBLDatabase, @"--> created %@", newRev);
 
