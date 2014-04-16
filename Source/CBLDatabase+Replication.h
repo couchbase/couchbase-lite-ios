@@ -7,6 +7,7 @@
 //
 
 #import "CBL_Revision.h"
+#import "CBLStatus.h"
 @class CBL_Replicator;
 
 
@@ -18,6 +19,7 @@
 
 - (void) addActiveReplicator: (CBL_Replicator*)repl;
 
-- (BOOL) findMissingRevisions: (CBL_RevisionList*)revs;
+- (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
+                       status: (CBLStatus*)outStatus;
 
 @end

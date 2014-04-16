@@ -134,7 +134,7 @@ TestCase(CBL_Database_CRUD) {
     CAssertEq(status, kCBLStatusConflict);
     
     // Check the changes feed, with and without filters:
-    CBL_RevisionList* changes = [db changesSinceSequence: 0 options: NULL filter: NULL params: nil];
+    CBL_RevisionList* changes = [db changesSinceSequence: 0 options: NULL filter: NULL params: nil status: &status];
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
 
@@ -144,11 +144,11 @@ TestCase(CBL_Database_CRUD) {
     };
     
     changes = [db changesSinceSequence: 0 options: NULL
-                                filter: filter params: $dict({@"status", @"updated!"})];
+                                filter: filter params: $dict({@"status", @"updated!"}) status: &status];
     CAssertEq(changes.count, 1u);
     
     changes = [db changesSinceSequence: 0 options: NULL
-                                filter: filter params: $dict({@"status", @"not updated!"})];
+                                filter: filter params: $dict({@"status", @"not updated!"}) status: &status];
     CAssertEq(changes.count, 0u);
         
     // Delete it:
@@ -170,7 +170,7 @@ TestCase(CBL_Database_CRUD) {
     CAssertNil(readRev);
     
     // Check the changes feed again after the deletion:
-    changes = [db changesSinceSequence: 0 options: NULL filter: NULL params: nil];
+    changes = [db changesSinceSequence: 0 options: NULL filter: NULL params: nil status: &status];
     Log(@"Changes = %@", changes);
     CAssertEq(changes.count, 1u);
     
@@ -210,7 +210,8 @@ TestCase(CBL_Database_EmptyDoc) {
     options.includeDocs = YES;
     NSArray* keys = @[rev.docID];
     options.keys = keys;
-    [db getAllDocs: &options]; // raises an exception :(
+    CBLStatus status;
+    [db getAllDocs: &options status: &status]; // raises an exception :(
     CAssert([db close]);
 }
 
@@ -444,10 +445,10 @@ TestCase(CBL_Database_RevTree) {
 
     // Get the _changes feed and verify only the winner is in it:
     CBLChangesOptions options = kDefaultCBLChangesOptions;
-    CBL_RevisionList* changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil];
+    CBL_RevisionList* changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil status: &status];
     CAssertEqual(changes.allRevisions, (@[conflict, other]));
     options.includeConflicts = YES;
-    changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil];
+    changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil status: &status];
     CAssertEqual(changes.allRevisions, (@[rev, conflict, other]));
 
     // Verify that compaction leaves the document history:
@@ -1066,7 +1067,8 @@ TestCase(CBL_Database_FindMissingRevisions) {
     CBL_Revision* revToFind2 = [[CBL_Revision alloc] initWithDocID: @"22222" revID: doc2r2.revID deleted: NO];
     CBL_Revision* revToFind3 = [[CBL_Revision alloc] initWithDocID: @"99999" revID: @"9-huh" deleted: NO];
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]];
-    CAssert([db findMissingRevisions: revs]);
+    CBLStatus status;
+    CAssert([db findMissingRevisions: revs status: &status]);
     CAssertEqual(revs.allRevisions, (@[revToFind1, revToFind3]));
     
     // Check the possible ancestors:

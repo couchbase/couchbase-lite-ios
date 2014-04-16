@@ -75,6 +75,8 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
 - (CBL_Revision*) getLocalDocumentWithID: (NSString*)docID 
                               revisionID: (NSString*)revID
 {
+    if (![docID hasPrefix: @"_local/"])
+        return nil;
     CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: NULL];
     NSString* gotRevID = getDocRevID(doc);
     if (revID && !$equal(revID, gotRevID))
@@ -147,7 +149,7 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
 
 
 - (CBLStatus) deleteLocalDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
-    if (!docID)
+    if (![docID hasPrefix: @"_local/"])
         return kCBLStatusBadID;
     if (!revID) {
         // Didn't specify a revision to delete: kCBLStatusNotFound or a kCBLStatusConflict, depending
@@ -167,6 +169,30 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
     if (![self.localDocs deleteDocument: doc error: &error])
         return kCBLStatusDBError;
     [_localDocs commit: NULL];
+    return kCBLStatusOK;
+}
+
+
+#pragma mark - INFO FOR KEY:
+
+
+static NSData* infoKey(NSString* key) {
+    return [[@"_info/" stringByAppendingString: key] dataUsingEncoding: NSUTF8StringEncoding];
+}
+
+- (NSString*) infoForKey: (NSString*)key {
+    NSData* value;
+    if (![self.localDocs getValue: &value meta: NULL forKey: infoKey(key) error: NULL] || !value)
+        return nil;
+    return [[NSString alloc] initWithData: value encoding: NSUTF8StringEncoding];
+}
+
+- (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key {
+    if (![self.localDocs setValue: [info dataUsingEncoding: NSUTF8StringEncoding]
+                             meta: NULL
+                           forKey: infoKey(key)
+                            error: NULL])
+        return kCBLStatusDBError;
     return kCBLStatusOK;
 }
 

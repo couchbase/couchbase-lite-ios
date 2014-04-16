@@ -137,7 +137,7 @@
     NSUInteger num_docs = db.documentCount;
     SequenceNumber update_seq = db.lastSequenceNumber;
     if (num_docs == NSNotFound || update_seq == NSNotFound)
-        return db.lastDbError;
+        return kCBLStatusDBError;
     UInt64 startTime = round(db.startTime.timeIntervalSince1970 * 1.0e6); // it's in microseconds
     _response.bodyObject = $dict({@"db_name", db.name},
                                  {@"db_uuid", db.publicUUID},
@@ -146,8 +146,7 @@
                                  {@"committed_update_seq", @(update_seq)},
                                  {@"purge_seq", @(0)}, // TODO: Implement
                                  {@"disk_size", @(db.totalDataSize)},
-                                 {@"instance_start_time", @(startTime)},
-                                 {@"disk_format_version", @(db.schemaVersion)});
+                                 {@"instance_start_time", @(startTime)});
     return kCBLStatusOK;
 }
 
@@ -157,7 +156,7 @@
         return kCBLStatusDuplicate;
     NSError* error;
     if (![db open: &error])
-        return CBLStatusFromNSError(error, db.lastDbError);
+        return CBLStatusFromNSError(error, 0);
     [self setResponseLocation: _request.URL];
     return kCBLStatusCreated;
 }
@@ -211,9 +210,10 @@
 }
 
 - (CBLStatus) doAllDocs: (const CBLQueryOptions*)options {
-    NSArray* result = [_db getAllDocs: options];
+    CBLStatus status;
+    NSArray* result = [_db getAllDocs: options status: &status];
     if (!result)
-        return _db.lastDbError;
+        return status;
     result = [result my_map: ^id(CBLQueryRow* row) {return row.asJSONDictionary;}];
     _response.bodyObject = $dict({@"rows", result},
                                  {@"total_rows", @(result.count)},
@@ -296,8 +296,9 @@
     }
     
     // Look them up, removing the existing ones from revs:
-    if (![db findMissingRevisions: revs])
-        return db.lastDbError;
+    CBLStatus status;
+    if (![db findMissingRevisions: revs status: &status])
+        return status;
     
     // Return the missing revs in a somewhat different format:
     NSMutableDictionary* diffs = $mdict();
@@ -597,13 +598,15 @@
             return status;
         _changesFilterParams = [self.jsonQueries copy];
     }
-    
+
+    CBLStatus status;
     CBL_RevisionList* changes = [db changesSinceSequence: since
-                                               options: &options
-                                                filter: _changesFilter
-                                                params: _changesFilterParams];
+                                                 options: &options
+                                                  filter: _changesFilter
+                                                  params: _changesFilterParams
+                                                  status: &status];
     if (!changes)
-        return db.lastDbError;
+        return status;
     
     
     if (continuous || (_longpoll && changes.count==0)) {

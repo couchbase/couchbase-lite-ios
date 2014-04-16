@@ -30,8 +30,6 @@
 
 #import <CBForest/CBForest.h>
 
-#import "FMDatabase.h"
-#import "FMDatabaseAdditions.h"
 #import "MYBlockUtils.h"
 #import "ExceptionUtils.h"
 
@@ -61,10 +59,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 #endif
 
-
-- (CBL_FMDatabase*) fmdb {
-    return _fmdb;
-}
 
 - (CBForestDB*) forestDB {
     return _forest;
@@ -123,18 +117,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _name = name ?: [dirPath.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
 
-        NSString* fmdbPath = [dirPath stringByAppendingPathComponent: @"db.sqlite"];
-        _fmdb = [[CBL_FMDatabase alloc] initWithPath: fmdbPath];
-        _fmdb.dispatchQueue = manager.dispatchQueue;
-        _fmdb.busyRetryTimeout = kSQLiteBusyTimeout;
-#if DEBUG
-        _fmdb.logsErrors = YES;
-#else
-        _fmdb.logsErrors = WillLogTo(CBLDatabase);
-#endif
-        _fmdb.traceExecution = WillLogTo(CBLDatabaseVerbose);
-        _docIDs = [[NSCache alloc] init];
-        _docIDs.countLimit = kDocIDCacheSize;
         _dispatchQueue = manager.dispatchQueue;
         if (!_dispatchQueue)
             _thread = [NSThread currentThread];
@@ -157,27 +139,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (NSError*) fmdbError {
-    NSDictionary* info = $dict({NSLocalizedDescriptionKey, _fmdb.lastErrorMessage});
-    return [NSError errorWithDomain: @"SQLite" code: _fmdb.lastErrorCode userInfo: info];
-}
-
-- (BOOL) initialize: (NSString*)statements error: (NSError**)outError {
-    for (NSString* quotedStatement in [statements componentsSeparatedByString: @";"]) {
-        NSString* statement = [quotedStatement stringByReplacingOccurrencesOfString: @"|"
-                                                                         withString: @";"];
-        if (statement.length && ![_fmdb executeUpdate: statement]) {
-            if (outError) *outError = self.fmdbError;
-            Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
-                  "SQLite error: %@", _dir, _fmdb.lastErrorMessage);
-            [_fmdb close];
-            return NO;
-        }
-    }
-    return YES;
-}
-
-
 - (BOOL) openForest: (NSError**)outError {
     NSString* forestPath = [_dir stringByAppendingPathComponent: @"db.forest"];
     CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
@@ -186,46 +147,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                          error: outError];
     _forest.documentClass = [CBForestVersions class];
     return (_forest != nil);
-}
-
-
-- (int) schemaVersion {
-    return [_fmdb intForQuery: @"PRAGMA user_version"];
-}
-
-
-- (BOOL) openFMDB: (NSError**)outError {
-    // Without the -ObjC linker flag, object files containing only category methods, not any
-    // class's main implementation, will be dead-stripped. This breaks several pieces of CBL.
-    Assert([CBL_FMDatabase instancesRespondToSelector: @selector(intForQuery:)],
-           @"Critical Couchbase Lite code has been stripped from the app binary! "
-            "Please make sure to build using the -ObjC linker flag!");
-
-    int flags =  SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
-    if (_readOnly)
-        flags |= SQLITE_OPEN_READONLY;
-    else
-        flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    LogTo(CBLDatabase, @"Open %@ (flags=%X)", _dir, flags);
-    if (![_fmdb openWithFlags: flags]) {
-        if (outError) *outError = self.fmdbError;
-        return NO;
-    }
-
-    // Register CouchDB-compatible JSON collation functions:
-    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON", SQLITE_UTF8,
-                             kCBLCollateJSON_Unicode, CBLCollateJSON);
-    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON_RAW", SQLITE_UTF8,
-                             kCBLCollateJSON_Raw, CBLCollateJSON);
-    sqlite3_create_collation(_fmdb.sqliteHandle, "JSON_ASCII", SQLITE_UTF8,
-                             kCBLCollateJSON_ASCII, CBLCollateJSON);
-    sqlite3_create_collation(_fmdb.sqliteHandle, "REVID", SQLITE_UTF8,
-                             NULL, CBLCollateRevIDs);
-    
-    // Stuff we need to initialize every time the database opens:
-    if (![self initialize: @"PRAGMA foreign_keys = ON;" error: outError])
-        return NO;
-    return YES;
 }
 
 
@@ -243,172 +164,23 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (![self openForest: outError])
         return NO;
 
-    if (![self openFMDB: outError])
-        return NO;
-    
-    // Check the user_version number we last stored in the database:
-    __unused int dbVersion = self.schemaVersion;
-    
-    // Incompatible version changes increment the hundreds' place:
-    if (dbVersion >= 100) {
-        Warn(@"CBLDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
-        [_fmdb close];
-        if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
-        return NO;
+    if (!self.privateUUID) {
+        // First-time setup:
+        [self setInfo: CBLCreateUUID() forKey: @"privateUUID"];
+        [self setInfo: CBLCreateUUID() forKey: @"publicUUID"];
     }
-
-    BOOL isNew = (dbVersion == 0);
-    if (isNew && ![self initialize: @"BEGIN TRANSACTION" error: outError])
-        return NO;
-
-    if (dbVersion < 1) {
-        // First-time initialization:
-        // (Note: Declaring revs.sequence as AUTOINCREMENT means the values will always be
-        // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>)
-        NSString *schema = @"\
-            CREATE TABLE docs ( \
-                doc_id INTEGER PRIMARY KEY, \
-                docid TEXT UNIQUE NOT NULL); \
-            CREATE INDEX docs_docid ON docs(docid); \
-            CREATE TABLE revs ( \
-                sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
-                doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE, \
-                revid TEXT NOT NULL COLLATE REVID, \
-                parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL, \
-                current BOOLEAN, \
-                deleted BOOLEAN DEFAULT 0, \
-                json BLOB, \
-                UNIQUE (doc_id, revid)); \
-            CREATE INDEX revs_current ON revs(doc_id, current); \
-            CREATE INDEX revs_parent ON revs(parent); \
-            CREATE TABLE localdocs ( \
-                docid TEXT UNIQUE NOT NULL, \
-                revid TEXT NOT NULL COLLATE REVID, \
-                json BLOB); \
-            CREATE INDEX localdocs_by_docid ON localdocs(docid); \
-            CREATE TABLE views ( \
-                view_id INTEGER PRIMARY KEY, \
-                name TEXT UNIQUE NOT NULL,\
-                version TEXT, \
-                lastsequence INTEGER DEFAULT 0); \
-            CREATE INDEX views_by_name ON views(name); \
-            CREATE TABLE maps ( \
-                view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
-                sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
-                key TEXT NOT NULL COLLATE JSON, \
-                value TEXT); \
-            CREATE INDEX maps_keys on maps(view_id, key COLLATE JSON); \
-            CREATE TABLE attachments ( \
-                sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
-                filename TEXT NOT NULL, \
-                key BLOB NOT NULL, \
-                type TEXT, \
-                length INTEGER NOT NULL, \
-                revpos INTEGER DEFAULT 0); \
-            CREATE INDEX attachments_by_sequence on attachments(sequence, filename); \
-            CREATE TABLE replicators ( \
-                remote TEXT NOT NULL, \
-                push BOOLEAN, \
-                last_sequence TEXT, \
-                UNIQUE (remote, push)); \
-            PRAGMA user_version = 3";             // at the end, update user_version
-        if (![self initialize: schema error: outError])
-            return NO;
-        dbVersion = 3;
-    }
-    
-    if (dbVersion < 2) {
-        // Version 2: added attachments.revpos
-        NSString* sql = @"ALTER TABLE attachments ADD COLUMN revpos INTEGER DEFAULT 0; \
-                          PRAGMA user_version = 2";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 2;
-    }
-    
-    if (dbVersion < 3) {
-        // Version 3: added localdocs table
-        NSString* sql = @"CREATE TABLE IF NOT EXISTS localdocs ( \
-                            docid TEXT UNIQUE NOT NULL, \
-                            revid TEXT NOT NULL, \
-                            json BLOB); \
-                            CREATE INDEX IF NOT EXISTS localdocs_by_docid ON localdocs(docid); \
-                          PRAGMA user_version = 3";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 3;
-    }
-    
-    if (dbVersion < 4) {
-        // Version 4: added 'info' table
-        NSString* sql = $sprintf(@"CREATE TABLE info ( \
-                                     key TEXT PRIMARY KEY, \
-                                     value TEXT); \
-                                   INSERT INTO INFO (key, value) VALUES ('privateUUID', '%@');\
-                                   INSERT INTO INFO (key, value) VALUES ('publicUUID',  '%@');\
-                                   PRAGMA user_version = 4",
-                                 CBLCreateUUID(), CBLCreateUUID());
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 4;
-    }
-
-    if (dbVersion < 5) {
-        // Version 5: added encoding for attachments
-        NSString* sql = @"ALTER TABLE attachments ADD COLUMN encoding INTEGER DEFAULT 0; \
-                          ALTER TABLE attachments ADD COLUMN encoded_length INTEGER; \
-                          PRAGMA user_version = 5";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 5;
-    }
-
-    if (dbVersion < 6) {
-        // Version 6: enable Write-Ahead Log (WAL) <http://sqlite.org/wal.html>
-        NSString* sql = @"PRAGMA journal_mode=WAL; \
-        PRAGMA user_version = 6";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 6;
-    }
-
-    if (dbVersion < 10) {
-        // Version 10: Add rev flag for whether it has an attachment
-        NSString* sql = @"ALTER TABLE revs ADD COLUMN no_attachments BOOLEAN; \
-        PRAGMA user_version = 10";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 10;
-    }
-
-    if (dbVersion < 11) {
-        // Version 10: Add another index
-        NSString* sql = @"CREATE INDEX revs_cur_deleted ON revs(current,deleted); \
-                          PRAGMA user_version = 11";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 11;
-    }
-
-    if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
-        return NO;
-
-#if DEBUG
-    _fmdb.crashOnErrors = YES;
-#endif
 
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
     _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath error: outError];
     if (!_attachments) {
         Warn(@"%@: Couldn't open attachment store at %@", self, attachmentsPath);
-        [_fmdb close];
+        [_forest close];
+        _forest = nil;
         return NO;
     }
 
     _isOpen = YES;
-
-    _fmdb.shouldCacheStatements = YES;      // Saves the time to recompile SQL statements
 
     // Listen for _any_ CBLDatabase changing, so I can detect changes made to my database
     // file by other instances (running on other threads presumably.)
@@ -452,34 +224,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     [self closeLocalDocs];
 
-    if (_fmdb && ![_fmdb close])
-        return NO;
     _isOpen = NO;
     _transactionLevel = 0;
     return YES;
-}
-
-
-- (CBLStatus) lastDbStatus {
-    switch (_fmdb.lastErrorCode) {
-        case SQLITE_OK:
-        case SQLITE_ROW:
-        case SQLITE_DONE:
-            return kCBLStatusOK;
-        case SQLITE_BUSY:
-        case SQLITE_LOCKED:
-            return kCBLStatusDBBusy;
-        case SQLITE_CORRUPT:
-            return kCBLStatusCorruptError;
-        default:
-            LogTo(CBLDatabase, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
-            return kCBLStatusDBError;
-    }
-}
-
-- (CBLStatus) lastDbError {
-    CBLStatus status = self.lastDbStatus;
-    return (status == kCBLStatusOK) ? kCBLStatusDBError : status;
 }
 
 
@@ -501,18 +248,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (NSString*) infoForKey: (NSString*)key {
-    return [_fmdb stringForQuery: @"SELECT value FROM info WHERE key=?", key];
-}
-
-- (CBLStatus) setInfo: (id)info forKey: (NSString*)key {
-    if ([_fmdb executeUpdate: @"UPDATE info SET value=? WHERE key=?", info, key])
-        return kCBLStatusOK;
-    else
-        return self.lastDbError;
-}
-
-
 - (NSString*) privateUUID {
     return [self infoForKey: @"privateUUID"];
 }
@@ -525,10 +260,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (BOOL) beginTransaction {
-    if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)]) {
-        Warn(@"Failed to create savepoint transaction!");
-        return NO;
-    }
     ++_transactionLevel;
     LogTo(CBLDatabase, @"Begin transaction (level %d)...", _transactionLevel);
     return YES;
@@ -541,15 +272,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         LogTo(CBLDatabase, @"Commit transaction (level %d)", _transactionLevel);
     } else {
         LogTo(CBLDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
-        if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)]) {
-            Warn(@"Failed to rollback transaction!");
-            ok = NO;
-        }
-        [_changesToNotify removeAllObjects];
-    }
-    if (![_fmdb executeUpdate: $sprintf(@"RELEASE tdb%d", _transactionLevel)]) {
-        Warn(@"Failed to release transaction!");
-        ok = NO;
+        //FIX: There's no way to cancel a transaction with ForestDB, is there?
     }
 
     --_transactionLevel;
@@ -566,7 +289,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     int retries = 0;
     do {
         if (![self beginTransaction])
-            return self.lastDbError;
+            return kCBLStatusDBError;
         @try {
             status = block();
         } @catch (NSException* x) {
@@ -883,9 +606,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (NSString*) _indexedTextWithID: (UInt64)fullTextID {
-    if (fullTextID == 0)
-        return nil;
-    return [_fmdb stringForQuery: @"SELECT content FROM fulltext WHERE rowid=?", @(fullTextID)];
+    Assert(NO, @"FTS is out of service"); //FIX
 }
 
 
@@ -1048,6 +769,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                    options: (const CBLChangesOptions*)options
                                     filter: (CBLFilterBlock)filter
                                     params: (NSDictionary*)filterParams
+                                    status: (CBLStatus*)outStatus
 {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     if (!options) options = &kDefaultCBLChangesOptions;
@@ -1061,10 +783,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         forestOpts.contentOptions |= kCBForestDBMetaOnly;
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
-    [_forest enumerateDocsFromSequence: lastSequence+1
-                            toSequence: kCBForestMaxSequence
-                               options: &forestOpts error: NULL
-                             withBlock: ^(CBForestDocument *baseDoc, BOOL *stop)
+    BOOL ok = [_forest enumerateDocsFromSequence: lastSequence+1
+                                      toSequence: kCBForestMaxSequence
+                                         options: &forestOpts error: NULL
+                                       withBlock: ^(CBForestDocument *baseDoc, BOOL *stop)
     {
         CBForestVersions* doc = (CBForestVersions*)baseDoc;
         NSArray* revisions;
@@ -1095,6 +817,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 [changes addRev: rev];
         }
     }];
+    if (!ok) {
+        *outStatus = kCBLStatusDBError;
+        return nil;
+    }
     return changes;
 }
 
@@ -1221,7 +947,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 //FIX: This has a lot of code in common with -[CBLView queryWithOptions:status:]. Unify the two!
-- (NSArray*) getAllDocs: (const CBLQueryOptions*)options {
+- (NSArray*) getAllDocs: (const CBLQueryOptions*)options status: (CBLStatus*)outStatus {
     if (!options)
         options = &kDefaultCBLQueryOptions;
     CBForestEnumerationOptions forestOpts = {
@@ -1309,9 +1035,14 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         }
     } else {
         // If not given keys, enumerate all docs from minKey to maxKey:
-        [_forest enumerateDocsFromID: minKey toID: maxKey options: &forestOpts error: NULL
-                           withBlock: addDocBlock];
+        NSError* error;
+        if (![_forest enumerateDocsFromID: minKey toID: maxKey options: &forestOpts error: &error
+                                withBlock: addDocBlock]) {
+            *outStatus = kCBLStatusDBError;
+            return nil;
+        }
     }
+    *outStatus = kCBLStatusOK;
     return rows;
 }
 

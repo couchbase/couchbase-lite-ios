@@ -628,8 +628,7 @@ static id fromJSON( NSData* json ) {
             rows = [view _queryWithOptions: &options status: &status];
         } else {
             // nil view means query _all_docs
-            rows = [self getAllDocs: &options];
-            status = rows ? kCBLStatusOK :self.lastDbError; //FIX: getALlDocs should return status
+            rows = [self getAllDocs: &options status: &status];
             lastSequence = self.lastSequenceNumber;
         }
     } while(false); // just to allow 'break' within the block

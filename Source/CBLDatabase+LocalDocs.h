@@ -25,4 +25,7 @@
 
 - (void) closeLocalDocs;
 
+- (NSString*) infoForKey: (NSString*)key;
+- (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key;
+
 @end

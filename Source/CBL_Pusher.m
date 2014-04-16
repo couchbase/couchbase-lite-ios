@@ -112,10 +112,12 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     options.includeConflicts = YES;
     // Process existing changes since the last push:
     CBLDatabase* db = _db;
+    CBLStatus status;
     [self addRevsToInbox: [db changesSinceSequence: [_lastSequence longLongValue]
                                            options: &options
                                             filter: filter
-                                            params: _filterParameters]];
+                                            params: _filterParameters
+                                            status: &status]];
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):

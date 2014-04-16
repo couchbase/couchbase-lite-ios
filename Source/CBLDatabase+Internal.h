@@ -9,7 +9,6 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBL_FMDatabase;
 @class CBForestDB, CBForestVersions;
 @class CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
@@ -65,13 +64,11 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     CBLManager* _manager;
     CBForestDB* _forest;
     CBForestDB* _localDocs;
-    CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
     int _transactionLevel;
     NSThread* _thread;
     dispatch_queue_t _dispatchQueue;    // One and only one of _thread or _dispatchQueue is set
-    NSCache* _docIDs;
     NSMutableDictionary* _views;
     CBL_BlobStore* _attachments;
     NSMutableDictionary* _pendingAttachmentsByDigest;
@@ -107,32 +104,16 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 #if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)path;
 #endif
-- (BOOL) openFMDB: (NSError**)outError;
 - (BOOL) open: (NSError**)outError;
 - (BOOL) closeInternal;
 
-@property (nonatomic, readonly) CBL_FMDatabase* fmdb;
 @property (nonatomic, readonly) CBForestDB* forestDB;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 
 @property (nonatomic, readonly) BOOL exists;
 @property (nonatomic, readonly) UInt64 totalDataSize;
-@property (nonatomic, readonly) int schemaVersion;
 @property (nonatomic, readonly) NSDate* startTime;
-
-/** The status of the last SQLite call, either kCBLStatusOK on success, or some error (generally
-    kCBLStatusDBBusy or kCBLStatusDBError.)
-    If you already know there's been an error, you should use lastDbError instead. */
-@property (readonly) CBLStatus lastDbStatus;
-
-/** The error status of the last SQLite call: Generally kCBLStatusDBBusy or kCBLStatusDBError.
-    Always returns some error code, never kCBLStatusOK! It's assumed that you're calling this
-    because a CBLDatabase method failed, so you should be returning _some_ error to the caller. */
-@property (readonly) CBLStatus lastDbError;
-
-- (NSString*) infoForKey: (NSString*)key;
-- (CBLStatus) setInfo: (id)info forKey: (NSString*)key;
 
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
@@ -205,7 +186,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (void) forgetViewNamed: (NSString*)name;
 
 /** Returns the value of an _all_docs query, as an array of CBLQueryRow. */
-- (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;
+- (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options
+                 status: (CBLStatus*)outStatus;
 
 - (CBLView*) makeAnonymousView;
 
@@ -221,7 +203,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                  options: (const CBLChangesOptions*)options
                                   filter: (CBLFilterBlock)filter
-                                  params: (NSDictionary*)filterParams;
+                                  params: (NSDictionary*)filterParams
+                                    status: (CBLStatus*)outStatus;
 
 - (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus;
 

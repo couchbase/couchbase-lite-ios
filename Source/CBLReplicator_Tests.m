@@ -345,8 +345,9 @@ TestCase(CBL_Puller_DocIDs) {
     id lastSeq = repl.lastSequence;
     
     CAssertEqual(lastSeq, @1);
-    
-    Log(@"GOT DOCS: %@", [db getAllDocs:nil]);
+
+    CBLStatus status;
+    Log(@"GOT DOCS: %@", [db getAllDocs:nil status: &status]);
     
     CAssertEq(db.documentCount, 1u);
     CAssertEq(db.lastSequenceNumber, 2);

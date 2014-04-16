@@ -30,9 +30,6 @@
 
 #import <CBForest/CBForest.h>
 
-#import "FMDatabase.h"
-#import "FMDatabaseAdditions.h"
-
 #ifdef GNUSTEP
 #import <openssl/sha.h>
 #else

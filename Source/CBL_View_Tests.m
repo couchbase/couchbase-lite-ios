@@ -526,7 +526,7 @@ TestCase(CBL_View_AllDocsQuery) {
 
     // Query all rows:
     CBLQueryOptions options = kDefaultCBLQueryOptions;
-    NSArray* query = [db getAllDocs: &options];
+    NSArray* query = [db getAllDocs: &options status: &status];
     NSArray* expectedRows = $array(expectedRow[2], expectedRow[0], expectedRow[3], expectedRow[1],
                                    expectedRow[4]);
     CAssertEqual(rowsToDicts(query), expectedRows);
@@ -535,27 +535,27 @@ TestCase(CBL_View_AllDocsQuery) {
     options = kDefaultCBLQueryOptions;
     options.startKey = @"2";
     options.endKey = @"44444";
-    query = [db getAllDocs: &options];
+    query = [db getAllDocs: &options status: &status];
     expectedRows = @[expectedRow[0], expectedRow[3], expectedRow[1]];
     CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Start/end query without inclusive end:
     options.inclusiveEnd = NO;
-    query = [db getAllDocs: &options];
+    query = [db getAllDocs: &options status: &status];
     expectedRows = @[expectedRow[0], expectedRow[3]];
     CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Get zero specific documents:
     options = kDefaultCBLQueryOptions;
     options.keys = @[];
-    query = [db getAllDocs: &options];
+    query = [db getAllDocs: &options status: &status];
     CAssertEq(query.count, 0u);
     
     // Get specific documents:
     options = kDefaultCBLQueryOptions;
     __unused NSArray* keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
     options.keys = keys;
-    query = [db getAllDocs: &options];
+    query = [db getAllDocs: &options status: &status];
     CAssertEqual(rowsToDicts(query), (@[expectedRow[2], expectedRow[3]]));
 
     // Delete a document:
@@ -567,7 +567,7 @@ TestCase(CBL_View_AllDocsQuery) {
     // Get deleted doc, and one bogus one:
     options = kDefaultCBLQueryOptions;
     keys = options.keys = @[@"BOGUS", expectedRow[0][@"id"]];
-    query = [db getAllDocs: &options];
+    query = [db getAllDocs: &options status: &status];
     CAssertEqual(rowsToDicts(query), (@[$dict({@"key",  @"BOGUS"},
                                               {@"error", @"not_found"}),
                                       $dict({@"id",  del.docID},
@@ -577,7 +577,7 @@ TestCase(CBL_View_AllDocsQuery) {
     // Get conflicts:
     options = kDefaultCBLQueryOptions;
     options.allDocsMode = kCBLIncludeConflicts;
-    query = [db getAllDocs: &options];
+    query = [db getAllDocs: &options status: &status];
     NSString* curRevID = [docs[1] revID];
     NSDictionary* expectedConflict1 = $dict({@"id",  @"44444"},
                                             {@"key", @"44444"},
@@ -588,7 +588,7 @@ TestCase(CBL_View_AllDocsQuery) {
 
     // Get _only_ conflicts:
     options.allDocsMode = kCBLOnlyConflicts;
-    query = [db getAllDocs: &options];
+    query = [db getAllDocs: &options status: &status];
     expectedRows = $array(expectedConflict1);
     CAssertEqual(rowsToDicts(query), expectedRows);
 

@@ -288,8 +288,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger total = self.changesTotal - inbox.count;
-    if (![_db findMissingRevisions: inbox]) {
-        Warn(@"%@ failed to look up local revs", self);
+    CBLStatus status;
+    if (![_db findMissingRevisions: inbox status: &status]) {
+        Warn(@"%@ failed to look up local revs; status=%d", self, status);
         inbox = nil;
     }
     if (self.changesTotal != total + inbox.count)

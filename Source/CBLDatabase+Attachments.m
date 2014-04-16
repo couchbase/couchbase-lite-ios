@@ -35,10 +35,7 @@
 #import "CBLInternal.h"
 
 #import "CollectionUtils.h"
-#import "FMDatabase.h"
-#import "FMDatabaseAdditions.h"
-#import "FMResultSet.h"
-#import "GTMNSData+zlib.h"
+//#import "GTMNSData+zlib.h"
 
 
 // Length that constitutes a 'big' attachment
@@ -413,25 +410,14 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 
 - (CBLStatus) garbageCollectAttachments {
-    // First delete attachment rows for already-cleared revisions:
-    // OPT: Could start after last sequence# we GC'd up to
-    [_fmdb executeUpdate:  @"DELETE FROM attachments WHERE sequence IN "
-                            "(SELECT sequence from revs WHERE current=0 AND json IS null)"];
-    
-    // Now collect all remaining attachment IDs and tell the store to delete all but these:
-    // OPT: Unindexed scan of attachments table!
-    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT DISTINCT key FROM attachments"];
-    if (!r)
-        return self.lastDbError;
+    //FIX: REIMPLEMENT!
+#if 0
     NSMutableSet* allKeys = [NSMutableSet set];
-    while ([r next]) {
-        [allKeys addObject: [r dataForColumnIndex: 0]];
-    }
-    [r close];
     NSInteger numDeleted = [_attachments deleteBlobsExceptWithKeys: allKeys];
     if (numDeleted < 0)
         return kCBLStatusAttachmentError;
     Log(@"Deleted %d attachments", (int)numDeleted);
+#endif
     return kCBLStatusOK;
 }
 
