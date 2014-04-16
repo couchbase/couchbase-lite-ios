@@ -65,6 +65,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return _fmdb;
 }
 
+- (CBForestDB*) forestDB {
+    return _forest;
+}
+
 - (CBL_BlobStore*) attachmentStore {
     return _attachments;
 }
@@ -216,8 +220,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                              kCBLCollateJSON_ASCII, CBLCollateJSON);
     sqlite3_create_collation(_fmdb.sqliteHandle, "REVID", SQLITE_UTF8,
                              NULL, CBLCollateRevIDs);
-
-    [CBLView registerFunctions: self];
     
     // Stuff we need to initialize every time the database opens:
     if (![self initialize: @"PRAGMA foreign_keys = ON;" error: outError])
@@ -367,36 +369,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 6;
-    }
-
-    if (dbVersion < 7) {
-        // Version 7: enable full-text search
-        // Note: Apple's SQLite build does not support the icu or unicode61 tokenizers :(
-        // OPT: Could add compress/decompress functions to make stored content smaller
-        NSString* sql = @"CREATE VIRTUAL TABLE fulltext USING fts4(content, tokenize=unicodesn); \
-                          ALTER TABLE maps ADD COLUMN fulltext_id INTEGER; \
-                          CREATE INDEX IF NOT EXISTS maps_by_fulltext ON maps(fulltext_id); \
-                          CREATE TRIGGER del_fulltext DELETE ON maps WHEN old.fulltext_id not null \
-                                BEGIN DELETE FROM fulltext WHERE rowid=old.fulltext_id| END;\
-                          PRAGMA user_version = 7";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 7;
-    }
-
-    // (Version 8 was an older version of the geo index)
-
-    if (dbVersion < 9) {
-        // Version 9: Add geo-query index
-        NSString* sql = @"CREATE VIRTUAL TABLE bboxes USING rtree(rowid, x0, x1, y0, y1); \
-                        ALTER TABLE maps ADD COLUMN bbox_id INTEGER; \
-                        ALTER TABLE maps ADD COLUMN geokey BLOB; \
-                        CREATE TRIGGER del_bbox DELETE ON maps WHEN old.bbox_id not null \
-                        BEGIN DELETE FROM bboxes WHERE rowid=old.bbox_id| END;\
-                        PRAGMA user_version = 9";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 9;
     }
 
     if (dbVersion < 10) {
@@ -1252,45 +1224,62 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 #pragma mark - VIEWS:
+// Note: Public view methods like -viewNamed: are in CBLDatabase.m.
+
+
+static inline NSString* fileNameToViewName(NSString* fileName) {
+    return fileName.stringByDeletingPathExtension;
+}
+
+static inline NSString* viewNameToFileName(NSString* viewName) {
+    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @"/"].length > 0)
+        return nil;
+    return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
+}
 
 
 - (NSArray*) allViews {
-    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT name FROM views"];
-    if (!r)
-        return nil;
-    NSMutableArray* views = $marray();
-    while ([r next])
-        [views addObject: [self viewNamed: [r stringForColumnIndex: 0]]];
-    [r close];
-    return views;
+    NSArray* filenames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir
+                                                                             error: NULL];
+    return [filenames my_map: ^id(NSString* filename) {
+        if ([filename.pathExtension isEqualToString: kViewIndexPathExtension])
+            return [self existingViewNamed: fileNameToViewName(filename)];
+        else
+            return nil;
+    }];
 }
 
 
 - (CBLStatus) deleteViewNamed: (NSString*)name {
-    if (![_fmdb executeUpdate: @"DELETE FROM views WHERE name=?", name])
-        return self.lastDbError;
+    NSString* filename = viewNameToFileName(name);
+    if (!filename)
+        return kCBLStatusBadID;
+    NSString* path = [_dir stringByAppendingPathComponent: filename];
+    NSError* error;
+    if (![[NSFileManager defaultManager] removeItemAtPath: path error: &error])
+        return CBLIsFileNotFoundError(error) ? kCBLStatusNotFound : kCBLStatusDBError;
     [_views removeObjectForKey: name];
-    return _fmdb.changes ? kCBLStatusOK : kCBLStatusNotFound;
+    return kCBLStatusOK;
 }
 
 
 - (CBLView*) makeAnonymousView {
-    for (int n = 1; true; ++n) {
-        NSString* name = $sprintf(@"$anon$%d", n);
-        if ([_fmdb intForQuery: @"SELECT count(*) FROM views WHERE name=?", name] <= 0)
+    for (;;) {
+        NSString* name = $sprintf(@"$anon$%lx", random());
+        if (![self existingViewNamed: name])
             return [self viewNamed: name];
     }
 }
 
-- (CBLView*) compileViewNamed: (NSString*)tdViewName status: (CBLStatus*)outStatus {
-    CBLView* view = [self existingViewNamed: tdViewName];
+- (CBLView*) compileViewNamed: (NSString*)viewName status: (CBLStatus*)outStatus {
+    CBLView* view = [self existingViewNamed: viewName];
     if (view && view.mapBlock)
         return view;
     
     // No CouchbaseLite view is defined, or it hasn't had a map block assigned;
     // see if there's a CouchDB view definition we can compile:
     NSString* language;
-    NSDictionary* viewProps = $castIf(NSDictionary, [self getDesignDocFunction: tdViewName
+    NSDictionary* viewProps = $castIf(NSDictionary, [self getDesignDocFunction: viewName
                                                                            key: @"views"
                                                                       language: &language]);
     if (!viewProps) {
@@ -1300,7 +1289,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         *outStatus = kCBLStatusNotImplemented;
         return nil;
     }
-    view = [self viewNamed: tdViewName];
+    view = [self viewNamed: viewName];
     if (![view compileFromProperties: viewProps language: language]) {
         *outStatus = kCBLStatusCallbackError;
         return nil;

@@ -390,10 +390,7 @@ static NSString* makeLocalDocID(NSString* docID) {
     CBLView* view = _views[name];
     if (view)
         return view;
-    view = [[CBLView alloc] initWithDatabase: self name: name];
-    if (!view.viewID)
-        return nil;
-    return [self registerView: view];
+    return [self registerView: [[CBLView alloc] initWithDatabase: self name: name create: NO]];
 }
 
 
@@ -401,7 +398,7 @@ static NSString* makeLocalDocID(NSString* docID) {
     CBLView* view = _views[name];
     if (view)
         return view;
-    return [self registerView: [[CBLView alloc] initWithDatabase: self name: name]];
+    return [self registerView: [[CBLView alloc] initWithDatabase: self name: name create: YES]];
 }
 
 

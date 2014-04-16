@@ -10,6 +10,10 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLView.h"
 #import "CBLQuery.h"
+@class CBForestMapReduceIndex;
+
+
+#define kViewIndexPathExtension @"viewindex"
 
 
 /** Standard query options for views. */
@@ -54,24 +58,22 @@ typedef enum {
     @private
     CBLDatabase* __weak _weakDB;
     NSString* _name;
-    int _viewID;
     uint8_t _collation;
     CBLContentOptions _mapContentOptions;
+    CBForestMapReduceIndex* _index;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name;
+- (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create;
 
 - (void) databaseClosing;
 
-@property (readonly) int viewID;
 @end
 
 
 @interface CBLView (Internal)
 
-+ (void) registerFunctions: (CBLDatabase*)db;
-
 #if DEBUG  // for unit tests only
+@property (readonly) NSString* indexFilePath;
 - (void) setCollation: (CBLViewCollation)collation;
 #endif
 

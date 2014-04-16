@@ -16,67 +16,23 @@
 #import "CBLView+Internal.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLSpecialKey.h"
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
 #import "CBLGeometry.h"
-
-#import "FMDatabase.h"
-#import "FMDatabaseAdditions.h"
-#import "FMResultSet.h"
 #import "ExceptionUtils.h"
-
-#include "sqlite3_unicodesn_tokenizer.h"
-
-
-static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
-
-
-// Special key object returned by CBLMapKey.
-@interface CBLSpecialKey : NSObject
-- (instancetype) initWithText: (NSString*)text;
-@property (readonly, nonatomic) NSString* text;
-- (instancetype) initWithPoint: (CBLGeoPoint)point;
-- (instancetype) initWithRect: (CBLGeoRect)rect;
-- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON;
-@property (readonly, nonatomic) CBLGeoRect rect;
-@property (readonly, nonatomic) NSData* geoJSONData;
-@end
-
-
-id CBLTextKey(NSString* text) {
-    return [[CBLSpecialKey alloc] initWithText: text];
-}
-
-id CBLGeoPointKey(double x, double y) {
-    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
-}
-
-id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
-    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
-}
-
-id CBLGeoJSONKey(NSDictionary* geoJSON) {
-    id key = [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
-    if (!key)
-        Warn(@"CBLGeoJSONKey doesn't recognize %@",
-             [CBLJSON stringWithJSONObject: geoJSON options:0 error: NULL]);
-    return key;
-}
+#import <CBForest/CBForest.h>
 
 
 @implementation CBLView (Internal)
 
 
-+ (void) registerFunctions:(CBLDatabase *)db {
-    sqlite3* dbHandle = db.fmdb.sqliteHandle;
-    register_unicodesn_tokenizer(dbHandle);
-    sqlite3_create_function(dbHandle, "ftsrank", 1, SQLITE_ANY, NULL,
-                            CBLComputeFTSRank, NULL, NULL);
+#if DEBUG
+- (NSString*) indexFilePath {
+    return _index.filename;
 }
 
-
-#if DEBUG
 - (void) setCollation: (CBLViewCollation)collation {
     _collation = collation;
 }
@@ -127,15 +83,59 @@ id CBLGeoJSONKey(NSDictionary* geoJSON) {
 #pragma mark - INDEXING:
 
 
-static inline NSString* toJSONString( id object ) {
-    if (!object)
-        return nil;
-    return [CBLJSON stringWithJSONObject: object
-                                options: CBLJSONWritingAllowFragments
-                                  error: NULL];
+/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
+- (CBLStatus) updateIndex {
+    LogTo(View, @"Re-indexing view %@ ...", _name);
+    CBLDatabase* db = _weakDB;
+    NSString* viewName = _name;
+    CBLContentOptions contentOptions = _mapContentOptions;
+    CBLMapBlock mapBlock = self.mapBlock;
+    Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
+    if (!_index)
+        return kCBLStatusNotFound;
+
+    _index.sourceDatabase = db.forestDB;
+    _index.map = ^(CBForestDocument* baseDoc, CBForestIndexEmitBlock emit) {
+        CBForestVersions* doc = (CBForestVersions*)baseDoc;
+        NSString *docID=doc.docID, *revID=doc.revID;
+        SequenceNumber sequence = doc.sequence;
+        NSData* json = [doc dataOfRevision: nil];
+        NSDictionary* properties = [db documentPropertiesFromJSON: json
+                                                            docID: docID
+                                                            revID: revID
+                                                          deleted: NO
+                                                         sequence: sequence
+                                                          options: contentOptions];
+        if (!properties) {
+            Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
+            return;
+        }
+
+        // Call the user-defined map() to emit new key/value pairs from this revision:
+        LogTo(View, @"  call map for sequence=%lld...", sequence);
+        @try {
+            mapBlock(properties, emit);
+        } @catch (NSException* x) {
+            MYReportException(x, @"map block of view '%@'", viewName);
+        }
+    };
+
+    uint64_t lastSequence = _index.lastSequenceIndexed;
+    NSError* error;
+    BOOL ok = [_index updateIndex: &error];
+    _index.map = nil;
+
+    if (!ok)
+        return kCBLStatusDBError; //FIX: Improve this
+    else if (_index.lastSequenceIndexed == lastSequence)
+        return kCBLStatusNotModified;
+    else
+        return kCBLStatusOK;
 }
 
 
+
+#if 0
 /** The body of the emit() callback while indexing a view. */
 - (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
     CBLDatabase* db = _weakDB;
@@ -336,136 +336,6 @@ static inline NSString* toJSONString( id object ) {
         Warn(@"CouchbaseLite: Failed to rebuild view '%@': %d", _name, status);
     return status;
 }
-
-
-@end
-
-
-
-
-#pragma mark -
-
-@implementation CBLSpecialKey
-{
-    NSString* _text;
-    CBLGeoRect _rect;
-    NSData* _geoJSONData;
-}
-
-- (instancetype) initWithText: (NSString*)text {
-    Assert(text != nil);
-    self = [super init];
-    if (self) {
-        _text = text;
-    }
-    return self;
-}
-
-- (instancetype) initWithPoint: (CBLGeoPoint)point {
-    self = [super init];
-    if (self) {
-        _rect = (CBLGeoRect){point, point};
-        _geoJSONData = [CBLJSON dataWithJSONObject: CBLGeoPointToJSON(point) options: 0 error:NULL];
-        _geoJSONData = [NSData data]; // Empty _geoJSONData means the bbox is a point
-    }
-    return self;
-}
-
-- (instancetype) initWithRect: (CBLGeoRect)rect {
-    self = [super init];
-    if (self) {
-        _rect = rect;
-        // Don't set _geoJSONData; if nil it defaults to the same as the bbox.
-    }
-    return self;
-}
-
-- (instancetype) initWithGeoJSON: (NSDictionary*)geoJSON {
-    self = [super init];
-    if (self) {
-        if (!CBLGeoJSONBoundingBox(geoJSON, &_rect))
-            return nil;
-        _geoJSONData = [CBLJSON dataWithJSONObject: geoJSON options: 0 error: NULL];
-    }
-    return self;
-}
-
-@synthesize text=_text, rect=_rect, geoJSONData=_geoJSONData;
-
-- (NSString*) description {
-    if (_text) {
-        return $sprintf(@"CBLTextKey(\"%@\")", _text);
-    } else if (_rect.min.x==_rect.max.x && _rect.min.y==_rect.max.y) {
-        return $sprintf(@"CBLGeoPointKey(%g, %g)", _rect.min.x, _rect.min.y);
-    } else {
-        return $sprintf(@"CBLGeoRectKey({%g, %g}, {%g, %g})",
-                        _rect.min.x, _rect.min.y, _rect.max.x, _rect.max.y);
-    }
-}
+#endif
 
 @end
-
-
-
-
-/*    Adapted from http://sqlite.org/fts3.html#appendix_a (public domain)
- *    removing the column-weights feature (because we only have one column)
- **
- ** SQLite user defined function to use with matchinfo() to calculate the
- ** relevancy of an FTS match. The value returned is the relevancy score
- ** (a real value greater than or equal to zero). A larger value indicates
- ** a more relevant document.
- **
- ** The overall relevancy returned is the sum of the relevancies of each
- ** column value in the FTS table. The relevancy of a column value is the
- ** sum of the following for each reportable phrase in the FTS query:
- **
- **   (<hit count> / <global hit count>)
- **
- ** where <hit count> is the number of instances of the phrase in the
- ** column value of the current row and <global hit count> is the number
- ** of instances of the phrase in the same column of all rows in the FTS
- ** table.
- */
-static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal) {
-    const uint32_t *aMatchinfo;                /* Return value of matchinfo() */
-    uint32_t nCol;
-    uint32_t nPhrase;                    /* Number of phrases in the query */
-    uint32_t iPhrase;                    /* Current phrase */
-    double score = 0.0;             /* Value to return */
-
-    /*  Set aMatchinfo to point to the array
-     ** of unsigned integer values returned by FTS function matchinfo. Set
-     ** nPhrase to contain the number of reportable phrases in the users full-text
-     ** query, and nCol to the number of columns in the table.
-     */
-    aMatchinfo = (const uint32_t*)sqlite3_value_blob(apVal[0]);
-    nPhrase = aMatchinfo[0];
-    nCol = aMatchinfo[1];
-
-    /* Iterate through each phrase in the users query. */
-    for(iPhrase=0; iPhrase<nPhrase; iPhrase++){
-        uint32_t iCol;                     /* Current column */
-
-        /* Now iterate through each column in the users query. For each column,
-         ** increment the relevancy score by:
-         **
-         **   (<hit count> / <global hit count>)
-         **
-         ** aPhraseinfo[] points to the start of the data for phrase iPhrase. So
-         ** the hit count and global hit counts for each column are found in
-         ** aPhraseinfo[iCol*3] and aPhraseinfo[iCol*3+1], respectively.
-         */
-        const uint32_t *aPhraseinfo = &aMatchinfo[2 + iPhrase*nCol*3];
-        for(iCol=0; iCol<nCol; iCol++){
-            uint32_t nHitCount = aPhraseinfo[3*iCol];
-            uint32_t nGlobalHitCount = aPhraseinfo[3*iCol+1];
-            if( nHitCount>0 ){
-                score += ((double)nHitCount / (double)nGlobalHitCount);
-            }
-        }
-    }
-
-    sqlite3_result_double(pCtx, score);
-    return;
-}

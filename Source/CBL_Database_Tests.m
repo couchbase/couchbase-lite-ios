@@ -1118,10 +1118,10 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_Purge);
     RequireTestCase(CBL_Database_ReplicatorSequences);
     RequireTestCase(CBL_Database_EmptyDoc);
-    RequireTestCase(CBL_Database_Attachments);
-    RequireTestCase(CBL_Database_PutAttachment);
-    RequireTestCase(CBL_Database_EncodedAttachment);
-    RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
+//TEMP    RequireTestCase(CBL_Database_Attachments);
+//TEMP    RequireTestCase(CBL_Database_PutAttachment);
+//TEMP    RequireTestCase(CBL_Database_EncodedAttachment);
+//TEMP    RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
 }
 
 

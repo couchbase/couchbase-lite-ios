@@ -111,6 +111,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (BOOL) closeInternal;
 
 @property (nonatomic, readonly) CBL_FMDatabase* fmdb;
+@property (nonatomic, readonly) CBForestDB* forestDB;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 

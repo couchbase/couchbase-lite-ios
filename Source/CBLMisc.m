@@ -243,7 +243,7 @@ BOOL CBLIsFileExistsError( NSError* error ) {
         ;
 }
 
-static BOOL CBLIsFileNotFoundError( NSError* error ) {
+BOOL CBLIsFileNotFoundError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
     return ($equal(domain, NSPOSIXErrorDomain) && code == ENOENT)

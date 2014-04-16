@@ -21,26 +21,43 @@
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
 
+#import <CBForest/CBForest.h>
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
 
 
+static inline NSString* viewNameToFileName(NSString* viewName) {
+    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @"/"].length > 0)
+        return nil;
+    return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
+}
+
+
 @implementation CBLView
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name {
+- (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create {
     Assert(db);
     Assert(name.length);
     self = [super init];
     if (self) {
         _weakDB = db;
         _name = [name copy];
-        _viewID = -1;  // means 'unknown'
         _mapContentOptions = kCBLIncludeLocalSeq;
         if (0) { // appease static analyzer
             _collation = 0;
         }
+
+        NSString* filename = viewNameToFileName(_name);
+        if (!filename)
+            return nil;
+        NSString* path = [db.dir stringByAppendingPathComponent: filename];
+        _index = [[CBForestMapReduceIndex alloc] initWithFile: path
+                                                      options: (create ? kCBForestDBCreate : 0)
+                                                        error: NULL];
+        if (!_index)
+            return nil;
     }
     return self;
 }
@@ -54,15 +71,8 @@
 }
 
 
-- (int) viewID {
-    if (_viewID < 0)
-        _viewID = [_weakDB.fmdb intForQuery: @"SELECT view_id FROM views WHERE name=?", _name];
-    return _viewID;
-}
-
-
 - (SequenceNumber) lastSequenceIndexed {
-    return [_weakDB.fmdb longLongForQuery: @"SELECT lastSequence FROM views WHERE name=?", _name];
+    return _index.lastSequenceIndexed;
 }
 
 
@@ -121,31 +131,33 @@
 
 
 - (void) deleteIndex {
-    if (self.viewID <= 0)
+    if (!_index)
         return;
-    CBLDatabase* db = _weakDB;
-    CBLStatus status = [db _inTransaction: ^CBLStatus {
-        if ([db.fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?",
-                                     @(_viewID)]) {
-            [db.fmdb executeUpdate: @"UPDATE views SET lastsequence=0 WHERE view_id=?",
-                                     @(_viewID)];
-        }
-        return db.lastDbStatus;
-    }];
-    if (CBLStatusIsError(status))
-        Warn(@"Error status %d removing index of %@", status, self);
+    NSString* path = _index.filename;
+    [_index close];
+    _index = nil;
+    NSError* error;
+    if( ![[NSFileManager defaultManager] removeItemAtPath: path error: &error])
+        Warn(@"Error removing index of %@: %@", self, error);
+    _index = [[CBForestMapReduceIndex alloc] initWithFile: path
+                                                  options: kCBForestDBCreate
+                                                    error: NULL];
+    if (!_index)
+        Warn(@"Error re-opening index of %@: %@", self, error);
 }
 
 
 - (void) deleteView {
+    [_index close];
+    _index = nil;
     [_weakDB deleteViewNamed: _name];
-    _viewID = 0;
 }
 
 
 - (void) databaseClosing {
+    [_index close];
+    _index = nil;
     _weakDB = nil;
-    _viewID = 0;
 }
 
 

@@ -101,6 +101,9 @@
 		272401CB1860D39B0080E082 /* CBLWebSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401C91860D39B0080E082 /* CBLWebSocketChangeTracker.h */; };
 		272401CC1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */; };
 		272401CD1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */; };
+		2726D14518FDF44000AACC2A /* CBLSpecialKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 2726D14318FDF44000AACC2A /* CBLSpecialKey.h */; };
+		2726D14618FDF44000AACC2A /* CBLSpecialKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 2726D14418FDF44000AACC2A /* CBLSpecialKey.m */; };
+		2726D14718FDF44000AACC2A /* CBLSpecialKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 2726D14418FDF44000AACC2A /* CBLSpecialKey.m */; };
 		272A690D17B2CCF0000722FA /* CBLFacebookAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */; };
 		272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
 		272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */; };
@@ -180,7 +183,7 @@
 		27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */; };
 		27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27538FA317F1ECE8004C3BFD /* LoggingMode.c in Sources */ = {isa = PBXBuildFile; fileRef = 27538FA217F1ECE8004C3BFD /* LoggingMode.c */; };
-		27571E0D18F9060700141BDD /* CBForest in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B7E10518F8FE2800044EBA /* CBForest */; };
+		27571E0D18F9060700141BDD /* CBForest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B7E10518F8FE2800044EBA /* CBForest.framework */; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -972,6 +975,8 @@
 		272401C51860D0850080E082 /* WebSocketHTTPLogic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocketHTTPLogic.m; path = "WebSockets-Cocoa/WebSocket/WebSocketHTTPLogic.m"; sourceTree = "<group>"; };
 		272401C91860D39B0080E082 /* CBLWebSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLWebSocketChangeTracker.h; sourceTree = "<group>"; };
 		272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLWebSocketChangeTracker.m; sourceTree = "<group>"; };
+		2726D14318FDF44000AACC2A /* CBLSpecialKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSpecialKey.h; sourceTree = "<group>"; };
+		2726D14418FDF44000AACC2A /* CBLSpecialKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSpecialKey.m; sourceTree = "<group>"; };
 		272A690B17B2CCF0000722FA /* CBLFacebookAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFacebookAuthorizer.h; sourceTree = "<group>"; };
 		272A690C17B2CCF0000722FA /* CBLFacebookAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLFacebookAuthorizer.m; sourceTree = "<group>"; };
 		2733022818F8572700A488F7 /* CBLAuthenticator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAuthenticator.h; sourceTree = "<group>"; };
@@ -1425,7 +1430,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27571E0D18F9060700141BDD /* CBForest in Frameworks */,
+				27571E0D18F9060700141BDD /* CBForest.framework in Frameworks */,
 				27E7FB04155DBDBF0025F93A /* Security.framework in Frameworks */,
 				27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */,
 				27103F8814EA076600DF7209 /* SystemConfiguration.framework in Frameworks */,
@@ -1631,6 +1636,8 @@
 				2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */,
 				279EB2CC149140DE00E74185 /* CBLView+Internal.h */,
 				279EB2CD149140DE00E74185 /* CBLView+Internal.m */,
+				2726D14318FDF44000AACC2A /* CBLSpecialKey.h */,
+				2726D14418FDF44000AACC2A /* CBLSpecialKey.m */,
 				277EF49317F5F3CB00F7B7F7 /* CBLView+Querying.m */,
 				271C2AD216FA176300B8C9DB /* CBL_Shared.h */,
 				271C2AD316FA176300B8C9DB /* CBL_Shared.m */,
@@ -2217,7 +2224,7 @@
 		27B7E0FB18F8FE2800044EBA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				27B7E10518F8FE2800044EBA /* CBForest */,
+				27B7E10518F8FE2800044EBA /* CBForest.framework */,
 				27571E0618F9060100141BDD /* libCBForest-iOS.a */,
 				27571E0818F9060100141BDD /* CBForestTests.xctest */,
 				27571E0A18F9060100141BDD /* CBForest-iOSTests.xctest */,
@@ -2560,6 +2567,7 @@
 				272401CB1860D39B0080E082 /* CBLWebSocketChangeTracker.h in Headers */,
 				270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */,
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
+				2726D14518FDF44000AACC2A /* CBLSpecialKey.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
 				2762AB5818D36F1B00649D47 /* CBLReplication+Transformation.h in Headers */,
 				2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
@@ -3018,14 +3026,16 @@
 		27571E0818F9060100141BDD /* CBForestTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			path = CBForestTests.xctest;
+			name = CBForestTests.xctest;
+			path = "CBForest Tests.xctest";
 			remoteRef = 27571E0718F9060100141BDD /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27571E0A18F9060100141BDD /* CBForest-iOSTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			path = "CBForest-iOSTests.xctest";
+			name = "CBForest-iOSTests.xctest";
+			path = "CBForest-iOS Tests.xctest";
 			remoteRef = 27571E0918F9060100141BDD /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -3036,10 +3046,10 @@
 			remoteRef = 27571E0B18F9060100141BDD /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		27B7E10518F8FE2800044EBA /* CBForest */ = {
+		27B7E10518F8FE2800044EBA /* CBForest.framework */ = {
 			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = CBForest;
+			fileType = wrapper.framework;
+			path = CBForest.framework;
 			remoteRef = 27B7E10418F8FE2800044EBA /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -3281,6 +3291,7 @@
 				27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
 				27DA435815918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435B15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
+				2726D14618FDF44000AACC2A /* CBLSpecialKey.m in Sources */,
 				27E2E5A4159383E9005B9234 /* CBLAttachment.m in Sources */,
 				27E2E5CE159533A5005B9234 /* CBLReplication.m in Sources */,
 				277EF39E17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
@@ -3519,6 +3530,7 @@
 				27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */,
 				27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */,
 				27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
+				2726D14718FDF44000AACC2A /* CBLSpecialKey.m in Sources */,
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,

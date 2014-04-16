@@ -25,7 +25,7 @@
 #if DEBUG
 
 static CBLDatabase* createDB(void) {
-    return [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite_ViewTest.touchdb"]];
+    return [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite_ViewTest.cblite2"]];
 }
 
 TestCase(CBL_View_Create) {
@@ -139,7 +139,7 @@ TestCase(CBL_View_Index) {
     putDoc(db, $dict({@"clef", @"quatre"}));
     
     CBLView* view = createView(db);
-    CAssertEq(view.viewID, 1);
+    CAssert([view.indexFilePath hasSuffix: @"/CouchbaseLite_ViewTest.cblite2/aview.viewindex"]);
     
     CAssert(view.stale);
     CAssertEq([view updateIndex], kCBLStatusOK);
