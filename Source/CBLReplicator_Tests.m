@@ -253,12 +253,12 @@ TestCase(CBL_Puller) {
     CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
-    CAssertEq(db.lastSequenceNumber, 3);
+    CAssertEq(db.lastSequenceNumber, 2);
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
     replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
-    CAssertEq(db.lastSequenceNumber, 3);
+    CAssertEq(db.lastSequenceNumber, 2);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     CAssert(doc);
@@ -289,12 +289,12 @@ TestCase(CBL_Puller_Continuous) {
     CAssertEqual(lastSeq, @2);
 
     CAssertEq(db.documentCount, 2u);
-    CAssertEq(db.lastSequenceNumber, 3);
+    CAssertEq(db.lastSequenceNumber, 2u);
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
     replic8Continuous(db, remoteURL, NO, nil);
-    CAssertEq(db.lastSequenceNumber, 3);
+    CAssertEq(db.lastSequenceNumber, 2u);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     CAssert(doc);
@@ -350,18 +350,23 @@ TestCase(CBL_Puller_DocIDs) {
     Log(@"GOT DOCS: %@", [db getAllDocs:nil status: &status]);
     
     CAssertEq(db.documentCount, 1u);
-    CAssertEq(db.lastSequenceNumber, 2);
-    
-    // Replicate again; should complete but add no revisions:
-    Log(@"Second replication, should get no more revs:");
-    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
-    CAssertEq(db.lastSequenceNumber, 3);
-    
+    CAssertEq(db.lastSequenceNumber, 1u);
+
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"2-"]);
     CAssertEqual(doc[@"foo"], @1);
     
+    // Now run a regular replication
+    Log(@"Second replication, should bring in doc2:");
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
+    CAssertEq(db.lastSequenceNumber, 2u);
+
+    doc = [db getDocumentWithID: @"doc1" revisionID: nil];
+    CAssert(doc);
+    CAssert([doc.revID hasPrefix: @"2-"]);
+    CAssertEqual(doc[@"foo"], @1);
+
     [db close];
     [server close];
 }
@@ -548,7 +553,8 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Puller);
     RequireTestCase(CBL_Puller_Continuous);
     RequireTestCase(CBL_Puller_FromCouchApp);
-    RequireTestCase(CBLPuller_DocIDs);
+    RequireTestCase(CBL_Puller_DocIDs);
+    RequireTestCase(CBL_Pusher_DocIDs);
     RequireTestCase(ParseReplicatorProperties);
 }
 

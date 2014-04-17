@@ -188,7 +188,7 @@ static NSData* infoKey(NSString* key) {
 }
 
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key {
-    if (![self.localDocs setValue: [info dataUsingEncoding: NSUTF8StringEncoding]
+    if (![self.localDocs setValue: [info.description dataUsingEncoding: NSUTF8StringEncoding]
                              meta: NULL
                            forKey: infoKey(key)
                             error: NULL])

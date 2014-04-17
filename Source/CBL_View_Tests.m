@@ -78,6 +78,7 @@ static NSArray* putDocs(CBLDatabase* db) {
     return docs;
 }
 
+#if 0 //FIX: REIMPLEMENT GEO
 static NSDictionary* mkGeoPoint(double x, double y) {
     return CBLGeoPointToJSON((CBLGeoPoint){x,y});
 }
@@ -107,6 +108,7 @@ static NSArray* putGeoDocs(CBLDatabase* db) {
                                         mkGeoRect(-115,-10, -90, 12)}))];
     return docs;
 }
+#endif
 
 
 static CBLView* createView(CBLDatabase* db) {
@@ -454,6 +456,7 @@ TestCase (CBL_View_NumericKeys) {
     CAssert([db close]);
 }
 
+#if 0 //FIX: REIMPLEMENT GO
 TestCase(CBL_View_GeoQuery) {
     RequireTestCase(CBLGeometry);
     RequireTestCase(CBL_View_Index);
@@ -501,6 +504,7 @@ TestCase(CBL_View_GeoQuery) {
 
     CAssert([db close]);
 }
+#endif
 
 TestCase(CBL_View_AllDocsQuery) {
     CBLDatabase *db = createDB();
@@ -871,6 +875,7 @@ TestCase(CBL_View_LinkedDocs) {
 }
 
 
+#if 0 //FIX: REIMPLEMENT FTS
 TestCase(CBL_View_FullTextQuery) {
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
@@ -974,6 +979,8 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEqual(rowsToDicts(rows), expectedRows);
     CAssert([db close]);
 }
+#endif
+
 
 TestCase(CBLView) {
     RequireTestCase(CBL_View_Query);
@@ -984,6 +991,8 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_LinkedDocs);
     RequireTestCase(CBL_View_Collation);
     RequireTestCase(CBL_View_CollationRaw);
+    RequireTestCase(CBL_View_Grouped);
+    RequireTestCase(CBL_View_GroupedStrings);
 //  RequireTestCase(CBL_View_GeoQuery);
 //  RequireTestCase(CBL_View_FullTextQuery);
 }

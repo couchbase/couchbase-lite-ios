@@ -496,15 +496,14 @@ TestCase(API_Conflict) {
     CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
     CAssert(rev2b, @"Failed to create a a conflict: %@", error);
 
-    CAssertEqual([doc getConflictingRevisions: &error], (@[rev2b, rev2a]));
-    CAssertEqual([doc getLeafRevisions: &error], (@[rev2b, rev2a]));
+    NSArray* expectedLeaves = @[rev2b, rev2a];
+    if ([rev2a.revisionID compare: rev2b.revisionID] > 0)
+        expectedLeaves = @[rev2a, rev2b]; // ensure descending order
+    CBLSavedRevision* defaultRev=expectedLeaves[0], *otherRev=expectedLeaves[1];
 
-    CBLSavedRevision* defaultRev, *otherRev;
-    if ([rev2a.revisionID compare: rev2b.revisionID] > 0) {
-        defaultRev = rev2a; otherRev = rev2b;
-    } else {
-        defaultRev = rev2b; otherRev = rev2a;
-    }
+    CAssertEqual([doc getConflictingRevisions: &error], expectedLeaves);
+    CAssertEqual([doc getLeafRevisions: &error], expectedLeaves);
+
     AssertEqual(doc.currentRevision, defaultRev);
 
     CBLQuery* query = [db createAllDocumentsQuery];
@@ -544,16 +543,15 @@ TestCase(API_Resolve_Conflict) {
     newRev.properties = properties;
     CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
     CAssert(rev2b, @"Failed to create a a conflict: %@", error);
+
+    NSArray* expectedLeaves = @[rev2b, rev2a];
+    if ([rev2a.revisionID compare: rev2b.revisionID] > 0)
+        expectedLeaves = @[rev2a, rev2b]; // ensure descending order
+    CBLSavedRevision* defaultRev=expectedLeaves[0], *otherRev=expectedLeaves[1];
+
+    CAssertEqual([doc getConflictingRevisions: &error], expectedLeaves);
+    CAssertEqual([doc getLeafRevisions: &error], expectedLeaves);
     
-    CAssertEqual([doc getConflictingRevisions: &error], (@[rev2b, rev2a]));
-    CAssertEqual([doc getLeafRevisions: &error], (@[rev2b, rev2a]));
-    
-    CBLSavedRevision* defaultRev, *otherRev;
-    if ([rev2a.revisionID compare: rev2b.revisionID] > 0) {
-        defaultRev = rev2a; otherRev = rev2b;
-    } else {
-        defaultRev = rev2b; otherRev = rev2a;
-    }
     AssertEqual(doc.currentRevision, defaultRev);
     
     [defaultRev deleteDocument:&error];

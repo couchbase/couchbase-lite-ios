@@ -35,7 +35,7 @@
 #import "CBLInternal.h"
 
 #import "CollectionUtils.h"
-//#import "GTMNSData+zlib.h"
+#import "GTMNSData+zlib.h"
 
 
 // Length that constitutes a 'big' attachment
@@ -253,17 +253,39 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
-- (void) expandAttachmentsIn: (CBL_MutableRevision*)rev {
+- (void) expandAttachmentsIn: (CBL_MutableRevision*)rev options: (CBLContentOptions)options {
+    BOOL decodeAttachments = !(options & kCBLLeaveAttachmentsEncoded);
     [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachment) {
-        if (!attachment[@"data"]) {
-            NSData* data = [self dataForAttachmentDict: attachment];
-            if (data) {
-                NSMutableDictionary* expanded = [attachment mutableCopy];
+        NSString* encoding = attachment[@"encoding"];
+        BOOL decodeIt = decodeAttachments && (encoding != nil);
+        if (decodeIt || attachment[@"stub"] || attachment[@"follows"]) {
+            NSMutableDictionary* expanded = [attachment mutableCopy];
+            [expanded removeObjectForKey: @"stub"];
+            [expanded removeObjectForKey: @"follows"];
+
+            NSString* base64Data = attachment[@"data"];
+            if (!base64Data || decodeIt) {
+                NSData* data;
+                if (base64Data)
+                    data = [CBLBase64 decode: base64Data];
+                else
+                    data = [self dataForAttachmentDict: attachment];
+                if (!data) {
+                    Warn(@"Can't get binary data of attachment '%@' of %@", name, rev);
+                    return attachment;
+                }
+                if (decodeIt) {
+                    data = [NSData gtm_dataByInflatingData: data];
+                    if (!data) {
+                        Warn(@"Can't unzip attachment '%@' of %@", name, rev);
+                        return attachment;
+                    }
+                    [expanded removeObjectForKey: @"encoding"];
+                    [expanded removeObjectForKey: @"encoded_length"];
+                }
                 expanded[@"data"] = [CBLBase64 encode: data];
-                [expanded removeObjectForKey: @"stub"];
-                [expanded removeObjectForKey: @"follows"];
-                attachment = expanded;
             }
+            attachment = expanded;
         }
         return attachment;
     }];

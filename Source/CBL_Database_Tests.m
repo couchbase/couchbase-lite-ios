@@ -58,7 +58,7 @@ static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
                            prevRevisionID: props[@"_rev"]
                             allowConflict: NO
                                    status: &status];
-    CAssert(status < 300);
+    CAssert(status < 300, @"Status %d from putRevision:", status);
     CAssert(result.sequence > 0);
     CAssert(result.revID != nil);
     return result;
@@ -543,6 +543,7 @@ TestCase(CBL_Database_DeterministicRevIDs) {
 }
 
 
+// Adding an identical revision to one that already exists should succeed with status 200.
 TestCase(CBL_Database_DuplicateRev) {
     CBLDatabase* db = createDB();
     CBL_Revision* rev1 = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
@@ -1113,9 +1114,12 @@ TestCase(CBL_Database_Purge) {
 
 TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_CRUD);
+    RequireTestCase(CBL_Database_DeterministicRevIDs);
+    RequireTestCase(CBL_Database_DuplicateRev);
     RequireTestCase(CBL_Database_DeleteWithProperties);
     RequireTestCase(CBL_Database_RevTree);
     RequireTestCase(CBL_Database_RevTreeConflict);
+    RequireTestCase(CBL_Database_Validation);
     RequireTestCase(CBL_Database_LocalDocs);
     RequireTestCase(CBL_Database_FindMissingRevisions);
     RequireTestCase(CBL_Database_Purge);

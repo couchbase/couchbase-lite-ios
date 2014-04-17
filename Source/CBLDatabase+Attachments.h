@@ -35,8 +35,9 @@ typedef enum {
             attachmentsFollow: (BOOL)attachmentsFollow;
 
 /** Modifies a CBL_Revision's _attachments dictionary by adding the "data" property to all
-    attachments (and removing "stub" and "follows".) */
-- (void) expandAttachmentsIn: (CBL_MutableRevision*)rev;
+    attachments (and removing "stub" and "follows".) GZip-encoded attachments will be unzipped
+    unless options contains the flag kCBLLeaveAttachmentsEncoded. */
+- (void) expandAttachmentsIn: (CBL_MutableRevision*)rev options: (CBLContentOptions)options;
 
 /** Generates a MIME multipart writer for a revision, with separate body parts for each attachment whose "follows" property is set. */
 - (CBLMultipartWriter*) multipartWriterForRevision: (CBL_Revision*)rev

@@ -191,8 +191,8 @@ static bool groupTogether(id key1, id key2, unsigned groupLevel) {
     if (groupLevel == 0)
         return [key1 isEqual: key2];
     if (![key1 isKindOfClass: [NSArray class]] || ![key2 isKindOfClass: [NSArray class]])
-        return NO;
-    NSUInteger level = MIN([key1 count], [key2 count]);
+        return groupLevel == 1 && [key1 isEqual: key2];
+    NSUInteger level = MIN(groupLevel, MIN([key1 count], [key2 count]));
     for (NSUInteger i = 0; i < level; i++) {
         if (![[key1 objectAtIndex: i] isEqual: [key2 objectAtIndex: i]])
             return NO;

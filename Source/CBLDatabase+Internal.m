@@ -460,7 +460,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     }
 
     if (options & kCBLIncludeAttachments)
-        [self expandAttachmentsIn: rev];
+        [self expandAttachmentsIn: rev options: options];
 }
 
 
@@ -610,7 +610,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev {
-    Assert(rev.docID && rev.revID);
+    if (!rev.docID || !rev.revID)
+        return nil;
     CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
     if (!doc)
         return nil;
