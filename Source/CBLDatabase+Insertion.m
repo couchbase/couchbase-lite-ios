@@ -264,7 +264,7 @@
 
     // Add any new attachments to the blob-store, and turn all of them into stubs:
     oldRev = [self processAttachmentsForRevision: oldRev
-                                      generation: [CBL_Revision generationFromRevID: prevRevID] + 1
+                                       prevRevID: prevRevID
                                           status: outStatus];
     if (!oldRev)
         return nil;
@@ -304,7 +304,8 @@
     newRev.sequence = doc.sequence;
 
     LogTo(CBLDatabase, @"--> created %@", newRev);
-
+    LogTo(CBLDatabaseVerbose, @"    %@", [json my_UTF8ToString]);
+    
     // Epilogue: A change notification is sent:
     [self notifyChange: newRev doc: doc source: nil];
     *outStatus = deleted ?kCBLStatusOK : kCBLStatusCreated;

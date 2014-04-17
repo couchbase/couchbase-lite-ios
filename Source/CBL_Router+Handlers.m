@@ -768,7 +768,6 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET
         return kCBLStatusNotModified;
     
-    NSString* type = nil;
     NSString* acceptEncoding = [_request valueForHTTPHeaderField: @"Accept-Encoding"];
     BOOL acceptEncoded = (acceptEncoding && [acceptEncoding rangeOfString: @"gzip"].length > 0);
 
@@ -795,6 +794,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             return kCBLStatusNotFound;
         _response.body = [CBL_Body bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
     }
+    NSString* type = attachment.contentType;
     if (type)
         _response[@"Content-Type"] = type;
     if (acceptEncoding && attachment->encoding == kCBLAttachmentEncodingGZIP)

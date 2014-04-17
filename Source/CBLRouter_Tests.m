@@ -62,6 +62,7 @@ static CBLResponse* SendRequest(CBLManager* server, NSString* method, NSString* 
     CAssert(response);
     CAssertEq(dataLength, response.body.asJSON.length);
     CAssert(calledOnFinished);
+    Log(@"%@ %@ --> %d", method, path, response.status);
     return response;
 }
 
@@ -85,7 +86,6 @@ static id SendBody(CBLManager* server, NSString* method, NSString* path, id body
                    CBLStatus expectedStatus, id expectedResult) {
     sLastResponse = SendRequest(server, method, path, @{@"Accept": @"application/json"}, bodyObj);
     id result = ParseJSONResponse(sLastResponse);
-    Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
     CAssert(result != nil);
     
     CAssertEq(sLastResponse.internalStatus, expectedStatus);
@@ -814,10 +814,15 @@ TestCase(CBL_Router) {
     RequireTestCase(CBL_Router_Server);
     RequireTestCase(CBL_Router_Databases);
     RequireTestCase(CBL_Router_Docs);
+    RequireTestCase(CBL_Router_LocalDocs);
     RequireTestCase(CBL_Router_AllDocs);
+    RequireTestCase(CBL_Router_Views);
     RequireTestCase(CBL_Router_LongPollChanges);
     RequireTestCase(CBL_Router_ContinuousChanges);
     RequireTestCase(CBL_Router_GetAttachment);
+    RequireTestCase(CBL_Router_GetRange);
+    RequireTestCase(CBL_Router_PutMultipart);
+    RequireTestCase(CBL_Router_OpenRevs);
     RequireTestCase(CBL_Router_RevsDiff);
     RequireTestCase(CBL_Router_AccessCheck);
 }

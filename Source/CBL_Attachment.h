@@ -16,7 +16,6 @@
     @public
     // Yes, these are public. They're simple scalar values so it's not really worth
     // creating accessor methods for them all.
-    CBLBlobKey blobKey;
     UInt64 length;
     UInt64 encodedLength;
     CBLAttachmentEncoding encoding;
@@ -33,6 +32,7 @@
 
 @property (readonly, nonatomic) NSString* name;
 @property (readonly, nonatomic) NSString* contentType;
+@property                       CBLBlobKey blobKey;
 @property (readonly, nonatomic) NSString* digest;
 
 @property (readonly, nonatomic) NSData* data;  // only if inline or stored in db blob-store

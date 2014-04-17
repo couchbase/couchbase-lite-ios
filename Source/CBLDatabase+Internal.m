@@ -231,20 +231,13 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (UInt64) totalDataSize {
+    [_forest commit: NULL];
+
+    NSDirectoryEnumerator* e = [[NSFileManager defaultManager] enumeratorAtPath: _dir];
     UInt64 size = 0;
-    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: _forest.filename
-                                                                           error: NULL];
-    if (!attrs)
-        return 0;
-    size = attrs.fileSize;
-
-    NSString* fmdbPath = [_dir stringByAppendingPathComponent: @"db.sqlite"];
-    attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: fmdbPath error: NULL];
-    if (!attrs)
-        return 0;
-    size += attrs.fileSize;
-
-    return size + _attachments.totalDataSize;
+    while ([e nextObject])
+        size += e.fileAttributes.fileSize;
+    return size;
 }
 
 
@@ -465,6 +458,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (json == nil)
             rev.missing = true;
     }
+
+    if (options & kCBLIncludeAttachments)
+        [self expandAttachmentsIn: rev];
 }
 
 
@@ -523,19 +519,19 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (!doc)
         return nil;
     CBForestRevisionFlags revFlags = [doc flagsOfRevision: revID];
-    if (!(revFlags & kCBForestRevisionHasBody)) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    }
+    BOOL deleted = (revFlags & kCBForestRevisionDeleted) != 0;
     if (revID == nil) {
-        if (revFlags & kCBForestRevisionDeleted) {
+        if (deleted) {
             *outStatus = kCBLStatusDeleted;
             return nil;
         }
         revID = doc.currentRevisionID;
     }
+    if (!(revFlags & kCBForestRevisionHasBody)) {
+        *outStatus = kCBLStatusNotFound;
+        return nil;
+    }
 
-    BOOL deleted = (revFlags & kCBForestRevisionDeleted) != 0;
     CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                        revID: revID
                                                                      deleted: deleted];
@@ -659,9 +655,15 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     NSMutableArray* revIDs = $marray();
     for (NSString* possibleRevID in doc.allRevisionIDs) {
         if ([CBL_Revision generationFromRevID: possibleRevID] < generation) {
-            [revIDs addObject: possibleRevID];
-            if (limit && revIDs.count >= limit)
-                break;
+            CBForestRevisionFlags flags = [doc flagsOfRevision: possibleRevID];
+            if (!(flags & kCBForestRevisionDeleted) && (flags & kCBForestRevisionHasBody)) {
+                // Does it REALLY have a body that hasn't been compacted?
+                if ([doc dataOfRevision: possibleRevID] != nil) {
+                    [revIDs addObject: possibleRevID];
+                    if (limit && revIDs.count >= limit)
+                        break;
+                }
+            }
         }
     }
     return revIDs;
@@ -670,7 +672,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 - (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs {
     unsigned generation = rev.generation;
-    if (generation <= 1)
+    if (generation <= 1 || revIDs.count == 0)
         return nil;
 
     CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
@@ -682,7 +684,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     }];
     for (NSString* possibleRevID in revIDs) {
         if ([doc flagsOfRevision: possibleRevID] != 0) {
-            if ([CBL_Revision generationFromRevID: possibleRevID] < generation) {
+            if ([CBL_Revision generationFromRevID: possibleRevID] <= generation) {
                 return possibleRevID;
             }
         }
@@ -707,7 +709,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                         revID: ancestorID
                                                                       deleted: deleted];
-        rev.missing = (flags & kCBForestRevisionHasBody) == 0;
+        rev.missing = (flags & kCBForestRevisionHasBody) == 0
+                   || [doc dataOfRevision: ancestorID] == nil;
         [history addObject: rev];
     }
     return history;

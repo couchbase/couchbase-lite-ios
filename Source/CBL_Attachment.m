@@ -37,6 +37,8 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 @implementation CBL_Attachment
 {
+    CBLBlobKey _blobKey;
+    NSString* _digest;
     NSData* _data;
 }
 
@@ -64,11 +66,9 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         NSNumber* explicitLength = $castIf(NSNumber, attachInfo[@"length"]);
         self->length = explicitLength.unsignedLongLongValue;
 
-        NSString* digest = $castIf(NSString, attachInfo[@"digest"]);
-        if (digest) {
-            if (!digestToBlobKey(digest, &blobKey))
-                digest = nil;
-        }
+        _digest = $castIf(NSString, attachInfo[@"digest"]);
+        if (_digest)
+            digestToBlobKey(_digest, &_blobKey); // (but digest might not map to a blob key)
 
         NSString* encodingStr = $castIf(NSString, attachInfo[@"encoding"]);
         if (encodingStr) {
@@ -105,7 +105,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
             return self; // skip
         } else if ([attachInfo[@"follows"] isEqual: $true]) {
             // I can't handle this myself; my caller will look it up from the digest
-            if (!self.hasBlobKey) {
+            if (!_digest) {
                 *outStatus = kCBLStatusBadAttachment;
                 return nil;
             }
@@ -129,14 +129,29 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 - (BOOL) hasBlobKey {
     size_t i;
     for (i=0; i<sizeof(CBLBlobKey); i++)
-        if (blobKey.bytes[i])
+        if (_blobKey.bytes[i])
             return true;
     return false;
 }
 
 
+- (CBLBlobKey) blobKey {
+    return _blobKey;
+}
+
+- (void) setBlobKey: (CBLBlobKey)blobKey {
+    _blobKey = blobKey;
+    _digest = nil;
+}
+
+
 - (NSString*) digest {
-    return self.hasBlobKey ? blobKeyToDigest(blobKey) : nil;
+    if (_digest)
+        return _digest;
+    else if (self.hasBlobKey)
+        return blobKeyToDigest(_blobKey);
+    else
+        return nil;
 }
 
 
@@ -158,7 +173,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 - (NSDictionary*) asStubDictionary {
     NSMutableDictionary* dict = $mdict({@"stub", $true},
-                                       {@"digest", blobKeyToDigest(blobKey)},
+                                       {@"digest", blobKeyToDigest(_blobKey)},
                                        {@"content_type", _contentType},
                                        {@"revpos", @(revpos)},
                                        {@"length", @(length)});
@@ -179,7 +194,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     if (_data)
         return _data;
     else
-        return [_database.attachmentStore blobForKey: self->blobKey];
+        return [_database.attachmentStore blobForKey: _blobKey];
 }
 
 
@@ -198,7 +213,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 
 - (NSURL*) dataURL {
-    NSString* path = [_database.attachmentStore pathForKey: self->blobKey];
+    NSString* path = [_database.attachmentStore pathForKey: _blobKey];
     return path ? [NSURL fileURLWithPath: path] : nil;
 }
 
