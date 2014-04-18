@@ -59,17 +59,22 @@ TestCase(DictOf) {
 
 @synthesize changes=_changes, checkedAnSSLCert=_checkedAnSSLCert, caughtUp=_caughtUp, finished=_finished;
 
-- (void) run: (CBLChangeTracker*)tracker expectingChanges: (NSArray*)expectedChanges {
-    [tracker start];
+- (BOOL) waitForChanges: (NSUInteger)expectedChangesCount {
     _running = YES;
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
-    while (_running && _changes.count < expectedChanges.count
+    while (_running && _changes.count < expectedChangesCount
            && [timeout timeIntervalSinceNow] > 0
            && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                        beforeDate: timeout])
         ;
+    return [timeout timeIntervalSinceNow] > 0;
+}
+
+- (void) run: (CBLChangeTracker*)tracker expectingChanges: (NSArray*)expectedChanges {
+    [tracker start];
+    BOOL ok = [self waitForChanges: expectedChanges.count];
     [tracker stop];
-    if ([timeout timeIntervalSinceNow] <= 0) {
+    if (!ok) {
         Warn(@"Timeout contacting %@", tracker.databaseURL);
         return;
     }
@@ -77,15 +82,25 @@ TestCase(DictOf) {
     CAssertEqual(_changes, expectedChanges);
 }
 
+- (void) run: (CBLChangeTracker*)tracker expectingChangeCount: (NSUInteger)changeCount {
+    [tracker start];
+    BOOL ok = [self waitForChanges: changeCount];
+    [tracker stop];
+    if (!ok) {
+        Warn(@"Timeout contacting %@", tracker.databaseURL);
+        return;
+    }
+    AssertNil(tracker.error);
+    CAssertEq(_changes.count, changeCount);
+}
+
 - (void) run: (CBLChangeTracker*)tracker expectingError: (NSError*)error {
     [tracker start];
-    _running = YES;
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 60];
-    while (_running && [timeout timeIntervalSinceNow] > 0
-           && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                       beforeDate: timeout])
-        ;
-    Assert(!_running, @"-changeTrackerStoped: wasn't called");
+    if (![self waitForChanges: 1]) {
+        Warn(@"Timeout contacting %@", tracker.databaseURL);
+        return;
+    }
+    Assert(!_running, @"-changeTrackerStopped: wasn't called");
     Assert(_caughtUp, @"-changeTrackerCaughtUp wasn't called");
     Assert(_finished, @"-changeTrackerFinished wasn't called");
     CAssertEqual(tracker.error.domain, error.domain);
@@ -154,22 +169,9 @@ TestCase(CBLChangeTracker_Simple) {
 TestCase(CBLChangeTracker_SSL) {
     // The only difference here is the "https:" scheme in the URL.
     CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
-    NSURL* url = [NSURL URLWithString: @"https://snej.iriscouch.com/tdpuller_test1"];
+    NSURL* url = [NSURL URLWithString: @"https://snej.cloudant.com/attachment-test"];
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
-    NSArray* expected = $array($dict({@"seq", @1},
-                                     {@"id", @"foo"},
-                                     {@"revs", $array(@"5-ca289aa53cbbf35a5f5c799b64b1f16f")}),
-                               $dict({@"seq", @2},
-                                     {@"id", @"attach"},
-                                     {@"revs", $array(@"1-a7e2aad2bc8084b9041433182e292d8e")}),
-                               $dict({@"seq", @5},
-                                     {@"id", @"bar"},
-                                     {@"revs", $array(@"1-16f4304cd5ad8779fb40cb6bbbed60f5")}),
-                               $dict({@"seq", @6},
-                                     {@"id", @"08a5cb4cc83156401c85bbe40e0007de"},
-                                     {@"deleted", $true},
-                                     {@"revs", $array(@"3-cbdb323dec78588cfea63bf7bb5a246f")}) );
-    [tester run: tracker expectingChanges: expected];
+    [tester run: tracker expectingChangeCount: 1];
     CAssert(tester.checkedAnSSLCert);
 }
 

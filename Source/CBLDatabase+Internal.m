@@ -252,57 +252,17 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #pragma mark - TRANSACTIONS & NOTIFICATIONS:
 
 
-- (BOOL) beginTransaction {
-    ++_transactionLevel;
-    LogTo(CBLDatabase, @"Begin transaction (level %d)...", _transactionLevel);
-    return YES;
-}
-
-- (BOOL) endTransaction: (BOOL)commit {
-    Assert(_transactionLevel > 0);
-    BOOL ok = YES;
-    if (commit) {
-        LogTo(CBLDatabase, @"Commit transaction (level %d)", _transactionLevel);
-    } else {
-        LogTo(CBLDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
-        //FIX: There's no way to cancel a transaction with ForestDB, is there?
-    }
-
-    --_transactionLevel;
-
-    if (_transactionLevel == 0)
-        [_forest commit: NULL];
-
-    [self postChangeNotifications];
-    return ok;
-}
-
 - (CBLStatus) _inTransaction: (CBLStatus(^)())block {
-    CBLStatus status;
-    int retries = 0;
-    do {
-        if (![self beginTransaction])
-            return kCBLStatusDBError;
-        @try {
-            status = block();
-        } @catch (NSException* x) {
-            MYReportException(x, @"CBLDatabase transaction");
-            status = kCBLStatusException;
-        } @finally {
-            [self endTransaction: !CBLStatusIsError(status)];
-        }
-        if (status == kCBLStatusDBBusy) {
-            // retry if locked out:
-            if (_transactionLevel > 1)
-                break;
-            if (++retries > kTransactionMaxRetries) {
-                Warn(@"%@: Db busy, too many retries, giving up", self);
-                break;
-            }
-            Log(@"%@: Db busy, retrying transaction (#%d)...", self, retries);
-            [NSThread sleepForTimeInterval: kTransactionRetryDelay];
-        }
-    } while (status == kCBLStatusDBBusy);
+    LogTo(CBLDatabase, @"BEGIN transaction...");
+    ++_transactionLevel;
+    __block CBLStatus status = kCBLStatusException;
+    [_forest inTransaction: ^BOOL{
+        status = block();
+        return !CBLStatusIsError(status);
+    }];
+    LogTo(CBLDatabase, @"END transaction (status=%d)", status);
+    if (--_transactionLevel == 0)
+        [self postChangeNotifications];
     return status;
 }
 

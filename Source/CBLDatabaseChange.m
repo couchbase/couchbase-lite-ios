@@ -69,4 +69,9 @@
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@]", self.class, _addedRevision];
+}
+
+
 @end

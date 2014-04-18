@@ -58,13 +58,13 @@ static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
 
 
 static void createDocuments(CBLDatabase* db, unsigned n) {
-    [db inTransaction:^BOOL{
-    for (unsigned i=0; i<n; i++) {
+    [db inTransaction: ^BOOL {
+        for (unsigned i=0; i<n; i++) {
             @autoreleasepool {
-        NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
-        createDocumentWithProperties(db, properties);
-    }
-}
+                NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
+                createDocumentWithProperties(db, properties);
+            }
+        }
         return YES;
     }];
 }
@@ -639,22 +639,26 @@ TestCase(API_Attachments) {
 
 TestCase(API_ChangeTracking) {
     CBLDatabase* db = createEmptyDB();
-    __block int changeCount = 0;
+    __block int changeCount = 0, notificationCount = 0;
     [[NSNotificationCenter defaultCenter] addObserverForName: kCBLDatabaseChangeNotification
                                                       object: db
                                                        queue: nil
-                                                  usingBlock: ^(NSNotification *n) {
-                                                      ++changeCount;
-                                                  }];
-    
+                                                  usingBlock: ^(NSNotification *n)
+     {
+         NSArray* changes = n.userInfo[@"changes"];
+         //Log(@"Notification: %@", changes);
+         Assert(changes.count > 0);
+         changeCount += changes.count;
+         notificationCount++;
+     }];
+
     createDocuments(db,5);
+    CAssertEq(db.lastSequenceNumber, 5);
 
     [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 1.0]];
-    // We expect that the changes reported by the server won't be notified, because those revisions
-    // are already cached in memory.
-    CAssertEq(changeCount, 1);
-    
-    CAssertEq(db.lastSequenceNumber, 5);
+
+    CAssertEq(changeCount, 5);
+    CAssertEq(notificationCount, 1); // All 5 changes should be batched in one notification
     closeTestDB(db);
 }
 
