@@ -46,6 +46,11 @@
 /** Is this model new, never before saved? */
 @property (readonly) bool isNew;
 
+/** Defines the type of document used. Set this to a unique string that defines your model 
+    to instantiate classes via CBLModelFactory. Make sure you register the class type via 
+    [CBLModelFactory registerClass: ofType:] message. */
+@property (strong, nonatomic) NSString* type;
+
 #pragma mark - SAVING:
 
 /** Writes any changes to a new revision of the document.
