@@ -186,6 +186,7 @@
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29051649A13900B0D8EE /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* CBLReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275A7CF21901AE0D00729933 /* libCBForest-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27571E0618F9060100141BDD /* libCBForest-iOS.a */; };
 		2762AB5818D36F1B00649D47 /* CBLReplication+Transformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2762AB5918D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */; };
 		2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */; };
@@ -804,6 +805,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 270FE0C714C5008C005FF647;
 			remoteInfo = LiteServ;
+		};
+		275A7CEA1901AE0900729933 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27139B9418F8EE3A0021A9A3;
+			remoteInfo = "CBForest-iOS";
 		};
 		27AD1F8617C29BE80063108F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1483,6 +1491,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				275A7CF21901AE0D00729933 /* libCBForest-iOS.a in Frameworks */,
 				27B0B7AA1492B83B00A817AD /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2212,8 +2221,8 @@
 			children = (
 				27B7E10518F8FE2800044EBA /* CBForest.framework */,
 				27571E0618F9060100141BDD /* libCBForest-iOS.a */,
-				27571E0818F9060100141BDD /* CBForestTests.xctest */,
-				27571E0A18F9060100141BDD /* CBForest-iOSTests.xctest */,
+				27571E0818F9060100141BDD /* CBForest Tests.xctest */,
+				27571E0A18F9060100141BDD /* CBForest-iOS Tests.xctest */,
 				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
 				27571E0C18F9060100141BDD /* libforestdb.a */,
 			);
@@ -2808,6 +2817,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				275A7CEB1901AE0900729933 /* PBXTargetDependency */,
 			);
 			name = "CBL iOS library";
 			productName = TouchDBiOS;
@@ -2946,7 +2956,7 @@
 						DevelopmentTeam = N2Q372V7W2;
 					};
 					27B0B80A1492C16300A817AD = {
-						DevelopmentTeam = KAZWMGZL2X;
+						DevelopmentTeam = N2Q372V7W2;
 					};
 				};
 			};
@@ -2994,18 +3004,16 @@
 			remoteRef = 27571E0518F9060100141BDD /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		27571E0818F9060100141BDD /* CBForestTests.xctest */ = {
+		27571E0818F9060100141BDD /* CBForest Tests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			name = CBForestTests.xctest;
 			path = "CBForest Tests.xctest";
 			remoteRef = 27571E0718F9060100141BDD /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		27571E0A18F9060100141BDD /* CBForest-iOSTests.xctest */ = {
+		27571E0A18F9060100141BDD /* CBForest-iOS Tests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			name = "CBForest-iOSTests.xctest";
 			path = "CBForest-iOS Tests.xctest";
 			remoteRef = 27571E0918F9060100141BDD /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -3738,6 +3746,11 @@
 			target = 270FE0C714C5008C005FF647 /* LiteServ */;
 			targetProxy = 275A29161649A55500B0D8EE /* PBXContainerItemProxy */;
 		};
+		275A7CEB1901AE0900729933 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CBForest-iOS";
+			targetProxy = 275A7CEA1901AE0900729933 /* PBXContainerItemProxy */;
+		};
 		27AD1F8717C29BE80063108F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */;
@@ -4198,6 +4211,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest,
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
@@ -4221,6 +4235,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest,
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
@@ -4309,7 +4324,7 @@
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Grocery Sync";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "745846E5-A2A9-43F9-A12A-F39D992219E0";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4338,7 +4353,7 @@
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Grocery Sync";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "745846E5-A2A9-43F9-A12A-F39D992219E0";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

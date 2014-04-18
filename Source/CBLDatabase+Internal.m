@@ -351,17 +351,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #pragma mark - GETTING DOCUMENTS:
 
 
-- (NSUInteger) documentCount {
-    [_forest commit: NULL]; //FIX: This is a workaround for a ForestDB bug
-    return _forest.info.documentCount;
-}
-
-
-- (SequenceNumber) lastSequenceNumber {
-    return _forest.info.lastSequence;
-}
-
-
 /** Inserts the _id, _rev, _attachments etc. properties into the dictionary 'dst'.
     Rev must already have its revID and sequence properties set. */
 - (void) extraPropertiesForRevision: (CBL_Revision*)rev

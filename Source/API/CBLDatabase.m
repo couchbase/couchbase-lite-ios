@@ -102,6 +102,16 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
+- (NSUInteger) documentCount {
+    return (NSUInteger)_forest.info.documentCount;
+}
+
+
+- (SequenceNumber) lastSequenceNumber {
+    return _forest.info.lastSequence;
+}
+
+
 - (void) postPublicChangeNotification: (NSArray*)changes {
     BOOL external = NO;
     for (CBLDatabaseChange* change in changes) {
@@ -320,10 +330,6 @@ static void catchInBlock(void (^block)()) {
 - (CBLQuery*) createAllDocumentsQuery {
     return [[CBLQuery alloc] initWithDatabase: self view: nil];
 }
-
-
-// Appease the compiler; these are actually implemented in CBLDatabase+Internal.m
-@dynamic documentCount, lastSequenceNumber;
 
 
 static NSString* makeLocalDocID(NSString* docID) {

@@ -141,7 +141,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 - (void) deleteView {
-    [_index delete: NULL];
+    [_index deleteDatabase: NULL];
     _index = nil;
     [_weakDB forgetViewNamed: _name];
 }

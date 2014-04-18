@@ -54,6 +54,9 @@ TestCase(CBL_View_Create) {
     changed = [view setMapBlock: MAPBLOCK({})
                     reduceBlock: NULL version: @"2"];
     CAssert(changed);
+
+    [view deleteIndex];
+    [view deleteView];
     
     CAssert([db close]);
 }

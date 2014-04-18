@@ -134,7 +134,7 @@
     CBLStatus status = [self openDB];
     if (CBLStatusIsError(status))
         return status;
-    NSUInteger num_docs = db.documentCount;
+    UInt64 num_docs = db.documentCount;
     SequenceNumber update_seq = db.lastSequenceNumber;
     if (num_docs == NSNotFound || update_seq == NSNotFound)
         return kCBLStatusDBError;
