@@ -192,8 +192,8 @@
 }
 
 
-- (CBL_Revision*) putRevision: (CBL_Revision*)putRev
-               prevRevisionID: (NSString*)prevRevID
+- (CBL_Revision*) putRevision: (CBL_Revision*)inPutRev
+               prevRevisionID: (NSString*)inPrevRevID
                 allowConflict: (BOOL)allowConflict
                        status: (CBLStatus*)outStatus
 {
@@ -201,6 +201,8 @@
     // a regular PUT in the REST API: The doc ID, and the new body. The actual
     // rev ID of the new revision will be assigned down below before it's inserted.
     Assert(outStatus);
+    __block CBL_Revision* putRev = inPutRev;
+    __block NSString* prevRevID = inPrevRevID;
     NSString* docID = putRev.docID;
     BOOL deleting = putRev.deleted;
     LogTo(CBLDatabase, @"PUT _id=%@, _rev=%@, _deleted=%d, allowConflict=%d",
@@ -215,105 +217,98 @@
     if (!docID)
         docID = [[self class] generateDocumentID];
 
-    // Get the ForestDB document:
-    NSError* error;
-    CBForestVersions* doc = (CBForestVersions*) [_forest documentWithID: docID
-                                                                options: kCBForestDBCreateDoc
-                                                                  error: &error];
-    if (!doc) {
-        *outStatus = kCBLStatusDBError;
-        return nil;
-    }
-    doc.maxDepth = (unsigned)self.maxRevTreeDepth;
+    __block CBForestVersions* doc = nil;
+    __block NSString* newRevID = nil;
+    __block NSData* json = nil;
 
-    CBForestRevisionFlags prevRevFlags = [doc flagsOfRevision: prevRevID];
-    if (prevRevID) {
-        // Updating an existing revision; make sure it exists and is a leaf:
-        CBForestRevisionFlags revFlags = [doc flagsOfRevision: prevRevID];
-        if (!(revFlags & kCBForestRevisionKnown)) {
-            *outStatus = kCBLStatusNotFound;
-            return nil;
-        } else if (!allowConflict && !(revFlags & kCBForestRevisionLeaf)) {
-            *outStatus = kCBLStatusConflict;
-            return nil;
-        }
-    } else {
-        // No parent revision given:
-        if (deleting) {
-            // Didn't specify a revision to delete: NotFound or a Conflict, depending
-            *outStatus = doc.exists ? kCBLStatusConflict : kCBLStatusNotFound;
-            return nil;
-        }
-        // If doc exists, current rev must be in a deleted state or there will be a conflict:
-        if (prevRevFlags & kCBForestRevisionKnown) {
-            if (prevRevFlags & kCBForestRevisionDeleted) {
-                // New rev will be child of the tombstone:
-                // (T0D0: Direct a horror movie called "Child Of The Tombstone"!)
-                prevRevID = doc.revID;
-            } else if (!allowConflict) {
-                *outStatus = kCBLStatusConflict;
-                return nil;
+    *outStatus = [self _inTransaction: ^CBLStatus {
+        // Get the ForestDB document:
+        NSError* error;
+        doc = (CBForestVersions*) [_forest documentWithID: docID
+                                                  options: kCBForestDBCreateDoc
+                                                    error: &error];
+        if (!doc)
+            return kCBLStatusDBError;
+        doc.maxDepth = (unsigned)self.maxRevTreeDepth;
+
+        CBForestRevisionFlags prevRevFlags = [doc flagsOfRevision: prevRevID];
+        if (prevRevID) {
+            // Updating an existing revision; make sure it exists and is a leaf:
+            CBForestRevisionFlags revFlags = [doc flagsOfRevision: prevRevID];
+            if (!(revFlags & kCBForestRevisionKnown))
+                return kCBLStatusNotFound;
+            else if (!allowConflict && !(revFlags & kCBForestRevisionLeaf))
+                return kCBLStatusConflict;
+        } else {
+            // No parent revision given:
+            if (deleting) {
+                // Didn't specify a revision to delete: NotFound or a Conflict, depending
+                return doc.exists ? kCBLStatusConflict : kCBLStatusNotFound;
+            }
+            // If doc exists, current rev must be in a deleted state or there will be a conflict:
+            if (prevRevFlags & kCBForestRevisionKnown) {
+                if (prevRevFlags & kCBForestRevisionDeleted) {
+                    // New rev will be child of the tombstone:
+                    // (T0D0: Direct a horror movie called "Child Of The Tombstone"!)
+                    prevRevID = doc.revID;
+                } else if (!allowConflict) {
+                    return kCBLStatusConflict;
+                }
             }
         }
-    }
 
-    // Run any validation blocks:
-    if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
-        CBL_Revision* fakeNewRev = [putRev mutableCopyWithDocID: docID revID: nil];
-        CBL_Revision* prevRev = nil;
-        if (prevRevID) {
-            prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
-                                          deleted: (prevRevFlags & kCBForestRevisionDeleted) != 0];
+        // Run any validation blocks:
+        if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
+            CBL_Revision* fakeNewRev = [putRev mutableCopyWithDocID: docID revID: nil];
+            CBL_Revision* prevRev = nil;
+            if (prevRevID) {
+                prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
+                                              deleted: (prevRevFlags & kCBForestRevisionDeleted) != 0];
+            }
+            CBLStatus status = [self validateRevision: fakeNewRev
+                                     previousRevision: prevRev
+                                          parentRevID: prevRevID];
+            if (CBLStatusIsError(status))
+                return status;
         }
-        *outStatus = [self validateRevision: fakeNewRev
-                           previousRevision: prevRev
-                                parentRevID: prevRevID];
-        if (CBLStatusIsError(*outStatus))
-            return nil;
-    }
 
-    // Add any new attachment data to the blob-store, and turn all of them into stubs:
-    putRev = [self processAttachmentsForRevision: putRev
-                                       prevRevID: prevRevID
-                                          status: outStatus];
-    if (!putRev)
-        return nil;
+        // Add any new attachment data to the blob-store, and turn all of them into stubs:
+        putRev = [self processAttachmentsForRevision: putRev
+                                           prevRevID: prevRevID
+                                              status: outStatus];
+        if (!putRev)
+            return NO;
 
-    // Encode the body as JSON:
-    NSData* json = nil;
-    if (putRev.properties) {
-        json = [self encodeDocumentJSON: putRev];
-        if (!json) {
-            *outStatus = kCBLStatusBadJSON;
-            return nil;
+        // Encode the body as JSON:
+        if (putRev.properties) {
+            json = [self encodeDocumentJSON: putRev];
+            if (!json)
+                return kCBLStatusBadJSON;
         }
-    }
 
-    // Compute the new revID:
-    NSString* newRevID = [self generateRevIDForJSON: json deleted: deleting prevRevID: prevRevID];
-    if (!newRevID) {
-        *outStatus = kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
-        return nil;
-    }
+        // Compute the new revID:
+        newRevID = [self generateRevIDForJSON: json deleted: deleting prevRevID: prevRevID];
+        if (!newRevID)
+            return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
 
-    *outStatus = kCBLStatusOK;
-    if ([doc flagsOfRevision: newRevID] == 0) {
-        // Add the revision to the database (if it doesn't already exist):
+        if ([doc flagsOfRevision: newRevID] != 0)
+            return kCBLStatusOK;    // Revision already exists
+
+        // Add the revision to the database:
         if (![doc addRevision: json
                      deletion: putRev.deleted
                        withID: newRevID
                      parentID: prevRevID
                 allowConflict: allowConflict]) {
-            *outStatus = kCBLStatusDBError;
-            return nil;
+            return kCBLStatusDBError;
+        } else if (![doc save: &error]) {
+            return kCBLStatusDBError;
+        } else {
+            return deleting ? kCBLStatusOK : kCBLStatusCreated;
         }
-        if (![doc save: &error]) {
-            *outStatus = kCBLStatusDBError;
-            return nil;
-        }
-        if (!deleting)
-            *outStatus = kCBLStatusCreated;
-    }
+    }];
+    if (CBLStatusIsError(*outStatus))
+        return nil;
 
     CBL_MutableRevision* newRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
     newRev.sequence = doc.sequence;
@@ -339,6 +334,10 @@
     if (![CBLDatabase isValidDocumentID: docID] || !revID)
         return kCBLStatusBadID;
     
+    NSData* json = [self encodeDocumentJSON: inRev];
+    if (!json)
+        return kCBLStatusBadJSON;
+
     NSUInteger historyCount = history.count;
     if (historyCount == 0) {
         history = @[revID];
@@ -348,47 +347,50 @@
     }
 
     // First get the CBForest doc:
-    NSError* error;
-    CBForestVersions* doc = (CBForestVersions*)[_forest documentWithID: docID
-                                                               options: kCBForestDBCreateDoc
-                                                                 error: &error];
-    if (!doc)
-        return kCBLStatusDBError;
-    doc.maxDepth = (unsigned)self.maxRevTreeDepth;
+    __block CBForestVersions* doc;
+    CBLStatus status = [self _inTransaction: ^CBLStatus {
+        NSError* error;
+        doc = (CBForestVersions*)[_forest documentWithID: docID
+                                                 options: kCBForestDBCreateDoc
+                                                   error: &error];
+        if (!doc)
+            return kCBLStatusDBError;
+        doc.maxDepth = (unsigned)self.maxRevTreeDepth;
 
-    // Add the revision & ancestry to the doc:
-    NSData* json = [self encodeDocumentJSON: inRev];
-    if (!json)
-        return kCBLStatusBadJSON;
-    NSInteger common = [doc addRevision: json
-                               deletion: inRev.deleted
-                                history: history];
-    if (common < 0)
-        return kCBLStatusDBError;   //FIX: Get a more detailed status
-    if (common == 0)
-        return kCBLStatusOK;      // No-op: No new revisions were inserted.
+        // Add the revision & ancestry to the doc:
+        NSInteger common = [doc addRevision: json
+                                   deletion: inRev.deleted
+                                    history: history];
+        if (common < 0)
+            return kCBLStatusDBError;   //FIX: Get a more detailed status
+        else if (common == 0)
+            return kCBLStatusOK;      // No-op: No new revisions were inserted.
 
-    // Validate against the common ancestor:
-    if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
-        NSString* commonAncestor = history[common];
-        CBForestRevisionFlags flags = [doc flagsOfRevision: commonAncestor];
-        BOOL deleted = (flags & kCBForestRevisionDeleted) != 0;
-        CBL_Revision* prev = [[CBL_Revision alloc] initWithDocID: docID
-                                                           revID: commonAncestor
-                                                         deleted: deleted];
-        NSString* parentRevID = (history.count > 1) ? history[1] : nil;
-        CBLStatus status = [self validateRevision: rev
-                                 previousRevision: prev
-                                      parentRevID: parentRevID];
-        if (CBLStatusIsError(status))
-            return status;
-    }
+        // Validate against the common ancestor:
+        if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
+            NSString* commonAncestor = history[common];
+            CBForestRevisionFlags flags = [doc flagsOfRevision: commonAncestor];
+            BOOL deleted = (flags & kCBForestRevisionDeleted) != 0;
+            CBL_Revision* prev = [[CBL_Revision alloc] initWithDocID: docID
+                                                               revID: commonAncestor
+                                                             deleted: deleted];
+            NSString* parentRevID = (history.count > 1) ? history[1] : nil;
+            CBLStatus status = [self validateRevision: rev
+                                     previousRevision: prev
+                                          parentRevID: parentRevID];
+            if (CBLStatusIsError(status))
+                return status;
+        }
 
-    // Save updated doc back to the database:
-    if (![doc save: &error])
-        return kCBLStatusDBError;
-    [self notifyChange: inRev doc: doc source: source];
-    return kCBLStatusCreated;
+        // Save updated doc back to the database:
+        if (![doc save: &error])
+            return kCBLStatusDBError;
+        return kCBLStatusCreated;
+    }];
+
+    if (!CBLStatusIsError(status))
+        [self notifyChange: inRev doc: doc source: source];
+    return status;
 }
 
 

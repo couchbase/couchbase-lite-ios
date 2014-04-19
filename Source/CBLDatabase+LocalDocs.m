@@ -108,42 +108,46 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
         return *outStatus < 300 ? revision : nil;
     } else {
         // PUT:
-        NSError* error;
-        CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
-        if (!doc && error && error.code != kCBForestErrorNotFound) {
-            *outStatus = kCBLStatusDBError;
-            return nil;
-        }
+        *outStatus = kCBLStatusOK;
+        __block NSString* newRevID = nil;
+        BOOL ok = [_localDocs inTransaction: ^BOOL {
+            NSError* error;
+            CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
+            if (!doc && error && error.code != kCBForestErrorNotFound) {
+                *outStatus = kCBLStatusDBError;
+                return NO;
+            }
 
-        unsigned generation = 0;
-        if (prevRevID) {
-            if (!$equal(prevRevID, getDocRevID(doc))) {
-                *outStatus = kCBLStatusConflict;
-                return nil;
+            unsigned generation = 0;
+            if (prevRevID) {
+                if (!$equal(prevRevID, getDocRevID(doc))) {
+                    *outStatus = kCBLStatusConflict;
+                    return NO;
+                }
+                generation = [CBL_Revision generationFromRevID: prevRevID];
+                if (generation == 0) {
+                    *outStatus = kCBLStatusBadID;
+                    return NO;
+                }
+            } else {
+                if (doc) {
+                    *outStatus = kCBLStatusConflict;
+                    return NO;
+                }
+                doc = [self.localDocs makeDocumentWithID: docID];
             }
-            generation = [CBL_Revision generationFromRevID: prevRevID];
-            if (generation == 0) {
-                *outStatus = kCBLStatusBadID;
-                return nil;
-            }
-        } else {
-            if (doc) {
-                *outStatus = kCBLStatusConflict;
-                return nil;
-            }
-            doc = [self.localDocs makeDocumentWithID: docID];
-        }
-        NSString* newRevID = $sprintf(@"%d-local", ++generation);
+            newRevID = $sprintf(@"%d-local", ++generation);
 
-        if (![doc writeBody: [self encodeDocumentJSON: revision]
-                   metadata: [newRevID dataUsingEncoding: NSUTF8StringEncoding]
-                      error: &error]) {
-            *outStatus = kCBLStatusDBError;
-            return nil;
-        }
-        [_localDocs commit: NULL];
-        *outStatus = kCBLStatusCreated;
-        return [revision mutableCopyWithDocID: docID revID: newRevID];
+            if (![doc writeBody: [self encodeDocumentJSON: revision]
+                       metadata: [newRevID dataUsingEncoding: NSUTF8StringEncoding]
+                          error: &error]) {
+                *outStatus = kCBLStatusDBError;
+                return NO;
+            }
+            *outStatus = kCBLStatusCreated;
+            return YES;
+        }];
+        return ok ? [revision mutableCopyWithDocID: docID revID: newRevID] : nil;
     }
 }
 
@@ -156,20 +160,24 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
         return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
     }
 
-    NSError* error;
-    CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
-    if (!doc) {
-        if (!error || error.code == kCBForestErrorNotFound)
-            return kCBLStatusNotFound;
-        else
-            return kCBLStatusDBError;
-    }
-    if (!$equal(getDocRevID(doc), revID))
-        return kCBLStatusConflict;
-    if (![self.localDocs deleteDocument: doc error: &error])
-        return kCBLStatusDBError;
-    [_localDocs commit: NULL];
-    return kCBLStatusOK;
+    __block CBLStatus status = kCBLStatusOK;
+    [self.localDocs inTransaction: ^BOOL {
+        NSError* error;
+        CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
+        if (!doc) {
+            if (!error || error.code == kCBForestErrorNotFound)
+                status = kCBLStatusNotFound;
+            else
+                status = kCBLStatusDBError;
+        } else {
+            if (!$equal(getDocRevID(doc), revID))
+                status = kCBLStatusConflict;
+            else if (![self.localDocs deleteDocument: doc error: &error])
+                status = kCBLStatusDBError;
+        }
+        return !CBLStatusIsError(status);
+    }];
+    return status;
 }
 
 

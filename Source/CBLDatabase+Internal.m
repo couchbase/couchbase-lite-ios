@@ -219,7 +219,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     
     _activeReplicators = nil;
 
-    [_forest commit: NULL];
     [_forest close];
 
     [self closeLocalDocs];
@@ -231,8 +230,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (UInt64) totalDataSize {
-    [_forest commit: NULL];
-
     NSDirectoryEnumerator* e = [[NSFileManager defaultManager] enumeratorAtPath: _dir];
     UInt64 size = 0;
     while ([e nextObject])
