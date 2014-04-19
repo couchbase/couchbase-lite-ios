@@ -60,15 +60,12 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 @implementation CBLDatabase (Attachments)
 
 
-+ (NSString*) attachmentStorePath: (NSString*)dbPath {
-    return [dbPath stringByAppendingPathComponent: @"attachments"];
-
-}
-
-
 - (NSString*) attachmentStorePath {
-    return [[self class] attachmentStorePath: _dir];
+    return [_dir stringByAppendingPathComponent: @"attachments"];
 }
+
+
+#pragma mark - ATTACHMENT WRITERS:
 
 
 - (CBL_BlobStoreWriter*) attachmentWriter {
@@ -146,6 +143,9 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
+#pragma mark - LOOKING UP ATTACHMENTS:
+
+
 - (NSDictionary*) attachmentsForDocID: (NSString*)docID
                                 revID: (NSString*)revID
                                status: (CBLStatus*)outStatus
@@ -215,6 +215,9 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
     return path ? [NSURL fileURLWithPath: path] : nil;
 }
+
+
+#pragma mark - UPDATING _attachments DICTS:
 
 
 // Replaces attachment data whose revpos is < minRevPos with stubs.
@@ -393,6 +396,9 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     }];
     return ok ? nuRev : nil;
 }
+
+
+#pragma mark - MISC.:
 
 
 - (CBLMultipartWriter*) multipartWriterForRevision: (CBL_Revision*)rev
