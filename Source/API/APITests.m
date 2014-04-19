@@ -912,6 +912,72 @@ TestCase(API_SharedMapBlocks) {
 }
 
 
+TestCase(API_MapReduce) {
+    // Adapted from Ashvinder's Test12_QueryView.m in WorkerBee
+    static const int kNumberOfDocuments = 1000;
+    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_MapReduce"];
+    CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
+
+    // Populate database:
+    [db inTransaction:^BOOL{
+        for (int i = 0; i < kNumberOfDocuments; i++) {
+            @autoreleasepool {
+                NSString* name = [NSString stringWithFormat:@"%@%@", @"n", @(i)];
+                bool vacant = (i+2) % 2 ? 1 : 0;
+                NSDictionary* props = @{@"name":name,
+                                        @"apt": @(i),
+                                        @"phone":@(408100000+i),
+                                        @"vacant":@(vacant)};
+                CBLDocument* doc = [db createDocument];
+                NSError* error;
+                Assert([doc putProperties: props error: &error]);
+            }
+        }
+        return YES;
+    }];
+
+    // Define view:
+    CBLView* view = [db viewNamed: @"vacant"];
+    [view setMapBlock: MAPBLOCK({
+        id v = [doc objectForKey: @"vacant"];
+        id name = [doc objectForKey: @"name"];
+        if (v && name) emit(name, v);
+    }) reduceBlock: REDUCEBLOCK({return [CBLView totalValues:values];})
+              version: @"3"];
+
+
+    // Index view:
+    [view updateIndex];
+
+    // Query:
+    CBLQuery* query = [[db viewNamed: @"vacant"] createQuery];
+    query.descending = NO;
+    query.mapOnly = YES;
+
+    NSString *key = [[NSString alloc] init];
+    NSString *value = [[NSString alloc] init];
+    NSError *error;
+    CBLQueryEnumerator *rowEnum = [query run: &error];
+    int i = 0;
+    for (CBLQueryRow* row in rowEnum) {
+        @autoreleasepool {
+            key = row.key;
+            value = row.value;
+            i++;
+        }
+    }
+    AssertEq(i, kNumberOfDocuments);
+
+    // Reduced query:
+    query = [[db viewNamed: @"vacant"] createQuery];
+    query.mapOnly = NO;
+    rowEnum = [query run: &error];
+    CBLQueryRow *row = [rowEnum rowAtIndex:0];
+    Log(@"Vacant: %@",row.value);
+    AssertEqual(row.value, @(500));
+}
+
+
 TestCase(API_ChangeUUID) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
     CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
