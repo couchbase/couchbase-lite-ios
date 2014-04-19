@@ -53,7 +53,7 @@ typedef enum {
 - (NSData*) dataForAttachmentDict: (NSDictionary*)attachmentDict;
 
 /** Deletes obsolete attachments from the database and blob store. */
-- (CBLStatus) garbageCollectAttachments;
+- (BOOL) garbageCollectAttachments: (NSError**)outError;
 
 /** Updates or deletes an attachment, creating a new document revision in the process.
     Used by the PUT / DELETE methods called on attachment URLs. */

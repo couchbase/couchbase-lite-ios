@@ -45,7 +45,7 @@ typedef struct CBLBlobKey {
 @property (readonly) NSArray* allKeys;
 @property (readonly) UInt64 totalDataSize;
 
-- (NSInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep;
+- (NSInteger) deleteBlobsExceptMatching: (BOOL(^)(CBLBlobKey))predicate;
 
 + (CBLBlobKey) keyForBlob: (NSData*)blob;
 + (NSData*) keyDataForBlob: (NSData*)blob;

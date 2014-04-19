@@ -36,6 +36,7 @@
 
 #import "CollectionUtils.h"
 #import "GTMNSData+zlib.h"
+#import <CBForest/CBForest.h>
 
 
 // Length that constitutes a 'big' attachment
@@ -485,16 +486,59 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
-- (CBLStatus) garbageCollectAttachments {
-    //FIX: REIMPLEMENT!
-#if 0
-    NSMutableSet* allKeys = [NSMutableSet set];
-    NSInteger numDeleted = [_attachments deleteBlobsExceptWithKeys: allKeys];
-    if (numDeleted < 0)
-        return kCBLStatusAttachmentError;
-    Log(@"Deleted %d attachments", (int)numDeleted);
-#endif
-    return kCBLStatusOK;
+- (BOOL) garbageCollectAttachments: (NSError**)outError {
+    NSString* path = [_dir stringByAppendingPathComponent: @"attachmentIndex.forest"];
+    if (!CBLRemoveFileIfExists(path, outError))
+        return NO;
+    CBForestDB* attachmentIndex = [[CBForestDB alloc] initWithFile: path
+                                                           options: kCBForestDBCreate
+                                                             error: outError];
+    if (!attachmentIndex)
+        return NO;
+
+    LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
+    __block BOOL gotError = NO;
+    BOOL ok = [_forest enumerateDocsFromID: nil toID: nil options: 0 error: outError
+                                 withBlock: ^(CBForestDocument *baseDoc, BOOL *stop)
+    {
+        CBForestVersions* doc = (CBForestVersions*)baseDoc;
+        NSData* noBody = [NSData dataWithBytes: "x" length: 1];
+        // Since db is assumed to have just been compacted, we know that non-current revisions
+        // won't have any bodies. So only scan the current revs.
+        for (NSString* revID in doc.currentRevisionIDs) {
+            NSData* body = [doc dataOfRevision: revID];
+            if (body) {
+                NSDictionary* rev = [CBLJSON JSONObjectWithData: body options: 0 error: NULL];
+                [rev.cbl_attachments enumerateKeysAndObjectsUsingBlock:^(id key, NSDictionary* att,
+                                                                         BOOL *stop)
+                {
+                    NSString* digest = att[@"digest"];
+                    CBLBlobKey blobKey;
+                    if (digestToBlobKey(digest, &blobKey)) {
+                        NSData* keyData = [NSData dataWithBytes: &blobKey length: sizeof(blobKey)];
+                        if (![attachmentIndex setValue: noBody meta: nil forKey: keyData
+                                                 error: outError]) {
+                            gotError = *stop = YES;
+                        }
+                    }
+                }];
+            }
+        }
+    }];
+    if (!ok || gotError)
+        return NO;
+    LogTo(CBLDatabase, @"    ...found %llu attachments", attachmentIndex.info.documentCount);
+
+    NSMutableData* curKeyData = [NSMutableData dataWithLength: sizeof(CBLBlobKey)];
+    CBLBlobKey* curKey = curKeyData.mutableBytes;
+    NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
+        *curKey = blobKey;
+        return [attachmentIndex hasValueForKey: curKeyData];
+    }];
+
+    LogTo(CBLDatabase, @"    ... deleted %ld obsolete attachment files.", (long)deleted);
+
+    return [attachmentIndex deleteDatabase: outError];
 }
 
 

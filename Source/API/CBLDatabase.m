@@ -232,16 +232,16 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) compact: (NSError**)outError {
-    if (![_forest compact: outError])
-        return NO;
-
-    CBLStatus status = [self garbageCollectAttachments];
-    if (CBLStatusIsError(status)) {
-        if (outError)
-            *outError = CBLStatusToNSError(status, nil);
-        return NO;
-    }
-    return YES;
+    CBLStatus status = [self _inTransaction: ^CBLStatus {
+        // Do this in a transaction because garbageCollectAttachments expects the database to be
+        // freshly compacted (i.e. only current revisions have bodies), and it could delete new
+        // attachments added while it's working. So lock out other writers for the duration.
+        if ([_forest compact: outError] && [self garbageCollectAttachments: outError])
+            return kCBLStatusOK;
+        else
+            return kCBLStatusDBError;
+    }];
+    return !CBLStatusIsError(status);
 }
 
 - (NSUInteger) maxRevTreeDepth {

@@ -182,20 +182,20 @@
 }
 
 
-- (NSInteger) deleteBlobsExceptWithKeys: (NSSet*)keysToKeep {
+- (NSInteger) deleteBlobsExceptMatching: (BOOL(^)(CBLBlobKey))predicate {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSArray* blob = [fmgr contentsOfDirectoryAtPath: _path error: NULL];
     if (!blob)
         return 0;
     NSUInteger numDeleted = 0;
     BOOL errors = NO;
-    NSMutableData* curKeyData = [NSMutableData dataWithLength: sizeof(CBLBlobKey)];
     for (NSString* filename in blob) {
-        if ([[self class] getKey: curKeyData.mutableBytes forFilename: filename]) {
-            if (![keysToKeep containsObject: curKeyData]) {
+        CBLBlobKey curKey;
+        if ([[self class] getKey: &curKey forFilename: filename]) {
+            if (!predicate(curKey)) {
                 NSError* error;
                 if ([fmgr removeItemAtPath: [_path stringByAppendingPathComponent: filename]
-                                 error: &error])
+                                     error: &error])
                     ++numDeleted;
                 else {
                     errors = YES;

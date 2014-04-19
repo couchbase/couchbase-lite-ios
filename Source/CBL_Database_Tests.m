@@ -713,25 +713,28 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
+static CBL_Revision* putDocWithAttachment(CBLDatabase* db, NSString* attachmentText) {
+    NSString* base64 = [CBLBase64 encode: [attachmentText dataUsingEncoding: NSUTF8StringEncoding]];
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"data", base64})});
+    NSDictionary* props = $dict({@"foo", @1},
+                                {@"bar", $false},
+                                {@"_attachments", attachmentDict});
+    CBLStatus status;
+    CBL_Revision* rev = [db putRevision: [CBL_Revision revisionWithProperties: props]
+                         prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusCreated);
+    return rev;
+}
+
+
 TestCase(CBL_Database_PutAttachment) {
     RequireTestCase(CBL_Database_CRUD);
     // Start with a fresh database in /tmp:
     CBLDatabase* db = createDB();
     
     // Put a revision that includes an _attachments dict:
-    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
-    NSString* base64 = [CBLBase64 encode: attach1];
-    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                                           {@"data", base64})});
-    NSDictionary* props = $dict({@"foo", @1},
-                                {@"bar", $false},
-                                {@"_attachments", attachmentDict});
-    CBL_Revision* rev1;
-    CBLStatus status;
-    rev1 = [db putRevision: [CBL_Revision revisionWithProperties: props]
-            prevRevisionID: nil allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusCreated);
-
+    CBL_Revision* rev1 = putDocWithAttachment(db, @"This is the body of attach1");
     CAssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                                 {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                                 {@"length", @(27)},
@@ -743,7 +746,7 @@ TestCase(CBL_Database_PutAttachment) {
     
     // Get the revision:
     CBL_Revision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
-    attachmentDict = gotRev1[@"_attachments"];
+    NSDictionary* attachmentDict = gotRev1[@"_attachments"];
     CAssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                          {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                          {@"length", @(27)},
@@ -751,6 +754,7 @@ TestCase(CBL_Database_PutAttachment) {
                                                          {@"revpos", @1})}));
     
     // Update the attachment directly:
+    CBLStatus status;
     NSData* attachv2 = [@"Replaced body of attach" dataUsingEncoding: NSUTF8StringEncoding];
     [db updateAttachment: @"attach" body: blobForData(db, attachv2)
                     type: @"application/foo"
@@ -848,6 +852,30 @@ TestCase(CBL_Database_AttachmentRevPos) {
 
     // The punch line: Did the revpos get incremented to 2?
     CAssertEqual([[rev2[@"_attachments"] objectForKey: @"attach"] objectForKey: @"revpos"], @2);
+
+    CAssert([db close]);
+}
+
+
+TestCase(CBL_Database_GarbageCollectAttachments) {
+    CBLDatabase* db = createDB();
+
+    NSMutableArray* revs = $marray();
+    for (int i=0; i<100; i++) {
+        [revs addObject: putDocWithAttachment(db, $sprintf(@"Attachment #%d", i))];
+    }
+    for (int i=0; i<40; i++) {
+        CBLStatus status;
+        revs[i] = [db updateAttachment: @"attach" body: nil type: nil
+                              encoding: kCBLAttachmentEncodingNone
+                               ofDocID: [revs[i] docID] revID: [revs[i] revID]
+                                status: &status];
+    }
+
+    NSError* error;
+    Assert([db compact: &error], @"Compact failed: %@", error);
+    AssertEq(db.attachmentStore.count, 60u);
+    CAssert([db close]);
 }
 
 
@@ -1126,6 +1154,7 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_ReplicatorSequences);
     RequireTestCase(CBL_Database_EmptyDoc);
     RequireTestCase(CBL_Database_PutAttachment);
+    RequireTestCase(CBL_Database_GarbageCollectAttachments);
 //    RequireTestCase(CBL_Database_EncodedAttachment);
     RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
 }
