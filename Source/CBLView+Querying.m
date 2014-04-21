@@ -48,7 +48,7 @@ static inline NSString* toJSONString( id object ) {
 #pragma mark - QUERYING:
 
 
-typedef CBLStatus (^QueryRowBlock)(id key, id value, NSString* docID, SequenceNumber sequence);
+typedef CBLStatus (^QueryRowBlock)(id key, NSData* valueData, NSString* docID, SequenceNumber seq);
 
 
 /** Runs a view query, calling the onRow callback for each row. */
@@ -64,10 +64,10 @@ typedef CBLStatus (^QueryRowBlock)(id key, id value, NSString* docID, SequenceNu
                                      endKey: key endDocID: nil
                                     options: NULL
                                       error: &error
-                                      block: ^(id key, id value, NSString *docID, uint64_t sequence,
-                                               BOOL *stop)
+                                      block: ^(id key, NSData* valueData, NSString *docID,
+                                               uint64_t sequence, BOOL *stop)
             {
-               status = onRow(key, value, docID, sequence);
+               status = onRow(key, valueData, docID, sequence);
                *stop = CBLStatusIsError(status);
             }];
             if (!ok)
@@ -142,13 +142,20 @@ typedef CBLStatus (^QueryRowBlock)(id key, id value, NSString* docID, SequenceNu
     CBLDatabase* db = _weakDB;
     NSMutableArray* rows = $marray();
     *outStatus = [self _runQueryWithOptions: options
-                                      onRow: ^CBLStatus(id key, id value,
+                                      onRow: ^CBLStatus(id key, NSData* valueData,
                                                         NSString* docID, SequenceNumber sequence)
     {
         id docContents = nil;
+        id value = valueData; // CBLQueryRow can take either NSData or parsed JSON for a value
         if (options->includeDocs) {
-            NSDictionary* valueDict = $castIf(NSDictionary, value);
-            NSString* linkedID = valueDict.cbl_id;
+            NSDictionary* valueDict = nil;
+            NSString* linkedID = nil;
+            if (valueData) {
+                value = [CBLJSON JSONObjectWithData: valueData
+                                            options: CBLJSONReadingAllowFragments error: NULL];
+                valueDict = $castIf(NSDictionary, value);
+                linkedID = valueDict.cbl_id;
+            }
             if (linkedID) {
                 // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                 NSString* linkedRev = valueDict.cbl_rev; // usually nil
@@ -167,7 +174,7 @@ typedef CBLStatus (^QueryRowBlock)(id key, id value, NSString* docID, SequenceNu
             }
         }
         LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
-              _name, toJSONString(key), toJSONString(value), toJSONString(docID));
+              _name, toJSONString(key), valueData.my_UTF8ToString, toJSONString(docID));
         CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
                                                      sequence: sequence
                                                           key: key
@@ -271,7 +278,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
     NSMutableArray* rows = $marray();
     *outStatus = [self _runQueryWithOptions: options
-                                      onRow: ^CBLStatus(id key, id value,
+                                      onRow: ^CBLStatus(id key, NSData* valueData,
                                                         NSString* docID, SequenceNumber sequence)
     {
         if (group && !groupTogether(key, lastKey, groupLevel)) {
@@ -290,9 +297,15 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             lastKey = [key copy];
         }
         LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
-              _name, toJSONString(key), toJSONString(value));
-        [keysToReduce addObject: key];
-        [valuesToReduce addObject: value ?: $null];
+              _name, toJSONString(key), valueData.my_UTF8ToString);
+        if (reduce) {
+            id value = nil;
+            if (valueData)
+                value = [CBLJSON JSONObjectWithData: valueData options: CBLJSONReadingAllowFragments
+                                              error: NULL];
+            [keysToReduce addObject: key];
+            [valuesToReduce addObject: value ?: $null];
+        }
         return kCBLStatusOK;
     }];
 
@@ -323,10 +336,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     [_index queryStartKey: nil startDocID: nil
                    endKey: nil endDocID: nil
                   options: NULL error: NULL
-                    block: ^(id key, id value, NSString *docID, uint64_t sequence, BOOL *stop)
+                    block: ^(id key, NSData* valueData, NSString *docID, uint64_t sequence,
+                             BOOL *stop)
     {
         [result addObject: $dict({@"key", toJSONString(key)},
-                                 {@"value", toJSONString(value)},
+                                 {@"value", [valueData my_UTF8ToString]},
                                  {@"seq", @(sequence)})];
     }];
     return result;

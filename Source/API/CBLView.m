@@ -67,6 +67,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
                                                         error: NULL];
         if (!_index)
             return nil;
+        LogTo(View, @"%@: Opened %@", self, _index);
     }
     return self;
 }
@@ -148,6 +149,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 - (void) databaseClosing {
+    LogTo(View, @"%@: Closing %@", self, _index);
     [_index close];
     _index = nil;
     _weakDB = nil;
