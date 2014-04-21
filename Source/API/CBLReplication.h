@@ -99,6 +99,24 @@ typedef enum {
     Facebook authentication. */
 @property (readonly) NSURL* personaOrigin;
 
+/** Adds a cookie to the shared NSHTTPCookieStorage that will be sent to the remote server. This
+    is useful if you've obtained a session cookie through some external means and need to tell the
+    replicator to send it for authentication purposes.
+    This method constructs an NSHTTPCookie from the given parameters, as well as the remote server
+    URL's host, port and path.
+    If you already have an NSHTTPCookie object for the remote server, you can simply add it to the
+    sharedHTTPCookieStorage yourself. 
+    If you have a "Set-Cookie:" response header, you can use NSHTTPCookie's class methods to parse
+    it to a cookie object, then add it to the sharedHTTPCookieStorage. */
+- (void) setCookieNamed: (NSString*)name
+              withValue: (NSString*)value
+                   path: (NSString*)path
+         expirationDate: (NSDate*)expirationDate
+                 secure: (BOOL)secure;
+
+/** Deletes the named cookie from the shared NSHTTPCookieStorage for the remote server's URL. */
+-(void)deleteCookieNamed:(NSString *)name;
+
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.
     @param certs  An array of SecCertificateRefs of root certs that should be trusted. Most often
@@ -106,7 +124,6 @@ typedef enum {
     @param onlyThese  If NO, the given certs are appended to the system's built-in list of trusted
         root certs; if YES, it replaces them (so *only* the given certs will be trusted.) */
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
-
 
 #pragma mark - STATUS:
 

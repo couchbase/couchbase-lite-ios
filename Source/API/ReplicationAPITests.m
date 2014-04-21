@@ -22,6 +22,8 @@
 #define kNDocuments 1000
 // This one too.
 #define kEncodedDBName @"cbl_replicator_encoding"
+// This one's never actually read or written to.
+#define kCookieTestDBName @"cbl_replicator_cookies"
 
 
 @interface CBL_ReplicationObserverHelper : NSObject
@@ -380,6 +382,37 @@ TestCase(ReplicationWithDecoding) {
     NSString* plans = doc[@"secret"];
     AssertEqual(plans, @"Attack at dawn");
     [db.manager close];
+}
+
+
+static NSHTTPCookie* cookieForURL(NSURL* url, NSString* name) {
+    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: url];
+    for (NSHTTPCookie* cookie in cookies) {
+        if ([cookie.name isEqualToString: name])
+            return cookie;
+    }
+    return nil;
+}
+
+
+TestCase(ReplicationCookie) {
+    RequireTestCase(CreateReplicators);
+    NSURL* remoteDbURL = RemoteTestDBURL(kCookieTestDBName);
+    CBLDatabase* db = createEmptyManagerAndDb();
+
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    [repl setCookieNamed: @"UnitTestCookie"
+               withValue: @"logmein"
+                    path: remoteDbURL.path
+          expirationDate: [NSDate dateWithTimeIntervalSinceNow: 10]
+                  secure: NO
+                httpOnly: NO];
+    NSHTTPCookie* cookie = cookieForURL(remoteDbURL, @"UnitTestCookie");
+    AssertEqual(cookie.value, @"logmein");
+
+    [repl deleteCookieNamed: @"UnitTestCookie"];
+    cookie = cookieForURL(remoteDbURL, @"UnitTestCookie");
+    AssertNil(cookie.value);
 }
 
 
