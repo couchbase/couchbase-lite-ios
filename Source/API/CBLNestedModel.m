@@ -44,10 +44,12 @@
 
 @interface CBLNestedModel ()
 @property (strong, nonatomic) CBLNestedModelModification* modObject;
+@property (strong, nonatomic) NSDictionary* documentObject;
 @end
 
 @implementation CBLNestedModel
 @synthesize modObject;
+@synthesize documentObject;
 
 - (id)init {
     self = [super init];
@@ -83,7 +85,10 @@
     if(self) {
         if([jsonObject isKindOfClass:[NSDictionary class]]) {
             // It must be a dictionary to represent a class
+            // Store it to later encode it
+            self.documentObject = jsonObject;
             
+            // Enumerate through all the properties that this subclass has.
             NSDictionary* properties = [self allProperties];
             [properties enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
                 NSString* propertyName = key;
@@ -193,7 +198,9 @@
 #pragma mark - Encoding Methods (class --> JSON)
 
 - (id)encodeToJSON {
-    NSMutableDictionary* classJSON = [NSMutableDictionary dictionary];
+    // Use old documentObject in case it contains more information than our model specifies
+    // and replace only with new information
+    NSMutableDictionary* classJSON = [self.documentObject mutableCopy];
     
     // Get a list of existing properties
     NSDictionary* properties = [self allProperties];
