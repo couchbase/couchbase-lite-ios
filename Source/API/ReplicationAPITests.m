@@ -405,8 +405,7 @@ TestCase(ReplicationCookie) {
                withValue: @"logmein"
                     path: remoteDbURL.path
           expirationDate: [NSDate dateWithTimeIntervalSinceNow: 10]
-                  secure: NO
-                httpOnly: NO];
+                  secure: NO];
     NSHTTPCookie* cookie = cookieForURL(remoteDbURL, @"UnitTestCookie");
     AssertEqual(cookie.value, @"logmein");
 
