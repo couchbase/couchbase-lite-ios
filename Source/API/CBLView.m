@@ -62,8 +62,15 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         if (!filename)
             return nil;
         NSString* path = [db.dir stringByAppendingPathComponent: filename];
+
+        CBForestDBConfig config = {
+            .bufferCacheSize = 16*1024*1024,
+            .walThreshold = 1024,
+            .enableSequenceTree = YES
+        };
         _index = [[CBForestMapReduceIndex alloc] initWithFile: path
                                                       options: (create ? kCBForestDBCreate : 0)
+                                                       config: &config
                                                         error: NULL];
         if (!_index)
             return nil;

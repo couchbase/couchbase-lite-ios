@@ -31,7 +31,14 @@
 - (CBForestDB*) localDocs {
     if (!_localDocs) {
         NSString* path = [_dir stringByAppendingPathComponent: @"local.forest"];
-        _localDocs = [[CBForestDB alloc] initWithFile: path options: kCBForestDBCreate
+        CBForestDBConfig config = {
+            .bufferCacheSize = 128*1024,
+            .walThreshold = 128,
+            .enableSequenceTree = YES
+        };
+        _localDocs = [[CBForestDB alloc] initWithFile: path
+                                              options: kCBForestDBCreate
+                                               config: &config
                                                 error: NULL];
         LogTo(CBLDatabase, @"%@: Opened _local docs db", self);
     }

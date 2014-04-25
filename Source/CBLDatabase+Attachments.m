@@ -490,8 +490,15 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     NSString* path = [_dir stringByAppendingPathComponent: @"attachmentIndex.forest"];
     if (!CBLRemoveFileIfExists(path, outError))
         return NO;
+
+    CBForestDBConfig config = {
+        .bufferCacheSize = 128*1024,
+        .walThreshold = 128,
+        .enableSequenceTree = NO
+    };
     CBForestDB* attachmentIndex = [[CBForestDB alloc] initWithFile: path
                                                            options: kCBForestDBCreate
+                                                            config: &config
                                                              error: outError];
     if (!attachmentIndex)
         return NO;

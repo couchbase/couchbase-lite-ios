@@ -142,8 +142,17 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (BOOL) openForest: (NSError**)outError {
     NSString* forestPath = [_dir stringByAppendingPathComponent: @"db.forest"];
     CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
+
+    CBForestDBConfig config = {
+        .bufferCacheSize = 16*1024*1024,
+        .walThreshold = 1024,
+        .enableSequenceTree = YES,
+        .compressDocBodies = YES,
+    };
+
     _forest = [[CBForestDB alloc] initWithFile: forestPath
                                        options: options
+                                        config: &config
                                          error: outError];
     _forest.documentClass = [CBForestVersions class];
     return (_forest != nil);
