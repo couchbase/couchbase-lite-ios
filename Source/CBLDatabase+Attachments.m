@@ -498,10 +498,8 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
     LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
     __block BOOL gotError = NO;
-    BOOL ok = [_forest enumerateDocsFromID: nil toID: nil options: 0 error: outError
-                                 withBlock: ^(CBForestDocument *baseDoc, BOOL *stop)
-    {
-        CBForestVersions* doc = (CBForestVersions*)baseDoc;
+    CBForestEnumerator* e = [_forest enumerateDocsFromID: nil toID: nil options: 0 error: outError];
+    for (CBForestVersions* doc in e) {
         NSData* noBody = [NSData dataWithBytes: "x" length: 1];
         // Since db is assumed to have just been compacted, we know that non-current revisions
         // won't have any bodies. So only scan the current revs.
@@ -518,14 +516,15 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
                         NSData* keyData = [NSData dataWithBytes: &blobKey length: sizeof(blobKey)];
                         if (![attachmentIndex setValue: noBody meta: nil forKey: keyData
                                                  error: outError]) {
-                            gotError = *stop = YES;
+                            gotError = YES;
+                            *stop = YES;
                         }
                     }
                 }];
             }
         }
-    }];
-    if (!ok || gotError)
+    }
+    if (e.error || gotError)
         return NO;
     LogTo(CBLDatabase, @"    ...found %llu attachments", attachmentIndex.info.documentCount);
 

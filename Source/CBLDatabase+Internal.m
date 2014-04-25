@@ -733,41 +733,41 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         forestOpts.contentOptions |= kCBForestDBMetaOnly;
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
-    BOOL ok = [_forest enumerateDocsFromSequence: lastSequence+1
-                                      toSequence: kCBForestMaxSequence
-                                         options: &forestOpts error: NULL
-                                       withBlock: ^(CBForestDocument *baseDoc, BOOL *stop)
-    {
-        CBForestVersions* doc = (CBForestVersions*)baseDoc;
-        NSArray* revisions;
-        if (options->includeConflicts) {
-            revisions = doc.currentRevisionIDs;
-            revisions = [revisions sortedArrayUsingComparator:^NSComparisonResult(id r1, id r2) {
-                return CBLCompareRevIDs(r1, r2);
-            }];
-        } else {
-            revisions = @[doc.revID];
-        }
-        for (NSString* revID in revisions) {
-            BOOL deleted;
-            if (options->includeConflicts)
-                deleted = [doc isRevisionDeleted: revID];
-            else
-                deleted = (doc.flags & kCBForestDocDeleted) != 0;
-            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: doc.docID
-                                                                            revID: revID
-                                                                          deleted: deleted];
-            rev.sequence = doc.sequence; //FIX ???
-            if (includeDocs) {
-                [self expandStoredJSON: [doc dataOfRevision: revID]
-                          intoRevision: rev
-                               options: options->contentOptions];
+    CBForestEnumerator* e = [_forest enumerateDocsFromSequence: lastSequence+1
+                                                   toSequence: kCBForestMaxSequence
+                                                      options: &forestOpts error: NULL];
+    for (CBForestVersions* doc in e) {
+        @autoreleasepool {
+            NSArray* revisions;
+            if (options->includeConflicts) {
+                revisions = doc.currentRevisionIDs;
+                revisions = [revisions sortedArrayUsingComparator:^NSComparisonResult(id r1, id r2) {
+                    return CBLCompareRevIDs(r1, r2);
+                }];
+            } else {
+                revisions = @[doc.revID];
             }
-            if ([self runFilter: filter params: filterParams onRevision: rev])
-                [changes addRev: rev];
+            for (NSString* revID in revisions) {
+                BOOL deleted;
+                if (options->includeConflicts)
+                    deleted = [doc isRevisionDeleted: revID];
+                else
+                    deleted = (doc.flags & kCBForestDocDeleted) != 0;
+                CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: doc.docID
+                                                                                revID: revID
+                                                                              deleted: deleted];
+                rev.sequence = doc.sequence; //FIX ???
+                if (includeDocs) {
+                    [self expandStoredJSON: [doc dataOfRevision: revID]
+                              intoRevision: rev
+                                   options: options->contentOptions];
+                }
+                if ([self runFilter: filter params: filterParams onRevision: rev])
+                    [changes addRev: rev];
+            }
         }
-    }];
-    if (!ok) {
+    }
+    if (e.error) {
         *outStatus = kCBLStatusDBError;
         return nil;
     }
@@ -917,8 +917,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
     // Here's the block that adds a document to the output:
     NSMutableArray* rows = $marray();
-    CBForestDocIterator addDocBlock = ^(CBForestDocument *baseDoc, BOOL *stop)
-    {
+    void (^addDocBlock)(CBForestDocument*) = ^(CBForestDocument *baseDoc) {
         CBForestVersions* doc = (CBForestVersions*)baseDoc;
         if (!inclusiveMin) {
             inclusiveMin = YES;
@@ -972,7 +971,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                                            options: 0
                                                                              error: NULL];
                 if (doc) {
-                    addDocBlock(doc, NULL);
+                    addDocBlock(doc);
                 } else {
                     // Add a placeholder for for a nonexistent doc:
                     [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
@@ -986,8 +985,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     } else {
         // If not given keys, enumerate all docs from minKey to maxKey:
         NSError* error;
-        if (![_forest enumerateDocsFromID: minKey toID: maxKey options: &forestOpts error: &error
-                                withBlock: addDocBlock]) {
+        CBForestEnumerator* e = [_forest enumerateDocsFromID: minKey toID: maxKey
+                                                     options: &forestOpts error: &error];
+        for (CBForestVersions* doc in e)
+            addDocBlock(doc);
+        if (e.error) {
             *outStatus = kCBLStatusDBError;
             return nil;
         }

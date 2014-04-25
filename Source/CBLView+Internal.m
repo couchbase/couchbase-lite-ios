@@ -96,7 +96,7 @@
 
     _index.sourceDatabase = db.forestDB;
     _index.mapVersion = self.mapVersion;
-    _index.map = ^(CBForestDocument* baseDoc, CBForestIndexEmitBlock emit) {
+    _index.map = ^(CBForestDocument* baseDoc, NSData* data, CBForestIndexEmitBlock emit) {
         CBForestVersions* doc = (CBForestVersions*)baseDoc;
         NSString *docID=doc.docID, *revID=doc.revID;
         SequenceNumber sequence = doc.sequence;
