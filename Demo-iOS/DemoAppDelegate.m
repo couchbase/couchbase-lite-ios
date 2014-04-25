@@ -83,6 +83,10 @@ static void RunViewPerformanceTest(void);
 
 #if PERFORMANCE_TEST
 
+
+#define kNumberOfDocuments 10000
+
+
 @interface CBLView (seekrit)
 - (void) updateIndex;
 @end
@@ -109,45 +113,79 @@ static NSTimeInterval elapsed(void) {
 
 static void RunViewPerformanceTest(void) {
     CBLDatabase* db = createEmptyDB();
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], doc[@"testName"]);
-    }) version: @"1"];
 
-    (void)elapsed();
-    static const NSUInteger kNDocs = 5000;
-    NSLog(@"Creating %u documents...", (unsigned)kNDocs);
-    [db inTransaction:^BOOL{
-        for (unsigned i=0; i<kNDocs; i++) {
+    elapsed(); // mark start time
+    @autoreleasepool {
+        [db inTransaction:^BOOL{
+            for (int i = 0; i < kNumberOfDocuments; i++) {
+                @autoreleasepool {
+                    NSString* name = [NSString stringWithFormat:@"%@%@", @"n", @(i)];
+                    bool vacant = (i+2) % 2 ? 1 : 0;
+                    NSDictionary* props = @{@"name":name,
+                                            @"apt": @(i),
+                                            @"phone":@(408100000+i),
+                                            @"vacant":@(vacant)};
+                    CBLDocument* doc = [db createDocument];
+                    NSError* error;
+                    __unused BOOL ok = [doc putProperties: props error: &error] != nil;
+                    NSCAssert(ok, @"putProperties failed");
+                }
+            }
+            return YES;
+        }];
+    }
+    NSLog(@"Creating docs took %.3g sec", elapsed());
+
+    CBLView* view = [db viewNamed: @"vacant"];
+
+    @autoreleasepool {
+        [view setMapBlock: MAPBLOCK({
+            id v = [doc objectForKey: @"vacant"];
+            id name = [doc objectForKey: @"name"];
+            if (v && name) emit(name, v);
+        }) reduceBlock: REDUCEBLOCK({return [CBLView totalValues:values];})
+                  version: @"3"];
+
+        [view updateIndex];
+    }
+    NSLog(@"Indexing view took %.3g sec", elapsed());
+
+    @autoreleasepool {
+        CBLQuery* query = [[db viewNamed: @"vacant"] createQuery];
+        query.descending = NO;
+        query.mapOnly = YES;
+
+        NSString *key;
+        NSString *value;
+        NSError *error;
+        CBLQueryEnumerator *rowEnum = [query run: &error];
+        unsigned n = 0;
+        for (CBLQueryRow* row in rowEnum) {
             @autoreleasepool {
-                NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
-                CBLDocument* doc = [db untitledDocument];
-                NSError* error;
-                __unused CBLRevision* rev = [doc putProperties: properties error: &error];
-                NSCAssert(rev,@"Couldn't save: %@", error);  // save it!
+                key = row.key;
+                value = row.value;
+                n++;
             }
         }
-        return YES;
-    }];
-
-    NSLog(@"Created docs:  %6.3f", elapsed());
-    [view updateIndex];
-
-    NSLog(@"Updated index: %6.3f", elapsed());
-    CBLQuery* query = [view query];
-    NSArray* rows = [query rows].allObjects;
-    NSCAssert(rows, @"query failed");
-    NSCAssert(rows.count == kNDocs, @"wrong number of rows");
-
-    NSLog(@"Queried view:  %6.3f", elapsed());
-    int expectedKey = 0;
-    for (CBLQueryRow* row in rows) {
-        NSCAssert([row.key intValue] == expectedKey, @"wrong key");
-        ++expectedKey;
+        if (n != kNumberOfDocuments) {
+            NSLog(@"Wrong number of rows: %u", n);
+            abort();
+        }
     }
-    NSLog(@"Verified rows: %6.3f", elapsed());
+    NSLog(@"Querying view took %.3g sec", elapsed());
 
-    [db.manager close];
+    @autoreleasepool {
+        CBLQuery* query = [[db viewNamed: @"vacant"] createQuery];
+        query.mapOnly = NO;
+        NSError* error;
+        CBLQueryEnumerator* rowEnum = [query run: &error];
+        CBLQueryRow *row = [rowEnum rowAtIndex:0];
+        if ([row.value unsignedIntegerValue] != 5000) {
+            NSLog(@"Wrong reduced value %@", row.value);
+            abort();
+        }
+    }
+    NSLog(@"Reduced query took %.3g sec", elapsed());
 }
 
 #endif // PERFORMANCE_TEST
