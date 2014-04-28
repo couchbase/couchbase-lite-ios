@@ -125,6 +125,15 @@ NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b) {
 }
 
 
+NSString* CBLJSONString( id object ) {
+    if (!object)
+        return nil;
+    return [CBLJSON stringWithJSONObject: object
+                                 options: CBLJSONWritingAllowFragments
+                                   error: NULL];
+}
+
+
 NSString* CBLEscapeID( NSString* docOrRevID ) {
 #ifdef GNUSTEP
     docOrRevID = [docOrRevID stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];

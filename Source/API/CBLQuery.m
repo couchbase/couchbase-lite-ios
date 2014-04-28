@@ -18,22 +18,26 @@
 #import "CBLView+Internal.h"
 #import "CBLDatabase.h"
 #import "CBL_Server.h"
+#import "CBLMisc.h"
 #import "MYBlockUtils.h"
 
 
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
-- (NSArray*) queryViewNamed: (NSString*)viewName
-                    options: (CBLQueryOptions)options
-               lastSequence: (SequenceNumber*)outLastSequence
-                     status: (CBLStatus*)outStatus;
+- (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
+                                 options: (CBLQueryOptions)options
+                            lastSequence: (SequenceNumber*)outLastSequence
+                                  status: (CBLStatus*)outStatus;
 @end
 
 
 @interface CBLQueryEnumerator ()
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-                             rows: (NSArray*)rows
-                   sequenceNumber: (SequenceNumber)sequenceNumber;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                   sequenceNumber: (SequenceNumber)sequenceNumber
+                         iterator: (CBLQueryIteratorBlock)iterator;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                   sequenceNumber: (SequenceNumber)sequenceNumber
+                             rows: (NSArray*)rows;
 @end
 
 
@@ -126,6 +130,34 @@
             endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
             database=_database, allDocsMode=_allDocsMode;
 
+- (NSString*) description {
+    NSMutableString *desc = [NSMutableString stringWithFormat: @"%@[%@",
+                             [self class], (_view ? _view.name : @"AllDocs")];
+#if DEBUG
+    if (_startKey)
+        [desc appendFormat: @", start=%@", CBLJSONString(_startKey)];
+    if (_endKey)
+        [desc appendFormat: @", end=%@", CBLJSONString(_endKey)];
+    if (_keys)
+        [desc appendFormat: @", keys=[..%lu keys...]", (unsigned long)_keys.count];
+    if (_skip)
+        [desc appendFormat: @", skip=%lu", (unsigned long)_skip];
+    if (_descending)
+        [desc appendFormat: @", descending"];
+    if (_limit)
+        [desc appendFormat: @", limit=%lu", (unsigned long)_limit];
+    if (_groupLevel)
+        [desc appendFormat: @", groupLevel=%lu", (unsigned long)_groupLevel];
+    if (_mapOnly)
+        [desc appendFormat: @", mapOnly=YES"];
+    if (_allDocsMode)
+        [desc appendFormat: @", allDocsMode=%d", _allDocsMode];
+#endif
+    [desc appendString: @"]"];
+    return desc;
+}
+
+
 
 - (CBLLiveQuery*) asLiveQuery {
     return [[CBLLiveQuery alloc] initWithQuery: self];
@@ -159,23 +191,24 @@
 
 - (CBLQueryEnumerator*) run: (NSError**)outError {
     CBLStatus status;
-    NSArray* rows = [_database queryViewNamed: _view.name
-                                      options: self.queryOptions
-                                 lastSequence: &_lastSequence
-                                       status: &status];
-    if (!rows) {
+    LogTo(Query, @"%@: running...", self);
+    CBLQueryIteratorBlock iterator = [_database queryViewNamed: _view.name
+                                                       options: self.queryOptions
+                                                  lastSequence: &_lastSequence
+                                                        status: &status];
+    if (!iterator) {
         if (outError)
             *outError = CBLStatusToNSError(status, nil);
         return nil;
     }
     return [[CBLQueryEnumerator alloc] initWithDatabase: _database
-                                                   rows: rows
-                                         sequenceNumber: _lastSequence];
+                                         sequenceNumber: _lastSequence
+                                               iterator: iterator];
 }
 
 
 - (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete {
-    LogTo(Query, @"%@: Async query %@/%@...", self, _database.name, (_view.name ?: @"_all_docs"));
+    LogTo(Query, @"%@: Async query...", self);
     NSThread *callingThread = [NSThread currentThread];
     NSString* viewName = _view.name;
     CBLQueryOptions options = self.queryOptions;
@@ -184,10 +217,17 @@
         // On the background server thread, run the query:
         CBLStatus status;
         SequenceNumber lastSequence;
-        NSArray* rows = [bgdb queryViewNamed: viewName
-                                     options: options
-                                lastSequence: &lastSequence
-                                      status: &status];
+        CBLQueryIteratorBlock iterator = [bgdb queryViewNamed: viewName
+                                                      options: options
+                                                 lastSequence: &lastSequence
+                                                       status: &status];
+        NSMutableArray* rows = $marray();
+        while (true) {
+            CBLQueryRow* row = iterator();
+            if (!row)
+                break;
+            [rows addObject: row];
+        }
         MYOnThread(callingThread, ^{
             // Back on original thread, call the onComplete block:
             LogTo(Query, @"%@: ...async query finished (%u rows)", self, (unsigned)rows.count);
@@ -195,10 +235,13 @@
             CBLQueryEnumerator* e = nil;
             if (CBLStatusIsError(status))
                 error = CBLStatusToNSError(status, nil);
-            else
+            else {
+                for (CBLQueryRow* row in rows)
+                    row.database = _database;
                 e = [[CBLQueryEnumerator alloc] initWithDatabase: _database
-                                                            rows: rows
-                                                  sequenceNumber: lastSequence];
+                                                  sequenceNumber: lastSequence
+                                                            rows: rows];
+            }
             onComplete(e, error);
         });
     }];
@@ -332,6 +375,8 @@
     NSArray* _rows;
     NSUInteger _nextRow;
     UInt64 _sequenceNumber;
+    CBLQueryIteratorBlock _iterator;
+    BOOL _usingIterator;
 }
 
 
@@ -339,29 +384,37 @@
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
-                             rows: (NSArray*)rows
                    sequenceNumber: (SequenceNumber)sequenceNumber
+                         iterator: (CBLQueryIteratorBlock)iterator
 {
     NSParameterAssert(database);
     self = [super init];
     if (self ) {
-        if (!rows)
-            return nil;
         _database = database;
-        _rows = [rows copy];
         _sequenceNumber = sequenceNumber;
+        _iterator = iterator;
+    }
+    return self;
+}
 
-        // Fill in the rows' database reference now
-        for (CBLQueryRow* row in _rows)
-            row.database = database;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                   sequenceNumber: (SequenceNumber)sequenceNumber
+                             rows: (NSArray*)rows
+{
+    NSParameterAssert(database);
+    self = [super init];
+    if (self ) {
+        _database = database;
+        _sequenceNumber = sequenceNumber;
+        _rows = rows;
     }
     return self;
 }
 
 - (id) copyWithZone: (NSZone*)zone {
     return [[[self class] alloc] initWithDatabase: _database
-                                             rows: _rows
-                                   sequenceNumber: _sequenceNumber];
+                                   sequenceNumber: _sequenceNumber
+                                             rows: self.allObjects];
 }
 
 
@@ -370,30 +423,34 @@
         return YES;
     if (![object isKindOfClass: [CBLQueryEnumerator class]])
         return NO;
-    CBLQueryEnumerator* otherEnum = object;
-    return [otherEnum->_rows isEqual: _rows];
+    return [[object allObjects] isEqual: self.allObjects];
 }
 
 
-- (void) reset {
-    _nextRow = 0;
-}
-
-
-- (NSUInteger) count {
-    return _rows.count;
-}
-
-
-- (CBLQueryRow*) rowAtIndex: (NSUInteger)index {
-    return _rows[index];
+- (BOOL) stale {
+    return (SequenceNumber)_sequenceNumber < _database.lastSequenceNumber;
 }
 
 
 - (CBLQueryRow*) nextRow {
-    if (_nextRow >= _rows.count)
-        return nil;
-    return [self rowAtIndex:_nextRow++];
+    if (_rows) {
+        // Using array:
+        if (_nextRow >= _rows.count)
+            return nil;
+        return [self rowAtIndex:_nextRow++];
+
+    } else {
+        // Using iterator:
+        _usingIterator = YES;
+        if (!_iterator)
+            return nil;
+        CBLQueryRow* row = _iterator();
+        if (row)
+            row.database = _database;
+        else
+            _iterator = nil;
+        return row;
+    }
 }
 
 
@@ -402,8 +459,29 @@
 }
 
 
-- (BOOL) stale {
-    return (SequenceNumber)_sequenceNumber < _database.lastSequenceNumber;
+- (NSArray*) allObjects {
+    if (!_rows) {
+        Assert(!_usingIterator, @"Enumerator is not at start");
+        _rows = [super allObjects];
+        _usingIterator = NO;
+    }
+    return _rows;
+}
+
+
+- (NSUInteger) count {
+    return self.allObjects.count;
+}
+
+
+- (CBLQueryRow*) rowAtIndex: (NSUInteger)index {
+    return self.allObjects[index];
+}
+
+
+- (void) reset {
+    Assert(!_usingIterator, @"Enumerator is not at start");
+    _nextRow = 0;
 }
 
 
@@ -596,13 +674,13 @@ static id fromJSON( NSData* json ) {
 
 @implementation CBLDatabase (Views)
 
-- (NSArray*) queryViewNamed: (NSString*)viewName
-                    options: (CBLQueryOptions)options
-               lastSequence: (SequenceNumber*)outLastSequence
-                     status: (CBLStatus*)outStatus
+- (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
+                                 options: (CBLQueryOptions)options
+                            lastSequence: (SequenceNumber*)outLastSequence
+                                  status: (CBLStatus*)outStatus
 {
     CBLStatus status;
-    NSArray* rows = nil;
+    CBLQueryIteratorBlock iterator = nil;
     SequenceNumber lastSequence = 0;
     do {
         if (viewName) {
@@ -625,10 +703,10 @@ static id fromJSON( NSData* json ) {
                     [view updateIndex];
                 }];
             }
-            rows = [view _queryWithOptions: &options status: &status];
+            iterator = [view _queryWithOptions: &options status: &status];
         } else {
             // nil view means query _all_docs
-            rows = [self getAllDocs: &options status: &status];
+            iterator = [self getAllDocs: &options status: &status];
             lastSequence = self.lastSequenceNumber;
         }
     } while(false); // just to allow 'break' within the block
@@ -637,7 +715,7 @@ static id fromJSON( NSData* json ) {
         *outLastSequence = lastSequence;
     if (outStatus)
         *outStatus = status;
-    return rows;
+    return iterator;
 }
 
 @end

@@ -145,7 +145,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     CBForestDBConfig config = {
         .bufferCacheSize = 16*1024*1024,
-        .walThreshold = 1024,
+        .walThreshold = 4096,
         .enableSequenceTree = YES,
         .compressDocBodies = YES,
     };
@@ -905,35 +905,38 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-//FIX: This has a lot of code in common with -[CBLView queryWithOptions:status:]. Unify the two!
-- (NSArray*) getAllDocs: (const CBLQueryOptions*)options status: (CBLStatus*)outStatus {
+- (CBLQueryIteratorBlock) getAllDocs: (const CBLQueryOptions*)options
+                              status: (CBLStatus*)outStatus
+{
     if (!options)
         options = &kDefaultCBLQueryOptions;
     CBForestEnumerationOptions forestOpts = {
         .skip = options->skip,
         .limit = options->limit,
+        .descending = options->descending,
         .inclusiveEnd = options->inclusiveEnd,
+        .includeDeleted = (options->allDocsMode == kCBLIncludeDeleted),
         .onlyConflicts = (options->allDocsMode == kCBLOnlyConflicts),
     };
-    id minKey = options->startKey, maxKey = options->endKey;
-    __block BOOL inclusiveMin = YES;
-    if (options->descending) {
-        minKey = maxKey;
-        maxKey = options->startKey;
-        inclusiveMin = options->inclusiveEnd;
-        forestOpts.inclusiveEnd = YES;
+
+    NSError* error;
+    CBForestEnumerator* e;
+    if (options->keys) {
+        e = [_forest enumerateDocsWithKeys: options->keys
+                                   options: &forestOpts error: &error];
+    } else {
+        e = [_forest enumerateDocsFromID: options->startKey toID: options->endKey
+                                 options: &forestOpts error: &error];
+    }
+    if (!e) {
+        *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
+        return nil;
     }
 
-    // Here's the block that adds a document to the output:
-    NSMutableArray* rows = $marray();
-    void (^addDocBlock)(CBForestDocument*) = ^(CBForestDocument *baseDoc) {
-        CBForestVersions* doc = (CBForestVersions*)baseDoc;
-        if (!inclusiveMin) {
-            inclusiveMin = YES;
-            if (minKey && [doc.docID isEqual: minKey])
-                return;
-        }
-
+    return ^CBLQueryRow*() {
+        CBForestVersions* doc = e.nextObject;
+        if (!doc)
+            return nil;
         NSString *docID = doc.docID, *revID = doc.revID;
         BOOL deleted = (doc.flags & kCBForestDocDeleted) != 0;
         SequenceNumber sequence = doc.sequence;
@@ -961,50 +964,14 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         NSDictionary* value = $dict({@"rev", revID},
                                     {@"deleted", (deleted ?$true : nil)},
                                     {@"_conflicts", conflicts});  // (not found in CouchDB)
-        CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                     sequence: sequence
-                                                          key: docID
-                                                        value: value
-                                                docProperties: docContents];
-        if (options->descending)
-            [rows insertObject: row atIndex: 0];
-        else
-            [rows addObject: row];
+        LogTo(ViewVerbose, @"AllDocs: Found row with key=\"%@\", value=%@",
+              docID, value);
+        return [[CBLQueryRow alloc] initWithDocID: docID
+                                         sequence: sequence
+                                              key: docID
+                                            value: value
+                                    docProperties: docContents];
     };
-
-    if (options->keys) {
-        // If given keys, look up each doc and add it:
-        for (NSString* docID in options->keys) {
-            @autoreleasepool {
-                CBForestVersions* doc = (CBForestVersions*)[_forest documentWithID: docID
-                                                                           options: 0
-                                                                             error: NULL];
-                if (doc) {
-                    addDocBlock(doc);
-                } else {
-                    // Add a placeholder for for a nonexistent doc:
-                    [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
-                                                               sequence: 0
-                                                                    key: docID
-                                                                  value: nil
-                                                          docProperties: nil]];
-                }
-            }
-        }
-    } else {
-        // If not given keys, enumerate all docs from minKey to maxKey:
-        NSError* error;
-        CBForestEnumerator* e = [_forest enumerateDocsFromID: minKey toID: maxKey
-                                                     options: &forestOpts error: &error];
-        for (CBForestVersions* doc in e)
-            addDocBlock(doc);
-        if (e.error) {
-            *outStatus = kCBLStatusDBError;
-            return nil;
-        }
-    }
-    *outStatus = kCBLStatusOK;
-    return rows;
 }
 
 

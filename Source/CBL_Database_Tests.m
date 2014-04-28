@@ -211,7 +211,10 @@ TestCase(CBL_Database_EmptyDoc) {
     NSArray* keys = @[rev.docID];
     options.keys = keys;
     CBLStatus status;
-    [db getAllDocs: &options status: &status]; // raises an exception :(
+    CBLQueryIteratorBlock iterator = [db getAllDocs: &options status: &status];
+    Assert(iterator);
+    while (iterator()) {
+    }
     CAssert([db close]);
 }
 

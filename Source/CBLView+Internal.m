@@ -141,7 +141,7 @@
 - (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
     CBLDatabase* db = _weakDB;
     CBL_FMDatabase* fmdb = db.fmdb;
-    NSString* valueJSON = toJSONString(value);
+    NSString* valueJSON = CBLJSONString(value);
     NSNumber* fullTextID = nil, *bboxID = nil;
     NSString* keyJSON = @"null";
     NSData* geoKey = nil;
@@ -165,7 +165,7 @@
         key = nil;
     } else {
         if (key)
-            keyJSON = toJSONString(key);
+            keyJSON = CBLJSONString(key);
         LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
     }
 

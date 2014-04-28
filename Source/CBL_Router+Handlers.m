@@ -209,12 +209,20 @@
     return [self doAllDocs: &options];
 }
 
+static NSArray* queryIteratorAllRows(CBLQueryIteratorBlock iterator) {
+    NSMutableArray* result = $marray();
+    CBLQueryRow* row;
+    while (nil != (row = iterator()))
+        [result addObject: row.asJSONDictionary];
+    return result;
+}
+
 - (CBLStatus) doAllDocs: (const CBLQueryOptions*)options {
     CBLStatus status;
-    NSArray* result = [_db getAllDocs: options status: &status];
-    if (!result)
+    CBLQueryIteratorBlock iterator = [_db getAllDocs: options status: &status];
+    if (!iterator)
         return status;
-    result = [result my_map: ^id(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    NSArray* result = queryIteratorAllRows(iterator);
     _response.bodyObject = $dict({@"rows", result},
                                  {@"total_rows", @(result.count)},
                                  {@"offset", @(options->skip)},
@@ -1070,10 +1078,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 - (CBLStatus) queryView: (CBLView*)view withOptions: (const CBLQueryOptions*)options {
     CBLStatus status;
-    NSArray* rows = [view _queryWithOptions: options status: &status];
-    if (!rows)
+    CBLQueryIteratorBlock iterator = [view _queryWithOptions: options status: &status];
+    if (!iterator)
         return status;
-    rows = [rows my_map:^(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    NSArray* rows = queryIteratorAllRows(iterator);
     id updateSeq = options->updateSeq ? @(view.lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
                                  {@"total_rows", @(rows.count)},

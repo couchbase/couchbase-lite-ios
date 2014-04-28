@@ -65,7 +65,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
         CBForestDBConfig config = {
             .bufferCacheSize = 16*1024*1024,
-            .walThreshold = 1024,
+            .walThreshold = 4096,
             .enableSequenceTree = YES
         };
         _index = [[CBForestMapReduceIndex alloc] initWithFile: path

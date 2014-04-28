@@ -97,8 +97,8 @@ typedef enum {
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
     @return  An array of CBLQueryRow. */
-- (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
-                        status: (CBLStatus*)outStatus;
+- (CBLQueryIteratorBlock) _queryWithOptions: (const CBLQueryOptions*)options
+                                     status: (CBLStatus*)outStatus;
 #if DEBUG
 - (NSArray*) dump;
 #endif

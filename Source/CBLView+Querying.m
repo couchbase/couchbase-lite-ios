@@ -33,75 +33,41 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 };
 
 
-static inline NSString* toJSONString( id object ) {
-    if (!object)
-        return nil;
-    return [CBLJSON stringWithJSONObject: object
-                                 options: CBLJSONWritingAllowFragments
-                                   error: NULL];
-}
-
-
 @implementation CBLView (Querying)
 
 
 #pragma mark - QUERYING:
 
 
-typedef CBLStatus (^QueryRowBlock)(id key, NSData* valueData, NSString* docID, SequenceNumber seq);
-
-
-/** Runs a view query, calling the onRow callback for each row. */
-- (CBLStatus) _runQueryWithOptions: (const CBLQueryOptions*)options
-                             onRow: (QueryRowBlock)onRow
+/** Starts a view query, returning a CBForest enumerator. */
+- (CBForestQueryEnumerator*) _runForestQueryWithOptions: (const CBLQueryOptions*)options
+                                                 status: (CBLStatus*)outStatus
 {
-    __block CBLStatus status = kCBLStatusOK;
+    CBForestQueryEnumerator* e;
+    NSError* error = nil;
+    CBForestEnumerationOptions forestOpts = {
+        .skip = options->skip,
+        .limit = options->limit,
+        .descending = options->descending,
+        .inclusiveEnd = options->inclusiveEnd,
+    };
     if (options->keys) {
-        // If given keys, look up each key:
-        for (id key in options->keys) {
-            NSError* error;
-            BOOL ok = [_index queryStartKey: key startDocID: nil
-                                     endKey: key endDocID: nil
-                                    options: NULL
-                                      error: &error
-                                      block: ^(id key, NSData* valueData, NSString *docID,
-                                               uint64_t sequence, BOOL *stop)
-            {
-               status = onRow(key, valueData, docID, sequence);
-               *stop = CBLStatusIsError(status);
-            }];
-            if (!ok)
-                status = kCBLStatusDBError;
-            if (CBLStatusIsError(status))
-                break;
-        }
-
+        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+                                                      keys: options->keys.objectEnumerator
+                                                   options: &forestOpts
+                                                     error: &error];
     } else {
-        // Regular range query:
-        CBForestEnumerationOptions forestOpts = {
-            .skip = options->skip,
-            .limit = options->limit,
-            .descending = options->descending,
-            .inclusiveEnd = options->inclusiveEnd,
-        };
-        __block CBLStatus status = kCBLStatusOK;
-        NSError* error;
-        BOOL ok = [_index queryStartKey: options->startKey
-                             startDocID: options->startKeyDocID
-                                 endKey: options->endKey
-                               endDocID: options->endKeyDocID
-                                options: &forestOpts
-                                  error: &error
-                                  block: ^(id key, id value, NSString *docID, uint64_t sequence,
-                                           BOOL *stop)
-        {
-            status = onRow(key, value, docID, sequence);
-            *stop = CBLStatusIsError(status);
-        }];
-        if (!ok)
-            status = kCBLStatusDBError;
+        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+                                                  startKey: options->startKey
+                                                startDocID: options->startKeyDocID
+                                                    endKey: options->endKey
+                                                  endDocID: options->endKeyDocID
+                                                   options: &forestOpts
+                                                     error: &error];
     }
-    return status;
+    if (!e)
+        *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
+    return e;
 }
 
 
@@ -117,42 +83,46 @@ typedef CBLStatus (^QueryRowBlock)(id key, NSData* valueData, NSString* docID, S
 
 
 /** Main internal call to query a view. */
-- (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
-                        status: (CBLStatus*)outStatus
+- (CBLQueryIteratorBlock) _queryWithOptions: (const CBLQueryOptions*)options
+                                     status: (CBLStatus*)outStatus
 {
     if (!options)
         options = &kDefaultCBLQueryOptions;
-    NSArray* rows;
+    CBLQueryIteratorBlock iterator;
     if (options->fullTextQuery) {
         Warn(@"Full-text querying is out of service at this time."); //FIX: Re-implement FTS
         *outStatus = kCBLStatusNotImplemented;
         return nil;
     } else if ([self groupOrReduceWithOptions: options])
-        rows = [self _reducedQueryWithOptions: options status: outStatus];
+        iterator = [self _reducedQueryWithOptions: options status: outStatus];
     else
-        rows = [self _regularQueryWithOptions: options status: outStatus];
-    LogTo(View, @"Query %@: Returning %u rows", _name, (unsigned)rows.count);
-    return rows;
+        iterator = [self _regularQueryWithOptions: options status: outStatus];
+    LogTo(View, @"Query %@: Returning iterator", _name);
+    return iterator;
 }
 
 
-- (NSArray*) _regularQueryWithOptions: (const CBLQueryOptions*)options
-                               status: (CBLStatus*)outStatus
+- (CBLQueryIteratorBlock) _regularQueryWithOptions: (const CBLQueryOptions*)options
+                                            status: (CBLStatus*)outStatus
 {
+    CBForestQueryEnumerator* e = [self _runForestQueryWithOptions: options status: outStatus];
+    if (!e)
+        return nil;
+
     CBLDatabase* db = _weakDB;
-    NSMutableArray* rows = $marray();
-    *outStatus = [self _runQueryWithOptions: options
-                                      onRow: ^CBLStatus(id key, NSData* valueData,
-                                                        NSString* docID, SequenceNumber sequence)
-    {
+    return ^CBLQueryRow*() {
+        id key = e.nextObject;
+        if (!key)
+            return nil;
+
         id docContents = nil;
-        id value = valueData; // CBLQueryRow can take either NSData or parsed JSON for a value
+        id value = e.value;
+        NSString* docID = e.docID;
+        SequenceNumber sequence = e.sequence;
         if (options->includeDocs) {
             NSDictionary* valueDict = nil;
             NSString* linkedID = nil;
-            if (valueData) {
-                value = [CBLJSON JSONObjectWithData: valueData
-                                            options: CBLJSONReadingAllowFragments error: NULL];
+            if (value) {
                 valueDict = $castIf(NSDictionary, value);
                 linkedID = valueDict.cbl_id;
             }
@@ -173,18 +143,14 @@ typedef CBLStatus (^QueryRowBlock)(id key, NSData* valueData, NSString* docID, S
                 docContents = rev.properties;
             }
         }
-        LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
-              _name, toJSONString(key), valueData.my_UTF8ToString, toJSONString(docID));
-        CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                     sequence: sequence
-                                                          key: key
-                                                        value: value
-                                                docProperties: docContents];
-        [rows addObject: row];
-        return kCBLStatusOK;
-    }];
-
-    return rows;
+        LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
+              _name, CBLJSONString(key), CBLJSONString(value), CBLJSONString(docID));
+        return [[CBLQueryRow alloc] initWithDocID: docID
+                                         sequence: sequence
+                                              key: key
+                                            value: value
+                                    docProperties: docContents];
+    };
 }
 
 
@@ -241,10 +207,15 @@ static id groupKey(NSData* keyJSON, unsigned groupLevel) {
 static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutableArray* values) {
     if (!reduceBlock)
         return nil;
-    CBLLazyArrayOfJSON* lazyKeys = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: keys];
-    CBLLazyArrayOfJSON* lazyVals = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: values];
+    NSArray *lazyKeys, *lazyValues;
+#ifdef PARSED_KEYS
+    lazyKeys = keys;
+#else
+    keys = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: keys];
+#endif
+    lazyValues = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: values];
     @try {
-        id result = reduceBlock(lazyKeys, lazyVals, NO);
+        id result = reduceBlock(lazyKeys, lazyValues, NO);
         if (result)
             return result;
     } @catch (NSException *x) {
@@ -254,13 +225,17 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-- (NSMutableArray*) _reducedQueryWithOptions: (const CBLQueryOptions*)options
-                                      status: (CBLStatus*)outStatus
+- (CBLQueryIteratorBlock) _reducedQueryWithOptions: (const CBLQueryOptions*)options
+                                            status: (CBLStatus*)outStatus
 {
     unsigned groupLevel = options->groupLevel;
     bool group = options->group || groupLevel > 0;
+
+    CBLReduceBlock reduce = self.reduceBlock;
     if (options->reduceSpecified) {
-        if (options->reduce && !self.reduceBlock) {
+        if (!options->reduce) {
+            reduce = nil;
+        } else if (!reduce) {
             Warn(@"Cannot use reduce option in view %@ which has no reduce block defined",
                  _name);
             *outStatus = kCBLStatusBadParam;
@@ -268,60 +243,43 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         }
     }
 
-    CBLReduceBlock reduce = self.reduceBlock;
+    __block id lastKey = nil;
     NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
     if (reduce) {
         keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
         valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
     }
-    __block id lastKey = nil;
 
-    NSMutableArray* rows = $marray();
-    *outStatus = [self _runQueryWithOptions: options
-                                      onRow: ^CBLStatus(id key, NSData* valueData,
-                                                        NSString* docID, SequenceNumber sequence)
-    {
-        if (group && !groupTogether(key, lastKey, groupLevel)) {
-            if (lastKey) {
-                // This pair starts a new group, so reduce & record the last one:
-                id key = groupKey(lastKey, groupLevel);
-                id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-                [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
-                                                           sequence: 0
-                                                                key: key
-                                                              value: reduced
-                                                      docProperties: nil]];
+    CBForestQueryEnumerator* e = [self _runForestQueryWithOptions: options status: outStatus];
+    if (!e)
+        return nil;
+
+    return ^CBLQueryRow*() {
+        CBLQueryRow* row = nil;
+        do {
+            id key = e.nextObject;
+            if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
+                // key doesn't match lastKey; emit a grouped/reduced row for what came before:
+                row = [[CBLQueryRow alloc] initWithDocID: nil
+                                        sequence: 0
+                                             key: (group ? groupKey(lastKey, groupLevel) : $null)
+                                           value: callReduce(reduce, keysToReduce,valuesToReduce)
+                                   docProperties: nil];
                 [keysToReduce removeAllObjects];
                 [valuesToReduce removeAllObjects];
             }
-            lastKey = [key copy];
-        }
-        LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
-              _name, toJSONString(key), valueData.my_UTF8ToString);
-        if (reduce) {
-            id value = nil;
-            if (valueData)
-                value = [CBLJSON JSONObjectWithData: valueData options: CBLJSONReadingAllowFragments
-                                              error: NULL];
-            [keysToReduce addObject: key];
-            [valuesToReduce addObject: value ?: $null];
-        }
-        return kCBLStatusOK;
-    }];
 
-    if (keysToReduce.count > 0) {
-        // Finish the last group (or the entire list, if no grouping):
-        id key = group ? groupKey(lastKey, groupLevel) : $null;
-        id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-        LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
-              _name, toJSONString(key), toJSONString(reduced));
-        [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
-                                                   sequence: 0
-                                                        key: key
-                                                      value: reduced
-                                              docProperties: nil]];
-    }
-    return rows;
+            if (key && reduce) {
+                // Add this key/value to the list to be reduced:
+                [keysToReduce addObject: key];
+                [valuesToReduce addObject: e.valueData ?: $null];
+                //TODO: Reduce the keys/values when there are too many; then rereduce at end
+            }
+
+            lastKey = key;
+        } while (!row && lastKey);
+        return row;
+    };
 }
 
 
@@ -333,16 +291,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (!_index)
         return nil;
     NSMutableArray* result = $marray();
-    [_index queryStartKey: nil startDocID: nil
-                   endKey: nil endDocID: nil
-                  options: NULL error: NULL
-                    block: ^(id key, NSData* valueData, NSString *docID, uint64_t sequence,
-                             BOOL *stop)
-    {
-        [result addObject: $dict({@"key", toJSONString(key)},
-                                 {@"value", [valueData my_UTF8ToString]},
-                                 {@"seq", @(sequence)})];
-    }];
+    CBForestQueryEnumerator* e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+                                                                       startKey: nil startDocID: nil endKey: nil endDocID: nil options: NULL error: NULL];
+    while (e.nextObject) {
+        [result addObject: $dict({@"key", CBLJSONString(e.key)},
+                                 {@"value", [e.valueData my_UTF8ToString]},
+                                 {@"seq", @(e.sequence)})];
+    }
     return result;
 }
 #endif
