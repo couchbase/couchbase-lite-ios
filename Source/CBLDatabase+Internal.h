@@ -9,8 +9,8 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared, CBLModelFactory;
-struct CBLQueryOptions;      // declared in CBLView+Internal.h
+@class CBL_FMDatabase, CBLQueryOptions, CBLView, CBL_BlobStore, CBLDocument, CBLCache;
+@class CBLDatabase, CBLDatabaseChange, CBL_Shared, CBLModelFactory;
 
 
 /** NSNotification posted when one or more documents have been updated.
@@ -212,7 +212,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (CBLStatus) deleteViewNamed: (NSString*)name;
 
 /** Returns the value of an _all_docs query, as an array of CBLQueryRow. */
-- (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;
+- (NSArray*) getAllDocs: (CBLQueryOptions*)options;
 
 - (CBLView*) makeAnonymousView;
 

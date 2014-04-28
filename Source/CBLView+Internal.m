@@ -52,6 +52,27 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 @end
 
 
+@implementation CBLQueryOptions
+
+@synthesize startKey, endKey, startKeyDocID, endKeyDocID, keys, fullTextQuery, filter;
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        limit = kCBLQueryOptionsDefaultLimit;
+        inclusiveStart = YES;
+        inclusiveEnd = YES;
+        fullTextRanking = YES;
+        // everything else will default to nil/0/NO
+    }
+    return self;
+}
+
+@end
+
+
+
+
 @implementation CBLView (Internal)
 
 

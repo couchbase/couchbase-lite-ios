@@ -28,6 +28,9 @@ NSString* CBLHexFromBytes( const void* bytes, size_t length) __attribute__((nonn
 
 NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b);
 
+/** Convenience function to JSON-encode an object to a string. */
+NSString* CBLJSONString( id object );
+
 /** Escapes a string to be used as the value of a query parameter in a URL.
     This does the usual %-escaping, but makes sure that '&' is also escaped. */
 NSString* CBLEscapeURLParam( NSString* param ) __attribute__((nonnull));

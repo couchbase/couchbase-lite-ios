@@ -203,11 +203,11 @@ TestCase(CBL_Database_EmptyDoc) {
     // Test case for issue #44, which is caused by a bug in CBLJSON.
     CBLDatabase* db = createDB();
     CBL_Revision* rev = putDoc(db, $dict());
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.includeDocs = YES;
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    options->includeDocs = YES;
     NSArray* keys = @[rev.docID];
     options.keys = keys;
-    [db getAllDocs: &options]; // raises an exception :(
+    [db getAllDocs: options]; // raises an exception :(
     [db _close];
 }
 

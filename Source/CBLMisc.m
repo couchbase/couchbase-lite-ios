@@ -126,6 +126,15 @@ NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b) {
 }
 
 
+NSString* CBLJSONString( id object ) {
+    if (!object)
+        return nil;
+    return [CBLJSON stringWithJSONObject: object
+                                 options: CBLJSONWritingAllowFragments
+                                   error: NULL];
+}
+
+
 NSString* CBLEscapeURLParam( NSString* param ) {
     // Escape all of the reserved characters according to section 2.2 in rfc3986
     // http://tools.ietf.org/html/rfc3986#section-2.2
