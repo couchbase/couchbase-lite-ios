@@ -323,9 +323,9 @@ TestCase(CBL_View_Query) {
     CAssertEq([view updateIndex], kCBLStatusOK);
     
     // Query all rows:
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                                    $dict({@"id",  @"44444"}, {@"key", @"four"}),
                                    $dict({@"id",  @"11111"}, {@"key", @"one"}),
@@ -334,66 +334,66 @@ TestCase(CBL_View_Query) {
     CAssertEqual(rows, expectedRows);
 
     // Start/end key query:
-    options = kDefaultCBLQueryOptions;
+    options = [CBLQueryOptions new];
     options.startKey = @"a";
     options.endKey = @"one";
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
 
     // Start/end query without inclusive end:
-    options.inclusiveEnd = NO;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options->inclusiveEnd = NO;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
 
     // Reversed:
-    options.descending = YES;
+    options->descending = YES;
     options.startKey = @"o";
     options.endKey = @"five";
-    options.inclusiveEnd = YES;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options->inclusiveEnd = YES;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"55555"}, {@"key", @"five"}));
     CAssertEqual(rows, expectedRows);
 
     // Reversed, no inclusive end:
-    options.inclusiveEnd = NO;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options->inclusiveEnd = NO;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
     
     // Limit:
-    options = kDefaultCBLQueryOptions;
-    options.limit = 2;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options = [CBLQueryOptions new];
+    options->limit = 2;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
 
     // Skip rows:
-    options = kDefaultCBLQueryOptions;
-    options.skip = 2;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options = [CBLQueryOptions new];
+    options->skip = 2;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}),
                           $dict({@"id",  @"33333"}, {@"key", @"three"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
     CAssertEqual(rows, expectedRows);
 
     // Skip + limit:
-    options.limit = 1;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options->limit = 1;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
 
     // Specific keys: (note that rows should be in same order as input keys, not sorted)
-    options = kDefaultCBLQueryOptions;
+    options = [CBLQueryOptions new];
     NSArray* keys = @[@"two", @"four"];
     options.keys = keys;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"22222"}, {@"key", @"two"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}));
     CAssertEqual(rows, expectedRows);
@@ -410,20 +410,20 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     CBLView* view = createView(db);
     CAssertEq([view updateIndex], kCBLStatusOK);
 
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLQueryOptions *options = [CBLQueryOptions new];
     options.startKey = @"one";
     options.startKeyDocID = @"11112";
     options.endKey = @"three";
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"11112"}, {@"key", @"one"}),
                                    $dict({@"id",  @"33333"}, {@"key", @"three"}));
     CAssertEqual(rows, expectedRows);
 
-    options = kDefaultCBLQueryOptions;
+    options = [CBLQueryOptions new];
     options.endKey = @"one";
     options.endKeyDocID = @"11111";
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
@@ -431,7 +431,7 @@ TestCase(CBL_View_QueryStartKeyDocID) {
 
     options.startKey = @"one";
     options.startKeyDocID = @"11111";
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
 
@@ -474,11 +474,11 @@ TestCase(CBL_View_GeoQuery) {
     CAssertEq([view updateIndex], kCBLStatusOK);
     
     // Bounding-box query:
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLQueryOptions *options = [CBLQueryOptions new];
     CBLGeoRect bbox = {{-100, 0}, {180, 90}};
     options.bbox = &bbox;
     CBLStatus status;
-    NSArray* rows = [view _queryWithOptions: &options status: &status];
+    NSArray* rows = [view _queryWithOptions: options status: &status];
     NSArray* expectedRows = @[$dict({@"id", @"xxx"},
                                     {@"geometry", mkGeoRect(-115, -10, -90, 12)},
                                     {@"bbox", @[@-115, @-10, @-90, @12]}),
@@ -537,37 +537,36 @@ TestCase(CBL_View_AllDocsQuery) {
     AssertEqual([db getDocumentWithID: @"44444" revisionID: nil].revID, [docs[1] revID]);
 
     // Query all rows:
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    CBLQueryIteratorBlock query = [db getAllDocs: &options status: &status];
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    CBLQueryIteratorBlock query = [db getAllDocs: options status: &status];
     NSArray* expectedRows = $array(expectedRow[2], expectedRow[0], expectedRow[3], expectedRow[1],
                                    expectedRow[4]);
     CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Start/end key query:
-    options = kDefaultCBLQueryOptions;
+    options = [CBLQueryOptions new];
     options.startKey = @"2";
     options.endKey = @"44444";
-    query = [db getAllDocs: &options status: &status];
+    query = [db getAllDocs: options status: &status];
     expectedRows = @[expectedRow[0], expectedRow[3], expectedRow[1]];
     CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Start/end query without inclusive end:
-    options.inclusiveEnd = NO;
-    query = [db getAllDocs: &options status: &status];
+    options->inclusiveEnd = NO;
+    query = [db getAllDocs: options status: &status];
     expectedRows = @[expectedRow[0], expectedRow[3]];
     CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Get zero specific documents:
-    options = kDefaultCBLQueryOptions;
+    options = [CBLQueryOptions new];
     options.keys = @[];
-    query = [db getAllDocs: &options status: &status];
+    query = [db getAllDocs: options status: &status];
     CAssert(query == nil || query() == nil);
     
     // Get specific documents:
-    options = kDefaultCBLQueryOptions;
-    __unused NSArray* keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
-    options.keys = keys;
-    query = [db getAllDocs: &options status: &status];
+    options = [CBLQueryOptions new];
+    options.keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
+    query = [db getAllDocs: options status: &status];
     CAssertEqual(rowsToDicts(query), (@[expectedRow[2], expectedRow[3]]));
 
     // Delete a document:
@@ -577,9 +576,9 @@ TestCase(CBL_View_AllDocsQuery) {
     CAssertEq(status, kCBLStatusOK);
 
     // Get deleted doc, and one bogus one:
-    options = kDefaultCBLQueryOptions;
-    keys = options.keys = @[@"BOGUS", expectedRow[0][@"id"]];
-    query = [db getAllDocs: &options status: &status];
+    options = [CBLQueryOptions new];
+    options.keys = @[@"BOGUS", expectedRow[0][@"id"]];
+    query = [db getAllDocs: options status: &status];
     CAssertEqual(rowsToDicts(query), (@[$dict({@"key",  @"BOGUS"},
                                               {@"error", @"not_found"}),
                                       $dict({@"id",  del.docID},
@@ -587,9 +586,9 @@ TestCase(CBL_View_AllDocsQuery) {
                                             {@"value", $dict({@"rev", del.revID},
                                                              {@"deleted", $true})}) ]));
     // Get conflicts:
-    options = kDefaultCBLQueryOptions;
-    options.allDocsMode = kCBLIncludeConflicts;
-    query = [db getAllDocs: &options status: &status];
+    options = [CBLQueryOptions new];
+    options->allDocsMode = kCBLIncludeConflicts;
+    query = [db getAllDocs: options status: &status];
     NSString* curRevID = [docs[1] revID];
     NSDictionary* expectedConflict1 = $dict({@"id",  @"44444"},
                                             {@"key", @"44444"},
@@ -599,8 +598,8 @@ TestCase(CBL_View_AllDocsQuery) {
     CAssertEqual(rowsToDicts(query), expectedRows);
 
     // Get _only_ conflicts:
-    options.allDocsMode = kCBLOnlyConflicts;
-    query = [db getAllDocs: &options status: &status];
+    options->allDocsMode = kCBLOnlyConflicts;
+    query = [db getAllDocs: options status: &status];
     expectedRows = $array(expectedConflict1);
     CAssertEqual(rowsToDicts(query), expectedRows);
 
@@ -633,9 +632,9 @@ TestCase(CBL_View_Reduce) {
                               $dict({@"key", @"\"CD\""}, {@"value", @"8.99"}, {@"seq", @1}),
                               $dict({@"key", @"\"Dessert\""}, {@"value", @"6.5"}, {@"seq", @3}) ));
 
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
-    NSArray* reduced = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* reduced = rowsToDicts([view _queryWithOptions: options status: &status]);
     CAssertEq(reduced.count, 1u);
     double result = [reduced[0][@"value"] doubleValue];
     CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
@@ -669,13 +668,13 @@ TestCase(CBL_View_Grouped) {
     
     CAssertEq([view updateIndex], kCBLStatusOK);
 
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     CAssertEqual(rows, $array($dict({@"key", $null}, {@"value", @(1162)})));
 
-    options.group = YES;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options->group = YES;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Ether")},
                                     {@"value", @(231)}),
@@ -692,13 +691,13 @@ TestCase(CBL_View_Grouped) {
                                                     @"Memories")}, 
                                     {@"value", @(309)})));
 
-    options.groupLevel = 1;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options->groupLevel = 1;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four"]}, {@"value", @(853)}),
                               $dict({@"key", @[@"PiL"]}, {@"value", @(309)})));
     
-    options.groupLevel = 2;
-    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    options->groupLevel = 2;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four", @"Entertainment!"]},
                                     {@"value", @(605)}),
                               $dict({@"key", @[@"Gang Of Four", @"Songs Of The Free"]},
@@ -729,10 +728,10 @@ TestCase(CBL_View_GroupedStrings) {
    
     CAssertEq([view updateIndex], kCBLStatusOK);
 
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.groupLevel = 1;
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    options->groupLevel = 1;
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
                               $dict({@"key", @"J"}, {@"value", @2}),
                               $dict({@"key", @"N"}, {@"value", @1})));
@@ -773,9 +772,9 @@ TestCase(CBL_View_Collation) {
         emit(doc[@"name"], nil);
     }) reduceBlock: NULL version:@"1.0"];
     
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
@@ -818,9 +817,9 @@ TestCase(CBL_View_CollationRaw) {
     }) reduceBlock: NULL version:@"1.0"];
     view.collation = kCBLViewCollationRaw;
     
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
@@ -852,10 +851,10 @@ TestCase(CBL_View_LinkedDocs) {
     CAssertEq([view updateIndex], kCBLStatusOK);
     
     // Query all rows:
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.includeDocs = YES;
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    options->includeDocs = YES;
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"},
                                          {@"value", $dict({@"_id", @"44444"})},
                                          {@"doc", docs[1]}),
@@ -904,13 +903,12 @@ TestCase(CBL_View_FullTextQuery) {
     }) reduceBlock: NULL version: @"1"];
     CAssertEq([otherView updateIndex], kCBLStatusOK);
     
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    __unused NSString* fullTextQuery = @"stormy OR dog";
-    options.fullTextQuery = fullTextQuery;
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    options.fullTextQuery = @"stormy OR dog";
     options.fullTextRanking = NO;
     options.fullTextSnippets = YES;
     CBLStatus status;
-    NSArray* rows = [view _queryWithOptions: &options status: &status];
+    NSArray* rows = [view _queryWithOptions: options status: &status];
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rows);
     NSArray* expectedRows = $array($dict({@"id",  @"44444"},
@@ -968,7 +966,7 @@ TestCase(CBL_View_FullTextQuery) {
     // Make sure the deleted doc doesn't still show up in the query results:
     fullTextQuery = @"stormy OR dog";
     options.fullTextQuery = fullTextQuery;
-    rows = [view _queryWithOptions: &options status: &status];
+    rows = [view _queryWithOptions: options status: &status];
     CAssert(rows, @"_queryFullText failed: %d", status);
     Log(@"after deletion, rows = %@", rows);
 

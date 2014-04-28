@@ -206,12 +206,12 @@ TestCase(CBL_Database_EmptyDoc) {
     // Test case for issue #44, which is caused by a bug in NSJSONSerialization.
     CBLDatabase* db = createDB();
     CBL_Revision* rev = putDoc(db, $dict());
-    CBLQueryOptions options = kDefaultCBLQueryOptions;
-    options.includeDocs = YES;
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    options->includeDocs = YES;
     NSArray* keys = @[rev.docID];
     options.keys = keys;
     CBLStatus status;
-    CBLQueryIteratorBlock iterator = [db getAllDocs: &options status: &status];
+    CBLQueryIteratorBlock iterator = [db getAllDocs: options status: &status];
     Assert(iterator);
     while (iterator()) {
     }

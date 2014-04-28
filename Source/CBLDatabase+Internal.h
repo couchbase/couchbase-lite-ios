@@ -10,7 +10,7 @@
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
 @class CBForestDB, CBForestVersions;
-@class CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
+@class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
@@ -188,7 +188,7 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 - (void) forgetViewNamed: (NSString*)name;
 
 /** Returns the value of an _all_docs query, as an array of CBLQueryRow. */
-- (CBLQueryIteratorBlock) getAllDocs: (const struct CBLQueryOptions*)options
+- (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
                               status: (CBLStatus*)outStatus;
 
 - (CBLView*) makeAnonymousView;

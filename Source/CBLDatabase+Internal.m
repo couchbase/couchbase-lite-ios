@@ -905,27 +905,27 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 
-- (CBLQueryIteratorBlock) getAllDocs: (const CBLQueryOptions*)options
+- (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
                               status: (CBLStatus*)outStatus
 {
     if (!options)
-        options = &kDefaultCBLQueryOptions;
+        options = [CBLQueryOptions new];
     CBForestEnumerationOptions forestOpts = {
         .skip = options->skip,
         .limit = options->limit,
         .descending = options->descending,
         .inclusiveEnd = options->inclusiveEnd,
-        .includeDeleted = (options->allDocsMode == kCBLIncludeDeleted),
+        .includeDeleted = (options->allDocsMode == kCBLIncludeDeleted) || options.keys != nil,
         .onlyConflicts = (options->allDocsMode == kCBLOnlyConflicts),
     };
 
     NSError* error;
     CBForestEnumerator* e;
-    if (options->keys) {
-        e = [_forest enumerateDocsWithKeys: options->keys
+    if (options.keys) {
+        e = [_forest enumerateDocsWithKeys: options.keys
                                    options: &forestOpts error: &error];
     } else {
-        e = [_forest enumerateDocsFromID: options->startKey toID: options->endKey
+        e = [_forest enumerateDocsFromID: options.startKey toID: options.endKey
                                  options: &forestOpts error: &error];
     }
     if (!e) {
@@ -938,6 +938,14 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         if (!doc)
             return nil;
         NSString *docID = doc.docID, *revID = doc.revID;
+        if (!doc.exists) {
+            return [[CBLQueryRow alloc] initWithDocID: nil
+                                             sequence: 0
+                                                  key: docID
+                                                value: nil
+                                        docProperties: nil];
+        }
+        
         BOOL deleted = (doc.flags & kCBForestDocDeleted) != 0;
         SequenceNumber sequence = doc.sequence;
 

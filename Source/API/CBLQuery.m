@@ -25,7 +25,7 @@
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
 - (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
-                                 options: (CBLQueryOptions)options
+                                 options: (CBLQueryOptions*)options
                             lastSequence: (SequenceNumber*)outLastSequence
                                   status: (CBLStatus*)outStatus;
 @end
@@ -71,8 +71,8 @@
     if (self) {
         _database = database;
         _view = view;
-        _limit = kDefaultCBLQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
-        _fullTextRanking = kDefaultCBLQueryOptions.fullTextRanking; // defaults to YES
+        _limit = UINT_MAX;
+        _fullTextRanking = YES;
         _mapOnly = (view.reduceBlock == nil);
     }
     return self;
@@ -144,7 +144,7 @@
         [desc appendFormat: @", skip=%lu", (unsigned long)_skip];
     if (_descending)
         [desc appendFormat: @", descending"];
-    if (_limit)
+    if (_limit != UINT_MAX)
         [desc appendFormat: @", limit=%lu", (unsigned long)_limit];
     if (_groupLevel)
         [desc appendFormat: @", groupLevel=%lu", (unsigned long)_groupLevel];
@@ -163,29 +163,29 @@
     return [[CBLLiveQuery alloc] initWithQuery: self];
 }
 
-- (CBLQueryOptions) queryOptions {
-    return (CBLQueryOptions) {
-        .startKey = _startKey,
-        .endKey = _endKey,
-        .startKeyDocID = _startKeyDocID,
-        .endKeyDocID = _endKeyDocID,
-        .keys = _keys,
-        .fullTextQuery = _fullTextQuery,
-        .fullTextSnippets = _fullTextSnippets,
-        .fullTextRanking = _fullTextRanking,
-        .bbox = (_isGeoQuery ? &_boundingBox : NULL),
-        .skip = (unsigned)_skip,
-        .limit = (unsigned)_limit,
-        .reduce = !_mapOnly,
-        .reduceSpecified = YES,
-        .groupLevel = (unsigned)_groupLevel,
-        .descending = _descending,
-        .includeDocs = _prefetch,
-        .updateSeq = YES,
-        .inclusiveEnd = YES,
-        .allDocsMode = _allDocsMode,
-        .indexUpdateMode = _indexUpdateMode
-    };
+- (CBLQueryOptions*) queryOptions {
+    CBLQueryOptions* options = [CBLQueryOptions new];
+    options.startKey = _startKey,
+    options.endKey = _endKey,
+    options.startKeyDocID = _startKeyDocID,
+    options.endKeyDocID = _endKeyDocID,
+    options.keys = _keys,
+    options.fullTextQuery = _fullTextQuery,
+    options->fullTextSnippets = _fullTextSnippets,
+    options->fullTextRanking = _fullTextRanking,
+    options->bbox = (_isGeoQuery ? &_boundingBox : NULL),
+    options->skip = (unsigned)_skip,
+    options->limit = (unsigned)_limit,
+    options->reduce = !_mapOnly,
+    options->reduceSpecified = YES,
+    options->groupLevel = (unsigned)_groupLevel,
+    options->descending = _descending,
+    options->includeDocs = _prefetch,
+    options->updateSeq = YES,
+    options->inclusiveEnd = YES,
+    options->allDocsMode = _allDocsMode,
+    options->indexUpdateMode = _indexUpdateMode;
+    return options;
 }
 
 
@@ -211,7 +211,7 @@
     LogTo(Query, @"%@: Async query...", self);
     NSThread *callingThread = [NSThread currentThread];
     NSString* viewName = _view.name;
-    CBLQueryOptions options = self.queryOptions;
+    CBLQueryOptions *options = self.queryOptions;
     
     [_database.manager backgroundTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
         // On the background server thread, run the query:
@@ -675,7 +675,7 @@ static id fromJSON( NSData* json ) {
 @implementation CBLDatabase (Views)
 
 - (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
-                                 options: (CBLQueryOptions)options
+                                 options: (CBLQueryOptions*)options
                             lastSequence: (SequenceNumber*)outLastSequence
                                   status: (CBLStatus*)outStatus
 {
@@ -690,23 +690,23 @@ static id fromJSON( NSData* json ) {
                 break;
             }
             lastSequence = view.lastSequenceIndexed;
-            if (options.indexUpdateMode == kCBLUpdateIndexBefore || lastSequence <= 0) {
+            if (options->indexUpdateMode == kCBLUpdateIndexBefore || lastSequence <= 0) {
                 status = [view updateIndex];
                 if (CBLStatusIsError(status)) {
                     Warn(@"Failed to update view index: %d", status);
                     break;
                 }
                 lastSequence = view.lastSequenceIndexed;
-            } else if (options.indexUpdateMode == kCBLUpdateIndexAfter &&
+            } else if (options->indexUpdateMode == kCBLUpdateIndexAfter &&
                        lastSequence < self.lastSequenceNumber) {
                 [self doAsync: ^{
                     [view updateIndex];
                 }];
             }
-            iterator = [view _queryWithOptions: &options status: &status];
+            iterator = [view _queryWithOptions: options status: &status];
         } else {
             // nil view means query _all_docs
-            iterator = [self getAllDocs: &options status: &status];
+            iterator = [self getAllDocs: options status: &status];
             lastSequence = self.lastSequenceNumber;
         }
     } while(false); // just to allow 'break' within the block

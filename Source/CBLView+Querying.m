@@ -25,14 +25,6 @@
 #define kReduceBatchSize 100
 
 
-const CBLQueryOptions kDefaultCBLQueryOptions = {
-    .limit = UINT_MAX,
-    .inclusiveEnd = YES,
-    .fullTextRanking = YES
-    // everything else will default to nil/0/NO
-};
-
-
 @implementation CBLView (Querying)
 
 
@@ -40,7 +32,7 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 
 
 /** Starts a view query, returning a CBForest enumerator. */
-- (CBForestQueryEnumerator*) _runForestQueryWithOptions: (const CBLQueryOptions*)options
+- (CBForestQueryEnumerator*) _runForestQueryWithOptions: (CBLQueryOptions*)options
                                                  status: (CBLStatus*)outStatus
 {
     CBForestQueryEnumerator* e;
@@ -51,17 +43,17 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
         .descending = options->descending,
         .inclusiveEnd = options->inclusiveEnd,
     };
-    if (options->keys) {
+    if (options.keys) {
         e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
-                                                      keys: options->keys.objectEnumerator
+                                                      keys: options.keys.objectEnumerator
                                                    options: &forestOpts
                                                      error: &error];
     } else {
         e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
-                                                  startKey: options->startKey
-                                                startDocID: options->startKeyDocID
-                                                    endKey: options->endKey
-                                                  endDocID: options->endKeyDocID
+                                                  startKey: options.startKey
+                                                startDocID: options.startKeyDocID
+                                                    endKey: options.endKey
+                                                  endDocID: options.endKeyDocID
                                                    options: &forestOpts
                                                      error: &error];
     }
@@ -72,7 +64,7 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 
 
 // Should this query be run as grouped/reduced?
-- (BOOL) groupOrReduceWithOptions: (const CBLQueryOptions*) options {
+- (BOOL) groupOrReduceWithOptions: (CBLQueryOptions*) options {
     if (options->group || options->groupLevel > 0)
         return YES;
     else if (options->reduceSpecified)
@@ -83,13 +75,13 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 
 
 /** Main internal call to query a view. */
-- (CBLQueryIteratorBlock) _queryWithOptions: (const CBLQueryOptions*)options
+- (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
                                      status: (CBLStatus*)outStatus
 {
     if (!options)
-        options = &kDefaultCBLQueryOptions;
+        options = [CBLQueryOptions new];
     CBLQueryIteratorBlock iterator;
-    if (options->fullTextQuery) {
+    if (options.fullTextQuery) {
         Warn(@"Full-text querying is out of service at this time."); //FIX: Re-implement FTS
         *outStatus = kCBLStatusNotImplemented;
         return nil;
@@ -102,7 +94,7 @@ const CBLQueryOptions kDefaultCBLQueryOptions = {
 }
 
 
-- (CBLQueryIteratorBlock) _regularQueryWithOptions: (const CBLQueryOptions*)options
+- (CBLQueryIteratorBlock) _regularQueryWithOptions: (CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus
 {
     CBForestQueryEnumerator* e = [self _runForestQueryWithOptions: options status: outStatus];
@@ -225,7 +217,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-- (CBLQueryIteratorBlock) _reducedQueryWithOptions: (const CBLQueryOptions*)options
+- (CBLQueryIteratorBlock) _reducedQueryWithOptions: (CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus
 {
     unsigned groupLevel = options->groupLevel;

@@ -17,13 +17,9 @@
 
 
 /** Standard query options for views. */
-typedef struct CBLQueryOptions {
-    __unsafe_unretained id startKey;
-    __unsafe_unretained id endKey;
-    __unsafe_unretained NSString* startKeyDocID;
-    __unsafe_unretained NSString* endKeyDocID;
-    __unsafe_unretained NSArray* keys;
-    __unsafe_unretained NSString* fullTextQuery;
+@interface CBLQueryOptions : NSObject
+{
+    @public
     const struct CBLGeoRect* bbox;
     unsigned skip;
     unsigned limit;
@@ -41,9 +37,16 @@ typedef struct CBLQueryOptions {
     BOOL fullTextRanking;
     CBLIndexUpdateMode indexUpdateMode;
     CBLAllDocsMode allDocsMode;
-} CBLQueryOptions;
+}
 
-extern const CBLQueryOptions kDefaultCBLQueryOptions;
+@property (copy, nonatomic) id startKey;
+@property (copy, nonatomic) id endKey;
+@property (copy, nonatomic) NSString* startKeyDocID;
+@property (copy, nonatomic) NSString* endKeyDocID;
+@property (copy, nonatomic) NSArray* keys;
+@property (copy, nonatomic) NSString* fullTextQuery;
+
+@end
 
 
 typedef enum {
@@ -97,7 +100,7 @@ typedef enum {
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
     @return  An array of CBLQueryRow. */
-- (CBLQueryIteratorBlock) _queryWithOptions: (const CBLQueryOptions*)options
+- (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
                                      status: (CBLStatus*)outStatus;
 #if DEBUG
 - (NSArray*) dump;

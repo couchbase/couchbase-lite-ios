@@ -25,6 +25,26 @@
 #import <CBForest/CBForest.h>
 
 
+@implementation CBLQueryOptions
+
+@synthesize startKey, endKey, startKeyDocID, endKeyDocID, keys, fullTextQuery;
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        limit = UINT_MAX;
+        inclusiveEnd = YES;
+        fullTextRanking = YES;
+        // everything else will default to nil/0/NO
+    }
+    return self;
+}
+
+@end
+
+
+
+
 @implementation CBLView (Internal)
 
 
