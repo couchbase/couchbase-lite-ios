@@ -46,7 +46,7 @@
 @property (strong, nonatomic) CBLNestedModelModification* modObject;
 @property (strong, nonatomic) NSDictionary* documentObject;
 
-- (void)propagateParent:(id)object;
+- (void)propagateParentTo:(id)object;
 @end
 
 @implementation CBLNestedModel
@@ -76,7 +76,7 @@
 }
 
 
-- (void)propagateParent:(id)object {
+- (void)propagateParentTo:(id)object {
     if(!object)
         return;
     
