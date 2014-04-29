@@ -28,6 +28,12 @@
  */
 - (void)modified;
 
+/**
+ * Call this from your setters for properties to make sure that the modification object is passed to child objects
+ * if they are instances of CBLNestedModels
+ */
+- (void)propagateParentTo:(id)object;
+
 @end
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
