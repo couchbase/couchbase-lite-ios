@@ -43,7 +43,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
 #if TARGET_OS_IPHONE
-        const char* platform = @"iOS";
+        const char* platform = "iOS";
 #else
         const char* platform = "Mac OS X";
 #endif
