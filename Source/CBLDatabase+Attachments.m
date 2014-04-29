@@ -505,7 +505,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
     LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
     __block BOOL gotError = NO;
-    CBForestEnumerator* e = [_forest enumerateDocsFromID: nil toID: nil options: 0 error: outError];
+    NSEnumerator* e = [_forest enumerateDocsFromID: nil toID: nil options: 0 error: outError];
     for (CBForestVersions* doc in e) {
         NSData* noBody = [NSData dataWithBytes: "x" length: 1];
         // Since db is assumed to have just been compacted, we know that non-current revisions
@@ -531,7 +531,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
             }
         }
     }
-    if (e.error || gotError)
+    if (gotError)
         return NO;
     LogTo(CBLDatabase, @"    ...found %llu attachments", attachmentIndex.info.documentCount);
 

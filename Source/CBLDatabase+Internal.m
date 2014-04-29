@@ -742,7 +742,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         forestOpts.contentOptions |= kCBForestDBMetaOnly;
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
-    CBForestEnumerator* e = [_forest enumerateDocsFromSequence: lastSequence+1
+    NSEnumerator* e = [_forest enumerateDocsFromSequence: lastSequence+1
                                                    toSequence: kCBForestMaxSequence
                                                       options: &forestOpts error: NULL];
     for (CBForestVersions* doc in e) {
@@ -775,10 +775,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                     [changes addRev: rev];
             }
         }
-    }
-    if (e.error) {
-        *outStatus = kCBLStatusDBError;
-        return nil;
     }
     return changes;
 }
@@ -920,7 +916,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     };
 
     NSError* error;
-    CBForestEnumerator* e;
+    NSEnumerator* e;
     if (options.keys) {
         e = [_forest enumerateDocsWithKeys: options.keys
                                    options: &forestOpts error: &error];

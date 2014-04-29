@@ -22,56 +22,10 @@
 #import "ExceptionUtils.h"
 
 
-#define kReduceBatchSize 100
-
-
 @implementation CBLView (Querying)
 
 
 #pragma mark - QUERYING:
-
-
-/** Starts a view query, returning a CBForest enumerator. */
-- (CBForestQueryEnumerator*) _runForestQueryWithOptions: (CBLQueryOptions*)options
-                                                 status: (CBLStatus*)outStatus
-{
-    CBForestQueryEnumerator* e;
-    NSError* error = nil;
-    CBForestEnumerationOptions forestOpts = {
-        .skip = options->skip,
-        .limit = options->limit,
-        .descending = options->descending,
-        .inclusiveEnd = options->inclusiveEnd,
-    };
-    if (options.keys) {
-        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
-                                                      keys: options.keys.objectEnumerator
-                                                   options: &forestOpts
-                                                     error: &error];
-    } else {
-        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
-                                                  startKey: options.startKey
-                                                startDocID: options.startKeyDocID
-                                                    endKey: options.endKey
-                                                  endDocID: options.endKeyDocID
-                                                   options: &forestOpts
-                                                     error: &error];
-    }
-    if (!e)
-        *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
-    return e;
-}
-
-
-// Should this query be run as grouped/reduced?
-- (BOOL) groupOrReduceWithOptions: (CBLQueryOptions*) options {
-    if (options->group || options->groupLevel > 0)
-        return YES;
-    else if (options->reduceSpecified)
-        return options->reduce;
-    else
-        return (self.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
-}
 
 
 /** Main internal call to query a view. */
@@ -91,6 +45,17 @@
         iterator = [self _regularQueryWithOptions: options status: outStatus];
     LogTo(View, @"Query %@: Returning iterator", _name);
     return iterator;
+}
+
+
+// Should this query be run as grouped/reduced?
+- (BOOL) groupOrReduceWithOptions: (CBLQueryOptions*) options {
+    if (options->group || options->groupLevel > 0)
+        return YES;
+    else if (options->reduceSpecified)
+        return options->reduce;
+    else
+        return (self.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
 }
 
 
@@ -272,6 +237,38 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         } while (!row && lastKey);
         return row;
     };
+}
+
+
+/** Starts a view query, returning a CBForest enumerator. */
+- (CBForestQueryEnumerator*) _runForestQueryWithOptions: (CBLQueryOptions*)options
+                                                 status: (CBLStatus*)outStatus
+{
+    CBForestQueryEnumerator* e;
+    NSError* error = nil;
+    CBForestEnumerationOptions forestOpts = {
+        .skip = options->skip,
+        .limit = options->limit,
+        .descending = options->descending,
+        .inclusiveEnd = options->inclusiveEnd,
+    };
+    if (options.keys) {
+        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+                                                      keys: options.keys.objectEnumerator
+                                                   options: &forestOpts
+                                                     error: &error];
+    } else {
+        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+                                                  startKey: options.startKey
+                                                startDocID: options.startKeyDocID
+                                                    endKey: options.endKey
+                                                  endDocID: options.endKeyDocID
+                                                   options: &forestOpts
+                                                     error: &error];
+    }
+    if (!e)
+        *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
+    return e;
 }
 
 
