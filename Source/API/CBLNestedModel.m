@@ -45,6 +45,8 @@
 @interface CBLNestedModel ()
 @property (strong, nonatomic) CBLNestedModelModification* modObject;
 @property (strong, nonatomic) NSDictionary* documentObject;
+
+- (void)propagateParent:(id)object;
 @end
 
 @implementation CBLNestedModel
@@ -71,6 +73,26 @@
 
 - (void)modified {
     [self.modObject modified];
+}
+
+
+- (void)propagateParent:(id)object {
+    if(!object)
+        return;
+    
+    if([object isKindOfClass:[NSArray class]]) {
+        NSArray* array = (NSArray*)object;
+        [array enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            [self propagateParent:obj];
+        }];
+    } else if([object isKindOfClass:[NSDictionary class]]) {
+        NSDictionary* dictionary = (NSDictionary*)object;
+        [dictionary enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+            [self propagateParent:obj];
+        }];
+    } else if([object isKindOfClass:[CBLNestedModel class]]) {
+        [object setParent:self];
+    }
 }
 
 @end
