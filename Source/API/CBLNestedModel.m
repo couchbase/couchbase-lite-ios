@@ -54,6 +54,7 @@
 - (id)init {
     self = [super init];
     if(self) {
+        self.documentObject = @{};
         self.modObject = [[CBLNestedModelModification alloc] init];
     }
     
