@@ -39,7 +39,17 @@
 
 
 + (NSString*) userAgentHeader {
-    return $sprintf(@"CouchbaseLite/%@", CBLVersion());
+    static NSString* sUserAgent;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+#if TARGET_OS_IPHONE
+        const char* platform = "iOS";
+#else
+        const char* platform = "Mac OS X";
+#endif
+        sUserAgent = $sprintf(@"CouchbaseLite/%s (%s)", CBL_VERSION_STRING, platform);
+    });
+    return sUserAgent;
 }
 
 

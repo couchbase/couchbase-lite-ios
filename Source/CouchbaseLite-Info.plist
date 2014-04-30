@@ -17,13 +17,13 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>${CURRENT_PROJECT_VERSION}</string>
+	<string>${CBL_VERSION_STRING}</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>${CURRENT_PROJECT_VERSION}</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2012-2013 Couchbase, Inc. All rights reserved.</string>
+	<string>Copyright © 2012-2014 Couchbase, Inc. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 </dict>

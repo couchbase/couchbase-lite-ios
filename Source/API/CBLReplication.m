@@ -191,6 +191,41 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 #endif
 
 
+- (void) setCookieNamed: (NSString*)name
+              withValue: (NSString*)value
+                   path: (NSString*)path
+         expirationDate: (NSDate*)expirationDate
+                 secure: (BOOL)secure
+{
+    if (secure && !_remoteURL.my_isHTTPS)
+        Warn(@"%@: Attempting to set secure cookie for non-secure URL %@", self, _remoteURL);
+    NSDictionary* props = $dict({NSHTTPCookieOriginURL, _remoteURL.my_baseURL},
+                                {NSHTTPCookiePath, (path ?: _remoteURL.path)},
+                                {NSHTTPCookieName, name},
+                                {NSHTTPCookieValue, value},
+                                {NSHTTPCookieExpires, expirationDate},
+                                {NSHTTPCookieSecure, (secure ? @YES : nil)});
+    NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
+    if (!cookie) {
+        Warn(@"%@: Could not create cookie from parameters", self);
+        return;
+    }
+    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie: cookie];
+}
+
+
+-(void) deleteCookieNamed: (NSString*)name {
+    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: _remoteURL];
+    for (NSHTTPCookie* cookie in cookies) {
+        if ([cookie.name isEqualToString: name]) {
+            [[NSHTTPCookieStorage sharedHTTPCookieStorage] deleteCookie: cookie];
+            return;
+        }
+    }
+}
+
+
+
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
     [CBL_Replicator setAnchorCerts: certs onlyThese: onlyThese];
 }
