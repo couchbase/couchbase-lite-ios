@@ -20,6 +20,7 @@
 #import "CBLCollateJSON.h"
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
+#import "ExceptionUtils.h"
 
 #import <CBForest/CBForest.h>
 
@@ -34,6 +35,27 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     viewName = [viewName stringByReplacingOccurrencesOfString: @"/" withString: @":"];
     return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
 }
+
+
+
+@implementation CBLQueryOptions
+
+@synthesize startKey, endKey, startKeyDocID, endKeyDocID, keys, fullTextQuery;
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        limit = UINT_MAX;
+        inclusiveEnd = YES;
+        fullTextRanking = YES;
+        // everything else will default to nil/0/NO
+    }
+    return self;
+}
+
+@end
+
+
 
 
 @implementation CBLView
@@ -154,10 +176,27 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
-- (SequenceNumber) lastSequenceIndexed {
-    self.index.mapVersion = self.mapVersion; // Because change of mapVersion resets lastSequenceIndexed
-    return self.index.lastSequenceIndexed;
+- (void) databaseClosing {
+    [self closeIndex];
+    _weakDB = nil;
 }
+
+
+- (void) deleteIndex {
+    NSError* error;
+    if (self.index && ![_index erase: &error])
+        Warn(@"Error deleting index of %@: %@", self, error);
+}
+
+
+- (void) deleteView {
+    [self closeIndex];
+    [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
+    [_weakDB forgetViewNamed: _name];
+}
+
+
+#pragma mark - CONFIGURATION:
 
 
 - (CBLMapBlock) mapBlock {
@@ -202,33 +241,104 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
-- (BOOL) stale {
-    return self.lastSequenceIndexed < _weakDB.lastSequenceNumber;
+static id<CBLViewCompiler> sCompiler;
+
+
++ (void) setCompiler: (id<CBLViewCompiler>)compiler {
+    sCompiler = compiler;
+}
+
++ (id<CBLViewCompiler>) compiler {
+    return sCompiler;
 }
 
 
-- (void) deleteIndex {
+- (BOOL) compileFromProperties: (NSDictionary*)viewProps language: (NSString*)language {
+    if (!language)
+        language = @"javascript";
+    NSString* mapSource = viewProps[@"map"];
+    if (!mapSource)
+        return NO;
+    CBLMapBlock mapBlock = [[CBLView compiler] compileMapFunction: mapSource language: language];
+    if (!mapBlock) {
+        Warn(@"View %@ has unknown map function: %@", _name, mapSource);
+        return NO;
+    }
+    NSString* reduceSource = viewProps[@"reduce"];
+    CBLReduceBlock reduceBlock = NULL;
+    if (reduceSource) {
+        reduceBlock =[[CBLView compiler] compileReduceFunction: reduceSource language: language];
+        if (!reduceBlock) {
+            Warn(@"View %@ has unknown reduce function: %@", _name, reduceSource);
+            return NO;
+        }
+    }
+
+    // Version string is based on a digest of the properties:
+    NSString* version = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: viewProps]);
+
+    [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
+
+    NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
+    _collation = ($equal(options[@"collation"], @"raw")) ? kCBLViewCollationRaw
+                                                             : kCBLViewCollationUnicode;
+    return YES;
+}
+
+
+#pragma mark - INDEXING:
+
+
+/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
+- (CBLStatus) updateIndex {
+    LogTo(View, @"Re-indexing view %@ ...", _name);
+    CBLDatabase* db = _weakDB;
+    NSString* viewName = _name;
+    CBLContentOptions contentOptions = _mapContentOptions;
+    CBLMapBlock mapBlock = self.mapBlock;
+    Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
+    CBForestMapReduceIndex* index = self.index;
+    if (!index)
+        return kCBLStatusNotFound;
+
+    index.sourceDatabase = db.forestDB;
+    index.mapVersion = self.mapVersion;
+    index.map = ^(CBForestDocument* baseDoc, NSData* data, CBForestIndexEmitBlock emit) {
+        CBForestVersions* doc = (CBForestVersions*)baseDoc;
+        NSString *docID=doc.docID, *revID=doc.revID;
+        SequenceNumber sequence = doc.sequence;
+        NSData* json = [doc dataOfRevision: nil];
+        NSDictionary* properties = [db documentPropertiesFromJSON: json
+                                                            docID: docID
+                                                            revID: revID
+                                                          deleted: NO
+                                                         sequence: sequence
+                                                          options: contentOptions];
+        if (!properties) {
+            Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
+            return;
+        }
+
+        // Call the user-defined map() to emit new key/value pairs from this revision:
+        LogTo(View, @"  call map for sequence=%lld...", sequence);
+        @try {
+            mapBlock(properties, emit);
+        } @catch (NSException* x) {
+            MYReportException(x, @"map block of view '%@'", viewName);
+        }
+    };
+
+    uint64_t lastSequence = index.lastSequenceIndexed;
     NSError* error;
-    if (self.index && ![_index erase: &error])
-        Warn(@"Error deleting index of %@: %@", self, error);
-}
+    BOOL ok = [index updateIndex: &error];
+    index.map = nil;
 
-
-- (void) deleteView {
-    [self closeIndex];
-    [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
-    [_weakDB forgetViewNamed: _name];
-}
-
-
-- (void) databaseClosing {
-    [self closeIndex];
-    _weakDB = nil;
-}
-
-
-- (CBLQuery*) createQuery {
-    return [[CBLQuery alloc] initWithDatabase: self.database view: self];
+    if (!ok)
+        return kCBLStatusDBError; //FIX: Improve this
+    else if (index.lastSequenceIndexed == lastSequence)
+        return kCBLStatusNotModified;
+    else
+        return kCBLStatusOK;
 }
 
 
@@ -240,15 +350,22 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
-static id<CBLViewCompiler> sCompiler;
+#pragma mark - QUERYING:
 
 
-+ (void) setCompiler: (id<CBLViewCompiler>)compiler {
-    sCompiler = compiler;
+- (SequenceNumber) lastSequenceIndexed {
+    self.index.mapVersion = self.mapVersion; // Because change of mapVersion resets lastSequenceIndexed
+    return self.index.lastSequenceIndexed;
 }
 
-+ (id<CBLViewCompiler>) compiler {
-    return sCompiler;
+
+- (BOOL) stale {
+    return self.lastSequenceIndexed < _weakDB.lastSequenceNumber;
+}
+
+
+- (CBLQuery*) createQuery {
+    return [[CBLQuery alloc] initWithDatabase: self.database view: self];
 }
 
 

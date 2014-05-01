@@ -315,7 +315,6 @@
 		279CE40B14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */; };
 		279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */; };
 		279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBLView+Internal.h */; };
-		279EB2CF149140DE00E74185 /* CBLView+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* CBLView+Internal.m */; };
 		279EB2D11491442500E74185 /* CBLInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D01491442500E74185 /* CBLInternal.h */; };
 		279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* CBLCollateJSON.h */; };
 		279EB2DC1491C34300E74185 /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2DA1491C34300E74185 /* CBLCollateJSON.m */; };
@@ -343,7 +342,6 @@
 		27B0B79F1492932800A817AD /* CBLBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* CBLBase64.m */; };
 		27B0B7AA1492B83B00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27B0B7CD1492B86C00A817AD /* CBLDatabase+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */; };
-		27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 279EB2CD149140DE00E74185 /* CBLView+Internal.m */; };
 		27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */; };
 		27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* CBL_Revision.m */; };
 		27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* CBL_Server.m */; };
@@ -1142,7 +1140,6 @@
 		279CE40814D8AA23009F3FA6 /* CBLMultipartDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartDownloader.h; sourceTree = "<group>"; };
 		279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartDownloader.m; sourceTree = "<group>"; };
 		279EB2CC149140DE00E74185 /* CBLView+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLView+Internal.h"; sourceTree = "<group>"; };
-		279EB2CD149140DE00E74185 /* CBLView+Internal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLView+Internal.m"; sourceTree = "<group>"; };
 		279EB2D01491442500E74185 /* CBLInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLInternal.h; sourceTree = "<group>"; };
 		279EB2D91491C34300E74185 /* CBLCollateJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLCollateJSON.h; sourceTree = "<group>"; };
 		279EB2DA1491C34300E74185 /* CBLCollateJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLCollateJSON.m; sourceTree = "<group>"; };
@@ -1548,7 +1545,6 @@
 				2773ADC614BD1EB80027A292 /* CBLDatabase+LocalDocs.m */,
 				2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */,
 				279EB2CC149140DE00E74185 /* CBLView+Internal.h */,
-				279EB2CD149140DE00E74185 /* CBLView+Internal.m */,
 				2726D14318FDF44000AACC2A /* CBLSpecialKey.h */,
 				2726D14418FDF44000AACC2A /* CBLSpecialKey.m */,
 				277EF49317F5F3CB00F7B7F7 /* CBLView+Querying.m */,
@@ -3140,7 +3136,6 @@
 				270B3E3F148D7F0000E0A926 /* CBL_Pusher.m in Sources */,
 				27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */,
 				27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */,
-				279EB2CF149140DE00E74185 /* CBLView+Internal.m in Sources */,
 				279EB2DC1491C34300E74185 /* CBLCollateJSON.m in Sources */,
 				27B0B7801491E76200A817AD /* CBL_View_Tests.m in Sources */,
 				27846FF115D5C8250030122F /* APITests.m in Sources */,
@@ -3305,7 +3300,6 @@
 				27F9411B176A5FB4007BAEBE /* ModelTests.m in Sources */,
 				27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */,
 				276F25FD18A3386100A70679 /* DDData.m in Sources */,
-				27B0B7CE1492B86F00A817AD /* CBLView+Internal.m in Sources */,
 				27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */,
 				277B5DD01821AE990088881E /* CBLJSONReader.m in Sources */,
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
