@@ -276,7 +276,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                         // Strip any attachments already known to the target db:
                         if (properties.cbl_attachments) {
                             // Look for the latest common ancestor and stub out older attachments:
-                            int minRevPos = findCommonAncestor(rev, possibleAncestors);
+                            int minRevPos = findCommonAncestor(populatedRev, possibleAncestors);
                             [CBLDatabase stubOutAttachmentsIn: populatedRev beforeRevPos: minRevPos + 1
                                             attachmentsFollow: NO];
                             properties = populatedRev.properties;
@@ -515,6 +515,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
     if (possibleRevIDs.count == 0)
         return 0;
     NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
+    Assert(history, @"rev is missing _revisions property");
     NSString* ancestorID = [history firstObjectCommonWithArray: possibleRevIDs];
     if (!ancestorID)
         return 0;
