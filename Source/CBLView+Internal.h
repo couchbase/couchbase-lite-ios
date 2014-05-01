@@ -63,7 +63,6 @@ typedef enum {
     NSString* _name;
     uint8_t _collation;
     CBLContentOptions _mapContentOptions;
-    CBForestMapReduceIndex* _index;
 }
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create;
@@ -72,17 +71,19 @@ typedef enum {
 
 + (NSString*) fileNameToViewName: (NSString*)fileName;
 
+@property (readonly) CBForestMapReduceIndex* index;
+
 @property (readonly) NSString* mapVersion;
-
-@end
-
-
-@interface CBLView (Internal)
 
 #if DEBUG  // for unit tests only
 @property (readonly) NSString* indexFilePath;
 - (void) setCollation: (CBLViewCollation)collation;
 #endif
+
+@end
+
+
+@interface CBLView (Internal)
 
 /** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
 - (BOOL) compileFromProperties: (NSDictionary*)viewProps

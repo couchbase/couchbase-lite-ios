@@ -24,6 +24,10 @@
 #import <CBForest/CBForest.h>
 
 
+// Close the index db after it's inactive this many seconds
+#define kCloseDelay 60.0
+
+
 static inline NSString* viewNameToFileName(NSString* viewName) {
     if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @":"].length > 0)
         return nil;
@@ -33,6 +37,10 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 @implementation CBLView
+{
+    NSString* _path;
+    CBForestMapReduceIndex* _index;
+}
 
 
 + (NSString*) fileNameToViewName: (NSString*)fileName {
@@ -53,34 +61,49 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     if (self) {
         _weakDB = db;
         _name = [name copy];
+        _path = [db.dir stringByAppendingPathComponent: viewNameToFileName(_name)];
         _mapContentOptions = kCBLIncludeLocalSeq;
         if (0) { // appease static analyzer
             _collation = 0;
         }
 
-        NSString* filename = viewNameToFileName(_name);
-        if (!filename)
-            return nil;
-        NSString* path = [db.dir stringByAppendingPathComponent: filename];
+        if (![[NSFileManager defaultManager] fileExistsAtPath: _path isDirectory: NULL]) {
+            if (!create || ![self openIndexWithOptions: kCBForestDBCreate])
+                return nil;
+            [self closeIndexSoon];
+        }
 
-        CBForestDBConfig config = {
-            .bufferCacheSize = 16*1024*1024,
-            .walThreshold = 4096,
-            .enableSequenceTree = YES
-        };
-        _index = [[CBForestMapReduceIndex alloc] initWithFile: path
-                                                      options: (create ? kCBForestDBCreate : 0)
-                                                       config: &config
-                                                        error: NULL];
-        if (!_index)
-            return nil;
-        LogTo(View, @"%@: Opened %@", self, _index);
+#if TARGET_OS_IPHONE
+        // On iOS, close the index when there's a low-memory notification:
+        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(closeIndex)
+                             name: UIApplicationDidReceiveMemoryWarningNotification object: nil];
+#endif
     }
     return self;
 }
 
 
-@synthesize name=_name;
+#if TARGET_OS_IPHONE
+- (void) dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+#endif
+
+
+@synthesize name=_name, indexFilePath=_path;
+
+
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@/%@]", self.class, _weakDB.name, _name];
+}
+
+
+
+#if DEBUG
+- (void) setCollation: (CBLViewCollation)collation {
+    _collation = collation;
+}
+#endif
 
 
 - (CBLDatabase*) database {
@@ -88,9 +111,52 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
+- (CBForestMapReduceIndex*) index {
+    [self closeIndexSoon];
+    return _index ?: [self openIndexWithOptions: 0];
+}
+
+
+- (CBForestMapReduceIndex*) openIndexWithOptions: (CBForestFileOptions)options {
+    Assert(!_index);
+    CBForestDBConfig config = {
+        .bufferCacheSize = 16*1024*1024,
+        .walThreshold = 4096,
+        .enableSequenceTree = YES
+    };
+    NSError* error;
+    _index = [[CBForestMapReduceIndex alloc] initWithFile: _path
+                                                  options: options
+                                                   config: &config
+                                                    error: &error];
+    if (_index)
+        LogTo(View, @"%@: Opened %@", self, _index);
+    else
+        Warn(@"Unable to open index of %@: %@", self, error);
+    return _index;
+}
+
+
+- (void) closeIndex {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
+                                               object: nil];
+    if (_index) {
+        [_index close];
+        _index = nil;
+        LogTo(View, @"%@: Closed index db", self);
+    }
+}
+
+- (void) closeIndexSoon {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
+                                               object: nil];
+    [self performSelector: @selector(closeIndex) withObject: nil afterDelay: kCloseDelay];
+}
+
+
 - (SequenceNumber) lastSequenceIndexed {
-    _index.mapVersion = self.mapVersion; // Because change of mapVersion resets lastSequenceIndexed
-    return _index.lastSequenceIndexed;
+    self.index.mapVersion = self.mapVersion; // Because change of mapVersion resets lastSequenceIndexed
+    return self.index.lastSequenceIndexed;
 }
 
 
@@ -143,22 +209,20 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 - (void) deleteIndex {
     NSError* error;
-    if (_index && ![_index erase: &error])
+    if (self.index && ![_index erase: &error])
         Warn(@"Error deleting index of %@: %@", self, error);
 }
 
 
 - (void) deleteView {
-    [_index deleteDatabase: NULL];
-    _index = nil;
+    [self closeIndex];
+    [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
     [_weakDB forgetViewNamed: _name];
 }
 
 
 - (void) databaseClosing {
-    LogTo(View, @"%@: Closing %@", self, _index);
-    [_index close];
-    _index = nil;
+    [self closeIndex];
     _weakDB = nil;
 }
 

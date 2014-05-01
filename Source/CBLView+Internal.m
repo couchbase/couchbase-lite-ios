@@ -48,16 +48,6 @@
 @implementation CBLView (Internal)
 
 
-#if DEBUG
-- (NSString*) indexFilePath {
-    return _index.filename;
-}
-
-- (void) setCollation: (CBLViewCollation)collation {
-    _collation = collation;
-}
-#endif
-
 //- (void) setMapContentOptions:(CBLContentOptions)mapContentOptions {
 //    _mapContentOptions = (uint8_t)mapContentOptions;
 //}
@@ -111,12 +101,13 @@
     CBLContentOptions contentOptions = _mapContentOptions;
     CBLMapBlock mapBlock = self.mapBlock;
     Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
-    if (!_index)
+    CBForestMapReduceIndex* index = self.index;
+    if (!index)
         return kCBLStatusNotFound;
 
-    _index.sourceDatabase = db.forestDB;
-    _index.mapVersion = self.mapVersion;
-    _index.map = ^(CBForestDocument* baseDoc, NSData* data, CBForestIndexEmitBlock emit) {
+    index.sourceDatabase = db.forestDB;
+    index.mapVersion = self.mapVersion;
+    index.map = ^(CBForestDocument* baseDoc, NSData* data, CBForestIndexEmitBlock emit) {
         CBForestVersions* doc = (CBForestVersions*)baseDoc;
         NSString *docID=doc.docID, *revID=doc.revID;
         SequenceNumber sequence = doc.sequence;
@@ -141,14 +132,14 @@
         }
     };
 
-    uint64_t lastSequence = _index.lastSequenceIndexed;
+    uint64_t lastSequence = index.lastSequenceIndexed;
     NSError* error;
-    BOOL ok = [_index updateIndex: &error];
-    _index.map = nil;
+    BOOL ok = [index updateIndex: &error];
+    index.map = nil;
 
     if (!ok)
         return kCBLStatusDBError; //FIX: Improve this
-    else if (_index.lastSequenceIndexed == lastSequence)
+    else if (index.lastSequenceIndexed == lastSequence)
         return kCBLStatusNotModified;
     else
         return kCBLStatusOK;

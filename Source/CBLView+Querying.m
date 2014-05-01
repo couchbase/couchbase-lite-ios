@@ -244,6 +244,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (CBForestQueryEnumerator*) _runForestQueryWithOptions: (CBLQueryOptions*)options
                                                  status: (CBLStatus*)outStatus
 {
+    CBForestMapReduceIndex* index = self.index;
+    if (!index) {
+        *outStatus = kCBLStatusNotFound;
+        return nil;
+    }
     CBForestQueryEnumerator* e;
     NSError* error = nil;
     CBForestEnumerationOptions forestOpts = {
@@ -253,12 +258,12 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         .inclusiveEnd = options->inclusiveEnd,
     };
     if (options.keys) {
-        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+        e = [[CBForestQueryEnumerator alloc] initWithIndex: index
                                                       keys: options.keys.objectEnumerator
                                                    options: &forestOpts
                                                      error: &error];
     } else {
-        e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+        e = [[CBForestQueryEnumerator alloc] initWithIndex: index
                                                   startKey: options.startKey
                                                 startDocID: options.startKeyDocID
                                                     endKey: options.endKey
@@ -277,10 +282,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 // This is really just for unit tests & debugging
 #if DEBUG
 - (NSArray*) dump {
-    if (!_index)
+    CBForestMapReduceIndex* index = self.index;
+    if (!index)
         return nil;
     NSMutableArray* result = $marray();
-    CBForestQueryEnumerator* e = [[CBForestQueryEnumerator alloc] initWithIndex: _index
+    CBForestQueryEnumerator* e = [[CBForestQueryEnumerator alloc] initWithIndex: index
                                                                        startKey: nil startDocID: nil endKey: nil endDocID: nil options: NULL error: NULL];
     while (e.nextObject) {
         [result addObject: $dict({@"key", CBLJSONString(e.key)},

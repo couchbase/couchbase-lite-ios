@@ -21,7 +21,7 @@
 #import <CBForest/CBForest.h>
 
 
-// Close the local docs db after its inactive this many seconds
+// Close the local docs db after it's inactive this many seconds
 #define kCloseDelay 15.0
 
 
