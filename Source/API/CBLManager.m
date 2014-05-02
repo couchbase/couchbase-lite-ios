@@ -48,8 +48,21 @@ static double CouchbaseLiteVersionNumber = 0.7;
 extern double CouchbaseLiteVersionNumber; // Defined in Xcode-generated CouchbaseLite_vers.c
 #endif
 
+
 NSString* CBLVersion( void ) {
-    return $sprintf(@"%g", CouchbaseLiteVersionNumber);
+    if (CouchbaseLiteVersionNumber > 0)
+        return $sprintf(@"%s (build %g)", CBL_VERSION_STRING, CouchbaseLiteVersionNumber);
+    else
+        return $sprintf(@"%s (unofficial)", CBL_VERSION_STRING);
+}
+
+static NSString* CBLFullVersionInfo( void ) {
+    NSMutableString* vers = [NSMutableString stringWithFormat: @"Couchbase Lite %@", CBLVersion()];
+#ifdef CBL_SOURCE_REVISION
+    if (strlen(CBL_SOURCE_REVISION) > 0)
+        [vers appendFormat: @"; git commit %s", CBL_SOURCE_REVISION];
+#endif
+    return vers;
 }
 
 
@@ -83,6 +96,7 @@ static NSCharacterSet* kIllegalNameChars;
 
 + (void) initialize {
     if (self == [CBLManager class]) {
+        Log(@"### %@ ###", CBLFullVersionInfo());
         kIllegalNameChars = [[NSCharacterSet characterSetWithCharactersInString: kLegalChars]
                              invertedSet];
     }
