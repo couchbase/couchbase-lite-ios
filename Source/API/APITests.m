@@ -954,8 +954,7 @@ TestCase(API_MapReduce) {
     query.descending = NO;
     query.mapOnly = YES;
 
-    NSString *key = [[NSString alloc] init];
-    NSString *value = [[NSString alloc] init];
+    __unused NSString *key, *value;
     NSError *error;
     CBLQueryEnumerator *rowEnum = [query run: &error];
     int i = 0;

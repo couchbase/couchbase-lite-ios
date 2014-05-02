@@ -338,13 +338,10 @@
     if (!json)
         return kCBLStatusBadJSON;
 
-    NSUInteger historyCount = history.count;
-    if (historyCount == 0) {
+    if (history.count == 0)
         history = @[revID];
-        historyCount = 1;
-    } else if (!$equal(history[0], revID)) {
+    else if (!$equal(history[0], revID))
         return kCBLStatusBadID;
-    }
 
     // First get the CBForest doc:
     __block CBForestVersions* doc;
