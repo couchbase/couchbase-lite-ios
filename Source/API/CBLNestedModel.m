@@ -120,8 +120,6 @@
                 id value = [self convertValueFromJSON:jsonObject[key] toDesiredClass:desiredPropertyClass representedByPropertyName:key];
                 if(value) {
                     [self setValue:value forKey:propertyName];
-                } else {
-                    NSLog(@"No existing value for property found that matches key: %@. Keeping default value.", propertyName);
                 }
             }];
         }
