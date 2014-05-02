@@ -435,6 +435,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return kCBLStatusNotFound;
     if (![doc loadBodyOfRevisionObject: rev options: options])
         return kCBLStatusNotFound;
+    if (options & kCBLIncludeAttachments)
+        [self expandAttachmentsIn: rev options: options];
     return kCBLStatusOK;
 }
 
