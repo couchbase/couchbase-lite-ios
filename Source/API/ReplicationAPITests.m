@@ -78,6 +78,7 @@ static CBLDatabase* createEmptyManagerAndDb(void) {
     NSError* error;
     CBLDatabase* db = [mgr databaseNamed: @"db" error: &error];
     CAssert(db);
+    CAssertEq(db.documentCount, 0u);
     return db;
 }
 
@@ -167,19 +168,17 @@ TestCase(RunPushReplicationNoSendAttachmentForUpdatedRev) {
         Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
         return;
     }
-    
+
     Log(@"Creating %d documents...", kNDocuments);
     CBLDatabase* db = createEmptyManagerAndDb();
     
     CBLDocument* doc = [db createDocument];
     
     NSError* error;
-    CBLSavedRevision *rev1 = [doc putProperties: @{@"dynamic":@1} error: &error];
+    [doc putProperties: @{@"dynamic":@1} error: &error];
     
     CAssert(!error);
-    
-    CAssert(![db sequenceHasAttachments: rev1.sequence]);
-    
+
     unsigned char attachbytes[kAttSize];
     for(int i=0; i<kAttSize; i++) {
         attachbytes[i] = 1;
@@ -198,8 +197,9 @@ TestCase(RunPushReplicationNoSendAttachmentForUpdatedRev) {
     CAssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"attach"]);
     
     Log(@"Pushing 1...");
+    DeleteRemoteDB(remoteDbURL);
     CBLReplication* repl = [db createPushReplication: remoteDbURL];
-    repl.createTarget = NO;
+    repl.createTarget = YES;
     [repl start];
     
     runReplication(repl, 1);
@@ -227,8 +227,7 @@ TestCase(RunPushReplicationNoSendAttachmentForUpdatedRev) {
     
     runReplication(repl, 1);
     AssertNil(repl.lastError);
-    
-    
+
     [db.manager close];
 }
 
@@ -487,6 +486,8 @@ TestCase(ReplicationCookie) {
     [repl deleteCookieNamed: @"UnitTestCookie"];
     cookie = cookieForURL(remoteDbURL, @"UnitTestCookie");
     AssertNil(cookie.value);
+
+    [db.manager close];
 }
 
 
