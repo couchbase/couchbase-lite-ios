@@ -184,6 +184,41 @@ TestCase(API_CreateRevisions) {
     closeTestDB(db);
 }
 
+TestCase(API_RevisionIdEquivalentRevisions) {
+    
+    NSDictionary* properties = @{@"testName": @"testCreateRevisions",
+                                 @"tag": @1337};
+    NSDictionary* properties2 = @{@"testName": @"testCreateRevisions",
+                                 @"tag": @1338};
+    
+    CBLDatabase* db = createEmptyDB();
+    CBLDocument* doc = [db createDocument];
+    CAssert(!doc.isDeleted);
+    CBLUnsavedRevision* newRev = [doc newRevision];
+    [newRev setUserProperties:properties];
+    
+    NSError* error;
+    CBLSavedRevision* rev1 = [newRev save: &error];
+    CAssert(rev1, @"Save 1 failed: %@", error);
+    
+    CBLUnsavedRevision* newRev2a = [rev1 createRevision];
+    [newRev2a setUserProperties:properties2];
+    CBLSavedRevision* rev2a = [newRev2a save: &error];
+    CAssert(rev2a, @"Save rev2a failed: %@", error);
+    Log(@"rev2a: %@", rev2a);
+    
+    CBLUnsavedRevision* newRev2b = [rev1 createRevision];
+    [newRev2b setUserProperties:properties2];
+    CBLSavedRevision* rev2b = [newRev2b saveAllowingConflict:&error];
+    CAssert(rev2b, @"Save rev2b failed: %@", error);
+    Log(@"rev2b: %@", rev2b);
+    
+    // since both rev2a and rev2b have same content, they should have
+    // the same rev ids.
+    CAssertEqual(rev2a.revisionID, rev2b.revisionID);
+    
+}
+
 TestCase(API_CreateNewRevisions) {
     RequireTestCase(API_CreateRevisions);
     NSDictionary* properties = @{@"testName": @"testCreateRevisions",
@@ -238,6 +273,7 @@ TestCase(API_CreateNewRevisions) {
 
     CAssert([doc.currentRevisionID hasPrefix: @"2-"],
             @"Document revision ID is still %@", doc.currentRevisionID);
+
 
     // Add a deletion/tombstone revision:
     newRev = doc.newRevision;
