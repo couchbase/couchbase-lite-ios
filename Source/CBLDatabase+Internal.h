@@ -150,13 +150,6 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus;
 
-- (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
-                                              docID: (NSString*)docID
-                                              revID: (NSString*)revID
-                                            deleted: (BOOL)deleted
-                                           sequence: (SequenceNumber)sequence
-                                            options: (CBLContentOptions)options;
-
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
 
 /** Returns an array of CBL_Revisions in reverse chronological order,

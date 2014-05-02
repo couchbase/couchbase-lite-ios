@@ -23,6 +23,7 @@
 #import "ExceptionUtils.h"
 
 #import <CBForest/CBForest.h>
+#import "CBForestVersions+JSON.h"
 
 
 // Close the index db after it's inactive this many seconds
@@ -112,7 +113,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 #endif
 
 
-@synthesize name=_name, indexFilePath=_path;
+@synthesize name=_name;
 
 
 - (NSString*) description {
@@ -122,6 +123,8 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 #if DEBUG
+@synthesize indexFilePath=_path;
+
 - (void) setCollation: (CBLViewCollation)collation {
     _collation = collation;
 }
@@ -305,22 +308,13 @@ static id<CBLViewCompiler> sCompiler;
     index.mapVersion = self.mapVersion;
     index.map = ^(CBForestDocument* baseDoc, NSData* data, CBForestIndexEmitBlock emit) {
         CBForestVersions* doc = (CBForestVersions*)baseDoc;
-        NSString *docID=doc.docID, *revID=doc.revID;
-        SequenceNumber sequence = doc.sequence;
-        NSData* json = [doc dataOfRevision: nil];
-        NSDictionary* properties = [db documentPropertiesFromJSON: json
-                                                            docID: docID
-                                                            revID: revID
-                                                          deleted: NO
-                                                         sequence: sequence
-                                                          options: contentOptions];
+        NSDictionary* properties = [doc bodyOfRevision: doc.revID options: contentOptions];
         if (!properties) {
-            Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
+            Warn(@"Failed to parse JSON of %@ / %@", doc.docID, doc.revID);
             return;
         }
-
         // Call the user-defined map() to emit new key/value pairs from this revision:
-        LogTo(View, @"  call map for sequence=%lld...", sequence);
+        LogTo(View, @"  call map for %@ / %@", doc.docID, doc.revID);
         @try {
             mapBlock(properties, emit);
         } @catch (NSException* x) {

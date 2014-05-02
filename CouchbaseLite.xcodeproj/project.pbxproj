@@ -481,6 +481,9 @@
 		27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
 		27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
 		27ED9A971639D8D2000C844A /* LiteServ.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED9A961639D8D2000C844A /* LiteServ.m */; };
+		27EF7F9B1912EB5200A327B9 /* CBForestVersions+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF7F991912EB5200A327B9 /* CBForestVersions+JSON.h */; };
+		27EF7F9C1912EB5200A327B9 /* CBForestVersions+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF7F9A1912EB5200A327B9 /* CBForestVersions+JSON.m */; };
+		27EF7F9D1912EB5200A327B9 /* CBForestVersions+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF7F9A1912EB5200A327B9 /* CBForestVersions+JSON.m */; };
 		27F08C8B15A7A31B003C3E2B /* CBL_Attachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* CBL_Attachment.h */; };
 		27F12887156ABE24008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -1249,6 +1252,8 @@
 		27ED862E157D0FC600712B33 /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		27ED862F157D0FC600712B33 /* CBLDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocument.m; sourceTree = "<group>"; };
 		27ED9A961639D8D2000C844A /* LiteServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LiteServ.m; path = ../Listener/LiteServ.m; sourceTree = "<group>"; };
+		27EF7F991912EB5200A327B9 /* CBForestVersions+JSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBForestVersions+JSON.h"; sourceTree = "<group>"; };
+		27EF7F9A1912EB5200A327B9 /* CBForestVersions+JSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBForestVersions+JSON.m"; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* CBLDatabase+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Internal.h"; sourceTree = "<group>"; };
 		27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Internal.m"; sourceTree = "<group>"; };
 		27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
@@ -1560,6 +1565,8 @@
 				27C706411486BBD500F0F099 /* CBL_Server.m */,
 				27731EFD1493FA3100815D67 /* CBL_BlobStore.h */,
 				27731EFE1493FA3100815D67 /* CBL_BlobStore.m */,
+				27EF7F991912EB5200A327B9 /* CBForestVersions+JSON.h */,
+				27EF7F9A1912EB5200A327B9 /* CBForestVersions+JSON.m */,
 			);
 			name = Database;
 			sourceTree = "<group>";
@@ -2472,6 +2479,7 @@
 				27B945B217692E2000B2DF2D /* CBLModel_Internal.h in Headers */,
 				2753158E14ACEFC90065964D /* HTTPAsyncFileResponse.h in Headers */,
 				2753159214ACEFC90065964D /* HTTPDataResponse.h in Headers */,
+				27EF7F9B1912EB5200A327B9 /* CBForestVersions+JSON.h in Headers */,
 				2753159614ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */,
 				2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */,
 				2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */,
@@ -3127,6 +3135,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27EF7F9C1912EB5200A327B9 /* CBForestVersions+JSON.m in Sources */,
 				270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */,
 				270B3E121489382F00E0A926 /* CBL_Body.m in Sources */,
 				270B3E131489382F00E0A926 /* CBL_Server.m in Sources */,
@@ -3321,6 +3330,7 @@
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
 				2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
+				27EF7F9D1912EB5200A327B9 /* CBForestVersions+JSON.m in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,

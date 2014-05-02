@@ -29,6 +29,7 @@
 #import "CouchbaseLitePrivate.h"
 
 #import <CBForest/CBForest.h>
+#import "CBForestVersions+JSON.h"
 
 #import "MYBlockUtils.h"
 #import "ExceptionUtils.h"
@@ -38,26 +39,8 @@ NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
-#define kDocIDCacheSize 1000
-
-#define kSQLiteBusyTimeout 5.0 // seconds
-
-#define kTransactionMaxRetries 10
-#define kTransactionRetryDelay 0.050
-
 
 @implementation CBLDatabase (Internal)
-
-
-#if 0
-+ (void) initialize {
-    if (self == [CBLDatabase class]) {
-        int i = 0;
-        while (NULL != (const char *opt = sqlite3_compileoption_get(i++)))
-               Log(@"SQLite has option '%s'", opt);
-    }
-}
-#endif
 
 
 - (CBForestDB*) forestDB {
@@ -139,7 +122,19 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (BOOL) openForest: (NSError**)outError {
+- (BOOL) open: (NSError**)outError {
+    if (_isOpen)
+        return YES;
+    LogTo(CBLDatabase, @"Opening %@", self);
+
+    // Create the database directory:
+    if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
+                                   withIntermediateDirectories: YES
+                                                    attributes: nil
+                                                         error: outError])
+        return NO;
+
+    // Open the ForestDB database:
     NSString* forestPath = [_dir stringByAppendingPathComponent: @"db.forest"];
     CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
 
@@ -154,27 +149,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                        options: options
                                         config: &config
                                          error: outError];
+    if (!_forest)
+        return NO;
     _forest.documentClass = [CBForestVersions class];
-    return (_forest != nil);
-}
 
-
-- (BOOL) open: (NSError**)outError {
-    if (_isOpen)
-        return YES;
-    LogTo(CBLDatabase, @"Opening %@", self);
-
-    if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
-                                   withIntermediateDirectories: YES
-                                                    attributes: nil
-                                                         error: outError])
-        return NO;
-
-    if (![self openForest: outError])
-        return NO;
-
+    // First-time setup:
     if (!self.privateUUID) {
-        // First-time setup:
         [self setInfo: CBLCreateUUID() forKey: @"privateUUID"];
         [self setInfo: CBLCreateUUID() forKey: @"publicUUID"];
     }
@@ -254,6 +234,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (NSString*) publicUUID {
     return [self infoForKey: @"publicUUID"];
 }
+
 
 #pragma mark - TRANSACTIONS & NOTIFICATIONS:
 
@@ -357,96 +338,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #pragma mark - GETTING DOCUMENTS:
 
 
-/** Inserts the _id, _rev, _attachments etc. properties into the dictionary 'dst'.
-    Rev must already have its revID and sequence properties set. */
-- (void) extraPropertiesForRevision: (CBL_Revision*)rev
-                            options: (CBLContentOptions)options
-                               into: (NSMutableDictionary*)dst
-{
-    dst[@"_id"] = rev.docID;
-    dst[@"_rev"] = rev.revID;
-    if (rev.deleted)
-        dst[@"_deleted"] = $true;
-
-    // Get more optional stuff to put in the properties:
-    //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
-    if (options & kCBLIncludeLocalSeq)
-        dst[@"_local_seq"] = @(rev.sequence);
-
-    if (options & kCBLIncludeRevs)
-        dst[@"_revisions"] = [self getRevisionHistoryDict: rev startingFromAnyOf: nil];
-    
-    if (options & kCBLIncludeRevsInfo) {
-        dst[@"_revs_info"] = [[self getRevisionHistory: rev] my_map: ^id(CBL_Revision* rev) {
-            NSString* status = @"available";
-            if (rev.deleted)
-                status = @"deleted";
-            else if (rev.missing)
-                status = @"missing";
-            return $dict({@"rev", [rev revID]}, {@"status", status});
-        }];
-    }
-    
-    if (options & kCBLIncludeConflicts) {
-        CBL_RevisionList* revs = [self getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES];
-        if (revs.count > 1) {
-            dst[@"_conflicts"] = [revs.allRevisions my_map: ^(id aRev) {
-                return ($equal(aRev, rev) || [(CBL_Revision*)aRev deleted]) ? nil : [aRev revID];
-            }];
-        }
-    }
-}
-
-
-/** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
-    Rev must already have its revID and sequence properties set. */
-- (void) expandStoredJSON: (NSData*)json
-             intoRevision: (CBL_MutableRevision*)rev
-                  options: (CBLContentOptions)options
-{
-    NSMutableDictionary* extra = $mdict();
-    [self extraPropertiesForRevision: rev options: options into: extra];
-    if (json.length > 0) {
-        rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
-    } else {
-        rev.properties = extra;
-        if (json == nil)
-            rev.missing = true;
-    }
-
-    if (options & kCBLIncludeAttachments)
-        [self expandAttachmentsIn: rev options: options];
-}
-
-
-- (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
-                                       docID: (NSString*)docID
-                                       revID: (NSString*)revID
-                                     deleted: (BOOL)deleted
-                                    sequence: (SequenceNumber)sequence
-                                     options: (CBLContentOptions)options
-{
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
-                                                                  deleted: deleted];
-    rev.sequence = sequence;
-    rev.missing = (json == nil);
-    NSMutableDictionary* docProperties;
-    if (json.length == 0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
-        docProperties = $mdict();      // optimization, and workaround for issue #44
-    else {
-        docProperties = [CBLJSON JSONObjectWithData: json
-                                            options: CBLJSONReadingMutableContainers
-                                              error: NULL];
-        if (!docProperties) {
-            Warn(@"Unparseable JSON for doc=%@, rev=%@: %@", docID, revID, [json my_UTF8ToString]);
-            docProperties = $mdict();
-        }
-    }
-    [self extraPropertiesForRevision: rev options: options into: docProperties];
-    return docProperties;
-}
-
-
 - (CBForestVersions*) _forestDocWithID: (NSString*)docID
                                 status: (CBLStatus*)outStatus
 {
@@ -462,6 +353,21 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             *outStatus = kCBLStatusDBError;
     }
     return doc;
+}
+
+
+- (CBL_MutableRevision*) revisionObjectFromForestDoc: (CBForestVersions*)doc
+                                               revID: (NSString*)revID
+                                             options: (CBLContentOptions)options
+{
+    BOOL deleted = [doc isRevisionDeleted: revID];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: doc.docID
+                                                                    revID: revID
+                                                                  deleted: deleted];
+    rev.sequence = doc.sequence;
+    if (![doc loadBodyOfRevisionObject: rev options: options])
+        return nil;
+    return rev;
 }
 
 
@@ -487,29 +393,21 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return nil;
     }
 
-    CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                                       revID: revID
-                                                                     deleted: deleted];
-    result.sequence = doc.sequence;
-
-    if (options != kCBLNoBody) {
-        NSData* json = nil;
-        if (!(options & kCBLNoBody)) {
-            json = [doc dataOfRevision: revID];
-            if (!json) {
-                *outStatus = kCBLStatusNotFound;
-                return nil;
-            }
-        }
-        [self expandStoredJSON: json intoRevision: result options: options];
+    CBL_MutableRevision* result = [self revisionObjectFromForestDoc: doc
+                                                              revID: revID options: options];
+    if (!result) {
+        *outStatus = kCBLStatusNotFound;
+        return nil;
     }
+    if (options & kCBLIncludeAttachments)
+        [self expandAttachmentsIn: result options: options];
     *outStatus = kCBLStatusOK;
     return result;
 }
 
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                       revisionID: (NSString*)revID
+                         revisionID: (NSString*)revID
 {
     CBLStatus status;
     return [self getDocumentWithID: docID revisionID: revID options: 0 status: &status];
@@ -535,7 +433,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return status;
     if ([doc flagsOfRevision: rev.revID] == 0)
         return kCBLStatusNotFound;
-    [self expandStoredJSON: [doc dataOfRevision: rev.revID] intoRevision: rev options: options];
+    if (![doc loadBodyOfRevisionObject: rev options: options])
+        return kCBLStatusNotFound;
     return kCBLStatusOK;
 }
 
@@ -601,51 +500,18 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                       limit: (unsigned)limit
                             onlyAttachments: (BOOL)onlyAttachments // unimplemented
 {
-    unsigned generation = rev.generation;
-    if (generation <= 1)
-        return nil;
-
     CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
-    if (!doc)
-        return nil;
-    NSMutableArray* revIDs = $marray();
-    for (NSString* possibleRevID in doc.allRevisionIDs) {
-        if ([CBL_Revision generationFromRevID: possibleRevID] < generation) {
-            CBForestRevisionFlags flags = [doc flagsOfRevision: possibleRevID];
-            if (!(flags & kCBForestRevisionDeleted) && (flags & kCBForestRevisionHasBody)) {
-                // Does it REALLY have a body that hasn't been compacted?
-                if ([doc dataOfRevision: possibleRevID] != nil) {
-                    [revIDs addObject: possibleRevID];
-                    if (limit && revIDs.count >= limit)
-                        break;
-                }
-            }
-        }
-    }
-    return revIDs;
+    return [doc getPossibleAncestorRevisionIDs: rev.revID
+                                         limit: limit
+                               onlyAttachments: onlyAttachments];
 }
 
 
 - (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs {
-    unsigned generation = rev.generation;
-    if (generation <= 1 || revIDs.count == 0)
+    if (revIDs.count == 0)
         return nil;
-
     CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
-    if (!doc)
-        return nil;
-
-    revIDs = [revIDs sortedArrayUsingComparator: ^NSComparisonResult(NSString* id1, NSString* id2) {
-        return CBLCompareRevIDs(id2, id1); // descending order of generation
-    }];
-    for (NSString* possibleRevID in revIDs) {
-        if ([doc flagsOfRevision: possibleRevID] != 0) {
-            if ([CBL_Revision generationFromRevID: possibleRevID] <= generation) {
-                return possibleRevID;
-            }
-        }
-    }
-    return nil;
+    return [doc findCommonAncestorOf: rev.revID withRevIDs: revIDs];
 }
     
 
@@ -653,71 +519,16 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     Assert(revID && docID);
-
-    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
-    if (!doc)
-        return @[];
-
-    NSMutableArray* history = $marray();
-    for (NSString* ancestorID in [doc historyOfRevision: revID]) {
-        CBForestRevisionFlags flags = [doc flagsOfRevision: ancestorID];
-        BOOL deleted = (flags & kCBForestRevisionDeleted) != 0;
-        CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                                        revID: ancestorID
-                                                                      deleted: deleted];
-        rev.missing = (flags & kCBForestRevisionHasBody) == 0
-                   || [doc dataOfRevision: ancestorID] == nil;
-        [history addObject: rev];
-    }
-    return history;
-}
-
-
-static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
-    if (!history)
-        return nil;
-    
-    // Try to extract descending numeric prefixes:
-    NSMutableArray* suffixes = $marray();
-    id start = nil;
-    int lastRevNo = -1;
-    for (CBL_Revision* rev in history) {
-        int revNo;
-        NSString* suffix;
-        if ([CBL_Revision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
-            if (!start)
-                start = @(revNo);
-            else if (revNo != lastRevNo - 1) {
-                start = nil;
-                break;
-            }
-            lastRevNo = revNo;
-            [suffixes addObject: suffix];
-        } else {
-            start = nil;
-            break;
-        }
-    }
-    
-    NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
-    return $dict({@"ids", revIDs}, {@"start", start});
+    CBForestVersions* doc = [self _forestDocWithID: docID status: NULL];
+    return doc ? [doc getRevisionHistory: revID] : @[];
 }
 
 
 - (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
                        startingFromAnyOf: (NSArray*)ancestorRevIDs
 {
-    NSArray* history = [self getRevisionHistory: rev]; // (this is in reverse order, newest..oldest
-    if (ancestorRevIDs.count > 0) {
-        NSUInteger n = history.count;
-        for (NSUInteger i = 0; i < n; ++i) {
-            if ([ancestorRevIDs containsObject: [history[i] revID]]) {
-                history = [history subarrayWithRange: NSMakeRange(0, i+1)];
-                break;
-            }
-        }
-    }
-    return makeRevisionHistoryDict(history);
+    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: NULL];
+    return [doc getRevisionHistoryDict: rev.revID startingFromAnyOf: ancestorRevIDs];
 }
 
 
@@ -740,11 +551,14 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     BOOL includeDocs = options->includeDocs || options->includeConflicts || (filter != NULL);
     if (!includeDocs)
         forestOpts.contentOptions |= kCBForestDBMetaOnly;
+    CBLContentOptions contentOptions = kCBLNoBody;
+    if (includeDocs || filter)
+        contentOptions = options->contentOptions;
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     NSEnumerator* e = [_forest enumerateDocsFromSequence: lastSequence+1
-                                                   toSequence: kCBForestMaxSequence
-                                                      options: &forestOpts error: NULL];
+                                              toSequence: kCBForestMaxSequence
+                                                 options: &forestOpts error: NULL];
     for (CBForestVersions* doc in e) {
         @autoreleasepool {
             NSArray* revisions;
@@ -757,20 +571,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 revisions = @[doc.revID];
             }
             for (NSString* revID in revisions) {
-                BOOL deleted;
-                if (options->includeConflicts)
-                    deleted = [doc isRevisionDeleted: revID];
-                else
-                    deleted = (doc.flags & kCBForestDocDeleted) != 0;
-                CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: doc.docID
-                                                                                revID: revID
-                                                                              deleted: deleted];
-                rev.sequence = doc.sequence; //FIX ???
-                if (includeDocs) {
-                    [self expandStoredJSON: [doc dataOfRevision: revID]
-                              intoRevision: rev
-                                   options: options->contentOptions];
-                }
+                CBL_MutableRevision* rev = [self revisionObjectFromForestDoc: doc revID: revID
+                                                                     options: contentOptions];
                 if ([self runFilter: filter params: filterParams onRevision: rev])
                     [changes addRev: rev];
             }
@@ -948,13 +750,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         NSDictionary* docContents = nil;
         if (options->includeDocs) {
             // Fill in the document contents:
-            NSData* json = [doc dataOfRevision: nil];
-            docContents = [self documentPropertiesFromJSON: json
-                                                     docID: docID
-                                                     revID: revID
-                                                   deleted: deleted
-                                                  sequence: sequence
-                                                   options: options->content];
+            docContents = [doc bodyOfRevision: revID options: options->content];
             Assert(docContents);
         }
 
@@ -980,27 +776,3 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 @end
-
-
-
-#pragma mark - TESTS:
-#if DEBUG
-
-static CBL_Revision* mkrev(NSString* revID) {
-    return [[CBL_Revision alloc] initWithDocID: @"docid" revID: revID deleted: NO];
-}
-
-
-TestCase(CBL_Database_MakeRevisionHistoryDict) {
-    NSArray* revs = @[mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def")];
-    CAssertEqual(makeRevisionHistoryDict(revs), $dict({@"ids", @[@"jkl", @"ghi", @"def"]},
-                                                      {@"start", @4}));
-    
-    revs = @[mkrev(@"4-jkl"), mkrev(@"2-def")];
-    CAssertEqual(makeRevisionHistoryDict(revs), $dict({@"ids", @[@"4-jkl", @"2-def"]}));
-    
-    revs = @[mkrev(@"12345"), mkrev(@"6789")];
-    CAssertEqual(makeRevisionHistoryDict(revs), $dict({@"ids", @[@"12345", @"6789"]}));
-}
-
-#endif
