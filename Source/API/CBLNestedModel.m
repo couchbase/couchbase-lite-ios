@@ -14,49 +14,21 @@
 #import "CBLModel.h"
 #import "CBLModelFactory.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-@interface CBLNestedModelModification : NSObject
-@property (copy, nonatomic) CBLOnMutateBlock onMutateBlock;
-
-- (void)modified;
-@end
-
-@implementation CBLNestedModelModification
-@synthesize onMutateBlock;
-
-- (id)init {
-    self = [super init];
-    if(self) {
-        self.onMutateBlock = nil;
-    }
-    
-    return self;
-}
-
-- (void)modified {
-    if(self.onMutateBlock)
-        self.onMutateBlock();
-}
-
-@end
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 @interface CBLNestedModel ()
-@property (strong, nonatomic) CBLNestedModelModification* modObject;
+@property (copy, nonatomic) CBLOnMutateBlock onMutateBlock;
 @property (strong, nonatomic) NSDictionary* documentObject;
 
 @end
 
 @implementation CBLNestedModel
-@synthesize modObject;
+@synthesize onMutateBlock;
 @synthesize documentObject;
 
 - (id)init {
     self = [super init];
     if(self) {
         self.documentObject = @{};
-        self.modObject = [[CBLNestedModelModification alloc] init];
+        self.onMutateBlock = nil;
     }
     
     return self;
@@ -66,12 +38,19 @@
     if(!parent) {
         NSLog(@"Warning: CBLNestedModel parent should never be nil");
     } else {
-        self.modObject = [parent modObject];
+        self.onMutateBlock = parent.onMutateBlock;
+        
+        // Get a list of existing properties and keep propagating the onMutateBlock
+        NSDictionary* properties = [self allProperties];
+        [properties enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+            [self propagateParentTo:[self valueForKey:key]];
+        }];
     }
 }
 
 - (void)modified {
-    [self.modObject modified];
+    if(self.onMutateBlock)
+        self.onMutateBlock();
 }
 
 
@@ -181,8 +160,6 @@
         // Propagate the modification Object so that changes to nested models can go to top level CBLModel
         
         value = [[desiredPropertyClass alloc] initFromJSON:jsonObject];
-        [value setModObject:self.modObject];
-        
     } else if(desiredPropertyClass == [NSArray class]) {
         NSArray* jsonArray = jsonObject;
         
@@ -281,7 +258,13 @@
 }
 
 - (void)setOnMutate:(CBLOnMutateBlock)onMutate {
-    self.modObject.onMutateBlock = onMutate;
+    self.onMutateBlock = onMutate;
+    
+    // Get a list of existing properties and propagate the onMutateBlock to classes that need it
+    NSDictionary* properties = [self allProperties];
+    [properties enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        [self propagateParentTo:[self valueForKey:key]];
+    }];
 }
 
 + (Class) itemClassForArrayProperty: (NSString*)property {
