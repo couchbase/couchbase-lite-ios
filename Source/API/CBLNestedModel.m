@@ -282,24 +282,43 @@
 @implementation CBLNestedModel (NSObject)
 
 - (NSDictionary*)allProperties {
-    NSMutableDictionary* dictionary = [NSMutableDictionary dictionary];
+    static NSMutableDictionary* propertyDictionary = nil;
     
-    // Get all properties we have until we hit CBLNestedModel
-    // Allows us to have multiple subclasses of CBLNestedModel, but does not support polymorphism.
+    // Property lists don't change at runtime, so store computed properties for fast O(1) access
+    // on subsequent calls
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        propertyDictionary = [NSMutableDictionary dictionary];
+    });
+    
     Class klass = [self class];
-    while(klass != [CBLNestedModel class]) {
-        unsigned count;
-        objc_property_t* properties = class_copyPropertyList(klass, &count);
-        for (unsigned i = 0; i < count; i++) {
-            objc_property_t property = properties[i];
-            
-            NSString* propertyName = [NSString stringWithUTF8String:property_getName(property)];
-            NSMutableArray* propertyAttr = [[[NSString stringWithUTF8String:property_getAttributes(property)] componentsSeparatedByString:@","] mutableCopy];
-            
-            dictionary[propertyName] = propertyAttr;
+    NSString* klassString = NSStringFromClass(klass);
+    NSMutableDictionary* dictionary = propertyDictionary[klassString];
+    
+    if(!dictionary) {
+        dictionary = [NSMutableDictionary dictionary];
+        
+        // Get all properties we have until we hit CBLNestedModel
+        // Allows us to have multiple subclasses of CBLNestedModel, but does not support polymorphism.
+        while(klass != [CBLNestedModel class]) {
+            unsigned count;
+            objc_property_t* properties = class_copyPropertyList(klass, &count);
+            for (unsigned i = 0; i < count; i++) {
+                objc_property_t property = properties[i];
+                
+                const char* propertyNameC = property_getName(property);
+                NSString* propertyName = [NSString stringWithUTF8String:propertyNameC];
+                const char* propertyAttrC = property_getAttributes(property);
+                NSString* propertyAttrS = [NSString stringWithUTF8String:propertyAttrC];
+                NSArray* propertyAttr = [propertyAttrS componentsSeparatedByString:@","];
+                
+                dictionary[propertyName] = propertyAttr;
+            }
+            free(properties);
+            klass = [klass superclass];
         }
-        free(properties);
-        klass = [klass superclass];
+        
+        propertyDictionary[klassString] = dictionary;
     }
 
     return dictionary;
