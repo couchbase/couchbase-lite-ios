@@ -311,7 +311,6 @@
         return nil;
 
     CBL_MutableRevision* newRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
-    newRev.sequence = doc.sequence;
 
     LogTo(CBLDatabase, @"--> created %@", newRev);
     LogTo(CBLDatabaseVerbose, @"    %@", [json my_UTF8ToString]);

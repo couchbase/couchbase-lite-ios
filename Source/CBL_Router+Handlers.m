@@ -472,7 +472,7 @@ static NSArray* queryIteratorAllRows(CBLQueryIteratorBlock iterator) {
 
 
 - (NSDictionary*) changeDictForRev: (CBL_Revision*)rev {
-    return $dict({@"seq", @(rev.sequence)},
+    return $dict({@"seq", @([_db getRevisionSequence: rev])},
                  {@"id",  rev.docID},
                  {@"changes", $marray($dict({@"rev", rev.revID}))},
                  {@"deleted", rev.deleted ? $true : nil},
@@ -482,7 +482,7 @@ static NSArray* queryIteratorAllRows(CBLQueryIteratorBlock iterator) {
 - (NSDictionary*) responseBodyForChanges: (NSArray*)changes since: (UInt64)since {
     NSArray* results = [changes my_map: ^(id rev) {return [self changeDictForRev: rev];}];
     if (changes.count > 0)
-        since = [[changes lastObject] sequence];
+        since = [_db getRevisionSequence: changes.lastObject];
     return $dict({@"results", results}, {@"last_seq", @(since)});
 }
 
@@ -548,7 +548,8 @@ static NSArray* queryIteratorAllRows(CBLQueryIteratorBlock iterator) {
                 CBL_MutableRevision* mRev = winningRev.mutableCopy;
                 if (_changesIncludeDocs)
                     [_db loadRevisionBody: mRev options: 0];
-                mRev.sequence = rev.sequence;
+                if ([_db getRevisionSequence: rev] > 0)
+                    mRev.sequence = rev.sequence;
                 rev = mRev;
             }
         }

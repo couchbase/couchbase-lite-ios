@@ -85,7 +85,12 @@
 
 @synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing, body=_body;
 
+- (SequenceNumber) sequenceIfKnown {
+    return _sequence;
+}
+
 - (SequenceNumber) sequence {
+    Assert(_sequence, @"Sequence of %@ unknown", self);
     return _sequence;
 }
 

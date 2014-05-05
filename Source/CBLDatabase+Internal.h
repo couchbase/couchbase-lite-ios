@@ -150,6 +150,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus;
 
+- (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev;
+
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
 
 /** Returns an array of CBL_Revisions in reverse chronological order,

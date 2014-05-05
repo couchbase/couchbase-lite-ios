@@ -41,10 +41,13 @@ typedef SInt64 SequenceNumber;
 /** Returns the "_attachments" property, validating that it's a dictionary. */
 @property (readonly) NSDictionary* attachments;
 
-/** Revision's sequence number, or 0 if unknown.
+/** Revision's sequence number. If sequence is unknown/unset, throws an exception.
     This property is settable, but only once. That is, it starts out zero and can be
     set to the correct value, but after that it becomes immutable. */
 @property SequenceNumber sequence;
+
+/** Revision's sequence number, or 0 if unknown/unset. */
+@property (readonly) SequenceNumber sequenceIfKnown;
 
 - (NSComparisonResult) compareSequences: (CBL_Revision*)rev;
 

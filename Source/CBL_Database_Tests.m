@@ -59,7 +59,6 @@ static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
                             allowConflict: NO
                                    status: &status];
     CAssert(status < 300, @"Status %d from putRevision:", status);
-    CAssert(result.sequence > 0);
     CAssert(result.revID != nil);
     return result;
 }

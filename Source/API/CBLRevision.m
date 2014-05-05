@@ -195,8 +195,8 @@
 
 
 - (SequenceNumber) sequence {
-    SequenceNumber sequence = _rev.sequence;
-    if (sequence == 0 && [self loadProperties])
+    SequenceNumber sequence = 0;
+    if (_rev.sequenceIfKnown > 0 || [self loadProperties])
             sequence = _rev.sequence;
     return sequence;
 }

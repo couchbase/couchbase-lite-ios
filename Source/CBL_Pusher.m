@@ -171,7 +171,8 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 // Adds a local revision to the "pending" set that are awaiting upload:
 - (void) addPending: (CBL_Revision*)rev {
-    SequenceNumber seq = rev.sequence;
+    SequenceNumber seq = [_db getRevisionSequence: rev];
+    Assert(seq > 0);
     [_pendingSequences addIndex: (NSUInteger)seq];
     _maxPendingSequence = MAX(_maxPendingSequence, seq);
 }
@@ -197,17 +198,19 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 
 - (void) dbChanged: (NSNotification*)n {
+    CBLDatabase* db = _db;
     NSArray* changes = (n.userInfo)[@"changes"];
     for (CBLDatabaseChange* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change.source isEqual: _remote]) {
             CBL_Revision* rev = change.addedRevision;
             CBLFilterBlock filter = self.filter;
-            if (filter && ![_db runFilter: filter params: _filterParameters onRevision: rev])
+            if (filter && ![db runFilter: filter params: _filterParameters onRevision: rev])
                 continue;
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
-            LogTo(SyncVerbose, @"%@: Queuing #%lld %@", self, nuRev.sequence, nuRev);
+            LogTo(SyncVerbose, @"%@: Queuing #%lld %@",
+                  self, [db getRevisionSequence: nuRev], nuRev);
             [self addToInbox: nuRev];
         }
     }

@@ -256,7 +256,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 /** Posts a local NSNotification of a new revision of a document. */
 - (void) notifyChange: (CBLDatabaseChange*)change {
-    LogTo(CBLDatabase, @"Added: %@ (seq=%lld)", change.addedRevision, change.addedRevision.sequence);
+    LogTo(CBLDatabase, @"Added: %@", change.addedRevision);
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
     [_changesToNotify addObject: change];
@@ -288,7 +288,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             for (CBLDatabaseChange* change in changes) {
                 if (seqs.length > 0)
                     [seqs appendString: @", "];
-                SequenceNumber seq = change.addedRevision.sequence;
+                SequenceNumber seq = [self getRevisionSequence: change.addedRevision];
                 if (change.echoed)
                     [seqs appendFormat: @"(%lld)", seq];
                 else
@@ -423,7 +423,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
                        options: (CBLContentOptions)options
 {
-    if (rev.body && options==0)
+    if (rev.body && rev.sequenceIfKnown && options==0)
         return kCBLStatusOK;  // no-op
     Assert(rev.docID && rev.revID);
 
@@ -445,7 +445,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus
 {
-    if (rev.body && options==0)
+    if (rev.body && rev.sequenceIfKnown && options==0)
         return rev;  // no-op
     CBL_MutableRevision* nuRev = rev.mutableCopy;
     CBLStatus status = [self loadRevisionBody: nuRev options: options];
@@ -454,6 +454,21 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (CBLStatusIsError(status))
         nuRev = nil;
     return nuRev;
+}
+
+
+- (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev {
+    SequenceNumber sequence = rev.sequenceIfKnown;
+    if (sequence > 0)
+        return sequence;
+    CBLStatus status;
+    CBForestVersions* doc = [self _forestDocWithID: rev.docID status: &status];
+    if (CBLStatusIsError(status))
+        return 0;
+    sequence = [doc sequenceOfRevision: rev.revID];
+    if (sequence > 0)
+        rev.sequence = sequence;
+    return sequence;
 }
 
 

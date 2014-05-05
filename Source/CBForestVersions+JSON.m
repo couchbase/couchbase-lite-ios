@@ -27,6 +27,8 @@
             return NO;
     }
 
+    rev.sequence = [self sequenceOfRevision: revID];
+
     NSMutableDictionary* extra = $mdict();
     [self addContentProperties: options forRevision: revID into: extra];
     if (json.length > 0)
@@ -70,7 +72,7 @@
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
     if (options & kCBLIncludeLocalSeq)
-        dst[@"_local_seq"] = @(self.sequence);
+        dst[@"_local_seq"] = @([self sequenceOfRevision: revID]);
 
     if (options & kCBLIncludeRevs)
         dst[@"_revisions"] = [self getRevisionHistoryDict: revID startingFromAnyOf: nil];

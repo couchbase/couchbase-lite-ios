@@ -114,7 +114,7 @@
                                          options: NSDataReadingMappedIfSafe | NSDataReadingUncached
                                            error: nil];
         }
-    } else if (_rev.sequence > 0) {
+    } else if (_rev.revisionID) {
         return [_rev.database dataForAttachmentDict: _metadata];
     }
     return nil;
@@ -125,7 +125,7 @@
     if (_body) {
         if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
             return _body;
-    } else if (_rev.sequence > 0) {
+    } else if (_rev.revisionID) {
         return [_rev.database fileForAttachmentDict: _metadata];
     }
     return nil;
