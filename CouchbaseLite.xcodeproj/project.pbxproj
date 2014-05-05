@@ -180,7 +180,6 @@
 		27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */; };
 		27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27538FA317F1ECE8004C3BFD /* LoggingMode.c in Sources */ = {isa = PBXBuildFile; fileRef = 27538FA217F1ECE8004C3BFD /* LoggingMode.c */; };
-		27571E0D18F9060700141BDD /* CBForest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B7E10518F8FE2800044EBA /* CBForest.framework */; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -523,6 +522,7 @@
 		27F94127176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */; };
 		27F94128176F8235007BAEBE /* CBLJSONValidator.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */; };
 		27F94129176F823A007BAEBE /* CBLJSONValidator.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */; };
+		27FA99F31917FFD900912F96 /* libCBForest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA99F01917FFD000912F96 /* libCBForest.a */; };
 		27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
 		27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
 		27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */; };
@@ -783,6 +783,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 275315D414ACF0A10065964D;
 			remoteInfo = TouchDBListener;
+		};
+		27FA99EF1917FFD000912F96 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 27EF81121917EEC600A327B9;
+			remoteInfo = "CBForest static";
+		};
+		27FA99F11917FFD000912F96 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 27EF807419142C2500A327B9;
+			remoteInfo = Tokenizer;
 		};
 		DA147C3814BCAC670052DA4D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1268,7 +1282,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27571E0D18F9060700141BDD /* CBForest.framework in Frameworks */,
+				27FA99F31917FFD900912F96 /* libCBForest.a in Frameworks */,
 				27E7FB04155DBDBF0025F93A /* Security.framework in Frameworks */,
 				27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */,
 				27103F8814EA076600DF7209 /* SystemConfiguration.framework in Frameworks */,
@@ -1933,11 +1947,13 @@
 			isa = PBXGroup;
 			children = (
 				27B7E10518F8FE2800044EBA /* CBForest.framework */,
+				27FA99F01917FFD000912F96 /* libCBForest.a */,
 				27571E0618F9060100141BDD /* libCBForest-iOS.a */,
 				27571E0818F9060100141BDD /* CBForest Tests.xctest */,
 				27571E0A18F9060100141BDD /* CBForest-iOS Tests.xctest */,
 				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
 				27571E0C18F9060100141BDD /* libforestdb.a */,
+				27FA99F21917FFD000912F96 /* libTokenizer.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2749,6 +2765,20 @@
 			fileType = archive.ar;
 			path = libforestdb.a;
 			remoteRef = 27B7E10C18F8FE2800044EBA /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		27FA99F01917FFD000912F96 /* libCBForest.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCBForest.a;
+			remoteRef = 27FA99EF1917FFD000912F96 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		27FA99F21917FFD000912F96 /* libTokenizer.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libTokenizer.a;
+			remoteRef = 27FA99F11917FFD000912F96 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
