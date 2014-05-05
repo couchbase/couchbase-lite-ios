@@ -10,6 +10,13 @@
 @class CBLDatabase, CBLQuery;
 
 
+typedef enum {
+    kCBLMapReduceIndex, /**< Regular map/reduce index with JSON keys. */
+    kCBLFullTextIndex,  /**< Keys must be strings and will be indexed by the words they contain. */
+    kCBLGeoIndex        /**< Geo-query index; not supported yet. */
+} CBLViewIndexType;
+
+
 typedef void (^CBLMapEmitBlock)(id key, id value);
 
 
@@ -50,6 +57,10 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 
 /** The name of the view. */
 @property (readonly) NSString* name;
+
+/** The type of the view. Defaults to general-purpose map-reduce.
+    This can be changed at any time, but the next query will rebuild the index from scratch. */
+@property CBLViewIndexType indexType;
 
 /** The map function that controls how index rows are created from documents. */
 @property (readonly) CBLMapBlock mapBlock;

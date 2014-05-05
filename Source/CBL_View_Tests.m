@@ -874,7 +874,6 @@ TestCase(CBL_View_LinkedDocs) {
 }
 
 
-#if 0 //FIX: REIMPLEMENT FTS
 TestCase(CBL_View_FullTextQuery) {
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
@@ -887,9 +886,10 @@ TestCase(CBL_View_FullTextQuery) {
     [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
 
     CBLView* view = [db viewNamed: @"fts"];
+    view.indexType = kFullTextIndex;
     [view setMapBlock: MAPBLOCK({
         if (doc[@"text"])
-            emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
+            emit(doc[@"text"], doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
 
     CAssertEq([view updateIndex], kCBLStatusOK);
@@ -897,20 +897,30 @@ TestCase(CBL_View_FullTextQuery) {
     // Create another view that outputs similar-but-different text, to make sure the results
     // don't get mixed up
     CBLView* otherView = [db viewNamed: @"fts_other"];
+    otherView.indexType = kFullTextIndex;
     [otherView setMapBlock: MAPBLOCK({
         if (doc[@"text"])
-            emit(CBLTextKey(@"dog stormy"), doc[@"_id"]);
+            emit(@"dog stormy", doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
     CAssertEq([otherView updateIndex], kCBLStatusOK);
-    
+
+    // Try a query with the public API:
+    CBLQuery* query = [view createQuery];
+    query.fullTextQuery = @"dog name";
+    NSArray* rows = [[query run: NULL] allObjects];
+    CAssertEq(rows.count, 1u);
+    CAssertEqual([rows[0] documentID], @"33333");
+
+
+#if 0
     CBLQueryOptions *options = [CBLQueryOptions new];
     options.fullTextQuery = @"stormy OR dog";
-    options.fullTextRanking = NO;
-    options.fullTextSnippets = YES;
+    options->fullTextRanking = NO;
+    options->fullTextSnippets = YES;
     CBLStatus status;
-    NSArray* rows = [view _queryWithOptions: options status: &status];
-    CAssert(rows, @"_queryFullText failed: %d", status);
-    Log(@"rows = %@", rows);
+    CBLQueryIteratorBlock rowIter = [view _queryWithOptions: options status: &status];
+    CAssert(rowIter, @"_queryFullText failed: %d", status);
+    Log(@"rows = %@", rowIter);
     NSArray* expectedRows = $array($dict({@"id",  @"44444"},
                                          {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
                                          {@"snippet", @"and [STöRMy] night."},
@@ -920,13 +930,13 @@ TestCase(CBL_View_FullTextQuery) {
                                                         @{@"range": @[@26, @3], @"term": @1}]},
                                          {@"snippet", @"a [dog] whøse ñame was “[Dog]”"},
                                          {@"value", @"33333"}));
-    CAssertEqual(rowsToDicts(rows), expectedRows);
+    CAssertEqual(rowsToDicts(rowIter), expectedRows);
 
     // Try a query with the public API:
     CBLQuery* query = [view createQuery];
     query.fullTextQuery = @"(was NOT barking) OR dog";
     query.fullTextSnippets = YES;
-    rows = [[query run: NULL] allObjects];
+    NSArray* rows = [[query run: NULL] allObjects];
     CAssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
@@ -964,20 +974,19 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEq([view updateIndex], kCBLStatusOK);
 
     // Make sure the deleted doc doesn't still show up in the query results:
-    fullTextQuery = @"stormy OR dog";
-    options.fullTextQuery = fullTextQuery;
-    rows = [view _queryWithOptions: options status: &status];
-    CAssert(rows, @"_queryFullText failed: %d", status);
-    Log(@"after deletion, rows = %@", rows);
+    options.fullTextQuery = @"stormy OR dog";
+    rowIter = [view _queryWithOptions: options status: &status];
+    CAssert(rowIter, @"_queryFullText failed: %d", status);
+    Log(@"after deletion, rows = %@", rowIter);
 
     expectedRows = $array($dict({@"id",  @"44444"},
                                 {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
                                 {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
-    CAssertEqual(rowsToDicts(rows), expectedRows);
+    CAssertEqual(rowsToDicts(rowIter), expectedRows);
+#endif
     CAssert([db close]);
 }
-#endif
 
 
 TestCase(CBLView) {
@@ -992,7 +1001,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_Grouped);
     RequireTestCase(CBL_View_GroupedStrings);
 //  RequireTestCase(CBL_View_GeoQuery);
-//  RequireTestCase(CBL_View_FullTextQuery);
+    RequireTestCase(CBL_View_FullTextQuery);
 }
 
 

@@ -36,9 +36,7 @@
         options = [CBLQueryOptions new];
     CBLQueryIteratorBlock iterator;
     if (options.fullTextQuery) {
-        Warn(@"Full-text querying is out of service at this time."); //FIX: Re-implement FTS
-        *outStatus = kCBLStatusNotImplemented;
-        return nil;
+        iterator = [self _fullTextQueryWithOptions: options status: outStatus];
     } else if ([self groupOrReduceWithOptions: options])
         iterator = [self _reducedQueryWithOptions: options status: outStatus];
     else
@@ -238,6 +236,42 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         return row;
     };
 }
+
+
+#pragma mark - FULL-TEXT:
+
+
+- (CBLQueryIteratorBlock) _fullTextQueryWithOptions: (CBLQueryOptions*)options
+                                             status: (CBLStatus*)outStatus
+{
+    CBForestMapReduceIndex* index = self.index;
+    if (!index) {
+        *outStatus = kCBLStatusNotFound;
+        return nil;
+    } else if (index.indexType != kFullTextIndex) {
+        *outStatus = kCBLStatusBadRequest;
+        return nil;
+    }
+    NSError* error;
+    CBForestQueryMultiKeyEnumerator* e = [index enumerateDocsContainingWords: options.fullTextQuery
+                                                                         all: YES
+                                                                       error: &error];
+    if (!e) {
+        *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
+        return nil;
+    }
+    return ^CBLQueryRow*() {
+        NSString* docID = e.nextObject;
+        if (!docID)
+            return nil;
+        return [[CBLQueryRow alloc] initWithDocID: docID
+                                         sequence: 0
+                                              key: options.fullTextQuery
+                                            value: nil
+                                    docProperties: nil];
+    };
+}
+
 
 
 /** Starts a view query, returning a CBForest enumerator. */

@@ -63,6 +63,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 {
     NSString* _path;
     CBForestMapReduceIndex* _index;
+    int _indexType;
 }
 
 
@@ -86,6 +87,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         _name = [name copy];
         _path = [db.dir stringByAppendingPathComponent: viewNameToFileName(_name)];
         _mapContentOptions = kCBLIncludeLocalSeq;
+        _indexType = -1; // unknown
         if (0) { // appease static analyzer
             _collation = 0;
         }
@@ -154,10 +156,16 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
                                                   options: options
                                                    config: &config
                                                     error: &error];
-    if (_index)
-        LogTo(View, @"%@: Opened %@", self, _index);
-    else
+    if (!_index) {
         Warn(@"Unable to open index of %@: %@", self, error);
+        return nil;
+    }
+
+    if (_indexType >= 0)
+        _index.indexType = _indexType;  // In case it was changed while index was closed
+    if (_indexType == kFullTextIndex)
+        _index.textTokenizer = [[CBTextTokenizer alloc] init];
+    LogTo(View, @"%@: Opened %@", self, _index);
     return _index;
 }
 
@@ -284,8 +292,24 @@ static id<CBLViewCompiler> sCompiler;
 
     NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
     _collation = ($equal(options[@"collation"], @"raw")) ? kCBLViewCollationRaw
-                                                             : kCBLViewCollationUnicode;
+                                                         : kCBLViewCollationUnicode;
     return YES;
+}
+
+
+- (CBLViewIndexType) indexType {
+    if (_index || _indexType < 0)
+        _indexType = self.index.indexType;
+    return _indexType;
+}
+
+- (void)setIndexType:(CBLViewIndexType)indexType {
+    _indexType = indexType;
+    if (_index) {
+        // Don't open index just to set its type, but if it's already open...
+        _index.indexType = indexType;
+        _index.textTokenizer = (_indexType == kFullTextIndex) ?[[CBTextTokenizer alloc] init] :nil;
+    }
 }
 
 
@@ -308,6 +332,8 @@ static id<CBLViewCompiler> sCompiler;
     index.mapVersion = self.mapVersion;
     index.map = ^(CBForestDocument* baseDoc, NSData* data, CBForestIndexEmitBlock emit) {
         CBForestVersions* doc = (CBForestVersions*)baseDoc;
+        if(doc.flags & kCBForestRevisionDeleted)
+            return;
         NSDictionary* properties = [doc bodyOfRevision: doc.revID options: contentOptions];
         if (!properties) {
             Warn(@"Failed to parse JSON of %@ / %@", doc.docID, doc.revID);
