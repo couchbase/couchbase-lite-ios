@@ -248,14 +248,14 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (!index) {
         *outStatus = kCBLStatusNotFound;
         return nil;
-    } else if (index.indexType != kFullTextIndex) {
+    } else if (index.indexType != kCBLFullTextIndex) {
         *outStatus = kCBLStatusBadRequest;
         return nil;
     }
     NSError* error;
-    CBForestQueryMultiKeyEnumerator* e = [index enumerateDocsContainingWords: options.fullTextQuery
-                                                                         all: YES
-                                                                       error: &error];
+    NSEnumerator* e = [index enumerateDocsContainingWords: options.fullTextQuery
+                                                      all: YES
+                                                    error: &error];
     if (!e) {
         *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
         return nil;

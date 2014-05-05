@@ -163,7 +163,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
     if (_indexType >= 0)
         _index.indexType = _indexType;  // In case it was changed while index was closed
-    if (_indexType == kFullTextIndex)
+    if (_indexType == kCBLFullTextIndex)
         _index.textTokenizer = [[CBTextTokenizer alloc] init];
     LogTo(View, @"%@: Opened %@", self, _index);
     return _index;
@@ -308,7 +308,10 @@ static id<CBLViewCompiler> sCompiler;
     if (_index) {
         // Don't open index just to set its type, but if it's already open...
         _index.indexType = indexType;
-        _index.textTokenizer = (_indexType == kFullTextIndex) ?[[CBTextTokenizer alloc] init] :nil;
+        if (_indexType == kCBLFullTextIndex)
+            _index.textTokenizer = [[CBTextTokenizer alloc] init];
+        else
+            _index.textTokenizer = nil;
     }
 }
 

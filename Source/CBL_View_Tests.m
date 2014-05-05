@@ -886,7 +886,7 @@ TestCase(CBL_View_FullTextQuery) {
     [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
 
     CBLView* view = [db viewNamed: @"fts"];
-    view.indexType = kFullTextIndex;
+    view.indexType = kCBLFullTextIndex;
     [view setMapBlock: MAPBLOCK({
         if (doc[@"text"])
             emit(doc[@"text"], doc[@"_id"]);
@@ -897,7 +897,7 @@ TestCase(CBL_View_FullTextQuery) {
     // Create another view that outputs similar-but-different text, to make sure the results
     // don't get mixed up
     CBLView* otherView = [db viewNamed: @"fts_other"];
-    otherView.indexType = kFullTextIndex;
+    otherView.indexType = kCBLFullTextIndex;
     [otherView setMapBlock: MAPBLOCK({
         if (doc[@"text"])
             emit(@"dog stormy", doc[@"_id"]);
