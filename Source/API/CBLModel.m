@@ -44,6 +44,13 @@
             _isNew = true;
             LogTo(CBLModel, @"%@ init", self);
         }
+        
+#ifdef TARGET_OS_IPHONE
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(removeUnchangedCachedProperties:)
+                                                     name:UIApplicationDidReceiveMemoryWarningNotification
+                                                   object:nil];
+#endif
     }
     return self;
 }
@@ -85,6 +92,12 @@
     if(_needsSave)
         Warn(@"%@ dealloced with unsaved changes!", self); // should be impossible
     _document.modelObject = nil;
+    
+#ifdef TARGET_OS_IPHONE
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIApplicationDidReceiveMemoryWarningNotification
+                                                  object:nil];
+#endif
 }
 
 
@@ -291,7 +304,9 @@
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return;
     _isNew = NO;
+#ifndef TARGET_OS_IPHONE
     _properties = nil;
+#endif
     _changedNames = nil;
     _changedAttachments = nil;
     self.needsSave = NO;
@@ -505,6 +520,16 @@
     return value;
 }
 
+- (void) removeUnchangedCachedProperties: (NSNotification*)notification {
+    // Remove unchanged cached values in _properties:
+    if (_changedNames && _properties) {
+        NSMutableSet* removeKeys = [NSMutableSet setWithArray: [_properties allKeys]];
+        [removeKeys minusSet: _changedNames];
+        [_properties removeObjectsForKeys: removeKeys.allObjects];
+    } else {
+        _properties = nil;
+    }
+}
 
 #pragma mark - ATTACHMENTS:
 
