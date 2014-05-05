@@ -284,7 +284,7 @@
 - (NSDictionary*)allProperties {
     static NSMutableDictionary* propertyDictionary = nil;
     
-    // Property lists don't change at runtime, so store computed properties for fast O(1) access
+    // Property lists don't change during runtime, so store computed properties for fast O(1) access
     // on subsequent calls
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
