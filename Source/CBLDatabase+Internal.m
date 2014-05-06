@@ -35,6 +35,10 @@
 #import "ExceptionUtils.h"
 
 
+// Size of ForestDB buffer cache allocated for a database
+#define kDBBufferCacheSize (8*1024*1024)
+
+
 NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
@@ -139,7 +143,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
 
     CBForestDBConfig config = {
-        .bufferCacheSize = 16*1024*1024,
+        .bufferCacheSize = kDBBufferCacheSize,
         .walThreshold = 4096,
         .enableSequenceTree = YES,
         .compressDocBodies = YES,

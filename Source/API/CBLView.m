@@ -26,6 +26,9 @@
 #import "CBForestVersions+JSON.h"
 
 
+// Size of ForestDB buffer cache allocated for a view index
+#define kViewBufferCacheSize (8*1024*1024)
+
 // Close the index db after it's inactive this many seconds
 #define kCloseDelay 60.0
 
@@ -147,7 +150,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (CBForestMapReduceIndex*) openIndexWithOptions: (CBForestFileOptions)options {
     Assert(!_index);
     CBForestDBConfig config = {
-        .bufferCacheSize = 16*1024*1024,
+        .bufferCacheSize = kViewBufferCacheSize,
         .walThreshold = 4096,
         .enableSequenceTree = YES
     };

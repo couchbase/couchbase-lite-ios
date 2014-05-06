@@ -277,7 +277,7 @@
                                            prevRevID: prevRevID
                                               status: outStatus];
         if (!putRev)
-            return NO;
+            return *outStatus;
 
         // Encode the body as JSON:
         if (putRev.properties) {

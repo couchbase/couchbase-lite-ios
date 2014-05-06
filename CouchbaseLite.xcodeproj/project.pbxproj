@@ -644,13 +644,6 @@
 			remoteGlobalIDString = 275315D414ACF0A10065964D;
 			remoteInfo = "CBL Listener Mac";
 		};
-		27571DFE18F9060100141BDD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 27139B1A18F8E9750021A9A3;
-			remoteInfo = CBForest;
-		};
 		27571E0518F9060100141BDD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
@@ -797,6 +790,20 @@
 			proxyType = 2;
 			remoteGlobalIDString = 27EF807419142C2500A327B9;
 			remoteInfo = Tokenizer;
+		};
+		27FA9A431918A7C700912F96 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 27FA9A3F19180B5F00912F96;
+			remoteInfo = "Tokenizer-iOS";
+		};
+		27FA9A451918AE3600912F96 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
+			remoteInfo = "CBForest static";
 		};
 		DA147C3814BCAC670052DA4D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1954,6 +1961,7 @@
 				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
 				27571E0C18F9060100141BDD /* libforestdb.a */,
 				27FA99F21917FFD000912F96 /* libTokenizer.a */,
+				27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2450,7 +2458,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				27571DFF18F9060100141BDD /* PBXTargetDependency */,
+				27FA9A461918AE3600912F96 /* PBXTargetDependency */,
 			);
 			name = "CBL Mac";
 			productName = ToyCouch;
@@ -2779,6 +2787,13 @@
 			fileType = archive.ar;
 			path = libTokenizer.a;
 			remoteRef = 27FA99F11917FFD000912F96 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libTokenizer-iOS.a";
+			remoteRef = 27FA9A431918A7C700912F96 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -3374,11 +3389,6 @@
 			target = 275315D414ACF0A10065964D /* CBL Listener Mac */;
 			targetProxy = 27538F9617F1D327004C3BFD /* PBXContainerItemProxy */;
 		};
-		27571DFF18F9060100141BDD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = CBForest;
-			targetProxy = 27571DFE18F9060100141BDD /* PBXContainerItemProxy */;
-		};
 		275A290B1649A54500B0D8EE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 270B3DE91489359000E0A926 /* CBL Mac */;
@@ -3444,6 +3454,11 @@
 			target = 275315D414ACF0A10065964D /* CBL Listener Mac */;
 			targetProxy = 27E11F1C14AD25570006B340 /* PBXContainerItemProxy */;
 		};
+		27FA9A461918AE3600912F96 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CBForest static";
+			targetProxy = 27FA9A451918AE3600912F96 /* PBXContainerItemProxy */;
+		};
 		DA147C3914BCAC670052DA4D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DA023B2614BCA94C008184BB /* Listener iOS Library */;
@@ -3501,7 +3516,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CBL_SOURCE_REVISION = "";
-				CBL_VERSION_STRING = 1.0;
+				CBL_VERSION_STRING = 1.1;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -3547,7 +3562,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CBL_SOURCE_REVISION = "";
-				CBL_VERSION_STRING = 1.0;
+				CBL_VERSION_STRING = 1.1;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -3591,6 +3606,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = "";
