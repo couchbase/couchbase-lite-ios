@@ -349,6 +349,11 @@
     return ok;
 }
 
+- (void) saveEventually {
+    [self.database doAsync: ^{
+        [self save: NULL];
+    }];
+}
 
 + (BOOL) saveModels: (NSArray*)models error: (NSError**)outError {
     if (models.count == 0)

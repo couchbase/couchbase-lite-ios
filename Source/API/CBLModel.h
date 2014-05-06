@@ -57,6 +57,9 @@
     Returns YES without doing anything, if no changes have been made. */
 - (BOOL) save: (NSError**)outError;
 
+/** Writes any changes to a new revision of the document as a synchronous event to be done later.*/
+- (void) saveEventually;
+
 /** Should changes be saved back to the database automatically?
     Defaults to NO, requiring you to call -save manually. */
 @property (nonatomic) bool autosaves;
