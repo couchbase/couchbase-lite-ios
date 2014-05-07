@@ -26,6 +26,7 @@
 @interface CBLDatabase (Views)
 - (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
                                  options: (CBLQueryOptions*)options
+                          ifChangedSince: (SequenceNumber)ifChangedSince
                             lastSequence: (SequenceNumber*)outLastSequence
                                   status: (CBLStatus*)outStatus;
 @end
@@ -33,9 +34,11 @@
 
 @interface CBLQueryEnumerator ()
 - (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBLView*)view
                    sequenceNumber: (SequenceNumber)sequenceNumber
                          iterator: (CBLQueryIteratorBlock)iterator;
 - (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBLView*)view
                    sequenceNumber: (SequenceNumber)sequenceNumber
                              rows: (NSArray*)rows;
 @end
@@ -194,6 +197,7 @@
     LogTo(Query, @"%@: running...", self);
     CBLQueryIteratorBlock iterator = [_database queryViewNamed: _view.name
                                                        options: self.queryOptions
+                                                ifChangedSince: 0
                                                   lastSequence: &_lastSequence
                                                         status: &status];
     if (!iterator) {
@@ -202,12 +206,19 @@
         return nil;
     }
     return [[CBLQueryEnumerator alloc] initWithDatabase: _database
+                                                   view: _view
                                          sequenceNumber: _lastSequence
                                                iterator: iterator];
 }
 
 
 - (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete {
+    [self runAsyncIfChangedSince: 0 onComplete: onComplete];
+}
+
+- (void) runAsyncIfChangedSince: (SequenceNumber)ifChangedSince
+                     onComplete: (void (^)(CBLQueryEnumerator*, NSError*))onComplete
+{
     LogTo(Query, @"%@: Async query...", self);
     NSThread *callingThread = [NSThread currentThread];
     NSString* viewName = _view.name;
@@ -219,28 +230,35 @@
         SequenceNumber lastSequence;
         CBLQueryIteratorBlock iterator = [bgdb queryViewNamed: viewName
                                                       options: options
+                                               ifChangedSince: ifChangedSince
                                                  lastSequence: &lastSequence
                                                        status: &status];
-        NSMutableArray* rows = $marray();
-        while (true) {
-            CBLQueryRow* row = iterator();
-            if (!row)
-                break;
-            [rows addObject: row];
+        NSMutableArray* rows = nil;
+        if (iterator) {
+            rows = $marray();
+            while (true) {
+                CBLQueryRow* row = iterator();
+                if (!row)
+                    break;
+                [rows addObject: row];
+            }
         }
+
         MYOnThread(callingThread, ^{
             // Back on original thread, call the onComplete block:
-            LogTo(Query, @"%@: ...async query finished (%u rows)", self, (unsigned)rows.count);
+            LogTo(Query, @"%@: ...async query finished (%u rows, status %d)",
+                  self, (unsigned)rows.count, status);
             NSError* error = nil;
             CBLQueryEnumerator* e = nil;
-            if (CBLStatusIsError(status))
-                error = CBLStatusToNSError(status, nil);
-            else {
+            if (rows) {
                 for (CBLQueryRow* row in rows)
                     row.database = _database;
                 e = [[CBLQueryEnumerator alloc] initWithDatabase: _database
+                                                            view: _view
                                                   sequenceNumber: lastSequence
                                                             rows: rows];
+            } else if (CBLStatusIsError(status)) {
+                error = CBLStatusToNSError(status, nil);
             }
             onComplete(e, error);
         });
@@ -338,11 +356,12 @@
 
 - (void) update {
     _willUpdate = NO;
-    [self runAsync: ^(CBLQueryEnumerator *rows, NSError* error) {
+    [self runAsyncIfChangedSince: _rows.sequenceNumber
+                      onComplete: ^(CBLQueryEnumerator *rows, NSError* error) {
         _lastError = error;
         if (error) {
             Warn(@"%@: Error updating rows: %@", self, error);
-        } else if(![rows isEqual: _rows]) {
+        } else if(rows && ![rows isEqual: _rows]) {
             LogTo(Query, @"%@: ...Rows changed! (now %lu)", self, (unsigned long)rows.count);
             self.rows = rows;   // Triggers KVO notification
         }
@@ -372,6 +391,7 @@
 @implementation CBLQueryEnumerator
 {
     CBLDatabase* _database;
+    CBLView* _view; // nil if this is an all-docs query
     NSArray* _rows;
     NSUInteger _nextRow;
     UInt64 _sequenceNumber;
@@ -384,6 +404,7 @@
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBLView*)view
                    sequenceNumber: (SequenceNumber)sequenceNumber
                          iterator: (CBLQueryIteratorBlock)iterator
 {
@@ -391,6 +412,7 @@
     self = [super init];
     if (self ) {
         _database = database;
+        _view = view;
         _sequenceNumber = sequenceNumber;
         _iterator = iterator;
     }
@@ -398,6 +420,7 @@
 }
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBLView*)view
                    sequenceNumber: (SequenceNumber)sequenceNumber
                              rows: (NSArray*)rows
 {
@@ -405,6 +428,7 @@
     self = [super init];
     if (self ) {
         _database = database;
+        _view = view;
         _sequenceNumber = sequenceNumber;
         _rows = rows;
     }
@@ -413,6 +437,7 @@
 
 - (id) copyWithZone: (NSZone*)zone {
     return [[[self class] alloc] initWithDatabase: _database
+                                             view: _view
                                    sequenceNumber: _sequenceNumber
                                              rows: self.allObjects];
 }
@@ -428,7 +453,12 @@
 
 
 - (BOOL) stale {
-    return (SequenceNumber)_sequenceNumber < _database.lastSequenceNumber;
+    // Check whether the result-set's sequence number is up to date with either the db or the view:
+    if ((SequenceNumber)_sequenceNumber == _database.lastSequenceNumber)
+        return NO;
+    if (_view && (SequenceNumber)_sequenceNumber == _view.lastSequenceChangedAt)
+        return NO;
+    return YES;
 }
 
 
@@ -679,6 +709,7 @@ static id fromJSON( NSData* json ) {
 
 - (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
                                  options: (CBLQueryOptions*)options
+                          ifChangedSince: (SequenceNumber)ifChangedSince
                             lastSequence: (SequenceNumber*)outLastSequence
                                   status: (CBLStatus*)outStatus
 {
@@ -705,6 +736,10 @@ static id fromJSON( NSData* json ) {
                 [self doAsync: ^{
                     [view updateIndex];
                 }];
+            }
+            if (view.lastSequenceChangedAt <= ifChangedSince) {
+                status = 304;
+                break;
             }
             iterator = [view _queryWithOptions: options status: &status];
         } else {

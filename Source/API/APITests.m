@@ -471,6 +471,30 @@ TestCase(API_LocalDocs) {
     closeTestDB(db);
 }
 
+
+TestCase(API_Validation) {
+    CBLDatabase* db = createEmptyDB();
+
+    [db setValidationNamed: @"uncool"
+                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
+                     if (!newRevision.properties[@"groovy"])
+                         [context rejectWithMessage: @"uncool"];
+                 }];
+    
+    NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
+    CBLDocument* doc = [db createDocument];
+    NSError *error;
+    CAssert([doc putProperties: properties error: &error]);
+    
+    properties = @{ @"foo": @"bar" };
+    doc = [db createDocument];
+    CAssert(![doc putProperties: properties error: &error]);
+    CAssertEq(error.code, 403);
+    //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
+    closeTestDB(db);
+}
+
+
 #pragma mark - HISTORY
 
 TestCase(API_History) {
@@ -763,29 +787,6 @@ TestCase(API_RunSlowView) {
 #endif
 
 
-TestCase(API_Validation) {
-    CBLDatabase* db = createEmptyDB();
-
-    [db setValidationNamed: @"uncool"
-                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
-                     if (!newRevision.properties[@"groovy"])
-                         [context rejectWithMessage: @"uncool"];
-                 }];
-    
-    NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
-    CBLDocument* doc = [db createDocument];
-    NSError *error;
-    CAssert([doc putProperties: properties error: &error]);
-    
-    properties = @{ @"foo": @"bar" };
-    doc = [db createDocument];
-    CAssert(![doc putProperties: properties error: &error]);
-    CAssertEq(error.code, 403);
-    //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
-    closeTestDB(db);
-}
-
-
 TestCase(API_ViewWithLinkedDocs) {
     CBLDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 50;
@@ -907,6 +908,31 @@ TestCase(API_AsyncViewQuery) {
     }
     CAssert(finished, @"Async query timed out!");
     closeTestDB(db);
+}
+
+
+TestCase(API_ViewStale) {
+    RequireTestCase(API_CreateView);
+    CBLDatabase* db = createEmptyDB();
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        if (doc[@"sequence"])
+            emit(doc[@"sequence"], nil);
+    }) version: @"1"];
+
+    createDocuments(db, 10);
+
+    CBLQuery* query = [view createQuery];
+    CBLQueryEnumerator* e = [query run: nil];
+    AssertEq(e.sequenceNumber, (uint64_t)10);
+    AssertEq(view.lastSequenceChangedAt, 10);
+
+    createDocumentWithProperties(db, @{@"foo": @1337}); // Won't be indexed by the view
+    Assert(e.stale);
+
+    [view updateIndex];
+    AssertEq(view.lastSequenceChangedAt, 10); // unchanged
+    Assert(!e.stale);
 }
 
 

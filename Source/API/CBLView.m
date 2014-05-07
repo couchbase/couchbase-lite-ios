@@ -380,8 +380,14 @@ static id<CBLViewCompiler> sCompiler;
 
 
 - (SequenceNumber) lastSequenceIndexed {
-    self.index.mapVersion = self.mapVersion; // Because change of mapVersion resets lastSequenceIndexed
+    self.index.mapVersion = self.mapVersion; // change of mapVersion resets lastSequenceIndexed
     return self.index.lastSequenceIndexed;
+}
+
+
+- (SequenceNumber) lastSequenceChangedAt {
+    self.index.mapVersion = self.mapVersion; // change of mapVersion resets lastSequenceChangedAt
+    return self.index.lastSequenceChangedAt;
 }
 
 

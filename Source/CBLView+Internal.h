@@ -75,6 +75,8 @@ typedef enum {
 
 @property (readonly) NSString* mapVersion;
 
+@property (readonly) SequenceNumber lastSequenceChangedAt;
+
 #if DEBUG  // for unit tests only
 @property (readonly) NSString* indexFilePath;
 - (void) setCollation: (CBLViewCollation)collation;
