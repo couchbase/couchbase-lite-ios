@@ -16,7 +16,7 @@
 
 @interface CBLNestedModel ()
 @property (copy, nonatomic) CBLOnMutateBlock onMutateBlock;
-@property (strong, nonatomic) NSDictionary* documentObject;
+@property (strong, nonatomic) NSMutableDictionary* documentObject;
 
 @end
 
@@ -27,7 +27,7 @@
 - (id)init {
     self = [super init];
     if(self) {
-        self.documentObject = @{};
+        self.documentObject = [NSMutableDictionary mutableCopy];
         self.onMutateBlock = nil;
     }
     
@@ -86,8 +86,8 @@
     if(self) {
         if([jsonObject isKindOfClass:[NSDictionary class]]) {
             // It must be a dictionary to represent a class
-            // Store it to later encode it
-            self.documentObject = jsonObject;
+            // Store it so that we don't lose information in the document that this class might not yet handle.
+            NSMutableDictionary* mutableJSONObject = [jsonObject mutableCopy];
             
             // Enumerate through all the properties that this subclass has.
             NSDictionary* properties = [self allProperties];
@@ -100,7 +100,10 @@
                 if(value) {
                     [self setValue:value forKey:propertyName];
                 }
+                
+                mutableJSONObject[key] = nil;
             }];
+            self.documentObject = mutableJSONObject;
         }
     }
     
@@ -197,7 +200,7 @@
 - (id)encodeToJSON {
     // Use old documentObject in case it contains more information than our model specifies
     // and replace only with new information
-    NSMutableDictionary* classJSON = [self.documentObject mutableCopy];
+    NSMutableDictionary* classJSON = self.documentObject;
     
     // Get a list of existing properties
     NSDictionary* properties = [self allProperties];
@@ -209,7 +212,7 @@
         }
     }];
     
-    return [classJSON copy];
+    return classJSON;
 }
 
 + (id)convertValueToJSON:(id)value {
