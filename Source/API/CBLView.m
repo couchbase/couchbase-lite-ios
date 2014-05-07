@@ -360,7 +360,7 @@ static id<CBLViewCompiler> sCompiler;
     index.map = nil;
 
     if (!ok)
-        return kCBLStatusDBError; //FIX: Improve this
+        return CBLStatusFromNSError(error, kCBLStatusDBError);
     else if (index.lastSequenceIndexed == lastSequence)
         return kCBLStatusNotModified;
     else

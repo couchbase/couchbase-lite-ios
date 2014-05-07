@@ -117,7 +117,7 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
             NSError* error;
             doc = (CBForestVersions*)[_forest documentWithID: rev.docID options: 0 error: &error];
             if (!doc && error && error.code != kCBForestErrorNotFound) {
-                *outStatus = kCBLStatusDBError;
+                *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
                 return NO;
             }
         }

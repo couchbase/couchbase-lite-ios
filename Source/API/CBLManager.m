@@ -530,9 +530,10 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         remoteDict = sourceDict;
         if (outDatabase) {
             if (*outCreateTarget) {
-                db = [self _databaseNamed: target mustExist: NO error: NULL];
-                if (![db open: NULL])
-                    return kCBLStatusDBError;
+                NSError* error;
+                db = [self _databaseNamed: target mustExist: NO error: &error];
+                if (![db open: &error])
+                    return CBLStatusFromNSError(error, kCBLStatusDBError);
             } else {
                 db = self[target];
             }

@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLStatus.h"
+#import <CBForest/CBForest.h>
 
 
 NSString* const CBLHTTPErrorDomain = @"CBLHTTP";
@@ -90,9 +91,22 @@ NSError* CBLStatusToNSError( CBLStatus status, NSURL* url ) {
 
 
 CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus) {
+    NSInteger code = error.code;
     if (!error)
         return kCBLStatusOK;
-    if (!$equal(error.domain, CBLHTTPErrorDomain))
+    else if ($equal(error.domain, CBLHTTPErrorDomain))
+        return (CBLStatus)code;
+    else if ($equal(error.domain, CBForestErrorDomain)) {
+        switch (code) {
+            case kCBForestErrorInvalidArgs:         return kCBLStatusServerError;
+            case kCBForestErrorFileNotFound:        return kCBLStatusNotFound;
+            case kCBForestErrorNotFound:            return kCBLStatusNotFound;
+            case kCBForestErrorReadOnly:            return kCBLStatusForbidden;
+            case kCBForestErrorFileCorrupt:         return kCBLStatusCorruptError;
+            case kCBForestErrorChecksum:            return kCBLStatusCorruptError;
+            case kCBForestErrorRevisionDataCorrupt: return kCBLStatusCorruptError;
+            default:                                return kCBLStatusDBError;
+        }
+    } else
         return defaultStatus;
-    return (CBLStatus)error.code;
 }

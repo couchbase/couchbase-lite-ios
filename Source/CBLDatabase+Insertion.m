@@ -228,7 +228,7 @@
                                                   options: kCBForestDBCreateDoc
                                                     error: &error];
         if (!doc)
-            return kCBLStatusDBError;
+            return CBLStatusFromNSError(error, kCBLStatusDBError);
         doc.maxDepth = (unsigned)self.maxRevTreeDepth;
 
         CBForestRevisionFlags prevRevFlags = [doc flagsOfRevision: prevRevID];
@@ -302,7 +302,7 @@
                 allowConflict: allowConflict]) {
             return kCBLStatusDBError;
         } else if (![doc save: &error]) {
-            return kCBLStatusDBError;
+            return CBLStatusFromNSError(error, kCBLStatusDBError);
         } else {
             return deleting ? kCBLStatusOK : kCBLStatusCreated;
         }
@@ -350,7 +350,7 @@
                                                  options: kCBForestDBCreateDoc
                                                    error: &error];
         if (!doc)
-            return kCBLStatusDBError;
+            return CBLStatusFromNSError(error, kCBLStatusDBError);
         doc.maxDepth = (unsigned)self.maxRevTreeDepth;
 
         // Add the revision & ancestry to the doc:
@@ -358,7 +358,7 @@
                                    deletion: inRev.deleted
                                     history: history];
         if (common < 0)
-            return kCBLStatusDBError;   //FIX: Get a more detailed status
+            return kCBLStatusDBError;
         else if (common == 0)
             return kCBLStatusOK;      // No-op: No new revisions were inserted.
 
@@ -380,7 +380,7 @@
 
         // Save updated doc back to the database:
         if (![doc save: &error])
-            return kCBLStatusDBError;
+            return CBLStatusFromNSError(error, kCBLStatusDBError);
         return kCBLStatusCreated;
     }];
 

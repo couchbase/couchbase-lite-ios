@@ -351,10 +351,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (outStatus != NULL) {
         if (doc)
             *outStatus = kCBLStatusOK;
-        else if (!error || error.code == kCBForestErrorNotFound)
+        else if (!error)
             *outStatus = kCBLStatusNotFound;
         else
-            *outStatus = kCBLStatusDBError;
+            *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
     }
     return doc;
 }

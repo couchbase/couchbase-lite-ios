@@ -805,6 +805,13 @@
 			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
 			remoteInfo = "CBForest static";
 		};
+		27FA9A49191AB89600912F96 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27139B1A18F8E9750021A9A3;
+			remoteInfo = CBForest;
+		};
 		DA147C3814BCAC670052DA4D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -2458,6 +2465,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				27FA9A4A191AB89600912F96 /* PBXTargetDependency */,
 				27FA9A461918AE3600912F96 /* PBXTargetDependency */,
 			);
 			name = "CBL Mac";
@@ -3458,6 +3466,11 @@
 			isa = PBXTargetDependency;
 			name = "CBForest static";
 			targetProxy = 27FA9A451918AE3600912F96 /* PBXContainerItemProxy */;
+		};
+		27FA9A4A191AB89600912F96 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CBForest;
+			targetProxy = 27FA9A49191AB89600912F96 /* PBXContainerItemProxy */;
 		};
 		DA147C3914BCAC670052DA4D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

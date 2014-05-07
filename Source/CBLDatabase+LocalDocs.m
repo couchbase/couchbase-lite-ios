@@ -121,7 +121,7 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
             NSError* error;
             CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
             if (!doc && error && error.code != kCBForestErrorNotFound) {
-                *outStatus = kCBLStatusDBError;
+                *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
                 return NO;
             }
 
@@ -148,7 +148,7 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
             if (![doc writeBody: [self encodeDocumentJSON: revision]
                        metadata: [newRevID dataUsingEncoding: NSUTF8StringEncoding]
                           error: &error]) {
-                *outStatus = kCBLStatusDBError;
+                *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
                 return NO;
             }
             *outStatus = kCBLStatusCreated;
@@ -172,15 +172,15 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
         NSError* error;
         CBForestDocument* doc = [self.localDocs documentWithID: docID options: 0 error: &error];
         if (!doc) {
-            if (!error || error.code == kCBForestErrorNotFound)
+            if (!error)
                 status = kCBLStatusNotFound;
             else
-                status = kCBLStatusDBError;
+                status = CBLStatusFromNSError(error, kCBLStatusDBError);
         } else {
             if (!$equal(getDocRevID(doc), revID))
                 status = kCBLStatusConflict;
             else if (![self.localDocs deleteDocument: doc error: &error])
-                status = kCBLStatusDBError;
+                status = CBLStatusFromNSError(error, kCBLStatusDBError);
         }
         return !CBLStatusIsError(status);
     }];
@@ -203,11 +203,12 @@ static NSData* infoKey(NSString* key) {
 }
 
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key {
+    NSError *error;
     if (![self.localDocs setValue: [info.description dataUsingEncoding: NSUTF8StringEncoding]
                              meta: NULL
                            forKey: infoKey(key)
-                            error: NULL])
-        return kCBLStatusDBError;
+                            error: &error])
+        return CBLStatusFromNSError(error, kCBLStatusDBError);
     return kCBLStatusOK;
 }
 
