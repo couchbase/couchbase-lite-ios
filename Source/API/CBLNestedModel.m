@@ -101,7 +101,7 @@
                     [self setValue:value forKey:propertyName];
                 }
                 
-                mutableJSONObject[key] = nil;
+                [mutableJSONObject removeObjectForKey:key];
             }];
             self.documentObject = mutableJSONObject;
         }
