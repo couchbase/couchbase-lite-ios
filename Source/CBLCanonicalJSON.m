@@ -87,11 +87,20 @@
 
 
 - (void) encodeNumber: (NSNumber*)number {
-    const char* encoding = number.objCType;
-    if (encoding[0] == 'c')
-        [_output appendString:[number boolValue] ? @"true" : @"false"];
-    else
-        [_output appendString:[number stringValue]];
+    switch (number.objCType[0]) {
+        case 'c':
+            [_output appendString: number.boolValue ? @"true" : @"false"];
+            break;
+        case 'f':
+        case 'd':
+            [_output appendFormat: @"%g", number.doubleValue];
+            break;
+        case 'Q':
+            [_output appendFormat: @"%llu", number.unsignedLongLongValue];
+        default:
+            [_output appendFormat: @"%lld", number.longLongValue];
+            break;
+    }
 }
 
 
@@ -160,12 +169,12 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
         [self encodeString: object];
     } else if ([object isKindOfClass: [NSNumber class]]) {
         [self encodeNumber: object];
-    } else if ([object isKindOfClass: [NSNull class]]) {
-        [_output appendString: @"null"];
     } else if ([object isKindOfClass: [NSDictionary class]]) {
         [self encodeDictionary: object];
     } else if ([object isKindOfClass: [NSArray class]]) {
         [self encodeArray: object];
+    } else if ([object isKindOfClass: [NSNull class]]) {
+        [_output appendString: @"null"];
     } else {
         Assert(NO, @"Can't encode instances of %@ as JSON", [object class]);
     }
