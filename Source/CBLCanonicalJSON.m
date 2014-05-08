@@ -93,10 +93,11 @@
             break;
         case 'f':
         case 'd':
-            [_output appendFormat: @"%g", number.doubleValue];
+            [_output appendFormat: @"%.16g", number.doubleValue];
             break;
         case 'Q':
             [_output appendFormat: @"%llu", number.unsignedLongLongValue];
+            break;
         default:
             [_output appendFormat: @"%lld", number.longLongValue];
             break;
@@ -238,8 +239,8 @@ static void roundtripFloat( double n ) {
     CAssert(reconstituted, @"`%@` was unparseable: %@",
             [json my_UTF8ToString], error);
     double delta = [reconstituted doubleValue] / n - 1.0;
-    Log(@"%g --> `%@` (error = %g)", n, [json my_UTF8ToString], delta);
-    CAssert(fabs(delta) < 1.0e-15, @"`%@` had floating point roundoff error of %g (%g vs %g)",
+    Log(@"%.16g --> `%@` (error = %.16g)", n, [json my_UTF8ToString], delta);
+    CAssert(fabs(delta) < 1.0e-15, @"`%@` had floating point roundoff error of %.16g (%.16g vs %.16g)",
             [json my_UTF8ToString], delta, [reconstituted doubleValue], n);
 }
 
