@@ -235,6 +235,8 @@
                                                        status: &status];
         NSMutableArray* rows = nil;
         if (iterator) {
+            // The iterator came from a background thread, so we shouldn't call it on the
+            // original thread. Instead, copy all the rows into an array:
             rows = $marray();
             while (true) {
                 CBLQueryRow* row = iterator();
@@ -454,9 +456,11 @@
 
 - (BOOL) stale {
     // Check whether the result-set's sequence number is up to date with either the db or the view:
-    if ((SequenceNumber)_sequenceNumber == _database.lastSequenceNumber)
+    SequenceNumber dbSequence = _database.lastSequenceNumber;
+    if ((SequenceNumber)_sequenceNumber == dbSequence)
         return NO;
-    if (_view && (SequenceNumber)_sequenceNumber == _view.lastSequenceChangedAt)
+    if (_view && _view.lastSequenceIndexed == dbSequence
+              && _view.lastSequenceChangedAt == (SequenceNumber)_sequenceNumber)
         return NO;
     return YES;
 }
