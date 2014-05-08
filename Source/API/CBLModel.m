@@ -45,7 +45,7 @@
             LogTo(CBLModel, @"%@ init", self);
         }
         
-#ifdef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(removeUnchangedCachedProperties:)
                                                      name:UIApplicationDidReceiveMemoryWarningNotification
@@ -93,7 +93,7 @@
         Warn(@"%@ dealloced with unsaved changes!", self); // should be impossible
     _document.modelObject = nil;
     
-#ifdef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:UIApplicationDidReceiveMemoryWarningNotification
                                                   object:nil];
@@ -304,7 +304,7 @@
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return;
     _isNew = NO;
-#ifndef TARGET_OS_IPHONE
+#if !(TARGET_OS_IPHONE)
     _properties = nil;
 #endif
     _changedNames = nil;
