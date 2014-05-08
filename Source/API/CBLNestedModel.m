@@ -27,7 +27,7 @@
 - (id)init {
     self = [super init];
     if(self) {
-        self.documentObject = [NSMutableDictionary mutableCopy];
+        self.documentObject = [NSMutableDictionary dictionary];
         self.onMutateBlock = nil;
     }
     
