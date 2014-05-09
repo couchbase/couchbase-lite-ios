@@ -22,6 +22,10 @@ NSString* CBLHexSHA1Digest( NSData* input ) __attribute__((nonnull));
 NSData* CBLHMACSHA1(NSData* key, NSData* data) __attribute__((nonnull));
 NSData* CBLHMACSHA256(NSData* key, NSData* data) __attribute__((nonnull));
 
+/** Writes a hex dump of the bytes to the output string. 
+    Returns a pointer to the end of the string (where it writes a null.) */
+char* CBLAppendHex( char *dst, const void* bytes, size_t length);
+
 /** Generates a hex dump of a sequence of bytes.
     The result is lowercase. This is important for CouchDB compatibility. */
 NSString* CBLHexFromBytes( const void* bytes, size_t length) __attribute__((nonnull));

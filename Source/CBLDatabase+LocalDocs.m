@@ -145,7 +145,7 @@ static NSDictionary* getDocProperties(CBForestDocument* doc) {
             }
             newRevID = $sprintf(@"%d-local", ++generation);
 
-            if (![doc writeBody: [self encodeDocumentJSON: revision]
+            if (![doc writeBody: revision.asCanonicalJSON
                        metadata: [newRevID dataUsingEncoding: NSUTF8StringEncoding]
                           error: &error]) {
                 *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);

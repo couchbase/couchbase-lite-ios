@@ -38,6 +38,9 @@
 #endif
 
 
+#define ASYNC_WRITE 1
+
+
 @interface CBLValidationContext : NSObject <CBLValidationContext>
 {
     @private
@@ -117,8 +120,7 @@
 
     char hex[11 + 2*MD5_DIGEST_LENGTH + 1];
     char *dst = hex + sprintf(hex, "%u-", generation+1);
-    for( size_t i=0; i<MD5_DIGEST_LENGTH; i+=1 )
-        dst += sprintf(dst,"%02x", digestBytes[i]); // important: generates lowercase!
+    dst = CBLAppendHex(dst, digestBytes, sizeof(digestBytes));
     return [[NSString alloc] initWithBytes: hex
                                     length: dst - hex
                                   encoding: NSASCIIStringEncoding];
@@ -141,42 +143,6 @@
 
 
 #pragma mark - INSERTION:
-
-
-/** Returns the JSON to be stored into the 'json' column for a given CBL_Revision.
-    This has all the special keys like "_id" stripped out. */
-- (NSData*) encodeDocumentJSON: (CBL_Revision*)rev {
-    static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
-    if (!sSpecialKeysToRemove) {
-        sSpecialKeysToRemove = [[NSSet alloc] initWithObjects: @"_id", @"_rev",
-            @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts",
-            @"_local_seq", nil];
-        sSpecialKeysToLeave = [[NSSet alloc] initWithObjects:
-            @"_attachments", @"_removed", nil];
-    }
-
-    NSDictionary* origProps = rev.properties;
-    if (!origProps)
-        return nil;
-    
-    // Don't leave in any "_"-prefixed keys except for the ones in sSpecialKeysToLeave.
-    // Keys in sSpecialKeysToRemove (_id, _rev, ...) are left out, any others trigger an error.
-    NSMutableDictionary* properties = [[NSMutableDictionary alloc] initWithCapacity: origProps.count];
-    for (NSString* key in origProps) {
-        if (![key hasPrefix: @"_"]  || [sSpecialKeysToLeave member: key]) {
-            properties[key] = origProps[key];
-        } else if (![sSpecialKeysToRemove member: key]) {
-            Log(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
-            return nil;
-        }
-    }
-    
-    // Create canonical JSON -- this is important, because the JSON data returned here will be used
-    // to create the new revision ID, and we need to guarantee that equivalent revision bodies
-    // result in equal revision IDs.
-    NSData* json = [CBLCanonicalJSON canonicalData: properties];
-    return json;
-}
 
 
 - (void) notifyChange: (CBL_Revision*)inRev doc: (CBForestVersions*)doc source: (NSURL*)source {
@@ -213,13 +179,34 @@
         return nil;
     }
 
+    if (_forest.isReadOnly) {
+        *outStatus = kCBLStatusForbidden;
+        return nil;
+    }
+
     // Make up a UUID if no docID was given:
     if (!docID)
         docID = [[self class] generateDocumentID];
 
     __block CBForestVersions* doc = nil;
     __block NSString* newRevID = nil;
+
+    // Asynchronously convert the revision to JSON (this is expensive):
     __block NSData* json = nil;
+    dispatch_semaphore_t jsonSemaphore = NULL;
+    if (putRev.properties) {
+        // Add any new attachment data to the blob-store, and turn all of them into stubs:
+        putRev = [self processAttachmentsForRevision: putRev
+                                           prevRevID: prevRevID
+                                              status: outStatus];
+        if (!putRev)
+            return nil;
+        jsonSemaphore = dispatch_semaphore_create(0);
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            json = putRev.asCanonicalJSON;
+            dispatch_semaphore_signal(jsonSemaphore);
+        });
+    }
 
     *outStatus = [self _inTransaction: ^CBLStatus {
         // Get the ForestDB document:
@@ -234,10 +221,9 @@
         CBForestRevisionFlags prevRevFlags = [doc flagsOfRevision: prevRevID];
         if (prevRevID) {
             // Updating an existing revision; make sure it exists and is a leaf:
-            CBForestRevisionFlags revFlags = [doc flagsOfRevision: prevRevID];
-            if (!(revFlags & kCBForestRevisionKnown))
+            if (!(prevRevFlags & kCBForestRevisionKnown))
                 return kCBLStatusNotFound;
-            else if (!allowConflict && !(revFlags & kCBForestRevisionLeaf))
+            else if (!allowConflict && !(prevRevFlags & kCBForestRevisionLeaf))
                 return kCBLStatusConflict;
         } else {
             // No parent revision given:
@@ -272,16 +258,9 @@
                 return status;
         }
 
-        // Add any new attachment data to the blob-store, and turn all of them into stubs:
-        putRev = [self processAttachmentsForRevision: putRev
-                                           prevRevID: prevRevID
-                                              status: outStatus];
-        if (!putRev)
-            return *outStatus;
-
-        // Encode the body as JSON:
+        // Get the JSON that we already started encoding:
         if (putRev.properties) {
-            json = [self encodeDocumentJSON: putRev];
+            dispatch_semaphore_wait(jsonSemaphore, DISPATCH_TIME_FOREVER);
             if (!json)
                 return kCBLStatusBadJSON;
         }
@@ -301,11 +280,18 @@
                      parentID: prevRevID
                 allowConflict: allowConflict]) {
             return kCBLStatusDBError;
-        } else if (![doc save: &error]) {
-            return CBLStatusFromNSError(error, kCBLStatusDBError);
-        } else {
-            return deleting ? kCBLStatusOK : kCBLStatusCreated;
         }
+        if (ASYNC_WRITE && _transactionLevel > 0) {
+            [doc asyncSave: ^(CBForestSequence seq, NSError *error) {
+                LogTo(CBLDatabaseVerbose, @"ASYNC finished creating %@ / %@", docID, newRevID);
+                if (error)
+                    Warn(@"Failed async save of %@ / %@: %@", docID, newRevID, error);
+            }];
+        } else {
+            if (![doc save: &error])
+                return CBLStatusFromNSError(error, kCBLStatusDBError);
+        }
+        return deleting ? kCBLStatusOK : kCBLStatusCreated;
     }];
     if (CBLStatusIsError(*outStatus))
         return nil;
@@ -333,7 +319,10 @@
     if (![CBLDatabase isValidDocumentID: docID] || !revID)
         return kCBLStatusBadID;
     
-    NSData* json = [self encodeDocumentJSON: inRev];
+    if (_forest.isReadOnly)
+        return kCBLStatusForbidden;
+
+    NSData* json = inRev.asCanonicalJSON;
     if (!json)
         return kCBLStatusBadJSON;
 

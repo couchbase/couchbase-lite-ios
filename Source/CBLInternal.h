@@ -20,7 +20,6 @@
 
 
 @interface CBLDatabase (Insertion_Internal)
-- (NSData*) encodeDocumentJSON: (CBL_Revision*)rev;
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev;
 @end
 

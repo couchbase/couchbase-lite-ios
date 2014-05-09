@@ -384,9 +384,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (!doc)
         return nil;
     CBForestRevisionFlags revFlags = [doc flagsOfRevision: revID];
-    BOOL deleted = (revFlags & kCBForestRevisionDeleted) != 0;
     if (revID == nil) {
-        if (deleted) {
+        if (revFlags & kCBForestRevisionDeleted) {
             *outStatus = kCBLStatusDeleted;
             return nil;
         }

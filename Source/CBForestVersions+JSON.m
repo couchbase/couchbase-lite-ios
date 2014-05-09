@@ -66,13 +66,18 @@
 {
     dst[@"_id"] = self.docID;
     dst[@"_rev"] = revID;
-    if ([self isRevisionDeleted: revID])
+
+    CBForestRevisionFlags flags;
+    CBForestSequence sequence;
+    if (![self getRevision: revID flags: &flags sequence: &sequence])
+        return;
+
+    if (flags & kCBForestRevisionDeleted)
         dst[@"_deleted"] = $true;
 
     // Get more optional stuff to put in the properties:
-    //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
     if (options & kCBLIncludeLocalSeq)
-        dst[@"_local_seq"] = @([self sequenceOfRevision: revID]);
+        dst[@"_local_seq"] = @(sequence);
 
     if (options & kCBLIncludeRevs)
         dst[@"_revisions"] = [self getRevisionHistoryDict: revID startingFromAnyOf: nil];

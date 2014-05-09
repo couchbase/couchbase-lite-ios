@@ -36,6 +36,10 @@ typedef SInt64 SequenceNumber;
 @property (readonly,copy) NSDictionary* properties;
 @property (readonly,copy) NSData* asJSON;
 
+/** Returns the JSON to be stored into the database.
+    This has all the special keys like "_id" stripped out, and keys in canonical order. */
+@property (readonly) NSData* asCanonicalJSON;
+
 - (id) objectForKeyedSubscript: (NSString*)key;  // enables subscript access in Xcode 4.4+
 
 /** Returns the "_attachments" property, validating that it's a dictionary. */

@@ -15,6 +15,7 @@
 
 #import "CBL_Revision.h"
 #import "CBL_Body.h"
+#import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
 
 
@@ -179,6 +180,43 @@
     [nuProperties setValue: revID forKey: @"_rev"];
     rev.properties = nuProperties;
     return rev;
+}
+
+
+/** Returns the JSON to be stored into the database.
+    This has all the special keys like "_id" stripped out, and keys in canonical order. */
+- (NSData*) asCanonicalJSON {
+    static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sSpecialKeysToRemove = [[NSSet alloc] initWithObjects: @"_id", @"_rev",
+                                @"_deleted", @"_revisions", @"_revs_info", @"_conflicts", @"_deleted_conflicts",
+                                @"_local_seq", nil];
+        sSpecialKeysToLeave = [[NSSet alloc] initWithObjects:
+                               @"_attachments", @"_removed", nil];
+    });
+
+    NSDictionary* origProps = self.properties;
+    if (!origProps)
+        return nil;
+
+    // Don't leave in any "_"-prefixed keys except for the ones in sSpecialKeysToLeave.
+    // Keys in sSpecialKeysToRemove (_id, _rev, ...) are left out, any others trigger an error.
+    NSMutableDictionary* properties = [[NSMutableDictionary alloc] initWithCapacity: origProps.count];
+    for (NSString* key in origProps) {
+        if (![key hasPrefix: @"_"]  || [sSpecialKeysToLeave member: key]) {
+            properties[key] = origProps[key];
+        } else if (![sSpecialKeysToRemove member: key]) {
+            Log(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
+            return nil;
+        }
+    }
+
+    // Create canonical JSON -- this is important, because the JSON data returned here will be used
+    // to create the new revision ID, and we need to guarantee that equivalent revision bodies
+    // result in equal revision IDs.
+    NSData* json = [CBLCanonicalJSON canonicalData: properties];
+    return json;
 }
 
 
