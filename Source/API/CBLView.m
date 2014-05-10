@@ -151,7 +151,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     Assert(!_index);
     CBForestDBConfig config = {
         .bufferCacheSize = kViewBufferCacheSize,
-        .walThreshold = 4096,
+        .walThreshold = 8192,
         .enableSequenceTree = YES
     };
     NSError* error;
