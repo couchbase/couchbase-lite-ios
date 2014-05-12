@@ -101,7 +101,6 @@
     NSLog(@"Quitting LiteServ.app");
 
     [_listener stop];
-    [_manager close];
 
     [(NSApplication*)NSApp terminate: self];
 }
