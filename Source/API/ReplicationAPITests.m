@@ -77,7 +77,7 @@ static CBLDatabase* createEmptyManagerAndDb(void) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_ReplicatorTests"];
     NSError* error;
     CBLDatabase* db = [mgr databaseNamed: @"db" error: &error];
-    CAssert(db);
+    CAssert(db, @"Couldn't open db: %@", error);
     CAssertEq(db.documentCount, 0u);
     return db;
 }

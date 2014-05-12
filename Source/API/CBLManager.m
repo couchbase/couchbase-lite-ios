@@ -206,6 +206,7 @@ static CBLManager* sInstance;
                                                 error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
+    [CBLDatabase setAutoCompact: NO]; // unit tests don't want autocompact
     return dbm;
 }
 

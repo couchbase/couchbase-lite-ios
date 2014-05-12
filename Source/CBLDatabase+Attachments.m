@@ -491,11 +491,10 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     if (!CBLRemoveFileIfExists(path, outError))
         return NO;
 
-    CBForestDBConfig config = {
-        .bufferCacheSize = 128*1024,
-        .walThreshold = 128,
-        .enableSequenceTree = NO
-    };
+    CBForestDBConfig config = [CBForestDB defaultConfig];
+    config.bufferCacheSize = 128*1024;
+    config.walThreshold = 128;
+    config.enableSequenceTree = NO;
     CBForestDB* attachmentIndex = [[CBForestDB alloc] initWithFile: path
                                                            options: kCBForestDBCreate
                                                             config: &config

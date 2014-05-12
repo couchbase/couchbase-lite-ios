@@ -38,6 +38,9 @@
 // Size of ForestDB buffer cache allocated for a database
 #define kDBBufferCacheSize (8*1024*1024)
 
+// How often ForestDB should check whether databases need auto-compaction
+#define kAutoCompactInterval (5*60.0)
+
 
 NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
@@ -45,6 +48,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 @implementation CBLDatabase (Internal)
+
+
++ (void) initialize {
+    if (self == [CBLDatabase class])
+        [self setAutoCompact: YES];
+}
 
 
 - (CBForestDB*) forestDB {
@@ -82,6 +91,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 #if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)dir {
+    [self setAutoCompact: NO]; // unit tests don't want autocompact
     if (![self deleteDatabaseFilesAtPath: dir error: NULL])
         return nil;
     CBLDatabase *db = [[self alloc] initWithDir: dir name: nil manager: nil readOnly: NO];
@@ -126,6 +136,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
++ (void) setAutoCompact:(BOOL)autoCompact {
+    [CBForestDB setAutoCompactInterval: (autoCompact ? kAutoCompactInterval : 0.0)];
+}
+
+
 - (BOOL) open: (NSError**)outError {
     if (_isOpen)
         return YES;
@@ -142,12 +157,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     NSString* forestPath = [_dir stringByAppendingPathComponent: @"db.forest"];
     CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
 
-    CBForestDBConfig config = {
-        .bufferCacheSize = kDBBufferCacheSize,
-        .walThreshold = 4096,
-        .enableSequenceTree = YES,
-        .compressDocBodies = YES,
-    };
+    CBForestDBConfig config = [CBForestDB defaultConfig];
+    config.bufferCacheSize = kDBBufferCacheSize;
+    config.walThreshold = 4096;
+    config.enableSequenceTree = YES;
+    config.compressDocBodies = YES;
+    config.autoCompactThreshold = 50;
 
     _forest = [[CBForestDB alloc] initWithFile: forestPath
                                        options: options

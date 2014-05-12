@@ -149,11 +149,11 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 - (CBForestMapReduceIndex*) openIndexWithOptions: (CBForestFileOptions)options {
     Assert(!_index);
-    CBForestDBConfig config = {
-        .bufferCacheSize = kViewBufferCacheSize,
-        .walThreshold = 8192,
-        .enableSequenceTree = YES
-    };
+    CBForestDBConfig config = [CBForestMapReduceIndex defaultConfig];
+    config.bufferCacheSize = kViewBufferCacheSize;
+    config.walThreshold = 8192;
+    config.enableSequenceTree = YES;
+    config.autoCompactThreshold = 50;
     NSError* error;
     _index = [[CBForestMapReduceIndex alloc] initWithFile: _path
                                                   options: options

@@ -109,6 +109,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 - (BOOL) open: (NSError**)outError;
 - (BOOL) closeInternal;
 
++ (void) setAutoCompact: (BOOL)autoCompact;
+
 @property (nonatomic, readonly) CBForestDB* forestDB;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;

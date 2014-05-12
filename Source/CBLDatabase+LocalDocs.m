@@ -31,11 +31,10 @@
 - (CBForestDB*) localDocs {
     if (!_localDocs) {
         NSString* path = [_dir stringByAppendingPathComponent: @"local.forest"];
-        CBForestDBConfig config = {
-            .bufferCacheSize = 128*1024,
-            .walThreshold = 128,
-            .enableSequenceTree = YES
-        };
+        CBForestDBConfig config = [CBForestDB defaultConfig];
+        config.bufferCacheSize = 128*1024;
+        config.walThreshold = 128;
+        config.enableSequenceTree = NO;
         _localDocs = [[CBForestDB alloc] initWithFile: path
                                               options: kCBForestDBCreate
                                                config: &config
