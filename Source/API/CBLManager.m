@@ -115,7 +115,14 @@ static NSCharacterSet* kIllegalNameChars;
                                                          NSUserDomainMask, YES);
     NSString* path = paths[0];
 #if !TARGET_OS_IPHONE
-    path = [path stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]];
+    
+    NSString *applicationSupportComponent = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleApplicationSupportFolderName"];
+    
+    if (applicationSupportComponent == nil)
+        applicationSupportComponent =[[NSBundle mainBundle] bundleIdentifier];
+    
+    path = [path stringByAppendingPathComponent: applicationSupportComponent];
+    
 #endif
     return [path stringByAppendingPathComponent: @"CouchbaseLite"];
 }
