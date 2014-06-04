@@ -29,8 +29,6 @@
 #import "MYBlockUtils.h"
 #import "ExceptionUtils.h"
 
-#import <CBForest/CBForest.h>
-
 #if TARGET_OS_IPHONE
 #import <UIKit/UIApplication.h>
 #endif
@@ -103,12 +101,12 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (NSUInteger) documentCount {
-    return (NSUInteger)_forest.info.documentCount;
+    return self._documentCount;
 }
 
 
 - (SequenceNumber) lastSequenceNumber {
-    return _forest.info.lastSequence;
+    return self._lastSequence;
 }
 
 

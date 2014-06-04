@@ -13,6 +13,9 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+#import <CBForest/CBForest.hh>
+
+extern "C" {
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+LocalDocs.h"
@@ -28,11 +31,13 @@
 #import "CBLDatabase.h"
 #import "CouchbaseLitePrivate.h"
 
-#import <CBForest/CBForest.h>
-#import "CBForestVersions+JSON.h"
-
 #import "MYBlockUtils.h"
 #import "ExceptionUtils.h"
+}
+
+#import <CBForest/CBForest.hh>
+
+using namespace forestdb;
 
 
 // Size of ForestDB buffer cache allocated for a database
@@ -41,10 +46,29 @@
 // How often ForestDB should check whether databases need auto-compaction
 #define kAutoCompactInterval (5*60.0)
 
+static NSTimeInterval sAutoCompactInterval = kAutoCompactInterval;
 
 NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
+
+
+static CBLStatus CBLStatusFromFDBError(forestdb::error err) {
+    switch (err.status) {
+        case FDB_RESULT_SUCCESS:
+            return kCBLStatusOK;
+        case FDB_RESULT_KEY_NOT_FOUND:
+        case FDB_RESULT_NO_SUCH_FILE:
+            return kCBLStatusNotFound;
+        case FDB_RESULT_RONLY_VIOLATION:
+            return kCBLStatusForbidden;
+        case FDB_RESULT_CHECKSUM_ERROR:
+        case FDB_RESULT_FILE_CORRUPTION:
+            return kCBLStatusCorruptError;
+        default:
+            return kCBLStatusDBError;
+    }
+}
 
 
 @implementation CBLDatabase (Internal)
@@ -56,7 +80,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 
-- (CBForestDB*) forestDB {
+- (Database*) forestDB {
     return _forest;
 }
 
@@ -137,7 +161,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 + (void) setAutoCompact:(BOOL)autoCompact {
-    [CBForestDB setAutoCompactInterval: (autoCompact ? kAutoCompactInterval : 0.0)];
+    sAutoCompactInterval = autoCompact ? kAutoCompactInterval : 0.0;
 }
 
 
@@ -155,22 +179,27 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     // Open the ForestDB database:
     NSString* forestPath = [_dir stringByAppendingPathComponent: @"db.forest"];
-    CBForestFileOptions options = _readOnly ? kCBForestDBReadOnly : kCBForestDBCreate;
+    Database::openFlags options = _readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
 
-    CBForestDBConfig config = [CBForestDB defaultConfig];
-    config.bufferCacheSize = kDBBufferCacheSize;
-    config.walThreshold = 4096;
-    config.enableSequenceTree = YES;
-    config.compressDocBodies = YES;
-    config.autoCompactThreshold = 50;
+    Database::config config = Database::defaultConfig();
+    config.buffercache_size = kDBBufferCacheSize;
+    config.wal_threshold = 4096;
+    config.seqtree_opt = true;
+    config.compress_document_body = true;
+    config.compaction_threshold = 50;
+    config.compactor_sleep_duration = (uint64_t)sAutoCompactInterval;
 
-    _forest = [[CBForestDB alloc] initWithFile: forestPath
-                                       options: options
-                                        config: &config
-                                         error: outError];
-    if (!_forest)
+    try {
+        _forest = new Database(std::string(forestPath.UTF8String), options, config);
+    } catch (forestdb::error err) {
+        if (outError)
+            *outError = CBLStatusToNSError(CBLStatusFromFDBError(err), nil);
         return NO;
-    _forest.documentClass = [CBForestVersions class];
+    } catch (...) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusException, nil);
+        return NO;
+    }
 
     // First-time setup:
     if (!self.privateUUID) {
@@ -183,7 +212,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath error: outError];
     if (!_attachments) {
         Warn(@"%@: Couldn't open attachment store at %@", self, attachmentsPath);
-        [_forest close];
+        delete _forest;
         _forest = nil;
         return NO;
     }
@@ -227,7 +256,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     
     _activeReplicators = nil;
 
-    [_forest close];
+    delete _forest;
+    _forest = NULL;
 
     [self closeLocalDocs];
 
@@ -357,34 +387,37 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #pragma mark - GETTING DOCUMENTS:
 
 
-- (CBForestVersions*) _forestDocWithID: (NSString*)docID
-                                status: (CBLStatus*)outStatus
+- (VersionedDocument*) _forestDocWithID: (NSString*)docID
+                                 status: (CBLStatus*)outStatus
 {
-    NSError* error;
-    CBForestVersions* doc = (CBForestVersions*)[_forest documentWithID: docID
-                                                               options: 0 error: &error];
-    if (outStatus != NULL) {
-        if (doc)
+    try {
+        VersionedDocument* doc = new VersionedDocument(_forest, _forest->get(docID));
+        if (doc->exists()) {
             *outStatus = kCBLStatusOK;
-        else if (!error)
-            *outStatus = kCBLStatusNotFound;
-        else
-            *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
+            return doc;
+        }
+        *outStatus = kCBLStatusNotFound;
+    } catch (forestdb::error err) {
+        *outStatus = CBLStatusFromFDBError(err);
+    } catch (...) {
+        *outStatus = kCBLStatusException;
     }
-    return doc;
+    return NULL;
 }
 
 
-- (CBL_MutableRevision*) revisionObjectFromForestDoc: (CBForestVersions*)doc
+- (CBL_MutableRevision*) revisionObjectFromForestDoc: (VersionedDocument*)doc
                                                revID: (NSString*)revID
                                              options: (CBLContentOptions)options
 {
-    BOOL deleted = [doc isRevisionDeleted: revID];
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: doc.docID
+    const RevNode* node = doc->get(revID);
+    if (!node)
+        return nil;
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: (NSString*)doc->docID()
                                                                     revID: revID
-                                                                  deleted: deleted];
-    rev.sequence = doc.sequence;
-    if (![doc loadBodyOfRevisionObject: rev options: options])
+                                                                  deleted: node->isDeleted()];
+    rev.sequence = node->sequence;
+    if (!LoadRevisionBody(rev, doc, options))
         return nil;
     return rev;
 }
@@ -585,7 +618,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     };
     BOOL includeDocs = options->includeDocs || options->includeConflicts || (filter != NULL);
     if (!includeDocs)
-        forestOpts.contentOptions |= kCBForestDBMetaOnly;
+        forestOpts.contentOptions = (CBForestContentOptions)(forestOpts.contentOptions | kCBForestDBMetaOnly);
     CBLContentOptions contentOptions = kCBLNoBody;
     if (includeDocs || filter)
         contentOptions = options->contentOptions;

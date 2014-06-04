@@ -9,9 +9,19 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBForestDB, CBForestVersions;
 @class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
-struct CBLQueryOptions;      // declared in CBLView+Internal.h
+
+#ifdef __cplusplus
+namespace forestdb {
+    class Database;
+    class VersionedDocument;
+}
+typedef forestdb::Database Database;
+typedef forestdb::VersionedDocument VersionedDocument;
+#else
+typedef struct _cpp_Database Database;
+typedef struct _cpp_VersionedDocument VersionedDocument;
+#endif
 
 
 /** NSNotification posted when one or more documents have been updated.
@@ -64,8 +74,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
     NSString* _dir;
     NSString* _name;
     CBLManager* _manager;
-    CBForestDB* _forest;
-    CBForestDB* _localDocs;
+    Database* _forest;
+    Database* _localDocs;
     BOOL _readOnly;
     BOOL _isOpen;
     int _transactionLevel;
@@ -111,7 +121,7 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 
 + (void) setAutoCompact: (BOOL)autoCompact;
 
-@property (nonatomic, readonly) CBForestDB* forestDB;
+@property (nonatomic, readonly) Database* forestDB;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 
@@ -133,8 +143,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 
 // DOCUMENTS:
 
-- (CBForestVersions*) _forestDocWithID: (NSString*)docID
-                                status: (CBLStatus*)outStatus;
+- (VersionedDocument*) _forestDocWithID: (NSString*)docID
+                                 status: (CBLStatus*)outStatus;
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID

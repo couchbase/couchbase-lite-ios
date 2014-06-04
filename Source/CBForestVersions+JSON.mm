@@ -8,29 +8,59 @@
 
 #import "CBForestVersions+JSON.h"
 
+using namespace forestdb;
 
-@implementation CBForestVersions (JSON)
+
+@implementation CBLVersionedDocument
 
 
-- (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
+static NSString* RevIDToString(forestdb::slice revID) {
+    char expandedBuf[256];
+    forestdb::slice expanded(expandedBuf, sizeof(expandedBuf));
+    revid::Expand(revID, &expanded);
+    return [[NSString alloc] initWithBytes: &expandedBuf length: sizeof(expandedBuf)
+                                  encoding: NSUTF8StringEncoding];
+}
+
+static alloc_slice StringToRevID(NSString* revID) {
+    char buf[256];
+    forestdb::slice dst(buf, sizeof(buf));
+    if (!revid::Compact(revID, &dst))
+        return alloc_slice();
+    return alloc_slice(dst);
+}
+
+
++ (NSData*) dataOfNode: (const RevNode*)node {
+    try {
+        return (NSData*)node->readBody();
+    } catch (...) {
+        return nil;
+    }
+}
+
+
++ (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
                           options: (CBLContentOptions)options
+                              doc: (VersionedDocument*)doc
 {
     // If caller wants no body and no metadata props, this is a no-op:
     if (options == kCBLNoBody)
         return YES;
 
     NSString* revID = rev.revID;
+    const RevNode* node = doc->get(revID);
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = [self dataOfRevision: revID];
+        json = [self dataOfNode: node];
         if (!json)
             return NO;
     }
 
-    rev.sequence = [self sequenceOfRevision: revID];
+    rev.sequence = node->sequence;
 
     NSMutableDictionary* extra = $mdict();
-    [self addContentProperties: options forRevision: revID into: extra];
+    [self addContentProperties: options into: extra node: node];
     if (json.length > 0)
         rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
     else
@@ -39,8 +69,8 @@
 }
 
 
-- (NSDictionary*) bodyOfRevision: (NSString*)revID
-                         options: (CBLContentOptions)options
++ (NSDictionary*) bodyOfNode: (const RevNode*)node
+                     options: (CBLContentOptions)options
 {
     // If caller wants no body and no metadata props, this is a no-op:
     if (options == kCBLNoBody)
@@ -48,57 +78,64 @@
 
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = [self dataOfRevision: revID];
+        json = [self dataOfNode: node];
         if (!json)
             return nil;
     }
     NSMutableDictionary* properties = [CBLJSON JSONObjectWithData: json
                                                           options: NSJSONReadingMutableContainers
                                                             error: NULL];
-    [self addContentProperties: options forRevision: revID into: properties];
+    [self addContentProperties: options into: properties node: node];
     return properties;
 }
 
 
-- (void) addContentProperties: (CBLContentOptions)options
-                  forRevision: (NSString*)revID
++ (void) addContentProperties: (CBLContentOptions)options
                          into: (NSMutableDictionary*)dst
+                         node: (const RevNode*)node
 {
-    dst[@"_id"] = self.docID;
+    NSString* revID = (NSString*)node->revID;
+    const VersionedDocument* doc = (const VersionedDocument*)node->owner;
+    dst[@"_id"] = (NSString*)doc->docID();
     dst[@"_rev"] = revID;
 
-    CBForestRevisionFlags flags;
-    CBForestSequence sequence;
-    if (![self getRevision: revID flags: &flags sequence: &sequence])
-        return;
-
-    if (flags & kCBForestRevisionDeleted)
+    if (node->isDeleted())
         dst[@"_deleted"] = $true;
 
     // Get more optional stuff to put in the properties:
     if (options & kCBLIncludeLocalSeq)
-        dst[@"_local_seq"] = @(sequence);
+        dst[@"_local_seq"] = @(node->sequence);
 
     if (options & kCBLIncludeRevs)
-        dst[@"_revisions"] = [self getRevisionHistoryDict: revID startingFromAnyOf: nil];
+        dst[@"_revisions"] = [self getRevisionHistoryOfNode: node startingFromAnyOf: nil];
 
     if (options & kCBLIncludeRevsInfo) {
-        dst[@"_revs_info"] = [[self getRevisionHistory: revID] my_map: ^id(CBL_Revision* rev) {
+        dst[@"_revs_info"] = [self mapHistoryOfNode: node
+                                            through: ^id(const RevNode *node)
+        {
             NSString* status = @"available";
-            if (rev.deleted)
+            if (node->isDeleted())
                 status = @"deleted";
-            else if (rev.missing)
+            else if (!node->isBodyAvailable())
                 status = @"missing";
-            return $dict({@"rev", [rev revID]}, {@"status", status});
+            return $dict({@"rev", (NSString*)node->revID},
+                         {@"status", status});
         }];
     }
 
     if (options & kCBLIncludeConflicts) {
-        NSArray* current = self.currentRevisionIDs;
-        if (current.count > 1) {
-            dst[@"_conflicts"] = [current my_map: ^(NSString* aRev) {
-                return ($equal(aRev, revID) || [self isRevisionDeleted: aRev]) ? nil : aRev;
-            }];
+        auto nodes = doc->currentNodes();
+        if (nodes.size() > 1) {
+            NSMutableArray* conflicts = $marray();
+            for (auto node = nodes.begin(); node != nodes.end(); ++node) {
+                if (!(*node)->isDeleted()) {
+                    NSString* nodeRevID = (NSString*)(*node)->revID;
+                    if (!$equal(nodeRevID, revID))
+                        [conflicts addObject: nodeRevID];
+                }
+            }
+            if (conflicts.count > 0)
+                dst[@"_conflicts"] = conflicts;
         }
     }
 
@@ -107,26 +144,36 @@
 }
 
 
-- (NSArray*) getRevisionHistory: (NSString*)revID {
++ (NSArray*) mapHistoryOfNode: (const RevNode*)node
+                      through: (id(^)(const RevNode*))block
+{
     NSMutableArray* history = $marray();
-    for (NSString* ancestorID in [self historyOfRevision: revID]) {
-        CBForestRevisionFlags flags = [self flagsOfRevision: ancestorID];
-        BOOL deleted = (flags & kCBForestRevisionDeleted) != 0;
-        CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: self.docID
-                                                                        revID: ancestorID
-                                                                      deleted: deleted];
-        rev.missing = (flags & kCBForestRevisionHasBody) == 0
-                   || [self dataOfRevision: ancestorID] == nil;
-        [history addObject: rev];
-    }
+    for (; node; ++node)
+        [history addObject: block(node)];
     return history;
 }
 
 
-- (NSDictionary*) getRevisionHistoryDict: (NSString*)revID
-                       startingFromAnyOf: (NSArray*)ancestorRevIDs
++ (NSArray*) getRevisionHistory: (const RevNode*)node
 {
-    NSArray* history = [self getRevisionHistory: revID]; // (this is in reverse order, newest..oldest
+    const VersionedDocument* doc = (const VersionedDocument*)node->owner;
+    NSString* docID = (NSString*)doc->docID();
+    return [self mapHistoryOfNode: node
+                          through: ^id(const RevNode *node)
+    {
+        CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                        revID:(NSString*)node->revID
+                                                                      deleted: node->isDeleted()];
+        rev.missing = !node->isBodyAvailable();
+        return rev;
+    }];
+}
+
+
++ (NSDictionary*) getRevisionHistoryOfNode: (const RevNode*)node
+                         startingFromAnyOf: (NSArray*)ancestorRevIDs
+{
+    NSArray* history = [self getRevisionHistory: node]; // (this is in reverse order, newest..oldest
     if (ancestorRevIDs.count > 0) {
         NSUInteger n = history.count;
         for (NSUInteger i = 0; i < n; ++i) {
@@ -171,33 +218,34 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 }
 
 
-- (NSArray*) getPossibleAncestorRevisionIDs: (NSString*)revID
++ (NSArray*) getPossibleAncestorRevisionIDs: (NSString*)revID
                                       limit: (unsigned)limit
                             onlyAttachments: (BOOL)onlyAttachments // unimplemented
+                                        doc: (VersionedDocument*)doc
 {
     unsigned generation = [CBL_Revision generationFromRevID: revID];
     if (generation <= 1)
         return nil;
 
     NSMutableArray* revIDs = $marray();
-    for (NSString* possibleRevID in self.allRevisionIDs) {
-        if ([CBL_Revision generationFromRevID: possibleRevID] < generation) {
-            CBForestRevisionFlags flags = [self flagsOfRevision: possibleRevID];
-            if (!(flags & kCBForestRevisionDeleted) && (flags & kCBForestRevisionHasBody)) {
-                // Does it REALLY have a body that hasn't been compacted?
-                if ([self dataOfRevision: possibleRevID] != nil) {
-                    [revIDs addObject: possibleRevID];
-                    if (limit && revIDs.count >= limit)
-                        break;
-                }
-            }
+
+    auto allNodes = doc->allNodes();
+    for (auto node = allNodes.begin(); node != allNodes.end(); ++node) {
+        if (revid::GetGeneration(node->revID) < generation
+                    && !node->isDeleted() && node->isBodyAvailable()) {
+            [revIDs addObject: RevIDToString(node->revID)];
+            if (limit && revIDs.count >= limit)
+                break;
         }
     }
     return revIDs;
 }
 
 
-- (NSString*) findCommonAncestorOf: (NSString*)revID withRevIDs: (NSArray*)revIDs {
++ (NSString*) findCommonAncestorOf: (NSString*)revID
+                        withRevIDs: (NSArray*)revIDs
+                               doc: (VersionedDocument*)doc
+{
     unsigned generation = [CBL_Revision generationFromRevID: revID];
     if (generation <= 1 || revIDs.count == 0)
         return nil;
@@ -206,10 +254,9 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
         return CBLCompareRevIDs(id2, id1); // descending order of generation
     }];
     for (NSString* possibleRevID in revIDs) {
-        if ([self flagsOfRevision: possibleRevID] != 0) {
-            if ([CBL_Revision generationFromRevID: possibleRevID] <= generation) {
-                return possibleRevID;
-            }
+        forestdb::slice revIDSlice = StringToRevID(possibleRevID);
+        if (revid::GetGeneration(revIDSlice) <= generation && doc->get(revIDSlice) != NULL) {
+            return possibleRevID;
         }
     }
     return nil;
