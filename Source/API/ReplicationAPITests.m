@@ -59,7 +59,7 @@
 
 - (void) replChanged: (NSNotification*)n {
     AssertEq(n.object, _repl);
-    Log(@"Replication status=%d; completedChangesCount=%u; changesCount=%u",
+    Log(@"Replication status=%u; completedChangesCount=%u; changesCount=%u",
         _repl.status, _repl.completedChangesCount, _repl.changesCount);
     CAssert(_repl.completedChangesCount <= _repl.changesCount);
     if (_repl.status == kCBLReplicationStopped) {
@@ -106,7 +106,7 @@ static void runReplication(CBLReplication* repl, unsigned expectedChangesCount) 
             Warn(@"Runloop was blocked for %g sec", now-lastTime);
         lastTime = now;
     }
-    Log(@"...replicator finished. mode=%d, progress %u/%u, error=%@",
+    Log(@"...replicator finished. mode=%u, progress %u/%u, error=%@",
         repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
     observer = nil;
 }
@@ -213,7 +213,7 @@ TestCase(RunPushReplicationNoSendAttachmentForUpdatedRev) {
     NSMutableDictionary *contents = [doc.properties mutableCopy];
     
     // toggle value of check property
-    [contents setObject: @2 forKey: @"dynamic"];
+    contents[@"dynamic"] = @2;
     
     // save the updated document
     [doc putProperties: contents error: &error];
@@ -415,7 +415,7 @@ TestCase(ReplicationWithDecoding) {
     repl.propertiesTransformationBlock = ^NSDictionary*(NSDictionary* props) {
         Assert(props.cbl_id);
         Assert(props.cbl_rev);
-        NSDictionary* encrypted = [props[@"_attachments"] objectForKey: @"(encrypted)"];
+        NSDictionary* encrypted = (props[@"_attachments"])[@"(encrypted)"];
         if (!encrypted)
             return props;
 

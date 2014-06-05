@@ -59,7 +59,7 @@ NSString* CBLVersion( void ) {
 static NSString* CBLFullVersionInfo( void ) {
     NSMutableString* vers = [NSMutableString stringWithFormat: @"Couchbase Lite %@", CBLVersion()];
 #ifdef CBL_SOURCE_REVISION
-    if (strlen(CBL_SOURCE_REVISION) > 0)
+    if (strlen(CBL_SOURCE_REVISION) > (0))
         [vers appendFormat: @"; git commit %s", CBL_SOURCE_REVISION];
 #endif
     return vers;

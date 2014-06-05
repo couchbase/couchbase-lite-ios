@@ -424,7 +424,7 @@ TestCase(CBLMultipartDocumentReader) {
                                                 @"follows": @YES,
                                                 @"digest": @"md5-1WWSGl9mJACzGjclAafpfQ=="}
                                  }}));
-    NSDictionary* attachment = [dict[@"_attachments"] objectForKey: @"mary.txt"];
+    NSDictionary* attachment = (dict[@"_attachments"])[@"mary.txt"];
     CBL_BlobStoreWriter* writer = [db attachmentWriterForAttachment: attachment];
     Assert(writer);
     AssertEq(writer.length, 52u);
@@ -448,11 +448,11 @@ TestCase(CBLMultipartDocumentReader) {
                                           @"digest":@"md5-6UpXIDR/olzgZrDhsMe7Sw==",
                                           @"length":@6566,
                                           @"follows":@YES}}}));
-    attachment = [dict[@"_attachments"] objectForKey: @"Toad.gif"];
+    attachment = (dict[@"_attachments"])[@"Toad.gif"];
     writer = [db attachmentWriterForAttachment: attachment];
     Assert(writer);
     AssertEq(writer.length, 6566u);
-    attachment = [dict[@"_attachments"] objectForKey: @"want3.jpg"];
+    attachment = (dict[@"_attachments"])[@"want3.jpg"];
     writer = [db attachmentWriterForAttachment: attachment];
     Assert(writer);
     AssertEq(writer.length, 24758u);

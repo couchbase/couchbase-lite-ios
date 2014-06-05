@@ -38,9 +38,7 @@
         _name = [name copy];
         _viewID = -1;  // means 'unknown'
         _mapContentOptions = kCBLIncludeLocalSeq;
-        if (0) { // appease static analyzer
-            _collation = 0;
-        }
+        _collation = 0;
     }
     return self;
 }

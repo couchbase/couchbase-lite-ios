@@ -12,20 +12,20 @@
 @class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow;
 
 
-typedef enum {
+typedef NS_ENUM(unsigned, CBLAllDocsMode) {
     kCBLAllDocs,            /**< Normal behavior for all-docs query */
     kCBLIncludeDeleted,     /**< Will include rows for deleted documents */
     kCBLShowConflicts,      /**< Rows will indicate conflicting revisions */
     kCBLOnlyConflicts       /**< Will _only_ return rows for docs in conflict */
-} CBLAllDocsMode;
+};
 
 
 /** Query options to allow out-of-date results to be returned in return for faster queries. */
-typedef enum {
+typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     kCBLUpdateIndexBefore,  /**< Always update index if needed before querying (default) */
     kCBLUpdateIndexNever,   /**< Don't update the index; results may be out of date */
     kCBLUpdateIndexAfter    /**< Update index _after_ querying (results may still be out of date) */
-} CBLIndexUpdateMode;
+};
 
 
 /** Represents a query of a CouchbaseLite 'view', or of a view-like resource like _all_documents. */

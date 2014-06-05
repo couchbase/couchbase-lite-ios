@@ -595,7 +595,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                       LogTo(Sync, @"%@: Session check failed: %@", self, error);
                       self.error = error;
                   } else {
-                      NSString* username = $castIf(NSString, [[result objectForKey: @"userCtx"] objectForKey: @"name"]);
+                      NSString* username = $castIf(NSString, result[@"userCtx"][@"name"]);
                       if (username) {
                           LogTo(Sync, @"%@: Active session, logged in as '%@'", self, username);
                           [self fetchRemoteCheckpointDoc];
