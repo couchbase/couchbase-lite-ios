@@ -18,8 +18,11 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLCollateJSON.h"
 #import "CBLMisc.h"
-#import <CBForest/CBForest.h>
 #import "ExceptionUtils.h"
+
+#import <CBForest/CBForest.hh>
+
+using namespace forestdb;
 
 
 @implementation CBLView (Querying)
@@ -60,14 +63,13 @@
 - (CBLQueryIteratorBlock) _regularQueryWithOptions: (CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus
 {
-    CBForestQueryEnumerator* e = [self _runForestQueryWithOptions: options status: outStatus];
+    IndexEnumerator e = [self _runForestQueryWithOptions: options];
     if (!e)
         return nil;
 
     CBLDatabase* db = _weakDB;
     return ^CBLQueryRow*() {
-        id key = e.nextObject;
-        if (!key)
+        if (!e)
             return nil;
 
         id docContents = nil;
@@ -244,11 +246,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (CBLQueryIteratorBlock) _fullTextQueryWithOptions: (CBLQueryOptions*)options
                                              status: (CBLStatus*)outStatus
 {
-    CBForestMapReduceIndex* index = self.index;
+    MapReduceIndex* index = self.index;
     if (!index) {
         *outStatus = kCBLStatusNotFound;
         return nil;
-    } else if (index.indexType != kCBLFullTextIndex) {
+    } else if (index->indexType() != kCBLFullTextIndex) {
         *outStatus = kCBLStatusBadRequest;
         return nil;
     }
@@ -275,39 +277,28 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
 
 /** Starts a view query, returning a CBForest enumerator. */
-- (CBForestQueryEnumerator*) _runForestQueryWithOptions: (CBLQueryOptions*)options
-                                                 status: (CBLStatus*)outStatus
+- (IndexEnumerator) _runForestQueryWithOptions: (CBLQueryOptions*)options
 {
-    CBForestMapReduceIndex* index = self.index;
+    MapReduceIndex* index = self.index;
     if (!index) {
         *outStatus = kCBLStatusNotFound;
         return nil;
     }
-    CBForestQueryEnumerator* e;
-    NSError* error = nil;
-    CBForestEnumerationOptions forestOpts = {
-        .skip = options->skip,
-        .limit = options->limit,
-        .descending = options->descending,
-        .inclusiveEnd = options->inclusiveEnd,
-    };
+    Database::enumerationOptions forestOpts = Database::enumerationOptions::kDefault;
+    forestOpts.skip = options->skip;
+    forestOpts.limit = options->limit;
+    forestOpts.descending = options->descending;
+    forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (options.keys) {
-        e = [[CBForestQueryEnumerator alloc] initWithIndex: index
-                                                      keys: options.keys.objectEnumerator
-                                                   options: &forestOpts
-                                                     error: &error];
+        return index->enumerate(collatableKeys,
+                                &forestOpts);
     } else {
-        e = [[CBForestQueryEnumerator alloc] initWithIndex: index
-                                                  startKey: options.startKey
-                                                startDocID: options.startKeyDocID
-                                                    endKey: options.endKey
-                                                  endDocID: options.endKeyDocID
-                                                   options: &forestOpts
-                                                     error: &error];
+        return index->enumerate(forestdb::slice(options.startKey),
+                                forestdb::slice(options.startKeyDocID),
+                                forestdb::slice(options.endKey),
+                                forestdb::slice(options.endKeyDocID),
+                                &forestOpts);
     }
-    if (!e)
-        *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
-    return e;
 }
 
 
@@ -316,7 +307,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 // This is really just for unit tests & debugging
 #if DEBUG
 - (NSArray*) dump {
-    CBForestMapReduceIndex* index = self.index;
+    MapReduceIndex* index = self.index;
     if (!index)
         return nil;
     NSMutableArray* result = $marray();

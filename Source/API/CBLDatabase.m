@@ -234,7 +234,7 @@ static void catchInBlock(void (^block)()) {
         // Do this in a transaction because garbageCollectAttachments expects the database to be
         // freshly compacted (i.e. only current revisions have bodies), and it could delete new
         // attachments added while it's working. So lock out other writers for the duration.
-        if ([_forest compact: outError] && [self garbageCollectAttachments: outError])
+        if ([self _compact: outError] && [self garbageCollectAttachments: outError])
             return kCBLStatusOK;
         else
             return kCBLStatusDBError;
@@ -515,6 +515,22 @@ static NSString* makeLocalDocID(NSString* docID) {
 
 - (void) setModelFactory:(CBLModelFactory *)modelFactory {
     _modelFactory = modelFactory;
+}
+
+@end
+
+
+
+
+@interface Foo : NSObject
+//@property (nonatomic,readonly) NSURL* signInURL;
+- (NSURL*) signInURL;
+@end
+
+@implementation Foo
+
+- (NSDictionary*) signInURL {
+    return nil;
 }
 
 @end

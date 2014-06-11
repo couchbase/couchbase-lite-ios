@@ -14,13 +14,20 @@
 #ifdef __cplusplus
 namespace forestdb {
     class Database;
+    class Transaction;
     class VersionedDocument;
+    class MapReduceIndex;
 }
 typedef forestdb::Database Database;
+typedef forestdb::Transaction Transaction;
 typedef forestdb::VersionedDocument VersionedDocument;
+typedef forestdb::MapReduceIndex MapReduceIndex;
 #else
+// Fake structs to appease the compiler when in non-C++ mode:
 typedef struct _cpp_Database Database;
+typedef struct _cpp_Transaction Transaction;
 typedef struct _cpp_VersionedDocument VersionedDocument;
+typedef struct _cpp_MapReduceIndex MapReduceIndex;
 #endif
 
 
@@ -75,6 +82,7 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
     NSString* _name;
     CBLManager* _manager;
     Database* _forest;
+    Transaction* _forestTransaction;
     Database* _localDocs;
     BOOL _readOnly;
     BOOL _isOpen;
@@ -120,17 +128,23 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 - (BOOL) closeInternal;
 
 + (void) setAutoCompact: (BOOL)autoCompact;
+- (BOOL) _compact: (NSError**)outError;
 
 @property (nonatomic, readonly) Database* forestDB;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 
 @property (nonatomic, readonly) BOOL exists;
+@property (nonatomic, readonly) NSUInteger _documentCount;
+@property (nonatomic, readonly) SequenceNumber _lastSequence;
 @property (nonatomic, readonly) UInt64 totalDataSize;
 @property (nonatomic, readonly) NSDate* startTime;
 
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
+
+/** Executes the block, catching any exception and converting it to a CBLStatus return value. */
+- (CBLStatus) _try: (CBLStatus(^)())block;
 
 /** Executes the block within a database transaction.
     If the block returns a non-OK status, the transaction is aborted/rolled back.
@@ -143,8 +157,6 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 
 // DOCUMENTS:
 
-- (VersionedDocument*) _forestDocWithID: (NSString*)docID
-                                 status: (CBLStatus*)outStatus;
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID 
                        revisionID: (NSString*)revID

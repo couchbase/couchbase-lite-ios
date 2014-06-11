@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLStatus.h"
-#import <CBForest/CBForest.h>
+#import <CBForest/forestdb.h>
 
 
 NSString* const CBLHTTPErrorDomain = @"CBLHTTP";
@@ -89,24 +89,30 @@ NSError* CBLStatusToNSError( CBLStatus status, NSURL* url ) {
 }
 
 
-
 CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus) {
     NSInteger code = error.code;
     if (!error)
         return kCBLStatusOK;
     else if ($equal(error.domain, CBLHTTPErrorDomain))
         return (CBLStatus)code;
-    else if ($equal(error.domain, CBForestErrorDomain)) {
-        switch (code) {
-            case kCBForestErrorInvalidArgs:         return kCBLStatusServerError;
-            case kCBForestErrorFileNotFound:        return kCBLStatusNotFound;
-            case kCBForestErrorNotFound:            return kCBLStatusNotFound;
-            case kCBForestErrorReadOnly:            return kCBLStatusForbidden;
-            case kCBForestErrorFileCorrupt:         return kCBLStatusCorruptError;
-            case kCBForestErrorChecksum:            return kCBLStatusCorruptError;
-            case kCBForestErrorRevisionDataCorrupt: return kCBLStatusCorruptError;
-            default:                                return kCBLStatusDBError;
-        }
-    } else
+    else
         return defaultStatus;
+}
+
+
+CBLStatus CBLStatusFromForestDBStatus(int fdbStatus) {
+    switch (fdbStatus) {
+        case FDB_RESULT_SUCCESS:
+            return kCBLStatusOK;
+        case FDB_RESULT_KEY_NOT_FOUND:
+        case FDB_RESULT_NO_SUCH_FILE:
+            return kCBLStatusNotFound;
+        case FDB_RESULT_RONLY_VIOLATION:
+            return kCBLStatusForbidden;
+        case FDB_RESULT_CHECKSUM_ERROR:
+        case FDB_RESULT_FILE_CORRUPTION:
+            return kCBLStatusCorruptError;
+        default:
+            return kCBLStatusDBError;
+    }
 }

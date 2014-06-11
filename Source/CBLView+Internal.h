@@ -71,7 +71,7 @@ typedef enum {
 
 + (NSString*) fileNameToViewName: (NSString*)fileName;
 
-@property (readonly) CBForestMapReduceIndex* index;
+@property (readonly) MapReduceIndex* index;
 
 @property (readonly) NSString* mapVersion;
 

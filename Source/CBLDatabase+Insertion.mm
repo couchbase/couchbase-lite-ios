@@ -28,7 +28,8 @@
 #import "Test.h"
 #import "ExceptionUtils.h"
 
-#import <CBForest/CBForest.h>
+#import <CBForest/CBForest.hh>
+using namespace forestdb;
 
 #ifdef GNUSTEP
 #import <openssl/sha.h>
@@ -145,16 +146,22 @@
 #pragma mark - INSERTION:
 
 
-- (void) notifyChange: (CBL_Revision*)inRev doc: (CBForestVersions*)doc source: (NSURL*)source {
+- (CBLDatabaseChange*) changeWithNewRevision: (CBL_Revision*)inRev
+                                         doc: (VersionedDocument&)doc
+                                      source: (NSURL*)source
+{
     CBL_Revision* winningRev = inRev;
-    if (!$equal(doc.revID, inRev.revID))
-        winningRev = [[CBL_Revision alloc] initWithDocID: doc.docID revID: doc.revID
-                                                 deleted: (doc.flags & kCBForestDocDeleted) != 0];
-    BOOL inConflict = (doc.flags & kCBForestDocConflicted) != 0;
-    [self notifyChange: [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
-                                                         winningRevision: winningRev
-                                                              inConflict: inConflict
-                                                                  source: source]];
+    const RevNode* winningNode = doc.currentNode();
+    NSString* winningRevID = (NSString*)winningNode->revID;
+    if (!$equal(winningRevID, inRev.revID)) {
+        winningRev = [[CBL_Revision alloc] initWithDocID: inRev.docID
+                                                   revID: winningRevID
+                                                 deleted: winningNode->isDeleted()];
+    }
+    return [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
+                                            winningRevision: winningRev
+                                                 inConflict: doc.hasConflict()
+                                                     source: source];
 }
 
 
@@ -179,7 +186,7 @@
         return nil;
     }
 
-    if (_forest.isReadOnly) {
+    if (_forest->isReadOnly()) {
         *outStatus = kCBLStatusForbidden;
         return nil;
     }
@@ -188,8 +195,8 @@
     if (!docID)
         docID = [[self class] generateDocumentID];
 
-    __block CBForestVersions* doc = nil;
-    __block NSString* newRevID = nil;
+    __block CBL_Revision* newRev = nil;
+    __block CBLDatabaseChange* change = nil;
 
     // Asynchronously convert the revision to JSON (this is expensive):
     __block NSData* json = nil;
@@ -210,33 +217,29 @@
 
     *outStatus = [self _inTransaction: ^CBLStatus {
         // Get the ForestDB document:
-        NSError* error;
-        doc = (CBForestVersions*) [_forest documentWithID: docID
-                                                  options: kCBForestDBCreateDoc
-                                                    error: &error];
-        if (!doc)
-            return CBLStatusFromNSError(error, kCBLStatusDBError);
-        doc.maxDepth = (unsigned)self.maxRevTreeDepth;
+        VersionedDocument doc(_forest, forestdb::slice(docID));
+        const RevNode* node;
 
-        CBForestRevisionFlags prevRevFlags = [doc flagsOfRevision: prevRevID];
         if (prevRevID) {
             // Updating an existing revision; make sure it exists and is a leaf:
-            if (!(prevRevFlags & kCBForestRevisionKnown))
+            node = doc.get(revidBuffer(prevRevID));
+            if (!node)
                 return kCBLStatusNotFound;
-            else if (!allowConflict && !(prevRevFlags & kCBForestRevisionLeaf))
+            else if (!allowConflict && !node->isLeaf())
                 return kCBLStatusConflict;
         } else {
             // No parent revision given:
             if (deleting) {
                 // Didn't specify a revision to delete: NotFound or a Conflict, depending
-                return doc.exists ? kCBLStatusConflict : kCBLStatusNotFound;
+                return doc.exists() ? kCBLStatusConflict : kCBLStatusNotFound;
             }
             // If doc exists, current rev must be in a deleted state or there will be a conflict:
-            if (prevRevFlags & kCBForestRevisionKnown) {
-                if (prevRevFlags & kCBForestRevisionDeleted) {
+            node = doc.currentNode();
+            if (node) {
+                if (node->isDeleted()) {
                     // New rev will be child of the tombstone:
-                    // (T0D0: Direct a horror movie called "Child Of The Tombstone"!)
-                    prevRevID = doc.revID;
+                    // (T0D0: Write a horror novel called "Child Of The Tombstone"!)
+                    prevRevID = (NSString*)node->revID;
                 } else if (!allowConflict) {
                     return kCBLStatusConflict;
                 }
@@ -248,8 +251,9 @@
             CBL_Revision* fakeNewRev = [putRev mutableCopyWithDocID: docID revID: nil];
             CBL_Revision* prevRev = nil;
             if (prevRevID) {
-                prevRev = [[CBL_Revision alloc] initWithDocID: docID revID: prevRevID
-                                              deleted: (prevRevFlags & kCBForestRevisionDeleted) != 0];
+                prevRev = [[CBL_Revision alloc] initWithDocID: docID
+                                                        revID: prevRevID
+                                                      deleted: node->isDeleted()];
             }
             CBLStatus status = [self validateRevision: fakeNewRev
                                      previousRevision: prevRev
@@ -266,44 +270,45 @@
         }
 
         // Compute the new revID:
-        newRevID = [self generateRevIDForJSON: json deleted: deleting prevRevID: prevRevID];
+        NSString* newRevID = [self generateRevIDForJSON: json
+                                                deleted: deleting
+                                              prevRevID: prevRevID];
         if (!newRevID)
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
 
-        if ([doc flagsOfRevision: newRevID] != 0)
-            return kCBLStatusOK;    // Revision already exists
-
         // Add the revision to the database:
-        if (![doc addRevision: json
-                     deletion: putRev.deleted
-                       withID: newRevID
-                     parentID: prevRevID
-                allowConflict: allowConflict]) {
-            return kCBLStatusDBError;
-        }
-        if (ASYNC_WRITE && _transactionLevel > 0) {
-            [doc asyncSave: ^(CBForestSequence seq, NSError *error) {
-                LogTo(CBLDatabaseVerbose, @"ASYNC finished creating %@ / %@", docID, newRevID);
-                if (error)
-                    Warn(@"Failed async save of %@ / %@: %@", docID, newRevID, error);
-            }];
-        } else {
-            if (![doc save: &error])
-                return CBLStatusFromNSError(error, kCBLStatusDBError);
-        }
+        int status;
+        if (!doc.insert(revidBuffer(newRevID), json, putRev.deleted, node, allowConflict, status))
+            return (CBLStatus)status;
+        doc.prune((unsigned)self.maxRevTreeDepth);
+        doc.save(*_forestTransaction);
+
+        newRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
+        change = [self changeWithNewRevision: newRev doc: doc source: nil];
+
         return deleting ? kCBLStatusOK : kCBLStatusCreated;
     }];
     if (CBLStatusIsError(*outStatus))
         return nil;
 
-    CBL_MutableRevision* newRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
-
     LogTo(CBLDatabase, @"--> created %@", newRev);
     LogTo(CBLDatabaseVerbose, @"    %@", [json my_UTF8ToString]);
     
     // Epilogue: A change notification is sent:
-    [self notifyChange: newRev doc: doc source: nil];
+    if (change)
+        [self notifyChange: change];
     return newRev;
+}
+
+
+static void convertRevIDs(NSArray* revIDs,
+                          std::vector<revidBuffer> &historyBuffers,
+                          std::vector<revid> &historyVector)
+{
+    for (NSString* revID in revIDs) {
+        historyBuffers.push_back(revidBuffer(revID));
+        historyVector.push_back(historyBuffers.back());
+    }
 }
 
 
@@ -319,7 +324,7 @@
     if (![CBLDatabase isValidDocumentID: docID] || !revID)
         return kCBLStatusBadID;
     
-    if (_forest.isReadOnly)
+    if (_forest->isReadOnly())
         return kCBLStatusForbidden;
 
     NSData* json = inRev.asCanonicalJSON;
@@ -331,21 +336,21 @@
     else if (!$equal(history[0], revID))
         return kCBLStatusBadID;
 
-    // First get the CBForest doc:
-    __block CBForestVersions* doc;
+    __block CBLDatabaseChange* change = nil;
+
     CBLStatus status = [self _inTransaction: ^CBLStatus {
-        NSError* error;
-        doc = (CBForestVersions*)[_forest documentWithID: docID
-                                                 options: kCBForestDBCreateDoc
-                                                   error: &error];
-        if (!doc)
-            return CBLStatusFromNSError(error, kCBLStatusDBError);
-        doc.maxDepth = (unsigned)self.maxRevTreeDepth;
+        // First get the CBForest doc:
+        VersionedDocument doc(_forest, forestdb::slice(docID));
+        if (!doc.exists())
+            return kCBLStatusNotFound;
 
         // Add the revision & ancestry to the doc:
-        NSInteger common = [doc addRevision: json
-                                   deletion: inRev.deleted
-                                    history: history];
+        std::vector<revidBuffer> historyBuffers;
+        std::vector<revid> historyVector;
+        convertRevIDs(history, historyBuffers, historyVector);
+        int common = doc.insertHistory(historyVector,
+                                       forestdb::slice(inRev.body.asJSON),
+                                       inRev.deleted);
         if (common < 0)
             return kCBLStatusDBError;
         else if (common == 0)
@@ -353,11 +358,9 @@
 
         // Validate against the common ancestor:
         if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
-            NSString* commonAncestor = history[common];
-            CBForestRevisionFlags flags = [doc flagsOfRevision: commonAncestor];
-            BOOL deleted = (flags & kCBForestRevisionDeleted) != 0;
+            BOOL deleted = doc[historyVector[common]]->isDeleted();
             CBL_Revision* prev = [[CBL_Revision alloc] initWithDocID: docID
-                                                               revID: commonAncestor
+                                                               revID: history[common]
                                                              deleted: deleted];
             NSString* parentRevID = (history.count > 1) ? history[1] : nil;
             CBLStatus status = [self validateRevision: rev
@@ -368,13 +371,14 @@
         }
 
         // Save updated doc back to the database:
-        if (![doc save: &error])
-            return CBLStatusFromNSError(error, kCBLStatusDBError);
+        doc.prune((unsigned)self.maxRevTreeDepth);
+        doc.save(*_forestTransaction);
+        change = [self changeWithNewRevision: inRev doc: doc source: source];
         return kCBLStatusCreated;
     }];
 
-    if (!CBLStatusIsError(status))
-        [self notifyChange: inRev doc: doc source: source];
+    if (change)
+        [self notifyChange: change];
     return status;
 }
 
@@ -383,7 +387,7 @@
 
 
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
-                     result: (NSDictionary**)outResult
+                      result: (NSDictionary**)outResult
 {
     // <http://wiki.apache.org/couchdb/Purge_Documents>
     NSMutableDictionary* result = $mdict();
@@ -393,10 +397,9 @@
         return kCBLStatusOK;
     return [self _inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
-            CBLStatus status;
-            CBForestVersions* doc = [self _forestDocWithID: docID status: &status];
-            if (!doc && status != kCBLStatusOK)
-                return status;
+            VersionedDocument doc(_forest, forestdb::slice(docID));
+            if (!doc.exists())
+                return kCBLStatusNotFound;
 
             NSArray* revsPurged;
             NSArray* revIDs = $castIf(NSArray, docsToRevs[docID]);
@@ -406,12 +409,20 @@
                 revsPurged = @[];
             } else if ([revIDs containsObject: @"*"]) {
                 // Delete all revisions if magic "*" revision ID is given:
-                [_forest deleteDocument: doc error: NULL];
+                _forestTransaction->del(doc.docID());
                 revsPurged = @[@"*"];
             } else {
-                revsPurged = [doc purgeRevisions: revIDs];
-                if (![doc save: NULL])
-                    revsPurged = @[];
+                std::vector<revidBuffer> revsBuffers;
+                std::vector<revid> revsVector;
+                convertRevIDs(revIDs, revsBuffers, revsVector);
+
+                std::vector<revid> revsPurgedVector = doc.purge(revsVector);
+                doc.save(*_forestTransaction);
+
+                NSMutableArray* revs = $marray();
+                for (auto rev = revsPurgedVector.begin(); rev != revsPurgedVector.end(); ++rev)
+                    [revs addObject: (NSString*)(*rev)];
+                revsPurged = revs;
             }
             result[docID] = revsPurged;
         }

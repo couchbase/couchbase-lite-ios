@@ -19,7 +19,9 @@
 #import "CBL_Puller.h"
 #import "MYBlockUtils.h"
 
-#import <CBForest/CBForest.h>
+#import <CBForest/CBForest.hh>
+
+using namespace forestdb;
 
 
 #define kActiveReplicatorCleanupDelay 10.0
@@ -110,20 +112,19 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
                        status: (CBLStatus*)outStatus
 {
     [revs sortByDocID];
-    CBForestVersions* doc = nil;
+    NSString* lastDocID = nil;
+    VersionedDocument* doc = NULL;
     for (NSInteger i = revs.count-1; i >= 0; i--) {
         CBL_Revision* rev = revs[i];
-        if (!$equal(rev.docID, doc.docID)) {
-            NSError* error;
-            doc = (CBForestVersions*)[_forest documentWithID: rev.docID options: 0 error: &error];
-            if (!doc && error && error.code != kCBForestErrorNotFound) {
-                *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
-                return NO;
-            }
+        if (!$equal(rev.docID, lastDocID)) {
+            lastDocID = rev.docID;
+            delete doc;
+            doc = new VersionedDocument(_forest, forestdb::slice(lastDocID));
         }
-        if (doc && [doc flagsOfRevision: rev.revID] != 0)
+        if (doc && doc->get(revidBuffer(rev.revID)) != NULL)
             [revs removeRev: rev];
     }
+    delete doc;
     return YES;
 }
 
