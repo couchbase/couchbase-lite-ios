@@ -34,7 +34,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 /** The database that contains this view. */
 @property (readonly) CBLDatabase* database;
 
-/** The maximum number of rows to return. Default value is 0, meaning 'unlimited'. */
+/** The maximum number of rows to return. Defaults to 'unlimited' (UINT_MAX). */
 @property NSUInteger limit;
 
 /** The number of initial rows to skip. Default value is 0.
@@ -96,10 +96,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 - (CBLQueryEnumerator*) run: (NSError**)outError;
 
 /** Starts an asynchronous query. Returns immediately, then calls the onComplete block when the
-    query completes, passing it the row enumerator.
-    If the query fails, the block will receive a non-nil enumerator but its .error property will
-    be set to a value reflecting the error. The originating CBLQuery's .error property will NOT
-    change. */
+    query completes, passing it the row enumerator (or an error). */
 - (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete   __attribute__((nonnull));
 
 /** Returns a live query with the same parameters. */
