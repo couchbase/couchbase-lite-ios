@@ -107,7 +107,7 @@
     [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     [_trackingInput open];
     _startTime = CFAbsoluteTimeGetCurrent();
-    LogTo(ChangeTracker, @"%@: Started... <%@>", self, url);
+    LogTo(ChangeTracker, @"%@: Started... <%@>", self, url.my_sanitizedString);
     return YES;
 }
 
