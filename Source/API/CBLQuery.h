@@ -34,7 +34,7 @@ typedef enum {
 /** The database that contains this view. */
 @property (readonly) CBLDatabase* database;
 
-/** The maximum number of rows to return. Default value is 0, meaning 'unlimited'. */
+/** The maximum number of rows to return. Default value is -1, meaning 'unlimited'. */
 @property NSUInteger limit;
 
 /** The number of initial rows to skip. Default value is 0.
