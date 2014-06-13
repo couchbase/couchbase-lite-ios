@@ -13,14 +13,14 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+extern "C" {
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabase+LocalDocs.h"
 #import "CBLInternal.h"
 #import "CBL_Puller.h"
 #import "MYBlockUtils.h"
-
+}
 #import <CBForest/CBForest.hh>
-
 using namespace forestdb;
 
 

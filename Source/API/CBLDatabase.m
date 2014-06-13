@@ -518,19 +518,3 @@ static NSString* makeLocalDocID(NSString* docID) {
 }
 
 @end
-
-
-
-
-@interface Foo : NSObject
-//@property (nonatomic,readonly) NSURL* signInURL;
-- (NSURL*) signInURL;
-@end
-
-@implementation Foo
-
-- (NSDictionary*) signInURL {
-    return nil;
-}
-
-@end

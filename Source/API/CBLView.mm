@@ -13,6 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+extern "C" {
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
 #import "CBL_Shared.h"
@@ -21,11 +22,10 @@
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
-#import "CBForestVersions+JSON.h"
-
+}
 #import <CBForest/CBForest.hh>
-
 using namespace forestdb;
+#import "CBLForestBridge.h"
 
 
 // Size of ForestDB buffer cache allocated for a view index

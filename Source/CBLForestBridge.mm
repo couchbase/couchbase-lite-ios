@@ -1,12 +1,12 @@
 //
-//  CBForestVersions+JSON.m
+//  CBLForestBridge.mm
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 5/1/14.
 //
 //
 
-#import "CBForestVersions+JSON.h"
+#import "CBLForestBridge.h"
 
 using namespace forestdb;
 

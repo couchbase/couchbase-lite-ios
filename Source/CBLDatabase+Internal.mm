@@ -36,7 +36,7 @@ extern "C" {
 }
 
 #import <CBForest/CBForest.hh>
-#import "CBForestVersions+JSON.h"
+#import "CBLForestBridge.h"
 
 using namespace forestdb;
 

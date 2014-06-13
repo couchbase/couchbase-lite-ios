@@ -24,6 +24,7 @@
                      "digest":"md5-muNoTiLXyJYP9QkvPukNng==", "length":9, "stub":true}}
 */
 
+extern "C" {
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLBase64.h"
@@ -36,8 +37,9 @@
 
 #import "CollectionUtils.h"
 #import "GTMNSData+zlib.h"
-#import <CBForest/CBForest.hh>
+}
 
+#import <CBForest/CBForest.hh>
 using namespace forestdb;
 
 

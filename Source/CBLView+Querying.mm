@@ -13,13 +13,14 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+extern "C" {
 #import "CBLView+Internal.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLCollateJSON.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
-
+}
 #import <CBForest/CBForest.hh>
 
 using namespace forestdb;
@@ -63,9 +64,11 @@ using namespace forestdb;
 - (CBLQueryIteratorBlock) _regularQueryWithOptions: (CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus
 {
-    IndexEnumerator e = [self _runForestQueryWithOptions: options];
-    if (!e)
+    if (!self.index) {
+        *outStatus = kCBLStatusNotFound;
         return nil;
+    }
+    __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
 
     CBLDatabase* db = _weakDB;
     return ^CBLQueryRow*() {
@@ -73,9 +76,12 @@ using namespace forestdb;
             return nil;
 
         id docContents = nil;
-        id value = e.value;
-        NSString* docID = e.docID;
-        SequenceNumber sequence = e.sequence;
+        id key = e.key().readNSObject();
+        id value = e.value().readNSObject();
+        NSString* docID = (NSString*)e.docID();
+        SequenceNumber sequence = e.sequence();
+        e.next();
+
         if (options->includeDocs) {
             NSDictionary* valueDict = nil;
             NSString* linkedID = nil;
@@ -100,6 +106,7 @@ using namespace forestdb;
                 docContents = rev.properties;
             }
         }
+
         LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
               _name, CBLJSONString(key), CBLJSONString(value), CBLJSONString(docID));
         return [[CBLQueryRow alloc] initWithDocID: docID
@@ -207,14 +214,16 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
     }
 
-    CBForestQueryEnumerator* e = [self _runForestQueryWithOptions: options status: outStatus];
-    if (!e)
+    if (!self.index) {
+        *outStatus = kCBLStatusNotFound;
         return nil;
+    }
+    __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
 
     return ^CBLQueryRow*() {
         CBLQueryRow* row = nil;
         do {
-            id key = e.nextObject;
+            id key = e ? e.key().readNSObject() : nil;
             if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
                 // key doesn't match lastKey; emit a grouped/reduced row for what came before:
                 row = [[CBLQueryRow alloc] initWithDocID: nil
@@ -229,11 +238,12 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             if (key && reduce) {
                 // Add this key/value to the list to be reduced:
                 [keysToReduce addObject: key];
-                [valuesToReduce addObject: e.valueData ?: $null];
+                [valuesToReduce addObject: e.value().readNSObject() ?: $null];
                 //TODO: Reduce the keys/values when there are too many; then rereduce at end
             }
 
             lastKey = key;
+            e.next();
         } while (!row && lastKey);
         return row;
     };
@@ -246,6 +256,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (CBLQueryIteratorBlock) _fullTextQueryWithOptions: (CBLQueryOptions*)options
                                              status: (CBLStatus*)outStatus
 {
+#if 1
+    return nil; //FIX
+#else
     MapReduceIndex* index = self.index;
     if (!index) {
         *outStatus = kCBLStatusNotFound;
@@ -272,6 +285,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                             value: nil
                                     docProperties: nil];
     };
+#endif
 }
 
 
@@ -280,24 +294,26 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (IndexEnumerator) _runForestQueryWithOptions: (CBLQueryOptions*)options
 {
     MapReduceIndex* index = self.index;
-    if (!index) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    }
+    Assert(index);
     Database::enumerationOptions forestOpts = Database::enumerationOptions::kDefault;
     forestOpts.skip = options->skip;
     forestOpts.limit = options->limit;
     forestOpts.descending = options->descending;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (options.keys) {
-        return index->enumerate(collatableKeys,
-                                &forestOpts);
+        std::vector<Collatable> collatableKeys;
+        for (id key in options.keys)
+            collatableKeys.push_back(Collatable(key));
+        return IndexEnumerator(*index,
+                               collatableKeys,
+                               &forestOpts);
     } else {
-        return index->enumerate(forestdb::slice(options.startKey),
-                                forestdb::slice(options.startKeyDocID),
-                                forestdb::slice(options.endKey),
-                                forestdb::slice(options.endKeyDocID),
-                                &forestOpts);
+        return IndexEnumerator(*index,
+                               Collatable(options.startKey),
+                               forestdb::slice(options.startKeyDocID),
+                               Collatable(options.endKey),
+                               forestdb::slice(options.endKeyDocID),
+                               &forestOpts);
     }
 }
 
@@ -311,12 +327,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (!index)
         return nil;
     NSMutableArray* result = $marray();
-    CBForestQueryEnumerator* e = [[CBForestQueryEnumerator alloc] initWithIndex: index
-                                                                       startKey: nil startDocID: nil endKey: nil endDocID: nil options: NULL error: NULL];
-    while (e.nextObject) {
-        [result addObject: $dict({@"key", CBLJSONString(e.key)},
-                                 {@"value", [e.valueData my_UTF8ToString]},
-                                 {@"seq", @(e.sequence)})];
+
+    IndexEnumerator e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
+    while (e) {
+        [result addObject: $dict({@"key", CBLJSONString(e.key().readNSObject())},
+                                 {@"value", CBLJSONString(e.value().readNSObject())},
+                                 {@"seq", @(e.sequence())})];
+        ++e;
     }
     return result;
 }

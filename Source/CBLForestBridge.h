@@ -1,5 +1,5 @@
 //
-//  CBForestVersions+JSON.h
+//  CBLForestBridge.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 5/1/14.
@@ -7,7 +7,9 @@
 //
 
 #import <CBForest/CBForest.hh>
+extern "C" {
 #import "CBLDatabase+Internal.h"
+}
 
 
 @interface CBLForestBridge : NSObject
