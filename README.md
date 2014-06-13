@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/couchbase/couchbase-lite-ios.png?label=ready&title=Ready)](https://waffle.io/couchbase/couchbase-lite-ios)
 # Couchbase Lite 
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine. 
