@@ -14,8 +14,6 @@ extern "C" {
 
 @interface CBLForestBridge : NSObject
 
-+ (NSString*) revIDToString: (forestdb::revid)revID;
-
 /** Gets the parsed body of a revision, including any metadata specified by the content options. */
 + (NSDictionary*) bodyOfNode: (const forestdb::RevNode*)node
                      options: (CBLContentOptions)options;

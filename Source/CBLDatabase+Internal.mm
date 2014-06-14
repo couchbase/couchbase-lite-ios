@@ -169,8 +169,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     config.wal_threshold = 4096;
     config.seqtree_opt = true;
     config.compress_document_body = true;
-    config.compaction_threshold = 50;
-    config.compactor_sleep_duration = (uint64_t)sAutoCompactInterval;
+    if (sAutoCompactInterval > 0) {
+        config.compactor_sleep_duration = (uint64_t)sAutoCompactInterval;
+    } else {
+        config.compaction_threshold = 0; // disables auto-compact
+    }
 
     try {
         _forest = new Database(std::string(forestPath.UTF8String), options, config);
@@ -441,7 +444,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             const RevNode* node = doc.currentNode();
             if (!node || node->isDeleted())
                 return kCBLStatusDeleted;
-            revID = [CBLForestBridge revIDToString: node->revID];
+            revID = (NSString*)node->revID;
         }
 
         result = [CBLForestBridge revisionObjectFromForestDoc: doc
@@ -686,7 +689,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 if (options->includeConflicts)
                     revIDs = [CBLForestBridge getCurrentRevisionIDs: doc];
                 else
-                    revIDs = @[[CBLForestBridge revIDToString: doc.revID()]];
+                    revIDs = @[(NSString*)doc.revID()];
                 for (NSString* revID in revIDs) {
                     CBL_MutableRevision* rev = [CBLForestBridge revisionObjectFromForestDoc: doc
                                                                                       revID: revID
@@ -856,7 +859,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 continue; // skip this doc
 
             NSString* docID = (NSString*)doc.docID();
-            NSString* revID = [CBLForestBridge revIDToString: doc.revID()];
+            NSString* revID = (NSString*)doc.revID();
             SequenceNumber sequence = doc.sequence();
 
             NSDictionary* docContents = nil;

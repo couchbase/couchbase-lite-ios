@@ -501,7 +501,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         config.wal_threshold = 128;
         config.seqtree_opt = false;
         Database attachmentIndex(path.fileSystemRepresentation, FDB_OPEN_FLAG_CREATE, config);
-        __block Transaction attachmentTransaction(&attachmentIndex);
+        Transaction attachmentTransaction(&attachmentIndex);
 
         LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
         for (auto e = _forest->enumerate(); e; ++e) {
@@ -517,24 +517,25 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
                     if (body.size > 0) {
                         NSDictionary* rev = [CBLJSON JSONObjectWithData: (NSData*)body
                                                                 options: 0 error: NULL];
-                        [rev.cbl_attachments enumerateKeysAndObjectsUsingBlock:^(id key, NSDictionary* att,
-                                                                                 BOOL *stop)
-                        {
+                        NSDictionary* attachments = rev.cbl_attachments;
+                        for (NSString* key in attachments) {
+                            NSDictionary* att = attachments[key];
                             NSString* digest = att[@"digest"];
                             CBLBlobKey blobKey;
                             if (digestToBlobKey(digest, &blobKey)) {
                                 attachmentTransaction.set(forestdb::slice(&blobKey, sizeof(blobKey)),
                                                           forestdb::slice("x", 1));
                             }
-                        }];
+                        }
                     }
                 }
             }
         }
         LogTo(CBLDatabase, @"    ...found %llu attachments", attachmentIndex.getInfo().doc_count);
 
+        Database* attachmentIndexP = &attachmentIndex; // workaround to allow block below to call it
         NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
-            return attachmentIndex.get(forestdb::slice(&blobKey, sizeof(blobKey))).exists();
+            return attachmentIndexP->get(forestdb::slice(&blobKey, sizeof(blobKey))).exists();
         }];
 
         LogTo(CBLDatabase, @"    ... deleted %ld obsolete attachment files.", (long)deleted);

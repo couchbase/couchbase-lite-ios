@@ -34,7 +34,7 @@
 
 
 static CBLDatabase* createDB(void) {
-    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"cbl_test.sqlite3"];
+    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"cbl_test.cblite2"];
     CBLDatabase *db = [CBLDatabase createEmptyDBAtPath: path];
     CAssert([db open: nil]);
     return db;

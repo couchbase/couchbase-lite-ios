@@ -14,15 +14,6 @@ using namespace forestdb;
 @implementation CBLForestBridge
 
 
-+ (NSString*) revIDToString: (revid)revID {
-    char expandedBuf[256];
-    forestdb::slice expanded(expandedBuf, sizeof(expandedBuf));
-    revID.expandInto(expanded);
-    return [[NSString alloc] initWithBytes: &expandedBuf length: sizeof(expandedBuf)
-                                  encoding: NSUTF8StringEncoding];
-}
-
-
 + (NSData*) dataOfNode: (const RevNode*)node {
     try {
         return (NSData*)node->readBody();
@@ -36,13 +27,23 @@ using namespace forestdb;
                                                revID: (NSString*)revID
                                              options: (CBLContentOptions)options
 {
-    const RevNode* node = doc.get(revidBuffer(revID));
-    if (!node)
-        return nil;
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: (NSString*)doc.docID()
-                                                                    revID: revID
-                                                                  deleted: node->isDeleted()];
-    rev.sequence = node->sequence;
+    CBL_MutableRevision* rev;
+    NSString* docID = (NSString*)doc.docID();
+    if (doc.nodesAvailable()) {
+        const RevNode* node = doc.get(revidBuffer(revID));
+        if (!node)
+            return nil;
+        rev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                   revID: revID
+                                                 deleted: node->isDeleted()];
+        rev.sequence = node->sequence;
+    } else {
+        Assert(revID == nil || $equal(revID, (NSString*)doc.revID()));
+        rev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                   revID: (NSString*)doc.revID()
+                                                 deleted: doc.isDeleted()];
+        rev.sequence = doc.sequence();
+    }
     if (![self loadBodyOfRevisionObject: rev options: options doc: doc])
         return nil;
     return rev;
@@ -105,6 +106,7 @@ using namespace forestdb;
                          node: (const RevNode*)node
 {
     NSString* revID = (NSString*)node->revID;
+    Assert(revID);
     const VersionedDocument* doc = (const VersionedDocument*)node->owner;
     dst[@"_id"] = (NSString*)doc->docID();
     dst[@"_rev"] = revID;
@@ -159,7 +161,7 @@ using namespace forestdb;
     auto nodes = doc.currentNodes();
     for (auto node = nodes.begin(); node != nodes.end(); ++node)
         if (!(*node)->isDeleted())
-            [currentRevIDs addObject: [CBLForestBridge revIDToString: (*node)->revID]];
+            [currentRevIDs addObject: (NSString*)(*node)->revID];
     [currentRevIDs sortUsingComparator:^NSComparisonResult(id r1, id r2) {
         return CBLCompareRevIDs(r1, r2);
     }];
@@ -171,7 +173,7 @@ using namespace forestdb;
                       through: (id(^)(const RevNode*))block
 {
     NSMutableArray* history = $marray();
-    for (; node; ++node)
+    for (; node; node = node->parent())
         [history addObject: block(node)];
     return history;
 }
@@ -256,7 +258,7 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
     for (auto node = allNodes.begin(); node != allNodes.end(); ++node) {
         if (node->revID.generation() < generation
                     && !node->isDeleted() && node->isBodyAvailable()) {
-            [revIDs addObject: [self revIDToString: node->revID]];
+            [revIDs addObject: (NSString*)node->revID];
             if (limit && revIDs.count >= limit)
                 break;
         }
