@@ -55,4 +55,3 @@ int CBLStatusToHTTPStatus( CBLStatus status, NSString** outMessage );
 NSError* CBLStatusToNSError( CBLStatus status, NSURL* url );
 NSError* CBLStatusToNSErrorWithInfo( CBLStatus status, NSURL* url, NSDictionary* extraInfo );
 CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus);
-CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);

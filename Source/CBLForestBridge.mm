@@ -292,6 +292,28 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 
 
 
+CBLStatus CBLStatusFromForestDBStatus(int fdbStatus) {
+    switch (fdbStatus) {
+        case FDB_RESULT_SUCCESS:
+            return kCBLStatusOK;
+        case FDB_RESULT_KEY_NOT_FOUND:
+        case FDB_RESULT_NO_SUCH_FILE:
+            return kCBLStatusNotFound;
+        case FDB_RESULT_RONLY_VIOLATION:
+            return kCBLStatusForbidden;
+        case FDB_RESULT_CHECKSUM_ERROR:
+        case FDB_RESULT_FILE_CORRUPTION:
+        case error::CorruptRevisionData:
+            return kCBLStatusCorruptError;
+        case error::BadRevisionID:
+            return kCBLStatusBadID;
+        default:
+            return kCBLStatusDBError;
+    }
+}
+
+
+
 #pragma mark - TESTS:
 #if DEBUG
 

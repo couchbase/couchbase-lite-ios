@@ -513,7 +513,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
             auto nodes = doc.currentNodes();
             for (auto node = nodes.begin(); node != nodes.end(); ++node) {
                 if ((*node)->isActive()) {
-                    forestdb::slice body = (*node)->readBody();
+                    alloc_slice body = (*node)->readBody();
                     if (body.size > 0) {
                         NSDictionary* rev = [CBLJSON JSONObjectWithData: (NSData*)body
                                                                 options: 0 error: NULL];

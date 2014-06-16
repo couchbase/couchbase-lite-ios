@@ -1,5 +1,5 @@
 //
-//  CBLView+Internal.m
+//  CBLView+Querying.mm
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/8/11.

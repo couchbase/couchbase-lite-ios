@@ -188,12 +188,19 @@ TestCase(CBL_Database_CRUD) {
                  (@{@"ids": @[revDSuffix, rev2Suffix, rev1Suffix],
                     @"start": @3}));
 
+    // Read rev 1 again:
+    readRev = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
+    CAssert(readRev != nil);
+    CAssertEqual(userProperties(readRev.properties), userProperties(rev1.properties));
+
     // Compact the database:
     NSError* error;
     CAssert([db compact: &error]);
 
     // Make sure old rev is missing:
+/* TEMP: Manual compaction is disabled right now
     CAssertNil([db getDocumentWithID: rev1.docID revisionID: rev1.revID]);
+*/
 
     CAssert([db close]);
     
@@ -400,9 +407,9 @@ TestCase(CBL_Database_RevTree) {
                        change = changes[0];
                    }];
 
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
-    NSArray* history = @[rev.revID, @"3-thrice", @"2-too", @"1-won"];
+    NSArray* history = @[rev.revID, @"3-3333", @"2-2222", @"1-1111"];
     change = nil;
     CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil];
     CAssertEq(status, kCBLStatusCreated);
@@ -412,10 +419,10 @@ TestCase(CBL_Database_RevTree) {
     CAssert(!change.inConflict);
 
 
-    CBL_MutableRevision* conflict = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"5-epsilon" deleted: NO];
+    CBL_MutableRevision* conflict = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"5-5555" deleted: NO];
     conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
                                 {@"message", @"yo"});
-    NSArray* conflictHistory = @[conflict.revID, @"4-delta", @"3-gamma", @"2-too", @"1-won"];
+    NSArray* conflictHistory = @[conflict.revID, @"4-4545", @"3-3030", @"2-2222", @"1-1111"];
     change = nil;
     status = [db forceInsert: conflict revisionHistory: conflictHistory source: nil];
     CAssertEq(status, kCBLStatusCreated);
@@ -425,7 +432,7 @@ TestCase(CBL_Database_RevTree) {
     CAssert(change.inConflict);
 
     // Add an unrelated document:
-    CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-ichi" deleted: NO];
+    CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-1010" deleted: NO];
     other.properties = $dict({@"language", @"jp"});
     change = nil;
     status = [db forceInsert: other revisionHistory: @[other.revID] source: nil];
@@ -434,7 +441,7 @@ TestCase(CBL_Database_RevTree) {
     CAssert(!change.inConflict);
 
     // Fetch one of those phantom revisions with no body:
-    CBL_Revision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-too"];
+    CBL_Revision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-2222"];
     CAssertNil(rev2);
     
     // Make sure the revision with the higher revID wins the conflict:
@@ -505,7 +512,7 @@ TestCase(CBL_Database_RevTreeConflict) {
          change = changes[0];
      }];
 
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-won" deleted: NO];
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-1111" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     NSArray* history = @[rev.revID];
     change = nil;
@@ -516,9 +523,9 @@ TestCase(CBL_Database_RevTreeConflict) {
     verifyHistory(db, rev, history, 0);
     CAssertEqual(change, announcement(rev, rev));
 
-    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-foxy" deleted: NO];
+    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
-    history = @[rev.revID, @"3-thrice", @"2-too", @"1-won"];
+    history = @[rev.revID, @"3-3333", @"2-2222", @"1-1111"];
     change = nil;
     status = [db forceInsert: rev revisionHistory: history source: nil];
     CAssertEq(status, kCBLStatusCreated);
@@ -715,11 +722,12 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-static CBL_Revision* putDocWithAttachment(CBLDatabase* db, NSString* attachmentText) {
+static CBL_Revision* putDocWithAttachment(CBLDatabase* db, NSString* docID, NSString* attachmentText) {
     NSString* base64 = [CBLBase64 encode: [attachmentText dataUsingEncoding: NSUTF8StringEncoding]];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                            {@"data", base64})});
-    NSDictionary* props = $dict({@"foo", @1},
+    NSDictionary* props = $dict({@"_id", docID},
+                                {@"foo", @1},
                                 {@"bar", $false},
                                 {@"_attachments", attachmentDict});
     CBLStatus status;
@@ -736,7 +744,7 @@ TestCase(CBL_Database_PutAttachment) {
     CBLDatabase* db = createDB();
     
     // Put a revision that includes an _attachments dict:
-    CBL_Revision* rev1 = putDocWithAttachment(db, @"This is the body of attach1");
+    CBL_Revision* rev1 = putDocWithAttachment(db, nil, @"This is the body of attach1");
     CAssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                                 {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                                 {@"length", @(27)},
@@ -767,7 +775,7 @@ TestCase(CBL_Database_PutAttachment) {
     [db updateAttachment: @"attach" body: blobForData(db, attachv2)
                     type: @"application/foo"
                 encoding: kCBLAttachmentEncodingNone
-                 ofDocID: rev1.docID revID: @"1-bogus"
+                 ofDocID: rev1.docID revID: @"1-deadbeef"
                   status: &status];
     CAssertEq(status, kCBLStatusConflict);
     CBL_Revision* rev2 = [db updateAttachment: @"attach" body: blobForData(db, attachv2)
@@ -864,7 +872,8 @@ TestCase(CBL_Database_GarbageCollectAttachments) {
 
     NSMutableArray* revs = $marray();
     for (int i=0; i<100; i++) {
-        [revs addObject: putDocWithAttachment(db, $sprintf(@"Attachment #%d", i))];
+        [revs addObject: putDocWithAttachment(db, $sprintf(@"doc-%d", i),
+                                              $sprintf(@"Attachment #%d", i))];
     }
     for (int i=0; i<40; i++) {
         CBLStatus status;
@@ -1094,9 +1103,9 @@ TestCase(CBL_Database_FindMissingRevisions) {
     putDoc(db, $dict({@"_id", @"11111"}, {@"_rev", doc1r2.revID}, {@"_deleted", $true}));
     
     // Now call -findMissingRevisions:
-    CBL_Revision* revToFind1 = [[CBL_Revision alloc] initWithDocID: @"11111" revID: @"3-bogus" deleted: NO];
+    CBL_Revision* revToFind1 = [[CBL_Revision alloc] initWithDocID: @"11111" revID: @"3-6060" deleted: NO];
     CBL_Revision* revToFind2 = [[CBL_Revision alloc] initWithDocID: @"22222" revID: doc2r2.revID deleted: NO];
-    CBL_Revision* revToFind3 = [[CBL_Revision alloc] initWithDocID: @"99999" revID: @"9-huh" deleted: NO];
+    CBL_Revision* revToFind3 = [[CBL_Revision alloc] initWithDocID: @"99999" revID: @"9-4141" deleted: NO];
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]];
     CBLStatus status;
     CAssert([db findMissingRevisions: revs status: &status]);

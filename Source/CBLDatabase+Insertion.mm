@@ -281,14 +281,15 @@ using namespace forestdb;
         // Add the revision to the database:
         int status;
         if (!doc.insert(revidBuffer(newRevID), json, putRev.deleted, node, allowConflict, status))
-            return (CBLStatus)status;
+            if (CBLStatusIsError((CBLStatus)status))
+                return (CBLStatus)status;
         doc.prune((unsigned)self.maxRevTreeDepth);
         doc.save(*_forestTransaction);
 
         newRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
         change = [self changeWithNewRevision: newRev doc: doc source: nil];
 
-        return deleting ? kCBLStatusOK : kCBLStatusCreated;
+        return (CBLStatus)status;
     }];
     if (CBLStatusIsError(*outStatus))
         return nil;
@@ -307,6 +308,7 @@ static void convertRevIDs(NSArray* revIDs,
                           std::vector<revidBuffer> &historyBuffers,
                           std::vector<revid> &historyVector)
 {
+    historyBuffers.resize(revIDs.count);
     for (NSString* revID in revIDs) {
         historyBuffers.push_back(revidBuffer(revID));
         historyVector.push_back(historyBuffers.back());
@@ -343,8 +345,6 @@ static void convertRevIDs(NSArray* revIDs,
     CBLStatus status = [self _inTransaction: ^CBLStatus {
         // First get the CBForest doc:
         VersionedDocument doc(_forest, forestdb::slice(docID));
-        if (!doc.exists())
-            return kCBLStatusNotFound;
 
         // Add the revision & ancestry to the doc:
         std::vector<revidBuffer> historyBuffers;
@@ -354,16 +354,19 @@ static void convertRevIDs(NSArray* revIDs,
                                        forestdb::slice(inRev.body.asJSON),
                                        inRev.deleted);
         if (common < 0)
-            return kCBLStatusDBError;
+            return kCBLStatusBadRequest; // generation numbers not in descending order
         else if (common == 0)
             return kCBLStatusOK;      // No-op: No new revisions were inserted.
 
         // Validate against the common ancestor:
         if (([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name])) {
-            BOOL deleted = doc[historyVector[common]]->isDeleted();
-            CBL_Revision* prev = [[CBL_Revision alloc] initWithDocID: docID
-                                                               revID: history[common]
-                                                             deleted: deleted];
+            CBL_Revision* prev;
+            if ((NSUInteger)common < history.count) {
+                BOOL deleted = doc[historyVector[common]]->isDeleted();
+                prev = [[CBL_Revision alloc] initWithDocID: docID
+                                                     revID: history[common]
+                                                   deleted: deleted];
+            }
             NSString* parentRevID = (history.count > 1) ? history[1] : nil;
             CBLStatus status = [self validateRevision: rev
                                      previousRevision: prev

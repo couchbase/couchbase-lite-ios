@@ -12,6 +12,9 @@ extern "C" {
 }
 
 
+CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
+
+
 @interface CBLForestBridge : NSObject
 
 /** Gets the parsed body of a revision, including any metadata specified by the content options. */
