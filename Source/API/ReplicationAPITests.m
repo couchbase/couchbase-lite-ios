@@ -20,6 +20,7 @@
 // This db will get deleted and overwritten during every test.
 #define kPushThenPullDBName @"cbl_replicator_pushpull"
 #define kNDocuments 1000
+#define kAttSize 1*1024
 // This one too.
 #define kEncodedDBName @"cbl_replicator_encoding"
 // This one's never actually read or written to.
@@ -157,6 +158,80 @@ TestCase(CreateReplicators) {
     AssertEqual(repl.docIDs, r3.documentIDs);
     [db.manager close];
 }
+
+TestCase(RunPushReplicationNoSendAttachmentForUpdatedRev) {
+    
+    //RequireTestCase(CreateReplicators);
+    NSURL* remoteDbURL = RemoteTestDBURL(kPushThenPullDBName);
+    if (!remoteDbURL) {
+        Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
+        return;
+    }
+    
+    Log(@"Creating %d documents...", kNDocuments);
+    CBLDatabase* db = createEmptyManagerAndDb();
+    
+    CBLDocument* doc = [db createDocument];
+    
+    NSError* error;
+    CBLSavedRevision *rev1 = [doc putProperties: @{@"dynamic":@1} error: &error];
+    
+    CAssert(!error);
+    
+    CAssert(![db sequenceHasAttachments: rev1.sequence]);
+    
+    unsigned char attachbytes[kAttSize];
+    for(int i=0; i<kAttSize; i++) {
+        attachbytes[i] = 1;
+    }
+    
+    NSData* attach1 = [NSData dataWithBytes:attachbytes length:kAttSize];
+    
+    CBLUnsavedRevision *rev2 = [doc newRevision];
+    [rev2 setAttachmentNamed: @"attach" withContentType: @"text/plain" content:attach1];
+    
+    [rev2 save:&error];
+    
+    CAssert(!error);
+    
+    CAssertEq(rev2.attachments.count, (NSUInteger)1);
+    CAssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"attach"]);
+    
+    Log(@"Pushing 1...");
+    CBLReplication* repl = [db createPushReplication: remoteDbURL];
+    repl.createTarget = NO;
+    [repl start];
+    
+    runReplication(repl, 1);
+    AssertNil(repl.lastError);
+    
+    
+    // Add a third revision that doesn't update the attachment:
+    Log(@"Updating doc to rev3");
+    
+    // copy the document
+    NSMutableDictionary *contents = [doc.properties mutableCopy];
+    
+    // toggle value of check property
+    [contents setObject: @2 forKey: @"dynamic"];
+    
+    // save the updated document
+    [doc putProperties: contents error: &error];
+    
+    CAssert(!error);
+    
+    Log(@"Pushing 2...");
+    repl = [db createPushReplication: remoteDbURL];
+    repl.createTarget = NO;
+    [repl start];
+    
+    runReplication(repl, 1);
+    AssertNil(repl.lastError);
+    
+    
+    [db.manager close];
+}
+
 
 
 TestCase(RunPushReplication) {
