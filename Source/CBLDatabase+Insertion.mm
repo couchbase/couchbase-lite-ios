@@ -215,6 +215,8 @@ using namespace forestdb;
             json = putRev.asCanonicalJSON;
             dispatch_semaphore_signal(jsonSemaphore);
         });
+    } else {
+        json = [NSData dataWithBytes: "{}" length: 2];
     }
 
     *outStatus = [self _inTransaction: ^CBLStatus {

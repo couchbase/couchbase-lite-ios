@@ -23,14 +23,14 @@
     @param outStatus  On return, an HTTP status code indicating success or failure.
     @return  A new CBL_Revision with the docID, revID and sequence filled in (but no body). */
 - (CBL_Revision*) putRevision: (CBL_Revision*)revision
-             prevRevisionID: (NSString*)prevRevID
-              allowConflict: (BOOL)allowConflict
-                     status: (CBLStatus*)outStatus;
+               prevRevisionID: (NSString*)prevRevID
+                allowConflict: (BOOL)allowConflict
+                       status: (CBLStatus*)outStatus;
 
 /** Inserts an already-existing revision replicated from a remote database. It must already have a revision ID. This may create a conflict! The revision's history must be given; ancestor revision IDs that don't already exist locally will create phantom revisions with no content. */
 - (CBLStatus) forceInsert: (CBL_Revision*)rev
-         revisionHistory: (NSArray*)history
-                  source: (NSURL*)source;
+          revisionHistory: (NSArray*)history
+                   source: (NSURL*)source;
 
 /** Parses the _revisions dict from a document into an array of revision ID strings */
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;
@@ -39,6 +39,6 @@
     @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
     @param outResult  On success will point to an NSDictionary with the same form as docsToRev, containing the doc/revision IDs that were actually removed. */
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
-                     result: (NSDictionary**)outResult;
+                      result: (NSDictionary**)outResult;
 
 @end

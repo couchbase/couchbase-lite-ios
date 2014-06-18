@@ -258,7 +258,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     opts.contentOptions = Database::kMetaOnly;
 
     NSUInteger count = 0;
-    for (auto e = _forest->enumerate(forestdb::slice::null, forestdb::slice::null, &opts); e; ++e) {
+    for (auto e = _forest->enumerate(forestdb::slice::null, forestdb::slice::null, opts); e; ++e) {
         VersionedDocument vdoc(_forest, *e);
         if (!vdoc.isDeleted())
             ++count;
@@ -682,7 +682,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     *outStatus = [self _try:^CBLStatus{
-        for (auto e = _forest->enumerate(lastSequence, UINT64_MAX, &forestOpts); e; ++e) {
+        for (auto e = _forest->enumerate(lastSequence, UINT64_MAX, forestOpts); e; ++e) {
             @autoreleasepool {
                 VersionedDocument doc(_forest, *e);
                 NSArray* revIDs;
@@ -834,7 +834,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     auto forestOpts = Database::enumerationOptions::kDefault;
     forestOpts.skip = options->skip;
     forestOpts.limit = options->limit;
-    forestOpts.descending = options->descending;
+//    forestOpts.descending = options->descending;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (!options->includeDocs)
         forestOpts.contentOptions = Database::kMetaOnly;
@@ -844,11 +844,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         std::vector<std::string> docIDs;
         for (NSString* docID in options.keys)
             docIDs.push_back(docID.UTF8String);
-        e = _forest->enumerate(docIDs, &forestOpts);
+        e = _forest->enumerate(docIDs, forestOpts);
     } else {
         e = _forest->enumerate(forestdb::slice((NSString*)options.startKey),
                                forestdb::slice((NSString*)options.endKey),
-                               &forestOpts);
+                               forestOpts);
     }
 
     return ^CBLQueryRow*() {

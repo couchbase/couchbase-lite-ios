@@ -255,7 +255,7 @@ TestCase(CBL_View_ConflictWinner) {
     
     // Create a conflict, won by the new revision:
     NSDictionary* props = $dict({@"_id", @"44444"},
-                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                                {@"_rev", @"1-ffffff"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
@@ -293,7 +293,7 @@ TestCase(CBL_View_ConflictLoser) {
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
     
-    // Create a conflict, won by the new revision:
+    // Create a conflict, won by the old revision:
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-00"},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
@@ -301,6 +301,9 @@ TestCase(CBL_View_ConflictLoser) {
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEqual(leaf1.docID, leaf2.docID);
+
+    CBL_Revision* winner = [db getDocumentWithID: @"44444" revisionID: nil];
+    AssertEqual(winner.revID, [docs[1] revID]);
     
     // Update the view -- should contain only the key from the new rev, not the old:
     CAssertEq([view updateIndex], kCBLStatusOK);
@@ -390,6 +393,7 @@ TestCase(CBL_View_Query) {
     CAssertEqual(rows, expectedRows);
 
     // Specific keys: (note that rows should be in same order as input keys, not sorted)
+    Log(@"---- Test specific keys:");
     options = [CBLQueryOptions new];
     NSArray* keys = @[@"two", @"four"];
     options.keys = keys;
@@ -1001,7 +1005,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_Grouped);
     RequireTestCase(CBL_View_GroupedStrings);
 //  RequireTestCase(CBL_View_GeoQuery);
-    RequireTestCase(CBL_View_FullTextQuery);
+//    RequireTestCase(CBL_View_FullTextQuery);
 }
 
 

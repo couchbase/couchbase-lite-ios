@@ -96,6 +96,7 @@ using namespace forestdb;
     NSMutableDictionary* properties = [CBLJSON JSONObjectWithData: json
                                                           options: NSJSONReadingMutableContainers
                                                             error: NULL];
+    Assert(properties, @"Unable to parse doc from db: %@", json.my_UTF8ToString);
     [self addContentProperties: options into: properties node: node];
     return properties;
 }

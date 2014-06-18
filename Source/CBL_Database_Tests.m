@@ -158,7 +158,13 @@ TestCase(CBL_Database_CRUD) {
     CAssertEq(status, kCBLStatusOK);
     CAssertEqual(revD.docID, rev2.docID);
     CAssert([revD.revID hasPrefix: @"3-"]);
-    
+
+    // Read the deletion revision:
+    readRev = [db getDocumentWithID: revD.docID revisionID: revD.revID];
+    CAssert(readRev);
+    CAssert(readRev.deleted);
+    CAssertEqual(readRev.revID, revD.revID);
+
     // Delete nonexistent doc:
     CBL_Revision* revFake = [[CBL_Revision alloc] initWithDocID: @"fake" revID: nil deleted: YES];
     [db putRevision: revFake prevRevisionID: nil allowConflict: NO status: &status];

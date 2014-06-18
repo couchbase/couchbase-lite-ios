@@ -220,7 +220,6 @@
                      onComplete: (void (^)(CBLQueryEnumerator*, NSError*))onComplete
 {
     LogTo(Query, @"%@: Async query...", self);
-    NSThread *callingThread = [NSThread currentThread];
     NSString* viewName = _view.name;
     CBLQueryOptions *options = self.queryOptions;
     
@@ -246,7 +245,7 @@
             }
         }
 
-        MYOnThread(callingThread, ^{
+        [_database.manager doAsync: ^{
             // Back on original thread, call the onComplete block:
             LogTo(Query, @"%@: ...async query finished (%u rows, status %d)",
                   self, (unsigned)rows.count, status);
@@ -263,7 +262,7 @@
                 error = CBLStatusToNSError(status, nil);
             }
             onComplete(e, error);
-        });
+        }];
     }];
 }
 

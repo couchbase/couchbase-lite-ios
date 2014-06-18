@@ -53,7 +53,7 @@ public:
             if (vdoc.isDeleted())
                 return;
             const RevNode* node = vdoc.currentNode();
-            NSDictionary* doc = [CBLForestBridge bodyOfNode: node options: 0];
+            NSDictionary* doc = [CBLForestBridge bodyOfNode: node options: kCBLIncludeLocalSeq];
             CBLMapEmitBlock emit = ^(id key, id value) {
                 Collatable collKey, collValue;
                 collKey << key;

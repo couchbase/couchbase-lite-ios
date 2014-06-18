@@ -32,6 +32,25 @@ using namespace forestdb;
 #pragma mark - QUERYING:
 
 
+static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQueryOptions* options) {
+    NSMutableArray* rows = $marray();
+    while(true) {
+        CBLQueryRow* row = iter();
+        if (row)
+            [rows addObject: row];
+        else
+            break;
+    }
+    while (!options->inclusiveEnd && rows.count > 0 && $equal([rows[0] key], options.endKey))
+        [rows removeObjectAtIndex: 0];
+    
+    NSEnumerator* e = [rows reverseObjectEnumerator];
+    return ^CBLQueryRow*() {
+        return e.nextObject;
+    };
+}
+
+
 /** Main internal call to query a view. */
 - (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
                                      status: (CBLStatus*)outStatus
@@ -45,6 +64,8 @@ using namespace forestdb;
         iterator = [self _reducedQueryWithOptions: options status: outStatus];
     else
         iterator = [self _regularQueryWithOptions: options status: outStatus];
+    if (options->descending)
+        iterator = reverseIterator(iterator, options);
     LogTo(View, @"Query %@: Returning iterator", _name);
     return iterator;
 }
@@ -298,7 +319,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     Database::enumerationOptions forestOpts = Database::enumerationOptions::kDefault;
     forestOpts.skip = options->skip;
     forestOpts.limit = options->limit;
-    forestOpts.descending = options->descending;
+//    forestOpts.descending = options->descending;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (options.keys) {
         std::vector<Collatable> collatableKeys;
@@ -306,14 +327,20 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             collatableKeys.push_back(Collatable(key));
         return IndexEnumerator(*index,
                                collatableKeys,
-                               &forestOpts);
+                               forestOpts);
     } else {
+        id startKey = options.startKey, endKey = options.endKey;
+        NSString *startKeyDocID = options.startKeyDocID, *endKeyDocID = options.endKeyDocID;
+        if (options->descending) {
+            std::swap(startKey, endKey);
+            std::swap(startKeyDocID, endKeyDocID);
+        }
         return IndexEnumerator(*index,
-                               Collatable(options.startKey),
-                               forestdb::slice(options.startKeyDocID),
-                               Collatable(options.endKey),
-                               forestdb::slice(options.endKeyDocID),
-                               &forestOpts);
+                               Collatable(startKey),
+                               forestdb::slice(startKeyDocID),
+                               Collatable(endKey),
+                               forestdb::slice(endKeyDocID),
+                               forestOpts);
     }
 }
 
