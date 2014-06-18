@@ -464,7 +464,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertEqual(changes.allRevisions, (@[conflict, other]));
     options.includeConflicts = YES;
     changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil status: &status];
-    CAssertEqual(changes.allRevisions, (@[rev, conflict, other]));
+    CAssertEqual(changes.allRevisions, (@[conflict, rev, other]));
 
     // Verify that compaction leaves the document history:
     Assert([db compact: NULL]);

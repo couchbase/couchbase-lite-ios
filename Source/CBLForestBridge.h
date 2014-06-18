@@ -30,6 +30,7 @@ CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
                           options: (CBLContentOptions)options
                              doc: (VersionedDocument&)doc;
 
+/** Returns the revIDs of all current leaf revisions, in descending order of priority. */
 + (NSArray*) getCurrentRevisionIDs: (VersionedDocument&)doc;
 
 /** Returns a revision & its ancestors as CBL_Revision objects, in reverse chronological order. */

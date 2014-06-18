@@ -163,9 +163,6 @@ using namespace forestdb;
     for (auto node = nodes.begin(); node != nodes.end(); ++node)
         if (!(*node)->isDeleted())
             [currentRevIDs addObject: (NSString*)(*node)->revID];
-    [currentRevIDs sortUsingComparator:^NSComparisonResult(id r1, id r2) {
-        return CBLCompareRevIDs(r1, r2);
-    }];
     return currentRevIDs;
 }
 

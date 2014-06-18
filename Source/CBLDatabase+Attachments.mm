@@ -504,7 +504,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         Transaction attachmentTransaction(&attachmentIndex);
 
         LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
-        for (auto e = _forest->enumerate(); e; ++e) {
+        for (DocEnumerator e(_forest); e; ++e) {
             // Since db is assumed to have just been compacted, we know that non-current revisions
             // won't have any bodies. So only scan the current revs.
             VersionedDocument doc(_forest, *e);

@@ -254,11 +254,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (NSUInteger) _documentCount {
-    auto opts = Database::enumerationOptions::kDefault;
+    auto opts = DocEnumerator::enumerationOptions::kDefault;
     opts.contentOptions = Database::kMetaOnly;
 
     NSUInteger count = 0;
-    for (auto e = _forest->enumerate(forestdb::slice::null, forestdb::slice::null, opts); e; ++e) {
+    for (DocEnumerator e(_forest, forestdb::slice::null, forestdb::slice::null, opts); e; ++e) {
         VersionedDocument vdoc(_forest, *e);
         if (!vdoc.isDeleted())
             ++count;
@@ -669,7 +669,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     // Translate options to ForestDB:
     if (!options) options = &kDefaultCBLChangesOptions;
-    auto forestOpts = Database::enumerationOptions::kDefault;
+    auto forestOpts = DocEnumerator::enumerationOptions::kDefault;
     forestOpts.limit = options->limit;
     forestOpts.inclusiveEnd = YES;
     forestOpts.includeDeleted = NO;
@@ -682,7 +682,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     *outStatus = [self _try:^CBLStatus{
-        for (auto e = _forest->enumerate(lastSequence, UINT64_MAX, forestOpts); e; ++e) {
+        for (DocEnumerator e(_forest, lastSequence, UINT64_MAX, forestOpts); e; ++e) {
             @autoreleasepool {
                 VersionedDocument doc(_forest, *e);
                 NSArray* revIDs;
@@ -831,12 +831,12 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 {
     if (!options)
         options = [CBLQueryOptions new];
-    auto forestOpts = Database::enumerationOptions::kDefault;
+    auto forestOpts = DocEnumerator::enumerationOptions::kDefault;
     forestOpts.skip = options->skip;
     forestOpts.limit = options->limit;
-//    forestOpts.descending = options->descending;
+//  forestOpts.descending = options->descending;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
-    if (!options->includeDocs)
+    if (!options->includeDocs && !(options->allDocsMode >= kCBLShowConflicts))
         forestOpts.contentOptions = Database::kMetaOnly;
 
     __block DocEnumerator e;
@@ -844,11 +844,12 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         std::vector<std::string> docIDs;
         for (NSString* docID in options.keys)
             docIDs.push_back(docID.UTF8String);
-        e = _forest->enumerate(docIDs, forestOpts);
+        e = DocEnumerator(_forest, docIDs, forestOpts);
     } else {
-        e = _forest->enumerate(forestdb::slice((NSString*)options.startKey),
-                               forestdb::slice((NSString*)options.endKey),
-                               forestOpts);
+        e = DocEnumerator(_forest,
+                          forestdb::slice((NSString*)options.startKey),
+                          forestdb::slice((NSString*)options.endKey),
+                          forestOpts);
     }
 
     return ^CBLQueryRow*() {
@@ -864,7 +865,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                             docProperties: nil];
             }
             BOOL deleted = doc.isDeleted();
-            if (deleted && options->allDocsMode != kCBLIncludeDeleted)
+            if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
                 continue; // skip this doc
 
             NSString* revID = (NSString*)doc.revID();
