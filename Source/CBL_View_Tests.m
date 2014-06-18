@@ -995,6 +995,7 @@ TestCase(CBL_View_FullTextQuery) {
 
 TestCase(CBLView) {
     RequireTestCase(CBL_View_Query);
+    RequireTestCase(CBL_View_AllDocsQuery);
     RequireTestCase(CBL_View_ChangeMapFn);
     RequireTestCase(CBL_View_QueryStartKeyDocID);
     RequireTestCase(CBL_View_ConflictWinner);

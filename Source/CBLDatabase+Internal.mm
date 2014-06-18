@@ -854,11 +854,19 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     return ^CBLQueryRow*() {
         for (; e; e.next()) {
             VersionedDocument doc(_forest, *e);
+            NSString* docID = (NSString*)doc.docID();
+            if (!doc.exists()) {
+                e.next();
+                return [[CBLQueryRow alloc] initWithDocID: nil
+                                                 sequence: 0
+                                                      key: docID
+                                                    value: nil
+                                            docProperties: nil];
+            }
             BOOL deleted = doc.isDeleted();
             if (deleted && options->allDocsMode != kCBLIncludeDeleted)
                 continue; // skip this doc
 
-            NSString* docID = (NSString*)doc.docID();
             NSString* revID = (NSString*)doc.revID();
             SequenceNumber sequence = doc.sequence();
 
@@ -884,6 +892,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                         {@"_conflicts", conflicts});  // (not found in CouchDB)
             LogTo(ViewVerbose, @"AllDocs: Found row with key=\"%@\", value=%@",
                   docID, value);
+            e.next();
             return [[CBLQueryRow alloc] initWithDocID: docID
                                              sequence: sequence
                                                   key: docID
