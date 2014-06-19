@@ -204,9 +204,7 @@ TestCase(CBL_Database_CRUD) {
     CAssert([db compact: &error]);
 
     // Make sure old rev is missing:
-/* TEMP: Manual compaction is disabled right now
     CAssertNil([db getDocumentWithID: rev1.docID revisionID: rev1.revID]);
-*/
 
     CAssert([db close]);
     
