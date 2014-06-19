@@ -95,6 +95,17 @@ TestCase(API_Manager) {
     CBLDocument* doc = [db createDocument];
     CAssert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
     [ro close];
+
+    RequireTestCase(API_ExcludedFromBackup);
+}
+
+
+TestCase(API_ExcludedFromBackup) {
+    CBLManager* dbmgr = [CBLManager createEmptyAtTemporaryPath: @"ExcludedFromBackup"];
+    AssertEq(dbmgr.excludedFromBackup, NO);
+    dbmgr.excludedFromBackup = YES;
+    AssertEq(dbmgr.excludedFromBackup, YES);
+    [dbmgr close];
 }
 
 

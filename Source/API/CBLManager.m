@@ -276,6 +276,27 @@ static CBLManager* sInstance;
 }
 
 
+- (BOOL) excludedFromBackup {
+    NSNumber* excluded;
+    NSError* error;
+    if (![[NSURL fileURLWithPath: _dir] getResourceValue: &excluded
+                                                  forKey: NSURLIsExcludedFromBackupKey
+                                                   error: &error]) {
+        Warn(@"%@: -excludedFromBackup failed: %@", self, error);
+    }
+    return excluded.boolValue;
+}
+
+- (void) setExcludedFromBackup: (BOOL)exclude {
+    NSError* error;
+    if (![[NSURL fileURLWithPath: _dir] setResourceValue: @(exclude)
+                                                  forKey: NSURLIsExcludedFromBackupKey
+                                                   error: &error]) {
+        Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error);
+    }
+}
+
+
 - (void) doAsync: (void (^)())block {
     if (_dispatchQueue)
         dispatch_async(_dispatchQueue, block);
