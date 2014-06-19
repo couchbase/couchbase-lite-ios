@@ -689,12 +689,12 @@ TestCase(CBL_Router_OpenRevs) {
                                     {@"_rev", revID2},
                                     {@"message", @"goodbye"})})
                 ));
-    NSString* uri = $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"bogus");
+    NSString* uri = $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"666-deadbeef");
     Send(server, @"GET", uri, kCBLStatusOK,
          $array($dict({@"ok", $dict({@"_id", @"doc1"},
                                     {@"_rev", revID1},
                                     {@"message", @"hello"})}),
-                $dict({@"missing", @"bogus"})
+                $dict({@"missing", @"666-deadbeef"})
                 ));
 
     // We've been forcing JSON, but verify that open_revs defaults to multipart:
@@ -724,16 +724,16 @@ TestCase(CBL_Router_RevsDiff) {
     NSString* doc1r3ID = doc1r3[@"rev"];
     
     SendBody(server, @"POST", @"/db/_revs_diff",
-             $dict({@"11111", @[doc1r2ID, @"3-foo"]},
+             $dict({@"11111", @[doc1r2ID, @"3-f000"]},
                    {@"22222", @[doc2r1ID]},
-                   {@"33333", @[@"10-bar"]},
-                   {@"99999", @[@"6-six"]}),
+                   {@"33333", @[@"10-badbad"]},
+                   {@"99999", @[@"6-666666"]}),
              kCBLStatusOK,
-             $dict({@"11111", $dict({@"missing", @[@"3-foo"]},
+             $dict({@"11111", $dict({@"missing", @[@"3-f000"]},
                                     {@"possible_ancestors", @[doc1r2ID, doc1r1ID]})},
-                   {@"33333", $dict({@"missing", @[@"10-bar"]},
+                   {@"33333", $dict({@"missing", @[@"10-badbad"]},
                                     {@"possible_ancestors", @[doc3r1ID]})},
-                   {@"99999", $dict({@"missing", @[@"6-six"]})}
+                   {@"99999", $dict({@"missing", @[@"6-666666"]})}
                    ));
     
     // Compact the database -- this will null out the JSON of doc1r1 & doc1r2,
@@ -741,16 +741,16 @@ TestCase(CBL_Router_RevsDiff) {
     Send(server, @"POST", @"/db/_compact", kCBLStatusAccepted, nil);
     
     SendBody(server, @"POST", @"/db/_revs_diff",
-             $dict({@"11111", @[doc1r2ID, @"4-foo"]},
+             $dict({@"11111", @[doc1r2ID, @"4-f000"]},
                    {@"22222", @[doc2r1ID]},
-                   {@"33333", @[@"10-bar"]},
-                   {@"99999", @[@"6-six"]}),
+                   {@"33333", @[@"10-badbad"]},
+                   {@"99999", @[@"6-666666"]}),
              kCBLStatusOK,
-             $dict({@"11111", $dict({@"missing", @[@"4-foo"]},
+             $dict({@"11111", $dict({@"missing", @[@"4-f000"]},
                                     {@"possible_ancestors", @[doc1r3ID]})},
-                   {@"33333", $dict({@"missing", @[@"10-bar"]},
+                   {@"33333", $dict({@"missing", @[@"10-badbad"]},
                                     {@"possible_ancestors", @[doc3r1ID]})},
-                   {@"99999", $dict({@"missing", @[@"6-six"]})}
+                   {@"99999", $dict({@"missing", @[@"6-666666"]})}
                    ));
 
     // Check the revision history using _revs_info:

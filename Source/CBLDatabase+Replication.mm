@@ -112,20 +112,23 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
                        status: (CBLStatus*)outStatus
 {
     [revs sortByDocID];
-    NSString* lastDocID = nil;
-    VersionedDocument* doc = NULL;
-    for (NSInteger i = revs.count-1; i >= 0; i--) {
-        CBL_Revision* rev = revs[i];
-        if (!$equal(rev.docID, lastDocID)) {
-            lastDocID = rev.docID;
-            delete doc;
-            doc = new VersionedDocument(_forest, forestdb::slice(lastDocID));
+    __block VersionedDocument* doc = NULL;
+    *outStatus = [self _try: ^CBLStatus {
+        NSString* lastDocID = nil;
+        for (NSInteger i = revs.count-1; i >= 0; i--) {
+            CBL_Revision* rev = revs[i];
+            if (!$equal(rev.docID, lastDocID)) {
+                lastDocID = rev.docID;
+                delete doc;
+                doc = new VersionedDocument(_forest, forestdb::slice(lastDocID));
+            }
+            if (doc && doc->get(revidBuffer(rev.revID)) != NULL)
+                [revs removeRev: rev];
         }
-        if (doc && doc->get(revidBuffer(rev.revID)) != NULL)
-            [revs removeRev: rev];
-    }
+        return kCBLStatusOK;
+    }];
     delete doc;
-    return YES;
+    return !CBLStatusIsError(*outStatus);
 }
 
 

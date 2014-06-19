@@ -682,7 +682,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     *outStatus = [self _try:^CBLStatus{
-        for (DocEnumerator e(_forest, lastSequence, UINT64_MAX, forestOpts); e; ++e) {
+        for (DocEnumerator e(_forest, lastSequence+1, UINT64_MAX, forestOpts); e; ++e) {
             @autoreleasepool {
                 VersionedDocument doc(_forest, *e);
                 NSArray* revIDs;
