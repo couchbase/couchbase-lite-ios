@@ -95,7 +95,7 @@ static size_t estimate(id object) {
     } else if ([object isKindOfClass: [NSDictionary class]]) {
         size_t size = kObjectOverhead + sizeof(NSUInteger);
         for (NSString* key in object)
-            size += (kObjectOverhead + 2*[key length]) + estimate([object objectForKey: key]);
+            size += (kObjectOverhead + 2*[key length]) + estimate(object[key]);
         return size;
     } else if ([object isKindOfClass: [NSArray class]]) {
         size_t size = kObjectOverhead + sizeof(NSUInteger);
@@ -183,14 +183,14 @@ static NSDateFormatter* getISO8601Formatter() {
                 return nil;
             key = [key stringByReplacingOccurrencesOfString: @"~1" withString: @"/"];
             key = [key stringByReplacingOccurrencesOfString: @"~0" withString: @"~"];
-            object = [object objectForKey: key];
+            object = object[key];
             if (!object)
                 return nil;
         } else if ([object isKindOfClass: [NSArray class]]) {
             int index;
             if (![scanner scanInt: &index] || index < 0 || index >= (int)[object count])
                 return nil;
-            object = [object objectAtIndex: index];
+            object = object[index];
         } else {
             return nil;
         }
@@ -224,11 +224,11 @@ static NSDateFormatter* getISO8601Formatter() {
 }
 
 - (id)objectAtIndex:(NSUInteger)index {
-    id obj = [_array objectAtIndex: index];
+    id obj = _array[index];
     if ([obj isKindOfClass: [NSData class]]) {
         obj = [CBLJSON JSONObjectWithData: obj options: CBLJSONReadingAllowFragments
                                    error: nil];
-        [_array replaceObjectAtIndex: index withObject: obj];
+        _array[index] = obj;
     }
     return obj;
 }

@@ -150,7 +150,11 @@
 
 /** Designated initializer. Do not call directly except from subclass initializers; to create a new instance call +modelForDocument: instead.
     @param document  The document. Nil if this is created new (-init was called). */
-- (instancetype) initWithDocument: (CBLDocument*)document;
+- (instancetype) initWithDocument: (CBLDocument*)document
+#ifdef NS_DESIGNATED_INITIALIZER
+NS_DESIGNATED_INITIALIZER
+#endif
+;
 
 /** The document ID to use when creating a new document.
     Default is nil, which means to assign no ID (the server will assign one). */

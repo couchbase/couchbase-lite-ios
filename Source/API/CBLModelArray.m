@@ -65,7 +65,7 @@
 }
 
 - (id)objectAtIndex:(NSUInteger)index {
-    NSString* docID = $cast(NSString, [_docIDs objectAtIndex: index]);
+    NSString* docID = $cast(NSString, _docIDs[index]);
     //Log(@"%@<%p> objectAtIndex: %u = %@", self.class, self, (unsigned)index, docID);
     return [_owner modelWithDocID: docID forProperty: _property ofClass: _itemClass];
 }
