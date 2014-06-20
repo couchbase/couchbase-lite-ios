@@ -254,7 +254,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (NSUInteger) _documentCount {
-    auto opts = DocEnumerator::enumerationOptions::kDefault;
+    auto opts = DocEnumerator::Options::kDefault;
     opts.contentOptions = Database::kMetaOnly;
 
     NSUInteger count = 0;
@@ -669,7 +669,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     // Translate options to ForestDB:
     if (!options) options = &kDefaultCBLChangesOptions;
-    auto forestOpts = DocEnumerator::enumerationOptions::kDefault;
+    auto forestOpts = DocEnumerator::Options::kDefault;
     forestOpts.limit = options->limit;
     forestOpts.inclusiveEnd = YES;
     forestOpts.includeDeleted = NO;
@@ -831,7 +831,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 {
     if (!options)
         options = [CBLQueryOptions new];
-    auto forestOpts = DocEnumerator::enumerationOptions::kDefault;
+    auto forestOpts = DocEnumerator::Options::kDefault;
     forestOpts.skip = options->skip;
     forestOpts.limit = options->limit;
 //  forestOpts.descending = options->descending;

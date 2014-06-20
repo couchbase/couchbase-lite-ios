@@ -316,7 +316,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 {
     MapReduceIndex* index = self.index;
     Assert(index);
-    DocEnumerator::enumerationOptions forestOpts = DocEnumerator::enumerationOptions::kDefault;
+    DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
     forestOpts.skip = options->skip;
     forestOpts.limit = options->limit;
 //    forestOpts.descending = options->descending;
