@@ -101,6 +101,16 @@
 
 #pragma mark - PROPERTIES & ATTACHMENTS:
 
+/** 
+    With CBLNestedModels, we may want to the model to not clear nested models that have been gotten
+    but not yet changed. Allows classes that hold onto a CBLModel to freely allow other classes to hold
+    properties that CBLNestedModels without fear that the CBLNestedModel may be dealloc'd under low memory conditions.
+ 
+    YES (Default) - will hold all properties and not clear any from the cache if they have been gotten
+    NO - will clear any properties that have not changed
+ */
+- (void)shouldHoldAllProperties:(BOOL)holdAllProperties;
+
 /** Gets a property by name.
     You can use this for document properties that you haven't added @@property declarations for. */
 - (id) getValueOfProperty: (NSString*)property                          __attribute__((nonnull));

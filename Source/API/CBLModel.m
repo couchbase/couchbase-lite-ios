@@ -45,12 +45,7 @@
             LogTo(CBLModel, @"%@ init", self);
         }
         
-#if TARGET_OS_IPHONE
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(removeUnchangedCachedProperties:)
-                                                     name:UIApplicationDidReceiveMemoryWarningNotification
-                                                   object:nil];
-#endif
+        [self shouldHoldAllProperties:YES];
     }
     return self;
 }
@@ -93,11 +88,8 @@
         Warn(@"%@ dealloced with unsaved changes!", self); // should be impossible
     _document.modelObject = nil;
     
-#if TARGET_OS_IPHONE
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIApplicationDidReceiveMemoryWarningNotification
-                                                  object:nil];
-#endif
+    // Clears notification observer on ios
+    [self shouldHoldAllProperties:YES];
 }
 
 
@@ -524,6 +516,22 @@
     }
     return value;
 }
+
+- (void)shouldHoldAllProperties:(BOOL)holdAllProperties {
+#if TARGET_OS_IPHONE
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIApplicationDidReceiveMemoryWarningNotification
+                                                  object:nil];
+    
+    if(!holdAllProperties) {
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(removeUnchangedCachedProperties:)
+                                                     name:UIApplicationDidReceiveMemoryWarningNotification
+                                                   object:nil];
+    }
+#endif
+}
+
 
 - (void) removeUnchangedCachedProperties: (NSNotification*)notification {
     // Remove unchanged cached values in _properties:
