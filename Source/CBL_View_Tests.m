@@ -878,6 +878,7 @@ TestCase(CBL_View_LinkedDocs) {
 }
 
 
+#if 0
 TestCase(CBL_View_FullTextQuery) {
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
@@ -915,8 +916,6 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEq(rows.count, 1u);
     CAssertEqual([rows[0] documentID], @"33333");
 
-
-#if 0
     CBLQueryOptions *options = [CBLQueryOptions new];
     options.fullTextQuery = @"stormy OR dog";
     options->fullTextRanking = NO;
@@ -988,9 +987,9 @@ TestCase(CBL_View_FullTextQuery) {
                                 {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rowIter), expectedRows);
-#endif
     CAssert([db close]);
 }
+#endif
 
 
 TestCase(CBLView) {

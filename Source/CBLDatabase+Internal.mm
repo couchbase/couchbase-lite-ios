@@ -549,7 +549,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             if (node) {
                 const RevNode* parentNode = node->parent();
                 if (parentNode) {
-                    NSString* parentRevID = (NSString*)(forestdb::slice)parentNode->revID;
+                    NSString* parentRevID = (NSString*)parentNode->revID;
                     parent = [[CBL_Revision alloc] initWithDocID: rev.docID
                                                            revID: parentRevID
                                                          deleted: parentNode->isDeleted()];

@@ -136,7 +136,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     // response arrives _db will be nil, so there won't be any way to save the checkpoint locally.
     // To avoid that, pre-emptively save the local checkpoint now.
     if (_savingCheckpoint && _lastSequence)
-        [_db setLastSequence: _lastSequence withCheckpointID: self.remoteCheckpointDocID];
+        [_db setLastSequence: _lastSequence.description withCheckpointID: self.remoteCheckpointDocID];
     _db = nil;
 }
 
@@ -923,7 +923,7 @@ static BOOL sOnlyTrustAnchorCerts;
                       if (rev)
                           body[@"_rev"] = rev;
                       self.remoteCheckpoint = body;
-                      [db setLastSequence: _lastSequence withCheckpointID: checkpointID];
+                      [db setLastSequence: _lastSequence.description withCheckpointID: checkpointID];
                   }
                   if (_overdueForSave)
                       [self saveLastSequence];      // start a save that was waiting on me
