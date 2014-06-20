@@ -14,7 +14,6 @@
 //  and limitations under the License.
 
 #import "CBLStatus.h"
-#import <CBForest/forestdb.h>
 
 
 NSString* const CBLHTTPErrorDomain = @"CBLHTTP";
