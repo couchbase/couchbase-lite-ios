@@ -319,6 +319,21 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
+- (BOOL) suspended {
+    NSNumber* result = [_database.manager.backgroundServer waitForDatabaseManager: ^(CBLManager* m){
+        return @(_bg_replicator.suspended);
+    }];
+    return result.boolValue;
+}
+
+
+- (void) setSuspended: (BOOL)suspended {
+    [self tellDatabaseManager:^(CBLManager* dbmgr) {
+        _bg_replicator.suspended = suspended;
+    }];
+}
+
+
 - (void) updateStatus: (CBLReplicationStatus)status
                 error: (NSError*)error
             processed: (NSUInteger)changesProcessed
