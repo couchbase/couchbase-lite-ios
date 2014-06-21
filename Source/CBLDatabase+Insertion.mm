@@ -153,12 +153,12 @@ using namespace forestdb;
                                       source: (NSURL*)source
 {
     CBL_Revision* winningRev = inRev;
-    const RevNode* winningNode = doc.currentNode();
-    NSString* winningRevID = (NSString*)winningNode->revID;
+    const Revision* winningRevision = doc.currentRevision();
+    NSString* winningRevID = (NSString*)winningRevision->revID;
     if (!$equal(winningRevID, inRev.revID)) {
         winningRev = [[CBL_Revision alloc] initWithDocID: inRev.docID
                                                    revID: winningRevID
-                                                 deleted: winningNode->isDeleted()];
+                                                 deleted: winningRevision->isDeleted()];
     }
     return [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
                                             winningRevision: winningRev
@@ -222,14 +222,14 @@ using namespace forestdb;
     *outStatus = [self _inTransaction: ^CBLStatus {
         // Get the ForestDB document:
         VersionedDocument doc(_forest, forestdb::slice(docID));
-        const RevNode* node;
+        const Revision* revNode;
 
         if (prevRevID) {
             // Updating an existing revision; make sure it exists and is a leaf:
-            node = doc.get(revidBuffer(prevRevID));
-            if (!node)
+            revNode = doc.get(revidBuffer(prevRevID));
+            if (!revNode)
                 return kCBLStatusNotFound;
-            else if (!allowConflict && !node->isLeaf())
+            else if (!allowConflict && !revNode->isLeaf())
                 return kCBLStatusConflict;
         } else {
             // No parent revision given:
@@ -238,12 +238,12 @@ using namespace forestdb;
                 return doc.exists() ? kCBLStatusConflict : kCBLStatusNotFound;
             }
             // If doc exists, current rev must be in a deleted state or there will be a conflict:
-            node = doc.currentNode();
-            if (node) {
-                if (node->isDeleted()) {
+            revNode = doc.currentRevision();
+            if (revNode) {
+                if (revNode->isDeleted()) {
                     // New rev will be child of the tombstone:
                     // (T0D0: Write a horror novel called "Child Of The Tombstone"!)
-                    prevRevID = (NSString*)node->revID;
+                    prevRevID = (NSString*)revNode->revID;
                 } else if (!allowConflict) {
                     return kCBLStatusConflict;
                 }
@@ -257,7 +257,7 @@ using namespace forestdb;
             if (prevRevID) {
                 prevRev = [[CBL_Revision alloc] initWithDocID: docID
                                                         revID: prevRevID
-                                                      deleted: node->isDeleted()];
+                                                      deleted: revNode->isDeleted()];
             }
             CBLStatus status = [self validateRevision: fakeNewRev
                                      previousRevision: prevRev
@@ -282,7 +282,7 @@ using namespace forestdb;
 
         // Add the revision to the database:
         int status;
-        if (!doc.insert(revidBuffer(newRevID), json, putRev.deleted, node, allowConflict, status))
+        if (!doc.insert(revidBuffer(newRevID), json, putRev.deleted, revNode, allowConflict, status))
             if (CBLStatusIsError((CBLStatus)status))
                 return (CBLStatus)status;
         doc.prune((unsigned)self.maxRevTreeDepth);

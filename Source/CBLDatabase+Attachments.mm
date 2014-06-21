@@ -510,10 +510,10 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
             VersionedDocument doc(_forest, *e);
             if (doc.isDeleted())
                 continue;
-            auto nodes = doc.currentNodes();
-            for (auto node = nodes.begin(); node != nodes.end(); ++node) {
-                if ((*node)->isActive()) {
-                    alloc_slice body = (*node)->readBody();
+            auto revNodes = doc.currentRevisions();
+            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
+                if ((*revNode)->isActive()) {
+                    alloc_slice body = (*revNode)->readBody();
                     if (body.size > 0) {
                         NSDictionary* rev = [CBLJSON JSONObjectWithData: (NSData*)body
                                                                 options: 0 error: NULL];

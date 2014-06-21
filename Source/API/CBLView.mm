@@ -52,7 +52,7 @@ public:
             VersionedDocument vdoc(db, cppDoc);
             if (vdoc.isDeleted())
                 return;
-            const RevNode* node = vdoc.currentNode();
+            const Revision* node = vdoc.currentRevision();
             NSDictionary* doc = [CBLForestBridge bodyOfNode: node options: kCBLIncludeLocalSeq];
             CBLMapEmitBlock emit = ^(id key, id value) {
                 Collatable collKey, collValue;

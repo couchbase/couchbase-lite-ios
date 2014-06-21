@@ -14,9 +14,9 @@ using namespace forestdb;
 @implementation CBLForestBridge
 
 
-+ (NSData*) dataOfNode: (const RevNode*)node {
++ (NSData*) dataOfNode: (const Revision*)rev {
     try {
-        return (NSData*)node->readBody();
+        return (NSData*)rev->readBody();
     } catch (...) {
         return nil;
     }
@@ -29,14 +29,14 @@ using namespace forestdb;
 {
     CBL_MutableRevision* rev;
     NSString* docID = (NSString*)doc.docID();
-    if (doc.nodesAvailable()) {
-        const RevNode* node = doc.get(revidBuffer(revID));
-        if (!node)
+    if (doc.revsAvailable()) {
+        const Revision* revNode = doc.get(revidBuffer(revID));
+        if (!revNode)
             return nil;
         rev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                    revID: revID
-                                                 deleted: node->isDeleted()];
-        rev.sequence = node->sequence;
+                                                 deleted: revNode->isDeleted()];
+        rev.sequence = revNode->sequence;
     } else {
         Assert(revID == nil || $equal(revID, (NSString*)doc.revID()));
         rev = [[CBL_MutableRevision alloc] initWithDocID: docID
@@ -58,20 +58,20 @@ using namespace forestdb;
     if (options == kCBLNoBody)
         return YES;
 
-    const RevNode* node = doc.get(revidBuffer(rev.revID));
-    if (!node)
+    const Revision* revNode = doc.get(revidBuffer(rev.revID));
+    if (!revNode)
         return NO;
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = [self dataOfNode: node];
+        json = [self dataOfNode: revNode];
         if (!json)
             return NO;
     }
 
-    rev.sequence = node->sequence;
+    rev.sequence = revNode->sequence;
 
     NSMutableDictionary* extra = $mdict();
-    [self addContentProperties: options into: extra node: node];
+    [self addContentProperties: options into: extra rev: revNode];
     if (json.length > 0)
         rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
     else
@@ -80,7 +80,7 @@ using namespace forestdb;
 }
 
 
-+ (NSDictionary*) bodyOfNode: (const RevNode*)node
++ (NSDictionary*) bodyOfNode: (const Revision*)rev
                      options: (CBLContentOptions)options
 {
     // If caller wants no body and no metadata props, this is a no-op:
@@ -89,7 +89,7 @@ using namespace forestdb;
 
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = [self dataOfNode: node];
+        json = [self dataOfNode: rev];
         if (!json)
             return nil;
     }
@@ -97,54 +97,54 @@ using namespace forestdb;
                                                           options: NSJSONReadingMutableContainers
                                                             error: NULL];
     Assert(properties, @"Unable to parse doc from db: %@", json.my_UTF8ToString);
-    [self addContentProperties: options into: properties node: node];
+    [self addContentProperties: options into: properties rev: rev];
     return properties;
 }
 
 
 + (void) addContentProperties: (CBLContentOptions)options
                          into: (NSMutableDictionary*)dst
-                         node: (const RevNode*)node
+                         rev: (const Revision*)rev
 {
-    NSString* revID = (NSString*)node->revID;
+    NSString* revID = (NSString*)rev->revID;
     Assert(revID);
-    const VersionedDocument* doc = (const VersionedDocument*)node->owner;
+    const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
     dst[@"_id"] = (NSString*)doc->docID();
     dst[@"_rev"] = revID;
 
-    if (node->isDeleted())
+    if (rev->isDeleted())
         dst[@"_deleted"] = $true;
 
     // Get more optional stuff to put in the properties:
     if (options & kCBLIncludeLocalSeq)
-        dst[@"_local_seq"] = @(node->sequence);
+        dst[@"_local_seq"] = @(rev->sequence);
 
     if (options & kCBLIncludeRevs)
-        dst[@"_revisions"] = [self getRevisionHistoryOfNode: node startingFromAnyOf: nil];
+        dst[@"_revisions"] = [self getRevisionHistoryOfNode: rev startingFromAnyOf: nil];
 
     if (options & kCBLIncludeRevsInfo) {
-        dst[@"_revs_info"] = [self mapHistoryOfNode: node
-                                            through: ^id(const RevNode *node)
+        dst[@"_revs_info"] = [self mapHistoryOfNode: rev
+                                            through: ^id(const Revision *rev)
         {
             NSString* status = @"available";
-            if (node->isDeleted())
+            if (rev->isDeleted())
                 status = @"deleted";
-            else if (!node->isBodyAvailable())
+            else if (!rev->isBodyAvailable())
                 status = @"missing";
-            return $dict({@"rev", (NSString*)node->revID},
+            return $dict({@"rev", (NSString*)rev->revID},
                          {@"status", status});
         }];
     }
 
     if (options & kCBLIncludeConflicts) {
-        auto nodes = doc->currentNodes();
-        if (nodes.size() > 1) {
+        auto revs = doc->currentRevisions();
+        if (revs.size() > 1) {
             NSMutableArray* conflicts = $marray();
-            for (auto node = nodes.begin(); node != nodes.end(); ++node) {
-                if (!(*node)->isDeleted()) {
-                    NSString* nodeRevID = (NSString*)(*node)->revID;
-                    if (!$equal(nodeRevID, revID))
-                        [conflicts addObject: nodeRevID];
+            for (auto rev = revs.begin(); rev != revs.end(); ++rev) {
+                if (!(*rev)->isDeleted()) {
+                    NSString* revRevID = (NSString*)(*rev)->revID;
+                    if (!$equal(revRevID, revID))
+                        [conflicts addObject: revRevID];
                 }
             }
             if (conflicts.count > 0)
@@ -159,44 +159,44 @@ using namespace forestdb;
 
 + (NSArray*) getCurrentRevisionIDs: (VersionedDocument&)doc {
     NSMutableArray* currentRevIDs = $marray();
-    auto nodes = doc.currentNodes();
-    for (auto node = nodes.begin(); node != nodes.end(); ++node)
-        if (!(*node)->isDeleted())
-            [currentRevIDs addObject: (NSString*)(*node)->revID];
+    auto revs = doc.currentRevisions();
+    for (auto rev = revs.begin(); rev != revs.end(); ++rev)
+        if (!(*rev)->isDeleted())
+            [currentRevIDs addObject: (NSString*)(*rev)->revID];
     return currentRevIDs;
 }
 
 
-+ (NSArray*) mapHistoryOfNode: (const RevNode*)node
-                      through: (id(^)(const RevNode*))block
++ (NSArray*) mapHistoryOfNode: (const Revision*)rev
+                      through: (id(^)(const Revision*))block
 {
     NSMutableArray* history = $marray();
-    for (; node; node = node->parent())
-        [history addObject: block(node)];
+    for (; rev; rev = rev->parent())
+        [history addObject: block(rev)];
     return history;
 }
 
 
-+ (NSArray*) getRevisionHistory: (const RevNode*)node
++ (NSArray*) getRevisionHistory: (const Revision*)revNode
 {
-    const VersionedDocument* doc = (const VersionedDocument*)node->owner;
+    const VersionedDocument* doc = (const VersionedDocument*)revNode->owner;
     NSString* docID = (NSString*)doc->docID();
-    return [self mapHistoryOfNode: node
-                          through: ^id(const RevNode *node)
+    return [self mapHistoryOfNode: revNode
+                          through: ^id(const Revision *ancestor)
     {
         CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                                        revID:(NSString*)node->revID
-                                                                      deleted: node->isDeleted()];
-        rev.missing = !node->isBodyAvailable();
+                                                                revID: (NSString*)ancestor->revID
+                                                              deleted: ancestor->isDeleted()];
+        rev.missing = !ancestor->isBodyAvailable();
         return rev;
     }];
 }
 
 
-+ (NSDictionary*) getRevisionHistoryOfNode: (const RevNode*)node
++ (NSDictionary*) getRevisionHistoryOfNode: (const Revision*)rev
                          startingFromAnyOf: (NSArray*)ancestorRevIDs
 {
-    NSArray* history = [self getRevisionHistory: node]; // (this is in reverse order, newest..oldest
+    NSArray* history = [self getRevisionHistory: rev]; // (this is in reverse order, newest..oldest
     if (ancestorRevIDs.count > 0) {
         NSUInteger n = history.count;
         for (NSUInteger i = 0; i < n; ++i) {
@@ -252,11 +252,11 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 
     NSMutableArray* revIDs = $marray();
 
-    auto allNodes = doc.allNodes();
-    for (auto node = allNodes.begin(); node != allNodes.end(); ++node) {
-        if (node->revID.generation() < generation
-                    && !node->isDeleted() && node->isBodyAvailable()) {
-            [revIDs addObject: (NSString*)node->revID];
+    auto allRevisions = doc.allRevisions();
+    for (auto rev = allRevisions.begin(); rev != allRevisions.end(); ++rev) {
+        if (rev->revID.generation() < generation
+                    && !rev->isDeleted() && rev->isBodyAvailable()) {
+            [revIDs addObject: (NSString*)rev->revID];
             if (limit && revIDs.count >= limit)
                 break;
         }

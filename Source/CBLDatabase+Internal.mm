@@ -422,7 +422,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #pragma mark - GETTING DOCUMENTS:
 
 
-- (const RevNode*) _forestRevNodeWithDoc: (VersionedDocument&)doc
+- (const Revision*) _forestRevisionWithDoc: (VersionedDocument&)doc
                                    revID: (NSString*)revID
 {
     return doc.get(revidBuffer(revID));
@@ -441,10 +441,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             return kCBLStatusNotFound;
         NSString* revID = inRevID;
         if (revID == nil) {
-            const RevNode* node = doc.currentNode();
-            if (!node || node->isDeleted())
+            const Revision* rev = doc.currentRevision();
+            if (!rev || rev->isDeleted())
                 return kCBLStatusDeleted;
-            revID = (NSString*)node->revID;
+            revID = (NSString*)rev->revID;
         }
 
         result = [CBLForestBridge revisionObjectFromForestDoc: doc
@@ -519,9 +519,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         VersionedDocument doc(_forest, rev.docID);
         if (!doc.exists())
             return kCBLStatusNotFound;
-        const RevNode* node = doc.get(revidBuffer(rev.revID));
-        if (node)
-            sequence = node->sequence;
+        const Revision* revNode = doc.get(revidBuffer(rev.revID));
+        if (revNode)
+            sequence = revNode->sequence;
         if (sequence > 0)
             rev.sequence = sequence;
         return kCBLStatusOK;
@@ -545,14 +545,14 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     [self _try: ^{
         VersionedDocument doc(_forest, rev.docID);
         if (doc.exists()) {
-            const RevNode* node = [self _forestRevNodeWithDoc: doc revID: rev.revID];
-            if (node) {
-                const RevNode* parentNode = node->parent();
-                if (parentNode) {
-                    NSString* parentRevID = (NSString*)parentNode->revID;
+            const Revision* revNode = [self _forestRevisionWithDoc: doc revID: rev.revID];
+            if (revNode) {
+                const Revision* parentRevision = revNode->parent();
+                if (parentRevision) {
+                    NSString* parentRevID = (NSString*)parentRevision->revID;
                     parent = [[CBL_Revision alloc] initWithDocID: rev.docID
                                                            revID: parentRevID
-                                                         deleted: parentNode->isDeleted()];
+                                                         deleted: parentRevision->isDeleted()];
                 }
             }
         }
@@ -573,18 +573,18 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
         revs = [[CBL_RevisionList alloc] init];
         if (onlyCurrent) {
-            auto nodes = doc.currentNodes();
-            for (auto node = nodes.begin(); node != nodes.end(); ++node) {
+            auto revNodes = doc.currentRevisions();
+            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
                 [revs addRev: [[CBL_Revision alloc] initWithDocID: docID
-                                                            revID: (NSString*)(*node)->revID
-                                                          deleted: (*node)->isDeleted()]];
+                                                            revID: (NSString*)(*revNode)->revID
+                                                          deleted: (*revNode)->isDeleted()]];
             }
         } else {
-            auto nodes = doc.allNodes();
-            for (auto node = nodes.begin(); node != nodes.end(); ++node) {
+            auto revNodes = doc.allRevisions();
+            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
                 [revs addRev: [[CBL_Revision alloc] initWithDocID: docID
-                                                            revID: (NSString*)node->revID
-                                                          deleted: node->isDeleted()]];
+                                                            revID: (NSString*)revNode->revID
+                                                          deleted: revNode->isDeleted()]];
             }
         }
         return kCBLStatusOK;
@@ -854,6 +854,13 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
     return ^CBLQueryRow*() {
         for (; e; e.next()) {
+            VersionedDocument::Flags flags = VersionedDocument::flagsOfDocument(*e);
+            BOOL deleted = (flags & VersionedDocument::kDeleted) != 0;
+            if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
+                continue; // skip this doc
+            if (options->allDocsMode == kCBLOnlyConflicts && !(flags & VersionedDocument::kConflicted))
+                continue; // skip this doc
+
             VersionedDocument doc(_forest, *e);
             NSString* docID = (NSString*)doc.docID();
             if (!doc.exists()) {
@@ -864,9 +871,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                     value: nil
                                             docProperties: nil];
             }
-            BOOL deleted = doc.isDeleted();
-            if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
-                continue; // skip this doc
 
             NSString* revID = (NSString*)doc.revID();
             SequenceNumber sequence = doc.sequence();
@@ -874,19 +878,17 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             NSDictionary* docContents = nil;
             if (options->includeDocs) {
                 // Fill in the document contents:
-                docContents = [CBLForestBridge bodyOfNode: doc.currentNode()
+                docContents = [CBLForestBridge bodyOfNode: doc.currentRevision()
                                                   options: options->content];
                 Assert(docContents);
             }
 
             NSArray* conflicts = nil;
-            if (options->allDocsMode >= kCBLShowConflicts) {
+            if (options->allDocsMode >= kCBLShowConflicts && doc.isConflicted()) {
                 conflicts = [CBLForestBridge getCurrentRevisionIDs: doc];
                 if (conflicts.count == 1)
                     conflicts = nil;
             }
-            if (!conflicts && options->allDocsMode == kCBLOnlyConflicts)
-                continue; // skip this doc
 
             NSDictionary* value = $dict({@"rev", revID},
                                         {@"deleted", (deleted ?$true : nil)},
