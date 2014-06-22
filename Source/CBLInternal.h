@@ -19,6 +19,9 @@
 @class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
 
 
+#define UU __unsafe_unretained  /* Use on method parameters to avoid retaining/releasing them */
+
+
 @interface CBLDatabase (Insertion_Internal)
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev;
 @end

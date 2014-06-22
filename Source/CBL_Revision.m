@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBL_Revision.h"
+#import "CBLInternal.h"
 #import "CBL_Body.h"
 #import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
@@ -166,7 +167,7 @@
     return CBLSequenceCompare(_sequence, rev->_sequence);
 }
 
-- (CBL_MutableRevision*) mutableCopyWithDocID: (NSString*)docID revID: (NSString*)revID {
+- (CBL_MutableRevision*) mutableCopyWithDocID: (UU NSString*)docID revID: (UU NSString*)revID {
     Assert(docID);
     Assert(!_docID || $equal(_docID, docID));
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
