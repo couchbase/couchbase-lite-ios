@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLMisc.h"
+#import "CBLBase64.h"
 
 #import "CollectionUtils.h"
 
@@ -45,25 +46,16 @@ NSData* CBLContentsOfTestFile(NSString* name) {
 
 
 NSString* CBLCreateUUID() {
-#ifdef GNUSTEP
-    uuid_t uuid;
-    uuid_generate(uuid);
-    char cstr[37];
-    uuid_unparse_lower(uuid, cstr);
-    return [[[NSString alloc] initWithCString: cstr encoding: NSASCIIStringEncoding] autorelease];
-#else
-    
-    CFUUIDRef uuid = CFUUIDCreate(NULL);
-#ifdef __OBJC_GC__
-    CFStringRef uuidStrRef = CFUUIDCreateString(NULL, uuid);
-    NSString *uuidStr = (NSString *)uuidStrRef;
-    CFRelease(uuidStrRef);
-#else
-    NSString *uuidStr = (__bridge_transfer NSString *)CFUUIDCreateString(NULL, uuid);
-#endif
-    CFRelease(uuid);
-    return uuidStr;
-#endif
+    // Generate 136 bits of entropy, convert to base64, trim the 2 chars at the end that aren't
+    // full of entropy, replace '/' chars that are problematic in doc IDs, prefix a '!' to make it
+    // more clear where this string came from.
+    uint8_t random[17];
+    SecRandomCopyBytes(kSecRandomDefault, sizeof(random), random);
+    NSMutableString* uuid = [[CBLBase64 encode: random length: sizeof(random)] mutableCopy];
+    [uuid deleteCharactersInRange: NSMakeRange(22, 2)];
+    [uuid replaceOccurrencesOfString: @"/" withString: @"~" options: 0 range: NSMakeRange(0, uuid.length)];
+    [uuid insertString: @"!" atIndex: 0];
+    return uuid;
 }
 
 
