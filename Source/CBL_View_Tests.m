@@ -65,7 +65,7 @@ TestCase(CBL_View_Create) {
 static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
-    CBL_Revision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    CBL_Revision* result = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(status < 300, @"Status %d from putDoc(%@)", status, props);
     return result;
 }
@@ -173,7 +173,7 @@ TestCase(CBL_View_Index) {
     CBL_Revision* rev4 = putDoc(db, $dict({@"key", @"four"}));
     
     CBL_Revision* twoDeleted = [[CBL_Revision alloc] initWithDocID: rev2.docID revID: nil deleted:YES];
-    [db putRevision: twoDeleted prevRevisionID: rev2.revID allowConflict: NO status: &status];
+    [db putRevision: [twoDeleted mutableCopy] prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssert(status < 300);
 
     // Reindex again:
@@ -576,7 +576,7 @@ TestCase(CBL_View_AllDocsQuery) {
     // Delete a document:
     CBL_Revision* del = docs[0];
     del = [[CBL_Revision alloc] initWithDocID: del.docID revID: del.revID deleted: YES];
-    del = [db putRevision: del prevRevisionID: del.revID allowConflict: NO status: &status];
+    del = [db putRevision: [del mutableCopy] prevRevisionID: del.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
 
     // Get deleted doc, and one bogus one:

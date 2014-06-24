@@ -327,29 +327,27 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 /** Given a revision, updates its _attachments dictionary for storage in the database, returning an
     updated copy of the revision (or nil on error.) */
-- (CBL_Revision*) processAttachmentsForRevision: (CBL_Revision*)rev
-                                      prevRevID: (NSString*)prevRevID
-                                         status: (CBLStatus*)outStatus
+- (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
+                             prevRevID: (NSString*)prevRevID
+                                status: (CBLStatus*)outStatus
 {
     *outStatus = kCBLStatusOK;
     NSDictionary* revAttachments = rev.attachments;
     if (revAttachments == nil)
-        return rev;  // no-op: no attachments
+        return YES;  // no-op: no attachments
 
     // Deletions can't have attachments:
-    CBL_MutableRevision* nuRev = [rev mutableCopy];
-    if (nuRev.deleted || revAttachments.count == 0) {
-        NSMutableDictionary* body = [nuRev.properties mutableCopy];
+    if (rev.deleted || revAttachments.count == 0) {
+        NSMutableDictionary* body = [rev.properties mutableCopy];
         [body removeObjectForKey: @"_attachments"];
-        nuRev.properties = body;
-        return nuRev;
+        rev.properties = body;
+        return YES;
     }
 
     unsigned generation = [CBL_Revision generationFromRevID: prevRevID] + 1;
     __block NSDictionary* parentAttachments = nil;
 
-    BOOL ok;
-    ok = [nuRev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
+    return [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
         CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name
                                                                      info: attachInfo
                                                                    status: outStatus];
@@ -399,7 +397,6 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         Assert(attachment.isValid);
         return attachment.asStubDictionary;
     }];
-    return ok ? nuRev : nil;
 }
 
 
@@ -499,6 +496,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         Database::config config = Database::defaultConfig();
         config.buffercache_size = 128*1024;
         config.wal_threshold = 128;
+//      config.wal_flush_before_commit = true;  // Can't use yet; see MB-11514
         config.seqtree_opt = false;
         Database attachmentIndex(path.fileSystemRepresentation, FDB_OPEN_FLAG_CREATE, config);
         Transaction attachmentTransaction(&attachmentIndex);
@@ -515,7 +513,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
                 if ((*revNode)->isActive()) {
                     alloc_slice body = (*revNode)->readBody();
                     if (body.size > 0) {
-                        NSDictionary* rev = [CBLJSON JSONObjectWithData: (NSData*)body
+                        NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
                                                                 options: 0 error: NULL];
                         NSDictionary* attachments = rev.cbl_attachments;
                         for (NSString* key in attachments) {

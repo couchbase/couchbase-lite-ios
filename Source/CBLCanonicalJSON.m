@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLCanonicalJSON.h"
+#import "CBLInternal.h"
 #import <math.h>
 
 
@@ -25,7 +26,7 @@
 @implementation CBLCanonicalJSON
 
 
-- (instancetype) initWithObject: (id)object {
+- (instancetype) initWithObject: (UU id)object {
     self = [super init];
     if (self) {
         _input = object;
@@ -39,7 +40,7 @@
 @synthesize ignoreKeyPrefix=_ignoreKeyPrefix, whitelistedKeys=_whitelistedKeys;
 
 
-- (void) encodeString: (NSString*)string {
+- (void) encodeString: (UU NSString*)string {
     static NSCharacterSet* kCharsToQuote;
     if (!kCharsToQuote) {
         NSMutableCharacterSet* chars = (id)[NSMutableCharacterSet characterSetWithRange: NSMakeRange(0, 32)];
@@ -86,7 +87,7 @@
 }
 
 
-- (void) encodeNumber: (NSNumber*)number {
+- (void) encodeNumber: (UU NSNumber*)number {
     switch (number.objCType[0]) {
         case 'c':
             [_output appendString: number.boolValue ? @"true" : @"false"];
@@ -105,7 +106,7 @@
 }
 
 
-- (void) encodeArray: (NSArray*)array {
+- (void) encodeArray: (UU NSArray*)array {
     [_output appendString: @"["];
     BOOL first = YES;
     for (id item in array) {
@@ -119,7 +120,7 @@
 }
 
 
-static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
+static NSComparisonResult compareCanonStrings( UU id s1, UU id s2, void *context) {
     return [s1 compare: s2 options: NSLiteralSearch];
     /* Alternate implementation in case NSLiteralSearch turns out to be inappropriate:
     NSUInteger len1 = [s1 length], len2 = [s2 length];
@@ -139,12 +140,12 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 }
 
 
-+ (NSArray*) orderedKeys: (NSDictionary*)dict {
++ (NSArray*) orderedKeys: (UU NSDictionary*)dict {
     return [[dict allKeys] sortedArrayUsingFunction: &compareCanonStrings context: NULL];
 }
 
 
-- (void) encodeDictionary: (NSDictionary*)dict {
+- (void) encodeDictionary: (UU NSDictionary*)dict {
     [_output appendString: @"{"];
     BOOL first = YES;
     for (NSString* key in [[self class] orderedKeys: dict]) {
@@ -165,7 +166,7 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 }
 
 
-- (void) encode: (id)object {
+- (void) encode: (UU id)object {
     if ([object isKindOfClass: [NSString class]]) {
         [self encodeString: object];
     } else if ([object isKindOfClass: [NSNumber class]]) {
@@ -202,14 +203,14 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 }
 
 
-+ (NSString*) canonicalString: (id)rootObject {
++ (NSString*) canonicalString: (UU id)rootObject {
     CBLCanonicalJSON* encoder = [[self alloc] initWithObject: rootObject];
     NSString* result = encoder.canonicalString;
     return result;
 }
 
 
-+ (NSData*) canonicalData: (id)rootObject {
++ (NSData*) canonicalData: (UU id)rootObject {
     CBLCanonicalJSON* encoder = [[self alloc] initWithObject: rootObject];
     NSData* result = encoder.canonicalData;
     return result;

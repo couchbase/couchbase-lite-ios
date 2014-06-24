@@ -30,8 +30,8 @@
     bool _missing;
 }
 
-- (instancetype) initWithDocID: (NSString*)docID
-                         revID: (NSString*)revID
+- (instancetype) initWithDocID: (UU NSString*)docID
+                         revID: (UU NSString*)revID
                        deleted: (BOOL)deleted
 {
     self = [super init];
@@ -47,7 +47,7 @@
     return self;
 }
 
-- (instancetype) initWithBody: (CBL_Body*)body {
+- (instancetype) initWithBody: (UU CBL_Body*)body {
     Assert(body);
     NSDictionary* props = body.properties;
     self = [self initWithDocID: props.cbl_id
@@ -59,7 +59,7 @@
     return self;
 }
 
-- (instancetype) initWithProperties: (NSDictionary*)properties {
+- (instancetype) initWithProperties: (UU NSDictionary*)properties {
     CBL_Body* body = [[CBL_Body alloc] initWithProperties: properties];
     if (!body) {
         return nil;
@@ -67,7 +67,7 @@
     return [self initWithBody: body];
 }
 
-+ (instancetype) revisionWithProperties: (NSDictionary*)properties {
++ (instancetype) revisionWithProperties: (UU NSDictionary*)properties {
     return [[self alloc] initWithProperties: properties];
 }
 
@@ -107,7 +107,7 @@
     return [[self class] generationFromRevID: _revID];
 }
 
-+ (unsigned) generationFromRevID: (NSString*)revID {
++ (unsigned) generationFromRevID: (UU NSString*)revID {
     unsigned generation = 0;
     NSUInteger length = MIN(revID.length, 9u);
     for (NSUInteger i=0; i<length; ++i) {
@@ -123,7 +123,7 @@
 }
 
 // Splits a revision ID into its generation number and opaque suffix string
-+ (BOOL) parseRevID: (NSString*)revID intoGeneration: (int*)outNum andSuffix:(NSString**)outSuffix
++ (BOOL) parseRevID: (UU NSString*)revID intoGeneration: (int*)outNum andSuffix:(NSString**)outSuffix
 {
     NSScanner* scanner = [[NSScanner alloc] initWithString: revID];
     scanner.charactersToBeSkipped = nil;
@@ -154,7 +154,7 @@
     return $sprintf(@"{%@ #%@%@}", _docID, _revID, (_deleted ?@" DEL" :@""));
 }
 
-- (BOOL) isEqual:(id)object {
+- (BOOL) isEqual:(UU id)object {
     return [_docID isEqual: [object docID]] && [_revID isEqual: [object revID]];
 }
 
@@ -162,24 +162,14 @@
     return _docID.hash ^ _revID.hash;
 }
 
-- (NSComparisonResult) compareSequences: (CBL_Revision*)rev {
+- (NSComparisonResult) compareSequences: (UU CBL_Revision*)rev {
     NSParameterAssert(rev != nil);
     return CBLSequenceCompare(_sequence, rev->_sequence);
 }
 
 - (CBL_MutableRevision*) mutableCopyWithDocID: (UU NSString*)docID revID: (UU NSString*)revID {
-    Assert(docID);
-    Assert(!_docID || $equal(_docID, docID));
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
-                                                                  deleted: _deleted];
-
-    // Update the _id and _rev in the new object's JSON:
-    NSDictionary* properties = self.properties;
-    NSMutableDictionary* nuProperties = properties ? [properties mutableCopy]
-                                                   : [[NSMutableDictionary alloc] init];
-    [nuProperties setValue: docID forKey: @"_id"];
-    [nuProperties setValue: revID forKey: @"_rev"];
-    rev.properties = nuProperties;
+    CBL_MutableRevision* rev = [self mutableCopy];
+    [rev setDocID: docID revID: revID];
     return rev;
 }
 
@@ -227,19 +217,38 @@
 
 @implementation CBL_MutableRevision
 
-- (void) setBody:(CBL_Body *)body {
+- (void) setBody:(UU CBL_Body *)body {
     _body = body;
 }
 
-- (void) setProperties:(NSDictionary *)properties {
-    self.body = [CBL_Body bodyWithProperties: properties];
+- (void) setDocID:(UU NSString *)docID revID: (UU NSString*)revID {
+    Assert(docID);
+
+    if (_docID)
+        Assert($equal(_docID, docID));
+    else
+        _docID = [docID copy];
+    _revID = [revID copy];
+
+    // Update the _id and _rev in the JSON:
+    NSDictionary* properties = self.properties;
+    NSMutableDictionary* nuProperties = properties ? [properties mutableCopy]
+                                                   : [[NSMutableDictionary alloc] init];
+    if (!nuProperties[@"_id"])
+        nuProperties[@"_id"] = docID;
+    [nuProperties setValue: revID forKey: @"_rev"];
+    self.properties = nuProperties;
 }
 
-- (void) setAsJSON:(NSData *)asJSON {
-    self.body = [CBL_Body bodyWithJSON: asJSON];
+- (void) setProperties:(UU NSDictionary *)properties {
+    self.body = [[CBL_Body alloc] initWithProperties: properties];
 }
 
-- (void) setObject: (id)object forKeyedSubscript: (NSString*)key {
+- (void) setAsJSON:(UU NSData *)asJSON {
+    self.body = [[CBL_Body alloc] initWithJSON: asJSON];
+}
+
+- (void) setObject: (UU id)object forKeyedSubscript: (UU NSString*)key {
     NSMutableDictionary* nuProps = self.properties.mutableCopy;
     [nuProps setValue: object forKey: key];
     self.properties = nuProps;

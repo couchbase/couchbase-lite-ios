@@ -54,7 +54,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
-    CBL_Revision* result = [db putRevision: rev
+    CBL_Revision* result = [db putRevision: [rev mutableCopy]
                            prevRevisionID: props[@"_rev"]
                             allowConflict: NO
                                    status: &status];
@@ -100,7 +100,7 @@ TestCase(CBL_Database_CRUD) {
     CBL_Body* doc = [[CBL_Body alloc] initWithProperties: props];
     CBL_Revision* rev1 = [[CBL_Revision alloc] initWithBody: doc];
     CAssert(rev1);
-    rev1 = [db putRevision: rev1 prevRevisionID: nil allowConflict: NO status: &status];
+    rev1 = [db putRevision: [rev1 mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
     Log(@"Created: %@", rev1);
     CAssert(rev1.docID.length >= 10);
@@ -117,7 +117,7 @@ TestCase(CBL_Database_CRUD) {
     doc = [CBL_Body bodyWithProperties: props];
     CBL_Revision* rev2 = [[CBL_Revision alloc] initWithBody: doc];
     CBL_Revision* rev2Input = rev2;
-    rev2 = [db putRevision: rev2 prevRevisionID: rev1.revID allowConflict: NO status: &status];
+    rev2 = [db putRevision: [rev2 mutableCopy] prevRevisionID: rev1.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
     Log(@"Updated: %@", rev2);
     CAssertEqual(rev2.docID, rev1.docID);
@@ -129,7 +129,7 @@ TestCase(CBL_Database_CRUD) {
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Try to update the first rev, which should fail:
-    CAssertNil([db putRevision: rev2Input prevRevisionID: rev1.revID allowConflict: NO status: &status]);
+    CAssertNil([db putRevision: [rev2Input mutableCopy] prevRevisionID: rev1.revID allowConflict: NO status: &status]);
     CAssertEq(status, kCBLStatusConflict);
     
     // Check the changes feed, with and without filters:
@@ -152,9 +152,9 @@ TestCase(CBL_Database_CRUD) {
         
     // Delete it:
     CBL_Revision* revD = [[CBL_Revision alloc] initWithDocID: rev2.docID revID: nil deleted: YES];
-    CAssertEqual([db putRevision: revD prevRevisionID: nil allowConflict: NO status: &status], nil);
+    CAssertEqual([db putRevision: [revD mutableCopy] prevRevisionID: nil allowConflict: NO status: &status], nil);
     CAssertEq(status, kCBLStatusConflict);
-    revD = [db putRevision: revD prevRevisionID: rev2.revID allowConflict: NO status: &status];
+    revD = [db putRevision: [revD mutableCopy] prevRevisionID: rev2.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssertEqual(revD.docID, rev2.docID);
     CAssert([revD.revID hasPrefix: @"3-"]);
@@ -167,7 +167,7 @@ TestCase(CBL_Database_CRUD) {
 
     // Delete nonexistent doc:
     CBL_Revision* revFake = [[CBL_Revision alloc] initWithDocID: @"fake" revID: nil deleted: YES];
-    [db putRevision: revFake prevRevisionID: nil allowConflict: NO status: &status];
+    [db putRevision: [revFake mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusNotFound);
     
     // Read it back (should fail):
@@ -304,7 +304,7 @@ TestCase(CBL_Database_Validation) {
     CBLStatus status;
     validationCalled = NO;
     expectedParentRevID = nil;
-    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusCreated);
     
@@ -313,7 +313,7 @@ TestCase(CBL_Database_Validation) {
     rev = revBySettingProperties(rev, props);
     validationCalled = NO;
     expectedParentRevID = rev.revID;
-    rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusCreated);
     
@@ -323,7 +323,7 @@ TestCase(CBL_Database_Validation) {
     validationCalled = NO;
     expectedParentRevID = rev.revID;
 #pragma unused(rev)
-    rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);
     
@@ -332,7 +332,7 @@ TestCase(CBL_Database_Validation) {
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
     expectedParentRevID = nil;
-    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);
 
@@ -340,7 +340,7 @@ TestCase(CBL_Database_Validation) {
     props = $mdict({@"_id", @"ford"}, {@"name", @"Ford Prefect"}, {@"towel", @"terrycloth"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
-    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
     expectedParentRevID = nil;
     CAssertEq(status, kCBLStatusCreated);
@@ -351,7 +351,7 @@ TestCase(CBL_Database_Validation) {
     CAssert(rev.deleted);
     validationCalled = NO;
     expectedParentRevID = rev.revID;
-    rev = [db putRevision: rev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssert(validationCalled);
 
@@ -360,7 +360,7 @@ TestCase(CBL_Database_Validation) {
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
     expectedParentRevID = nil;
-    rev = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);
     
@@ -471,7 +471,7 @@ TestCase(CBL_Database_RevTree) {
     // Delete the current winning rev, leaving the other one:
     CBL_Revision* del1 = [[CBL_Revision alloc] initWithDocID: conflict.docID revID: nil deleted: YES];
     change = nil;
-    del1 = [db putRevision: del1 prevRevisionID: conflict.revID
+    del1 = [db putRevision: [del1 mutableCopy] prevRevisionID: conflict.revID
              allowConflict: NO status: &status];
     CAssertEq(status, 200);
     current = [db getDocumentWithID: rev.docID revisionID: nil];
@@ -483,7 +483,7 @@ TestCase(CBL_Database_RevTree) {
     // Delete the remaining rev:
     CBL_Revision* del2 = [[CBL_Revision alloc] initWithDocID: rev.docID revID: nil deleted: YES];
     change = nil;
-    del2 = [db putRevision: del2 prevRevisionID: rev.revID
+    del2 = [db putRevision: [del2 mutableCopy] prevRevisionID: rev.revID
              allowConflict: NO status: &status];
     CAssertEq(status, 200);
     current = [db getDocumentWithID: rev.docID revisionID: nil];
@@ -568,7 +568,7 @@ TestCase(CBL_Database_DuplicateRev) {
 
     CBL_Revision* rev2b = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
-    rev2b = [db putRevision: rev2b
+    rev2b = [db putRevision: [rev2b mutableCopy]
              prevRevisionID: rev1.revID
               allowConflict: YES
                      status: &status];
@@ -735,7 +735,7 @@ static CBL_Revision* putDocWithAttachment(CBLDatabase* db, NSString* docID, NSSt
                                 {@"bar", $false},
                                 {@"_attachments", attachmentDict});
     CBLStatus status;
-    CBL_Revision* rev = [db putRevision: [CBL_Revision revisionWithProperties: props]
+    CBL_Revision* rev = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
                          prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
     return rev;
@@ -844,7 +844,7 @@ TestCase(CBL_Database_AttachmentRevPos) {
                                 {@"_attachments", attachmentDict});
     CBL_Revision* rev1;
     CBLStatus status;
-    rev1 = [db putRevision: [CBL_Revision revisionWithProperties: props]
+    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
             prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
 
@@ -860,7 +860,7 @@ TestCase(CBL_Database_AttachmentRevPos) {
                   {@"bar", $true},
                   {@"_attachments", attachmentDict});
     CBL_Revision* rev2;
-    rev2 = [db putRevision: [CBL_Revision revisionWithProperties: props]
+    rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
             prevRevisionID: rev1.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
 

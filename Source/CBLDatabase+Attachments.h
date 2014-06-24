@@ -24,9 +24,9 @@ typedef enum {
 /** Creates a CBL_BlobStoreWriter object that can be used to stream an attachment to the store. */
 - (CBL_BlobStoreWriter*) attachmentWriter;
 
-- (CBL_Revision*) processAttachmentsForRevision: (CBL_Revision*)rev
-                                      prevRevID: (NSString*)prevRevID
-                                         status: (CBLStatus*)outStatus;
+- (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
+                             prevRevID: (NSString*)prevRevID
+                                status: (CBLStatus*)outStatus;
 
 /** Modifies a CBL_Revision's _attachments dictionary by changing all attachments with revpos < minRevPos into stubs; and if 'attachmentsFollow' is true, the remaining attachments will be modified to _not_ be stubs but include a "follows" key instead of a body. */
 + (void) stubOutAttachmentsIn: (CBL_MutableRevision*)rev

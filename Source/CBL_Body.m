@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBL_Body.h"
+#import "CBLInternal.h"
 
 
 @implementation CBL_Body
@@ -24,7 +25,7 @@
     BOOL _error;
 }
 
-- (instancetype) initWithProperties: (NSDictionary*)properties {
+- (instancetype) initWithProperties: (UU NSDictionary*)properties {
     NSParameterAssert(properties);
     self = [super init];
     if (self) {

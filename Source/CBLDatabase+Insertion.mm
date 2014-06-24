@@ -167,18 +167,17 @@ using namespace forestdb;
 }
 
 
-- (CBL_Revision*) putRevision: (CBL_Revision*)inPutRev
+- (CBL_Revision*) putRevision: (CBL_MutableRevision*)putRev
                prevRevisionID: (NSString*)inPrevRevID
                 allowConflict: (BOOL)allowConflict
                        status: (CBLStatus*)outStatus
 {
-    // "oldRev" is sort of a misnomer. It's a hodge-podge. It contains the stuff that would go into
+    // putRev is a hodge-podge. It contains the stuff that would go into
     // a regular PUT in the REST API: The doc ID, and the new body. The actual
     // rev ID of the new revision will be assigned down below before it's inserted.
     Assert(outStatus);
-    __block CBL_Revision* putRev = inPutRev;
     __block NSString* prevRevID = inPrevRevID;
-    NSString* docID = putRev.docID;
+    __block NSString* docID = putRev.docID;
     BOOL deleting = putRev.deleted;
     LogTo(CBLDatabase, @"PUT _id=%@, _rev=%@, _deleted=%d, allowConflict=%d",
           docID, prevRevID, deleting, allowConflict);
@@ -193,11 +192,6 @@ using namespace forestdb;
         return nil;
     }
 
-    // Make up a UUID if no docID was given:
-    if (!docID)
-        docID = [[self class] generateDocumentID];
-
-    __block CBL_Revision* newRev = nil;
     __block CBLDatabaseChange* change = nil;
 
     // Asynchronously convert the revision to JSON (this is expensive):
@@ -205,10 +199,9 @@ using namespace forestdb;
     dispatch_semaphore_t jsonSemaphore = NULL;
     if (putRev.properties) {
         // Add any new attachment data to the blob-store, and turn all of them into stubs:
-        putRev = [self processAttachmentsForRevision: putRev
-                                           prevRevID: prevRevID
-                                              status: outStatus];
-        if (!putRev)
+        if (![self processAttachmentsForRevision: putRev
+                                       prevRevID: prevRevID
+                                          status: outStatus])
             return nil;
         jsonSemaphore = dispatch_semaphore_create(0);
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
@@ -220,8 +213,19 @@ using namespace forestdb;
     }
 
     *outStatus = [self _inTransaction: ^CBLStatus {
-        // Get the ForestDB document:
-        VersionedDocument doc(_forest, forestdb::slice(docID));
+        Document rawDoc;
+        if (docID) {
+            // Read the doc from the database:
+            rawDoc.setKey(nsstring_slice(docID));
+            _forest->read(rawDoc);
+        } else {
+            // Create new doc ID, and don't bother to read it since it's a new doc:
+            docID = [[self class] generateDocumentID];
+            rawDoc.setKey(nsstring_slice(docID));
+        }
+
+        // Parse the document revision tree:
+        VersionedDocument doc(_forest, rawDoc);
         const Revision* revNode;
 
         if (prevRevID) {
@@ -288,21 +292,21 @@ using namespace forestdb;
         doc.prune((unsigned)self.maxRevTreeDepth);
         doc.save(*_forestTransaction);
 
-        newRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
-        change = [self changeWithNewRevision: newRev doc: doc source: nil];
+        [putRev setDocID: docID revID: newRevID];
+        change = [self changeWithNewRevision: putRev doc: doc source: nil];
 
         return (CBLStatus)status;
     }];
     if (CBLStatusIsError(*outStatus))
         return nil;
 
-    LogTo(CBLDatabase, @"--> created %@", newRev);
+    LogTo(CBLDatabase, @"--> created %@", putRev);
     LogTo(CBLDatabaseVerbose, @"    %@", [json my_UTF8ToString]);
     
     // Epilogue: A change notification is sent:
     if (change)
         [self notifyChange: change];
-    return newRev;
+    return putRev;
 }
 
 
@@ -346,7 +350,7 @@ static void convertRevIDs(NSArray* revIDs,
 
     CBLStatus status = [self _inTransaction: ^CBLStatus {
         // First get the CBForest doc:
-        VersionedDocument doc(_forest, forestdb::slice(docID));
+        VersionedDocument doc(_forest, nsstring_slice(docID));
 
         // Add the revision & ancestry to the doc:
         std::vector<revidBuffer> historyBuffers;
@@ -404,7 +408,7 @@ static void convertRevIDs(NSArray* revIDs,
         return kCBLStatusOK;
     return [self _inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
-            VersionedDocument doc(_forest, forestdb::slice(docID));
+            VersionedDocument doc(_forest, nsstring_slice(docID));
             if (!doc.exists())
                 return kCBLStatusNotFound;
 

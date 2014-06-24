@@ -48,18 +48,20 @@ public:
     Database* db;
     CBLMapBlock mapBlock;
     virtual void operator() (const Document& cppDoc, EmitFn& emitFn) {
+        if (VersionedDocument::flagsOfDocument(cppDoc) & VersionedDocument::kDeleted)
+            return;
+        VersionedDocument vdoc(db, cppDoc);
+        const Revision* node = vdoc.currentRevision();
         @autoreleasepool {
-            VersionedDocument vdoc(db, cppDoc);
-            if (vdoc.isDeleted())
-                return;
-            const Revision* node = vdoc.currentRevision();
             NSDictionary* doc = [CBLForestBridge bodyOfNode: node options: kCBLIncludeLocalSeq];
             CBLMapEmitBlock emit = ^(id key, id value) {
-                Collatable collKey, collValue;
-                collKey << key;
-                if (value)
-                    collValue << value;
-                emitFn(collKey, collValue);
+                if (key) {
+                    Collatable collKey, collValue;
+                    collKey << key;
+                    if (value)
+                        collValue << value;
+                    emitFn(collKey, collValue);
+                }
             };
             mapBlock(doc, emit);
         }
@@ -179,6 +181,7 @@ public:
     MapReduceIndex::config config = MapReduceIndex::defaultConfig();
     config.buffercache_size = kViewBufferCacheSize;
     config.wal_threshold = 8192;
+//  config.wal_flush_before_commit = true;  // Can't use yet; see MB-11514
     config.seqtree_opt = YES;
     config.compaction_threshold = 50;
     try {

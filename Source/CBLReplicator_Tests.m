@@ -204,19 +204,19 @@ TestCase(CBL_Pusher) {
     NSMutableDictionary* props = $mdict({@"_id", @"doc1"},
                                         {@"foo", @1}, {@"bar", $false});
     CBLStatus status;
-    CBL_Revision* rev1 = [db putRevision: [CBL_Revision revisionWithProperties: props]
+    CBL_Revision* rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
     
     props[@"_rev"] = rev1.revID;
     props[@"UPDATED"] = $true;
-    CBL_Revision* rev2 = [db putRevision: [CBL_Revision revisionWithProperties: props]
+    CBL_Revision* rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
                         prevRevisionID: rev1.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
     
     props = $mdict({@"_id", @"doc2"},
                    {@"baz", @(666)}, {@"fnord", $true});
-    [db putRevision: [CBL_Revision revisionWithProperties: props]
+    [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
                         prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
 #pragma unused(rev2)
@@ -382,7 +382,7 @@ TestCase(CBL_Pusher_DocIDs) {
     for (int i = 1; i <= 10; i++) {
         NSDictionary* props = @{@"_id": $sprintf(@"doc%d", i)};
         CBLStatus status;
-        [db putRevision: [CBL_Revision revisionWithProperties: props]
+        [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
              prevRevisionID: nil allowConflict: NO status: &status];
         CAssertEq(status, kCBLStatusCreated);
     }

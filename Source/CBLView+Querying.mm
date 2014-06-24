@@ -337,9 +337,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         }
         return IndexEnumerator(*index,
                                Collatable(startKey),
-                               forestdb::slice(startKeyDocID),
+                               nsstring_slice(startKeyDocID),
                                Collatable(endKey),
-                               forestdb::slice(endKeyDocID),
+                               nsstring_slice(endKeyDocID),
                                forestOpts);
     }
 }

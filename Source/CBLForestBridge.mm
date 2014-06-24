@@ -14,9 +14,11 @@ using namespace forestdb;
 @implementation CBLForestBridge
 
 
-+ (NSData*) dataOfNode: (const Revision*)rev {
+static NSData* dataOfNode(const Revision* rev) {
+    if (rev->body.buf)
+        return rev->body.uncopiedNSData();
     try {
-        return (NSData*)rev->readBody();
+        return rev->readBody().copiedNSData();
     } catch (...) {
         return nil;
     }
@@ -63,7 +65,7 @@ using namespace forestdb;
         return NO;
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = [self dataOfNode: revNode];
+        json = dataOfNode(revNode);
         if (!json)
             return NO;
     }
@@ -89,7 +91,7 @@ using namespace forestdb;
 
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = [self dataOfNode: rev];
+        json = dataOfNode(rev);
         if (!json)
             return nil;
     }

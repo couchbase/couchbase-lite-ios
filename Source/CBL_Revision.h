@@ -78,6 +78,9 @@ typedef SInt64 SequenceNumber;
 @property (readwrite, copy) NSData* asJSON;
 @property (readwrite) bool missing;
 
+- (void) setDocID:(NSString *)docID
+            revID: (NSString*)revID;
+
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key;  // subscript access in Xcode 4.4+
 
 /** Calls the block on every attachment dictionary. The block can return a different dictionary,

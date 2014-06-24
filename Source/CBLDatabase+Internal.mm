@@ -167,6 +167,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     Database::config config = Database::defaultConfig();
     config.buffercache_size = kDBBufferCacheSize;
     config.wal_threshold = 4096;
+//  config.wal_flush_before_commit = true;  // Can't use yet; see MB-11514
     config.seqtree_opt = true;
     config.compress_document_body = true;
     if (sAutoCompactInterval > 0) {
@@ -436,7 +437,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 {
     __block CBL_MutableRevision* result = nil;
     *outStatus = [self _try: ^{
-        VersionedDocument doc(_forest, docID);
+        VersionedDocument doc(_forest, nsstring_slice(docID));
         if (!doc.exists())
             return kCBLStatusNotFound;
         NSString* revID = inRevID;
@@ -482,7 +483,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     Assert(rev.docID && rev.revID);
 
     return [self _try: ^{
-        VersionedDocument doc(_forest, rev.docID);
+        VersionedDocument doc(_forest, nsstring_slice(rev.docID));
         if (!doc.exists())
             return kCBLStatusNotFound;
         BOOL ok = [CBLForestBridge loadBodyOfRevisionObject: rev options: options doc: doc];
@@ -516,7 +517,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     if (sequence > 0)
         return sequence;
     [self _try: ^{
-        VersionedDocument doc(_forest, rev.docID);
+        VersionedDocument doc(_forest, nsstring_slice(rev.docID));
         if (!doc.exists())
             return kCBLStatusNotFound;
         const Revision* revNode = doc.get(revidBuffer(rev.revID));
@@ -543,7 +544,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return nil;
     __block CBL_Revision* parent;
     [self _try: ^{
-        VersionedDocument doc(_forest, rev.docID);
+        VersionedDocument doc(_forest, nsstring_slice(rev.docID));
         if (doc.exists()) {
             const Revision* revNode = [self _forestRevisionWithDoc: doc revID: rev.revID];
             if (revNode) {
@@ -567,7 +568,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 {
     __block CBL_RevisionList* revs = nil;
     [self _try: ^{
-        VersionedDocument doc(_forest, docID);
+        VersionedDocument doc(_forest, nsstring_slice(docID));
         if (!doc.exists())
             return kCBLStatusNotFound;
 
@@ -599,7 +600,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 {
     __block NSArray* result = nil;
     [self _try: ^{
-        VersionedDocument doc(_forest, rev.docID);
+        VersionedDocument doc(_forest, nsstring_slice(rev.docID));
         if (!doc.exists())
             return kCBLStatusNotFound;
         result = [CBLForestBridge getPossibleAncestorRevisionIDs: rev.revID
@@ -617,7 +618,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return nil;
     __block NSString* commonAncestor = nil;
     [self _try: ^{
-        VersionedDocument doc(_forest, rev.docID);
+        VersionedDocument doc(_forest, nsstring_slice(rev.docID));
         if (doc.exists())
             commonAncestor = [CBLForestBridge findCommonAncestorOf: rev.revID withRevIDs: revIDs
                                                                doc: doc];
@@ -633,7 +634,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     Assert(revID && docID);
     __block NSArray* history = nil;
     [self _try: ^{
-        VersionedDocument doc(_forest, rev.docID);
+        VersionedDocument doc(_forest, nsstring_slice(rev.docID));
         history = doc.exists() ? [CBLForestBridge getRevisionHistory: doc[revidBuffer(revID)]]
                                : @[];
         return kCBLStatusOK;
@@ -647,7 +648,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 {
     __block NSDictionary* history = nil;
     [self _try: ^{
-        VersionedDocument doc(_forest, rev.docID);
+        VersionedDocument doc(_forest, nsstring_slice(rev.docID));
         if (doc.exists())
             history = [CBLForestBridge getRevisionHistoryOfNode: doc[revidBuffer(rev.revID)]
                                               startingFromAnyOf: ancestorRevIDs];
@@ -847,8 +848,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         e = DocEnumerator(_forest, docIDs, forestOpts);
     } else {
         e = DocEnumerator(_forest,
-                          forestdb::slice((NSString*)options.startKey),
-                          forestdb::slice((NSString*)options.endKey),
+                          nsstring_slice(options.startKey),
+                          nsstring_slice(options.endKey),
                           forestOpts);
     }
 

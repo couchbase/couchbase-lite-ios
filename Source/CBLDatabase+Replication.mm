@@ -120,7 +120,7 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
             if (!$equal(rev.docID, lastDocID)) {
                 lastDocID = rev.docID;
                 delete doc;
-                doc = new VersionedDocument(_forest, forestdb::slice(lastDocID));
+                doc = new VersionedDocument(_forest, nsstring_slice(lastDocID));
             }
             if (doc && doc->get(revidBuffer(rev.revID)) != NULL)
                 [revs removeRev: rev];

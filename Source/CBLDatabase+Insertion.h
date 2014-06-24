@@ -22,7 +22,7 @@
     @param allowConflict  If NO, an error status kCBLStatusConflict will be returned if the insertion would create a conflict, i.e. if the previous revision already has a child.
     @param outStatus  On return, an HTTP status code indicating success or failure.
     @return  A new CBL_Revision with the docID, revID and sequence filled in (but no body). */
-- (CBL_Revision*) putRevision: (CBL_Revision*)revision
+- (CBL_Revision*) putRevision: (CBL_MutableRevision*)revision
                prevRevisionID: (NSString*)prevRevID
                 allowConflict: (BOOL)allowConflict
                        status: (CBLStatus*)outStatus;
