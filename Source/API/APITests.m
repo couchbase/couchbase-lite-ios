@@ -946,7 +946,7 @@ TestCase(API_LiveQuery_DispatchQueue) {
     Assert(finished, @"LiveQuery didn't complete");
 
     dispatch_async(queue, ^{
-        NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(23.5)};
+        NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(29)};
         createDocumentWithProperties(db, properties);
     });
 
