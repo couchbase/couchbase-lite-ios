@@ -907,7 +907,7 @@ TestCase(API_LiveQuery_DispatchQueue) {
         [query addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: NULL];
     });
 
-    Log(@"Waiting for live query to update...");
+    Log(@"Waiting for live query to complete...");
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
     bool finished = false;
     while (!finished && timeout.timeIntervalSinceNow > 0.0) {
@@ -928,12 +928,33 @@ TestCase(API_LiveQuery_DispatchQueue) {
             }
         }
     }
+    Assert(finished, @"LiveQuery didn't complete");
+
+    dispatch_async(queue, ^{
+        NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(23.5)};
+        createDocumentWithProperties(db, properties);
+    });
+
+    Log(@"Waiting for live query to update again...");
+    timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
+    finished = false;
+    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
+        usleep(1000);
+        if (observer.changeCount == 2) {
+            CBLQueryEnumerator* rows = observer.change[NSKeyValueChangeNewKey];
+            Log(@"Live query rows = %@", rows);
+            if (rows != nil) {
+                CAssertEq(rows.count, (NSUInteger)12);
+                finished = true;
+            }
+        }
+    }
+    Assert(finished, @"LiveQuery didn't update");
 
     // Clean up:
     dispatch_sync(queue, ^{
         [query removeObserver: observer forKeyPath: @"rows"];
         [query stop];
-        CAssert(finished, @"Live query timed out!");
         closeTestDB(db);
         [dbmgr close];
     });
