@@ -12,7 +12,7 @@
 #import "CBLGNUstep.h"
 #endif
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 #ifdef __cplusplus
 extern "C" {

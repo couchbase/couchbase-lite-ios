@@ -451,7 +451,7 @@ TestCase (CBL_View_NumericKeys) {
 
     CBLView* view = [db viewNamed: @"things_byRefNumber"];
     [view setMapBlock: MAPBLOCK({
-        NSNumber *refrenceNumber = [doc objectForKey: @"refrenceNumber"];
+        NSNumber *refrenceNumber = doc[@"refrenceNumber"];
         if (refrenceNumber) {
             emit(refrenceNumber, doc);
         };

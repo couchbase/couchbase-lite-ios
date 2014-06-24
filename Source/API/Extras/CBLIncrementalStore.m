@@ -1174,10 +1174,10 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                     case NSTransformableAttributeType:
                         // intentionally do nothing
                         break;
-                     default:
+                    default:
                         //NSAssert(NO, @"Unsupported attribute type");
-//                        NSLog(@"ii unsupported attribute %@, type: %@ (%d)", attribute, attr, [attr attributeType]);
-                         break;
+                        //break;
+                        NSLog(@"CBLIncrementalStore: unsupported attribute %@, type: %lu",  attr, (unsigned long)attributeType);
                 }
                 
                 if (value) {

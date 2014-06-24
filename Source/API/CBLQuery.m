@@ -219,7 +219,7 @@
 - (void) runAsyncIfChangedSince: (SequenceNumber)ifChangedSince
                      onComplete: (void (^)(CBLQueryEnumerator*, NSError*))onComplete
 {
-    LogTo(Query, @"%@: Async query...", self);
+    LogTo(Query, @"%@: Async query %@/%@...", self, _database.name, (_view.name ?: @"_all_docs"));
     NSString* viewName = _view.name;
     CBLQueryOptions *options = self.queryOptions;
     
@@ -730,9 +730,10 @@ static id fromJSON( NSData* json ) {
 
 
 - (NSString*) description {
-    NSString* valueStr = @"<none>";
+    NSString* valueStr = @"nil";
     if (self.value)
-        valueStr = [CBLJSON stringWithJSONObject: self.value options: CBLJSONWritingAllowFragments error: nil];
+        valueStr = [CBLJSON stringWithJSONObject: self.value
+                                         options: CBLJSONWritingAllowFragments error: nil];
     return [NSString stringWithFormat: @"%@[key=%@; value=%@; id=%@]",
             [self class],
             [CBLJSON stringWithJSONObject: self.key options: CBLJSONWritingAllowFragments error: nil],

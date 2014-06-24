@@ -59,7 +59,7 @@ NSString* CBLVersion( void ) {
 static NSString* CBLFullVersionInfo( void ) {
     NSMutableString* vers = [NSMutableString stringWithFormat: @"Couchbase Lite %@", CBLVersion()];
 #ifdef CBL_SOURCE_REVISION
-    if (strlen(CBL_SOURCE_REVISION) > 0)
+    if (strlen(CBL_SOURCE_REVISION) > (0))
         [vers appendFormat: @"; git commit %s", CBL_SOURCE_REVISION];
 #endif
     return vers;
@@ -274,6 +274,27 @@ static CBLManager* sInstance;
 
 - (NSString*) description {
     return $sprintf(@"%@[%p %@]", [self class], self, self.directory);
+}
+
+
+- (BOOL) excludedFromBackup {
+    NSNumber* excluded;
+    NSError* error;
+    if (![[NSURL fileURLWithPath: _dir] getResourceValue: &excluded
+                                                  forKey: NSURLIsExcludedFromBackupKey
+                                                   error: &error]) {
+        Warn(@"%@: -excludedFromBackup failed: %@", self, error);
+    }
+    return excluded.boolValue;
+}
+
+- (void) setExcludedFromBackup: (BOOL)exclude {
+    NSError* error;
+    if (![[NSURL fileURLWithPath: _dir] setResourceValue: @(exclude)
+                                                  forKey: NSURLIsExcludedFromBackupKey
+                                                   error: &error]) {
+        Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error);
+    }
 }
 
 

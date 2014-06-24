@@ -52,6 +52,10 @@ typedef struct CBLManagerOptions {
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
 
+/** Should the databases and attachments be excluded from iCloud or Time Machine backup?
+    Defaults to NO. */
+@property BOOL excludedFromBackup;
+
 #pragma mark - DATABASES:
 
 /** Returns the database with the given name, creating it if it didn't already exist.

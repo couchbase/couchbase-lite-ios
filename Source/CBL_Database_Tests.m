@@ -824,7 +824,7 @@ TestCase(CBL_Database_PutAttachment) {
     
     // Get the updated revision:
     CBL_Revision* gotRev3 = [db getDocumentWithID: rev3.docID revisionID: rev3.revID];
-    CAssertNil([gotRev3.properties objectForKey: @"_attachments"]);
+    CAssertNil((gotRev3.properties)[@"_attachments"]);
     CAssert([db close]);
 }
 
@@ -848,7 +848,7 @@ TestCase(CBL_Database_AttachmentRevPos) {
             prevRevisionID: nil allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusCreated);
 
-    CAssertEqual([[rev1[@"_attachments"] objectForKey: @"attach"] objectForKey: @"revpos"], @1);
+    CAssertEqual((rev1[@"_attachments"])[@"attach"][@"revpos"], @1);
 
     // Update the attachment with another PUT:
     NSData* attach2 = [@"This WAS the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
@@ -865,8 +865,7 @@ TestCase(CBL_Database_AttachmentRevPos) {
     CAssertEq(status, kCBLStatusCreated);
 
     // The punch line: Did the revpos get incremented to 2?
-    CAssertEqual([[rev2[@"_attachments"] objectForKey: @"attach"] objectForKey: @"revpos"], @2);
-
+    CAssertEqual((rev2[@"_attachments"])[@"attach"][@"revpos"], @2);
     CAssert([db close]);
 }
 

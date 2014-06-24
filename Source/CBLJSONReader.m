@@ -127,9 +127,9 @@
 
 - (id) nestedTemplate {
     if (self.key)
-        return [$castIf(NSDictionary, _template) objectForKey: self.key];
+        return $castIf(NSDictionary, _template)[self.key];
     else
-        return [$castIf(NSArray, _template) objectAtIndex: 0];
+        return $castIf(NSArray, _template)[0];
 }
 
 - (CBLJSONArrayMatcher*) startArray {

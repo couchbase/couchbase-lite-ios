@@ -83,7 +83,7 @@ typedef void (^CBLOnMutateBlock)();
 /** Protocol for classes whose instances can encode themselves as JSON.
     Such classes can be used directly as property types in CBLModel subclasses. */
 @protocol CBLJSONEncoding <NSObject>
-- (id) initWithJSON: (id)jsonObject;
+- (instancetype) initWithJSON: (id)jsonObject;
 - (id) encodeAsJSON;
 
 @optional

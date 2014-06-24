@@ -18,6 +18,7 @@
 #import "CBLJSON.h"
 #import "Test.h"
 #import "MYBlockUtils.h"
+
 #import <CouchbaseLite/CouchbaseLite.h>
 
 #undef FOR_TESTING_PURPOSES
@@ -386,12 +387,12 @@ int main (int argc, const char * argv[]) {
     NSTimeInterval changedFor = item.timeSinceExternallyChanged;
     if (changedFor > 0 && changedFor < kChangeGlowDuration) {
         float fraction = (float)(1.0 - changedFor / kChangeGlowDuration);
-        if (YES || [cell isKindOfClass: [NSButtonCell class]])
-            bg = [[NSColor controlBackgroundColor] blendedColorWithFraction: fraction 
+//        if ([cell isKindOfClass: [NSButtonCell class]])
+            bg = [[NSColor controlBackgroundColor] blendedColorWithFraction: fraction
                                                         ofColor: [NSColor yellowColor]];
-        else
-            bg = [[NSColor yellowColor] colorWithAlphaComponent: fraction];
-        
+//        else
+//            bg = [[NSColor yellowColor] colorWithAlphaComponent: fraction];
+
         if (!_glowing) {
             _glowing = YES;
             MYAfterDelay(0.1, ^{

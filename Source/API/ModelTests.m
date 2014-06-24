@@ -81,8 +81,8 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 }
 
 - (id) initWithJSON:(id)jsonObject {
-    return [self initWithFirstName: [jsonObject objectForKey: @"first"]
-                          lastName: [jsonObject objectForKey: @"last"]];
+    return [self initWithFirstName: jsonObject[@"first"]
+                          lastName: jsonObject[@"last"]];
 }
 
 - (id) encodeAsJSON {

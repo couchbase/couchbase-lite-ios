@@ -12,12 +12,12 @@
 
 
 /** Describes the current status of a replication. */
-typedef enum {
+typedef NS_ENUM(unsigned, CBLReplicationStatus) {
     kCBLReplicationStopped, /**< The replication is finished or hit a fatal error. */
     kCBLReplicationOffline, /**< The remote host is currently unreachable. */
     kCBLReplicationIdle,    /**< Continuous replication is caught up and waiting for more changes.*/
     kCBLReplicationActive   /**< The replication is actively transferring data. */
-} CBLReplicationStatus;
+} ;
 
 
 /** A 'push' or 'pull' replication between a local and a remote database.
@@ -140,6 +140,13 @@ typedef enum {
 /** Restarts a running replication.
     Has no effect if the replication is not running. */
 - (void) restart;
+
+/** Suspends/resumes a replication.
+    On iOS a replication will suspend itself when the app goes into the background, and resume
+    when the app is re-activated. If your app receives a push notification while suspended and needs
+    to run the replication to download new data, your handler should set suspended to NO to resume
+    replication, and then set the property back to YES when it's done. */
+@property BOOL suspended;
 
 /** The replication's current state, one of {stopped, offline, idle, active}. */
 @property (nonatomic, readonly) CBLReplicationStatus status;

@@ -460,6 +460,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         [self goOffline];
 }
 
+- (BOOL) suspended {
+    return _suspended;
+}
+
 // When suspended, the replicator acts as though it's offline, stopping all network activity.
 // This is used by the iOS backgrounding support (see CBLReplication+Backgrounding.m)
 - (void) setSuspended: (BOOL)suspended {
@@ -595,7 +599,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                       LogTo(Sync, @"%@: Session check failed: %@", self, error);
                       self.error = error;
                   } else {
-                      NSString* username = $castIf(NSString, [[result objectForKey: @"userCtx"] objectForKey: @"name"]);
+                      NSString* username = $castIf(NSString, result[@"userCtx"][@"name"]);
                       if (username) {
                           LogTo(Sync, @"%@: Active session, logged in as '%@'", self, username);
                           [self fetchRemoteCheckpointDoc];

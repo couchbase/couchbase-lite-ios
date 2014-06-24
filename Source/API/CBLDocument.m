@@ -281,6 +281,9 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 - (CBLSavedRevision*) update: (BOOL(^)(CBLUnsavedRevision*))block error: (NSError**)outError {
     NSError* error;
     do {
+        // if there is a conflict error, get the latest revision from db instead of cache
+        if (error)
+            [self forgetCurrentRevision];
         CBLUnsavedRevision* newRev = self.newRevision;
         if (!block(newRev)) {
             error = nil;

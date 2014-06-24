@@ -404,8 +404,8 @@ TestCase(CBL_Pusher_DocIDs) {
     NSDictionary* response = [CBLJSON JSONObjectWithData: data options: 0 error: NULL];
     NSArray* rows = response[@"rows"];
     CAssertEq(rows.count, 2u);
-    CAssertEqual([rows[0] objectForKey: @"id"], @"doc4");
-    CAssertEqual([rows[1] objectForKey: @"id"], @"doc7");
+    CAssertEqual((rows[0])[@"id"], @"doc4");
+    CAssertEqual((rows[1])[@"id"], @"doc7");
 
     [db close];
     [server close];

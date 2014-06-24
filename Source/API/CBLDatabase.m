@@ -125,11 +125,18 @@ static id<CBLFilterCompiler> sFilterCompiler;
     NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
                                                       object: self
                                                     userInfo: userInfo];
-    NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-    [queue enqueueNotification: n
-                  postingStyle: NSPostASAP 
-                  coalesceMask: NSNotificationNoCoalescing
-                      forModes: @[NSRunLoopCommonModes]];
+    if (_dispatchQueue) {
+        // NSNotificationQueue is runloop-based, doesn't work on dispatch queues. (#364)
+        [self doAsync:^{
+            [[NSNotificationCenter defaultCenter] postNotification: n];
+        }];
+    } else {
+        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
+        [queue enqueueNotification: n
+                      postingStyle: NSPostASAP 
+                      coalesceMask: NSNotificationNoCoalescing
+                          forModes: @[NSRunLoopCommonModes]];
+    }
 }
 
 

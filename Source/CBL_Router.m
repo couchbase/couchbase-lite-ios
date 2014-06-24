@@ -426,13 +426,14 @@ static NSArray* splitPath( NSURL* url ) {
             return status;
         }
     }
-    
-#ifdef GNUSTEP
-    IMP fn = objc_msg_lookup(self, sel);
-    return (CBLStatus) fn(self, sel, _db, docID, attachmentName);
-#else
-    return (CBLStatus) objc_msgSend(self, sel, _db, docID, attachmentName);
-#endif
+
+    // Send 'sel' to self, i.e. call the method it names. This is equivalent to -performSelector,
+    // which isn't legal under ARC.
+    // The parameters are the database, doc ID and attachment name; any of these can be missing in
+    // the actual method since C allows unhandled parameters.
+    IMP imp = [self methodForSelector: sel];
+    CBLStatus (*methodImpl)(id, SEL, CBLDatabase*, NSString*, NSString*) = (void *)imp;
+    return methodImpl(self, sel, _db, docID, attachmentName);
 }
 
 
