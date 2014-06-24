@@ -137,7 +137,7 @@ typedef enum {
 
 /** Enumerator on a CBLQuery's result rows.
     The objects returned are instances of CBLQueryRow. */
-@interface CBLQueryEnumerator : NSEnumerator <NSCopying>
+@interface CBLQueryEnumerator : NSEnumerator <NSCopying, NSFastEnumeration>
 
 /** The number of rows returned in this enumerator */
 @property (readonly) NSUInteger count;

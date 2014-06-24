@@ -388,6 +388,8 @@
 
 
 
+#define kEnumerationBufferSize 16
+
 
 @implementation CBLQueryEnumerator
 {
@@ -398,6 +400,7 @@
     UInt64 _sequenceNumber;
     CBLQueryIteratorBlock _iterator;
     BOOL _usingIterator;
+    id __unsafe_unretained _enumerationBuffer[kEnumerationBufferSize];
 }
 
 
@@ -441,6 +444,10 @@
                                              view: _view
                                    sequenceNumber: _sequenceNumber
                                              rows: self.allObjects];
+}
+
+- (void) dealloc {
+    [self clearEnumBuffer];
 }
 
 
@@ -515,6 +522,37 @@
 - (void) reset {
     Assert(!_usingIterator, @"Enumerator is not at start");
     _nextRow = 0;
+}
+
+
+// fast-enumeration support
+- (NSUInteger) countByEnumeratingWithState: (NSFastEnumerationState*)state
+                                   objects: (id __unsafe_unretained[])stackbuf
+                                     count: (NSUInteger)stackbufLength
+{
+    if (state->state == 0) {
+        state->state = 1;
+        state->mutationsPtr = &state->extra[0]; // boilerplate for when we don't track mutations
+        _nextRow = 0; // restart in case we're iterating over _rows
+    }
+    [self clearEnumBuffer];
+    NSUInteger i;
+    for (i = 0; i < stackbufLength; i++) {
+        CBLQueryRow* row = [self nextRow];
+        _enumerationBuffer[i] = row;
+        if (!row)
+            break;
+        CFRetain((__bridge CFTypeRef)row);  // balanced by CFRelease in -clearEnumBuffer
+    }
+    state->itemsPtr = _enumerationBuffer;
+    return i;
+}
+
+- (void) clearEnumBuffer {
+    for (NSUInteger i = 0; i < kEnumerationBufferSize && _enumerationBuffer[i]; i++) {
+        CFRelease((__bridge CFTypeRef)_enumerationBuffer[i]);
+        _enumerationBuffer[i] = NULL;
+    }
 }
 
 
