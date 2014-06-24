@@ -111,14 +111,17 @@ static id<CBLFilterCompiler> sFilterCompiler;
     // Post the public kCBLDatabaseChangeNotification:
     NSDictionary* userInfo = @{@"changes": changes,
                                @"external": @(external)};
-    NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
-                                                      object: self
-                                                    userInfo: userInfo];
-    NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-    [queue enqueueNotification: n
-                  postingStyle: NSPostASAP 
-                  coalesceMask: NSNotificationNoCoalescing
-                      forModes: @[NSRunLoopCommonModes]];
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
+                                                          object: self
+                                                        userInfo: userInfo];
+        
+        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
+        [queue enqueueNotification: n
+                      postingStyle: NSPostASAP
+                      coalesceMask: NSNotificationNoCoalescing
+                          forModes: @[NSRunLoopCommonModes]];
+    });
 }
 
 
