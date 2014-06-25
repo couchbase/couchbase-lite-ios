@@ -13,6 +13,8 @@
 
 @interface CBLManager (Internal)
 
+- (NSString*) nameOfDatabaseAtPath: (NSString*)path;
+
 - (NSString*) pathForDatabaseNamed: (NSString*)name;
 
 - (CBLDatabase*) _databaseNamed: (NSString*)name

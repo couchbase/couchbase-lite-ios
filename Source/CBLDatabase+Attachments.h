@@ -7,7 +7,8 @@
 //
 
 #import "CBLDatabase+Internal.h"
-@class CBL_BlobStoreWriter, CBL_Revision, CBLMultipartWriter, CBL_Attachment;
+#import "CBL_BlobStore.h"
+@class CBL_Revision, CBLMultipartWriter, CBL_Attachment;
 
 
 /** Types of encoding/compression of stored attachments. */
@@ -20,6 +21,8 @@ typedef enum {
 @interface CBLDatabase (Attachments)
 
 @property (readonly) NSString* attachmentStorePath;
+
++ (NSString*) blobKeyToDigest: (CBLBlobKey)key;
 
 /** Creates a CBL_BlobStoreWriter object that can be used to stream an attachment to the store. */
 - (CBL_BlobStoreWriter*) attachmentWriter;

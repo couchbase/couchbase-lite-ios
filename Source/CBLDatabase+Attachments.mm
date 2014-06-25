@@ -47,10 +47,6 @@ using namespace forestdb;
 #define kBigAttachmentLength (16*1024)
 
 
-static NSString* blobKeyToDigest(CBLBlobKey key) {
-    return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key length: sizeof(key)]];
-}
-
 static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     if (![digest hasPrefix: @"sha1-"])
         return false;
@@ -64,6 +60,10 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 @implementation CBLDatabase (Attachments)
 
+
++ (NSString*) blobKeyToDigest: (CBLBlobKey)key {
+    return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key length: sizeof(key)]];
+}
 
 - (NSString*) attachmentStorePath {
     return [_dir stringByAppendingPathComponent: @"attachments"];
@@ -459,7 +459,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         attachments = $mdict();
     if (body) {
         CBLBlobKey key = body.blobKey;
-        NSString* digest = blobKeyToDigest(key);
+        NSString* digest = [CBLDatabase blobKeyToDigest: key];
         [self rememberAttachmentWriter: body forDigest: digest];
         NSString* encodingName = (encoding == kCBLAttachmentEncodingGZIP) ? @"gzip" : nil;
         attachments[filename] = $dict({@"digest", digest},

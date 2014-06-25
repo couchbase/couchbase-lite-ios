@@ -32,10 +32,11 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
+#import "CBLDatabaseImport.h"
 #import "MYBlockUtils.h"
 
 
-#define kOldDBExtension @"touchdb" // Used before CBL beta 1
+#define kV1DBExtension @"cblite"    // Couchbase Lite 1.0
 #define kDBExtension @"cblite2"
 
 
@@ -250,24 +251,55 @@ static CBLManager* sInstance;
 }
 
 
-// Scan my dir for older ".touchdb" databases & rename them to ".cblite"
+// Scan my dir for SQLite-based databases from Couchbase Lite 1.0 and upgrade them:
 - (void) upgradeOldDatabaseFiles {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSArray* files = [fmgr contentsOfDirectoryAtPath: _dir error: NULL];
-    for (NSString* filename in [files pathsMatchingExtensions: @[kOldDBExtension]]) {
-        NSString* oldPath = [_dir stringByAppendingPathComponent: filename];
-        NSString* newPath = [oldPath.stringByDeletingPathExtension
-                                            stringByAppendingPathExtension: kDBExtension];
-        Log(@"Renaming old database file %@", oldPath);
-        for (NSString* suffix in @[@"", @"-wal", @"-shm"]) {
-            NSError* error;
-            BOOL ok = [[NSFileManager defaultManager]
-                    moveItemAtPath: [oldPath stringByAppendingString: suffix]
-                            toPath: [newPath stringByAppendingString: suffix]
-                             error: &error];
-            if (!ok)
-                Warn(@"Couldn't move %@: %@", oldPath, error);
+    for (NSString* filename in [files pathsMatchingExtensions: @[kV1DBExtension]]) {
+        NSString* oldDbPath = [_dir stringByAppendingPathComponent: filename];
+        NSLog(@"CouchbaseLite: Upgrading v1 database at %@ ...", oldDbPath);
+
+        // Create and open new CBLDatabase:
+        NSString* name = [self nameOfDatabaseAtPath: filename];
+        NSError* error;
+        CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
+        if (!db) {
+            Warn(@"Upgrade failed: Creating new db failed: %@", error);
+            continue;
         }
+        if (!db.exists) {
+            // Move attachments directory:
+            if (![fmgr moveItemAtPath: [[oldDbPath stringByDeletingPathExtension]
+                                                        stringByAppendingString: @" attachments"]
+                               toPath: db.attachmentStorePath
+                                error: &error]) {
+                if (!CBLIsFileNotFoundError(error)) {
+                    Warn(@"Upgrade failed: Couldn't move attachments: %@", error);
+                    continue;
+                    //TODO: Close & delete new db
+                }
+            }
+            if (![db open: &error]) {
+                Warn(@"Upgrade failed: Couldn't open new db: %@", error);
+                continue;
+                //TODO: Close & delete new db
+            }
+
+            // Import the documents:
+            CBLDatabaseImport* importer = [[CBLDatabaseImport alloc] initWithDatabase: db
+                                                                           sqliteFile: oldDbPath];
+            CBLStatus status = [importer import];
+            if (CBLStatusIsError(status)) {
+                Warn(@"Upgrade failed: Couldn't import docs: status %d", status);
+                //TODO: Close & delete new db
+            }
+        }
+        [db close];
+
+        // Remove old database file and its SQLite side files:
+        for (NSString* suffix in @[@"", @"-wal", @"-shm"])
+            [fmgr removeItemAtPath: [oldDbPath stringByAppendingString: suffix] error: NULL];
+        NSLog(@"    ...success!");
     }
 }
 
@@ -367,9 +399,8 @@ static CBLManager* sInstance;
 - (NSArray*) allDatabaseNames {
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: NULL];
     files = [files pathsMatchingExtensions: @[kDBExtension]];
-    return [files my_map: ^(id filename) {
-        return [[filename stringByDeletingPathExtension]
-                stringByReplacingOccurrencesOfString: @":" withString: @"/"];
+    return [files my_map: ^(NSString* filename) {
+        return [self nameOfDatabaseAtPath: filename];
     }];
 }
 
@@ -438,9 +469,22 @@ static CBLManager* sInstance;
 @implementation CBLManager (Internal)
 
 
+- (NSString*) nameOfDatabaseAtPath: (NSString*)path {
+    NSString* name = path.lastPathComponent.stringByDeletingPathExtension;
+    return [name stringByReplacingOccurrencesOfString: @":" withString: @"/"];
+}
+
+
 - (NSString*) pathForDatabaseNamed: (NSString*)name {
     name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
-                    stringByAppendingPathExtension: kDBExtension];
+            stringByAppendingPathExtension: kDBExtension];
+    return [_dir stringByAppendingPathComponent: name];
+}
+
+
+- (NSString*) pathForV1DatabaseNamed: (NSString*)name {
+    name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
+            stringByAppendingPathExtension: kDBExtension];
     return [_dir stringByAppendingPathComponent: name];
 }
 
