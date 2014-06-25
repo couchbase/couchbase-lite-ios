@@ -293,6 +293,8 @@
 		278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */; };
 		278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27942C9E195B8319008C8DE9 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27942C9D195B8319008C8DE9 /* libsqlite3.dylib */; };
+		27942CA6195B8991008C8DE9 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27942C9D195B8319008C8DE9 /* libsqlite3.dylib */; };
 		279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* CBLRemoteRequest.h */; };
 		279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* CBLRemoteRequest.m */; };
 		279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* CBLRemoteRequest.m */; };
@@ -1085,6 +1087,7 @@
 		278B0C9F152A8B1900577747 /* CBLCanonicalJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLCanonicalJSON.m; sourceTree = "<group>"; };
 		278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYURLUtils.h; sourceTree = "<group>"; };
 		278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYURLUtils.m; sourceTree = "<group>"; };
+		27942C9D195B8319008C8DE9 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
 		279906E1149A65B7003D4338 /* CBLRemoteRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRemoteRequest.h; sourceTree = "<group>"; };
 		279906E2149A65B8003D4338 /* CBLRemoteRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRemoteRequest.m; sourceTree = "<group>"; };
 		279906EC149ABFC1003D4338 /* CBLBatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBatcher.h; sourceTree = "<group>"; };
@@ -1359,6 +1362,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27942CA6195B8991008C8DE9 /* libsqlite3.dylib in Frameworks */,
 				27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */,
 				27E7FB03155DBDA20025F93A /* Security.framework in Frameworks */,
 				27E7FAF1155D8ECE0025F93A /* CFNetwork.framework in Frameworks */,
@@ -1393,6 +1397,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27942C9E195B8319008C8DE9 /* libsqlite3.dylib in Frameworks */,
 				27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */,
 				AA1776BC1857AE4D00CB01A3 /* CoreData.framework in Frameworks */,
 				27D90B1A15601F8C0000735E /* Security.framework in Frameworks */,
@@ -1994,6 +1999,7 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27942C9D195B8319008C8DE9 /* libsqlite3.dylib */,
 				27E940651954BB9E00A9732E /* libc++.dylib */,
 				27DD150519354B3F009A367D /* libc++.dylib */,
 				27DD150319354AF7009A367D /* libstdc++.dylib */,

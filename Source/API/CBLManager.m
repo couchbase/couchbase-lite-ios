@@ -253,6 +253,12 @@ static CBLManager* sInstance;
 
 // Scan my dir for SQLite-based databases from Couchbase Lite 1.0 and upgrade them:
 - (void) upgradeOldDatabaseFiles {
+    // The CBLDatabaseImport class is optional, so don't create a hard reference to it.
+    // And skip the upgrade check if it's not present:
+    Class databaseImportClass = NSClassFromString(@"CBLDatabaseImport");
+    if (!databaseImportClass)
+        return;
+
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSArray* files = [fmgr contentsOfDirectoryAtPath: _dir error: NULL];
     for (NSString* filename in [files pathsMatchingExtensions: @[kV1DBExtension]]) {
@@ -268,30 +274,14 @@ static CBLManager* sInstance;
             continue;
         }
         if (!db.exists) {
-            // Move attachments directory:
-            if (![fmgr moveItemAtPath: [[oldDbPath stringByDeletingPathExtension]
-                                                        stringByAppendingString: @" attachments"]
-                               toPath: db.attachmentStorePath
-                                error: &error]) {
-                if (!CBLIsFileNotFoundError(error)) {
-                    Warn(@"Upgrade failed: Couldn't move attachments: %@", error);
-                    continue;
-                    //TODO: Close & delete new db
-                }
-            }
-            if (![db open: &error]) {
-                Warn(@"Upgrade failed: Couldn't open new db: %@", error);
-                continue;
-                //TODO: Close & delete new db
-            }
-
-            // Import the documents:
-            CBLDatabaseImport* importer = [[CBLDatabaseImport alloc] initWithDatabase: db
-                                                                           sqliteFile: oldDbPath];
+            // Import the old database into the new one:
+            CBLDatabaseImport* importer = [[databaseImportClass alloc] initWithDatabase: db
+                                                                             sqliteFile: oldDbPath];
             CBLStatus status = [importer import];
             if (CBLStatusIsError(status)) {
-                Warn(@"Upgrade failed: Couldn't import docs: status %d", status);
-                //TODO: Close & delete new db
+                Warn(@"Upgrade failed: status %d", status);
+                [db deleteDatabase: NULL];
+                continue;
             }
         }
         [db close];

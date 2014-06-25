@@ -8,9 +8,11 @@
 
 #import "CBLDatabaseImport.h"
 #import "CouchbaseLitePrivate.h"
-#import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+LocalDocs.h"
 #import "CBL_Revision.h"
+#import "CBLMisc.h"
 #import <sqlite3.h>
 
 
@@ -57,12 +59,10 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     sqlite3_stmt* _docQuery;
     sqlite3_stmt* _revQuery;
     sqlite3_stmt* _attQuery;
-    NSUInteger _numDocs;
-    NSUInteger _numRevs;
 }
 
 
-@synthesize numDocs=_numDocs, numRevs=_numRevs;
+@synthesize numDocs=_numDocs, numRevs=_numRevs, moveAttachmentsDir=_moveAttachmentsDir;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db sqliteFile: (NSString*)sqliteFile {
@@ -70,6 +70,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     if (self) {
         _db = db;
         _path = sqliteFile;
+        _moveAttachmentsDir = YES;
     }
     return self;
 }
@@ -84,17 +85,26 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
 
 
 - (CBLStatus) import {
+    // Open source and destination databases:
+    NSError* error;
+    if (![_db open: &error]) {
+        Warn(@"Upgrade failed: Couldn't open new db: %@", error);
+        return CBLStatusFromNSError(error, 0);
+    }
+
     int err = sqlite3_open_v2(_path.fileSystemRepresentation, &_sqlite,
                               SQLITE_OPEN_READONLY, NULL);
     if (err)
         return sqliteErrToStatus(err);
 
+    // Import documents:
     // CREATE TABLE docs (doc_id INTEGER PRIMARY KEY, docid TEXT UNIQUE NOT NULL);
-    err = sqlite3_prepare_v2(_sqlite, "SELECT doc_id, docid FROM docs", -1, &_docQuery, NULL);
-    if (err)
-        return sqliteErrToStatus(err);
+    CBLStatus status = [self prepare: &_docQuery
+                             fromSQL: "SELECT doc_id, docid FROM docs"];
+    if (CBLStatusIsError(status))
+        return status;
 
-    return [_db _inTransaction: ^CBLStatus {
+    status = [_db _inTransaction: ^CBLStatus {
         int err;
         while (SQLITE_ROW == (err = sqlite3_step(_docQuery))) {
             @autoreleasepool {
@@ -107,6 +117,33 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
         }
         return sqliteErrToStatus(err);
     }];
+    if (CBLStatusIsError(status))
+        return status;
+
+    // Import local docs:
+    status = [self importLocalDocs];
+    if (CBLStatusIsError(status))
+        return status;
+
+    // Import info (public/private UUIDs):
+    status = [self importInfo];
+    if (CBLStatusIsError(status))
+        return status;
+
+    // Finally, move attachment storage directory:
+    if (_moveAttachmentsDir) {
+        NSString* oldAttachmentsPath = [[_path stringByDeletingPathExtension]
+                                                       stringByAppendingString: @" attachments"];
+        if (![[NSFileManager defaultManager] moveItemAtPath: oldAttachmentsPath
+                                                     toPath: _db.attachmentStorePath
+                                                      error: &error]) {
+            if (!CBLIsFileNotFoundError(error)) {
+                Warn(@"Import failed: Couldn't move attachments: %@", error);
+                status = CBLStatusFromNSError(error, 0);
+            }
+        }
+    }
+    return status;
 }
 
 
@@ -122,20 +159,15 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     //  no_attachments BOOLEAN,
     //  UNIQUE (doc_id, revid) );
 
-    if (!_revQuery) {
-        int err = sqlite3_prepare_v2(_sqlite,
-                                     "SELECT sequence, revid, parent, current, deleted, json,"
-                                        " no_attachments FROM revs WHERE doc_id=? ORDER BY sequence",
-                                     -1, &_revQuery, NULL);
-        if (err) return sqliteErrToStatus(err);
-    } else {
-        sqlite3_reset(_revQuery);
-    }
+    CBLStatus status = [self prepare: &_revQuery
+                             fromSQL: "SELECT sequence, revid, parent, current, deleted, json,"
+                                      " no_attachments FROM revs WHERE doc_id=? ORDER BY sequence"];
+    if (CBLStatusIsError(status))
+        return status;
     sqlite3_bind_int64(_revQuery, 1, docNumericID);
 
     NSMutableDictionary* tree = $mdict();
 
-    CBLStatus status;
     int err;
     while (SQLITE_ROW == (err = sqlite3_step(_revQuery))) {
         int64_t sequence = sqlite3_column_int64(_revQuery, 0);
@@ -194,14 +226,10 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     //  encoding INTEGER DEFAULT 0,
     //  encoded_length INTEGER );
 
-    if (!_attQuery) {
-        int err = sqlite3_prepare_v2(_sqlite,
-                                     "SELECT filename, key, type, length, revpos, encoding, encoded_length FROM attachments WHERE sequence=?",
-                                     -1, &_attQuery, NULL);
-        if (err) return sqliteErrToStatus(err);
-    } else {
-        sqlite3_reset(_attQuery);
-    }
+    CBLStatus status = [self prepare: &_attQuery fromSQL: "SELECT filename, key, type, length,"
+                                    " revpos, encoding, encoded_length FROM attachments WHERE sequence=?"];
+    if (CBLStatusIsError(status))
+        return status;
     sqlite3_bind_int64(_attQuery, 1, sequence);
 
     NSMutableDictionary* attachments = $mdict();
@@ -245,6 +273,55 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
 }
 
 
+- (CBLStatus) importLocalDocs {
+    // CREATE TABLE localdocs (
+    //  docid TEXT UNIQUE NOT NULL,
+    //  revid TEXT NOT NULL COLLATE REVID,
+    //  json BLOB );
+
+    sqlite3_stmt* localQuery = NULL;
+    CBLStatus status = [self prepare: &localQuery fromSQL: "SELECT docid, json FROM localdocs"];
+    if (CBLStatusIsError(status))
+        return status;
+    int err;
+    while (SQLITE_ROW == (err = sqlite3_step(localQuery))) {
+        NSString* docID = columnString(localQuery, 0);
+        NSData* json = columnData(localQuery, 1);
+        NSDictionary* props = [CBLJSON JSONObjectWithData: json options: 0 error: NULL];
+        NSError* error;
+        if (props && ![_db putLocalDocument: props withID: docID error: &error]) {
+            Warn(@"Couldn't import local doc '%@': %@", docID, error);
+        }
+    }
+    sqlite3_finalize(localQuery);
+    return sqliteErrToStatus(err);
+}
+
+
+- (CBLStatus) importInfo {
+    // CREATE TABLE info (key TEXT PRIMARY KEY, value TEXT);
+    sqlite3_stmt* infoQuery = NULL;
+    CBLStatus status = [self prepare: &infoQuery fromSQL: "SELECT key, value FROM info"];
+    if (CBLStatusIsError(status))
+        return status;
+    int err;
+    while (SQLITE_ROW == (err = sqlite3_step(infoQuery))) {
+        [_db setInfo: columnString(infoQuery, 1) forKey: columnString(infoQuery, 0)];
+    }
+    return sqliteErrToStatus(err);
+}
+
+
+- (CBLStatus) prepare: (sqlite3_stmt**)pStmt fromSQL: (const char*)sql {
+    int err;
+    if (*pStmt)
+        err = sqlite3_reset(*pStmt);
+    else
+        err = sqlite3_prepare_v2(_sqlite, sql, -1, pStmt, NULL);
+    return sqliteErrToStatus(err);
+}
+
+
 @end
 
 
@@ -263,6 +340,7 @@ TestCase(ImportDB) {
     CBLDatabaseImport* import = [[CBLDatabaseImport alloc] initWithDatabase: db
                                                                  sqliteFile: path];
     Assert(import);
+    import.moveAttachmentsDir = NO;
     CBLStatus status = [import import];
     AssertEq(status, kCBLStatusOK);
     Log(@"Imported %lu docs, %lu revisions", (unsigned long)import.numDocs, (unsigned long)import.numRevs);

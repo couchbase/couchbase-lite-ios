@@ -10,13 +10,16 @@
 @class CBLDatabase;
 
 
-/** Imports from the v1.0 SQLite database format into a CBLDatabase. */
+/** Imports from the v1.0 SQLite database format into a CBLDatabase.
+    This class is optional: the source file does not need to be built into the app or the
+    Couchbase Lite library. If it's not present, Couchbase Lite will ignore old v1.0 databases
+    instead of importing them. */
 @interface CBLDatabaseImport : NSObject
-
-- (instancetype) initWithPath: (NSString*)dbPath;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                        sqliteFile: (NSString*)sqliteFile;
+
+@property BOOL moveAttachmentsDir;
 
 - (CBLStatus) import;
 
