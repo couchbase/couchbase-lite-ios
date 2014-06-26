@@ -198,7 +198,7 @@
     for (NSString* key in properties) {
         if ([key hasPrefix: @"_"]  && ![sSpecialKeysToLeave member: key]) {
             if (![sSpecialKeysToRemove member: key]) {
-                Warn(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
+                Log(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
                 return nil;
             }
             if (!editedProperties)
@@ -236,10 +236,14 @@
 
     // Update the _id and _rev in the JSON, but only if those properties were already set:
     NSDictionary* properties = self.properties;
-    if (properties.cbl_id || properties.cbl_rev) {
-        NSDictionary* updatedProperties = [properties cbl_withDocID: docID revID: revID];
-        if (updatedProperties != properties)
-            self.properties = updatedProperties;
+    if (properties) {
+        NSString* idProp = properties.cbl_id, *revProp = properties.cbl_rev;
+        if ((idProp && !$equal(idProp, _docID)) || (revProp && !$equal(revProp, revID))) {
+            NSMutableDictionary* nuProperties = [properties mutableCopy];
+            [nuProperties setValue: docID forKey: @"_id"];
+            [nuProperties setValue: revID forKey: @"_rev"];
+            self.properties = [nuProperties copy];
+        }
     }
 }
 
