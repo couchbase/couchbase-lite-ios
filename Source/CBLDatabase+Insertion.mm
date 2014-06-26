@@ -230,7 +230,7 @@ using namespace forestdb;
 
         if (prevRevID) {
             // Updating an existing revision; make sure it exists and is a leaf:
-            revNode = doc.get(revidBuffer(prevRevID));
+            revNode = doc.get(prevRevID);
             if (!revNode)
                 return kCBLStatusNotFound;
             else if (!allowConflict && !revNode->isLeaf())
@@ -350,7 +350,7 @@ static void convertRevIDs(NSArray* revIDs,
 
     CBLStatus status = [self _inTransaction: ^CBLStatus {
         // First get the CBForest doc:
-        VersionedDocument doc(_forest, nsstring_slice(docID));
+        VersionedDocument doc(_forest, docID);
 
         // Add the revision & ancestry to the doc:
         std::vector<revidBuffer> historyBuffers;
@@ -408,7 +408,7 @@ static void convertRevIDs(NSArray* revIDs,
         return kCBLStatusOK;
     return [self _inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
-            VersionedDocument doc(_forest, nsstring_slice(docID));
+            VersionedDocument doc(_forest, docID);
             if (!doc.exists())
                 return kCBLStatusNotFound;
 

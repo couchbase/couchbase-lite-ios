@@ -32,7 +32,7 @@ static NSData* dataOfNode(const Revision* rev) {
     CBL_MutableRevision* rev;
     NSString* docID = (NSString*)doc.docID();
     if (doc.revsAvailable()) {
-        const Revision* revNode = doc.get(revidBuffer(revID));
+        const Revision* revNode = doc.get(revID);
         if (!revNode)
             return nil;
         rev = [[CBL_MutableRevision alloc] initWithDocID: docID
@@ -60,7 +60,7 @@ static NSData* dataOfNode(const Revision* rev) {
     if (options == kCBLNoBody)
         return YES;
 
-    const Revision* revNode = doc.get(revidBuffer(rev.revID));
+    const Revision* revNode = doc.get(rev.revID);
     if (!revNode)
         return NO;
     NSData* json = nil;
@@ -240,51 +240,6 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 
     NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
     return $dict({@"ids", revIDs}, {@"start", start});
-}
-
-
-+ (NSArray*) getPossibleAncestorRevisionIDs: (NSString*)revID
-                                      limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments // unimplemented
-                                        doc: (VersionedDocument&)doc
-{
-    unsigned generation = [CBL_Revision generationFromRevID: revID];
-    if (generation <= 1)
-        return nil;
-
-    NSMutableArray* revIDs = $marray();
-
-    auto allRevisions = doc.allRevisions();
-    for (auto rev = allRevisions.begin(); rev != allRevisions.end(); ++rev) {
-        if (rev->revID.generation() < generation
-                    && !rev->isDeleted() && rev->isBodyAvailable()) {
-            [revIDs addObject: (NSString*)rev->revID];
-            if (limit && revIDs.count >= limit)
-                break;
-        }
-    }
-    return revIDs;
-}
-
-
-+ (NSString*) findCommonAncestorOf: (NSString*)revID
-                        withRevIDs: (NSArray*)revIDs
-                               doc: (VersionedDocument&)doc
-{
-    unsigned generation = [CBL_Revision generationFromRevID: revID];
-    if (generation <= 1 || revIDs.count == 0)
-        return nil;
-
-    revIDs = [revIDs sortedArrayUsingComparator: ^NSComparisonResult(NSString* id1, NSString* id2) {
-        return CBLCompareRevIDs(id2, id1); // descending order of generation
-    }];
-    for (NSString* possibleRevID in revIDs) {
-        revidBuffer revIDSlice(possibleRevID);
-        if (revIDSlice.generation() <= generation && doc.get(revIDSlice) != NULL) {
-            return possibleRevID;
-        }
-    }
-    return nil;
 }
     
 

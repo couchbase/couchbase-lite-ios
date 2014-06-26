@@ -42,15 +42,4 @@ CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
 + (NSDictionary*) getRevisionHistoryOfNode: (const forestdb::Revision*)revNode
                          startingFromAnyOf: (NSArray*)ancestorRevIDs;
 
-/** Returns IDs of local revisions of the same document, that have a lower generation number.
-    Does not return revisions whose bodies have been compacted away, or deletion markers. */
-+ (NSArray*) getPossibleAncestorRevisionIDs: (NSString*)revID
-                                      limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments
-                                        doc: (VersionedDocument&)doc;
-
-+ (NSString*) findCommonAncestorOf: (NSString*)revID
-                        withRevIDs: (NSArray*)revIDs
-                               doc: (VersionedDocument&)doc;
-
 @end
