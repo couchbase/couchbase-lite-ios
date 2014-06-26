@@ -161,9 +161,9 @@
 
 @synthesize rev=_rev;
 
-- (NSString*) revisionID    {return _rev.revID;}
-- (BOOL) isDeletion          {return _rev.deleted;}
-- (BOOL) propertiesAvailable{return !_rev.missing;}
+- (NSString*) revisionID        {return _rev.revID;}
+- (BOOL) isDeletion             {return _rev.deleted;}
+- (BOOL) propertiesAvailable    {return !_rev.missing;}
 
 
 - (NSString*) parentRevisionID  {
@@ -190,6 +190,12 @@
         return false;
     }
     _rev = rev;
+#if DEBUG
+    NSDictionary* properties = rev.properties;
+    AssertEqual(properties[@"_id"], self.document.documentID);
+    AssertEqual(properties[@"_rev"], self.revisionID);
+    AssertEq([properties[@"_deleted"] boolValue], self.isDeletion);
+#endif
     return true;
 }
 
@@ -204,7 +210,7 @@
 
 - (NSDictionary*) properties {
     NSDictionary* properties = _rev.properties;
-    if (!properties && !_checkedProperties) {
+    if (!_checkedProperties) {
         if ([self loadProperties])
             properties = _rev.properties;
         _checkedProperties = YES;

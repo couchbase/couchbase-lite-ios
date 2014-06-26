@@ -77,7 +77,8 @@
 }
 
 - (id) mutableCopyWithZone: (NSZone*)zone {
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID revID: _revID
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID
+                                                                    revID: _revID
                                                                   deleted: _deleted];
     rev.body = _body;
     rev.sequence = _sequence;
@@ -187,26 +188,29 @@
                                @"_attachments", @"_removed", nil];
     });
 
-    NSDictionary* origProps = self.properties;
-    if (!origProps)
+    NSDictionary* properties = self.properties;
+    if (!properties)
         return nil;
 
     // Don't leave in any "_"-prefixed keys except for the ones in sSpecialKeysToLeave.
     // Keys in sSpecialKeysToRemove (_id, _rev, ...) are left out, any others trigger an error.
-    NSMutableDictionary* properties = [[NSMutableDictionary alloc] initWithCapacity: origProps.count];
-    for (NSString* key in origProps) {
-        if (![key hasPrefix: @"_"]  || [sSpecialKeysToLeave member: key]) {
-            properties[key] = origProps[key];
-        } else if (![sSpecialKeysToRemove member: key]) {
-            Log(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
-            return nil;
+    NSMutableDictionary* editedProperties = nil;
+    for (NSString* key in properties) {
+        if ([key hasPrefix: @"_"]  && ![sSpecialKeysToLeave member: key]) {
+            if (![sSpecialKeysToRemove member: key]) {
+                Warn(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
+                return nil;
+            }
+            if (!editedProperties)
+                editedProperties = [properties mutableCopy];
+            [editedProperties removeObjectForKey: key];
         }
     }
 
     // Create canonical JSON -- this is important, because the JSON data returned here will be used
     // to create the new revision ID, and we need to guarantee that equivalent revision bodies
     // result in equal revision IDs.
-    NSData* json = [CBLCanonicalJSON canonicalData: properties];
+    NSData* json = [CBLCanonicalJSON canonicalData: (editedProperties ?: properties)];
     return json;
 }
 
@@ -230,14 +234,13 @@
         _docID = [docID copy];
     _revID = [revID copy];
 
-    // Update the _id and _rev in the JSON:
+    // Update the _id and _rev in the JSON, but only if those properties were already set:
     NSDictionary* properties = self.properties;
-    NSMutableDictionary* nuProperties = properties ? [properties mutableCopy]
-                                                   : [[NSMutableDictionary alloc] init];
-    if (!nuProperties[@"_id"])
-        nuProperties[@"_id"] = docID;
-    [nuProperties setValue: revID forKey: @"_rev"];
-    self.properties = nuProperties;
+    if (properties.cbl_id || properties.cbl_rev) {
+        NSDictionary* updatedProperties = [properties cbl_withDocID: docID revID: revID];
+        if (updatedProperties != properties)
+            self.properties = updatedProperties;
+    }
 }
 
 - (void) setProperties:(UU NSDictionary *)properties {

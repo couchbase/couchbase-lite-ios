@@ -42,21 +42,26 @@
 
 - (void) encodeString: (UU NSString*)string {
     static NSCharacterSet* kCharsToQuote;
-    if (!kCharsToQuote) {
-        NSMutableCharacterSet* chars = (id)[NSMutableCharacterSet characterSetWithRange: NSMakeRange(0, 32)];
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSMutableCharacterSet* chars = [NSMutableCharacterSet characterSetWithRange: NSMakeRange(0, 32)];
         [chars addCharactersInString: @"\"\\"];
         kCharsToQuote = [chars copy];
-    }
-    
-    [_output appendString: @"\""];
-    NSRange remainder = {0, string.length};
+    });
+
+    const NSUInteger stringLength = string.length;
+    NSUInteger insertPos = _output.length + 1;
+    [_output appendString: @"\"\""];
+    NSRange remainder = {0, stringLength};
     while (remainder.length > 0) {
         NSRange quote = [string rangeOfCharacterFromSet: kCharsToQuote options: 0 range: remainder];
         if (quote.length == 0)
-            quote.location = string.length;
+            quote.location = stringLength;
         NSUInteger nChars = quote.location - remainder.location;
-        [_output appendString: [string substringWithRange:
-                                                    NSMakeRange(remainder.location, nChars)]];
+        [_output insertString: [string substringWithRange:
+                                                    NSMakeRange(remainder.location, nChars)]
+                      atIndex: insertPos];
+        insertPos += nChars;
         if (quote.length > 0) {
             unichar ch = [string characterAtIndex: quote.location];
             NSString* escaped;
@@ -77,13 +82,13 @@
                     escaped = [NSString stringWithFormat: @"\\u%04x", ch];
                     break;
             }
-            [_output appendString: escaped];
+            [_output insertString: escaped atIndex: insertPos];
+            insertPos += escaped.length;
             ++nChars;
         }
         remainder.location += nChars;
         remainder.length -= nChars;
     }
-    [_output appendString: @"\""];
 }
 
 
@@ -185,7 +190,7 @@ static NSComparisonResult compareCanonStrings( UU id s1, UU id s2, void *context
 
 - (void) encode {
     if (!_output) {
-        _output = [[NSMutableString alloc] init];
+        _output = [[NSMutableString alloc] initWithCapacity: 500];
         [self encode: _input];
     }
 }

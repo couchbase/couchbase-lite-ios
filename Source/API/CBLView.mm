@@ -120,7 +120,7 @@ public:
         _path = [db.dir stringByAppendingPathComponent: viewNameToFileName(_name)];
         _mapContentOptions = kCBLIncludeLocalSeq;
         _indexType = (CBLViewIndexType)-1; // unknown
-        if (0) { // appease static analyzer
+        if ((0)) { // appease static analyzer
             _collation = 0;
         }
 

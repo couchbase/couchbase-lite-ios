@@ -38,7 +38,7 @@ static void closeTestDB(CBLDatabase* db) {
 
 
 static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
-                                                   NSDictionary* properties) {
+                                                 NSDictionary* properties) {
     CBLDocument* doc = [db createDocument];
     CAssert(doc != nil);
     CAssertNil(doc.currentRevisionID);
@@ -50,6 +50,9 @@ static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
     
     CAssert(doc.documentID);
     CAssert(doc.currentRevisionID);
+    CAssertEqual(doc.properties[@"_id"], doc.documentID);
+    CAssertEqual(doc.properties[@"_rev"], doc.currentRevisionID);
+    CAssertEq([doc.properties[@"_deleted"] boolValue], doc.isDeleted);
     CAssertEqual(doc.userProperties, properties);
     CAssertEq(db[doc.documentID], doc);
     //Log(@"Created %p = %@", doc, doc);
@@ -113,7 +116,7 @@ TestCase(API_ExcludedFromBackup) {
 TestCase(API_CreateDocument) {
     CBLDatabase* db = createEmptyDB();
     NSDictionary* properties = @{@"testName": @"testCreateDocument",
-                                @"tag": @1337};
+                                 @"tag": @1337};
     CBLDocument* doc = createDocumentWithProperties(db, properties);
     
     NSString* docID = doc.documentID;

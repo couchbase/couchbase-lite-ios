@@ -54,13 +54,21 @@ TestCase(JSFilterFunction) {
 
     // I'm using a CBL_Revision as a sort of mock CBLRevision, simply because it's easier to
     // instantiate one. The only method that will be called on it is -properties.
-    CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: @{@"foo": @666}];
+    CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: @{@"_id": @"doc1",
+                                                                    @"_rev": @"1-aa",
+                                                                    @"foo": @666}];
     CAssert(!filterBlock((CBLSavedRevision*)rev,nil));
-    rev = [[CBL_Revision alloc] initWithProperties: @{@"ok": $false}];
+    rev = [[CBL_Revision alloc] initWithProperties: @{@"_id": @"doc1",
+                                                      @"_rev": @"1-aa",
+                                                      @"ok": $false}];
     CAssert(!filterBlock((CBLSavedRevision*)rev,nil));
-    rev = [[CBL_Revision alloc] initWithProperties: @{@"ok": $true}];
+    rev = [[CBL_Revision alloc] initWithProperties: @{@"_id": @"doc1",
+                                                      @"_rev": @"1-aa",
+                                                      @"ok": $true}];
     CAssert(filterBlock((CBLSavedRevision*)rev,nil));
-    rev = [[CBL_Revision alloc] initWithProperties: @{@"ok": @"mais oui"}];
+    rev = [[CBL_Revision alloc] initWithProperties: @{@"_id": @"doc1",
+                                                      @"_rev": @"1-aa",
+                                                      @"ok": @"mais oui"}];
     CAssert(filterBlock((CBLSavedRevision*)rev,nil));
 }
 
@@ -74,11 +82,17 @@ TestCase(JSFilterFunctionWithParams) {
     NSDictionary* params = @{@"name": @"jens"};
     // I'm using a CBL_Revision as a sort of mock CBLRevision, simply because it's easier to
     // instantiate one. The only method that will be called on it is -properties.
-    CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: @{@"foo": @666}];
+    CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: @{@"_id": @"doc1",
+                                                                    @"_rev": @"1-aa",
+                                                                    @"foo": @666}];
     CAssert(!filterBlock((CBLSavedRevision*)rev, params));
-    rev = [[CBL_Revision alloc] initWithProperties: @{@"name": @"bob"}];
+    rev = [[CBL_Revision alloc] initWithProperties: @{@"_id": @"doc1",
+                                                      @"_rev": @"1-aa",
+                                                      @"name": @"bob"}];
     CAssert(!filterBlock((CBLSavedRevision*)rev, params));
-    rev = [[CBL_Revision alloc] initWithProperties: @{@"name": @"jens"}];
+    rev = [[CBL_Revision alloc] initWithProperties: @{@"_id": @"doc1",
+                                                      @"_rev": @"1-aa",
+                                                      @"name": @"jens"}];
     CAssert(filterBlock((CBLSavedRevision*)rev, params));
 }
 

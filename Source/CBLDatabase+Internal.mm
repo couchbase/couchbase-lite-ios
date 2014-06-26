@@ -478,8 +478,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
                        options: (CBLContentOptions)options
 {
-    if (rev.body && rev.sequenceIfKnown && options==0)
-        return kCBLStatusOK;  // no-op
+    // First check for no-op -- if we just need the default properties and already have them:
+    if (options==0 && rev.sequenceIfKnown) {
+        NSDictionary* props = rev.properties;
+        if (props.cbl_rev && props.cbl_id)
+            return kCBLStatusOK;
+    }
     Assert(rev.docID && rev.revID);
 
     return [self _try: ^{
@@ -500,8 +504,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus
 {
-    if (rev.body && rev.sequenceIfKnown && options==0)
-        return rev;  // no-op
+    // First check for no-op -- if we just need the default properties and already have them:
+    if (options==0 && rev.sequenceIfKnown) {
+        NSDictionary* props = rev.properties;
+        if (props.cbl_rev && props.cbl_id)
+            return rev;
+    }
     CBL_MutableRevision* nuRev = rev.mutableCopy;
     CBLStatus status = [self loadRevisionBody: nuRev options: options];
     if (outStatus)

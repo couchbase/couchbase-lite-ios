@@ -254,22 +254,6 @@ using namespace forestdb;
             }
         }
 
-        // Run any validation blocks:
-        if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
-            CBL_Revision* fakeNewRev = [putRev mutableCopyWithDocID: docID revID: nil];
-            CBL_Revision* prevRev = nil;
-            if (prevRevID) {
-                prevRev = [[CBL_Revision alloc] initWithDocID: docID
-                                                        revID: prevRevID
-                                                      deleted: revNode->isDeleted()];
-            }
-            CBLStatus status = [self validateRevision: fakeNewRev
-                                     previousRevision: prevRev
-                                          parentRevID: prevRevID];
-            if (CBLStatusIsError(status))
-                return status;
-        }
-
         // Get the JSON that we already started encoding:
         if (putRev.properties) {
             dispatch_semaphore_wait(jsonSemaphore, DISPATCH_TIME_FOREVER);
@@ -283,6 +267,22 @@ using namespace forestdb;
                                               prevRevID: prevRevID];
         if (!newRevID)
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
+
+        // Run any validation blocks:
+        if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
+            CBL_MutableRevision* fakeNewRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
+            CBL_Revision* prevRev = nil;
+            if (prevRevID) {
+                prevRev = [[CBL_Revision alloc] initWithDocID: docID
+                                                        revID: prevRevID
+                                                      deleted: revNode->isDeleted()];
+            }
+            CBLStatus status = [self validateRevision: fakeNewRev
+                                     previousRevision: prevRev
+                                          parentRevID: prevRevID];
+            if (CBLStatusIsError(status))
+                return status;
+        }
 
         // Add the revision to the database:
         int status;

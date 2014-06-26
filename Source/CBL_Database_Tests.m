@@ -85,8 +85,6 @@ TestCase(CBL_Database_CRUD) {
                            CAssert(rev);
                            CAssert(rev.docID);
                            CAssert(rev.revID);
-                           CAssertEqual(rev[@"_id"], rev.docID);
-                           CAssertEqual(rev[@"_rev"], rev.revID);
                        }
                    }];
 
@@ -289,7 +287,6 @@ TestCase(CBL_Database_Validation) {
         CAssert(newRevision);
         CAssert(context);
         CAssert(newRevision.properties || newRevision.isDeletion);
-        CAssertNil(newRevision.revisionID);
         validationCalled = YES;
         BOOL hoopy = newRevision.isDeletion || newRevision[@"towel"] != nil;
         Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
