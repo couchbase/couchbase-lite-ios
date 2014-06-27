@@ -62,7 +62,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
 }
 
 
-@synthesize numDocs=_numDocs, numRevs=_numRevs, moveAttachmentsDir=_moveAttachmentsDir;
+@synthesize numDocs=_numDocs, numRevs=_numRevs, canRemoveOldAttachmentsDir=_canRemoveOldAttachmentsDir;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db sqliteFile: (NSString*)sqliteFile {
@@ -70,7 +70,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     if (self) {
         _db = db;
         _path = sqliteFile;
-        _moveAttachmentsDir = YES;
+        _canRemoveOldAttachmentsDir = YES;
     }
     return self;
 }
@@ -85,22 +85,28 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
 
 
 - (CBLStatus) import {
-    // Open source and destination databases:
+    // Open source (SQLite) database:
+    int err = sqlite3_open_v2(_path.fileSystemRepresentation, &_sqlite,
+                              SQLITE_OPEN_READONLY, NULL);
+    if (err)
+        return sqliteErrToStatus(err);
+
+    // Open destination database:
     NSError* error;
     if (![_db open: &error]) {
         Warn(@"Upgrade failed: Couldn't open new db: %@", error);
         return CBLStatusFromNSError(error, 0);
     }
 
-    int err = sqlite3_open_v2(_path.fileSystemRepresentation, &_sqlite,
-                              SQLITE_OPEN_READONLY, NULL);
-    if (err)
-        return sqliteErrToStatus(err);
+    // Move attachment storage directory:
+    CBLStatus status = [self moveAttachmentsDir];
+    if( CBLStatusIsError(status))
+        return status;
 
     // Import documents:
     // CREATE TABLE docs (doc_id INTEGER PRIMARY KEY, docid TEXT UNIQUE NOT NULL);
-    CBLStatus status = [self prepare: &_docQuery
-                             fromSQL: "SELECT doc_id, docid FROM docs"];
+    status = [self prepare: &_docQuery
+                   fromSQL: "SELECT doc_id, docid FROM docs"];
     if (CBLStatusIsError(status))
         return status;
 
@@ -130,20 +136,35 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     if (CBLStatusIsError(status))
         return status;
 
-    // Finally, move attachment storage directory:
-    if (_moveAttachmentsDir) {
-        NSString* oldAttachmentsPath = [[_path stringByDeletingPathExtension]
-                                                       stringByAppendingString: @" attachments"];
-        if (![[NSFileManager defaultManager] moveItemAtPath: oldAttachmentsPath
-                                                     toPath: _db.attachmentStorePath
-                                                      error: &error]) {
-            if (!CBLIsFileNotFoundError(error)) {
-                Warn(@"Import failed: Couldn't move attachments: %@", error);
-                status = CBLStatusFromNSError(error, 0);
-            }
+    return status;
+}
+
+
+- (CBLStatus) moveAttachmentsDir {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* oldAttachmentsPath = [[_path stringByDeletingPathExtension]
+                                                        stringByAppendingString: @" attachments"];
+    NSString* newAttachmentsPath = _db.attachmentStorePath;
+    if (![fmgr isReadableFileAtPath: oldAttachmentsPath])
+        return kCBLStatusOK;
+
+    [fmgr removeItemAtPath: newAttachmentsPath error: NULL];
+    NSError* error;
+    BOOL result;
+    if (_canRemoveOldAttachmentsDir) {
+        result = [fmgr moveItemAtPath: oldAttachmentsPath toPath: newAttachmentsPath
+                                error: &error];
+    } else {
+        result = [fmgr copyItemAtPath: oldAttachmentsPath toPath: newAttachmentsPath
+                                error: &error];
+    }
+    if (!result) {
+        if (!CBLIsFileNotFoundError(error)) {
+            Warn(@"Import failed: Couldn't move attachments: %@", error);
+            return CBLStatusFromNSError(error, 0);
         }
     }
-    return status;
+    return kCBLStatusOK;
 }
 
 
@@ -252,6 +273,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
                                   {@"digest", digest},
                                   {@"length", @(length)},
                                   {@"revpos", @(revpos)},
+                                  {@"follows", @YES},
                                   {@"encoding", (encoding ?@"gzip" : nil)},
                                   {@"encoded_length", (encoding ?@(encodedLength) :nil)} );
         attachments[name] = att;
@@ -340,7 +362,7 @@ TestCase(ImportDB) {
     CBLDatabaseImport* import = [[CBLDatabaseImport alloc] initWithDatabase: db
                                                                  sqliteFile: path];
     Assert(import);
-    import.moveAttachmentsDir = NO;
+    import.canRemoveOldAttachmentsDir = NO;
     CBLStatus status = [import import];
     AssertEq(status, kCBLStatusOK);
     Log(@"Imported %lu docs, %lu revisions", (unsigned long)import.numDocs, (unsigned long)import.numRevs);

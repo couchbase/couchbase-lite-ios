@@ -101,6 +101,12 @@
 }
 
 
+- (BOOL) hasBlobForKey: (CBLBlobKey)key {
+    return [[NSFileManager defaultManager] fileExistsAtPath: [self pathForKey: key]
+                                                isDirectory: NULL];
+}
+
+
 - (NSData*) blobForKey: (CBLBlobKey)key {
     NSString* path = [self pathForKey: key];
     return [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: NULL];

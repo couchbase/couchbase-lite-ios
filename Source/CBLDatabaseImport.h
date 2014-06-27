@@ -19,7 +19,7 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                        sqliteFile: (NSString*)sqliteFile;
 
-@property BOOL moveAttachmentsDir;
+@property BOOL canRemoveOldAttachmentsDir;
 
 - (CBLStatus) import;
 

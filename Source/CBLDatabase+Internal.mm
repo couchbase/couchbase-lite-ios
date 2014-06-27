@@ -597,7 +597,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments // unimplemented
+                            onlyAttachments: (BOOL)onlyAttachments
 {
     unsigned generation = [CBL_Revision generationFromRevID: rev.revID];
     if (generation <= 1)
@@ -608,7 +608,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         auto allRevisions = doc.allRevisions();
         for (auto rev = allRevisions.begin(); rev != allRevisions.end(); ++rev) {
             if (rev->revID.generation() < generation
-                    && !rev->isDeleted() && rev->isBodyAvailable()) {
+                    && !rev->isDeleted() && rev->isBodyAvailable()
+                    && !(onlyAttachments && !rev->hasAttachments())) {
                 [revIDs addObject: (NSString*)rev->revID];
                 if (limit && revIDs.count >= limit)
                     break;

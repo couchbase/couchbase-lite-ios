@@ -286,7 +286,10 @@ using namespace forestdb;
 
         // Add the revision to the database:
         int status;
-        if (!doc.insert(revidBuffer(newRevID), json, putRev.deleted, revNode, allowConflict, status))
+        if (!doc.insert(revidBuffer(newRevID), json,
+                        putRev.deleted,
+                        (putRev.attachments != nil),
+                        revNode, allowConflict, status))
             if (CBLStatusIsError((CBLStatus)status))
                 return (CBLStatus)status;
         doc.prune((unsigned)self.maxRevTreeDepth);
@@ -337,18 +340,29 @@ static void convertRevIDs(NSArray* revIDs,
     if (_forest->isReadOnly())
         return kCBLStatusForbidden;
 
-    NSData* json = inRev.asCanonicalJSON;
-    if (!json)
-        return kCBLStatusBadJSON;
-
     if (history.count == 0)
         history = @[revID];
     else if (!$equal(history[0], revID))
         return kCBLStatusBadID;
 
+    CBLStatus status;
+    if (inRev.attachments) {
+        CBL_MutableRevision* updatedRev = [inRev mutableCopy];
+        NSString* prevRevID = history.count >= 2 ? history[1] : nil;
+        if (![self processAttachmentsForRevision: updatedRev
+                                       prevRevID: prevRevID
+                                          status: &status])
+        return status;
+        inRev = updatedRev;
+    }
+
+    NSData* json = inRev.asCanonicalJSON;
+    if (!json)
+        return kCBLStatusBadJSON;
+
     __block CBLDatabaseChange* change = nil;
 
-    CBLStatus status = [self _inTransaction: ^CBLStatus {
+    status = [self _inTransaction: ^CBLStatus {
         // First get the CBForest doc:
         VersionedDocument doc(_forest, docID);
 
@@ -357,8 +371,9 @@ static void convertRevIDs(NSArray* revIDs,
         std::vector<revid> historyVector;
         convertRevIDs(history, historyBuffers, historyVector);
         int common = doc.insertHistory(historyVector,
-                                       forestdb::slice(inRev.body.asJSON),
-                                       inRev.deleted);
+                                       forestdb::slice(json),
+                                       inRev.deleted,
+                                       (inRev.attachments != nil));
         if (common < 0)
             return kCBLStatusBadRequest; // generation numbers not in descending order
         else if (common == 0)

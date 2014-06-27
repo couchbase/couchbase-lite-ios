@@ -191,7 +191,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
                                     onlyCurrent: (BOOL)onlyCurrent;
 
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
-    Does not return revisions whose bodies have been compacted away, or deletion markers. */
+    Does not return revisions whose bodies have been compacted away, or deletion markers.
+    If 'onlyAttachments' is true, only revisions with attachments will be returned. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
                             onlyAttachments: (BOOL)onlyAttachments;

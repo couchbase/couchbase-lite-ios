@@ -140,6 +140,10 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         // This attachment was already added, but the key was left behind in the dictionary:
         attachment.blobKey = *(CBLBlobKey*)[writer bytes];
         return kCBLStatusOK;
+
+    } else if ([_attachments hasBlobForKey: attachment.blobKey]) {
+        // It already exists in the blob-store, so it's OK
+        return kCBLStatusOK;
         
     } else {
         Warn(@"CBLDatabase: No pending attachment for digest %@", digest);
@@ -325,8 +329,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 }
 
 
-/** Given a revision, updates its _attachments dictionary for storage in the database, returning an
-    updated copy of the revision (or nil on error.) */
+/** Given a revision, updates its _attachments dictionary for storage in the database. */
 - (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
                              prevRevID: (NSString*)prevRevID
                                 status: (CBLStatus*)outStatus
@@ -501,16 +504,20 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         Database attachmentIndex(path.fileSystemRepresentation, FDB_OPEN_FLAG_CREATE, config);
         Transaction attachmentTransaction(&attachmentIndex);
 
+        DocEnumerator::Options options = DocEnumerator::Options::kDefault;
+        options.contentOptions = Database::kMetaOnly;
+
         LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
-        for (DocEnumerator e(_forest); e; ++e) {
+        for (DocEnumerator e(_forest, slice::null, slice::null, options); e; ++e) {
+            VersionedDocument doc(_forest, *e);
+            if (!doc.hasAttachments() || (doc.isDeleted() && !doc.isConflicted()))
+                continue;
+            doc.read();
             // Since db is assumed to have just been compacted, we know that non-current revisions
             // won't have any bodies. So only scan the current revs.
-            VersionedDocument doc(_forest, *e);
-            if (doc.isDeleted())
-                continue;
             auto revNodes = doc.currentRevisions();
             for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
-                if ((*revNode)->isActive()) {
+                if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
                     alloc_slice body = (*revNode)->readBody();
                     if (body.size > 0) {
                         NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()

@@ -33,6 +33,7 @@ typedef struct CBLBlobKey {
 
 - (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError;
 
+- (BOOL) hasBlobForKey: (CBLBlobKey)key;
 - (NSData*) blobForKey: (CBLBlobKey)key;
 - (NSInputStream*) blobInputStreamForKey: (CBLBlobKey)key
                                   length: (UInt64*)outLength;
