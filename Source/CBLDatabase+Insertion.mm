@@ -424,6 +424,7 @@ static void convertRevIDs(NSArray* revIDs,
         *outResult = result;
     if (docsToRevs.count == 0)
         return kCBLStatusOK;
+    LogTo(CBLDatabase, @"Purging %lu docs...", (unsigned long)docsToRevs.count);
     return [self _inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
             VersionedDocument doc(_forest, docID);
@@ -440,18 +441,23 @@ static void convertRevIDs(NSArray* revIDs,
                 // Delete all revisions if magic "*" revision ID is given:
                 _forestTransaction->del(doc.docID());
                 revsPurged = @[@"*"];
+                LogTo(CBLDatabase, @"Purged doc '%@'", docID);
             } else {
-                std::vector<revidBuffer> revsBuffers;
-                std::vector<revid> revsVector;
-                convertRevIDs(revIDs, revsBuffers, revsVector);
-
-                std::vector<revid> revsPurgedVector = doc.purge(revsVector);
-                doc.save(*_forestTransaction);
-
-                NSMutableArray* revs = $marray();
-                for (auto rev = revsPurgedVector.begin(); rev != revsPurgedVector.end(); ++rev)
-                    [revs addObject: (NSString*)(*rev)];
-                revsPurged = revs;
+                NSMutableArray* purged = $marray();
+                for (NSString* revID in revIDs) {
+                    if (doc.purge(revidBuffer(revID)) > 0)
+                        [purged addObject: revID];
+                }
+                if (purged.count > 0) {
+                    if (doc.allRevisions().size() > 0) {
+                        doc.save(*_forestTransaction);
+                        LogTo(CBLDatabase, @"Purged doc '%@' revs %@", docID, revIDs);
+                    } else {
+                        _forestTransaction->del(doc.docID());
+                        LogTo(CBLDatabase, @"Purged doc '%@'", docID);
+                    }
+                }
+                revsPurged = purged;
             }
             result[docID] = revsPurged;
         }

@@ -892,7 +892,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 // Fill in the document contents:
                 docContents = [CBLForestBridge bodyOfNode: doc.currentRevision()
                                                   options: options->content];
-                Assert(docContents);
+                if (!docContents)
+                    Warn(@"AllDocs: Unable to read body of doc %@", docID);
             }
 
             NSArray* conflicts = nil;
