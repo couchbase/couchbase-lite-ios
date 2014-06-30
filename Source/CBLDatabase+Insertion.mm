@@ -271,6 +271,9 @@ using namespace forestdb;
         // Run any validation blocks:
         if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
             CBL_MutableRevision* fakeNewRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
+            if (!fakeNewRev.body)
+                fakeNewRev.properties = @{};
+            fakeNewRev.sequence = -1;
             CBL_Revision* prevRev = nil;
             if (prevRevID) {
                 prevRev = [[CBL_Revision alloc] initWithDocID: docID
