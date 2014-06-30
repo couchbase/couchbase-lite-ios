@@ -265,30 +265,35 @@ static CBLManager* sInstance;
         NSString* oldDbPath = [_dir stringByAppendingPathComponent: filename];
         NSLog(@"CouchbaseLite: Upgrading v1 database at %@ ...", oldDbPath);
 
-        // Create and open new CBLDatabase:
         NSString* name = [self nameOfDatabaseAtPath: filename];
-        NSError* error;
-        CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
-        if (!db) {
-            Warn(@"Upgrade failed: Creating new db failed: %@", error);
-            continue;
-        }
-        if (!db.exists) {
-            // Import the old database into the new one:
-            CBLDatabaseImport* importer = [[databaseImportClass alloc] initWithDatabase: db
-                                                                             sqliteFile: oldDbPath];
-            CBLStatus status = [importer import];
-            if (CBLStatusIsError(status)) {
-                Warn(@"Upgrade failed: status %d", status);
-                [db deleteDatabase: NULL];
+        if (![name isEqualToString: @"_replicator"]) {
+            // Create and open new CBLDatabase:
+            NSError* error;
+            CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
+            if (!db) {
+                Warn(@"Upgrade failed: Creating new db failed: %@", error);
                 continue;
             }
+            if (!db.exists) {
+                // Import the old database into the new one:
+                CBLDatabaseImport* importer = [[databaseImportClass alloc] initWithDatabase: db
+                                                                                 sqliteFile: oldDbPath];
+                CBLStatus status = [importer import];
+                if (CBLStatusIsError(status)) {
+                    Warn(@"Upgrade failed: status %d", status);
+                    [importer backOut];
+                    continue;
+                }
+            }
+            [db close];
         }
-        [db close];
 
         // Remove old database file and its SQLite side files:
         for (NSString* suffix in @[@"", @"-wal", @"-shm"])
             [fmgr removeItemAtPath: [oldDbPath stringByAppendingString: suffix] error: NULL];
+        NSString* oldAttachmentsPath = [[oldDbPath stringByDeletingPathExtension]
+                                                stringByAppendingString: @" attachments"];
+        [fmgr removeItemAtPath: oldAttachmentsPath error: NULL];
         NSLog(@"    ...success!");
     }
 }

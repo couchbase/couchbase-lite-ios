@@ -23,6 +23,8 @@
 
 - (CBLStatus) import;
 
+- (void) backOut;
+
 @property (readonly) NSUInteger numDocs, numRevs;
 
 @end

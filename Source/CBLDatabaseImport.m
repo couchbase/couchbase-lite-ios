@@ -32,10 +32,10 @@ static NSData* columnData(sqlite3_stmt* stmt, int column) {
 }
 
 static CBLStatus sqliteErrToStatus(int sqliteErr) {
+    if (sqliteErr == SQLITE_OK || sqliteErr == SQLITE_DONE)
+        return kCBLStatusOK;
+    Warn(@"Import failed: SQLite error %d", sqliteErr);
     switch (sqliteErr) {
-        case SQLITE_OK:
-        case SQLITE_DONE:
-            return kCBLStatusOK;
         case SQLITE_NOTADB:
             return kCBLStatusBadRequest;
         case SQLITE_PERM:
@@ -140,6 +140,21 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
 }
 
 
+- (void) backOut {
+    // Move attachments dir back to old path:
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* newAttachmentsPath = _db.attachmentStorePath;
+    if ([fmgr isReadableFileAtPath: newAttachmentsPath]) {
+        NSString* oldAttachmentsPath = [[_path stringByDeletingPathExtension]
+                                                stringByAppendingString: @" attachments"];
+        if (_canRemoveOldAttachmentsDir)
+            [fmgr moveItemAtPath: newAttachmentsPath toPath: oldAttachmentsPath error: NULL];
+    }
+
+    [_db deleteDatabase: NULL];
+}
+
+
 - (CBLStatus) moveAttachmentsDir {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSString* oldAttachmentsPath = [[_path stringByDeletingPathExtension]
@@ -181,8 +196,8 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     //  UNIQUE (doc_id, revid) );
 
     CBLStatus status = [self prepare: &_revQuery
-                             fromSQL: "SELECT sequence, revid, parent, current, deleted, json,"
-                                      " no_attachments FROM revs WHERE doc_id=? ORDER BY sequence"];
+                             fromSQL: "SELECT sequence, revid, parent, current, deleted, json"
+                                      " FROM revs WHERE doc_id=? ORDER BY sequence"];
     if (CBLStatusIsError(status))
         return status;
     sqlite3_bind_int64(_revQuery, 1, docNumericID);
@@ -201,13 +216,11 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
             BOOL deleted = (BOOL)sqlite3_column_int(_revQuery, 4);
             NSData* json = columnData(_revQuery, 5);
 
-            if (!sqlite3_column_int(_revQuery, 6)) {
-                NSMutableData* nuJson = [json mutableCopy];
-                status = [self addAttachmentsToSequence: sequence json: nuJson];
-                if (CBLStatusIsError(status))
-                    return status;
-                json = nuJson;
-            }
+            NSMutableData* nuJson = [json mutableCopy];
+            status = [self addAttachmentsToSequence: sequence json: nuJson];
+            if (CBLStatusIsError(status))
+                return status;
+            json = nuJson;
 
             CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
                                                                           deleted: deleted];
@@ -340,6 +353,8 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
         err = sqlite3_reset(*pStmt);
     else
         err = sqlite3_prepare_v2(_sqlite, sql, -1, pStmt, NULL);
+    if (err)
+        Warn(@"Couldn't compile SQL `%s` : %s", sql, sqlite3_errmsg(_sqlite));
     return sqliteErrToStatus(err);
 }
 
