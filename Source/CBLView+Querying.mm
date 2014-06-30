@@ -318,7 +318,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     Assert(index);
     DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
     forestOpts.skip = options->skip;
-    forestOpts.limit = options->limit;
+    if (options->limit > 0)
+        forestOpts.limit = options->limit;
 //    forestOpts.descending = options->descending;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (options.keys) {

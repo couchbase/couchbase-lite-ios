@@ -547,6 +547,16 @@ TestCase(CBL_View_AllDocsQuery) {
                                    expectedRow[4]);
     CAssertEqual(rowsToDicts(query), expectedRows);
 
+    // Limit:
+    options->limit = 1;
+    query = [db getAllDocs: options status: &status];
+    CAssertEqual(rowsToDicts(query), @[expectedRow[2]]);
+
+    // Limit + Skip:
+    options->skip = 2;
+    query = [db getAllDocs: options status: &status];
+    CAssertEqual(rowsToDicts(query), @[expectedRow[3]]);
+
     // Start/end key query:
     options = [CBLQueryOptions new];
     options.startKey = @"2";
