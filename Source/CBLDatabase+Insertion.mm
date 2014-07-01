@@ -248,7 +248,7 @@ using namespace forestdb;
                     // New rev will be child of the tombstone:
                     // (T0D0: Write a horror novel called "Child Of The Tombstone"!)
                     prevRevID = (NSString*)revNode->revID;
-                } else if (!allowConflict) {
+                } else {
                     return kCBLStatusConflict;
                 }
             }
