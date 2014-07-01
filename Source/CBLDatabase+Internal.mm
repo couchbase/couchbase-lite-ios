@@ -844,12 +844,12 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     if (!options)
         options = [CBLQueryOptions new];
     auto forestOpts = DocEnumerator::Options::kDefault;
-    forestOpts.skip = options->skip;
-    forestOpts.limit = options->limit;
 //  forestOpts.descending = options->descending;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (!options->includeDocs && !(options->allDocsMode >= kCBLShowConflicts))
         forestOpts.contentOptions = Database::kMetaOnly;
+    __block unsigned limit = options->limit;
+    __block unsigned skip = options->skip;
 
     __block DocEnumerator e;
     if (options.keys) {
@@ -872,6 +872,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 continue; // skip this doc
             if (options->allDocsMode == kCBLOnlyConflicts && !(flags & VersionedDocument::kConflicted))
                 continue; // skip this doc
+            if (skip > 0) {
+                --skip;
+                continue;
+            }
 
             VersionedDocument doc(_forest, *e);
             NSString* docID = (NSString*)doc.docID();
@@ -909,6 +913,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             LogTo(ViewVerbose, @"AllDocs: Found row with key=\"%@\", value=%@",
                   docID, value);
             e.next();
+            if (limit > 0 && --limit == 0)
+                e.close();
             return [[CBLQueryRow alloc] initWithDocID: docID
                                              sequence: sequence
                                                   key: docID
