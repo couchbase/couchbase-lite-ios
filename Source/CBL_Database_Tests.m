@@ -1035,7 +1035,7 @@ TestCase(CBL_Database_LocalDocs) {
     CBL_Body* doc = [[CBL_Body alloc] initWithProperties: props];
     CBL_Revision* rev1 = [[CBL_Revision alloc] initWithBody: doc];
     CBLStatus status;
-    rev1 = [db putLocalRevision: rev1 prevRevisionID: nil status: &status];
+    rev1 = [db putLocalRevision: rev1 prevRevisionID: nil obeyMVCC: YES status: &status];
     CAssertEq(status, kCBLStatusCreated);
     Log(@"Created: %@", rev1);
     CAssertEqual(rev1.docID, @"_local/doc1");
@@ -1054,7 +1054,7 @@ TestCase(CBL_Database_LocalDocs) {
     doc = [CBL_Body bodyWithProperties: props];
     CBL_Revision* rev2 = [[CBL_Revision alloc] initWithBody: doc];
     CBL_Revision* rev2Input = rev2;
-    rev2 = [db putLocalRevision: rev2 prevRevisionID: rev1.revID status: &status];
+    rev2 = [db putLocalRevision: rev2 prevRevisionID: rev1.revID obeyMVCC: YES status: &status];
     CAssertEq(status, kCBLStatusCreated);
     Log(@"Updated: %@", rev2);
     CAssertEqual(rev2.docID, rev1.docID);
@@ -1066,19 +1066,19 @@ TestCase(CBL_Database_LocalDocs) {
     CAssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Try to update the first rev, which should fail:
-    CAssertNil([db putLocalRevision: rev2Input prevRevisionID: rev1.revID status: &status]);
+    CAssertNil([db putLocalRevision: rev2Input prevRevisionID: rev1.revID obeyMVCC: YES status: &status]);
     CAssertEq(status, kCBLStatusConflict);
     
     // Delete it:
     CBL_Revision* revD = [[CBL_Revision alloc] initWithDocID: rev2.docID revID: nil deleted: YES];
-    CAssertEqual([db putLocalRevision: revD prevRevisionID: nil status: &status], nil);
+    CAssertEqual([db putLocalRevision: revD prevRevisionID: nil obeyMVCC: YES status: &status], nil);
     CAssertEq(status, kCBLStatusConflict);
-    revD = [db putLocalRevision: revD prevRevisionID: rev2.revID status: &status];
+    revD = [db putLocalRevision: revD prevRevisionID: rev2.revID obeyMVCC: YES status: &status];
     CAssertEq(status, kCBLStatusOK);
     
     // Delete nonexistent doc:
     CBL_Revision* revFake = [[CBL_Revision alloc] initWithDocID: @"_local/fake" revID: nil deleted: YES];
-    [db putLocalRevision: revFake prevRevisionID: nil status: &status];
+    [db putLocalRevision: revFake prevRevisionID: nil obeyMVCC: YES status: &status];
     CAssertEq(status, kCBLStatusNotFound);
     
     // Read it back (should fail):

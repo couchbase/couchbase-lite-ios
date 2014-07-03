@@ -852,7 +852,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     
     CBLStatus status;
     if ([docID hasPrefix: @"_local/"])
-        *outRev = [db putLocalRevision: rev prevRevisionID: prevRevID status: &status];
+        *outRev = [db putLocalRevision: rev
+                        prevRevisionID: prevRevID
+                              obeyMVCC: YES
+                                status: &status];
     else
         *outRev = [db putRevision: rev prevRevisionID: prevRevID
                     allowConflict: allowConflict

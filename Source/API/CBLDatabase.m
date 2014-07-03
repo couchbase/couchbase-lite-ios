@@ -351,24 +351,17 @@ static NSString* makeLocalDocID(NSString* docID) {
                     error: (NSError**)outError
 {
     localDocID = makeLocalDocID(localDocID);
-    __block CBLStatus status;
-    BOOL ok = [self inTransaction: ^BOOL {
-        // The lower-level local docs API has MVCC and requires the matching prior revision ID.
-        // So first get the document to look up its current rev ID:
-        CBL_Revision* prevRev = [self getLocalDocumentWithID: localDocID revisionID: nil];
-        if (!prevRev && !properties) {
-            status = kCBLStatusNotFound;
-            return NO;
-        }
-        CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: localDocID
-                                                                        revID: nil
-                                                                      deleted: (properties == nil)];
-        if (properties)
-            rev.properties = properties;
-        // Now update the doc (or delete it, if properties is nil):
-        return [self putLocalRevision: rev prevRevisionID: prevRev.revID status: &status] != nil;
-    }];
-    
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: localDocID
+                                                                    revID: nil
+                                                                  deleted: (properties == nil)];
+    if (properties)
+        rev.properties = properties;
+    // Now update the doc (or delete it, if properties is nil):
+    CBLStatus status;
+    BOOL ok = [self putLocalRevision: rev
+                      prevRevisionID: nil
+                            obeyMVCC: NO
+                              status: &status] != nil;
     if (!ok && outError)
         *outError = CBLStatusToNSError(status, nil);
     return ok;

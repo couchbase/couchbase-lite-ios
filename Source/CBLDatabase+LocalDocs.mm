@@ -95,6 +95,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
 
 - (CBL_Revision*) putLocalRevision: (CBL_Revision*)revision
                     prevRevisionID: (NSString*)prevRevID
+                          obeyMVCC: (BOOL)obeyMVCC
                             status: (CBLStatus*)outStatus
 {
     NSString* docID = revision.docID;
@@ -104,7 +105,9 @@ static NSDictionary* getDocProperties(const Document& doc) {
     }
     if (revision.deleted) {
         // DELETE:
-        *outStatus = [self deleteLocalDocumentWithID: docID revisionID: prevRevID];
+        *outStatus = [self deleteLocalDocumentWithID: docID
+                                          revisionID: prevRevID
+                                            obeyMVCC: obeyMVCC];
         return *outStatus < 300 ? revision : nil;
     } else {
         // PUT:
@@ -113,16 +116,17 @@ static NSDictionary* getDocProperties(const Document& doc) {
             Transaction t(self.localDocs);
             forestdb::slice key(docID.UTF8String);
             Document doc = _localDocs->get(key);
-            unsigned generation = 0;
-            if (prevRevID) {
-                if (!$equal(prevRevID, (NSString*)doc.meta()))
-                    return kCBLStatusConflict;
-                generation = [CBL_Revision generationFromRevID: prevRevID];
-                if (generation == 0)
-                    return kCBLStatusBadID;
-            } else {
-                if (doc.exists())
-                    return kCBLStatusConflict;
+            unsigned generation = [CBL_Revision generationFromRevID: prevRevID];
+            if (obeyMVCC) {
+                if (prevRevID) {
+                    if (!$equal(prevRevID, (NSString*)doc.meta()))
+                        return kCBLStatusConflict;
+                    if (generation == 0)
+                        return kCBLStatusBadID;
+                } else {
+                    if (doc.exists())
+                        return kCBLStatusConflict;
+                }
             }
             NSString* newRevID = $sprintf(@"%d-local", ++generation);
             t.set(key, nsstring_slice(newRevID), forestdb::slice(revision.asCanonicalJSON));
@@ -134,10 +138,13 @@ static NSDictionary* getDocProperties(const Document& doc) {
 }
 
 
-- (CBLStatus) deleteLocalDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
+- (CBLStatus) deleteLocalDocumentWithID: (NSString*)docID
+                             revisionID: (NSString*)revID
+                               obeyMVCC: (BOOL)obeyMVCC
+{
     if (![docID hasPrefix: @"_local/"])
         return kCBLStatusBadID;
-    if (!revID) {
+    if (obeyMVCC && !revID) {
         // Didn't specify a revision to delete: kCBLStatusNotFound or a kCBLStatusConflict, depending
         return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
     }
@@ -147,7 +154,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
         Document doc = _localDocs->get(forestdb::slice(docID.UTF8String));
         if (!doc.exists())
             return kCBLStatusNotFound;
-        else if (!$equal(revID, (NSString*)doc.meta()))
+        else if (obeyMVCC && !$equal(revID, (NSString*)doc.meta()))
             return kCBLStatusConflict;
         else {
             t.del(doc);

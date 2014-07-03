@@ -14,14 +14,16 @@
 @interface CBLDatabase (LocalDocs)
 
 - (CBL_Revision*) getLocalDocumentWithID: (NSString*)docID 
-                            revisionID: (NSString*)revID;
+                              revisionID: (NSString*)revID;
 
 - (CBL_Revision*) putLocalRevision: (CBL_Revision*)revision
-                  prevRevisionID: (NSString*)prevRevID
-                          status: (CBLStatus*)outStatus;
+                    prevRevisionID: (NSString*)prevRevID
+                          obeyMVCC: (BOOL)obeyMVCC
+                            status: (CBLStatus*)outStatus;
 
 - (CBLStatus) deleteLocalDocumentWithID: (NSString*)docID
-                            revisionID: (NSString*)revID;
+                             revisionID: (NSString*)revID
+                               obeyMVCC: (BOOL)obeyMVCC;
 
 - (void) closeLocalDocs;
 
