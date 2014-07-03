@@ -167,7 +167,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     Database::config config = Database::defaultConfig();
     config.buffercache_size = kDBBufferCacheSize;
     config.wal_threshold = 4096;
-//  config.wal_flush_before_commit = true;  // Can't use yet; see MB-11514
+    config.wal_flush_before_commit = true;
     config.seqtree_opt = true;
     config.compress_document_body = true;
     if (sAutoCompactInterval > 0) {
@@ -178,6 +178,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     try {
         _forest = new Database(std::string(forestPath.UTF8String), options, config);
+        _forest->setLogCallback(&fdbLogCallback, (__bridge void*)self);
     } catch (forestdb::error err) {
         if (outError)
             *outError = CBLStatusToNSError(CBLStatusFromForestDBStatus(err.status), nil);
@@ -251,6 +252,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     _isOpen = NO;
     _transactionLevel = 0;
     return YES;
+}
+
+
+static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
+    CBLDatabase* db = (__bridge CBLDatabase*)ctx_data;
+    Log(@"%@: forestdb error %d: %@", db, err_code, [NSString stringWithUTF8String: err_msg]);
 }
 
 

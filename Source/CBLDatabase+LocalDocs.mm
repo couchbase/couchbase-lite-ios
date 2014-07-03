@@ -36,7 +36,7 @@ using namespace forestdb;
         Database::config config = Database::defaultConfig();
         config.buffercache_size = 128*1024;
         config.wal_threshold = 128;
-//      config.wal_flush_before_commit = true;  // Can't use yet; see MB-11514
+        config.wal_flush_before_commit = true;
         config.seqtree_opt = false;
         _localDocs = new Database(path.fileSystemRepresentation, FDB_OPEN_FLAG_CREATE, config);
         LogTo(CBLDatabase, @"%@: Opened _local docs db", self);

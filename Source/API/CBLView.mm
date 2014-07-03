@@ -181,7 +181,7 @@ public:
     MapReduceIndex::config config = MapReduceIndex::defaultConfig();
     config.buffercache_size = kViewBufferCacheSize;
     config.wal_threshold = 8192;
-//  config.wal_flush_before_commit = true;  // Can't use yet; see MB-11514
+    config.wal_flush_before_commit = true;
     config.seqtree_opt = YES;
     config.compaction_threshold = 50;
     try {
