@@ -26,6 +26,7 @@
 #import "CBL_BlobStore.h"
 #import "CBLBase64.h"
 #import "CBLInternal.h"
+#import "CouchbaseLitePrivate.h"
 #import "Test.h"
 #import "GTMNSData+zlib.h"
 

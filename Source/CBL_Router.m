@@ -19,7 +19,6 @@
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartWriter.h"
-#import "CBLInternal.h"
 #import "CBLJSON.h"
 #import "CBLMisc.h"
 #import "CBLGeometry.h"
