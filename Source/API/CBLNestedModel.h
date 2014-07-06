@@ -48,6 +48,8 @@
 - (id)convertValueFromJSON:(id)jsonObject toDesiredClass:(Class)desiredPropertyClass representedByPropertyName:(NSString*)propertyName;
 + (id)convertValueToJSON:(id)value;
 
+- (id)copyWithZone:(NSZone*)zone;
+
 @end
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
