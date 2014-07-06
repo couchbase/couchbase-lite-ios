@@ -406,9 +406,9 @@
 		27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
-		27D8C349195A28100073A51C /* CBLDatabaseImport.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D8C347195A28100073A51C /* CBLDatabaseImport.h */; };
-		27D8C34A195A28100073A51C /* CBLDatabaseImport.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D8C348195A28100073A51C /* CBLDatabaseImport.m */; };
-		27D8C34B195A28100073A51C /* CBLDatabaseImport.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D8C348195A28100073A51C /* CBLDatabaseImport.m */; };
+		27D8C349195A28100073A51C /* CBLDatabaseUpgrade.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D8C347195A28100073A51C /* CBLDatabaseUpgrade.h */; };
+		27D8C34A195A28100073A51C /* CBLDatabaseUpgrade.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D8C348195A28100073A51C /* CBLDatabaseUpgrade.m */; };
+		27D8C34B195A28100073A51C /* CBLDatabaseUpgrade.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D8C348195A28100073A51C /* CBLDatabaseUpgrade.m */; };
 		27D8C353195A42980073A51C /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0744911CD4BA000E9A2AB /* libsqlite3.dylib */; };
 		27D90B1815601C340000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27D90B1915601C350000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -1169,8 +1169,8 @@
 		27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLUICollectionSource.m; path = Extras/CBLUICollectionSource.m; sourceTree = "<group>"; };
 		27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLUICollectionSource.h; path = Extras/CBLUICollectionSource.h; sourceTree = "<group>"; };
 		27CF5D2C152F514A0015D7A9 /* CBLStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLStatus.m; sourceTree = "<group>"; };
-		27D8C347195A28100073A51C /* CBLDatabaseImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseImport.h; sourceTree = "<group>"; };
-		27D8C348195A28100073A51C /* CBLDatabaseImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseImport.m; sourceTree = "<group>"; };
+		27D8C347195A28100073A51C /* CBLDatabaseUpgrade.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseUpgrade.h; sourceTree = "<group>"; };
+		27D8C348195A28100073A51C /* CBLDatabaseUpgrade.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseUpgrade.m; sourceTree = "<group>"; };
 		27D90B1615601C2F0000735E /* MYErrorUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
 		27D90B1715601C2F0000735E /* MYErrorUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYErrorUtils.m; sourceTree = "<group>"; };
 		27DA42F6158E66DD00F9E7B5 /* CBLRevision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRevision.h; sourceTree = "<group>"; };
@@ -1537,8 +1537,8 @@
 				27731EFE1493FA3100815D67 /* CBL_BlobStore.m */,
 				27EF7F991912EB5200A327B9 /* CBLForestBridge.h */,
 				27EF7F9A1912EB5200A327B9 /* CBLForestBridge.mm */,
-				27D8C347195A28100073A51C /* CBLDatabaseImport.h */,
-				27D8C348195A28100073A51C /* CBLDatabaseImport.m */,
+				27D8C347195A28100073A51C /* CBLDatabaseUpgrade.h */,
+				27D8C348195A28100073A51C /* CBLDatabaseUpgrade.m */,
 			);
 			name = Database;
 			sourceTree = "<group>";
@@ -2361,7 +2361,7 @@
 				27F128AB156AC004008465C2 /* NSMutableURLRequest+Parameters.h in Headers */,
 				27F128B1156AC1CA008465C2 /* CBLOAuth1Authorizer.h in Headers */,
 				270F5705156AE0BF000FEB8F /* CBLAuthorizer.h in Headers */,
-				27D8C349195A28100073A51C /* CBLDatabaseImport.h in Headers */,
+				27D8C349195A28100073A51C /* CBLDatabaseUpgrade.h in Headers */,
 				27ED8630157D0FC600712B33 /* CBLDocument.h in Headers */,
 				27726AAF1889835F00AE6931 /* CBLJSON.h in Headers */,
 				277B5D361821A8380088881E /* yajl_encode.h in Headers */,
@@ -3051,7 +3051,7 @@
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
 				27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */,
-				27D8C34A195A28100073A51C /* CBLDatabaseImport.m in Sources */,
+				27D8C34A195A28100073A51C /* CBLDatabaseUpgrade.m in Sources */,
 				27DA42F9158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				27DA42FE158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
@@ -3242,7 +3242,7 @@
 				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,
 				2776A63216A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
 				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
-				27D8C34B195A28100073A51C /* CBLDatabaseImport.m in Sources */,
+				27D8C34B195A28100073A51C /* CBLDatabaseUpgrade.m in Sources */,
 				27FFE20617BBF20D0040AE60 /* CBLReplicator_Tests.m in Sources */,
 				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
 				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,

@@ -6,7 +6,7 @@
 //
 //
 
-#import "CBLDatabaseImport.h"
+#import "CBLDatabaseUpgrade.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
@@ -16,42 +16,7 @@
 #import <sqlite3.h>
 
 
-static NSString* columnString(sqlite3_stmt* stmt, int column) {
-    const char* cstr = (const char*)sqlite3_column_text(stmt, column);
-    if (!cstr)
-        return nil;
-    return [[NSString alloc] initWithCString: cstr encoding: NSUTF8StringEncoding];
-}
-
-static NSData* columnData(sqlite3_stmt* stmt, int column) {
-    const void* blob = (const char*)sqlite3_column_blob(stmt, column);
-    if (!blob)
-        return nil;
-    size_t length = sqlite3_column_bytes(stmt, column);
-    return [[NSData alloc] initWithBytes: blob length: length];
-}
-
-static CBLStatus sqliteErrToStatus(int sqliteErr) {
-    if (sqliteErr == SQLITE_OK || sqliteErr == SQLITE_DONE)
-        return kCBLStatusOK;
-    Warn(@"Import failed: SQLite error %d", sqliteErr);
-    switch (sqliteErr) {
-        case SQLITE_NOTADB:
-            return kCBLStatusBadRequest;
-        case SQLITE_PERM:
-            return kCBLStatusForbidden;
-        case SQLITE_CORRUPT:
-        case SQLITE_IOERR:
-            return kCBLStatusCorruptError;
-        case SQLITE_CANTOPEN:
-            return kCBLStatusNotFound;
-        default:
-            return kCBLStatusDBError;
-    }
-}
-
-
-@implementation CBLDatabaseImport
+@implementation CBLDatabaseUpgrade
 {
     CBLDatabase* _db;
     NSString* _path;
@@ -103,7 +68,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     if( CBLStatusIsError(status))
         return status;
 
-    // Import documents:
+    // Upgrade documents:
     // CREATE TABLE docs (doc_id INTEGER PRIMARY KEY, docid TEXT UNIQUE NOT NULL);
     status = [self prepare: &_docQuery
                    fromSQL: "SELECT doc_id, docid FROM docs"];
@@ -126,12 +91,12 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     if (CBLStatusIsError(status))
         return status;
 
-    // Import local docs:
+    // Upgrade local docs:
     status = [self importLocalDocs];
     if (CBLStatusIsError(status))
         return status;
 
-    // Import info (public/private UUIDs):
+    // Upgrade info (public/private UUIDs):
     status = [self importInfo];
     if (CBLStatusIsError(status))
         return status;
@@ -163,6 +128,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     if (![fmgr isReadableFileAtPath: oldAttachmentsPath])
         return kCBLStatusOK;
 
+    Log(@"Upgrade: Moving '%@' to '%@'", oldAttachmentsPath, newAttachmentsPath);
     [fmgr removeItemAtPath: newAttachmentsPath error: NULL];
     NSError* error;
     BOOL result;
@@ -175,7 +141,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
     }
     if (!result) {
         if (!CBLIsFileNotFoundError(error)) {
-            Warn(@"Import failed: Couldn't move attachments: %@", error);
+            Warn(@"Upgrade failed: Couldn't move attachments: %@", error);
             return CBLStatusFromNSError(error, 0);
         }
     }
@@ -235,7 +201,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
                 parentSeq = [ancestor[1] longLongValue];
             }
 
-            Log(@"Importing %@, history = %@", rev, history);
+            LogTo(Upgrade, @"Upgradeing doc %@, history = %@", rev, history);
             status = [_db forceInsert: rev revisionHistory: history source: nil];
             if (CBLStatusIsError(status))
                 return status;
@@ -323,6 +289,7 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
         NSString* docID = columnString(localQuery, 0);
         NSData* json = columnData(localQuery, 1);
         NSDictionary* props = [CBLJSON JSONObjectWithData: json options: 0 error: NULL];
+        LogTo(Upgrade, @"Upgradeing local doc '%@'", docID);
         NSError* error;
         if (props && ![_db putLocalDocument: props withID: docID error: &error]) {
             Warn(@"Couldn't import local doc '%@': %@", docID, error);
@@ -359,6 +326,41 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
 }
 
 
+static NSString* columnString(sqlite3_stmt* stmt, int column) {
+    const char* cstr = (const char*)sqlite3_column_text(stmt, column);
+    if (!cstr)
+        return nil;
+    return [[NSString alloc] initWithCString: cstr encoding: NSUTF8StringEncoding];
+}
+
+static NSData* columnData(sqlite3_stmt* stmt, int column) {
+    const void* blob = (const char*)sqlite3_column_blob(stmt, column);
+    if (!blob)
+        return nil;
+    size_t length = sqlite3_column_bytes(stmt, column);
+    return [[NSData alloc] initWithBytes: blob length: length];
+}
+
+static CBLStatus sqliteErrToStatus(int sqliteErr) {
+    if (sqliteErr == SQLITE_OK || sqliteErr == SQLITE_DONE)
+        return kCBLStatusOK;
+    Warn(@"Upgrade failed: SQLite error %d", sqliteErr);
+    switch (sqliteErr) {
+        case SQLITE_NOTADB:
+            return kCBLStatusBadRequest;
+        case SQLITE_PERM:
+            return kCBLStatusForbidden;
+        case SQLITE_CORRUPT:
+        case SQLITE_IOERR:
+            return kCBLStatusCorruptError;
+        case SQLITE_CANTOPEN:
+            return kCBLStatusNotFound;
+        default:
+            return kCBLStatusDBError;
+    }
+}
+
+
 @end
 
 
@@ -371,16 +373,16 @@ static CBLDatabase* createDB(void) {
     return db;
 }
 
-TestCase(ImportDB) {
+TestCase(UpgradeDB) {
     CBLDatabase* db = createDB();
     NSString* path = @"/Users/snej/Library/Application Support/com.mooseyard.Beanbag/CouchbaseLite/people.cblite";
-    CBLDatabaseImport* import = [[CBLDatabaseImport alloc] initWithDatabase: db
+    CBLDatabaseUpgrade* upgrade = [[CBLDatabaseUpgrade alloc] initWithDatabase: db
                                                                  sqliteFile: path];
-    Assert(import);
-    import.canRemoveOldAttachmentsDir = NO;
-    CBLStatus status = [import import];
+    Assert(upgrade);
+    upgrade.canRemoveOldAttachmentsDir = NO;
+    CBLStatus status = [upgrade import];
     AssertEq(status, kCBLStatusOK);
-    Log(@"Imported %lu docs, %lu revisions", (unsigned long)import.numDocs, (unsigned long)import.numRevs);
+    Log(@"Upgradeed %lu docs, %lu revisions", (unsigned long)upgrade.numDocs, (unsigned long)upgrade.numRevs);
     [db close];
 }
 

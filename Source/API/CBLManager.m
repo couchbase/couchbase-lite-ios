@@ -32,7 +32,7 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
-#import "CBLDatabaseImport.h"
+#import "CBLDatabaseUpgrade.h"
 #import "MYBlockUtils.h"
 
 
@@ -253,10 +253,10 @@ static CBLManager* sInstance;
 
 // Scan my dir for SQLite-based databases from Couchbase Lite 1.0 and upgrade them:
 - (void) upgradeOldDatabaseFiles {
-    // The CBLDatabaseImport class is optional, so don't create a hard reference to it.
+    // The CBLDatabaseUpgrade class is optional, so don't create a hard reference to it.
     // And skip the upgrade check if it's not present:
-    Class databaseImportClass = NSClassFromString(@"CBLDatabaseImport");
-    if (!databaseImportClass)
+    Class databaseUpgradeClass = NSClassFromString(@"CBLDatabaseUpgrade");
+    if (!databaseUpgradeClass)
         return;
 
     NSFileManager* fmgr = [NSFileManager defaultManager];
@@ -275,13 +275,13 @@ static CBLManager* sInstance;
                 continue;
             }
             if (!db.exists) {
-                // Import the old database into the new one:
-                CBLDatabaseImport* importer = [[databaseImportClass alloc] initWithDatabase: db
-                                                                                 sqliteFile: oldDbPath];
-                CBLStatus status = [importer import];
+                // Upgrade the old database into the new one:
+                CBLDatabaseUpgrade* upgrader = [[databaseUpgradeClass alloc] initWithDatabase: db
+                                                                             sqliteFile: oldDbPath];
+                CBLStatus status = [upgrader import];
                 if (CBLStatusIsError(status)) {
                     Warn(@"Upgrade failed: status %d", status);
-                    [importer backOut];
+                    [upgrader backOut];
                     continue;
                 }
             }

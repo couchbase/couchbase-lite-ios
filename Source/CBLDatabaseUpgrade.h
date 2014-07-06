@@ -14,7 +14,7 @@
     This class is optional: the source file does not need to be built into the app or the
     Couchbase Lite library. If it's not present, Couchbase Lite will ignore old v1.0 databases
     instead of importing them. */
-@interface CBLDatabaseImport : NSObject
+@interface CBLDatabaseUpgrade : NSObject
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                        sqliteFile: (NSString*)sqliteFile;
