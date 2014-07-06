@@ -281,7 +281,7 @@
 #pragma mark - Copy 
 
 - (id)copyWithZone:(NSZone*)zone {
-    return [[[self class] alloc] initWithJSON:[self encodeToJSON]];
+    return [[[self class] alloc] initFromJSON:[self encodeToJSON]];
 }
 
 @end
