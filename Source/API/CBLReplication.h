@@ -83,7 +83,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** An object that knows how to authenticate with a remote server.
     CBLAuthenticator is an opaque protocol; instances can be created by calling the factory methods
     of the class of the same name. */
-@property id<CBLAuthenticator> authenticator;
+@property (nonatomic, strong) id<CBLAuthenticator> authenticator;
 
 /** The credential (generally username+password) to use to authenticate to the remote database.
     This can either come from the URL itself (if it's of the form "http://user:pass@example.com")
@@ -115,7 +115,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
                  secure: (BOOL)secure;
 
 /** Deletes the named cookie from the shared NSHTTPCookieStorage for the remote server's URL. */
--(void)deleteCookieNamed:(NSString *)name;
+-(void) deleteCookieNamed: (NSString *)name;
 
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.
