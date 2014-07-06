@@ -20,6 +20,7 @@
 #import "CBLDatabaseChange.h"
 #import "CBLBatcher.h"
 #import "CBLMultipartUploader.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLCanonicalJSON.h"
