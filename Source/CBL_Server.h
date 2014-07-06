@@ -29,6 +29,7 @@
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block;
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
 - (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(CBLDatabase*))block;
+- (id) waitForDatabaseManager: (id (^)(CBLManager*))block;
 
 - (void) close;
 

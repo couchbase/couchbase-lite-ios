@@ -141,6 +141,13 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
     Has no effect if the replication is not running. */
 - (void) restart;
 
+/** Suspends/resumes a replication.
+    On iOS a replication will suspend itself when the app goes into the background, and resume
+    when the app is re-activated. If your app receives a push notification while suspended and needs
+    to run the replication to download new data, your handler should set suspended to NO to resume
+    replication, and then set the property back to YES when it's done. */
+@property BOOL suspended;
+
 /** The replication's current state, one of {stopped, offline, idle, active}. */
 @property (nonatomic, readonly) CBLReplicationStatus status;
 

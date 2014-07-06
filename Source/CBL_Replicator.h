@@ -79,6 +79,9 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     CBL_ReplicatorStoppedNotification will be posted when it finally stops. */
 - (void) stop;
 
+/** Setting suspended to YES pauses the replicator. */
+@property (nonatomic) BOOL suspended;
+
 /** Is the replicator running? (Observable) */
 @property (readonly, nonatomic) BOOL running;
 

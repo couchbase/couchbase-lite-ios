@@ -9,10 +9,11 @@
 #import "CouchbaseLite.h"
 #import "CBLCache.h"
 #import "CBLDatabase.h"
+#import "CBLDatabaseChange.h"
 #import "CBLReplication+Transformation.h"
 #import "CBL_Revision.h"
 #import "CBLGeometry.h"
-@class CBLDatabaseChange, CBL_Revision, CBLManager, CBL_Server;
+@class CBL_Server;
 
 
 @interface CBLManager ()
@@ -38,6 +39,21 @@
 - (CBLDocument*) _cachedDocumentWithID: (NSString*)docID;
 - (void) _clearDocumentCache;
 #endif
+@end
+
+
+@interface CBLDatabaseChange ()
+- (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
+                       winningRevision: (CBL_Revision*)winningRevision
+                            inConflict: (BOOL)maybeConflict
+                                source: (NSURL*)source;
+/** The revision just added. Guaranteed immutable. */
+@property (nonatomic, readonly) CBL_Revision* addedRevision;
+/** The revision that is now the default "winning" revision of the document.
+ Guaranteed immutable.*/
+@property (nonatomic, readonly) CBL_Revision* winningRevision;
+/** Is this a relayed notification of one from another thread, not the original? */
+@property (nonatomic, readonly) bool echoed;
 @end
 
 

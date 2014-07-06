@@ -176,7 +176,6 @@
 
 - (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete {
     LogTo(Query, @"%@: Async query %@/%@...", self, _database.name, (_view.name ?: @"_all_docs"));
-    NSThread *callingThread = [NSThread currentThread];
     NSString* viewName = _view.name;
     CBLQueryOptions options = self.queryOptions;
     
@@ -188,7 +187,7 @@
                                      options: options
                                 lastSequence: &lastSequence
                                       status: &status];
-        MYOnThread(callingThread, ^{
+        [_database.manager doAsync:^{
             // Back on original thread, call the onComplete block:
             LogTo(Query, @"%@: ...async query finished (%u rows)", self, (unsigned)rows.count);
             NSError* error = nil;
@@ -200,7 +199,7 @@
                                                             rows: rows
                                                   sequenceNumber: lastSequence];
             onComplete(e, error);
-        });
+        }];
     }];
 }
 
