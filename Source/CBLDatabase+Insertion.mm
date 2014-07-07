@@ -297,6 +297,9 @@ using namespace forestdb;
                 return (CBLStatus)status;
         doc.prune((unsigned)self.maxRevTreeDepth);
         doc.save(*_forestTransaction);
+#if DEBUG
+        LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
+#endif
 
         [putRev setDocID: docID revID: newRevID];
         change = [self changeWithNewRevision: putRev doc: doc source: nil];
@@ -402,6 +405,9 @@ static void convertRevIDs(NSArray* revIDs,
         // Save updated doc back to the database:
         doc.prune((unsigned)self.maxRevTreeDepth);
         doc.save(*_forestTransaction);
+#if DEBUG
+        LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
+#endif
         change = [self changeWithNewRevision: inRev doc: doc source: source];
         return kCBLStatusCreated;
     }];

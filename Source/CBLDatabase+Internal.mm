@@ -453,6 +453,9 @@ static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
 {
     __block CBL_MutableRevision* result = nil;
     *outStatus = [self _withVersionedDoc: docID do: ^(VersionedDocument& doc) {
+#if DEBUG
+        LogTo(CBLDatabase, @"Read %s", doc.dump().c_str());
+#endif
         NSString* revID = inRevID;
         if (revID == nil) {
             const Revision* rev = doc.currentRevision();
