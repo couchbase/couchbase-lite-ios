@@ -26,12 +26,13 @@ typedef struct CBLBlobKey {
 /** A persistent content-addressable store for arbitrary-size data blobs.
     Each blob is stored as a file named by its SHA-1 digest. */
 @interface CBL_BlobStore : NSObject
-{
-    NSString* _path;
-    NSString* _tempDir;
-}
 
 - (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError;
+
+#if TARGET_OS_IPHONE
+/** Sets iOS file protection. Defaults to CompleteUntilFirstUserAuthentication. */
+@property (nonatomic) NSDataWritingOptions fileProtection;
+#endif
 
 - (NSData*) blobForKey: (CBLBlobKey)key;
 - (NSInputStream*) blobInputStreamForKey: (CBLBlobKey)key

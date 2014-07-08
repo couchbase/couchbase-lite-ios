@@ -187,7 +187,23 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
            @"Critical Couchbase Lite code has been stripped from the app binary! "
             "Please make sure to build using the -ObjC linker flag!");
 
-    int flags =  SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
+    int flags = 0;
+#if TARGET_OS_IPHONE
+    switch (_manager.fileProtection) {
+        case NSDataWritingFileProtectionNone:
+            flags |= SQLITE_OPEN_FILEPROTECTION_NONE;
+            break;
+        case NSDataWritingFileProtectionComplete:
+            flags |= SQLITE_OPEN_FILEPROTECTION_COMPLETE;
+            break;
+        case NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication:
+            flags |= SQLITE_OPEN_FILEPROTECTION_COMPLETEUNTILFIRSTUSERAUTHENTICATION;
+            break;
+        default:
+            flags |= SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
+            break;
+    }
+#endif
     if (_readOnly)
         flags |= SQLITE_OPEN_READONLY;
     else
@@ -413,6 +429,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         [_fmdb close];
         return NO;
     }
+#if TARGET_OS_IPHONE
+    _attachments.fileProtection = _manager.fileProtection;
+#endif
 
     _isOpen = YES;
 
