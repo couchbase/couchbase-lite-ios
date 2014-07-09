@@ -4,7 +4,7 @@
 
 Get more info and downloads of Couchbase Lite (for iOS and Android) via [the Couchbase mobile portal](http://mobile.couchbase.com)
 
-[Click here for **official documentation for Couchbase Lite iOS**](http://docs.couchbase.com/couchbase-lite/cbl-ios/)
+[Click here for **official documentation for Couchbase Lite iOS**](http://developer.couchbase.com/mobile/)
 
 Latency matters a lot to users, so a local database takes frustration out of the equation. It’s got JSON documents, and the same map/reduce as Couchbase Server, in a pint-sized edition.
 
@@ -44,9 +44,7 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 * There's lots more information on the [wiki][2].
 * Demo apps:
     * [Grocery Sync][18] - implements a simple shared grocery list.
-    * [CouchChat-iOS](https://github.com/couchbaselabs/CouchChat-iOS) - group chat with photos.
     * [TodoLite-iOS](https://github.com/couchbaselabs/TodoLite-iOS) - a generic ToDo list with photos and sharing. 
-    * [Checkers-iOS](https://github.com/couchbaselabs/Checkers-iOS) - a checkers app
 * Or if you want to ask questions or get help, join the [mailing list][17].
 
 ## Platforms ##
