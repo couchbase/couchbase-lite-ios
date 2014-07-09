@@ -467,6 +467,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         for (NSManagedObject *object in [save deletedObjects]) {
             // doesn't delete the document the normal way, but marks it as deleted to keep the type field needed for notifying Core Data.
             CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
+            if (doc.isDeleted) continue;
+
             NSDictionary *contents = [self _propertiesForDeletingDocument:doc];
             if (![doc putProperties:contents error:&error]) {
                 if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
@@ -685,6 +687,19 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     return objectID;
 }
 
+
+- (NSArray *)newArrayForRelationship:(NSRelationshipDescription *)relationship referenceObject:(id)data context:(NSManagedObjectContext *)context
+{
+    NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:[data count]];
+    for (NSString *referenceObject in data) {
+        NSManagedObjectID *objectID = [self newObjectIDForEntity:relationship.destinationEntity referenceObject:referenceObject];
+        NSManagedObject *object = [context objectRegisteredForID:objectID];
+        if (object)
+            [array addObject:object];
+    }
+    return array;
+}
+
 #pragma mark - Views
 
 /** Initializes the views needed for querying objects by type and for to-many relationships. */
@@ -829,7 +844,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:rows.count];
     for (CBLQueryRow *row in rows) {
-        if (!fetch.predicate || [self _evaluatePredicate:fetch.predicate withEntity:entity properties:row.documentProperties]) {
+        if (!fetch.predicate || [self _evaluatePredicate:fetch.predicate withEntity:entity properties:row.documentProperties context:context]) {
             NSManagedObjectID *objectID = [self _newObjectIDForEntity:entity managedObjectContext:context
                                                               couchID:row.documentID];
             NSManagedObject *object = [context objectWithID:objectID];
@@ -1091,6 +1106,13 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                 if (![rel isToMany]) {
                     NSManagedObjectID *objectID = [relationshipDestination valueForKey:@"objectID"];
                     [proxy setObject:[objectID couchbaseLiteIDRepresentation] forKey:property];
+                } else {
+                    NSMutableArray *subentities = [[NSMutableArray alloc] initWithCapacity:[relationshipDestination count]];
+                    for (NSManagedObject *subentity in relationshipDestination) {
+                        NSManagedObjectID *objectID = [subentity valueForKey:@"objectID"];
+                        [subentities addObject:[objectID couchbaseLiteIDRepresentation]];
+                    }
+                    [proxy setObject:subentities forKey:property];
                 }
             }
             
@@ -1188,8 +1210,10 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         } else if ([desc isKindOfClass:[NSRelationshipDescription class]]) {
             NSRelationshipDescription *rel = desc;
             
-            if (![rel isToMany]) { // only handle to-one relationships
-                id value = [properties objectForKey:property];
+            id value = [properties objectForKey:property];
+            
+            if (![rel isToMany]) {
+                
                 
                 if (!CBLISIsNull(value)) {
                     NSManagedObjectID *destination = [self newObjectIDForEntity:rel.destinationEntity
@@ -1197,6 +1221,16 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                     
                     [result setObject:destination forKey:property];
                 }
+            } else {
+                NSMutableSet *mSet = [[NSMutableSet alloc] initWithCapacity:[value count]];
+                for (id subentity in value) {
+                    if (!CBLISIsNull(subentity)) {
+                        NSManagedObjectID *destination = [self newObjectIDForEntity:rel.destinationEntity
+                                                                    referenceObject:subentity];
+                        [mSet addObject:destination];
+                    }
+                }
+                [result setObject:mSet forKey:property];
             }
         }
     }
@@ -1247,7 +1281,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark - NSPredicate
 
-- (BOOL) _evaluatePredicate:(NSPredicate*)predicate withEntity:(NSEntityDescription*)entity properties:(NSDictionary*)properties
+- (BOOL) _evaluatePredicate:(NSPredicate*)predicate withEntity:(NSEntityDescription*)entity properties:(NSDictionary*)properties context:(NSManagedObjectContext *)context
 {
     if ([predicate isKindOfClass:[NSCompoundPredicate class]]) {
         NSCompoundPredicate *compoundPredicate = (NSCompoundPredicate*)predicate;
@@ -1269,7 +1303,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
         BOOL compoundResult = NO;
         for (NSPredicate *subpredicate in compoundPredicate.subpredicates) {
-            BOOL result = [self _evaluatePredicate:subpredicate withEntity:entity properties:properties];
+            BOOL result = [self _evaluatePredicate:subpredicate withEntity:entity properties:properties context:context];
             
             switch (type) {
                 case NSAndPredicateType:
@@ -1290,8 +1324,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         
     } else if ([predicate isKindOfClass:[NSComparisonPredicate class]]) {
         NSComparisonPredicate *comparisonPredicate = (NSComparisonPredicate*)predicate;
-        id leftValue = [self _evaluateExpression:comparisonPredicate.leftExpression withEntity:entity properties:properties];
-        id rightValue = [self _evaluateExpression:comparisonPredicate.rightExpression withEntity:entity properties:properties];
+        id leftValue = [self _evaluateExpression:comparisonPredicate.leftExpression withEntity:entity properties:properties context:context];
+        id rightValue = [self _evaluateExpression:comparisonPredicate.rightExpression withEntity:entity properties:properties context:context];
         
         NSExpression *leftExpression = [NSExpression expressionForConstantValue:leftValue];
         NSExpression *rightExpression = [NSExpression expressionForConstantValue:rightValue];
@@ -1306,7 +1340,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
     return NO;
 }
-- (id) _evaluateExpression:(NSExpression*)expression withEntity:(NSEntityDescription*)entity properties:(NSDictionary*)properties
+- (id) _evaluateExpression:(NSExpression*)expression withEntity:(NSEntityDescription*)entity properties:(NSDictionary*)properties context:(NSManagedObjectContext *)context
 {
     id value = nil;
     switch (expression.expressionType) {
@@ -1323,7 +1357,12 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             if ([property isKindOfClass:[NSRelationshipDescription class]]) {
                 // if it's a relationship it should be a MOCID
                 NSRelationshipDescription *rel = (NSRelationshipDescription*)property;
-                value = [self newObjectIDForEntity:rel.destinationEntity referenceObject:value];
+                if (!rel.isToMany) {
+                    NSManagedObjectID *objectID = [self newObjectIDForEntity:rel.destinationEntity referenceObject:value];
+                    value = [context objectRegisteredForID:objectID];
+                }
+                else
+                    value = [self newArrayForRelationship:rel referenceObject:value context:context];
             }
         }
             break;
@@ -1405,6 +1444,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             if (!moc) {
                 moc = [context objectWithID:mocid];
                 [inserted addObject:moc];
+                [moc willAccessValueForKey:nil];
+                [self _purgeCacheForEntityName:moc.entity.name];
             } else {
                 [context refreshObject:moc mergeChanges:YES];
                 [updated addObject:moc];
