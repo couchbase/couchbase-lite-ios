@@ -15,6 +15,7 @@
 
 #import "CBL_Shared.h"
 #import "CBL_Server.h"
+#import "MYReadWriteLock.h"
 
 
 @implementation CBL_Shared
@@ -92,6 +93,18 @@
 {
     @synchronized(self) {
         return [_databases[dbName][type] copy];
+    }
+}
+
+- (MYReadWriteLock*) lockForDatabaseNamed: (NSString*)dbName {
+    @synchronized(self) {
+        MYReadWriteLock* lock = [self valueForType: @"lock" name: @"" inDatabaseNamed: dbName];
+        if (!lock) {
+            lock = [[MYReadWriteLock alloc] init];
+            lock.name = $sprintf(@"DB lock for %@", dbName);
+            [self setValue: lock forType: @"lock" name: @"" inDatabaseNamed: dbName];
+        }
+        return lock;
     }
 }
 

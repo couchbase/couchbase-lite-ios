@@ -35,7 +35,7 @@
 
 
 // NOTE: This file contains mostly just public-API method implementations.
-// The lower-level stuff is in CBLDatabase.m, etc.
+// The lower-level stuff is in CBLDatabase+Internal.m, etc.
 
 
 // Size of document cache: max # of otherwise-unreferenced docs that will be kept in memory.

@@ -8,7 +8,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBL_Server;
+@class CBL_Server, MYReadWriteLock;
 
 
 /** Container for shared state between CBLDatabase instances that represent the same database file. API is thread-safe. */
@@ -28,6 +28,8 @@
 
 - (NSDictionary*) valuesOfType: (NSString*)type
                inDatabaseNamed: (NSString*)dbName;
+
+- (MYReadWriteLock*) lockForDatabaseNamed: (NSString*)dbName;
 
 - (void) openedDatabase: (NSString*)dbName;
 - (void) closedDatabase: (NSString*)dbName;

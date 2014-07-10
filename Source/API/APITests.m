@@ -763,6 +763,81 @@ TestCase(API_ChangeTracking) {
 }
 
 
+static void lotsaWrites(CBLDatabase* db, NSUInteger nTransactions, NSUInteger nDocs) {
+    for (NSUInteger t = 1; t <= nTransactions; t++) {
+        BOOL ok = [db inTransaction: ^BOOL {
+            Log(@"Transaction #%u ...", (unsigned)t);
+            @autoreleasepool {
+                for (NSUInteger d = 1; d <= nDocs; d++) {
+                    CBLDocument* doc = [db createDocument];
+                    NSDictionary* props = @{@"transaction": @(t),
+                                            @"doc": @(d)};
+                    NSError* error;
+                    Assert([doc putProperties: props error: &error], @"put failed: %@", error);
+                }
+                return YES;
+            }
+        }];
+        Assert(ok, @"Transaction failed!");
+    }
+}
+
+static void lotsaReads(CBLDatabase* db, NSUInteger nReads) {
+    NSUInteger docCount = 0;
+    for (NSUInteger t = 1; t <= nReads; t++) {
+        @autoreleasepool {
+            usleep(10*1000);
+            NSArray* allDocs = [db getAllDocs: NULL];
+            NSUInteger newCount = allDocs.count;
+            //NSLog(@"Reader found %lu docs", (unsigned long)newCount);
+            Assert(allDocs, @"getAllDocs failed: status %d", db.lastDbError);
+            Assert(newCount >= docCount, @"Wrong doc count (used to be %ld)", (unsigned long)docCount);
+            docCount = newCount;
+        }
+    }
+}
+
+
+TestCase(API_ConcurrentWrites) {
+    const NSUInteger kNTransactions = 100;
+    const NSUInteger kNDocs = 100;
+    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_ConcurrentWrites"];
+    CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
+    Log(@"Main thread writer: %@", db.fmdb);
+
+    CBLManager* bgmgr = [mgr copy];
+    dispatch_queue_t writingQueue = dispatch_queue_create("ConcurrentWritesTest",  NULL);
+    dispatch_async(writingQueue, ^{
+        CBLDatabase* bgdb = [bgmgr databaseNamed: @"db" error: nil];
+        Log(@"bg writer: %@", bgdb.fmdb);
+        lotsaWrites(bgdb, kNTransactions, kNDocs);
+    });
+
+    CBLManager* readQueueMgr = [mgr copy];
+    dispatch_queue_t readingQueue = dispatch_queue_create("reading",  NULL);
+    dispatch_async(readingQueue, ^{
+        CBLDatabase* bgdb = [readQueueMgr databaseNamed: @"db" error: nil];
+        Log(@"bg reader: %@", bgdb.fmdb);
+        lotsaReads(bgdb, kNTransactions);
+    });
+
+    CBLManager* readQueue2Mgr = [mgr copy];
+    dispatch_queue_t readingQueue2 = dispatch_queue_create("reading",  NULL);
+    dispatch_async(readingQueue2, ^{
+        CBLDatabase* bgdb = [readQueue2Mgr databaseNamed: @"db" error: nil];
+        Log(@"bg2 reader: %@", bgdb.fmdb);
+        lotsaReads(bgdb, kNTransactions);
+    });
+
+    lotsaWrites(db, kNTransactions, kNDocs);
+
+    // Wait for queue to finish the previous block:
+    dispatch_sync(writingQueue, ^{  });
+    dispatch_sync(readingQueue, ^{  });
+    dispatch_sync(readingQueue2, ^{  });
+}
+
+
 TestCase(API_ChangeUUID) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
     CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
