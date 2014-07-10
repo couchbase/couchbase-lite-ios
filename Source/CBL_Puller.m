@@ -415,9 +415,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             __strong CBL_Puller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
             if (error) {
-                strongSelf.error = error;
-                [strongSelf revisionFailed];
-                strongSelf.changesProcessed++;
+                [strongSelf revision: rev failedWithError: error];
             } else {
                 CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: dl.document];
                 gotRev.sequence = rev.sequence;
@@ -488,9 +486,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   [strongSelf queueDownloadedRevision:rev];
               } else {
                   CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
-                  strongSelf.error = CBLStatusToNSError(status, nil);
-                  [strongSelf revisionFailed];
-                  strongSelf.changesProcessed++;
+                  [strongSelf revision: rev failedWithError: CBLStatusToNSError(status, nil)];
               }
           }
                                    onCompletion:
@@ -529,11 +525,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
     [self asyncTaskStarted];
     ++_httpConnectionCount;
-    NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
-    NSArray* keys = [bulkRevs my_map: ^(CBL_Revision* rev) { return rev.docID; }];
+    CBL_RevisionList* remainingRevs = [[CBL_RevisionList alloc] initWithArray: bulkRevs];
     [self sendAsyncRequest: @"POST"
                       path: @"_all_docs?include_docs=true"
-                      body: $dict({@"keys", keys})
+                      body: $dict({@"keys", remainingRevs.allDocIDs})
               onCompletion:^(id result, NSError *error) {
                   if (error) {
                       self.error = error;
@@ -550,11 +545,20 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                           NSDictionary* doc = $castIf(NSDictionary, row[@"doc"]);
                           if (doc && !doc.cbl_attachments) {
                               CBL_Revision* rev = [CBL_Revision revisionWithProperties: doc];
-                              NSUInteger pos = [remainingRevs indexOfObject: rev];
-                              if (pos != NSNotFound) {
-                                  rev.sequence = [remainingRevs[pos] sequence];
-                                  [remainingRevs removeObjectAtIndex: pos];
-                                  [self queueDownloadedRevision:rev];
+                              CBL_Revision* removedRev = [remainingRevs removeAndReturnRev: rev];
+                              if (removedRev) {
+                                  rev.sequence = removedRev.sequence;
+                                  [self queueDownloadedRevision: rev];
+                              }
+                          } else {
+                              CBLStatus status = CBLStatusFromBulkDocsResponseItem(row);
+                              if (CBLStatusIsError(status) && row[@"key"]) {
+                                  CBL_Revision* rev = [remainingRevs revWithDocID: row[@"key"]];
+                                  if (rev) {
+                                      [remainingRevs removeRev: rev];
+                                      [self revision: rev
+                                            failedWithError: CBLStatusToNSError(status, nil)];
+                                  }
                               }
                           }
                       }
@@ -576,6 +580,16 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   [self pullRemoteRevisions];
               }
      ];
+}
+
+- (void) revision: (CBL_Revision*)rev failedWithError: (NSError*)error {
+    if (CBLMayBeTransientError(error))
+        [self revisionFailed]; // retry later
+    else {
+        LogTo(SyncVerbose, @"Giving up on %@: %@", rev, error);
+        [_pendingSequences removeSequence: rev.sequence];
+    }
+    self.changesProcessed++;
 }
 
 // This invokes the tranformation block if one is installed and queues the resulting CBL_Revision

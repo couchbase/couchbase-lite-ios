@@ -12,7 +12,8 @@
 
 /** Option flags for CBLManager initialization. */
 typedef struct CBLManagerOptions {
-    bool readOnly;      /**< No modifications to databases are allowed. */
+    bool                 readOnly;          /**< No modifications to databases are allowed. */
+    NSDataWritingOptions fileProtection;    /**< File protection/encryption options (iOS only) */
 } CBLManagerOptions;
 
 

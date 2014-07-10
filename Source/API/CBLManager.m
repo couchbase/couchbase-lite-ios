@@ -325,6 +325,16 @@ static CBLManager* sInstance;
 }
 
 
+#if TARGET_OS_IPHONE
+- (NSDataWritingOptions) fileProtection {
+    return _options.fileProtection & NSDataWritingFileProtectionMask;
+}
+#endif
+
+
+#pragma mark - BACKGROUND TASKS:
+
+
 - (void) doAsync: (void (^)())block {
     if (_dispatchQueue)
         dispatch_async(_dispatchQueue, block);

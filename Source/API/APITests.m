@@ -85,13 +85,16 @@ TestCase(API_Manager) {
         Log(@"Database '%@': %u documents", db.name, (unsigned)db.documentCount);
     }
 
-    CBLManagerOptions options = {.readOnly= true};
     NSError* error;
+    CBLDatabase* db = [dbmgr databaseNamed: @"test_db" error: &error];
+    CAssert(db, @"Couldn't get/create test_db: %@", error);
+
+    CBLManagerOptions options = {.readOnly= true};
     CBLManager* ro = [[CBLManager alloc] initWithDirectory: dbmgr.directory options: &options
                                                      error: &error];
     CAssert(ro);
 
-    CBLDatabase* db = [ro databaseNamed: @"foo" error: &error];
+    db = [ro databaseNamed: @"foo" error: &error];
     CAssertNil(db);
 
     db = [ro existingDatabaseNamed: @"test_db" error: &error];

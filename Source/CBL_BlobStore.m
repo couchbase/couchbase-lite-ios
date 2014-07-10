@@ -28,6 +28,16 @@
 
 
 @implementation CBL_BlobStore
+{
+    NSString* _tempDir;
+}
+
+
+@synthesize path=_path;
+#if TARGET_OS_IPHONE
+@synthesize fileProtection=_fileProtection;
+#endif
+
 
 - (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError {
     Assert(dir);
@@ -48,8 +58,6 @@
 }
 
 
-
-
 + (CBLBlobKey) keyForBlob: (NSData*)blob {
     NSCParameterAssert(blob);
     CBLBlobKey key;
@@ -64,9 +72,6 @@
     CBLBlobKey key = [self keyForBlob: blob];
     return [NSData dataWithBytes: &key length: sizeof(key)];
 }
-
-
-@synthesize path=_path;
 
 
 - (NSString*) pathForKey: (CBLBlobKey)key {
@@ -133,13 +138,17 @@
     NSString* path = [self pathForKey: *outKey];
     if ([[NSFileManager defaultManager] isReadableFileAtPath: path])
         return YES;
-    NSError* error;
-    if (![blob writeToFile: path
-                   options: NSDataWritingAtomic
+
+    NSDataWritingOptions options = NSDataWritingAtomic;
 #if TARGET_OS_IPHONE
-                            | NSDataWritingFileProtectionCompleteUnlessOpen
+    if (_fileProtection != 0)
+        options |= _fileProtection;
+    else
+        options |= NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication; // default
 #endif
-                     error: &error]) {
+
+    NSError* error;
+    if (![blob writeToFile: path options: options error: &error]) {
         Warn(@"CBL_BlobStore: Couldn't write to %@: %@", path, error);
         return NO;
     }
@@ -261,7 +270,22 @@
         }
         NSDictionary* attributes = nil;
 #if TARGET_OS_IPHONE
-        attributes = @{NSFileProtectionKey: NSFileProtectionCompleteUnlessOpen};
+        NSString* protection;
+        switch (store.fileProtection) {
+            case NSDataWritingFileProtectionNone:
+                protection = NSFileProtectionNone;
+                break;
+            case NSDataWritingFileProtectionComplete:
+                protection = NSFileProtectionComplete;
+                break;
+            case NSDataWritingFileProtectionCompleteUnlessOpen:
+                protection = NSFileProtectionCompleteUnlessOpen;
+                break;
+            default:
+                protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
+                break;
+        }
+        attributes = @{NSFileProtectionKey: protection};
 #endif
         if (![[NSFileManager defaultManager] createFileAtPath: _tempPath
                                                      contents: nil

@@ -361,6 +361,23 @@
     [_revs removeObject: rev];
 }
 
+- (CBL_Revision*) removeAndReturnRev: (CBL_Revision*)rev {
+    NSUInteger index = [_revs indexOfObject: rev];
+    if (index == NSNotFound)
+        return nil;
+    rev = _revs[index];
+    [_revs removeObjectAtIndex: index];
+    return rev;
+}
+
+- (CBL_Revision*) revWithDocID: (NSString*)docID {
+    for (CBL_Revision* rev in _revs) {
+        if ($equal(rev.docID, docID))
+            return rev;
+    }
+    return nil;
+}
+
 - (void) removeObjectAtIndex: (NSUInteger)index {
     [_revs removeObjectAtIndex: index];
 }

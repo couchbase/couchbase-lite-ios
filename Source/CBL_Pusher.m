@@ -379,7 +379,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     NSString* errorStr = item[@"error"];
     if (!errorStr)
         return kCBLStatusOK;
-    // 'status' property is nonstandard; TouchDB returns it, others don't.
+    // 'status' property is nonstandard; Couchbase Lite returns it, others don't.
     CBLStatus status = $castIf(NSNumber, item[@"status"]).intValue;
     if (status >= 400)
         return status;
@@ -390,6 +390,10 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
         return kCBLStatusForbidden;
     else if ($equal(errorStr, @"conflict"))
         return kCBLStatusConflict;
+    else if ($equal(errorStr, @"missing"))
+        return kCBLStatusNotFound;
+    else if ($equal(errorStr, @"not_found"))
+        return kCBLStatusNotFound;
     else
         return kCBLStatusUpstreamError;
 }
