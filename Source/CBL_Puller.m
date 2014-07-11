@@ -95,13 +95,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         }
     }
 
-    CBLChangeTrackerMode mode;
-    if (!_continuous || pollInterval > 0.0)
-        mode = kOneShot;
-    else if (self.canUseWebSockets)
+    CBLChangeTrackerMode mode = kOneShot;
+    if (_continuous && pollInterval == 0.0 && self.canUseWebSockets)
         mode = kWebSocket;
-    else
-        mode = _caughtUp ? kLongPoll : kOneShot;
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _remote
                                                               mode: mode
