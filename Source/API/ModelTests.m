@@ -145,6 +145,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @property NSArray* strings;
 @property NSArray* dates;
 @property NSArray* others;
+@property NSDictionary* dict;
 
 @property CBL_TestSubModel* subModel;
 @property CBL_TTestMutableSubModel* mutableSubModel;
@@ -159,7 +160,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @implementation CBL_TestModel
 
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
-@dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly;
+@dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly, dict;
 @dynamic str, data, date, decimal, other, strings, dates, others, Capitalized;
 @dynamic subModel, subModels, mutableSubModel;
 @synthesize reloadCount;
@@ -525,6 +526,22 @@ TestCase(API_ModelAttachments) {
         [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content:newAttData];
         CAssert([model save: &error], @"Final save failed: %@", error);
     }
+    [db close];
+}
+
+
+TestCase(API_ModelPropertyObservation) {
+    // For https://github.com/couchbase/couchbase-lite-ios/issues/244
+    CBLDatabase* db = createEmptyDB();
+    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    id observer = [NSObject new];
+
+    @autoreleasepool {
+        model.dict = @{@"name": @"Puddin' Tane"};
+        [model addObserver: observer forKeyPath: @"dict.name" options: 0 context: NULL];
+        [model save: NULL];
+    }
+    [model removeObserver: observer forKeyPath: @"dict.name"];
     [db close];
 }
 

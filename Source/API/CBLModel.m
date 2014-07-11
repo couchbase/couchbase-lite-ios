@@ -291,7 +291,6 @@
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return;
     _isNew = NO;
-    _properties = nil;
     _changedNames = nil;
     _changedAttachments = nil;
     self.needsSave = NO;
