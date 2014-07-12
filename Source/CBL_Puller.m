@@ -209,12 +209,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                 revIDs: (NSArray*)revIDs
                                deleted: (BOOL)deleted
 {
-    NSUInteger changeCount = 0;
-
     // Process each change from the feed:
     if (![CBLDatabase isValidDocumentID: docID])
         return;
     
+    self.changesTotal += revIDs.count;
     for (NSString* revID in revIDs) {
         // Push each revision info to the inbox
         CBLPulledRevision* rev = [[CBLPulledRevision alloc] initWithDocID: docID
@@ -227,10 +226,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             rev.conflicted = true;
         LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
         [self addToInbox: rev];
-
-        changeCount++;
     }
-    self.changesTotal += changeCount;
 }
 
 
@@ -283,15 +279,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
-    NSUInteger total = self.changesTotal - inbox.count;
+    NSUInteger originalCount = inbox.count;
     if (![_db findMissingRevisions: inbox]) {
         Warn(@"%@ failed to look up local revs", self);
         inbox = nil;
     }
-    if (self.changesTotal != total + inbox.count)
-        self.changesTotal = total + inbox.count;
+    NSUInteger missingCount = inbox.count;
+    if (missingCount < originalCount) {
+        // Some of the revisions originally in the inbox aren't missing; treat those as processed:
+        self.changesProcessed += originalCount - missingCount;
+    }
     
-    if (inbox.count == 0) {
+    if (missingCount == 0) {
         // Nothing to do; just count all the revisions as processed.
         // Instead of adding and immediately removing the revs to _pendingSequences,
         // just do the latest one (equivalent but faster):
