@@ -203,7 +203,7 @@
 - (SequenceNumber) sequence {
     SequenceNumber sequence = 0;
     if (_rev.sequenceIfKnown > 0 || [self loadProperties])
-            sequence = _rev.sequence;
+        sequence = _rev.sequence;
     return sequence;
 }
 
@@ -211,8 +211,13 @@
 - (NSDictionary*) properties {
     NSDictionary* properties = _rev.properties;
     if (!_checkedProperties) {
-        if ([self loadProperties])
+        if (properties == nil) {
+            if ([self loadProperties])
+                properties = _rev.properties;
+        } else if (!properties.cbl_id) {
+            _rev = [_rev revisionByAddingBasicMetadata];
             properties = _rev.properties;
+        }
         _checkedProperties = YES;
     }
     return properties;

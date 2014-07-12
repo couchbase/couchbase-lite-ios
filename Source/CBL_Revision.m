@@ -174,6 +174,15 @@
     return rev;
 }
 
+- (CBL_Revision*) revisionByAddingBasicMetadata {
+    NSMutableDictionary* props = [self.properties mutableCopy];
+    props[@"_id"] = self.docID;
+    props[@"_rev"] = self.revID;
+    if (_deleted)
+        props[@"_deleted"] = @YES;
+    return [[CBL_Revision alloc] initWithProperties: props];
+}
+
 
 /** Returns the JSON to be stored into the database.
     This has all the special keys like "_id" stripped out, and keys in canonical order. */
