@@ -109,8 +109,8 @@ static NSArray* putGeoDocs(CBLDatabase* db) {
 }
 
 
-static CBLView* createView(CBLDatabase* db) {
-    CBLView* view = [db viewNamed: @"aview"];
+static CBLView* createViewNamed(CBLDatabase* db, NSString* name) {
+    CBLView* view = [db viewNamed: name];
     [view setMapBlock: MAPBLOCK({
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
@@ -121,6 +121,10 @@ static CBLView* createView(CBLDatabase* db) {
             emit(CBLGeoJSONKey(doc[@"geoJSON"]), nil);
     }) reduceBlock: NULL version: @"1"];
     return view;
+}
+
+static CBLView* createView(CBLDatabase* db) {
+    return createViewNamed(db, @"aview");
 }
 
 
@@ -185,6 +189,44 @@ TestCase(CBL_View_Index) {
     
     [view deleteIndex];
     
+    CAssert([db close]);
+}
+
+
+TestCase(CBL_View_IndexMultiple) {
+    RequireTestCase(CBL_View_Index);
+    CBLDatabase *db = createDB();
+
+    CBLView* v1 = createViewNamed(db, @"prefix/view1");
+    CBLView* v2 = createViewNamed(db, @"view2");
+    CBLView* v3 = createViewNamed(db, @"view3");
+    NSArray* views = @[v1, v2, v3];
+
+    AssertEqual(v1.viewsInGroup, (@[v1]));
+    AssertEqual(v2.viewsInGroup, (@[v2, v3]));
+    AssertEqual(v3.viewsInGroup, (@[v2, v3]));
+
+    const int kNDocs = 10;
+    for (int i=0; i<kNDocs; i++) {
+        putDoc(db, @{@"key": @(i)});
+        if (i == kNDocs/2) {
+            CBLStatus status = [v1 updateIndex];
+            CAssert(status < 300);
+        }
+    }
+
+    CBLStatus status = [v2 updateIndexAlone];
+    CAssert(status < 300);
+
+    status = [v2 updateIndex];
+    CAssertEq(status, kCBLStatusNotModified); // should not update v3
+
+    status = [db updateIndexes: views forView: v3];
+    CAssert(status < 300);
+
+    for (CBLView* view in views)
+        CAssertEq(view.lastSequenceIndexed, kNDocs);
+
     CAssert([db close]);
 }
 
@@ -936,6 +978,9 @@ TestCase(CBL_View_FullTextQuery) {
 }
 
 TestCase(CBLView) {
+    RequireTestCase(CBL_View_Create);
+    RequireTestCase(CBL_View_Index);
+    RequireTestCase(CBL_View_IndexMultiple);
     RequireTestCase(CBL_View_Query);
     RequireTestCase(CBL_View_QueryStartKeyDocID);
     RequireTestCase(CBL_View_MapConflicts);
