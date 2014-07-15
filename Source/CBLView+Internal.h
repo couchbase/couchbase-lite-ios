@@ -49,6 +49,10 @@ typedef enum {
 } CBLViewCollation;
 
 
+/** Returns YES if the data is meant as a placeholder for the doc's entire data (a "*") */
+BOOL CBLValueIsEntireDoc(NSData* valueData);
+
+
 @interface CBLView ()
 {
     @private

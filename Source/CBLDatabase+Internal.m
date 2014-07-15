@@ -846,10 +846,41 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                       revisionID: (NSString*)revID
+                         revisionID: (NSString*)revID
 {
     CBLStatus status;
     return [self getDocumentWithID: docID revisionID: revID options: 0 status: &status];
+}
+
+
+// Note: This method assumes the docID is correct and doesn't bother to look it up on its own.
+- (CBL_Revision*) getDocumentWithID: (NSString*)docID
+                           sequence: (SequenceNumber)sequence
+                             status: (CBLStatus*)outStatus
+{
+    CBL_MutableRevision* result = nil;
+    CBLStatus status;
+    CBL_FMResultSet *r = [_fmdb executeQuery:
+                          @"SELECT revid, deleted, no_attachments, json FROM revs WHERE sequence=?",
+                          @(sequence)];
+    if (!r) {
+        status = self.lastDbError;
+    } else if (![r next]) {
+        status = kCBLStatusNotFound;
+    } else {
+        result = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                      revID: [r stringForColumnIndex: 0]
+                                                    deleted: [r boolForColumnIndex: 1]];
+        result.sequence = sequence;
+        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 3]
+                  intoRevision: result
+                       options: ([r boolForColumnIndex: 2] ? kCBLNoAttachments : 0)];
+        status = kCBLStatusOK;
+    }
+    [r close];
+    if (outStatus)
+        *outStatus = status;
+    return result;
 }
 
 

@@ -135,10 +135,14 @@ static inline NSString* toJSONString( id object ) {
 
 
 /** The body of the emit() callback while indexing a view. */
-- (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
+- (CBLStatus) _emitKey: (id)key
+                 value: (id)value
+            valueIsDoc: (BOOL)valueIsDoc
+           forSequence: (SequenceNumber)sequence
+{
     CBLDatabase* db = _weakDB;
     CBL_FMDatabase* fmdb = db.fmdb;
-    NSString* valueJSON = toJSONString(value);
+    NSString* valueJSON = valueIsDoc ? @"*" : toJSONString(value);
     NSNumber* fullTextID = nil, *bboxID = nil;
     NSString* keyJSON = @"null";
     NSData* geoKey = nil;
@@ -245,11 +249,14 @@ static inline NSString* toJSONString( id object ) {
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.
         __block CBLView* curView;
+        __block NSDictionary* curDoc;
         __block SequenceNumber sequence = minLastSequence;
         __block CBLStatus emitStatus = kCBLStatusOK;
         __block unsigned inserted = 0;
         CBLMapEmitBlock emit = ^(id key, id value) {
-            int status = [curView _emitKey: key value: value forSequence: sequence];
+            int status = [curView _emitKey: key value: value
+                                valueIsDoc: (value == curDoc)
+                               forSequence: sequence];
             if (status != kCBLStatusOK)
                 emitStatus = status;
             else
@@ -324,12 +331,12 @@ static inline NSString* toJSONString( id object ) {
                 CBLContentOptions contentOptions = kCBLIncludeLocalSeq;
                 if (noAttachments)
                     contentOptions |= kCBLNoAttachments;
-                NSDictionary* properties = [self documentPropertiesFromJSON: json
-                                                                     docID: docID revID:revID
-                                                                   deleted: NO
-                                                                  sequence: sequence
-                                                                   options: contentOptions];
-                if (!properties) {
+                curDoc = [self documentPropertiesFromJSON: json
+                                                    docID: docID revID:revID
+                                                  deleted: NO
+                                                 sequence: sequence
+                                                  options: contentOptions];
+                if (!curDoc) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
                 }
@@ -341,7 +348,7 @@ static inline NSString* toJSONString( id object ) {
                         LogTo(ViewVerbose, @"#%lld: map \"%@\" for view %@...",
                               sequence, docID, curView.name);
                         @try {
-                            curView.mapBlock(properties, emit);
+                            curView.mapBlock(curDoc, emit);
                         } @catch (NSException* x) {
                             MYReportException(x, @"map block of view '%@'", curView.name);
                             emitStatus = kCBLStatusCallbackError;
