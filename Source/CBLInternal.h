@@ -19,6 +19,13 @@
 @class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
 
 
+// In a method/function implementation (not declaration), declaring an object parameter as
+// __unsafe_unretained avoids the implicit retain at the start of the function and releasse at
+// the end. In a performance-sensitive function, those can be significant overhead. Of course this
+// should never be used if the object might be released during the function.
+#define UU __unsafe_unretained
+
+
 @interface CBLDatabase (Insertion_Internal)
 - (NSData*) encodeDocumentJSON: (CBL_Revision*)rev;
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev;

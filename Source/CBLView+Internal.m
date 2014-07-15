@@ -125,7 +125,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 }
 
 
-static inline NSString* toJSONString( id object ) {
+static inline NSString* toJSONString( UU id object ) {
     if (!object)
         return nil;
     return [CBLJSON stringWithJSONObject: object
@@ -135,8 +135,8 @@ static inline NSString* toJSONString( id object ) {
 
 
 /** The body of the emit() callback while indexing a view. */
-- (CBLStatus) _emitKey: (id)key
-                 value: (id)value
+- (CBLStatus) _emitKey: (UU id)key
+                 value: (UU id)value
             valueIsDoc: (BOOL)valueIsDoc
            forSequence: (SequenceNumber)sequence
 {
@@ -211,8 +211,12 @@ static inline NSString* toJSONString( id object ) {
         SequenceNumber viewLastSequence[views.count];
         unsigned deleted = 0;
         int i = 0;
+        NSMutableArray* mapBlocks = [[NSMutableArray alloc] initWithCapacity: views.count];
         for (CBLView* view in views) {
-            Assert(view.mapBlock, @"Cannot reindex view '%@' which has no map block set", view.name);
+            CBLMapBlock mapBlock = view.mapBlock;
+            Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", view.name);
+            [mapBlocks addObject: mapBlock];
+
             int viewID = view.viewID;
             if (viewID <= 0)
                 return kCBLStatusNotFound;
@@ -344,11 +348,11 @@ static inline NSString* toJSONString( id object ) {
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 int i = 0;
                 for (curView in views) {
-                    if (viewLastSequence[i++] < realSequence) {
+                    if (viewLastSequence[i] < realSequence) {
                         LogTo(ViewVerbose, @"#%lld: map \"%@\" for view %@...",
                               sequence, docID, curView.name);
                         @try {
-                            curView.mapBlock(curDoc, emit);
+                            ((CBLMapBlock)mapBlocks[i])(curDoc, emit);
                         } @catch (NSException* x) {
                             MYReportException(x, @"map block of view '%@'", curView.name);
                             emitStatus = kCBLStatusCallbackError;
@@ -358,6 +362,7 @@ static inline NSString* toJSONString( id object ) {
                             return emitStatus;
                         }
                     }
+                    ++i;
                 }
                 curView = nil;
             }
