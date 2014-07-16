@@ -197,14 +197,18 @@ TestCase(CBL_View_IndexMultiple) {
     RequireTestCase(CBL_View_Index);
     CBLDatabase *db = createDB();
 
-    CBLView* v1 = createViewNamed(db, @"prefix/view1");
-    CBLView* v2 = createViewNamed(db, @"view2");
-    CBLView* v3 = createViewNamed(db, @"view3");
+    CBLView* v1 = createViewNamed(db, @"agroup/view1");
+    CBLView* v2 = createViewNamed(db, @"other/view2");
+    CBLView* v3 = createViewNamed(db, @"other/view3");
+    CBLView* v4 = createViewNamed(db, @"view4");
+    CBLView* v5 = createViewNamed(db, @"view5");
     NSArray* views = @[v1, v2, v3];
 
     AssertEqual(v1.viewsInGroup, (@[v1]));
     AssertEqual(v2.viewsInGroup, (@[v2, v3]));
     AssertEqual(v3.viewsInGroup, (@[v2, v3]));
+    AssertEqual(v4.viewsInGroup, (@[v4])); // because GROUP_VIEWS_BY_DEFAULT isn't enabled
+    AssertEqual(v5.viewsInGroup, (@[v5]));
 
     const int kNDocs = 10;
     for (int i=0; i<kNDocs; i++) {

@@ -29,6 +29,14 @@
 #include "sqlite3_unicodesn_tokenizer.h"
 
 
+// GROUP_VIEWS_BY_DEFAULT alters the behavior of -viewsInGroup and thus which views will be
+// re-indexed together. If it's defined, all views with no "/" in the name are treated as a single
+// group and will be re-indexed together. If it's not defined, such views aren't in any group
+// and will be re-indexed only individually. (The latter matches the CBL 1.0 behavior and
+// avoids unexpected slowdowns if an app suddenly has all its views re-index at once.)
+#undef GROUP_VIEWS_BY_DEFAULT
+
+
 static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
 
 
@@ -116,10 +124,15 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             return [view.name hasPrefix: prefix];
         };
     } else {
+#ifdef GROUP_VIEWS_BY_DEFAULT
         // Return all the views that don't have a slash in their names:
         filter = ^int(CBLView* view) {
             return [view.name rangeOfString: @"/"].length == 0;
         };
+#else
+        // Without GROUP_VIEWS_BY_DEFAULT, views with no "/" in the name aren't in any group:
+        return @[self];
+#endif
     }
     return [_weakDB.allViews my_filter: filter];
 }
