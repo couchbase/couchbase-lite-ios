@@ -26,13 +26,11 @@
 
 
 static inline int cmp(int n1, int n2) {
-    int diff = n1 - n2;
-    return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+    return (n1>n2) ? 1 : ((n1<n2)? -1 : 0);
 }
 
 static inline int dcmp(double n1, double n2) {
-    double diff = n1 - n2;
-    return diff > 0.0 ? 1 : (diff < 0.0 ? -1 : 0);
+    return (n1>n2) ? 1 : ((n1<n2)? -1 : 0);
 }
 
 
@@ -73,24 +71,32 @@ static SInt8 kRawOrderOfValueType[] = {
 };
 
 
+static uint8_t kTypeOf[256];
+
+static void initializeValueTypes(void) {
+    memset(&kTypeOf, kIllegal, sizeof(kTypeOf));
+    memset(&kTypeOf['0'], kNumber, 10);
+    kTypeOf['n'] = kNull;
+    kTypeOf['f'] = kFalse;
+    kTypeOf['t'] = kTrue;
+    kTypeOf['-'] = kNumber;
+    kTypeOf['"'] = kString;
+    kTypeOf[']'] = kEndArray;
+    kTypeOf['}'] = kEndObject;
+    kTypeOf[','] = kComma;
+    kTypeOf[':'] = kColon;
+    kTypeOf['['] = kArray;
+    kTypeOf['{'] = kObject;
+}
+
+
 static ValueType valueTypeOf(char c) {
-    switch (c) {
-        case 'n':           return kNull;
-        case 'f':           return kFalse;
-        case 't':           return kTrue;
-        case '0' ... '9':
-        case '-':           return kNumber;
-        case '"':           return kString;
-        case ']':           return kEndArray;
-        case '}':           return kEndObject;
-        case ',':           return kComma;
-        case ':':           return kColon;
-        case '[':           return kArray;
-        case '{':           return kObject;
-        default:
-            Warn(@"Unexpected character '%c' parsing JSON", c);
-            return kIllegal;
-    }
+    ValueType v = kTypeOf[(uint8_t)c];
+#if DEBUG
+    if (v == kIllegal)
+        Warn(@"Unexpected character '%c' parsing JSON", c);
+#endif
+    return v;
 }
 
 
@@ -290,6 +296,7 @@ int CBLCollateJSONLimited(void *context,
 
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        initializeValueTypes();
         initializeAsciiToUpper();
     });
 

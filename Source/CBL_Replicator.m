@@ -258,6 +258,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             LogTo(Sync, @"%@ Progress: %lu / %lu",
                   self, (unsigned long)processed, (unsigned long)_changesTotal);
     }
+    if ((NSInteger)processed < 0)
+        Warn(@"Suspicious changesProcessed value: %llu", (UInt64)processed);
     _changesProcessed = processed;
     [self postProgressChanged];
 }
@@ -267,6 +269,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         LogTo(Sync, @"%@ Progress: %lu / %lu",
               self, (unsigned long)_changesProcessed, (unsigned long)total);
     }
+    if ((NSInteger)total < 0)
+        Warn(@"Suspicious changesTotal value: %llu", (UInt64)total);
     _changesTotal = total;
     [self postProgressChanged];
 }

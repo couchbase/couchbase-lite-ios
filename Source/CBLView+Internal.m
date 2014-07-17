@@ -29,6 +29,14 @@
 #include "sqlite3_unicodesn_tokenizer.h"
 
 
+// GROUP_VIEWS_BY_DEFAULT alters the behavior of -viewsInGroup and thus which views will be
+// re-indexed together. If it's defined, all views with no "/" in the name are treated as a single
+// group and will be re-indexed together. If it's not defined, such views aren't in any group
+// and will be re-indexed only individually. (The latter matches the CBL 1.0 behavior and
+// avoids unexpected slowdowns if an app suddenly has all its views re-index at once.)
+#undef GROUP_VIEWS_BY_DEFAULT
+
+
 static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
 
 
@@ -42,27 +50,6 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 @property (readonly, nonatomic) CBLGeoRect rect;
 @property (readonly, nonatomic) NSData* geoJSONData;
 @end
-
-
-id CBLTextKey(NSString* text) {
-    return [[CBLSpecialKey alloc] initWithText: text];
-}
-
-id CBLGeoPointKey(double x, double y) {
-    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
-}
-
-id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
-    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
-}
-
-id CBLGeoJSONKey(NSDictionary* geoJSON) {
-    id key = [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
-    if (!key)
-        Warn(@"CBLGeoJSONKey doesn't recognize %@",
-             [CBLJSON stringWithJSONObject: geoJSON options:0 error: NULL]);
-    return key;
-}
 
 
 @implementation CBLView (Internal)
@@ -127,7 +114,31 @@ id CBLGeoJSONKey(NSDictionary* geoJSON) {
 #pragma mark - INDEXING:
 
 
-static inline NSString* toJSONString( id object ) {
+- (NSArray*) viewsInGroup {
+    int (^filter)(CBLView* view);
+    NSRange slash = [_name rangeOfString: @"/"];
+    if (slash.length > 0) {
+        // Return all the views whose name starts with the same prefix before the slash:
+        NSString* prefix = [_name substringToIndex: NSMaxRange(slash)];
+        filter = ^int(CBLView* view) {
+            return [view.name hasPrefix: prefix];
+        };
+    } else {
+#ifdef GROUP_VIEWS_BY_DEFAULT
+        // Return all the views that don't have a slash in their names:
+        filter = ^int(CBLView* view) {
+            return [view.name rangeOfString: @"/"].length == 0;
+        };
+#else
+        // Without GROUP_VIEWS_BY_DEFAULT, views with no "/" in the name aren't in any group:
+        return @[self];
+#endif
+    }
+    return [_weakDB.allViews my_filter: filter];
+}
+
+
+static inline NSString* toJSONString( UU id object ) {
     if (!object)
         return nil;
     return [CBLJSON stringWithJSONObject: object
@@ -137,16 +148,20 @@ static inline NSString* toJSONString( id object ) {
 
 
 /** The body of the emit() callback while indexing a view. */
-- (CBLStatus) _emitKey: (id)key value: (id)value forSequence: (SequenceNumber)sequence {
+- (CBLStatus) _emitKey: (UU id)key
+                 value: (UU id)value
+            valueIsDoc: (BOOL)valueIsDoc
+           forSequence: (SequenceNumber)sequence
+{
     CBLDatabase* db = _weakDB;
     CBL_FMDatabase* fmdb = db.fmdb;
-    NSString* valueJSON = toJSONString(value);
+    NSString* valueJSON = valueIsDoc ? @"*" : toJSONString(value);
     NSNumber* fullTextID = nil, *bboxID = nil;
     NSString* keyJSON = @"null";
     NSData* geoKey = nil;
     if ([key isKindOfClass: [CBLSpecialKey class]]) {
         CBLSpecialKey *specialKey = key;
-        LogTo(View, @"    emit( %@, %@)", specialKey, valueJSON);
+        LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, valueJSON);
         BOOL ok;
         NSString* text = specialKey.text;
         if (text) {
@@ -165,7 +180,7 @@ static inline NSString* toJSONString( id object ) {
     } else {
         if (key)
             keyJSON = toJSONString(key);
-        LogTo(View, @"    emit(%@, %@)", keyJSON, valueJSON);
+        LogTo(ViewVerbose, @"    emit(%@, %@)", keyJSON, valueJSON);
     }
 
     if (![fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
@@ -177,70 +192,104 @@ static inline NSString* toJSONString( id object ) {
 }
 
 
-/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
-    LogTo(View, @"Re-indexing view %@ ...", _name);
-    CBLMapBlock mapBlock = self.mapBlock;
-    Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
-    
-    int viewID = self.viewID;
-    if (viewID <= 0)
-        return kCBLStatusNotFound;
-    CBLDatabase* db = _weakDB;
-    
-    CBLStatus status = [db _inTransaction: ^CBLStatus {
-        // Check whether we need to update at all:
-        const SequenceNumber lastSequence = self.lastSequenceIndexed;
-        const SequenceNumber dbMaxSequence = db.lastSequenceNumber;
-        if (lastSequence == dbMaxSequence) {
-            return kCBLStatusNotModified;
-        }
+    return [_weakDB updateIndexes: self.viewsInGroup forView: self];
+}
 
-        __block CBLStatus emitStatus = kCBLStatusOK;
-        __block unsigned inserted = 0;
-        CBL_FMDatabase* fmdb = db.fmdb;
-        
-        // First remove obsolete emitted results from the 'maps' table:
-        __block SequenceNumber sequence = lastSequence;
-        if (lastSequence < 0)
-            return db.lastDbError;
-        BOOL ok;
-        if (lastSequence == 0) {
-            // If the lastSequence has been reset to 0, make sure to remove all map results:
-            ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?", @(_viewID)];
-        } else {
-            // Delete all obsolete map results (ones from since-replaced revisions):
-            ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence IN ("
-                                            "SELECT parent FROM revs WHERE sequence>? "
-                                                "AND parent>0 AND parent<=?)",
-                                      @(_viewID), @(lastSequence), @(lastSequence)];
+
+- (CBLStatus) updateIndexAlone {
+    return [_weakDB updateIndexes: @[self] forView: self];
+}
+
+
+@end
+
+
+@implementation CBLDatabase (ViewIndexing)
+
+/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
+- (CBLStatus) updateIndexes: (NSArray*)views forView: (CBLView*)forView {
+    LogTo(View, @"Checking indexes of (%@)", viewNames(views));
+
+    CBLStatus status = [self _inTransaction: ^CBLStatus {
+        // If the view the update is for doesn't need any update, don't do anything:
+        const SequenceNumber dbMaxSequence = self.lastSequenceNumber;
+        const SequenceNumber forViewLastSequence = forView.lastSequenceIndexed;
+        if (forView && forViewLastSequence >= dbMaxSequence)
+            return kCBLStatusNotModified;
+
+        // Check whether we need to update at all,
+        // and remove obsolete emitted results from the 'maps' table:
+        SequenceNumber minLastSequence = dbMaxSequence;
+        SequenceNumber viewLastSequence[views.count];
+        unsigned deleted = 0;
+        int i = 0;
+        NSMutableArray* mapBlocks = [[NSMutableArray alloc] initWithCapacity: views.count];
+        for (CBLView* view in views) {
+            CBLMapBlock mapBlock = view.mapBlock;
+            Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", view.name);
+            [mapBlocks addObject: mapBlock];
+
+            int viewID = view.viewID;
+            if (viewID <= 0)
+                return kCBLStatusNotFound;
+
+            SequenceNumber last = (view==forView) ? forViewLastSequence : view.lastSequenceIndexed;
+            viewLastSequence[i++] = last;
+            if (last < 0) {
+                return self.lastDbError;
+            } else if (last < dbMaxSequence) {
+                minLastSequence = MIN(minLastSequence, last);
+                LogTo(ViewVerbose, @"    %@ last indexed at #%lld", view.name, last);
+                BOOL ok;
+                if (last == 0) {
+                    // If the lastSequence has been reset to 0, make sure to remove all map results:
+                    ok = [_fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?", @(viewID)];
+                } else {
+                    // Delete all obsolete map results (ones from since-replaced revisions):
+                    ok = [_fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence IN ("
+                                                    "SELECT parent FROM revs WHERE sequence>? "
+                                                        "AND parent>0 AND parent<=?)",
+                                              @(viewID), @(last), @(last)];
+                }
+                if (!ok)
+                    return self.lastDbError;
+                deleted += _fmdb.changes;
+            }
         }
-        if (!ok)
-            return db.lastDbError;
-#ifndef MY_DISABLE_LOGGING
-        unsigned deleted = fmdb.changes;
-#endif
-        
+        if (minLastSequence == dbMaxSequence)
+            return kCBLStatusNotModified;
+
+        LogTo(View, @"Updating indexes of (%@) from #%lld to #%lld ...",
+              viewNames(views), minLastSequence, dbMaxSequence);
+
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.
+        __block CBLView* curView;
+        __block NSDictionary* curDoc;
+        __block SequenceNumber sequence = minLastSequence;
+        __block CBLStatus emitStatus = kCBLStatusOK;
+        __block unsigned inserted = 0;
         CBLMapEmitBlock emit = ^(id key, id value) {
-            int status = [self _emitKey: key value: value forSequence: sequence];
+            int status = [curView _emitKey: key value: value
+                                valueIsDoc: (value == curDoc)
+                               forSequence: sequence];
             if (status != kCBLStatusOK)
                 emitStatus = status;
             else
                 inserted++;
         };
 
-        // Now scan every revision added since the last time the view was indexed:
+        // Now scan every revision added since the last time the views were indexed:
         CBL_FMResultSet* r;
-        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
+        r = [_fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
                                  "FROM revs, docs "
                                  "WHERE sequence>? AND current!=0 AND deleted=0 "
                                  "AND revs.doc_id = docs.doc_id "
                                  "ORDER BY revs.doc_id, revid DESC",
-                                 @(lastSequence)];
+                                 @(minLastSequence)];
         if (!r)
-            return db.lastDbError;
+            return self.lastDbError;
 
         BOOL keepGoing = [r next]; // Go to first result row
         while (keepGoing) {
@@ -260,32 +309,35 @@ static inline NSString* toJSONString( id object ) {
                 // Skip rows with the same doc_id -- these are losing conflicts.
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
                 }
-            
-                if (lastSequence > 0) {
+
+                SequenceNumber realSequence = sequence; // because sequence may be changed, below
+                if (minLastSequence > 0) {
                     // Find conflicts with documents from previous indexings.
-                    CBL_FMResultSet* r2 = [fmdb executeQuery:
+                    CBL_FMResultSet* r2 = [_fmdb executeQuery:
                                     @"SELECT revid, sequence FROM revs "
                                      "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
                                      "ORDER BY revID DESC "
                                      "LIMIT 1",
-                                    @(doc_id), @(lastSequence)];
+                                    @(doc_id), @(minLastSequence)];
                     if (!r2) {
                         [r close];
-                        return db.lastDbError;
+                        return self.lastDbError;
                     }
                     if ([r2 next]) {
                         NSString* oldRevID = [r2 stringForColumnIndex:0];
                         // This is the revision that used to be the 'winner'.
                         // Remove its emitted rows:
                         SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
-                        [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
-                                             @(_viewID), @(oldSequence)];
+                        for (CBLView* view in views) {
+                            [_fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
+                                                 @(view.viewID), @(oldSequence)];
+                        }
                         if (CBLCompareRevIDs(oldRevID, revID) > 0) {
                             // It still 'wins' the conflict, so it's the one that
                             // should be mapped [again], not the current revision!
                             revID = oldRevID;
                             sequence = oldSequence;
-                            json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
+                            json = [_fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
                                     @(sequence)];
                         }
                     }
@@ -293,48 +345,63 @@ static inline NSString* toJSONString( id object ) {
                 }
                 
                 // Get the document properties, to pass to the map function:
-                CBLContentOptions contentOptions = _mapContentOptions;
+                CBLContentOptions contentOptions = kCBLIncludeLocalSeq;
                 if (noAttachments)
                     contentOptions |= kCBLNoAttachments;
-                NSDictionary* properties = [db documentPropertiesFromJSON: json
-                                                                     docID: docID revID:revID
-                                                                   deleted: NO
-                                                                  sequence: sequence
-                                                                   options: contentOptions];
-                if (!properties) {
+                curDoc = [self documentPropertiesFromJSON: json
+                                                    docID: docID revID:revID
+                                                  deleted: NO
+                                                 sequence: sequence
+                                                  options: contentOptions];
+                if (!curDoc) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
                 }
                 
                 // Call the user-defined map() to emit new key/value pairs from this revision:
-                LogTo(View, @"  call map for sequence=%lld...", sequence);
-                @try {
-                    mapBlock(properties, emit);
-                } @catch (NSException* x) {
-                    MYReportException(x, @"map block of view '%@'", _name);
-                    emitStatus = kCBLStatusCallbackError;
+                int i = 0;
+                for (curView in views) {
+                    if (viewLastSequence[i] < realSequence) {
+                        LogTo(ViewVerbose, @"#%lld: map \"%@\" for view %@...",
+                              sequence, docID, curView.name);
+                        @try {
+                            ((CBLMapBlock)mapBlocks[i])(curDoc, emit);
+                        } @catch (NSException* x) {
+                            MYReportException(x, @"map block of view '%@'", curView.name);
+                            emitStatus = kCBLStatusCallbackError;
+                        }
+                        if (CBLStatusIsError(emitStatus)) {
+                            [r close];
+                            return emitStatus;
+                        }
+                    }
+                    ++i;
                 }
-                if (CBLStatusIsError(emitStatus)) {
-                    [r close];
-                    return emitStatus;
-                }
+                curView = nil;
             }
         }
         [r close];
         
         // Finally, record the last revision sequence number that was indexed:
-        if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
-                                   @(dbMaxSequence), @(viewID)])
-            return db.lastDbError;
-        
-        LogTo(View, @"...Finished re-indexing view %@ to #%lld (deleted %u, added %u)",
-              _name, dbMaxSequence, deleted, inserted);
+        for (CBLView* view in views) {
+            if (![_fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
+                                       @(dbMaxSequence), @(view.viewID)])
+                return self.lastDbError;
+        }
+
+        LogTo(View, @"...Finished re-indexing (%@) to #%lld (deleted %u, added %u)",
+              viewNames(views), dbMaxSequence, deleted, inserted);
         return kCBLStatusOK;
     }];
     
     if (status >= kCBLStatusBadRequest)
-        Warn(@"CouchbaseLite: Failed to rebuild view '%@': %d", _name, status);
+        Warn(@"CouchbaseLite: Failed to rebuild views (%@): %d", viewNames(views), status);
     return status;
+}
+
+
+static NSString* viewNames(NSArray* views) {
+    return [[views my_map: ^(CBLView* view) {return view.name;}] componentsJoinedByString: @", "];
 }
 
 
@@ -343,7 +410,29 @@ static inline NSString* toJSONString( id object ) {
 
 
 
-#pragma mark -
+#pragma mark - SPECIAL KEYS:
+
+
+id CBLTextKey(NSString* text) {
+    return [[CBLSpecialKey alloc] initWithText: text];
+}
+
+id CBLGeoPointKey(double x, double y) {
+    return [[CBLSpecialKey alloc] initWithPoint: (CBLGeoPoint){x,y}];
+}
+
+id CBLGeoRectKey(double x0, double y0, double x1, double y1) {
+    return [[CBLSpecialKey alloc] initWithRect: (CBLGeoRect){{x0,y0},{x1,y1}}];
+}
+
+id CBLGeoJSONKey(NSDictionary* geoJSON) {
+    id key = [[CBLSpecialKey alloc] initWithGeoJSON: geoJSON];
+    if (!key)
+        Warn(@"CBLGeoJSONKey doesn't recognize %@",
+             [CBLJSON stringWithJSONObject: geoJSON options:0 error: NULL]);
+    return key;
+}
+
 
 @implementation CBLSpecialKey
 {

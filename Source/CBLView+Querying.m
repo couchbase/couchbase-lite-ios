@@ -220,6 +220,11 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
 }
 
 
+BOOL CBLValueIsEntireDoc(NSData* valueData) {
+    return valueData.length == 1 && *(const char*)valueData.bytes == '*';
+}
+
+
 - (NSArray*) _regularQueryWithOptions: (const CBLQueryOptions*)options
                                status: (CBLStatus*)outStatus
 {
@@ -233,7 +238,9 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         SequenceNumber sequence = [r longLongIntForColumnIndex:3];
         id docContents = nil;
         if (options->includeDocs) {
-            NSDictionary* value = $castIf(NSDictionary, fromJSON(valueData));
+            NSDictionary* value = nil;
+            if (valueData && !CBLValueIsEntireDoc(valueData))
+                value = $castIf(NSDictionary, fromJSON(valueData));
             NSString* linkedID = value.cbl_id;
             if (linkedID) {
                 // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
@@ -419,8 +426,21 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         }
         LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
               _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString]);
+
+        id valueOrData = valueData;
+        if (valuesToReduce && CBLValueIsEntireDoc(valueData)) {
+            // map fn emitted 'doc' as value, which was stored as a "*" placeholder; expand now:
+            CBLStatus status;
+            CBL_Revision* rev = [_weakDB getDocumentWithID: docID
+                                                  sequence: [r longLongIntForColumnIndex:3]
+                                                    status: &status];
+            if (!rev)
+                Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+            valueOrData = rev.properties;
+        }
+
         [keysToReduce addObject: keyData];
-        [valuesToReduce addObject: valueData ?: $null];
+        [valuesToReduce addObject: valueOrData ?: $null];
         return kCBLStatusOK;
     }];
 

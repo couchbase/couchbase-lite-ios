@@ -1199,7 +1199,7 @@
 		27B0B7E81492BB6B00A817AD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		27B0B7F61492BC7A00A817AD /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		27B0B7F81492BC8000A817AD /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
-		27B0B80B1492C16300A817AD /* Grocery Sync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Grocery Sync.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		27B0B80B1492C16300A817AD /* CBL Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		27B0B80F1492C16300A817AD /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
 		27B0B8131492C16300A817AD /* iOS Demo-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS Demo-Info.plist"; sourceTree = "<group>"; };
 		27B0B8151492C16300A817AD /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -1558,7 +1558,7 @@
 				270B3DEA1489359000E0A926 /* CouchbaseLite.framework */,
 				27B0B7A91492B83B00A817AD /* libCouchbaseLite.a */,
 				27B0B7E71492BB6B00A817AD /* CouchbaseLite.framework */,
-				27B0B80B1492C16300A817AD /* Grocery Sync.app */,
+				27B0B80B1492C16300A817AD /* CBL Test.app */,
 				27731F2A1495CFEF00815D67 /* Couchbase Lite Empty App.app */,
 				275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */,
 				DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */,
@@ -2790,9 +2790,9 @@
 			productReference = 27B0B7E71492BB6B00A817AD /* CouchbaseLite.framework */;
 			productType = "com.apple.product-type.bundle";
 		};
-		27B0B80A1492C16300A817AD /* Grocery Sync iOS Demo */ = {
+		27B0B80A1492C16300A817AD /* CBL iOS Test */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "Grocery Sync iOS Demo" */;
+			buildConfigurationList = 27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "CBL iOS Test" */;
 			buildPhases = (
 				27B0B8071492C16300A817AD /* Sources */,
 				27B0B8081492C16300A817AD /* Frameworks */,
@@ -2804,14 +2804,14 @@
 				27AD1F8717C29BE80063108F /* PBXTargetDependency */,
 				270BDD7315645147007D52F6 /* PBXTargetDependency */,
 			);
-			name = "Grocery Sync iOS Demo";
+			name = "CBL iOS Test";
 			productName = "iOS Demo";
-			productReference = 27B0B80B1492C16300A817AD /* Grocery Sync.app */;
+			productReference = 27B0B80B1492C16300A817AD /* CBL Test.app */;
 			productType = "com.apple.product-type.application";
 		};
-		27C70693148864BA00F0F099 /* CBL Mac Demo */ = {
+		27C70693148864BA00F0F099 /* CBL Mac Test */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "CBL Mac Demo" */;
+			buildConfigurationList = 27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "CBL Mac Test" */;
 			buildPhases = (
 				27C70690148864BA00F0F099 /* Sources */,
 				27C70691148864BA00F0F099 /* Frameworks */,
@@ -2824,7 +2824,7 @@
 				27E11F1D14AD25570006B340 /* PBXTargetDependency */,
 				27E11F1B14AD251C0006B340 /* PBXTargetDependency */,
 			);
-			name = "CBL Mac Demo";
+			name = "CBL Mac Test";
 			productName = "ToyCouch Demo";
 			productReference = 27C70694148864BA00F0F099 /* Couchbase Lite Demo.app */;
 			productType = "com.apple.product-type.application";
@@ -2902,7 +2902,7 @@
 						DevelopmentTeam = N2Q372V7W2;
 					};
 					27B0B80A1492C16300A817AD = {
-						DevelopmentTeam = KAZWMGZL2X;
+						DevelopmentTeam = N2Q372V7W2;
 					};
 				};
 			};
@@ -2921,8 +2921,8 @@
 				270B3DE91489359000E0A926 /* CBL Mac */,
 				27B0B7E61492BB6B00A817AD /* CBL iOS */,
 				27B0B7A81492B83B00A817AD /* CBL iOS library */,
-				27C70693148864BA00F0F099 /* CBL Mac Demo */,
-				27B0B80A1492C16300A817AD /* Grocery Sync iOS Demo */,
+				27C70693148864BA00F0F099 /* CBL Mac Test */,
+				27B0B80A1492C16300A817AD /* CBL iOS Test */,
 				27731F131495CFEF00815D67 /* CBL iOS Empty App */,
 				275315D414ACF0A10065964D /* CBL Listener Mac */,
 				DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */,
@@ -3619,12 +3619,12 @@
 		};
 		275A290F1649A54A00B0D8EE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 27C70693148864BA00F0F099 /* CBL Mac Demo */;
+			target = 27C70693148864BA00F0F099 /* CBL Mac Test */;
 			targetProxy = 275A290E1649A54A00B0D8EE /* PBXContainerItemProxy */;
 		};
 		275A29111649A54C00B0D8EE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 27B0B80A1492C16300A817AD /* Grocery Sync iOS Demo */;
+			target = 27B0B80A1492C16300A817AD /* CBL iOS Test */;
 			targetProxy = 275A29101649A54C00B0D8EE /* PBXContainerItemProxy */;
 		};
 		275A29131649A54F00B0D8EE /* PBXTargetDependency */ = {
@@ -4235,9 +4235,8 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "Grocery Sync";
-				PROVISIONING_PROFILE = "";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				PRODUCT_NAME = "CBL Test";
+				PROVISIONING_PROFILE = "3FA0AADA-0697-4838-B3D1-ADE7D6834462";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
@@ -4264,9 +4263,8 @@
 				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "Grocery Sync";
-				PROVISIONING_PROFILE = "";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				PRODUCT_NAME = "CBL Test";
+				PROVISIONING_PROFILE = "3FA0AADA-0697-4838-B3D1-ADE7D6834462";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -4617,7 +4615,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "Grocery Sync iOS Demo" */ = {
+		27B0B8291492C16300A817AD /* Build configuration list for PBXNativeTarget "CBL iOS Test" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27B0B82A1492C16300A817AD /* Debug */,
@@ -4626,7 +4624,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "CBL Mac Demo" */ = {
+		27C706AF148864BA00F0F099 /* Build configuration list for PBXNativeTarget "CBL Mac Test" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27C706B0148864BA00F0F099 /* Debug */,

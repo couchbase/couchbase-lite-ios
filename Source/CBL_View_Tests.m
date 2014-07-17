@@ -109,8 +109,8 @@ static NSArray* putGeoDocs(CBLDatabase* db) {
 }
 
 
-static CBLView* createView(CBLDatabase* db) {
-    CBLView* view = [db viewNamed: @"aview"];
+static CBLView* createViewNamed(CBLDatabase* db, NSString* name) {
+    CBLView* view = [db viewNamed: name];
     [view setMapBlock: MAPBLOCK({
         CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
@@ -121,6 +121,10 @@ static CBLView* createView(CBLDatabase* db) {
             emit(CBLGeoJSONKey(doc[@"geoJSON"]), nil);
     }) reduceBlock: NULL version: @"1"];
     return view;
+}
+
+static CBLView* createView(CBLDatabase* db) {
+    return createViewNamed(db, @"aview");
 }
 
 
@@ -185,6 +189,48 @@ TestCase(CBL_View_Index) {
     
     [view deleteIndex];
     
+    CAssert([db close]);
+}
+
+
+TestCase(CBL_View_IndexMultiple) {
+    RequireTestCase(CBL_View_Index);
+    CBLDatabase *db = createDB();
+
+    CBLView* v1 = createViewNamed(db, @"agroup/view1");
+    CBLView* v2 = createViewNamed(db, @"other/view2");
+    CBLView* v3 = createViewNamed(db, @"other/view3");
+    CBLView* v4 = createViewNamed(db, @"view4");
+    CBLView* v5 = createViewNamed(db, @"view5");
+    NSArray* views = @[v1, v2, v3];
+
+    AssertEqual(v1.viewsInGroup, (@[v1]));
+    AssertEqual(v2.viewsInGroup, (@[v2, v3]));
+    AssertEqual(v3.viewsInGroup, (@[v2, v3]));
+    AssertEqual(v4.viewsInGroup, (@[v4])); // because GROUP_VIEWS_BY_DEFAULT isn't enabled
+    AssertEqual(v5.viewsInGroup, (@[v5]));
+
+    const int kNDocs = 10;
+    for (int i=0; i<kNDocs; i++) {
+        putDoc(db, @{@"key": @(i)});
+        if (i == kNDocs/2) {
+            CBLStatus status = [v1 updateIndex];
+            CAssert(status < 300);
+        }
+    }
+
+    CBLStatus status = [v2 updateIndexAlone];
+    CAssert(status < 300);
+
+    status = [v2 updateIndex];
+    CAssertEq(status, kCBLStatusNotModified); // should not update v3
+
+    status = [db updateIndexes: views forView: v3];
+    CAssert(status < 300);
+
+    for (CBLView* view in views)
+        CAssertEq(view.lastSequenceIndexed, kNDocs);
+
     CAssert([db close]);
 }
 
@@ -388,6 +434,58 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
+}
+
+TestCase(CBL_View_EmitDocAsValue) {
+    RequireTestCase(CBL_View_Query);
+    CBLDatabase *db = createDB();
+    NSArray* docs = putDocs(db);
+
+    CBLView* view = [db viewNamed: @"wholedoc"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"key"], doc);
+    }) reduceBlock: ^(NSArray* keys, NSArray* values, BOOL rereduce) {
+        NSMutableString* result = [NSMutableString string];
+        // Make sure values have been expanded to the full docs:
+        for (NSDictionary* value in values) {
+            Assert([value isKindOfClass: [NSDictionary class]]);
+            Assert(value[@"key"]);
+            Assert(value[@"_id"]);
+            Assert(value[@"_rev"]);
+            [result appendString: value[@"key"]];
+        }
+        return result;
+    } version: @"1"];
+
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    // Query all rows:
+    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    options.reduceSpecified = YES;
+    options.reduce = NO;
+    CBLStatus status;
+    NSArray* rows = [view _queryWithOptions: &options status: &status];
+    for (CBLQueryRow* row in rows)
+        row.database = db; // it doesn't get set initially, but the .value accessor will need it
+    rows = rowsToDicts(rows);
+    NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"},
+                                         {@"value", [docs[4] properties]}),
+                                   $dict({@"id",  @"44444"}, {@"key", @"four"},
+                                         {@"value", [docs[1] properties]}),
+                                   $dict({@"id",  @"11111"}, {@"key", @"one"},
+                                         {@"value", [docs[2] properties]}),
+                                   $dict({@"id",  @"33333"}, {@"key", @"three"},
+                                         {@"value", [docs[3] properties]}),
+                                   $dict({@"id",  @"22222"}, {@"key", @"two"},
+                                         {@"value", [docs[0] properties]}));
+    CAssertEqual(rows, expectedRows);
+
+    // Now test reducing
+    options.reduce = YES;
+    NSArray* reduced = [view _queryWithOptions: &options status: &status];
+    CAssertEq(status, kCBLStatusOK);
+    CAssertEq(reduced.count, 1u);
+    CAssertEqual([reduced[0] value], @"fivefouronethreetwo");
 }
 
 TestCase (CBL_View_NumericKeys) {
@@ -936,8 +1034,12 @@ TestCase(CBL_View_FullTextQuery) {
 }
 
 TestCase(CBLView) {
+    RequireTestCase(CBL_View_Create);
+    RequireTestCase(CBL_View_Index);
+    RequireTestCase(CBL_View_IndexMultiple);
     RequireTestCase(CBL_View_Query);
     RequireTestCase(CBL_View_QueryStartKeyDocID);
+    RequireTestCase(CBL_View_EmitDocAsValue);
     RequireTestCase(CBL_View_MapConflicts);
     RequireTestCase(CBL_View_ConflictWinner);
     RequireTestCase(CBL_View_ConflictLoser);

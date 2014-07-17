@@ -90,6 +90,7 @@ typedef SInt64 SequenceNumber;
 
 @property (readonly) NSUInteger count;
 
+- (CBL_Revision*) revWithDocID: (NSString*)docID;
 - (CBL_Revision*) revWithDocID: (NSString*)docID revID: (NSString*)revID;
 
 - (NSEnumerator*) objectEnumerator;
@@ -102,6 +103,7 @@ typedef SInt64 SequenceNumber;
 
 - (void) addRev: (CBL_Revision*)rev;
 - (void) removeRev: (CBL_Revision*)rev;
+- (CBL_Revision*) removeAndReturnRev: (CBL_Revision*)rev;  // returns the object removed, or nil
 
 - (void) limit: (NSUInteger)limit;
 - (void) sortBySequence;

@@ -88,6 +88,7 @@
 - (void) webSocketDidOpen: (WebSocket *)ws {
     MYOnThread(_thread, ^{
         LogTo(ChangeTrackerVerbose, @"%@: WebSocket opened", self);
+        _retryCount = 0;
         // Now that the WebSocket is open, send the changes-feed options (the ones that would have
         // gone in the POST body if this were HTTP-based.)
         if (self.usePOST)

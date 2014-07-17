@@ -765,7 +765,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSString* type = nil;
     CBLAttachmentEncoding encoding = kCBLAttachmentEncodingNone;
     NSString* acceptEncoding = [_request valueForHTTPHeaderField: @"Accept-Encoding"];
-    BOOL acceptEncoded = (acceptEncoding && [acceptEncoding rangeOfString: @"gzip"].length > 0);
+    BOOL acceptEncoded = (acceptEncoding
+                          && [acceptEncoding rangeOfString: @"gzip"].length > 0
+                          && [_request valueForHTTPHeaderField: @"Range"] == nil);
 
     if ($equal(_request.HTTPMethod, @"HEAD")) {
         NSString* filePath = [_db getAttachmentPathForSequence: rev.sequence

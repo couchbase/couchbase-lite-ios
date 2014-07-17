@@ -37,7 +37,6 @@
         _weakDB = db;
         _name = [name copy];
         _viewID = -1;  // means 'unknown'
-        _mapContentOptions = kCBLIncludeLocalSeq;
         _collation = 0;
     }
     return self;

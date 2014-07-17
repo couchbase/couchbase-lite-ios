@@ -187,7 +187,23 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
            @"Critical Couchbase Lite code has been stripped from the app binary! "
             "Please make sure to build using the -ObjC linker flag!");
 
-    int flags =  SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
+    int flags = 0;
+#if TARGET_OS_IPHONE
+    switch (_manager.fileProtection) {
+        case NSDataWritingFileProtectionNone:
+            flags |= SQLITE_OPEN_FILEPROTECTION_NONE;
+            break;
+        case NSDataWritingFileProtectionComplete:
+            flags |= SQLITE_OPEN_FILEPROTECTION_COMPLETE;
+            break;
+        case NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication:
+            flags |= SQLITE_OPEN_FILEPROTECTION_COMPLETEUNTILFIRSTUSERAUTHENTICATION;
+            break;
+        default:
+            flags |= SQLITE_OPEN_FILEPROTECTION_COMPLETEUNLESSOPEN;
+            break;
+    }
+#endif
     if (_readOnly)
         flags |= SQLITE_OPEN_READONLY;
     else
@@ -413,6 +429,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         [_fmdb close];
         return NO;
     }
+#if TARGET_OS_IPHONE
+    _attachments.fileProtection = _manager.fileProtection;
+#endif
 
     _isOpen = YES;
 
@@ -827,10 +846,41 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                       revisionID: (NSString*)revID
+                         revisionID: (NSString*)revID
 {
     CBLStatus status;
     return [self getDocumentWithID: docID revisionID: revID options: 0 status: &status];
+}
+
+
+// Note: This method assumes the docID is correct and doesn't bother to look it up on its own.
+- (CBL_Revision*) getDocumentWithID: (NSString*)docID
+                           sequence: (SequenceNumber)sequence
+                             status: (CBLStatus*)outStatus
+{
+    CBL_MutableRevision* result = nil;
+    CBLStatus status;
+    CBL_FMResultSet *r = [_fmdb executeQuery:
+                          @"SELECT revid, deleted, no_attachments, json FROM revs WHERE sequence=?",
+                          @(sequence)];
+    if (!r) {
+        status = self.lastDbError;
+    } else if (![r next]) {
+        status = kCBLStatusNotFound;
+    } else {
+        result = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                      revID: [r stringForColumnIndex: 0]
+                                                    deleted: [r boolForColumnIndex: 1]];
+        result.sequence = sequence;
+        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 3]
+                  intoRevision: result
+                       options: ([r boolForColumnIndex: 2] ? kCBLNoAttachments : 0)];
+        status = kCBLStatusOK;
+    }
+    [r close];
+    if (outStatus)
+        *outStatus = status;
+    return result;
 }
 
 

@@ -17,6 +17,9 @@
 
 
 @interface CBLManager ()
+#if TARGET_OS_IPHONE
+@property (readonly) NSDataWritingOptions fileProtection;
+#endif
 @property (readonly) CBL_Server* backgroundServer;
 #if DEBUG // for unit tests only
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;
@@ -126,6 +129,7 @@
                            key: (id)key
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
+@property (readwrite, nonatomic) CBLDatabase* database;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @end
 
