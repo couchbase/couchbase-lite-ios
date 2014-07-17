@@ -834,6 +834,42 @@ TestCase(API_ViewWithLinkedDocs) {
 }
 
 
+TestCase(API_EmitDoc) {
+    RequireTestCase(API_CreateView);
+    CBLDatabase* db = createEmptyDB();
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], doc);
+    }) version: @"1"];
+
+    CBLDocument* doc1 = createDocumentWithProperties(db, @{@"sequence": @1});
+    CBLDocument* doc2 = createDocumentWithProperties(db, @{@"sequence": @2});
+    CBLQuery* query = view.createQuery;
+    NSArray* result1 = [[query run: NULL] allObjects];
+    AssertEqual([result1[0] key], @1);
+    AssertEqual([result1[0] value], doc1.properties);
+    AssertEqual([result1[1] key], @2);
+    AssertEqual([result1[1] value], doc2.properties);
+    NSDictionary* initialDoc1Properties = doc1.properties;
+
+    // Update doc1
+    [doc1 update:^BOOL(CBLUnsavedRevision *rev) {
+        rev[@"something"] = @"else";
+        return YES;
+    } error: NULL];
+
+    // Query again and verify that the results sets are not considered equal:
+    NSArray* result2 = [[query run: NULL] allObjects];
+    Assert(![result2 isEqual: result1]);
+    AssertEqual([result2[0] key], @1);
+    AssertEqual([result2[0] value], doc1.properties);
+
+    // Rows from initial query should still return the revisions they were created with:
+    AssertEqual([result1[0] key], @1);
+    AssertEqual([result1[0] value], initialDoc1Properties); // i.e. _not_ doc1.properties
+}
+
+
 TestCase(API_LiveQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createEmptyDB();
