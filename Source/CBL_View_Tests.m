@@ -485,7 +485,7 @@ TestCase(CBL_View_EmitDocAsValue) {
     NSArray* reduced = [view _queryWithOptions: &options status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssertEq(reduced.count, 1u);
-    CAssertEqual([reduced[0] value], @"fivefouronethreetwo");
+    CAssertEqual([(CBLQueryRow*)reduced[0] value], @"fivefouronethreetwo");
 }
 
 TestCase (CBL_View_NumericKeys) {
