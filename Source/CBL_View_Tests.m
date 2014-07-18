@@ -794,6 +794,7 @@ TestCase(CBL_View_GroupedStrings) {
 
 TestCase(CBL_View_Collation) {
     // Based on CouchDB's "view_collation.js" test
+    RequireTestCase(CBL_View_Query);
     NSArray* testKeys = @[$null,
                                                    $false,
                                                    $true,
@@ -814,7 +815,6 @@ TestCase(CBL_View_Collation) {
                                                    @[@"b", @"c", @"a"],
                                                    @[@"b", @"d"],
                                                    @[@"b", @"d", @"e"]];
-    RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
     int i = 0;
     for (id key in testKeys)
@@ -824,11 +824,13 @@ TestCase(CBL_View_Collation) {
     [view setMapBlock:  MAPBLOCK({
         emit(doc[@"name"], nil);
     }) reduceBlock: NULL version:@"1.0"];
+    [view updateIndex];
     
     CBLQueryOptions options = kDefaultCBLQueryOptions;
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
     CAssertEq(status, kCBLStatusOK);
+    CAssertEq(rows.count, testKeys.count);
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
@@ -1046,6 +1048,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_LinkedDocs);
     RequireTestCase(CBL_View_Collation);
     RequireTestCase(CBL_View_CollationRaw);
+    RequireTestCase(CBL_View_NumericKeys);
     RequireTestCase(CBL_View_GeoQuery);
     RequireTestCase(CBL_View_FullTextQuery);
 }
