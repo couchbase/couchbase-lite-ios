@@ -194,16 +194,25 @@
 
 
 - (BOOL) parseBytes: (const void*)bytes length: (size_t)length {
-    return yajl_parse(_yajl, bytes, length) == yajl_status_ok;
+    CFRetain((__bridge CFTypeRef)self); // keep self from being released during this call
+    BOOL ok = yajl_parse(_yajl, bytes, length) == yajl_status_ok;
+    CFRelease((__bridge CFTypeRef)self);
+    return ok;
 }
 
 - (BOOL) parseData:(NSData *)data {
-    return yajl_parse(_yajl, data.bytes, data.length) == yajl_status_ok;
+    CFRetain((__bridge CFTypeRef)self); // keep self from being released during this call
+    BOOL ok = yajl_parse(_yajl, data.bytes, data.length) == yajl_status_ok;
+    CFRelease((__bridge CFTypeRef)self);
+    return ok;
 }
 
 
 - (BOOL) finish {
-    return yajl_complete_parse(_yajl) == yajl_status_ok;
+    CFRetain((__bridge CFTypeRef)self); // keep self from being released during this call
+    BOOL ok = yajl_complete_parse(_yajl) == yajl_status_ok;
+    CFRelease((__bridge CFTypeRef)self);
+    return ok;
 }
 
 
