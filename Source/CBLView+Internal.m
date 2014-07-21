@@ -217,7 +217,7 @@ static inline NSData* toJSONData( UU id object ) {
 
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndexes: (NSArray*)views forView: (CBLView*)forView {
-    LogTo(View, @"Checking indexes of (%@)", viewNames(views));
+    LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), forView.name);
 
     CBLStatus status = [self _inTransaction: ^CBLStatus {
         // If the view the update is for doesn't need any update, don't do anything:
@@ -239,8 +239,10 @@ static inline NSData* toJSONData( UU id object ) {
             [mapBlocks addObject: mapBlock];
 
             int viewID = view.viewID;
-            if (viewID <= 0)
+            if (viewID <= 0) {
+                Warn(@"%@ does not exist in the database!", view);
                 return kCBLStatusNotFound;
+            }
 
             SequenceNumber last = (view==forView) ? forViewLastSequence : view.lastSequenceIndexed;
             viewLastSequence[i++] = last;
