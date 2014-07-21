@@ -253,7 +253,7 @@
         
     } else {
         // Unknown type - log it
-        NSLog(@"Warning: Unknown type of value to encode. Value class name is %@.", [value class]);
+        NSLog(@"Warning: Unknown type of value to encode. Value class name is %@. Value is %@", [value class], value);
         value = nil;
     }
     
@@ -320,6 +320,7 @@
                 const char* propertyAttrC = property_getAttributes(property);
                 NSString* propertyAttrS = [NSString stringWithUTF8String:propertyAttrC];
                 NSArray* propertyAttr = [propertyAttrS componentsSeparatedByString:@","];
+                // NSLog(@"%@ has property %@", NSStringFromClass(klass), propertyName);
                 
                 dictionary[propertyName] = propertyAttr;
             }
