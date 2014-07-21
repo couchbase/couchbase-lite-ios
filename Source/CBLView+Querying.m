@@ -97,7 +97,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     if (options->bbox)
         [sql appendString: @", bboxes"];
     [sql appendString: @" WHERE maps.view_id=?"];
-    NSMutableArray* args = $marray(@(_viewID));
+    NSMutableArray* args = $marray(@(self.viewID));
 
     if (options->keys) {
         [sql appendString:@" AND key in ("];
@@ -482,7 +482,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
     CBL_FMResultSet* r = [_weakDB.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
                                                       "WHERE view_id=? ORDER BY key",
-                                                     @(_viewID)];
+                                                     @(self.viewID)];
     if (!r)
         return nil;
     NSMutableArray* result = $marray();
