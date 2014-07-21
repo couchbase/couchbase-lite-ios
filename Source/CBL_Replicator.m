@@ -891,52 +891,58 @@ static BOOL sOnlyTrustAnchorCerts;
         return;
     }
     _lastSequenceChanged = _overdueForSave = NO;
-    
-    LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
+
+    id lastSequence = _lastSequence;
+    LogTo(Sync, @"%@ checkpointing sequence=%@", self, lastSequence);
     NSMutableDictionary* body = [_remoteCheckpoint mutableCopy];
     if (!body)
         body = $mdict();
-    [body setValue: _lastSequence.description forKey: @"lastSequence"]; // always save as a string
+    [body setValue: [lastSequence description] forKey: @"lastSequence"]; // always save as a string
     
     _savingCheckpoint = YES;
     NSString* checkpointID = self.remoteCheckpointDocID;
-    [self sendAsyncRequest: @"PUT"
-                      path: [@"_local/" stringByAppendingString: checkpointID]
-                      body: body
-              onCompletion: ^(id response, NSError* error) {
-                  _savingCheckpoint = NO;
-                  if (error)
-                      Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
-                  CBLDatabase* db = _db;
-                  if (!db)
-                      return;
-                  if (error) {
-                      // Failed to save checkpoint:
-                      switch(CBLStatusFromNSError(error, 0)) {
-                          case kCBLStatusNotFound:
-                              self.remoteCheckpoint = nil; // doc deleted or db reset
-                              _overdueForSave = YES; // try saving again
-                              break;
-                          case kCBLStatusConflict:
-                              [self refreshRemoteCheckpointDoc];
-                              break;
-                          default:
-                              break;
-                              // TODO: On 401 or 403, and this is a pull, remember that remote
-                              // is read-only & don't attempt to read its checkpoint next time.
+    CBLRemoteRequest* request =
+        [self sendAsyncRequest: @"PUT"
+                          path: [@"_local/" stringByAppendingString: checkpointID]
+                          body: body
+                  onCompletion: ^(id response, NSError* error) {
+                      _savingCheckpoint = NO;
+                      if (error)
+                          Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
+                      CBLDatabase* db = _db;
+                      if (!db)
+                          return;
+                      if (error) {
+                          // Failed to save checkpoint:
+                          switch(CBLStatusFromNSError(error, 0)) {
+                              case kCBLStatusNotFound:
+                                  self.remoteCheckpoint = nil; // doc deleted or db reset
+                                  _overdueForSave = YES; // try saving again
+                                  break;
+                              case kCBLStatusConflict:
+                                  [self refreshRemoteCheckpointDoc];
+                                  break;
+                              default:
+                                  break;
+                                  // TODO: On 401 or 403, and this is a pull, remember that remote
+                                  // is read-only & don't attempt to read its checkpoint next time.
+                          }
+                      } else {
+                          // Saved checkpoint:
+                          id rev = response[@"rev"];
+                          if (rev)
+                              body[@"_rev"] = rev;
+                          self.remoteCheckpoint = body;
+                          [db setLastSequence: lastSequence withCheckpointID: checkpointID];
+                          LogTo(Sync, @"%@ saved remote checkpoint '%@' (_rev=%@)",
+                                self, lastSequence, rev);
                       }
-                  } else {
-                      // Saved checkpoint:
-                      id rev = response[@"rev"];
-                      if (rev)
-                          body[@"_rev"] = rev;
-                      self.remoteCheckpoint = body;
-                      [db setLastSequence: _lastSequence withCheckpointID: checkpointID];
+                      if (_overdueForSave)
+                          [self saveLastSequence];      // start a save that was waiting on me
                   }
-                  if (_overdueForSave)
-                      [self saveLastSequence];      // start a save that was waiting on me
-              }
-     ];
+         ];
+    // This request should not be canceled when the replication is told to stop:
+    [_remoteRequests removeObject: request];
 }
 
 
