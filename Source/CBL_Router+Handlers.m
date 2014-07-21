@@ -592,7 +592,7 @@
         _changesFilter = [_db compileFilterNamed: filterName status: &status];
         if (!_changesFilter)
             return status;
-        _changesFilterParams = [self.jsonQueries copy];
+        _changesFilterParams = [self.queries copy];
     }
     
     CBL_RevisionList* changes = [db changesSinceSequence: since
