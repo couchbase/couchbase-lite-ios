@@ -138,12 +138,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 }
 
 
-static inline NSString* toJSONString( UU id object ) {
+static inline NSData* toJSONData( UU id object ) {
     if (!object)
         return nil;
-    return [CBLJSON stringWithJSONObject: object
-                                options: CBLJSONWritingAllowFragments
-                                  error: NULL];
+    return [CBLJSON dataWithJSONObject: object
+                               options: CBLJSONWritingAllowFragments
+                                 error: NULL];
 }
 
 
@@ -155,13 +155,18 @@ static inline NSString* toJSONString( UU id object ) {
 {
     CBLDatabase* db = _weakDB;
     CBL_FMDatabase* fmdb = db.fmdb;
-    NSString* valueJSON = valueIsDoc ? @"*" : toJSONString(value);
+    NSData* valueJSON;
+    if (valueIsDoc)
+        valueJSON = [[NSData alloc] initWithBytes: "*" length: 1];
+    else
+        valueJSON = toJSONData(value);
+
     NSNumber* fullTextID = nil, *bboxID = nil;
-    NSString* keyJSON = @"null";
+    NSData* keyJSON;
     NSData* geoKey = nil;
     if ([key isKindOfClass: [CBLSpecialKey class]]) {
         CBLSpecialKey *specialKey = key;
-        LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, valueJSON);
+        LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, valueJSON.my_UTF8ToString);
         BOOL ok;
         NSString* text = specialKey.text;
         if (text) {
@@ -178,17 +183,20 @@ static inline NSString* toJSONString( UU id object ) {
             return db.lastDbError;
         key = nil;
     } else {
-        if (key)
-            keyJSON = toJSONString(key);
-        LogTo(ViewVerbose, @"    emit(%@, %@)", keyJSON, valueJSON);
+        keyJSON = toJSONData(key);
+        LogTo(ViewVerbose, @"    emit(%@, %@)", keyJSON.my_UTF8ToString, valueJSON.my_UTF8ToString);
     }
 
-    if (![fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
+    if (!keyJSON)
+        keyJSON = [[NSData alloc] initWithBytes: "null" length: 4];
+
+    fmdb.bindNSDataAsString = YES;
+    BOOL ok = [fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
                                    "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?, ?)",
                                   @(self.viewID), @(sequence), keyJSON, valueJSON,
-                                  fullTextID, bboxID, geoKey])
-        return db.lastDbError;
-    return kCBLStatusOK;
+                                  fullTextID, bboxID, geoKey];
+    fmdb.bindNSDataAsString = NO;
+    return ok ? kCBLStatusOK : db.lastDbError;
 }
 
 

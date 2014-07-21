@@ -45,6 +45,15 @@ static inline NSString* toJSONString( id object ) {
 }
 
 
+static inline NSData* toJSONData( id object ) {
+    if (!object)
+        return nil;
+    return [CBLJSON dataWithJSONObject: object
+                               options: CBLJSONWritingAllowFragments
+                                 error: NULL];
+}
+
+
 static id fromJSON( NSData* json ) {
     if (!json)
         return nil;
@@ -96,19 +105,19 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         for (NSString * key in options->keys) {
             [sql appendString: item];
             item = @",?";
-            [args addObject: toJSONString(key)];
+            [args addObject: toJSONData(key)];
         }
         [sql appendString:@")"];
     }
 
-    NSString* startKey = toJSONString(options->startKey);
-    NSString* endKey = toJSONString(options->endKey);
-    NSString* minKey = startKey, *maxKey = endKey;
+    NSData* startKey = toJSONData(options->startKey);
+    NSData* endKey = toJSONData(options->endKey);
+    NSData* minKey = startKey, *maxKey = endKey;
     NSString* minKeyDocID = options->startKeyDocID;
     NSString* maxKeyDocID = options->endKeyDocID;
     BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
-        NSString* min = minKey;
+        NSData* min = minKey;
         minKey = maxKey;
         maxKey = min;
         inclusiveMin = inclusiveMax;
@@ -167,7 +176,10 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
     
     CBLDatabase* db = _weakDB;
-    CBL_FMResultSet* r = [db.fmdb executeQuery: sql withArgumentsInArray: args];
+    CBL_FMDatabase* fmdb = db.fmdb;
+    fmdb.bindNSDataAsString = YES;
+    CBL_FMResultSet* r = [fmdb executeQuery: sql withArgumentsInArray: args];
+    fmdb.bindNSDataAsString = NO;
     if (!r)
         return db.lastDbError;
 
