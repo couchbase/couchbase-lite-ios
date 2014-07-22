@@ -64,7 +64,6 @@
     CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
     NSUInteger _groupLevel;
-    SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
 }
 
 
@@ -195,10 +194,11 @@
 - (CBLQueryEnumerator*) run: (NSError**)outError {
     CBLStatus status;
     LogTo(Query, @"%@: running...", self);
+    SequenceNumber lastSequence;
     CBLQueryIteratorBlock iterator = [_database queryViewNamed: _view.name
                                                        options: self.queryOptions
                                                 ifChangedSince: 0
-                                                  lastSequence: &_lastSequence
+                                                  lastSequence: &lastSequence
                                                         status: &status];
     if (!iterator) {
         if (outError)
@@ -207,7 +207,7 @@
     }
     return [[CBLQueryEnumerator alloc] initWithDatabase: _database
                                                    view: _view
-                                         sequenceNumber: _lastSequence
+                                         sequenceNumber: lastSequence
                                                iterator: iterator];
 }
 
@@ -757,7 +757,7 @@ static id fromJSON( NSData* json ) {
 {
     CBLStatus status;
     CBLQueryIteratorBlock iterator = nil;
-    SequenceNumber lastSequence = 0;
+    SequenceNumber lastIndexedSequence = 0, lastChangedSequence = 0;
     do {
         if (viewName) {
             CBLView* view = [self viewNamed: viewName];
@@ -765,34 +765,35 @@ static id fromJSON( NSData* json ) {
                 status = kCBLStatusNotFound;
                 break;
             }
-            lastSequence = view.lastSequenceIndexed;
-            if (options->indexUpdateMode == kCBLUpdateIndexBefore || lastSequence <= 0) {
+            lastIndexedSequence = view.lastSequenceIndexed;
+            if (options->indexUpdateMode == kCBLUpdateIndexBefore || lastIndexedSequence <= 0) {
                 status = [view updateIndex];
                 if (CBLStatusIsError(status)) {
                     Warn(@"Failed to update view index: %d", status);
                     break;
                 }
-                lastSequence = view.lastSequenceIndexed;
+                lastIndexedSequence = view.lastSequenceIndexed;
             } else if (options->indexUpdateMode == kCBLUpdateIndexAfter &&
-                       lastSequence < self.lastSequenceNumber) {
+                       lastIndexedSequence < self.lastSequenceNumber) {
                 [self doAsync: ^{
                     [view updateIndex];
                 }];
             }
-            if (view.lastSequenceChangedAt <= ifChangedSince) {
-                status = 304;
-                break;
-            }
+            lastChangedSequence = view.lastSequenceChangedAt;
             iterator = [view _queryWithOptions: options status: &status];
         } else {
             // nil view means query _all_docs
             iterator = [self getAllDocs: options status: &status];
-            lastSequence = self.lastSequenceNumber;
+            lastIndexedSequence = lastChangedSequence = self.lastSequenceNumber;
+        }
+        if (lastChangedSequence <= ifChangedSince) {
+            status = 304;
+            break;
         }
     } while(false); // just to allow 'break' within the block
 
     if (outLastSequence)
-        *outLastSequence = lastSequence;
+        *outLastSequence = lastIndexedSequence;
     if (outStatus)
         *outStatus = status;
     return iterator;
