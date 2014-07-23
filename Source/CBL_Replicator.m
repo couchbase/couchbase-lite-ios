@@ -199,7 +199,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     NSNotification* n = [NSNotification notificationWithName: CBL_ReplicatorProgressChangedNotification
                                                       object: self];
     [[NSNotificationQueue defaultQueue] enqueueNotification: n
-                                               postingStyle: NSPostWhenIdle
+                                               postingStyle: NSPostASAP
                                                coalesceMask: NSNotificationCoalescingOnSender |
                                                              NSNotificationCoalescingOnName
                                                    forModes: nil];
