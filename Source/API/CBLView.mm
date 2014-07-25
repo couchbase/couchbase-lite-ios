@@ -43,28 +43,72 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
+#pragma mark - C++ MAP/REDUCE GLUE:
+
+
+class CocoaMappable : public Mappable {
+public:
+    explicit CocoaMappable(const Document& doc, NSDictionary* dict)
+    :Mappable(doc), body(dict)
+    { }
+
+    __strong NSDictionary* body;
+};
+
+
+class CocoaIndexer : public MapReduceIndexer {
+public:
+    static bool updateIndex(MapReduceIndex* index) {
+        std::vector<MapReduceIndex*> indexes;
+        indexes.push_back(index);
+        CocoaIndexer indexer(indexes);
+        return indexer.run();
+    }
+
+    CocoaIndexer(std::vector<MapReduceIndex*> indexes)
+    :MapReduceIndexer(indexes),
+     _db(indexes[0]->sourceDatabase())
+    { }
+
+    virtual void addDocument(const Document& cppDoc) {
+        if (VersionedDocument::flagsOfDocument(cppDoc) & VersionedDocument::kDeleted) {
+            CocoaMappable mappable(cppDoc, nil);
+            addMappable(mappable);
+        } else {
+            @autoreleasepool {
+                VersionedDocument vdoc(_db, cppDoc);
+                const Revision* node = vdoc.currentRevision();
+                NSDictionary* body = [CBLForestBridge bodyOfNode: node
+                                                         options: kCBLIncludeLocalSeq];
+                CocoaMappable mappable(cppDoc, body);
+                addMappable(mappable);
+            }
+        }
+    }
+
+private:
+    Database* _db;
+};
+
+
 class MapReduceBridge : public MapFn {
 public:
-    Database* db;
     CBLMapBlock mapBlock;
-    virtual void operator() (const Document& cppDoc, EmitFn& emitFn) {
-        if (VersionedDocument::flagsOfDocument(cppDoc) & VersionedDocument::kDeleted)
+
+    virtual void operator() (const Mappable& mappable, EmitFn& emitFn) {
+        NSDictionary* doc = ((CocoaMappable&)mappable).body;
+        if (!doc)
             return;
-        VersionedDocument vdoc(db, cppDoc);
-        const Revision* node = vdoc.currentRevision();
-        @autoreleasepool {
-            NSDictionary* doc = [CBLForestBridge bodyOfNode: node options: kCBLIncludeLocalSeq];
-            CBLMapEmitBlock emit = ^(id key, id value) {
-                if (key) {
-                    Collatable collKey, collValue;
-                    collKey << key;
-                    if (value)
-                        collValue << value;
-                    emitFn(collKey, collValue);
-                }
-            };
-            mapBlock(doc, emit);
-        }
+        CBLMapEmitBlock emit = ^(id key, id value) {
+            if (key) {
+                Collatable collKey, collValue;
+                collKey << key;
+                if (value)
+                    collValue << value;
+                emitFn(collKey, collValue);
+            }
+        };
+        mapBlock(doc, emit);
     }
 };
 
@@ -89,6 +133,7 @@ public:
 
 
 
+#pragma mark -
 
 @implementation CBLView
 {
@@ -347,7 +392,6 @@ static id<CBLViewCompiler> sCompiler;
 
 
 - (void) setupIndex {
-    _mapReduceBridge.db = _weakDB.forestDB;
     _mapReduceBridge.mapBlock = self.mapBlock;
     self.index->setup(_indexType, &_mapReduceBridge, self.mapVersion.UTF8String);
 }
@@ -367,7 +411,7 @@ static id<CBLViewCompiler> sCompiler;
     uint64_t lastSequence = index->lastSequenceIndexed();
 
     try {
-        index->updateIndex();
+        CocoaIndexer::updateIndex(index);
     } catch (forestdb::error x) {
         Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
         return CBLStatusFromForestDBStatus(x.status);
