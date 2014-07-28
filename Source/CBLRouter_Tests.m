@@ -623,6 +623,15 @@ TestCase(CBL_Router_GetRange) {
     CAssertEq(response.status, 206);
     CAssertEqual((response.headers)[@"Content-Range"], @"bytes 20-26/27");
     CAssertEqual(response.body.asJSON, [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+
+    NSString* eTag = (response.headers)[@"Etag"];
+    Assert(eTag.length > 0);
+    response = SendRequest(server, @"GET", @"/db/doc1/attach",
+                           $dict({@"Range", @"bytes=-7"},
+                                 {@"If-None-Match", eTag}),
+                           nil);
+    CAssertEq(response.status, 304);
+
     [server close];
 }
 

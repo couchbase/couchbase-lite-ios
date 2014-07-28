@@ -778,7 +778,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return kCBLStatusNotModified;
     
     NSString* acceptEncoding = [_request valueForHTTPHeaderField: @"Accept-Encoding"];
-    BOOL acceptEncoded = (acceptEncoding && [acceptEncoding rangeOfString: @"gzip"].length > 0);
+    BOOL acceptEncoded = (acceptEncoding
+                          && [acceptEncoding rangeOfString: @"gzip"].length > 0
+                          && [_request valueForHTTPHeaderField: @"Range"] == nil);
 
     CBL_Attachment* attachment = [_db attachmentForRevision: rev
                                                       named: attachmentName
