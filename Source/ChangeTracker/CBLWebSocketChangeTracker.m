@@ -7,6 +7,7 @@
 //
 
 #import "CBLWebSocketChangeTracker.h"
+#import "CBLAuthorizer.h"
 #import "WebSocketClient.h"
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
@@ -26,10 +27,8 @@
 
 
 - (NSURL*) changesFeedURL {
-    if (self.usePOST)
-        return CBLAppendToURL(_databaseURL, @"_changes?feed=websocket");
-    else
-        return super.changesFeedURL;
+    // The options will be sent in a WebSocket message after opening (see -webSocketDidOpen: below)
+    return CBLAppendToURL(_databaseURL, @"_changes?feed=websocket");
 }
 
 
@@ -50,6 +49,13 @@
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
     }];
+
+    if (_authorizer) {
+        // Let the Authorizer add its own credential:
+        NSString* authHeader = [_authorizer authorizeURLRequest: request forRealm: nil];
+        if (authHeader)
+            [request setValue: authHeader forHTTPHeaderField: @"Authorization"];
+    }
 
     LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, url.resourceSpecifier);
     _ws = [[WebSocketClient alloc] initWithURLRequest: request];
@@ -91,8 +97,7 @@
         _retryCount = 0;
         // Now that the WebSocket is open, send the changes-feed options (the ones that would have
         // gone in the POST body if this were HTTP-based.)
-        if (self.usePOST)
-            [ws sendBinaryMessage: self.changesFeedPOSTBody];
+        [ws sendBinaryMessage: self.changesFeedPOSTBody];
     });
 }
 
