@@ -31,7 +31,13 @@ using namespace forestdb;
 
 
 BOOL CBLValueIsEntireDoc(NSData* valueData) {
-    return valueData.length == 4 && ::memcmp(valueData.bytes, "null", 4) == 0;
+    return valueData.length == 1 && *(uint8_t*)valueData.bytes == CollatableReader::kSpecial;
+}
+
+
+id CBLParseQueryValue(NSData* collatable) {
+    CollatableReader reader((slice(collatable)));
+    return reader.readNSObject();
 }
 
 
@@ -104,15 +110,15 @@ static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQuer
 
         id docContents = nil;
         id key = e.key().readNSObject();
-        id value = e.value().readNSObject();
+        id value = nil;
         NSString* docID = (NSString*)e.docID();
         SequenceNumber sequence = e.sequence();
-        e.next();
 
         if (options->includeDocs) {
             NSDictionary* valueDict = nil;
             NSString* linkedID = nil;
-            if (value) {
+            if (e.value().peekTag() == CollatableReader::kMap) {
+                value = e.value().readNSObject();
                 valueDict = $castIf(NSDictionary, value);
                 linkedID = valueDict.cbl_id;
             }
@@ -134,8 +140,12 @@ static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQuer
             }
         }
 
+        if (!value)
+            value = e.value().data().copiedNSData();
+        e.next();
+
         LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
-              _name, CBLJSONString(key), CBLJSONString(value), CBLJSONString(docID));
+              _name, CBLJSONString(key), value, CBLJSONString(docID));
         return [[CBLQueryRow alloc] initWithDocID: docID
                                          sequence: sequence
                                               key: key
@@ -268,8 +278,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             if (key && reduce) {
                 // Add this key/value to the list to be reduced:
                 [keysToReduce addObject: key];
-                id value = e.value().readNSObject();
-                if ([value isKindOfClass: [NSNull class]]) { //TEMP
+                CollatableReader collatableValue = e.value();
+                id value;
+                if (collatableValue.peekTag() == CollatableReader::kSpecial) {
                     CBLStatus status;
                     CBL_Revision* rev = [dbForReduce getDocumentWithID: (NSString*)e.docID()
                                                               sequence: e.sequence()
@@ -277,8 +288,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                     if (!rev)
                         Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
                     value = rev.properties;
+                } else {
+                    value = collatableValue.readNSObject() ?: $null;
                 }
-                [valuesToReduce addObject: value ?: $null];
+                [valuesToReduce addObject: value];
                 //TODO: Reduce the keys/values when there are too many; then rereduce at end
             }
 
