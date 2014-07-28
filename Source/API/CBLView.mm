@@ -111,6 +111,8 @@ public:
             if (key) {
                 Collatable collKey, collValue;
                 collKey << key;
+                if (value == doc)
+                    collValue.addNull(); // placeholder for doc
                 if (value)
                     collValue << value;
                 emitFn(collKey, collValue);

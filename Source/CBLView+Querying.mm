@@ -23,6 +23,7 @@ extern "C" {
 }
 #import <CBForest/CBForest.hh>
 
+
 using namespace forestdb;
 
 
@@ -30,7 +31,7 @@ using namespace forestdb;
 
 
 BOOL CBLValueIsEntireDoc(NSData* valueData) {
-    return valueData.length == 1 && *(const char*)valueData.bytes == '*';
+    return valueData.length == 4 && ::memcmp(valueData.bytes, "null", 4) == 0;
 }
 
 
@@ -234,8 +235,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
 
     __block id lastKey = nil;
+    CBLDatabase* dbForReduce;
     NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
     if (reduce) {
+        dbForReduce = _weakDB;
         keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
         valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
     }
@@ -246,6 +249,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
     __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
 
+    *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
         CBLQueryRow* row = nil;
         do {
@@ -264,7 +268,17 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             if (key && reduce) {
                 // Add this key/value to the list to be reduced:
                 [keysToReduce addObject: key];
-                [valuesToReduce addObject: e.value().readNSObject() ?: $null];
+                id value = e.value().readNSObject();
+                if ([value isKindOfClass: [NSNull class]]) { //TEMP
+                    CBLStatus status;
+                    CBL_Revision* rev = [dbForReduce getDocumentWithID: (NSString*)e.docID()
+                                                              sequence: e.sequence()
+                                                                status: &status];
+                    if (!rev)
+                        Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+                    value = rev.properties;
+                }
+                [valuesToReduce addObject: value ?: $null];
                 //TODO: Reduce the keys/values when there are too many; then rereduce at end
             }
 

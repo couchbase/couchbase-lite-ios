@@ -67,7 +67,7 @@ static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
     CBLStatus status;
     CBL_Revision* result = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
     CAssert(status < 300, @"Status %d from putDoc(%@)", status, props);
-    return result;
+    return result.revisionByAddingBasicMetadata;
 }
 
 
@@ -139,6 +139,18 @@ static NSArray* rowsToDicts(CBLQueryIteratorBlock iterator) {
     CBLQueryRow* row;
     while (nil != (row = iterator()))
         [rows addObject: row.asJSONDictionary];
+    return rows;
+}
+
+
+static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iterator) {
+    Assert(iterator!=nil);
+    NSMutableArray* rows = $marray();
+    CBLQueryRow* row;
+    while (nil != (row = iterator())) {
+        row.database = db;
+        [rows addObject: row.asJSONDictionary];
+    }
     return rows;
 }
 
@@ -235,6 +247,49 @@ TestCase(CBL_View_ChangeMapFn) {
     CAssertEqual(dump, $array($dict({@"key", @"\"e\""}, {@"seq", @1}),
                               $dict({@"key", @"\"o\""}, {@"seq", @2}),
                               $dict({@"key", @"\"ree\""}, {@"seq", @3}) ));
+    CAssert([db close]);
+}
+
+
+TestCase(CBL_View_IndexMultiple) {
+    RequireTestCase(CBL_View_Index);
+    CBLDatabase *db = createDB();
+
+    CBLView* v1 = createViewNamed(db, @"agroup/view1");
+    CBLView* v2 = createViewNamed(db, @"other/view2");
+    CBLView* v3 = createViewNamed(db, @"other/view3");
+    CBLView* v4 = createViewNamed(db, @"view4");
+    CBLView* v5 = createViewNamed(db, @"view5");
+
+    AssertEqual(v1.viewsInGroup, (@[v1]));
+    AssertEqual(v2.viewsInGroup, (@[v2, v3]));
+    AssertEqual(v3.viewsInGroup, (@[v2, v3]));
+    AssertEqual(v4.viewsInGroup, (@[v4])); // because GROUP_VIEWS_BY_DEFAULT isn't enabled
+    AssertEqual(v5.viewsInGroup, (@[v5]));
+
+    const int kNDocs = 10;
+    for (int i=0; i<kNDocs; i++) {
+        putDoc(db, @{@"key": @(i)});
+        if (i == kNDocs/2) {
+            CBLStatus status = [v1 updateIndex];
+            CAssert(status < 300);
+        }
+    }
+
+    CBLStatus status = [v2 updateIndexAlone];
+    CAssert(status < 300);
+
+    status = [v2 updateIndex];
+    CAssertEq(status, kCBLStatusNotModified); // should not update v3
+/* FIX: Not implemented for forestdb branch yet
+    NSArray* views = @[v1, v2, v3];
+    status = [db updateIndexes: views forView: v3];
+    CAssert(status < 300);
+
+    for (CBLView* view in views)
+        CAssertEq(view.lastSequenceIndexed, kNDocs);
+ */
+
     CAssert([db close]);
 }
 
@@ -474,7 +529,7 @@ TestCase(CBL_View_EmitDocAsValue) {
     options->reduceSpecified = YES;
     options->reduce = NO;
     CBLStatus status;
-    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    NSArray* rows = rowsToDictsSettingDB(db, [view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"},
                                          {@"value", [docs[4] properties]}),
                                    $dict({@"id",  @"44444"}, {@"key", @"four"},
@@ -489,10 +544,14 @@ TestCase(CBL_View_EmitDocAsValue) {
 
     // Now test reducing
     options->reduce = YES;
-    NSArray* reduced = [view _queryWithOptions: options status: &status];
+    CBLQueryIteratorBlock reduced = [view _queryWithOptions: options status: &status];
+    CAssert(reduced != NULL);
     CAssertEq(status, kCBLStatusOK);
-    CAssertEq(reduced.count, 1u);
-    CAssertEqual([reduced[0] value], @"fivefouronethreetwo");
+    CBLQueryRow* row = reduced();
+    row.database = db;
+    CAssertEqual(row.value, @"fivefouronethreetwo");
+    CAssertNil(reduced());
+    CAssert([db close]);
 }
 
 TestCase (CBL_View_NumericKeys) {
