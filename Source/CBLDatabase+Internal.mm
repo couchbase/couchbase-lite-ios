@@ -478,6 +478,24 @@ static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
 
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
+                           sequence: (SequenceNumber)sequence
+                             status: (CBLStatus*)outStatus
+{
+    __block CBL_MutableRevision* result = nil;
+    *outStatus = [self _withVersionedDoc: docID do: ^(VersionedDocument& doc) {
+#if DEBUG
+        LogTo(CBLDatabase, @"Read %s", doc.dump().c_str());
+#endif
+        result = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                     sequence: sequence
+                                                      options: 0];
+        return result ? kCBLStatusOK : kCBLStatusNotFound;
+    }];
+    return result;
+}
+
+
+- (CBL_Revision*) getDocumentWithID: (NSString*)docID
                          revisionID: (NSString*)revID
 {
     CBLStatus status;

@@ -24,6 +24,9 @@ CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (VersionedDocument&)doc
                                                revID: (NSString*)revID
                                              options: (CBLContentOptions)options;
++ (CBL_MutableRevision*) revisionObjectFromForestDoc: (VersionedDocument&)doc
+                                            sequence: (forestdb::sequence)sequence
+                                             options: (CBLContentOptions)options;
 
 /** Stores the body of a revision (including metadata) into a CBL_MutableRevision. */
 + (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev

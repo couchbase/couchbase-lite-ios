@@ -44,11 +44,6 @@
 @end
 
 
-@interface CBLQueryRow ()
-@property (readwrite, nonatomic) CBLDatabase* database;
-@end
-
-
 
 @implementation CBLQuery
 {
@@ -650,7 +645,21 @@ static id fromJSON( NSData* json ) {
     if (!value) {
         value = _value;
         if ([value isKindOfClass: [NSData class]]) {   // _value may start out as unparsed JSON data
-            value = fromJSON(_value);
+            if (CBLValueIsEntireDoc(value)) {
+                // Value is a placeholder ("*") denoting that the map function emitted "doc" as
+                // the value. So load the body of the revision now:
+                Assert(_database);
+                Assert(_sequence);
+                CBLStatus status;
+                CBL_Revision* rev = [_database getDocumentWithID: _sourceDocID
+                                                        sequence: _sequence
+                                                          status: &status];
+                if (!rev)
+                    Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+                value = rev.properties;
+            } else {
+                value = fromJSON(value);
+            }
             _parsedValue = value;
         }
     }

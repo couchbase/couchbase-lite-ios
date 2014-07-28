@@ -758,13 +758,6 @@
 			remoteGlobalIDString = 27731F131495CFEF00815D67;
 			remoteInfo = "TouchDB iOS Empty App";
 		};
-		27B7E10418F8FE2800044EBA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27139B1B18F8E9750021A9A3;
-			remoteInfo = CBForest;
-		};
 		27B7E10C18F8FE2800044EBA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
@@ -813,13 +806,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
 			remoteInfo = "CBForest static";
-		};
-		27FA9A49191AB89600912F96 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 27139B1A18F8E9750021A9A3;
-			remoteInfo = CBForest;
 		};
 		DA147C3814BCAC670052DA4D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1983,7 +1969,6 @@
 		27B7E0FB18F8FE2800044EBA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				27B7E10518F8FE2800044EBA /* CBForest.framework */,
 				27FA99F01917FFD000912F96 /* libCBForest.a */,
 				27571E0618F9060100141BDD /* libCBForest-iOS.a */,
 				27571E0818F9060100141BDD /* CBForest Tests.xctest */,
@@ -2491,7 +2476,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				27FA9A4A191AB89600912F96 /* PBXTargetDependency */,
 				27FA9A461918AE3600912F96 /* PBXTargetDependency */,
 			);
 			name = "CBL Mac";
@@ -2793,13 +2777,6 @@
 			fileType = archive.ar;
 			path = libforestdb.a;
 			remoteRef = 27571E0B18F9060100141BDD /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		27B7E10518F8FE2800044EBA /* CBForest.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = CBForest.framework;
-			remoteRef = 27B7E10418F8FE2800044EBA /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27B7E10D18F8FE2800044EBA /* libforestdb.a */ = {
@@ -3495,11 +3472,6 @@
 			name = "CBForest static";
 			targetProxy = 27FA9A451918AE3600912F96 /* PBXContainerItemProxy */;
 		};
-		27FA9A4A191AB89600912F96 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = CBForest;
-			targetProxy = 27FA9A49191AB89600912F96 /* PBXContainerItemProxy */;
-		};
 		DA147C3914BCAC670052DA4D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DA023B2614BCA94C008184BB /* Listener iOS Library */;
@@ -3669,6 +3641,8 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest,
+					vendor/CBForest/vendor/forestdb/include/libforestdb,
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
@@ -3698,6 +3672,8 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest,
+					vendor/CBForest/vendor/forestdb/include/libforestdb,
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";

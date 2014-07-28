@@ -56,13 +56,16 @@ typedef enum {
 } CBLViewCollation;
 
 
+/** Returns YES if the data is meant as a placeholder for the doc's entire data (a "*") */
+BOOL CBLValueIsEntireDoc(NSData* valueData);
+
+
 @interface CBLView ()
 {
     @private
     CBLDatabase* __weak _weakDB;
     NSString* _name;
     uint8_t _collation;
-    CBLContentOptions _mapContentOptions;
 }
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create;
@@ -87,13 +90,20 @@ typedef enum {
 
 @interface CBLView (Internal)
 
+@property (readonly) NSArray* viewsInGroup;
+
 /** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
 - (BOOL) compileFromProperties: (NSDictionary*)viewProps
                       language: (NSString*)language;
 
 /** Updates the view's index (incrementally) if necessary.
- @return  200 if updated, 304 if already up-to-date, else an error code */
+    If the index is updated, the other views in the viewGroup will be updated as a bonus.
+    @return  200 if updated, 304 if already up-to-date, else an error code */
 - (CBLStatus) updateIndex;
+
+/** Updates the view's index (incrementally) if necessary. No other groups will be updated.
+    @return  200 if updated, 304 if already up-to-date, else an error code */
+- (CBLStatus) updateIndexAlone;
 
 @end
 
@@ -109,4 +119,10 @@ typedef enum {
 - (NSArray*) dump;
 #endif
 
+@end
+
+
+@interface CBLDatabase (ViewIndexing)
+- (CBLStatus) updateIndexes: (NSArray*)views
+                    forView: (CBLView*)forView;
 @end

@@ -29,6 +29,11 @@ using namespace forestdb;
 @implementation CBLView (Querying)
 
 
+BOOL CBLValueIsEntireDoc(NSData* valueData) {
+    return valueData.length == 1 && *(const char*)valueData.bytes == '*';
+}
+
+
 #pragma mark - QUERYING:
 
 

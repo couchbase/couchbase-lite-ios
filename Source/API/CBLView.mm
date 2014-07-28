@@ -35,6 +35,14 @@ using namespace forestdb;
 #define kCloseDelay 60.0
 
 
+// GROUP_VIEWS_BY_DEFAULT alters the behavior of -viewsInGroup and thus which views will be
+// re-indexed together. If it's defined, all views with no "/" in the name are treated as a single
+// group and will be re-indexed together. If it's not defined, such views aren't in any group
+// and will be re-indexed only individually. (The latter matches the CBL 1.0 behavior and
+// avoids unexpected slowdowns if an app suddenly has all its views re-index at once.)
+#undef GROUP_VIEWS_BY_DEFAULT
+
+
 static inline NSString* viewNameToFileName(NSString* viewName) {
     if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @":"].length > 0)
         return nil;
@@ -163,7 +171,6 @@ public:
         _weakDB = db;
         _name = [name copy];
         _path = [db.dir stringByAppendingPathComponent: viewNameToFileName(_name)];
-        _mapContentOptions = kCBLIncludeLocalSeq;
         _indexType = (CBLViewIndexType)-1; // unknown
         if ((0)) { // appease static analyzer
             _collation = 0;
@@ -391,6 +398,30 @@ static id<CBLViewCompiler> sCompiler;
 #pragma mark - INDEXING:
 
 
+- (NSArray*) viewsInGroup {
+    int (^filter)(CBLView* view);
+    NSRange slash = [_name rangeOfString: @"/"];
+    if (slash.length > 0) {
+        // Return all the views whose name starts with the same prefix before the slash:
+        NSString* prefix = [_name substringToIndex: NSMaxRange(slash)];
+        filter = ^int(CBLView* view) {
+            return [view.name hasPrefix: prefix];
+        };
+    } else {
+#ifdef GROUP_VIEWS_BY_DEFAULT
+        // Return all the views that don't have a slash in their names:
+        filter = ^int(CBLView* view) {
+            return [view.name rangeOfString: @"/"].length == 0;
+        };
+#else
+        // Without GROUP_VIEWS_BY_DEFAULT, views with no "/" in the name aren't in any group:
+        return @[self];
+#endif
+    }
+    return [_weakDB.allViews my_filter: filter];
+}
+
+
 - (void) setupIndex {
     _mapReduceBridge.mapBlock = self.mapBlock;
     self.index->setup(_indexType, &_mapReduceBridge, self.mapVersion.UTF8String);
@@ -399,6 +430,15 @@ static id<CBLViewCompiler> sCompiler;
 
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
+    return [self updateIndexes: self.viewsInGroup];
+}
+
+- (CBLStatus) updateIndexAlone {
+    return [self updateIndexes: @[self]];
+}
+
+- (CBLStatus) updateIndexes: (NSArray*)views {
+// TEMP TEMP -- 
     LogTo(View, @"Re-indexing view %@ ...", _name);
     CBLMapBlock mapBlock = self.mapBlock;
     Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
