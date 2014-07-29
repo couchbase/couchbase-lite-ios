@@ -195,6 +195,8 @@
 		2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */; };
 		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		2769845B198863B5009687A3 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
+		2769845C198863B6009687A3 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
 		276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276F25FB18A3386100A70679 /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 276F25F918A3386100A70679 /* DDData.h */; };
@@ -3255,6 +3257,7 @@
 				27411445179744F6005EF2F8 /* CBLJSFunction.m in Sources */,
 				27ED9A971639D8D2000C844A /* LiteServ.m in Sources */,
 				27411446179744FE005EF2F8 /* CBLJSViewCompiler.m in Sources */,
+				2769845B198863B5009687A3 /* CBLRegisterJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3296,6 +3299,7 @@
 				27538F8317F14185004C3BFD /* CBLJSFunction.m in Sources */,
 				27538F9A17F1D93F004C3BFD /* ToolInstallController.m in Sources */,
 				27538F8217F1417B004C3BFD /* CBLJSViewCompiler.m in Sources */,
+				2769845C198863B6009687A3 /* CBLRegisterJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
