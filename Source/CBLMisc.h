@@ -12,6 +12,8 @@
 
 extern NSString* const CBLHTTPErrorDomain;
 
+BOOL CBLWithStringBytes(NSString* str, void (^block)(const char*, size_t));
+
 NSString* CBLCreateUUID( void );
 
 NSData* CBLSHA1Digest( NSData* input ) __attribute__((nonnull));

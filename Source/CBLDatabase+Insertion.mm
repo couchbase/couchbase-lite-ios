@@ -102,18 +102,19 @@ using namespace forestdb;
     // Generate a digest for this revision based on the previous revision ID, document JSON,
     // and attachment digests. This doesn't need to be secure; we just need to ensure that this
     // code consistently generates the same ID given equivalent revisions.
-    MD5_CTX ctx;
+    __block MD5_CTX ctx;
     unsigned char digestBytes[MD5_DIGEST_LENGTH];
     MD5_Init(&ctx);
-    
-    NSData* prevIDUTF8 = [prevID dataUsingEncoding: NSUTF8StringEncoding];
-    NSUInteger length = prevIDUTF8.length;
-    if (length > 0xFF)
-        return nil;
-    uint8_t lengthByte = length & 0xFF;
-    MD5_Update(&ctx, &lengthByte, 1);       // prefix with length byte
-    if (length > 0)
-        MD5_Update(&ctx, prevIDUTF8.bytes, length);
+
+    __block BOOL tooLong = NO;
+    CBLWithStringBytes(prevID, ^(const char *bytes, size_t length) {
+        if (length > 0xFF)
+            tooLong = YES;
+        uint8_t lengthByte = length & 0xFF;
+        MD5_Update(&ctx, &lengthByte, 1);       // prefix with length byte
+        if (length > 0)
+            MD5_Update(&ctx, bytes, length);
+    });
     
     uint8_t deletedByte = deleted != NO;
     MD5_Update(&ctx, &deletedByte, 1);
@@ -203,8 +204,13 @@ using namespace forestdb;
                                        prevRevID: prevRevID
                                           status: outStatus])
             return nil;
+        static dispatch_queue_t sJSONQueue;
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            sJSONQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+        });
         jsonSemaphore = dispatch_semaphore_create(0);
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        dispatch_async(sJSONQueue, ^{
             json = putRev.asCanonicalJSON;
             dispatch_semaphore_signal(jsonSemaphore);
         });
