@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLChangeTracker.h"
+#import "CBLAuthorizer.h"
 #import "CBLInternal.h"
 #import "Test.h"
 #import "MYURLUtils.h"
@@ -66,16 +67,19 @@ TestCase(DictOf) {
            && [timeout timeIntervalSinceNow] > 0
            && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                        beforeDate: timeout])
-        ;
+    {
+    }
     return [timeout timeIntervalSinceNow] > 0;
 }
 
 - (void) run: (CBLChangeTracker*)tracker expectingChanges: (NSArray*)expectedChanges {
     [tracker start];
     BOOL ok = [self waitForChanges: expectedChanges.count];
+    AssertNil(tracker.error);
     [tracker stop];
     if (!ok) {
         Warn(@"Timeout contacting %@", tracker.databaseURL);
+        Assert(NO, @"Failed to contact %@", tracker.databaseURL);
         return;
     }
     AssertNil(tracker.error);
@@ -85,6 +89,7 @@ TestCase(DictOf) {
 - (void) run: (CBLChangeTracker*)tracker expectingChangeCount: (NSUInteger)changeCount {
     [tracker start];
     BOOL ok = [self waitForChanges: changeCount];
+    AssertNil(tracker.error);
     [tracker stop];
     if (!ok) {
         Warn(@"Timeout contacting %@", tracker.databaseURL);
@@ -190,6 +195,30 @@ TestCase(CBLChangeTracker_Auth) {
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"something"},
                                      {@"revs", $array(@"1-31e4c2faf5cfcd56f4518c29367f9124")}) );
+    [tester run: tracker expectingChanges: expected];
+}
+
+
+TestCase(CBLWebSocketChangeTracker_Auth) {
+    // This Sync Gateway database requires authentication to access at all.
+    NSURL* url = $url(@"http://localhost:4984/cbl_auth_test"); //TEMP
+    if (!url) {
+        Warn(@"Skipping test; no remote DB URL configured");
+        return;
+    }
+    CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kWebSocket conflicts: NO lastSequence: 0 client:  tester];
+
+    NSURLCredential* c = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
+                                                 persistence: NSURLCredentialPersistenceForSession];
+    tracker.authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: c];
+
+    NSArray* expected = $array($dict({@"seq", @1},
+                                     {@"id", @"_user/test"},
+                                     {@"revs", $array()}) ,
+                               $dict({@"seq", @2},
+                                     {@"id", @"something"},
+                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
     [tester run: tracker expectingChanges: expected];
 }
 

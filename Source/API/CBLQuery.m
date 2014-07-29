@@ -604,6 +604,11 @@ static id fromJSON( NSData* json ) {
 }
 
 
+static inline BOOL isNonMagicValue(id value) {
+    return value && !([value isKindOfClass: [NSData class]] && CBLValueIsEntireDoc(value));
+}
+
+
 // This is used implicitly by -[CBLLiveQuery update] to decide whether the query result has changed
 // enough to notify the client. So it's important that it not give false positives, else the app
 // won't get notified of changes.
@@ -619,7 +624,7 @@ static id fromJSON( NSData* json ) {
             && $equal(_documentProperties, other->_documentProperties)) {
         // If values were emitted, compare them. Otherwise we have nothing to go on so check
         // if _anything_ about the doc has changed (i.e. the sequences are different.)
-        if (_value || other->_value)
+        if (isNonMagicValue(_value) || isNonMagicValue(other->_value))
             return  $equal(_value, other->_value);
         else
             return _sequence == other->_sequence;

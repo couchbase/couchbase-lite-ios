@@ -103,6 +103,7 @@ static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQuer
     }
     __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
 
+    *outStatus = kCBLStatusOK;
     CBLDatabase* db = _weakDB;
     return ^CBLQueryRow*() {
         if (!e)

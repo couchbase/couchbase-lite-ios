@@ -148,9 +148,6 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 }
 
 - (NSData*) changesFeedPOSTBody {
-    if (!_usePOST)
-        return nil;
-
     // The replicator always stores the last sequence as a string, but the server may treat it as
     // an integer. As a heuristic, convert it to a number if it looks like one:
     id since = _lastSequenceID;

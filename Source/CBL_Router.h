@@ -69,7 +69,7 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) boolQuery: (NSString*)param;
 - (int) intQuery: (NSString*)param defaultValue: (int)defaultValue;
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
-- (NSMutableDictionary*) jsonQueries;
+@property NSDictionary* queries;
 - (BOOL) cacheWithEtag: (NSString*)etag;
 - (CBLContentOptions) contentOptions;
 - (CBLQueryOptions*) getQueryOptions;

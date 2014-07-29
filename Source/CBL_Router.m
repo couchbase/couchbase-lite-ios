@@ -136,18 +136,6 @@
     return result;
 }
 
-- (NSMutableDictionary*) jsonQueries {
-    NSMutableDictionary* queries = $mdict();
-    [self.queries enumerateKeysAndObjectsUsingBlock: ^(NSString* param, NSString* value, BOOL *stop) {
-        id parsed = [CBLJSON JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
-                                       options: CBLJSONReadingAllowFragments
-                                         error: nil];
-        if (parsed)
-            queries[param] = parsed;
-    }];
-    return queries;
-}
-
 
 - (BOOL) cacheWithEtag: (NSString*)etag {
     NSString* eTag = $sprintf(@"\"%@\"", etag);
