@@ -281,14 +281,13 @@ TestCase(CBL_View_IndexMultiple) {
 
     status = [v2 updateIndex];
     CAssertEq(status, kCBLStatusNotModified); // should not update v3
-/* FIX: Not implemented for forestdb branch yet
+
     NSArray* views = @[v1, v2, v3];
     status = [db updateIndexes: views forView: v3];
     CAssert(status < 300);
 
     for (CBLView* view in views)
         CAssertEq(view.lastSequenceIndexed, kNDocs);
- */
 
     CAssert([db close]);
 }

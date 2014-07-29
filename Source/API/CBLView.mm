@@ -24,6 +24,7 @@ extern "C" {
 #import "ExceptionUtils.h"
 }
 #import <CBForest/CBForest.hh>
+#import <CBForest/MapReduceDispatchIndexer.hh>
 using namespace forestdb;
 #import "CBLForestBridge.h"
 
@@ -64,7 +65,7 @@ public:
 };
 
 
-class CocoaIndexer : public MapReduceIndexer {
+class CocoaIndexer : public MapReduceDispatchIndexer {
 public:
     static bool updateIndex(MapReduceIndex* index) {
         std::vector<MapReduceIndex*> indexes;
@@ -74,7 +75,7 @@ public:
     }
 
     CocoaIndexer(std::vector<MapReduceIndex*> indexes)
-    :MapReduceIndexer(indexes),
+    :MapReduceDispatchIndexer(indexes),
      _db(indexes[0]->sourceDatabase())
     { }
 
@@ -432,40 +433,11 @@ static id<CBLViewCompiler> sCompiler;
 
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
-    return [self updateIndexes: self.viewsInGroup];
+    return [self.database updateIndexes: self.viewsInGroup forView: self];
 }
 
 - (CBLStatus) updateIndexAlone {
-    return [self updateIndexes: @[self]];
-}
-
-- (CBLStatus) updateIndexes: (NSArray*)views {
-// TEMP TEMP -- 
-    LogTo(View, @"Re-indexing view %@ ...", _name);
-    CBLMapBlock mapBlock = self.mapBlock;
-    Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
-    MapReduceIndex* index = self.index;
-    if (!index)
-        return kCBLStatusNotFound;
-
-    [self setupIndex];
-
-    uint64_t lastSequence = index->lastSequenceIndexed();
-
-    try {
-        CocoaIndexer::updateIndex(index);
-    } catch (forestdb::error x) {
-        Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
-        return CBLStatusFromForestDBStatus(x.status);
-    } catch (...) {
-        Warn(@"Unexpected exception indexing %@", self);
-        return kCBLStatusException;
-    }
-
-    if (index->lastSequenceIndexed() == lastSequence)
-        return kCBLStatusNotModified;
-    else
-        return kCBLStatusOK;
+    return [self.database updateIndexes: @[self] forView: self];
 }
 
 
@@ -502,4 +474,38 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 
+@end
+
+
+
+
+@implementation CBLDatabase (ViewIndexing)
+
+- (CBLStatus) updateIndexes: (NSArray*)views
+                    forView: (CBLView*)forView
+{
+    try {
+        std::vector<MapReduceIndex*> indexes;
+        for (CBLView* view in views) {
+            [view setupIndex];
+            CBLMapBlock mapBlock = view.mapBlock;
+            Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
+            MapReduceIndex* index = view.index;
+            if (!index)
+                return kCBLStatusNotFound;
+            indexes.push_back(index);
+        }
+        CocoaIndexer indexer(indexes);
+        if (forView)
+            indexer.triggerOnIndex(forView.index);
+        bool updated = indexer.run();
+        return updated ? kCBLStatusOK : kCBLStatusNotModified;
+    } catch (forestdb::error x) {
+        Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
+        return CBLStatusFromForestDBStatus(x.status);
+    } catch (...) {
+        Warn(@"Unexpected exception indexing %@", self);
+        return kCBLStatusException;
+    }
+}
 @end
