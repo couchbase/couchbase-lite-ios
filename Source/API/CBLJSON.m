@@ -258,6 +258,14 @@ TestCase(CBLJSON_Date) {
     CAssert(isnan([CBLJSON absoluteTimeWithJSONObject: @""]));
 
     CAssertEqual([CBLJSON JSONObjectWithDate: date], @"2013-04-01T20:42:33.388Z");
+
+    date = [CBLJSON dateWithJSONObject:@"2014-07-30T17:09:00.000+02:00"];
+
+    CAssertEqual([CBLJSON JSONObjectWithDate:date
+                                    timeZone:[NSTimeZone timeZoneForSecondsFromGMT:3600*2]], @"2014-07-30T17:09:00.000+02:00");
+
+    CAssertEqual([CBLJSON JSONObjectWithDate:date
+                                    timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]], @"2014-07-30T15:09:00.000Z");
 }
 
 
