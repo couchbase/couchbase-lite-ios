@@ -151,7 +151,8 @@ static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push,
 
 
 static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
-                                   BOOL push, NSString* filter)
+                                   BOOL push, NSString* filter,
+                                   NSError* expectError)
 {
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                          push: push continuous: YES];
@@ -176,9 +177,17 @@ static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
     }
     CAssert(wasActive && !repl.active);
     CAssert(!repl.savingCheckpoint);
-    CAssert(repl.running);
-    CAssertNil(repl.error);
-    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+
+    if (expectError) {
+        CAssert(!repl.running);
+        AssertEqual(repl.error.domain, expectError.domain);
+        AssertEq(repl.error.code, expectError.code);
+        Log(@"...replicator finished. error=%@", repl.error);
+    } else {
+        CAssert(repl.running);
+        CAssertNil(repl.error);
+        Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+    }
     NSString* result = repl.lastSequence;
     [repl stop];
     return result;
@@ -285,7 +294,7 @@ TestCase(CBL_Puller_Continuous) {
     CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
 
-    id lastSeq = replic8Continuous(db, remoteURL, NO, nil);
+    id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil);
     CAssertEqual(lastSeq, @2);
 
     CAssertEq(db.documentCount, 2u);
@@ -293,7 +302,7 @@ TestCase(CBL_Puller_Continuous) {
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8Continuous(db, remoteURL, NO, nil);
+    replic8Continuous(db, remoteURL, NO, nil, nil);
     CAssertEq(db.lastSequenceNumber, 3);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -305,6 +314,29 @@ TestCase(CBL_Puller_Continuous) {
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"1-"]);
     CAssertEqual(doc[@"fnord"], $true);
+
+    [db close];
+    [server close];
+}
+
+TestCase(CBL_Puller_AuthFailure) {
+    RequireTestCase(CBL_Puller);
+    NSURL* remoteURL = RemoteTestDBURL(@"tdpuller_test2_auth");
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+        return;
+    }
+    // Add a bogus user to make auth fail:
+    NSString* urlStr = remoteURL.absoluteString;
+    urlStr = [urlStr stringByReplacingOccurrencesOfString: @"http://" withString: @"http://bogus@"];
+    remoteURL = $url(urlStr);
+
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
+    replic8Continuous(db, remoteURL, NO, nil, error);
 
     [db close];
     [server close];
@@ -546,6 +578,7 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Pusher);
     RequireTestCase(CBL_Puller);
     RequireTestCase(CBL_Puller_Continuous);
+    RequireTestCase(CBL_Puller_AuthFailure);
     RequireTestCase(CBL_Puller_FromCouchApp);
     RequireTestCase(CBLPuller_DocIDs);
     RequireTestCase(ParseReplicatorProperties);

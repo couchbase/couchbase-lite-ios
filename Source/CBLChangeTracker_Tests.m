@@ -180,6 +180,7 @@ TestCase(CBLChangeTracker_SSL) {
 
 
 TestCase(CBLChangeTracker_Auth) {
+    RequireTestCase(CBLChangeTracker_AuthFailure);
     // This database requires authentication to access at all.
     NSURL* url = RemoteTestDBURL(@"tdpuller_test2_auth");
     if (!url) {
@@ -194,6 +195,20 @@ TestCase(CBLChangeTracker_Auth) {
                                      {@"id", @"something"},
                                      {@"revs", $array(@"1-31e4c2faf5cfcd56f4518c29367f9124")}) );
     [tester run: tracker expectingChanges: expected];
+}
+
+
+TestCase(CBLChangeTracker_AuthFailure) {
+    NSURL* url = RemoteTestDBURL(@"tdpuller_test2_auth");
+    if (!url) {
+        Warn(@"Skipping test; no remote DB URL configured");
+        return;
+    }
+    CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
+    AddTemporaryCredential(url, @"CouchDB", @"dummy", @"wrong_password");
+
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  tester];
+    [tester run: tracker expectingError: CBLStatusToNSError(kCBLStatusUnauthorized, url)];
 }
 
 
@@ -238,6 +253,7 @@ TestCase(CBLChangeTracker) {
     RequireTestCase(CBLChangeTracker_SSL);
     RequireTestCase(CBLChangeTracker_Auth);
     RequireTestCase(CBLChangeTracker_Retry);
+    RequireTestCase(CBLWebSocketChangeTracker_Auth);
 }
 
 #endif // DEBUG
