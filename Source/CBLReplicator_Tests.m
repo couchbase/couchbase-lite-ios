@@ -75,6 +75,15 @@ NSURL* RemoteTestDBURL(NSString* dbName) {
 }
 
 
+NSArray* RemoteTestDBAnchorCerts(void) {
+    NSData* certData = [NSData dataWithContentsOfFile: @"/Couchbase/sync_gateway/examples/ssl/cert.cer"];//FIX: Make portable
+    Assert(certData, @"Couldn't load cert file");
+    SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
+    Assert(cert, @"Couldn't parse cert");
+    return @[CFBridgingRelease(cert)];
+}
+
+
 void AddTemporaryCredential(NSURL* url, NSString* realm,
                             NSString* username, NSString* password)
 {
@@ -340,6 +349,24 @@ TestCase(CBL_Puller_AuthFailure) {
 
     [db close];
     [server close];
+}
+
+TestCase(CBL_Puller_SSL) {
+    RequireTestCase(CBL_Pusher);
+    NSURL* remoteURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    replic8Continuous(db, remoteURL, NO, nil, [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorServerCertificateUntrusted userInfo: nil]);
+
+    [CBL_Replicator setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil);
+    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CAssert([lastSeq intValue] >= 2);
+
+    CAssertEq(db.documentCount, 2u);
+    CAssertEq(db.lastSequenceNumber, 2);
 }
 
 TestCase(CBL_Puller_DocIDs) {

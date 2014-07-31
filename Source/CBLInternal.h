@@ -114,6 +114,7 @@
 // The test server defaults to <http://127.0.0.1:5984> but can be configured by setting the
 // environment variable "CBL_TEST_SERVER" at runtime.
 NSURL* RemoteTestDBURL(NSString* dbName);
+NSArray* RemoteTestDBAnchorCerts(void);
 
 void AddTemporaryCredential(NSURL* url, NSString* realm,
                             NSString* username, NSString* password);
