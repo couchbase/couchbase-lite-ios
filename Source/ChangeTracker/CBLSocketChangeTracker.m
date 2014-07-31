@@ -248,13 +248,6 @@
 
 
 - (void) failedWithError:(NSError*) error {
-    // Map lower-level errors from CFStream to higher-level NSURLError ones:
-    if ($equal(error.domain, NSPOSIXErrorDomain)) {
-        if (error.code == ECONNREFUSED)
-            error = [NSError errorWithDomain: NSURLErrorDomain
-                                        code: NSURLErrorCannotConnectToHost
-                                    userInfo: error.userInfo];
-    }
     [self clearConnection];
     [super failedWithError: error];
 }
