@@ -276,7 +276,9 @@ BOOL CBLIsPermanentError( NSError* error ) {
         return code == NSURLErrorBadURL
             || code == NSURLErrorUnsupportedURL
             || code == NSURLErrorUserCancelledAuthentication
-            || code == NSURLErrorUserAuthenticationRequired;
+            || code == NSURLErrorUserAuthenticationRequired
+            || (code <= NSURLErrorSecureConnectionFailed &&
+                code >= NSURLErrorClientCertificateRequired);
     } else if ($equal(domain, CBLHTTPErrorDomain)) {
         return code >= 400 && code <= 499;
     } else {

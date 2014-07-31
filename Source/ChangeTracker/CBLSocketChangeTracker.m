@@ -94,8 +94,11 @@
         // Disable TLS 1.2 support because it breaks compatibility with some SSL servers;
         // workaround taken from Apple technote TN2287:
         // http://developer.apple.com/library/ios/#technotes/tn2287/
-        NSDictionary *settings = $dict({(id)kCFStreamSSLLevel,
-                                        @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"});
+        // Disable automatic cert-chain checking, because that's the only way to allow self-signed
+        // certs. We will check the cert later in -checkSSLCert.
+        NSDictionary *settings = $dict(
+                            {(id)kCFStreamSSLLevel, @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"},
+                            {(id)kCFStreamSSLValidatesCertificateChain, @NO});
         CFReadStreamSetProperty(cfInputStream,
                                 kCFStreamPropertySSLSettings, (CFTypeRef)settings);
     }
@@ -145,9 +148,9 @@
         CFRelease(sslTrust);
         if (!trusted) {
             //TODO: This error could be made more precise
-            self.error = [NSError errorWithDomain: NSURLErrorDomain
-                                             code: NSURLErrorServerCertificateUntrusted
-                                         userInfo: nil];
+            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                       code: NSURLErrorServerCertificateUntrusted
+                                                   userInfo: nil]];
             return NO;
         }
     }
