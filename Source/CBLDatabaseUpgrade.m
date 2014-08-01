@@ -172,42 +172,46 @@
 
     int err;
     while (SQLITE_ROW == (err = sqlite3_step(_revQuery))) {
-        int64_t sequence = sqlite3_column_int64(_revQuery, 0);
-        NSString* revID = columnString(_revQuery, 1);
-        int64_t parentSeq = sqlite3_column_int64(_revQuery, 2);
-        BOOL current = (BOOL)sqlite3_column_int(_revQuery, 3);
+        @autoreleasepool {
+            int64_t sequence = sqlite3_column_int64(_revQuery, 0);
+            NSString* revID = columnString(_revQuery, 1);
+            int64_t parentSeq = sqlite3_column_int64(_revQuery, 2);
+            BOOL current = (BOOL)sqlite3_column_int(_revQuery, 3);
 
-        if (current) {
-            // Add a leaf revision:
-            BOOL deleted = (BOOL)sqlite3_column_int(_revQuery, 4);
-            NSData* json = columnData(_revQuery, 5);
+            if (current) {
+                // Add a leaf revision:
+                BOOL deleted = (BOOL)sqlite3_column_int(_revQuery, 4);
+                NSData* json = columnData(_revQuery, 5);
+                if (!json)
+                    json = [NSData dataWithBytes: "{}" length: 2];
 
-            NSMutableData* nuJson = [json mutableCopy];
-            status = [self addAttachmentsToSequence: sequence json: nuJson];
-            if (CBLStatusIsError(status))
-                return status;
-            json = nuJson;
+                NSMutableData* nuJson = [json mutableCopy];
+                status = [self addAttachmentsToSequence: sequence json: nuJson];
+                if (CBLStatusIsError(status))
+                    return status;
+                json = nuJson;
 
-            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
-                                                                          deleted: deleted];
-            rev.asJSON = json;
+                CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
+                                                                              deleted: deleted];
+                rev.asJSON = json;
 
-            NSMutableArray* history = $marray();
-            [history addObject: revID];
-            while (parentSeq > 0) {
-                NSArray* ancestor = tree[@(parentSeq)];
-                Assert(ancestor, @"Couldn't find parent of seq %lld (doc %@)", parentSeq, docID);
-                [history addObject: ancestor[0]];
-                parentSeq = [ancestor[1] longLongValue];
+                NSMutableArray* history = $marray();
+                [history addObject: revID];
+                while (parentSeq > 0) {
+                    NSArray* ancestor = tree[@(parentSeq)];
+                    Assert(ancestor, @"Couldn't find parent of seq %lld (doc %@)", parentSeq, docID);
+                    [history addObject: ancestor[0]];
+                    parentSeq = [ancestor[1] longLongValue];
+                }
+
+                LogTo(Upgrade, @"Upgrading doc %@, history = %@", rev, history);
+                status = [_db forceInsert: rev revisionHistory: history source: nil];
+                if (CBLStatusIsError(status))
+                    return status;
+                ++_numRevs;
+            } else {
+                tree[@(sequence)] = @[revID, @(parentSeq)];
             }
-
-            LogTo(Upgrade, @"Upgradeing doc %@, history = %@", rev, history);
-            status = [_db forceInsert: rev revisionHistory: history source: nil];
-            if (CBLStatusIsError(status))
-                return status;
-            ++_numRevs;
-        } else {
-            tree[@(sequence)] = @[revID, @(parentSeq)];
         }
     }
     ++_numDocs;
@@ -286,13 +290,15 @@
         return status;
     int err;
     while (SQLITE_ROW == (err = sqlite3_step(localQuery))) {
-        NSString* docID = columnString(localQuery, 0);
-        NSData* json = columnData(localQuery, 1);
-        NSDictionary* props = [CBLJSON JSONObjectWithData: json options: 0 error: NULL];
-        LogTo(Upgrade, @"Upgradeing local doc '%@'", docID);
-        NSError* error;
-        if (props && ![_db putLocalDocument: props withID: docID error: &error]) {
-            Warn(@"Couldn't import local doc '%@': %@", docID, error);
+        @autoreleasepool {
+            NSString* docID = columnString(localQuery, 0);
+            NSData* json = columnData(localQuery, 1);
+            NSDictionary* props = [CBLJSON JSONObjectWithData: json options: 0 error: NULL];
+            LogTo(Upgrade, @"Upgradeing local doc '%@'", docID);
+            NSError* error;
+            if (props && ![_db putLocalDocument: props withID: docID error: &error]) {
+                Warn(@"Couldn't import local doc '%@': %@", docID, error);
+            }
         }
     }
     sqlite3_finalize(localQuery);
