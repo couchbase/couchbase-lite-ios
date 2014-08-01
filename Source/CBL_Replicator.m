@@ -25,7 +25,7 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLBase64.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
 
@@ -805,7 +805,8 @@ static BOOL sOnlyTrustAnchorCerts;
                                            {@"filterParams", _filterParameters},
                                          //{@"headers", _requestHeaders}, (removed; see #143)
                                            {@"docids", _docIDs});
-        _remoteCheckpointDocID = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
+        _remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
+                                                                             error: NULL]);
     }
     return _remoteCheckpointDocID;
 }

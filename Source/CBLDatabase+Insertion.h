@@ -16,6 +16,12 @@
 
 + (NSString*) generateDocumentID;
 
+- (CBL_Revision*) putDocID: (NSString*)inDocID
+                properties: (NSMutableDictionary*)properties
+            prevRevisionID: (NSString*)inPrevRevID
+             allowConflict: (BOOL)allowConflict
+                    status: (CBLStatus*)outStatus;
+
 /** Stores a new (or initial) revision of a document. This is what's invoked by a PUT or POST. As with those, the previous revision ID must be supplied when necessary and the call will fail if it doesn't match.
     @param revision  The revision to add. If the docID is nil, a new UUID will be assigned. Its revID must be nil. It must have a JSON body.
     @param prevRevID  The ID of the revision to replace (same as the "?rev=" parameter to a PUT), or nil if this is a new document.

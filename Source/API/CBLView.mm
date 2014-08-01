@@ -19,7 +19,7 @@ extern "C" {
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLCollateJSON.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
 }
@@ -376,7 +376,7 @@ static id<CBLViewCompiler> sCompiler;
     }
 
     // Version string is based on a digest of the properties:
-    NSString* version = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: viewProps]);
+    NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: NULL]);
 
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 

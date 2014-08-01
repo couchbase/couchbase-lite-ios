@@ -270,7 +270,7 @@
 
 
 
-#pragma mark - CBLNEWREVISION
+#pragma mark - CBLUNSAVEDREVISION
 
 
 @implementation CBLUnsavedRevision

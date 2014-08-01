@@ -43,6 +43,8 @@ typedef SInt64 SequenceNumber;
     This has all the special keys like "_id" stripped out, and keys in canonical order. */
 @property (readonly) NSData* asCanonicalJSON;
 
++ (NSData*) asCanonicalJSON: (NSDictionary*)properties;
+
 - (id) objectForKeyedSubscript: (NSString*)key;  // enables subscript access in Xcode 4.4+
 
 /** Returns the "_attachments" property, validating that it's a dictionary. */

@@ -16,7 +16,7 @@
 #import "CBL_Revision.h"
 #import "CBLInternal.h"
 #import "CBL_Body.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "CBLMisc.h"
 
 
@@ -184,9 +184,13 @@
 }
 
 
+- (NSData*) asCanonicalJSON {
+    return [[self class] asCanonicalJSON: self.properties];
+}
+
 /** Returns the JSON to be stored into the database.
     This has all the special keys like "_id" stripped out, and keys in canonical order. */
-- (NSData*) asCanonicalJSON {
++ (NSData*) asCanonicalJSON: (UU NSDictionary*)properties {
     static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -197,7 +201,6 @@
                                @"_attachments", @"_removed", nil];
     });
 
-    NSDictionary* properties = self.properties;
     if (!properties)
         return nil;
 
@@ -219,7 +222,8 @@
     // Create canonical JSON -- this is important, because the JSON data returned here will be used
     // to create the new revision ID, and we need to guarantee that equivalent revision bodies
     // result in equal revision IDs.
-    NSData* json = [CBLCanonicalJSON canonicalData: (editedProperties ?: properties)];
+    NSData* json = [CBJSONEncoder canonicalEncoding: (editedProperties ?: properties)
+                                              error: nil];
     return json;
 }
 

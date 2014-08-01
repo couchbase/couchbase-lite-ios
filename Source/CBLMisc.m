@@ -29,9 +29,6 @@
 #endif
 
 
-#define UU __unsafe_unretained
-
-
 #if DEBUG
 NSString* CBLPathToTestFile(NSString* name) {
     NSString* path = [[[@(__FILE__) stringByDeletingLastPathComponent]

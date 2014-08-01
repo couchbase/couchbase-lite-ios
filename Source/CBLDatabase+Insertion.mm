@@ -20,7 +20,6 @@ extern "C" {
 #import "CouchbaseLitePrivate.h"
 #import "CBLDocument.h"
 #import "CBL_Revision.h"
-#import "CBLCanonicalJSON.h"
 #import "CBL_Attachment.h"
 #import "CBLDatabaseChange.h"
 #import "CBL_Shared.h"
@@ -39,9 +38,6 @@ using namespace forestdb;
 #define COMMON_DIGEST_FOR_OPENSSL
 #import <CommonCrypto/CommonDigest.h>
 #endif
-
-
-#define ASYNC_WRITE 1
 
 
 @interface CBLValidationContext : NSObject <CBLValidationContext>
@@ -150,16 +146,19 @@ using namespace forestdb;
 
 
 - (CBLDatabaseChange*) changeWithNewRevision: (CBL_Revision*)inRev
+                                isWinningRev: (BOOL)isWinningRev
                                          doc: (VersionedDocument&)doc
                                       source: (NSURL*)source
 {
     CBL_Revision* winningRev = inRev;
-    const Revision* winningRevision = doc.currentRevision();
-    NSString* winningRevID = (NSString*)winningRevision->revID;
-    if (!$equal(winningRevID, inRev.revID)) {
-        winningRev = [[CBL_Revision alloc] initWithDocID: inRev.docID
-                                                   revID: winningRevID
-                                                 deleted: winningRevision->isDeleted()];
+    if (!isWinningRev) {
+        const Revision* winningRevision = doc.currentRevision();
+        NSString* winningRevID = (NSString*)winningRevision->revID;
+        if (!$equal(winningRevID, inRev.revID)) {
+            winningRev = [[CBL_Revision alloc] initWithDocID: inRev.docID
+                                                       revID: winningRevID
+                                                     deleted: winningRevision->isDeleted()];
+        }
     }
     return [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
                                             winningRevision: winningRev
@@ -173,17 +172,25 @@ using namespace forestdb;
                 allowConflict: (BOOL)allowConflict
                        status: (CBLStatus*)outStatus
 {
-    // putRev is a hodge-podge. It contains the stuff that would go into
-    // a regular PUT in the REST API: The doc ID, and the new body. The actual
-    // rev ID of the new revision will be assigned down below before it's inserted.
+    return [self putDocID: putRev.docID properties: [putRev.properties mutableCopy]
+           prevRevisionID: inPrevRevID allowConflict: allowConflict status: outStatus];
+}
+
+
+- (CBL_Revision*) putDocID: (NSString*)inDocID
+                properties: (NSMutableDictionary*)properties
+            prevRevisionID: (NSString*)inPrevRevID
+             allowConflict: (BOOL)allowConflict
+                    status: (CBLStatus*)outStatus
+{
     Assert(outStatus);
+    __block NSString* docID = inDocID;
     __block NSString* prevRevID = inPrevRevID;
-    __block NSString* docID = putRev.docID;
-    BOOL deleting = putRev.deleted;
+    BOOL deleting = !properties || properties.cbl_deleted;
     LogTo(CBLDatabase, @"PUT _id=%@, _rev=%@, _deleted=%d, allowConflict=%d",
           docID, prevRevID, deleting, allowConflict);
-    if (!putRev || (prevRevID && !docID) || (deleting && !docID)
-                || (docID && ![CBLDatabase isValidDocumentID: docID])) {
+    if ((prevRevID && !docID) || (deleting && !docID)
+            || (docID && ![CBLDatabase isValidDocumentID: docID])) {
         *outStatus = kCBLStatusBadID;
         return nil;
     }
@@ -193,17 +200,27 @@ using namespace forestdb;
         return nil;
     }
 
+    __block CBL_MutableRevision* putRev = nil;
     __block CBLDatabaseChange* change = nil;
 
     // Asynchronously convert the revision to JSON (this is expensive):
     __block NSData* json = nil;
     dispatch_semaphore_t jsonSemaphore = NULL;
-    if (putRev.properties) {
-        // Add any new attachment data to the blob-store, and turn all of them into stubs:
-        if (![self processAttachmentsForRevision: putRev
-                                       prevRevID: prevRevID
-                                          status: outStatus])
-            return nil;
+    if (properties) {
+        if (properties.cbl_attachments) {
+            // Add any new attachment data to the blob-store, and turn all of them into stubs:
+            //FIX: Optimize this to avoid creating a revision object
+            CBL_MutableRevision* tmpRev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                               revID: prevRevID
+                                                                             deleted: deleting];
+            tmpRev.properties = properties;
+            if (![self processAttachmentsForRevision: tmpRev
+                                           prevRevID: prevRevID
+                                              status: outStatus])
+                return nil;
+            properties = [tmpRev.properties mutableCopy];
+        }
+
         static dispatch_queue_t sJSONQueue;
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
@@ -211,7 +228,7 @@ using namespace forestdb;
         });
         jsonSemaphore = dispatch_semaphore_create(0);
         dispatch_async(sJSONQueue, ^{
-            json = putRev.asCanonicalJSON;
+            json = [CBL_Revision asCanonicalJSON: properties];
             dispatch_semaphore_signal(jsonSemaphore);
         });
     } else {
@@ -260,8 +277,10 @@ using namespace forestdb;
             }
         }
 
+        BOOL hasValidations = [self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name];
+
         // Get the JSON that we already started encoding:
-        if (putRev.properties) {
+        if (properties) {
             dispatch_semaphore_wait(jsonSemaphore, DISPATCH_TIME_FOREVER);
             if (!json)
                 return kCBLStatusBadJSON;
@@ -274,19 +293,24 @@ using namespace forestdb;
         if (!newRevID)
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
 
+        putRev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                      revID: newRevID
+                                                    deleted: deleting];
+        if (properties) {
+            properties[@"_id"] = docID;
+            properties[@"_rev"] = newRevID;
+            putRev.properties = properties;
+        }
+
         // Run any validation blocks:
-        if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
-            CBL_MutableRevision* fakeNewRev = [putRev mutableCopyWithDocID: docID revID: newRevID];
-            if (!fakeNewRev.body)
-                fakeNewRev.properties = @{};
-            fakeNewRev.sequence = -1;
+        if (hasValidations) {
             CBL_Revision* prevRev = nil;
             if (prevRevID) {
                 prevRev = [[CBL_Revision alloc] initWithDocID: docID
                                                         revID: prevRevID
                                                       deleted: revNode->isDeleted()];
             }
-            CBLStatus status = [self validateRevision: fakeNewRev
+            CBLStatus status = [self validateRevision: putRev
                                      previousRevision: prevRev
                                           parentRevID: prevRevID];
             if (CBLStatusIsError(status))
@@ -295,20 +319,24 @@ using namespace forestdb;
 
         // Add the revision to the database:
         int status;
-        if (!doc.insert(revidBuffer(newRevID), json,
-                        putRev.deleted,
-                        (putRev.attachments != nil),
-                        revNode, allowConflict, status))
-            if (CBLStatusIsError((CBLStatus)status))
-                return (CBLStatus)status;
+        const Revision* fdbRev = doc.insert(revidBuffer(newRevID), json,
+                                            deleting,
+                                            (putRev.attachments != nil),
+                                            revNode, allowConflict, status);
+        if (fdbRev)
+            putRev.sequence = fdbRev->sequence;
+        else if (CBLStatusIsError((CBLStatus)status))
+            return (CBLStatus)status;
         doc.prune((unsigned)self.maxRevTreeDepth);
         doc.save(*_forestTransaction);
 #if DEBUG
         LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
 #endif
 
-        [putRev setDocID: docID revID: newRevID];
-        change = [self changeWithNewRevision: putRev doc: doc source: nil];
+        change = [self changeWithNewRevision: putRev
+                                isWinningRev: (fdbRev && fdbRev->index() == 0)
+                                         doc: doc
+                                      source: nil];
 
         return (CBLStatus)status;
     }];
@@ -414,7 +442,10 @@ static void convertRevIDs(NSArray* revIDs,
 #if DEBUG
         LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
 #endif
-        change = [self changeWithNewRevision: inRev doc: doc source: source];
+        change = [self changeWithNewRevision: inRev
+                                isWinningRev: NO // might be, but not known for sure
+                                         doc: doc
+                                      source: source];
         return kCBLStatusCreated;
     }];
 

@@ -246,27 +246,23 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     if (idProp && ![idProp isEqual: self.documentID])
         Warn(@"Trying to PUT wrong _id to %@: %@", self, properties);
 
+    NSMutableDictionary* nuProperties = [properties mutableCopy];
+
     // Process _attachments dict, converting CBLAttachments to dicts:
     NSDictionary* attachments = properties.cbl_attachments;
     if (attachments.count) {
         NSDictionary* expanded = [CBLAttachment installAttachmentBodies: attachments
                                                              intoDatabase: _database];
-        if (expanded != attachments) {
-            NSMutableDictionary* nuProperties = [properties mutableCopy];
+        if (expanded != attachments)
             nuProperties[@"_attachments"] = expanded;
-            properties = nuProperties;
-        }
     }
     
-    BOOL deleted = !properties || properties.cbl_deleted;
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID
-                                                                    revID: nil
-                                                                  deleted: deleted];
-    if (properties)
-        rev.properties = properties;
     CBLStatus status = 0;
-    CBL_Revision* newRev = [_database putRevision: rev prevRevisionID: prevID
-                                    allowConflict: allowConflict status: &status];
+    CBL_Revision* newRev = [_database putDocID: _docID
+                                    properties: nuProperties
+                                prevRevisionID: prevID
+                                 allowConflict: allowConflict
+                                        status: &status];
     if (!newRev) {
         if (outError) *outError = CBLStatusToNSError(status, nil);
         return nil;
