@@ -122,6 +122,11 @@ typedef struct CBLManagerOptions {
     other criteria to enable logging. */
 + (void) enableLogging: (NSString*)type;
 
+/** Redirects Couchbase Lite logging: instead of writing to the console/stderr, it will call the
+    given block. Passing a nil block restores the default behavior. */
++ (void) redirectLogging: (void (^)(NSString* type, NSString* message))callback;
+
+
 @property (readonly, nonatomic) NSMutableDictionary* customHTTPHeaders;
 
 @end

@@ -144,15 +144,6 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 }
 
 
-- (void) retry {
-    // This is called if I've gone idle but some revisions failed to be pushed.
-    // I should start the _changes feed over again, so I can retry all the revisions.
-    [super retry];
-
-    [self beginReplicating];
-}
-
-
 - (BOOL) goOffline {
     if (![super goOffline])
         return NO;

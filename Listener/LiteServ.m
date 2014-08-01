@@ -22,7 +22,7 @@
 #import "CBLManager+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
-#import "CBLJSViewCompiler.h"
+#import "CBLRegisterJSViewCompiler.h"
 #import <Security/Security.h>
 
 #if DEBUG
@@ -161,7 +161,7 @@ int main (int argc, const char * argv[])
         EnableLogTo(CBLListener, YES);
 #endif
 
-        [CBLView setCompiler: [[CBLJSViewCompiler alloc] init]];
+        CBLRegisterJSViewCompiler();
 
         NSString* dataPath = nil;
         UInt16 port = kPortNumber;

@@ -163,10 +163,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) retry {
     // This is called if I've gone idle but some revisions failed to be pulled.
     // I should start the _changes feed over again, so I can retry all the revisions.
-    [super retry];
-
     [_changeTracker stop];
-    [self beginReplicating];
+    [super retry];
 }
 
 

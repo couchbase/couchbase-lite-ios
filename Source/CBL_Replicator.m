@@ -283,7 +283,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     {
         LogTo(Sync, @"%@ Progress: set error = %@", self, error.localizedDescription);
         _error = error;
-        [self postProgressChanged];
+        if (CBLIsPermanentError(error))
+            [self stop];
+        else
+            [self postProgressChanged];
     }
 }
 
@@ -389,9 +392,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 // Called after a continuous replication has gone idle, but it failed to transfer some revisions
-// and so wants to try again in a minute. Should be overridden by subclasses.
+// and so wants to try again in a minute. Can be overridden by subclasses.
 - (void) retry {
     self.error = nil;
+    [self checkSession];
 }
 
 - (void) retryIfReady {
