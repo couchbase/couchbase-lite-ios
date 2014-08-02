@@ -203,9 +203,10 @@ using namespace forestdb;
     __block CBL_MutableRevision* putRev = nil;
     __block CBLDatabaseChange* change = nil;
 
-    // Asynchronously convert the revision to JSON (this is expensive):
     __block NSData* json = nil;
+#ifdef ASYNC_ENCODE
     dispatch_semaphore_t jsonSemaphore = NULL;
+#endif
     if (properties) {
         if (properties.cbl_attachments) {
             // Add any new attachment data to the blob-store, and turn all of them into stubs:
@@ -221,6 +222,8 @@ using namespace forestdb;
             properties = [tmpRev.properties mutableCopy];
         }
 
+#ifdef ASYNC_ENCODE
+        // Asynchronously convert the revision to JSON (this is expensive):
         static dispatch_queue_t sJSONQueue;
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
@@ -231,6 +234,13 @@ using namespace forestdb;
             json = [CBL_Revision asCanonicalJSON: properties];
             dispatch_semaphore_signal(jsonSemaphore);
         });
+#else
+        json = [CBL_Revision asCanonicalJSON: properties];
+        if (!json) {
+            *outStatus = kCBLStatusBadJSON;
+            return nil;
+        }
+#endif
     } else {
         json = [NSData dataWithBytes: "{}" length: 2];
     }
@@ -279,12 +289,14 @@ using namespace forestdb;
 
         BOOL hasValidations = [self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name];
 
+#ifdef ASYNC_ENCODE
         // Get the JSON that we already started encoding:
         if (properties) {
             dispatch_semaphore_wait(jsonSemaphore, DISPATCH_TIME_FOREVER);
             if (!json)
                 return kCBLStatusBadJSON;
         }
+#endif
 
         // Compute the new revID:
         NSString* newRevID = [self generateRevIDForJSON: json
