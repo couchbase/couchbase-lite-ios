@@ -21,6 +21,9 @@
 #import "MYBlockUtils.h"
 
 
+static NSString* keyPathForQueryRow(NSString* keyPath);
+
+
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
 - (NSArray*) queryViewNamed: (NSString*)viewName
@@ -90,6 +93,7 @@
         _descending = query.descending;
         _prefetch = query.prefetch;
         self.keys = query.keys;
+        self.sortDescriptors = query.sortDescriptors;
         if (query->_isGeoQuery) {
             _isGeoQuery = YES;
             _boundingBox = query->_boundingBox;
@@ -119,7 +123,7 @@
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
-            database=_database, allDocsMode=_allDocsMode;
+            database=_database, allDocsMode=_allDocsMode, sortDescriptors=_sortDescriptors;
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -163,9 +167,12 @@
             *outError = CBLStatusToNSError(status, nil);
         return nil;
     }
-    return [[CBLQueryEnumerator alloc] initWithDatabase: _database
-                                                   rows: rows
-                                         sequenceNumber: _lastSequence];
+    CBLQueryEnumerator* result = [[CBLQueryEnumerator alloc] initWithDatabase: _database
+                                                                         rows: rows
+                                                               sequenceNumber: _lastSequence];
+    if (_sortDescriptors)
+        [result sortUsingDescriptors: _sortDescriptors];
+    return result;
 }
 
 
@@ -189,10 +196,13 @@
             CBLQueryEnumerator* e = nil;
             if (CBLStatusIsError(status))
                 error = CBLStatusToNSError(status, nil);
-            else
+            else {
                 e = [[CBLQueryEnumerator alloc] initWithDatabase: _database
                                                             rows: rows
                                                   sequenceNumber: lastSequence];
+                if (_sortDescriptors)
+                    [e sortUsingDescriptors: _sortDescriptors];
+            }
             onComplete(e, error);
         }];
     }];
@@ -366,6 +376,29 @@
         return NO;
     CBLQueryEnumerator* otherEnum = object;
     return [otherEnum->_rows isEqual: _rows];
+}
+
+
+- (void) sortUsingDescriptors: (NSArray*)sortDescriptors {
+    // First make the key-paths relative to each row's value unless they start from a root key:
+    sortDescriptors = [sortDescriptors my_map: ^id(NSSortDescriptor* desc) {
+        NSString* keyPath = desc.key;
+        NSString* newKeyPath = keyPathForQueryRow(keyPath);
+        Assert(newKeyPath, @"Invalid CBLQueryRow key path \"%@\"", keyPath);
+        if (newKeyPath == keyPath)
+            return desc;
+        else if (desc.comparator)
+            return [[NSSortDescriptor alloc] initWithKey: newKeyPath
+                                               ascending: desc.ascending
+                                              comparator: desc.comparator];
+        else
+            return [[NSSortDescriptor alloc] initWithKey: newKeyPath
+                                               ascending: desc.ascending
+                                                selector: desc.selector];
+    }];
+
+    // Now the sorting is trivial:
+    _rows = [_rows sortedArrayUsingDescriptors: sortDescriptors];
 }
 
 
@@ -555,6 +588,19 @@ static inline BOOL isNonMagicValue(id value) {
 - (id) key2                         {return [self keyAtIndex: 2];}
 - (id) key3                         {return [self keyAtIndex: 3];}
 
+- (id) valueAtIndex: (NSUInteger)index {
+    id value = self.value;
+    if ([value isKindOfClass:[NSArray class]])
+        return (index < [value count]) ? value[index] : nil;
+    else
+        return (index == 0) ? value : nil;
+}
+
+- (id) value0                         {return [self valueAtIndex: 0];}
+- (id) value1                         {return [self valueAtIndex: 1];}
+- (id) value2                         {return [self valueAtIndex: 2];}
+- (id) value3                         {return [self valueAtIndex: 3];}
+
 
 - (CBLDocument*) document {
     NSString* docID = self.documentID;
@@ -659,3 +705,51 @@ static inline BOOL isNonMagicValue(id value) {
 }
 
 @end
+
+
+
+// Tweaks a key-path for use with a CBLQueryRow. Unless the path starts with one of the main
+// public properties, it's interpreted as relative to the value.
+static NSString* keyPathForQueryRow(NSString* keyPath) {
+    static NSArray* kRootKeys;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        kRootKeys = @[@"key", @"value", @"documentID", @"sourceDocumentID",
+                      @"document", @"documentProperties", @"sequenceNumber"];
+    });
+    for (NSString* rootKey in kRootKeys) {
+        if ([keyPath hasPrefix: rootKey]) {
+            NSUInteger len = rootKey.length;
+            if (keyPath.length == len)
+                return keyPath;
+            unichar ch = [keyPath characterAtIndex: len];
+            if (ch == '.')
+                return keyPath;
+            else if (ch == '[') {
+                // Fake array index syntax:
+                if (keyPath.length < len+3 || [keyPath characterAtIndex: len+2] != ']')
+                    return nil;
+                ch = [keyPath characterAtIndex: len+1];
+                if (!isdigit(ch))
+                    return nil;
+                NSMutableString* newKey = [keyPath mutableCopy];
+                [newKey deleteCharactersInRange: NSMakeRange(len+2, 1)];
+                [newKey deleteCharactersInRange: NSMakeRange(len+0, 1)];
+                return newKey;
+            }
+        }
+    }
+    return [@"value." stringByAppendingString: keyPath];
+}
+
+
+TestCase(CBLQuery_KeyPathForQueryRow) {
+    AssertEqual(keyPathForQueryRow(@"value"),           @"value");
+    AssertEqual(keyPathForQueryRow(@"value.foo"),       @"value.foo");
+    AssertEqual(keyPathForQueryRow(@"foo"),             @"value.foo");
+    AssertEqual(keyPathForQueryRow(@"value[0]"),        @"value0");
+    AssertEqual(keyPathForQueryRow(@"key[3].foo"),      @"key3.foo");
+    AssertEqual(keyPathForQueryRow(@"value["),          nil);
+    AssertEqual(keyPathForQueryRow(@"value[0"),         nil);
+    AssertEqual(keyPathForQueryRow(@"value[x]"),        nil);
+}

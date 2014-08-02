@@ -58,6 +58,10 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
 @property (copy) NSString* endKeyDocID;
 
+/** An optional array of NSSortDescriptor objects.
+    If set, overrides the default by-key ordering. See -[CBLQueryEnumerator sortUsingDescriptors:]. */
+@property (copy) NSArray* sortDescriptors;
+
 /** Determines whether or when the view index is updated. By default, the index will be updated
     if necessary before the query runs -- this guarantees up-to-date results but can cause a
     delay. The "Never" mode skips updating the index, so it's faster but can return out of date
@@ -153,6 +157,19 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 
 /** Resets the enumeration so the next call to -nextObject or -nextRow will return the first row. */
 - (void) reset;
+
+/** Re-sorts the rows based on the given NSSortDescriptors.
+    This operation requires that all rows be loaded into memory, so you can't have previously
+    called -nextObject, -nextRow or for...in on this enumerator. (But it's fine to use them
+    _after_ calling this method.)
+    You can call this method multiple times with different sort descriptors, but the effects
+    on any in-progress enumeration are undefined.
+    A key-path that doesn't start from a CBLQueryRow property (key, value, document...) is
+    assumed to be relative to the value. So if the view emits values that are dictionaries with a
+    "color" property, you could use "color" as the key.
+    A limited form of array indexing is supported, so you can refer to "key[1]" or "value[0]" if
+    the key or value are arrays. This only works with indexes from 0 to 3. */
+- (void) sortUsingDescriptors: (NSArray*)sortDescriptors;
 
 @end
 
