@@ -908,6 +908,63 @@ TestCase(API_EmitDoc) {
 }
 
 
+TestCase(API_ViewCustomSort) {
+    RequireTestCase(CBLQuery_KeyPathForQueryRow);
+    CBLDatabase* db = createEmptyDB();
+
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"name"], doc[@"skin"]);
+    }) version: @"1"];
+
+    CAssert(view.mapBlock != nil);
+
+    [db inTransaction: ^BOOL {
+        createDocumentWithProperties(db, @{@"name": @"Barry", @"skin": @"none"});
+        createDocumentWithProperties(db, @{@"name": @"Terry", @"skin": @"furry"});
+        createDocumentWithProperties(db, @{@"name": @"Wanda", @"skin": @"scaly"});
+        return YES;
+    }];
+
+    CBLQuery* query = [view createQuery];
+    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"value" ascending: NO]];
+    CBLQueryEnumerator* rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.value, @"scaly");
+    AssertEqual(rows.nextRow.value, @"none");
+    AssertEqual(rows.nextRow.value, @"furry");
+    AssertNil(rows.nextRow);
+
+    // Now test a keypath that implicitly refers to the value:
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"name"], @{@"skin": doc[@"skin"]});
+    }) version: @"2"];
+
+    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"skin" ascending: NO]];
+    rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.value, @{@"skin": @"scaly"});
+    AssertEqual(rows.nextRow.value, @{@"skin": @"none"});
+    AssertEqual(rows.nextRow.value, @{@"skin": @"furry"});
+    AssertNil(rows.nextRow);
+
+    // Now test a keypath with an array:
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"name"], @[doc[@"skin"]]);
+    }) version: @"3"];
+
+    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"value[0]" ascending: NO]];
+    rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.value, @[@"scaly"]);
+    AssertEqual(rows.nextRow.value, @[@"none"]);
+    AssertEqual(rows.nextRow.value, @[@"furry"]);
+    AssertNil(rows.nextRow);
+
+    closeTestDB(db);
+}
+
+
 TestCase(API_LiveQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createEmptyDB();
@@ -1251,6 +1308,7 @@ TestCase(API) {
     RequireTestCase(API_CreateView);
     RequireTestCase(API_Validation);
     RequireTestCase(API_CreateView);
+    RequireTestCase(API_ViewCustomSort);
     RequireTestCase(API_ViewWithLinkedDocs);
     RequireTestCase(API_SharedMapBlocks);
     RequireTestCase(API_EmitNil);
