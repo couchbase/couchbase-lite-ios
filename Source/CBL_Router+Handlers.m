@@ -213,7 +213,10 @@
     NSArray* result = [_db getAllDocs: options];
     if (!result)
         return _db.lastDbError;
-    result = [result my_map: ^id(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    result = [result my_map: ^id(CBLQueryRow* row) {
+        row.database = _db;
+        return row.asJSONDictionary;
+    }];
     _response.bodyObject = $dict({@"rows", result},
                                  {@"total_rows", @(result.count)},
                                  {@"offset", @(options->skip)},
@@ -1075,7 +1078,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSArray* rows = [view _queryWithOptions: options status: &status];
     if (!rows)
         return status;
-    rows = [rows my_map:^(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    rows = [rows my_map:^(CBLQueryRow* row) {
+        row.database = _db;
+        return row.asJSONDictionary;
+    }];
     id updateSeq = options->updateSeq ? @(view.lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
                                  {@"total_rows", @(rows.count)},
