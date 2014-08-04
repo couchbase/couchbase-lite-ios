@@ -575,6 +575,10 @@ static inline BOOL isNonMagicValue(id value) {
 }
 
 
+// Custom key & value indexing properties. These are used by the extended "key[0]" / "value[2]"
+// key-path syntax (see keyPathForQueryRow(), below.) They're also useful when creating Cocoa
+// bindings to query rows, on Mac OS X.
+
 - (id) keyAtIndex: (NSUInteger)index {
     id key = self.key;
     if ([key isKindOfClass:[NSArray class]])
@@ -708,48 +712,41 @@ static inline BOOL isNonMagicValue(id value) {
 
 
 
-// Tweaks a key-path for use with a CBLQueryRow. Unless the path starts with one of the main
-// public properties, it's interpreted as relative to the value.
+// Tweaks a key-path for use with a CBLQueryRow. The "key" and "value" properties can be
+// indexed as arrays using a syntax like "key[0]". (Yes, this is a hack.)
 static NSString* keyPathForQueryRow(NSString* keyPath) {
-    static NSArray* kRootKeys;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        kRootKeys = @[@"key", @"value", @"documentID", @"sourceDocumentID",
-                      @"document", @"documentProperties", @"sequenceNumber"];
-    });
-    for (NSString* rootKey in kRootKeys) {
-        if ([keyPath hasPrefix: rootKey]) {
-            NSUInteger len = rootKey.length;
-            if (keyPath.length == len)
-                return keyPath;
-            unichar ch = [keyPath characterAtIndex: len];
-            if (ch == '.')
-                return keyPath;
-            else if (ch == '[') {
-                // Fake array index syntax:
-                if (keyPath.length < len+3 || [keyPath characterAtIndex: len+2] != ']')
-                    return nil;
-                ch = [keyPath characterAtIndex: len+1];
-                if (!isdigit(ch))
-                    return nil;
-                NSMutableString* newKey = [keyPath mutableCopy];
-                [newKey deleteCharactersInRange: NSMakeRange(len+2, 1)];
-                [newKey deleteCharactersInRange: NSMakeRange(len+0, 1)];
-                return newKey;
-            }
-        }
-    }
-    return [@"value." stringByAppendingString: keyPath];
+    NSRange bracket = [keyPath rangeOfString: @"["];
+    if (bracket.length == 0)
+        return keyPath;
+    if (![keyPath hasPrefix: @"key["] && ![keyPath hasPrefix: @"value["])
+        return nil;
+    NSUInteger indexPos = NSMaxRange(bracket);
+    if (keyPath.length < indexPos+2 || [keyPath characterAtIndex: indexPos+1] != ']')
+        return nil;
+    unichar ch = [keyPath characterAtIndex: indexPos];
+    if (!isdigit(ch))
+        return nil;
+    // Delete the brackets, e.g. turning "value[1]" into "value1". CBLQueryRow
+    // just so happens to have custom properties key0..key3 and value0..value3.
+    NSMutableString* newKey = [keyPath mutableCopy];
+    [newKey deleteCharactersInRange: NSMakeRange(indexPos+1, 1)]; // delete ']'
+    [newKey deleteCharactersInRange: NSMakeRange(indexPos-1, 1)]; // delete '['
+    return newKey;
 }
 
 
 TestCase(CBLQuery_KeyPathForQueryRow) {
     AssertEqual(keyPathForQueryRow(@"value"),           @"value");
     AssertEqual(keyPathForQueryRow(@"value.foo"),       @"value.foo");
-    AssertEqual(keyPathForQueryRow(@"foo"),             @"value.foo");
     AssertEqual(keyPathForQueryRow(@"value[0]"),        @"value0");
     AssertEqual(keyPathForQueryRow(@"key[3].foo"),      @"key3.foo");
+    AssertEqual(keyPathForQueryRow(@"value[0].foo"),    @"value0.foo");
+    AssertEqual(keyPathForQueryRow(@"[2]"),             nil);
+    AssertEqual(keyPathForQueryRow(@"sequence[2]"),     nil);
+    AssertEqual(keyPathForQueryRow(@"value.addresses[2]"),nil);
     AssertEqual(keyPathForQueryRow(@"value["),          nil);
     AssertEqual(keyPathForQueryRow(@"value[0"),         nil);
-    AssertEqual(keyPathForQueryRow(@"value[x]"),        nil);
+    AssertEqual(keyPathForQueryRow(@"value[0"),         nil);
+    AssertEqual(keyPathForQueryRow(@"value[0}"),        nil);
+    AssertEqual(keyPathForQueryRow(@"value[d]"),        nil);
 }

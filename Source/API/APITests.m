@@ -933,7 +933,7 @@ TestCase(API_ViewCustomSort) {
         emit(doc[@"name"], @{@"skin": doc[@"skin"]});
     }) version: @"2"];
 
-    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"skin" ascending: NO]];
+    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"value.skin" ascending: NO]];
     rows = [query run: NULL];
 
     AssertEqual(rows.nextRow.value, @{@"skin": @"scaly"});
