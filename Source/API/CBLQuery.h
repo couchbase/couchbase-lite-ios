@@ -58,6 +58,9 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
 @property (copy) NSString* endKeyDocID;
 
+/** If YES (the default) the endKey (or endKeyDocID) comparison uses "<=". Else it uses "<". */
+@property BOOL inclusiveEnd;
+
 /** An optional array of NSSortDescriptor objects.
     If set, overrides the default by-key ordering. See -[CBLQueryEnumerator sortUsingDescriptors:]. */
 @property (copy) NSArray* sortDescriptors;
