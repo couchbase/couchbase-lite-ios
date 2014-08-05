@@ -208,7 +208,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         flags |= SQLITE_OPEN_READONLY;
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    LogTo(CBLDatabase, @"Open %@ (flags=%X)", _path, flags);
+
+    id key = [_manager.shared valueForType: @"encryptionKey" name: @""
+                           inDatabaseNamed: self.name];
+
+    LogTo(CBLDatabase, @"Open %@ (flags=%X%@)",
+          _path, flags, (key ? @", encryption key given" : nil));
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
         return NO;
@@ -226,6 +231,37 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     [CBLView registerFunctions: self];
     
+    // Give SQLCipher the encryption key, if provided:
+    if (key) {
+        // http://sqlcipher.net/sqlcipher-api/#key
+        NSString* pragma;
+        if ([key isKindOfClass: [NSString class]]) {
+            pragma = $sprintf(@"PRAGMA key = '%@'",
+                      [key stringByReplacingOccurrencesOfString: @"'" withString: @"''"]);
+        } else {
+            Assert([key isKindOfClass: [NSData class]]);
+            //Assert([key length] == 32, @"SQLCipher raw key must be exactly 256 bits (32 bytes)");
+            pragma = $sprintf(@"PRAGMA key = \"x'%@'\"",
+                              CBLHexFromBytes([key bytes], [key length]));
+        }
+        if (![_fmdb executeUpdate: pragma]) {
+            Warn(@"CBLDatabase: Couldn't give encryption key; SQLite may not be built with SQLCipher");
+            if (outError) *outError = self.fmdbError;
+            return NO;
+        }
+    }
+
+    // Verify that encryption key is correct (or db is unencrypted, if no key given):
+    if ([_fmdb intForQuery: @"SELECT count(*) FROM sqlite_master"] == 0) {
+        if (outError) {
+            if (_fmdb.lastErrorCode == SQLITE_NOTADB)
+                *outError = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
+            else
+                *outError = self.fmdbError;
+        }
+        return NO;
+    }
+
     // Stuff we need to initialize every time the database opens:
     if (![self initialize: @"PRAGMA foreign_keys = ON;" error: outError])
         return NO;
@@ -502,6 +538,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             return kCBLStatusDBBusy;
         case SQLITE_CORRUPT:
             return kCBLStatusCorruptError;
+        case SQLITE_NOTADB:
+            return kCBLStatusUnauthorized; // DB is probaby encrypted
         default:
             LogTo(CBLDatabase, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
             return kCBLStatusDBError;

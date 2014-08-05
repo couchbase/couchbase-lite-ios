@@ -411,6 +411,15 @@ static CBLManager* sInstance;
     return db;
 }
 
+- (void) registerEncryptionKey: (id)encryptionKey
+              forDatabaseNamed: (NSString*)name
+{
+    [self.shared setValue: encryptionKey
+                  forType: @"encryptionKey" name: @""
+          inDatabaseNamed: name];
+}
+
+
 #if DEBUG
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = _databases[name];
