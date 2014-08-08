@@ -134,7 +134,7 @@ NSString* CBLEscapeID( NSString* docOrRevID ) {
 #else
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)docOrRevID,
-                                                                  NULL, (CFStringRef)@"?&/",
+                                                                  NULL, NULL,
                                                                   kCFStringEncodingUTF8);
     #ifdef __OBJC_GC__
     return NSMakeCollectable(escaped);
