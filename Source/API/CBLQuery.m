@@ -97,6 +97,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         _prefetch = query.prefetch;
         self.keys = query.keys;
         self.sortDescriptors = query.sortDescriptors;
+        self.postFilter = query.postFilter;
         if (query->_isGeoQuery) {
             _isGeoQuery = YES;
             _boundingBox = query->_boundingBox;
@@ -127,7 +128,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
             database=_database, allDocsMode=_allDocsMode, sortDescriptors=_sortDescriptors,
-            inclusiveEnd=_inclusiveEnd;
+            inclusiveEnd=_inclusiveEnd, postFilter=_postFilter;
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -155,7 +156,8 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         .includeDocs = _prefetch,
         .updateSeq = YES,
         .allDocsMode = _allDocsMode,
-        .indexUpdateMode = _indexUpdateMode
+        .indexUpdateMode = _indexUpdateMode,
+        .filter = _postFilter
     };
 }
 

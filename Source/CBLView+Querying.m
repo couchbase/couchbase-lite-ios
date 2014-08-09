@@ -295,6 +295,15 @@ BOOL CBLValueIsEntireDoc(NSData* valueData) {
                                                value: valueData
                                        docProperties: docContents];
         }
+        
+        if (options->filter) {
+            row.database = db; // temporary; this may not be the final database instance
+            if (![options->filter evaluateWithObject: row]) {
+                LogTo(ViewVerbose, @"   ... on 2nd thought, filter predicate skipped that row");
+                return kCBLStatusOK;
+            }
+            row.database = nil;
+        }
         [rows addObject: row];
         return kCBLStatusOK;
     }];

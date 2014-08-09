@@ -13,40 +13,9 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CouchbaseLitePrivate.h"
-#import "CBLModelArray.h"
-#import "CBLInternal.h"
-#import "Test.h"
-
-
 #if DEBUG
-
-
-static CBLDatabase* createEmptyDB(void) {
-    CBLManager* dbmgr = [CBLManager sharedInstance];
-    CAssert(dbmgr);
-    NSError* error;
-    CBLDatabase* db = [dbmgr createEmptyDatabaseNamed: @"test_db" error: &error];
-    CAssert(db, @"Couldn't create db: %@", error);
-    return db;
-}
-
-
-static void closeTestDB(CBLDatabase* db) {
-    CAssert(db != nil);
-    CAssert([db close]);
-}
-
-
-static CBLDatabase* reopenTestDB(CBLDatabase* db) {
-    closeTestDB(db);
-    [[CBLManager sharedInstance] _forgetDatabase: db];
-    NSError* error;
-    CBLDatabase* db2 = [[CBLManager sharedInstance] databaseNamed: @"test_db" error: &error];
-    CAssert(db2, @"Couldn't reopen db: %@", error);
-    CAssert(db2 != db, @"reopenTestDB couldn't make a new instance");
-    return db2;
-}
+#import "APITestUtils.h"
+#import "CBLModelArray.h"
 
 
 #pragma mark - TEST MODEL:
