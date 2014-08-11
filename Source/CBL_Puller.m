@@ -399,18 +399,18 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...
     // results in compiler error (could be undefined variable)
     __weak CBL_Puller *weakSelf = self;
-    CBLMultipartDownloader *dl;
+    __block CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
                                            database: db
                                      requestHeaders: self.requestHeaders
                                        onCompletion:
-        ^(CBLMultipartDownloader* dl, NSError *error) {
+        ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBL_Puller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
             if (error) {
                 [strongSelf revision: rev failedWithError: error];
             } else {
-                CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: dl.document];
+                CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: result.document];
                 gotRev.sequence = rev.sequence;
                 // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [strongSelf queueDownloadedRevision:gotRev];
@@ -450,7 +450,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     __weak CBL_Puller *weakSelf = self;
-    CBLBulkDownloader *dl;
+    __block CBLBulkDownloader *dl;
     dl = [[CBLBulkDownloader alloc] initWithDbURL: _remote
                                          database: _db
                                    requestHeaders: self.requestHeaders
@@ -483,7 +483,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               }
           }
                                    onCompletion:
-          ^(CBLMultipartDownloader* dl, NSError *error) {
+          ^(CBLBulkDownloader* result, NSError *error) {
               // The entire _bulk_get is finished:
               __strong CBL_Puller *strongSelf = weakSelf;
               if (error) {
@@ -494,8 +494,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                        self, (unsigned)remainingRevs.count, remainingRevs);
               }
               strongSelf.changesProcessed += remainingRevs.count;
+              
               // Note that we've finished this task:
-              [self asyncTasksFinished: 1];
+              [strongSelf removeRemoteRequest:dl];
+              [strongSelf asyncTasksFinished:1];
+              
               --_httpConnectionCount;
               // Start another task if there are still revisions waiting to be pulled:
               [strongSelf pullRemoteRevisions];
