@@ -237,6 +237,19 @@ BOOL CBLValueIsEntireDoc(NSData* valueData) {
 }
 
 
+static BOOL rowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options) {
+    if (options->filter) {
+        row.database = db; // temporary; this may not be the final database instance
+        if (![options->filter evaluateWithObject: row]) {
+            LogTo(ViewVerbose, @"   ... on 2nd thought, filter predicate skipped that row");
+            return NO;
+        }
+        row.database = nil;
+    }
+    return YES;
+}
+
+
 - (NSArray*) _regularQueryWithOptions: (const CBLQueryOptions*)options
                                status: (CBLStatus*)outStatus
 {
@@ -296,15 +309,8 @@ BOOL CBLValueIsEntireDoc(NSData* valueData) {
                                        docProperties: docContents];
         }
         
-        if (options->filter) {
-            row.database = db; // temporary; this may not be the final database instance
-            if (![options->filter evaluateWithObject: row]) {
-                LogTo(ViewVerbose, @"   ... on 2nd thought, filter predicate skipped that row");
-                return kCBLStatusOK;
-            }
-            row.database = nil;
-        }
-        [rows addObject: row];
+        if (rowPassesFilter(db, row, options))
+            [rows addObject: row];
         return kCBLStatusOK;
     }];
 
@@ -354,7 +360,8 @@ BOOL CBLValueIsEntireDoc(NSData* valueData) {
                                                                         value: valueData];
         if (options->fullTextSnippets)
             row.snippet = [r stringForColumnIndex: 5];
-        [rows addObject: row];
+        if (rowPassesFilter(db, row, options))
+            [rows addObject: row];
     }
     return rows;
 }
@@ -405,6 +412,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (NSMutableArray*) _reducedQueryWithOptions: (const CBLQueryOptions*)options
                                       status: (CBLStatus*)outStatus
 {
+    CBLDatabase* db = _weakDB;
     unsigned groupLevel = options->groupLevel;
     bool group = options->group || groupLevel > 0;
     if (options->reduceSpecified) {
@@ -435,11 +443,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                 // This pair starts a new group, so reduce & record the last one:
                 id key = groupKey(lastKeyData, groupLevel);
                 id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-                [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
-                                                           sequence: 0
-                                                                key: key
-                                                              value: reduced
-                                                      docProperties: nil]];
+                CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: nil
+                                                             sequence: 0
+                                                                  key: key
+                                                                value: reduced
+                                                        docProperties: nil];
+                if (rowPassesFilter(db, row, options))
+                    [rows addObject: row];
                 [keysToReduce removeAllObjects];
                 [valuesToReduce removeAllObjects];
             }
@@ -452,9 +462,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         if (valuesToReduce && CBLValueIsEntireDoc(valueData)) {
             // map fn emitted 'doc' as value, which was stored as a "*" placeholder; expand now:
             CBLStatus status;
-            CBL_Revision* rev = [_weakDB getDocumentWithID: docID
-                                                  sequence: [r longLongIntForColumnIndex:3]
-                                                    status: &status];
+            CBL_Revision* rev = [db getDocumentWithID: docID
+                                             sequence: [r longLongIntForColumnIndex:3]
+                                               status: &status];
             if (!rev)
                 Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
             valueOrData = rev.properties;
@@ -471,11 +481,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
         LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
-        [rows addObject: [[CBLQueryRow alloc] initWithDocID: nil
-                                                   sequence: 0
-                                                        key: key
-                                                      value: reduced
-                                              docProperties: nil]];
+        CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: nil
+                                                     sequence: 0
+                                                          key: key
+                                                        value: reduced
+                                                docProperties: nil];
+        if (rowPassesFilter(db, row, options))
+            [rows addObject: row];
     }
     return rows;
 }
