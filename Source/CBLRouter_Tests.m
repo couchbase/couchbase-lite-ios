@@ -595,6 +595,43 @@ TestCase(CBL_Router_GetAttachment) {
     [server close];
 }
 
+TestCase(CBL_Router_GetJSONAttachment) {
+    CBLManager* server = createDBManager();
+    
+    // Create a document with two json-like attachements. One with be put as 'text/plain' and
+    // the other one will be put as 'application/json'.
+    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+    
+    NSData* attach1 = [@"{\"name\": \"foo\"}" dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* attach2 = [@"{\"name\": \"bar\"}" dataUsingEncoding: NSUTF8StringEncoding];
+    
+    NSString* base641 = [CBLBase64 encode: attach1];
+    NSString* base642 = [CBLBase64 encode: attach2];
+    
+    NSDictionary* attachmentDict = $dict({@"attach1", $dict({@"content_type", @"text/plain"},
+                                                            {@"data", base641})},
+                                         {@"attach2", $dict({@"content_type", @"application/json"},
+                                                            {@"data", base642})});
+    NSDictionary* props = $dict({@"message", @"hello"}, {@"_attachments", attachmentDict});
+    
+    SendBody(server, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
+    
+    // Get the first attachment
+    CBLResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach1", nil, nil);
+    CAssertEq(response.status, kCBLStatusOK);
+    CAssertEqual(response.body.asJSON, attach1);
+    CAssertEqual((response.headers)[@"Content-Type"], @"text/plain");
+    NSString* eTag = (response.headers)[@"Etag"];
+    CAssert(eTag.length > 0);
+    
+    // Get the second attachment
+    response = SendRequest(server, @"GET", @"/db/doc1/attach2", nil, nil);
+    CAssertEq(response.status, kCBLStatusOK);
+    CAssertEqual(response.body.asJSON, attach2);
+    CAssertEqual((response.headers)[@"Content-Type"], @"application/json");
+    eTag = (response.headers)[@"Etag"];
+    CAssert(eTag.length > 0);
+}
 
 TestCase(CBL_Router_GetRange) {
     CBLManager* server = createDBManager();
@@ -827,6 +864,7 @@ TestCase(CBL_Router) {
     RequireTestCase(CBL_Router_LongPollChanges);
     RequireTestCase(CBL_Router_ContinuousChanges);
     RequireTestCase(CBL_Router_GetAttachment);
+    RequireTestCase(CBL_Router_GetJSONAttachment);
     RequireTestCase(CBL_Router_RevsDiff);
     RequireTestCase(CBL_Router_AccessCheck);
 }
