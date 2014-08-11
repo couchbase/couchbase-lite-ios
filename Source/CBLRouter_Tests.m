@@ -24,6 +24,11 @@
 #import "CBLJSON.h"
 
 
+@interface CBL_Router ()
+- (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
+@end
+
+
 #if DEBUG
 #pragma mark - UTILITIES
 
