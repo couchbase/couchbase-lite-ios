@@ -30,6 +30,7 @@
 
 const CBLQueryOptions kDefaultCBLQueryOptions = {
     .limit = UINT_MAX,
+    .inclusiveStart = YES,
     .inclusiveEnd = YES,
     .fullTextRanking = YES
     // everything else will default to nil/0/NO
@@ -115,7 +116,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     NSData* minKey = startKey, *maxKey = endKey;
     NSString* minKeyDocID = options->startKeyDocID;
     NSString* maxKeyDocID = options->endKeyDocID;
-    BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
+    BOOL inclusiveMin = options->inclusiveStart, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
         NSData* min = minKey;
         minKey = maxKey;

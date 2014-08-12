@@ -51,7 +51,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
     CBLIndexUpdateMode _indexUpdateMode;
-    BOOL _descending, _inclusiveEnd, _prefetch, _mapOnly;
+    BOOL _descending, _inclusiveStart, _inclusiveEnd, _prefetch, _mapOnly;
     CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
     NSUInteger _groupLevel;
@@ -65,7 +65,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     if (self) {
         _database = database;
         _view = view;
-        _inclusiveEnd = YES;
+        _inclusiveStart = _inclusiveEnd = YES;
         _limit = kDefaultCBLQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
         _fullTextRanking = kDefaultCBLQueryOptions.fullTextRanking; // defaults to YES
         _mapOnly = (view.reduceBlock == nil);
@@ -78,7 +78,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     CBLView* view = [database makeAnonymousView];
     if (self = [self initWithDatabase: database view: view]) {
         _temporaryView = YES;
-        _inclusiveEnd = YES;
+        _inclusiveStart = _inclusiveEnd = YES;
         [view setMapBlock: mapBlock reduceBlock: nil version: @""];
     }
     return self;
@@ -92,6 +92,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         _skip = query.skip;
         self.startKey = query.startKey;
         self.endKey = query.endKey;
+        _inclusiveStart = query.inclusiveStart;
         _inclusiveEnd = query.inclusiveEnd;
         _descending = query.descending;
         _prefetch = query.prefetch;
@@ -128,7 +129,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
             database=_database, allDocsMode=_allDocsMode, sortDescriptors=_sortDescriptors,
-            inclusiveEnd=_inclusiveEnd, postFilter=_postFilter;
+            inclusiveStart=_inclusiveStart, inclusiveEnd=_inclusiveEnd, postFilter=_postFilter;
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -141,6 +142,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         .endKey = _endKey,
         .startKeyDocID = _startKeyDocID,
         .endKeyDocID = _endKeyDocID,
+        .inclusiveStart = _inclusiveStart,
         .inclusiveEnd = _inclusiveEnd,
         .keys = _keys,
         .fullTextQuery = _fullTextQuery,

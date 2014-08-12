@@ -343,7 +343,17 @@ TestCase(CBL_View_Query) {
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
 
+    // Start/end query without inclusive start:
+    options.inclusiveStart = NO;
+    options.startKey = @"five";
+    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
+                          $dict({@"id",  @"11111"}, {@"key", @"one"}));
+    CAssertEqual(rows, expectedRows);
+
     // Start/end query without inclusive end:
+    options.inclusiveStart = YES;
+    options.startKey = @"a";
     options.inclusiveEnd = NO;
     rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),

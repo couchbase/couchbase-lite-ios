@@ -30,6 +30,7 @@ typedef struct CBLQueryOptions {
     BOOL includeDocs;
     BOOL updateSeq;
     BOOL localSeq;
+    BOOL inclusiveStart;
     BOOL inclusiveEnd;
     BOOL reduceSpecified;
     BOOL reduce;                   // Ignore if !reduceSpecified
