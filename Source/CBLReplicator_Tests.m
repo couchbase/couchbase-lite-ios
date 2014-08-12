@@ -328,6 +328,25 @@ TestCase(CBL_Puller_Continuous) {
     [server close];
 }
 
+TestCase(CBL_Puller_Continuous_PermanentError) {
+    RequireTestCase(CBL_Puller);
+    NSURL* remoteURL = RemoteTestDBURL(@"non_existent_remote_db");
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+        return;
+    }
+    
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+    
+    NSError* error = CBLStatusToNSError(kCBLStatusNotFound, nil);
+    replic8Continuous(db, remoteURL, NO, nil, error);
+    
+    [db close];
+    [server close];
+}
+
 TestCase(CBL_Puller_AuthFailure) {
     RequireTestCase(CBL_Puller);
     NSURL* remoteURL = RemoteTestDBURL(@"tdpuller_test2_auth");
@@ -605,6 +624,7 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Pusher);
     RequireTestCase(CBL_Puller);
     RequireTestCase(CBL_Puller_Continuous);
+    RequireTestCase(CBL_Puller_Continuous_PermanentError);
     RequireTestCase(CBL_Puller_AuthFailure);
     RequireTestCase(CBL_Puller_FromCouchApp);
     RequireTestCase(CBLPuller_DocIDs);

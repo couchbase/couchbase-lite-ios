@@ -251,6 +251,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     _changeTracker = nil;
     
+    // Need to get the continous flag here as the continous flag will get reset
+    // in CBL_Replication's stop method when there is a permanent error occurred.
+    // (See CBL_Replicator setError: and stop method)
+    BOOL continous = _continuous;
+    
     if (error) {
         if (CBLIsOfflineError(error))
             [self goOffline];
@@ -259,7 +264,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     }
     
     [_batcher flushAll];
-    if (!_continuous)
+    if (!continous)
         [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
     if (!_caughtUp)
         [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
