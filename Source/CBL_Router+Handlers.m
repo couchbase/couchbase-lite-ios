@@ -596,6 +596,7 @@
         if (!_changesFilter)
             return status;
         _changesFilterParams = [self.queries copy];
+        LogTo(CBL_Router, @"Filter params=%@", _changesFilterParams);
     }
     
     CBL_RevisionList* changes = [db changesSinceSequence: since
