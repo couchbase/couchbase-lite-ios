@@ -640,6 +640,7 @@
 		792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		792867D4178DE33E00248AF0 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 792867D3178DE33E00248AF0 /* JavaScriptCore.framework */; };
 		792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */; };
+		93F85F76199BDCB200A379A9 /* CBLRouter_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C7064A1488311100F0F099 /* CBLRouter_Tests.m */; };
 		AA1776B91857ADDB00CB01A3 /* CBLIncrementalStore.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */; };
 		AA1776BA1857ADDB00CB01A3 /* CBLIncrementalStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1776B81857ADDB00CB01A3 /* CBLIncrementalStoreTests.m */; };
 		AA1776BC1857AE4D00CB01A3 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1776BB1857AE4D00CB01A3 /* CoreData.framework */; };
@@ -3489,6 +3490,7 @@
 				27B0B81C1492C16300A817AD /* DemoAppDelegate.m in Sources */,
 				27731F3714967A5F00815D67 /* RootViewController.m in Sources */,
 				27731F3814967A5F00815D67 /* ConfigViewController.m in Sources */,
+				93F85F76199BDCB200A379A9 /* CBLRouter_Tests.m in Sources */,
 				27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */,
 				27F94124176F7448007BAEBE /* CBLJSONValidator.m in Sources */,
 				AA1776B91857ADDB00CB01A3 /* CBLIncrementalStore.m in Sources */,
