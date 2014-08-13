@@ -50,10 +50,15 @@ static void test(NSArray* select,
                  NSString* expectedMapPred,
                  NSString* expectedKeyExprs,
                  NSString* expectedValues,
+                 NSString* expectedStartKey,
+                 NSString* expectedEndKey,
                  NSString* expectedSorts,
                  NSString* expectedFilter)
 {
     NSPredicate* wherePred = [NSPredicate predicateWithFormat: where];
+    NSArray* orderBy = nil;
+    if (orderKey)
+        orderBy = @[[NSSortDescriptor sortDescriptorWithKey: orderKey ascending: YES]];
     Log(@"--------------");
     Log(@"Select: %@", desc(select));
     Log(@"Where:  %@", wherePred);
@@ -63,7 +68,7 @@ static void test(NSArray* select,
                 initWithView: nil
                 select: select
                 where: [NSPredicate predicateWithFormat: where]
-                orderBy: @[[NSSortDescriptor sortDescriptorWithKey: orderKey ascending: YES]]
+                orderBy: orderBy
                 error: &error];
     NSCAssert(planner, @"Couldn't create planner: %@", error);
     BOOL result = YES;
@@ -73,6 +78,10 @@ static void test(NSArray* select,
     result = matchDesc(@"keyExpressions", planner.keyExpressions, expectedKeyExprs) && result;
     Log(@"Value -->    %@", desc(planner.valueTemplate));
     result = matchDesc(@"valueTemplate", planner.valueTemplate, expectedValues) && result;
+    Log(@"StartKey --> %@", desc(planner.queryStartKey));
+    result = matchDesc(@"queryStartKey", planner.queryStartKey, expectedStartKey) && result;
+    Log(@"EndKey -->   %@", desc(planner.queryEndKey));
+    result = matchDesc(@"queryEndKey", planner.queryEndKey, expectedEndKey) && result;
     Log(@"Sort -->     %@", desc(planner.sortDescriptors));
     result = matchDesc(@"sortDescriptors", planner.sortDescriptors, expectedSorts) && result;
     Log(@"Filter -->   %@", planner.filter);
@@ -85,11 +94,35 @@ static void test(NSArray* select,
 
 TestCase(CBLQueryPlanner) {
     test(/*select*/ @[@"title", @"body", @"author", @"date"],
+         /*where*/ @"type == 'post' and title beginswith $PREFIX and tags contains $TAG",
+         /*order by*/ @"date",
+         @"type == \"post\"",
+         @"[tags, title]",
+         @"['body', 'author', 'date']",
+         @"{$TAG, $PREFIX}",
+         @"{$TAG, $PREFIX}",
+         @"[(value2, ascending, compare:)]",
+         nil);
+
+    test(/*select*/ @[@"title", @"body", @"author", @"date"],
+         /*where*/ @"type == 'post' and tags contains $TAG",
+         /*order by*/ nil,
+         @"type == \"post\"",
+         @"[tags]",
+         @"['title', 'body', 'author', 'date']",
+         @"$TAG",
+         @"$TAG",
+         nil,
+         nil);
+
+    test(/*select*/ @[@"title", @"body", @"author", @"date"],
          /*where*/ @"type == 'post' and tags contains $TAG",
          /*order by*/ @"date",
          @"type == \"post\"",
          @"[tags, date]",
          @"['title', 'body', 'author']",
+         @"{$TAG}",
+         @"{$TAG}",
          nil,
          nil);
     
@@ -99,6 +132,8 @@ TestCase(CBLQueryPlanner) {
          @"type == \"comment\"",
          @"[post_id, date]",
          @"['body', 'author']",
+         @"{$POST_ID}",
+         @"{$POST_ID}",
          nil,
          nil);
 
@@ -108,6 +143,8 @@ TestCase(CBLQueryPlanner) {
          @"type == \"bird\"",
          @"[name]",
          @"['wingspan']",
+         nil, // there's no startKey or endKey because we didn't specify a range.
+         nil,
          nil,
          nil);
 
@@ -117,6 +154,8 @@ TestCase(CBLQueryPlanner) {
          nil,
          @"[Artist, TotalTime / 1000]",
          @"['Album', 'Name']",
+         @"{$A, $MIN}",
+         @"{$A, $MAX}",
          @"[(value1, ascending, compare:)]",
          @"value1 CONTAINS $NAME");
 
@@ -126,6 +165,8 @@ TestCase(CBLQueryPlanner) {
          nil,
          @"[Artist, Time]",
          @"['Album', 'Name']",
+         @"{$A, $MIN}",
+         @"{$A, $MAX}",
          @"[(value1, ascending, compare:)]",
          @"value1 CONTAINS $NAME");
 }

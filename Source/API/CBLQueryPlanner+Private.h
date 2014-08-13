@@ -15,6 +15,9 @@
 @property (readonly) NSPredicate* mapPredicate;
 @property (readonly) NSArray* keyExpressions;
 @property (readonly) NSArray* valueTemplate;
+@property (readonly) NSExpression* queryStartKey;
+@property (readonly) NSExpression* queryEndKey;
+@property (readonly) BOOL queryInclusiveStart, queryInclusiveEnd;
 @property (readonly) NSArray* sortDescriptors;
 @property (readonly) NSPredicate* filter;
 

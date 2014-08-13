@@ -32,12 +32,17 @@
     NSComparisonPredicate* _equalityKey;    // Predicate with equality test, used as key
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
     NSArray* _keyExpressions;               // Expressions that generate the key, at map time
+    NSExpression* _queryStartKey;
+    NSExpression* _queryEndKey;
+    BOOL _queryInclusiveStart, _queryInclusiveEnd;
     NSMutableArray* _filterPredicates;      // Predicates that have to run after the query runs
     NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
 }
 
 @synthesize view=_view, mapPredicate=_mapPredicate, keyExpressions=_keyExpressions,
-            valueTemplate=_valueTemplate, sortDescriptors=_sort, filter=_filter;
+            valueTemplate=_valueTemplate, sortDescriptors=_sort, filter=_filter,
+            queryStartKey=_queryStartKey, queryEndKey=_queryEndKey,
+            queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
 
 
 - (instancetype) initWithView: (CBLView*)view
@@ -79,6 +84,8 @@
                      valueProperties: _valueTemplate
                                 sort: _sort];
         }
+
+        [self precomputeQuery];
     }
     return self;
 }
@@ -414,67 +421,96 @@ primaryKeyIsContainer: (BOOL)primaryKeyIsContainer
 #pragma mark - QUERYING:
 
 
-- (CBLQuery*) createQueryWithContext: (NSDictionary*)context {
-    NSMutableDictionary* mutableContext = [context mutableCopy];
-    CBLQuery* query = [_view createQuery];
-
+// Creates the query startKey/endKey expressions and the inclusive start/end values.
+// This is called at initialization time only.
+- (BOOL) precomputeQuery {
+    _queryInclusiveStart = _queryInclusiveEnd = YES;
     NSMutableArray* startKey = [NSMutableArray array];
     NSMutableArray* endKey   = [NSMutableArray array];
 
     if (_equalityKey) {
         // The LHS is the expression emitted as the view's key, and the RHS is a variable
-        id key = [_equalityKey.rightExpression expressionValueWithObject: nil
-                                                                 context: mutableContext];
-        [startKey addObject: key];
-        [endKey   addObject: key];
+        NSExpression* keyExpr = _equalityKey.rightExpression;
+        [startKey addObject: keyExpr];
+        [endKey   addObject: keyExpr];
     }
 
     if (_otherKey) {
-        id key = [_otherKey.rightExpression expressionValueWithObject: nil
-                                                              context: mutableContext];
+        NSExpression* keyExpr = _otherKey.rightExpression;
         NSPredicateOperatorType op = _otherKey.predicateOperatorType;
         switch (op) {
             case NSLessThanPredicateOperatorType:
             case NSLessThanOrEqualToPredicateOperatorType:
-                [endKey addObject: key];
-                query.inclusiveEnd = (op == NSLessThanOrEqualToPredicateOperatorType);
+                [endKey addObject: keyExpr];
+                _queryInclusiveEnd = (op == NSLessThanOrEqualToPredicateOperatorType);
                 break;
             case NSEqualToPredicateOperatorType:
-                [startKey addObject: key];
-                [endKey addObject: key];
+                [startKey addObject: keyExpr];
+                [endKey addObject: keyExpr];
                 break;
             case NSGreaterThanOrEqualToPredicateOperatorType:
             case NSGreaterThanPredicateOperatorType:
-                [startKey addObject: key];
-                query.inclusiveStart = (op == NSGreaterThanOrEqualToPredicateOperatorType);
+                [startKey addObject: keyExpr];
+                _queryInclusiveStart = (op == NSGreaterThanOrEqualToPredicateOperatorType);
                 [endKey addObject: @{}];
-                query.inclusiveEnd = NO;
+                _queryInclusiveEnd = NO;
                 break;
             case NSBeginsWithPredicateOperatorType:
-                [startKey addObject: key];
-                [endKey addObject: [key stringByAppendingString: @"\uFFFF"]]; //FIX: hacky!
+                [startKey addObject: keyExpr];
+                [endKey addObject: keyExpr];  // can't append \uFFFF until query time
                 break;
-            case NSBetweenPredicateOperatorType:
-                [startKey addObject: [key objectAtIndex: 0]];
-                [endKey   addObject: [key objectAtIndex: 1]];
+            case NSBetweenPredicateOperatorType: {
+                // key must be an aggregate expression:
+                NSArray* aggregate = keyExpr.collection;
+                [startKey addObject: aggregate[0]];
+                [endKey   addObject: aggregate[1]];
                 break;
+            }
             default:
                 Warn(@"Unsupported operator (#%d) in %@", (int)op, _otherKey);
-                return nil;
+                return NO;
         }
     }
 
     if (_keyExpressions.count > 1) {
-        query.startKey = startKey;
-        query.endKey   = endKey;
+        _queryStartKey = [NSExpression expressionForAggregate: startKey];
+        _queryEndKey   = [NSExpression expressionForAggregate: endKey];
     } else {
-        query.startKey = startKey[0];
-        query.endKey   = endKey[0];
+        _queryStartKey = startKey.firstObject;
+        _queryEndKey   = endKey.firstObject;
+    }
+    return YES;
+}
+
+
+// Public method to create a CBLQuery.
+- (CBLQuery*) createQueryWithContext: (NSDictionary*)context {
+    NSMutableDictionary* mutableContext = [context mutableCopy];
+    CBLQuery* query = [_view createQuery];
+
+    id startKey = [_queryStartKey expressionValueWithObject: nil
+                                                    context: mutableContext];
+    id endKey = [_queryEndKey expressionValueWithObject: nil
+                                                context: mutableContext];
+    if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType) {
+        // The only way to do a prefix match is to make the endKey the startKey + a high character
+        if ([endKey isKindOfClass: [NSArray class]]) {
+            NSString* str = $cast(NSString, [startKey lastObject]);
+            str = [str stringByAppendingString: @"\uFFFE"];
+            NSMutableArray* newEnd = [endKey mutableCopy];
+            [newEnd replaceObjectAtIndex: newEnd.count-1 withObject: str];
+            endKey = newEnd;
+        } else {
+            endKey = [$cast(NSString, startKey) stringByAppendingString: @"\uFFFE"];
+        }
     }
 
+    query.startKey = startKey;
+    query.endKey = endKey;
+    query.inclusiveStart = _queryInclusiveStart;
+    query.inclusiveEnd = _queryInclusiveEnd;
     query.sortDescriptors = _sort;
-    query.postFilter = [_filter predicateWithSubstitutionVariables: context];
-
+    query.postFilter = [_filter predicateWithSubstitutionVariables: mutableContext];
     return query;
 }
 
