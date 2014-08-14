@@ -75,10 +75,10 @@ static void test(NSArray* select,
     BOOL result = YES;
     Log(@"Map pred --> %@", planner.mapPredicate);
     result = matchDesc(@"mapPredicate", planner.mapPredicate, expectedMapPred) && result;
-    Log(@"Key expr --> %@", desc(planner.keyExpressions));
-    result = matchDesc(@"keyExpressions", planner.keyExpressions, expectedKeyExprs) && result;
-    Log(@"Value -->    %@", desc(planner.valueTemplate));
-    result = matchDesc(@"valueTemplate", planner.valueTemplate, expectedValues) && result;
+    Log(@"Key expr --> %@", desc(planner.keyExpression));
+    result = matchDesc(@"keyExpression", planner.keyExpression, expectedKeyExprs) && result;
+    Log(@"Value -->    %@", desc(planner.valueExpression));
+    result = matchDesc(@"valueExpression", planner.valueExpression, expectedValues) && result;
     Log(@"StartKey --> %@", desc(planner.queryStartKey));
     result = matchDesc(@"queryStartKey", planner.queryStartKey, expectedStartKey) && result;
     Log(@"EndKey -->   %@", desc(planner.queryEndKey));
@@ -100,8 +100,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"name in $NAMES",
          /*order by*/ @"name",
          nil,
-         @"[name]",
-         @"['wingspan']",
+         @"name",
+         @"wingspan",
          nil,
          nil,
          @"$NAMES", // .keys
@@ -112,8 +112,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"firstName ==[c] $F",
          /*order by*/ nil,
          nil,
-         @"[lowercase:(firstName)]",
-         @"['firstName', 'lastName']",
+         @"lowercase:(firstName)",
+         @"{firstName, lastName}",
          @"lowercase:($F)",
          @"lowercase:($F)",
          nil,
@@ -124,8 +124,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"type == 'post' and title beginswith[c] $PREFIX and tags contains $TAG",
          /*order by*/ @"date",
          @"type == \"post\"",
-         @"[tags, lowercase:(title)]",
-         @"['title', 'body', 'author', 'date']",
+         @"{tags, lowercase:(title)}",
+         @"{title, body, author, date}",
          @"{$TAG, lowercase:($PREFIX)}",
          @"{$TAG, lowercase:($PREFIX)}",
          nil,
@@ -136,8 +136,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"type == 'post' and tags contains $TAG",
          /*order by*/ nil,
          @"type == \"post\"",
-         @"[tags]",
-         @"['title', 'body', 'author', 'date']",
+         @"tags",
+         @"{title, body, author, date}",
          @"$TAG",
          @"$TAG",
          nil,
@@ -148,8 +148,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"type == 'post' and tags contains $TAG",
          /*order by*/ @"date",
          @"type == \"post\"",
-         @"[tags, date]",
-         @"['title', 'body', 'author']",
+         @"{tags, date}",
+         @"{title, body, author}",
          @"{$TAG}",
          @"{$TAG}",
          nil,
@@ -160,8 +160,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"type == 'comment' and post_id == $POST_ID",
          /*order by*/ @"date",
          @"type == \"comment\"",
-         @"[post_id, date]",
-         @"['body', 'author']",
+         @"{post_id, date}",
+         @"{body, author}",
          @"{$POST_ID}",
          @"{$POST_ID}",
          nil,
@@ -172,8 +172,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"type == 'bird'",
          /*order by*/ @"name",
          @"type == \"bird\"",
-         @"[name]",
-         @"['wingspan']",
+         @"name",
+         @"wingspan",
          nil, // there's no startKey or endKey because we didn't specify a range.
          nil,
          nil,
@@ -184,8 +184,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"TotalTime / 1000.0 between {$MIN, $MAX} and Artist = $A and Name contains $NAME",
          /*order by*/ @"Name",
          nil,
-         @"[Artist, TotalTime / 1000]",
-         @"['Album', 'Name']",
+         @"{Artist, TotalTime / 1000}",
+         @"{Album, Name}",
          @"{$A, $MIN}",
          @"{$A, $MAX}",
          nil,
@@ -196,8 +196,8 @@ TestCase(CBLQueryPlanner) {
          /*where*/ @"Time >= $MIN and Time <= $MAX and Artist = $A and Name contains $NAME",
          /*order by*/ @"Name",
          nil,
-         @"[Artist, Time]",
-         @"['Album', 'Name']",
+         @"{Artist, Time}",
+         @"{Album, Name}",
          @"{$A, $MIN}",
          @"{$A, $MAX}",
          nil,

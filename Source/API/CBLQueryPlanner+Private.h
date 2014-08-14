@@ -15,8 +15,8 @@
 
 // These properties show the innards of how the view/query are processed. Not usually needed.
 @property (readonly, nonatomic) NSPredicate* mapPredicate;
-@property (readonly, nonatomic) NSArray* keyExpressions;
-@property (readonly, nonatomic) NSArray* valueTemplate;
+@property (readonly, nonatomic) NSExpression* keyExpression;
+@property (readonly, nonatomic) NSExpression* valueExpression;
 @property (readonly, nonatomic) NSExpression* queryStartKey;
 @property (readonly, nonatomic) NSExpression* queryEndKey;
 @property (readonly, nonatomic) NSExpression* queryKeys;

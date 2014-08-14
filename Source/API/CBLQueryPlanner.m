@@ -49,8 +49,7 @@
 @synthesize view=_view;
 
 #if DEBUG // allow unit tests to inspect these internal properties
-@synthesize mapPredicate=_mapPredicate,
-            valueTemplate=_valueTemplate, sortDescriptors=_querySort, filter=_queryFilter,
+@synthesize mapPredicate=_mapPredicate, sortDescriptors=_querySort, filter=_queryFilter,
             queryStartKey=_queryStartKey, queryEndKey=_queryEndKey, queryKeys=_queryKeys,
             queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
 #endif
@@ -83,30 +82,22 @@
         _querySort = [self createQuerySortDescriptors];
         _queryFilter = [self createQueryFilter];
 
-        BOOL keyContains = (_equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
+        // If the predicate contains a "property CONTAINS $item" test, then we should emit every
+        // item of the 'property' array as a separate key during the map phase.
+        BOOL explodeKey = (_keyPredicates.count == 1 &&
+                           _equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
 
         if (_view) {
             [[self class] defineView: _view
                     withMapPredicate: mapPredicate
-                      keyExpressions: self.keyExpressions
-               primaryKeyIsContainer: keyContains
-                     valueProperties: _valueTemplate];
+                       keyExpression: self.keyExpression
+                          explodeKey: explodeKey
+                     valueExpression: self.valueExpression];
         }
 
         [self precomputeQuery];
     }
     return self;
-}
-
-
-// The expressions that should be emitted as the key
-- (NSArray*) keyExpressions {
-    return [_keyPredicates my_map:^id(NSComparisonPredicate* cp) {
-        NSExpression* expr = cp.leftExpression;
-        if (cp.options & NSCaseInsensitivePredicateOption)
-            expr = [NSExpression expressionForFunction: @"lowercase:" arguments: @[expr]];
-        return expr;
-    }];
 }
 
 
@@ -402,61 +393,54 @@
 #pragma mark - DEFINING THE VIEW:
 
 
+// The expression that should be emitted as the key
+- (NSExpression*) keyExpression {
+    return aggregateExpressions([_keyPredicates my_map:^id(NSComparisonPredicate* cp) {
+        NSExpression* expr = cp.leftExpression;
+        if (cp.options & NSCaseInsensitivePredicateOption)
+            expr = [NSExpression expressionForFunction: @"lowercase:" arguments: @[expr]];
+        return expr;
+    }]);
+}
+
+
+// The expression that should be emitted as the value
+- (NSExpression*) valueExpression {
+    return aggregateExpressions([_valueTemplate my_map:^id(id item) {
+        if (![item isKindOfClass: [NSExpression class]])
+            item = [NSExpression expressionForKeyPath: $cast(NSString, item)];
+        return item;
+    }]);
+}
+
+
 // Sets the view's map block. (This is a class method to avoid having the block accidentally close
 // over any instance variables, creating a reference cycle.)
 + (void) defineView: (CBLView*)view
    withMapPredicate: (NSPredicate*)mapPredicate
-     keyExpressions: (NSArray*)keyExpressions
-primaryKeyIsContainer: (BOOL)primaryKeyIsContainer
-    valueProperties: (NSArray*)valueTemplate
+      keyExpression: (NSExpression*)keyExpression
+         explodeKey: (BOOL)explodeKey
+    valueExpression: (NSExpression*)valueExpr
 {
     // Compute a map-block version string that's unique to this configuration:
     NSMutableDictionary* versioned = [NSMutableDictionary dictionary];
-    versioned[@"keyExpressions"] = keyExpressions;
+    versioned[@"keyExpression"] = keyExpression;
     if (mapPredicate)
         versioned[@"mapPredicate"] = mapPredicate;
-    if (valueTemplate)
-        versioned[@"valueTemplate"] = valueTemplate;
+    if (valueExpr)
+        versioned[@"valueExpression"] = valueExpr;
     NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
     NSString* version = [CBLJSON base64StringWithData: CBLSHA1Digest(archive)];
-
-    id singleValueTemplate = nil;
-    if (valueTemplate.count == 1)
-        singleValueTemplate = valueTemplate[0];
-    NSUInteger numKeys = keyExpressions.count;
 
     // Define the view's map block:
     [view setMapBlock: ^(NSDictionary *doc, CBLMapEmitBlock emit) {
         if (!mapPredicate || [mapPredicate evaluateWithObject: doc]) {  // check mapPredicate
-            id value = nil;
-            if (singleValueTemplate) {
-                value = getValue(doc, singleValueTemplate);
-            } else {
-                value = [NSMutableArray array];
-                for (id property in valueTemplate) {
-                    id v = getValue(doc, property) ?: [NSNull null];
-                    [value addObject: v];
-                }
-            }
-
-            if (numKeys == 1) {
-                // Single key:
-                id key = [keyExpressions[0] expressionValueWithObject: doc context: nil];
-                if (primaryKeyIsContainer && [key isKindOfClass: [NSArray class]]) {
-                    for (id keyItem in key)
-                        emit(keyItem, value);
-                } else if (key != nil) {
-                    emit(key, value);
-                }
-            } else {
-                NSMutableArray* key = [[NSMutableArray alloc] initWithCapacity: numKeys];
-                for (NSExpression* keyExpression in keyExpressions) {
-                    id keyItem = [keyExpression expressionValueWithObject: doc context: nil];
-                    if (!keyItem)
-                        return; // Missing property so can't emit anything
-                    //FIX: What if keyItem is an array? Emit multiple times??
-                    [key addObject: keyItem];
-                }
+            id key = [keyExpression expressionValueWithObject: doc context: nil];
+            id value = [valueExpr expressionValueWithObject: doc context: nil];
+            if (explodeKey && [key isKindOfClass: [NSArray class]]) {
+                for (id keyItem in key)
+                    emit(keyItem, value);
+            } else if (key != nil) {
                 emit(key, value);
             }
         }
@@ -595,17 +579,6 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
 }
 
 
-// Evaluates expr against doc, where expr is either a key-path or an expression.
-static id getValue(NSDictionary* doc, id expr) {
-    if ([expr isKindOfClass: [NSString class]])
-        return [doc valueForKeyPath: expr];
-    else if (expr) // assumed to be NSExpression
-        return [expr expressionValueWithObject: doc context: nil];
-    else
-        return nil;
-}
-
-
 // Reverses the order of terms in a comparison without affecting its meaning.
 static NSComparisonPredicate* flipComparison(NSComparisonPredicate* cp) {
     static NSPredicateOperatorType kFlipped[1+NSNotEqualToPredicateOperatorType] = {
@@ -662,6 +635,15 @@ static NSComparisonPredicate* mergeComparisons(NSComparisonPredicate* p1,
                                                           options: p1.options];
     }
     return nil;
+}
+
+
+static NSExpression* aggregateExpressions(NSArray* expressions) {
+    switch (expressions.count) {
+        case 0:     return nil;
+        case 1:     return expressions[0];
+        default:    return [NSExpression expressionForAggregate: expressions];
+    }
 }
 
 
