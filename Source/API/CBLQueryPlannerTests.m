@@ -52,6 +52,7 @@ static void test(NSArray* select,
                  NSString* expectedValues,
                  NSString* expectedStartKey,
                  NSString* expectedEndKey,
+                 NSString* expectedKeys,
                  NSString* expectedSorts,
                  NSString* expectedFilter)
 {
@@ -82,6 +83,8 @@ static void test(NSArray* select,
     result = matchDesc(@"queryStartKey", planner.queryStartKey, expectedStartKey) && result;
     Log(@"EndKey -->   %@", desc(planner.queryEndKey));
     result = matchDesc(@"queryEndKey", planner.queryEndKey, expectedEndKey) && result;
+    Log(@"Keys -->     %@", desc(planner.queryKeys));
+    result = matchDesc(@"queryKeys", planner.queryKeys, expectedKeys) && result;
     Log(@"Sort -->     %@", desc(planner.sortDescriptors));
     result = matchDesc(@"sortDescriptors", planner.sortDescriptors, expectedSorts) && result;
     Log(@"Filter -->   %@", planner.filter);
@@ -93,6 +96,18 @@ static void test(NSArray* select,
 
 
 TestCase(CBLQueryPlanner) {
+    test(/*select*/ @[@"wingspan"],
+         /*where*/ @"name in $NAMES",
+         /*order by*/ @"name",
+         nil,
+         @"[name]",
+         @"['wingspan']",
+         nil,
+         nil,
+         @"$NAMES", // .keys
+         nil,
+         nil);
+
     test(/*select*/ @[@"firstName", @"lastName"],
          /*where*/ @"firstName ==[c] $F",
          /*order by*/ nil,
@@ -101,6 +116,7 @@ TestCase(CBLQueryPlanner) {
          @"['firstName', 'lastName']",
          @"lowercase:($F)",
          @"lowercase:($F)",
+         nil,
          nil,
          nil);
 
@@ -112,6 +128,7 @@ TestCase(CBLQueryPlanner) {
          @"['title', 'body', 'author', 'date']",
          @"{$TAG, lowercase:($PREFIX)}",
          @"{$TAG, lowercase:($PREFIX)}",
+         nil,
          @"[(value3, ascending, compare:)]",
          nil);
 
@@ -124,6 +141,7 @@ TestCase(CBLQueryPlanner) {
          @"$TAG",
          @"$TAG",
          nil,
+         nil,
          nil);
 
     test(/*select*/ @[@"title", @"body", @"author", @"date"],
@@ -134,6 +152,7 @@ TestCase(CBLQueryPlanner) {
          @"['title', 'body', 'author']",
          @"{$TAG}",
          @"{$TAG}",
+         nil,
          nil,
          nil);
     
@@ -146,6 +165,7 @@ TestCase(CBLQueryPlanner) {
          @"{$POST_ID}",
          @"{$POST_ID}",
          nil,
+         nil,
          nil);
 
     test(/*select*/ @[@"wingspan", @"name"],
@@ -155,6 +175,7 @@ TestCase(CBLQueryPlanner) {
          @"[name]",
          @"['wingspan']",
          nil, // there's no startKey or endKey because we didn't specify a range.
+         nil,
          nil,
          nil,
          nil);
@@ -167,6 +188,7 @@ TestCase(CBLQueryPlanner) {
          @"['Album', 'Name']",
          @"{$A, $MIN}",
          @"{$A, $MAX}",
+         nil,
          @"[(value1, ascending, compare:)]",
          @"value1 CONTAINS $NAME");
 
@@ -178,6 +200,7 @@ TestCase(CBLQueryPlanner) {
          @"['Album', 'Name']",
          @"{$A, $MIN}",
          @"{$A, $MAX}",
+         nil,
          @"[(value1, ascending, compare:)]",
          @"value1 CONTAINS $NAME");
 }

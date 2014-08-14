@@ -29,20 +29,31 @@
 
 @implementation CBLQueryPlanner
 {
+    // These are only used during initialization:
     NSComparisonPredicate* _equalityKey;    // Predicate with equality test, used as key
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
     NSArray* _keyPredicates;                // Predicates whose LHS generate the key, at map time
+    NSArray* _valueTemplate;                // Values desired
+    NSMutableArray* _filterPredicates;      // Predicates to go into _queryFilter
+    NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
+
+    // These will be used to initialize queries:
     NSExpression* _queryStartKey;           // The startKey to use in queries
     NSExpression* _queryEndKey;             // The endKey to use in queries
+    NSExpression* _queryKeys;               // The 'keys' array to use in queries
     BOOL _queryInclusiveStart, _queryInclusiveEnd;  // The inclusiveStart/End to use in queries
-    NSMutableArray* _filterPredicates;      // Predicates that have to run after the query runs
-    NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
+    NSPredicate* _queryFilter;              // Postprocessing filter predicate to use in the query
+    NSArray* _querySort;                    // Sort descriptors for the query
 }
 
-@synthesize view=_view, mapPredicate=_mapPredicate,
-            valueTemplate=_valueTemplate, sortDescriptors=_sort, filter=_filter,
-            queryStartKey=_queryStartKey, queryEndKey=_queryEndKey,
+@synthesize view=_view;
+
+#if DEBUG // allow unit tests to inspect these internal properties
+@synthesize mapPredicate=_mapPredicate,
+            valueTemplate=_valueTemplate, sortDescriptors=_querySort, filter=_queryFilter,
+            queryStartKey=_queryStartKey, queryEndKey=_queryEndKey, queryKeys=_queryKeys,
             queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
+#endif
 
 
 - (instancetype) initWithView: (CBLView*)view
@@ -53,36 +64,33 @@
 {
     self = [super init];
     if (self) {
-        // Scan the input:
         _view = view;
         _valueTemplate = valueTemplate;
-        _sort = sortDescriptors;
-        _mapPredicate = [self scanPredicate: predicate];
+        _querySort = sortDescriptors;
+
+        // Scan the input:
+        NSPredicate* mapPredicate = [self scanPredicate: predicate];
+#if DEBUG
+        _mapPredicate = mapPredicate;
+#endif
         if (_error) {
             if (outError)
                 *outError = _error;
             return nil;
         }
 
-        [self fixUpFilterPredicates];
         _keyPredicates = [self createKeyPredicates];
-        _sort = [self createSortDescriptors: _sort];
-
-        if (_filterPredicates.count == 1)
-            _filter = _filterPredicates[0];
-        else if (_filterPredicates.count > 0)
-            _filter = [[NSCompoundPredicate alloc] initWithType: NSAndPredicateType
-                                                  subpredicates: _filterPredicates];
+        _querySort = [self createQuerySortDescriptors];
+        _queryFilter = [self createQueryFilter];
 
         BOOL keyContains = (_equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
 
         if (_view) {
             [[self class] defineView: _view
-                    withMapPredicate: _mapPredicate
+                    withMapPredicate: mapPredicate
                       keyExpressions: self.keyExpressions
                primaryKeyIsContainer: keyContains
-                     valueProperties: _valueTemplate
-                                sort: _sort];
+                     valueProperties: _valueTemplate];
         }
 
         [self precomputeQuery];
@@ -163,7 +171,8 @@
 - (BOOL) addKeyPredicate: (NSComparisonPredicate*)cp {
     NSPredicateOperatorType op = cp.predicateOperatorType;
     if (!_equalityKey && (op == NSEqualToPredicateOperatorType ||
-                          op == NSContainsPredicateOperatorType)) {
+                          op == NSContainsPredicateOperatorType ||
+                          op == NSInPredicateOperatorType)) {
         // An equality (or containment) test can become the primary key.
         _equalityKey = cp;
         return YES;
@@ -227,8 +236,8 @@
 #pragma mark - FILTER PREDICATE & SORT DESCRIPTORS:
 
 
-// Updates each of _filterPredicates to make its keypaths relative to the query rows' values.
-- (void) fixUpFilterPredicates {
+- (NSPredicate*) createQueryFilter {
+    // Update each of _filterPredicates to make its keypath relative to the query rows' values.
     for (NSUInteger i = 0; i < _filterPredicates.count; ++i) {
         NSComparisonPredicate* cp = _filterPredicates[i];
         NSExpression* lhs = [self rewriteKeyPathsInExpression: cp.leftExpression];
@@ -238,6 +247,16 @@
                                                               type: cp.predicateOperatorType
                                                            options: cp.options];
         [_filterPredicates replaceObjectAtIndex: i withObject: cp];
+    }
+    // Combine the filterPredicates into a single predicate:
+    switch (_filterPredicates.count) {
+        case 0:
+            return nil;
+        case 1:
+            return _filterPredicates[0];
+        default:
+            return [[NSCompoundPredicate alloc] initWithType: NSAndPredicateType
+                                               subpredicates: _filterPredicates];
     }
 }
 
@@ -331,8 +350,12 @@
     if (_otherKey)
         [keyPredicates addObject: _otherKey];
     else {
-        for (NSSortDescriptor* sortDesc in _sort) {
+        // Add sort descriptors as extra components of the key so the index will sort by them:
+        NSUInteger i = 0;
+        for (NSSortDescriptor* sortDesc in _querySort) {
             NSExpression* expr = [NSExpression expressionForKeyPath: sortDesc.key];
+            if (i++ == 0 && [expr isEqual: _equalityKey.leftExpression])
+                continue;   // This sort descriptor is already the 1st component of the key
             NSComparisonPredicateOptions options = 0;
             if (sortDesc.selector == @selector(caseInsensitiveCompare:))
                 options |= NSCaseInsensitivePredicateOption;
@@ -343,6 +366,7 @@
                                            type: NSLessThanPredicateOperatorType
                                         options: options]];
         }
+        _querySort = nil;
     }
 
     // Remove redundant values that are already part of the key:
@@ -361,12 +385,12 @@
 
 
 // Computes the post-processing sort descriptors to be applied after the query runs.
-- (NSArray*) createSortDescriptors: (NSArray*)inputSort {
-    if (inputSort.count == 0 || !_otherKey)
+- (NSArray*) createQuerySortDescriptors {
+    if (_querySort.count == 0)
         return nil;
 
-    NSMutableArray* sort = [NSMutableArray arrayWithCapacity: inputSort.count];
-    for (NSSortDescriptor* sd in inputSort) {
+    NSMutableArray* sort = [NSMutableArray arrayWithCapacity: _querySort.count];
+    for (NSSortDescriptor* sd in _querySort) {
         [sort addObject: [[NSSortDescriptor alloc] initWithKey: [self rewriteKeyPath: sd.key]
                                                      ascending: sd.ascending
                                                       selector: sd.selector]];
@@ -385,7 +409,6 @@
      keyExpressions: (NSArray*)keyExpressions
 primaryKeyIsContainer: (BOOL)primaryKeyIsContainer
     valueProperties: (NSArray*)valueTemplate
-               sort: (NSArray*)sort
 {
     // Compute a map-block version string that's unique to this configuration:
     NSMutableDictionary* versioned = [NSMutableDictionary dictionary];
@@ -459,6 +482,12 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
     NSMutableArray* startKey = [NSMutableArray array];
     NSMutableArray* endKey   = [NSMutableArray array];
 
+    if (_equalityKey.predicateOperatorType == NSInPredicateOperatorType) {
+        // Using "key in $SET", so query should use .keys instead of .startKey/.endKey
+        _queryKeys = keyExprForQuery(_equalityKey);
+        return YES;
+    }
+
     if (_equalityKey) {
         // The LHS is the expression emitted as the view's key, and the RHS is a variable
         NSExpression* keyExpr = keyExprForQuery(_equalityKey);
@@ -519,29 +548,34 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
     NSMutableDictionary* mutableContext = [context mutableCopy];
     CBLQuery* query = [_view createQuery];
 
-    id startKey = [_queryStartKey expressionValueWithObject: nil
+    if (_queryKeys) {
+        query.keys = $cast(NSArray, [_queryKeys expressionValueWithObject: nil
+                                                                  context: mutableContext]);
+    } else {
+        id startKey = [_queryStartKey expressionValueWithObject: nil
+                                                        context: mutableContext];
+        id endKey = [_queryEndKey expressionValueWithObject: nil
                                                     context: mutableContext];
-    id endKey = [_queryEndKey expressionValueWithObject: nil
-                                                context: mutableContext];
-    if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType) {
-        // The only way to do a prefix match is to make the endKey the startKey + a high character
-        if ([endKey isKindOfClass: [NSArray class]]) {
-            NSString* str = $cast(NSString, [startKey lastObject]);
-            str = [str stringByAppendingString: @"\uFFFE"];
-            NSMutableArray* newEnd = [endKey mutableCopy];
-            [newEnd replaceObjectAtIndex: newEnd.count-1 withObject: str];
-            endKey = newEnd;
-        } else {
-            endKey = [$cast(NSString, startKey) stringByAppendingString: @"\uFFFE"];
+        if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType) {
+            // The only way to do a prefix match is to make the endKey the startKey + a high character
+            if ([endKey isKindOfClass: [NSArray class]]) {
+                NSString* str = $cast(NSString, [startKey lastObject]);
+                str = [str stringByAppendingString: @"\uFFFE"];
+                NSMutableArray* newEnd = [endKey mutableCopy];
+                [newEnd replaceObjectAtIndex: newEnd.count-1 withObject: str];
+                endKey = newEnd;
+            } else {
+                endKey = [$cast(NSString, startKey) stringByAppendingString: @"\uFFFE"];
+            }
         }
-    }
 
-    query.startKey = startKey;
-    query.endKey = endKey;
-    query.inclusiveStart = _queryInclusiveStart;
-    query.inclusiveEnd = _queryInclusiveEnd;
-    query.sortDescriptors = _sort;
-    query.postFilter = [_filter predicateWithSubstitutionVariables: mutableContext];
+        query.startKey = startKey;
+        query.endKey = endKey;
+        query.inclusiveStart = _queryInclusiveStart;
+        query.inclusiveEnd = _queryInclusiveEnd;
+    }
+    query.sortDescriptors = _querySort;
+    query.postFilter = [_queryFilter predicateWithSubstitutionVariables: mutableContext];
     return query;
 }
 

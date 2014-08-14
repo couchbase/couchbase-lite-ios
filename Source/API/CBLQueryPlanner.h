@@ -36,7 +36,7 @@
                       orderBy: (NSArray*)sortDescriptors
                         error: (NSError**)outError;
 
-@property (readonly) CBLView* view;
+@property (readonly, nonatomic) CBLView* view;
 
 /** Creates a query, given a set of values for the variables.
     @param context  A dictionary mapping variable names to values.
