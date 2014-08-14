@@ -31,15 +31,15 @@
 {
     NSComparisonPredicate* _equalityKey;    // Predicate with equality test, used as key
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
-    NSArray* _keyExpressions;               // Expressions that generate the key, at map time
-    NSExpression* _queryStartKey;
-    NSExpression* _queryEndKey;
-    BOOL _queryInclusiveStart, _queryInclusiveEnd;
+    NSArray* _keyPredicates;                // Predicates whose LHS generate the key, at map time
+    NSExpression* _queryStartKey;           // The startKey to use in queries
+    NSExpression* _queryEndKey;             // The endKey to use in queries
+    BOOL _queryInclusiveStart, _queryInclusiveEnd;  // The inclusiveStart/End to use in queries
     NSMutableArray* _filterPredicates;      // Predicates that have to run after the query runs
     NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
 }
 
-@synthesize view=_view, mapPredicate=_mapPredicate, keyExpressions=_keyExpressions,
+@synthesize view=_view, mapPredicate=_mapPredicate,
             valueTemplate=_valueTemplate, sortDescriptors=_sort, filter=_filter,
             queryStartKey=_queryStartKey, queryEndKey=_queryEndKey,
             queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
@@ -65,7 +65,7 @@
         }
 
         [self fixUpFilterPredicates];
-        _keyExpressions = [self createKeyExpressions];
+        _keyPredicates = [self createKeyPredicates];
         _sort = [self createSortDescriptors: _sort];
 
         if (_filterPredicates.count == 1)
@@ -88,6 +88,17 @@
         [self precomputeQuery];
     }
     return self;
+}
+
+
+// The expressions that should be emitted as the key
+- (NSArray*) keyExpressions {
+    return [_keyPredicates my_map:^id(NSComparisonPredicate* cp) {
+        NSExpression* expr = cp.leftExpression;
+        if (cp.options & NSCaseInsensitivePredicateOption)
+            expr = [NSExpression expressionForFunction: @"lowercase:" arguments: @[expr]];
+        return expr;
+    }];
 }
 
 
@@ -288,7 +299,8 @@
 - (NSString*) rewriteKeyPath: (NSString*)keyPath {
     // First, is this the key or a component of it?
     unsigned index = 0;
-    for (NSExpression* keyExpr in _keyExpressions) {
+    for (NSComparisonPredicate* kp in _keyPredicates) {
+        NSExpression* keyExpr = kp.leftExpression;
         if (keyExpr.expressionType == NSKeyPathExpressionType
                 && [keyExpr.keyPath isEqualToString: keyPath]) {
             return [NSString stringWithFormat: @"key%u", index];
@@ -312,28 +324,39 @@
 
 
 // Finds the expression(s) whose values (at map time) are to be emitted as the key.
-- (NSArray*) createKeyExpressions {
-    NSMutableArray* exprs = [NSMutableArray array];
+- (NSArray*) createKeyPredicates {
+    NSMutableArray* keyPredicates = [NSMutableArray array];
     if (_equalityKey)
-        [exprs addObject: _equalityKey.leftExpression];
+        [keyPredicates addObject: _equalityKey];
     if (_otherKey)
-        [exprs addObject: _otherKey.leftExpression];
+        [keyPredicates addObject: _otherKey];
     else {
-        for (NSSortDescriptor* sortDesc in _sort)
-            [exprs addObject: [NSExpression expressionForKeyPath: sortDesc.key]];
+        for (NSSortDescriptor* sortDesc in _sort) {
+            NSExpression* expr = [NSExpression expressionForKeyPath: sortDesc.key];
+            NSComparisonPredicateOptions options = 0;
+            if (sortDesc.selector == @selector(caseInsensitiveCompare:))
+                options |= NSCaseInsensitivePredicateOption;
+            [keyPredicates addObject: [NSComparisonPredicate
+                    predicateWithLeftExpression: expr
+                                rightExpression: [NSExpression expressionForConstantValue: nil]
+                                       modifier: NSDirectPredicateModifier
+                                           type: NSLessThanPredicateOperatorType
+                                        options: options]];
+        }
     }
 
     // Remove redundant values that are already part of the key:
     NSMutableArray* values = [_valueTemplate mutableCopy];
-    for (NSExpression* expr in exprs) {
-        if (expr.expressionType == NSKeyPathExpressionType) {
+    for (NSComparisonPredicate* cp in keyPredicates) {
+        NSExpression* expr = cp.leftExpression;
+        if (expr.expressionType == NSKeyPathExpressionType && cp.options == 0) {
             [values removeObject: expr];
             [values removeObject: expr.keyPath];
         }
     }
     _valueTemplate = [values copy];
 
-    return exprs;
+    return keyPredicates;
 }
 
 
@@ -421,6 +444,14 @@ primaryKeyIsContainer: (BOOL)primaryKeyIsContainer
 #pragma mark - QUERYING:
 
 
+static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
+    NSExpression* rhs = cp.rightExpression;
+    if (cp.options & NSCaseInsensitivePredicateOption)
+        rhs = [NSExpression expressionForFunction: @"lowercase:" arguments: @[rhs]];
+    return rhs;
+}
+
+
 // Creates the query startKey/endKey expressions and the inclusive start/end values.
 // This is called at initialization time only.
 - (BOOL) precomputeQuery {
@@ -430,13 +461,13 @@ primaryKeyIsContainer: (BOOL)primaryKeyIsContainer
 
     if (_equalityKey) {
         // The LHS is the expression emitted as the view's key, and the RHS is a variable
-        NSExpression* keyExpr = _equalityKey.rightExpression;
+        NSExpression* keyExpr = keyExprForQuery(_equalityKey);
         [startKey addObject: keyExpr];
         [endKey   addObject: keyExpr];
     }
 
     if (_otherKey) {
-        NSExpression* keyExpr = _otherKey.rightExpression;
+        NSExpression* keyExpr = keyExprForQuery(_otherKey);
         NSPredicateOperatorType op = _otherKey.predicateOperatorType;
         switch (op) {
             case NSLessThanPredicateOperatorType:
@@ -472,7 +503,7 @@ primaryKeyIsContainer: (BOOL)primaryKeyIsContainer
         }
     }
 
-    if (_keyExpressions.count > 1) {
+    if (_keyPredicates.count > 1) {
         _queryStartKey = [NSExpression expressionForAggregate: startKey];
         _queryEndKey   = [NSExpression expressionForAggregate: endKey];
     } else {

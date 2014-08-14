@@ -93,15 +93,26 @@ static void test(NSArray* select,
 
 
 TestCase(CBLQueryPlanner) {
+    test(/*select*/ @[@"firstName", @"lastName"],
+         /*where*/ @"firstName ==[c] $F",
+         /*order by*/ nil,
+         nil,
+         @"[lowercase:(firstName)]",
+         @"['firstName', 'lastName']",
+         @"lowercase:($F)",
+         @"lowercase:($F)",
+         nil,
+         nil);
+
     test(/*select*/ @[@"title", @"body", @"author", @"date"],
-         /*where*/ @"type == 'post' and title beginswith $PREFIX and tags contains $TAG",
+         /*where*/ @"type == 'post' and title beginswith[c] $PREFIX and tags contains $TAG",
          /*order by*/ @"date",
          @"type == \"post\"",
-         @"[tags, title]",
-         @"['body', 'author', 'date']",
-         @"{$TAG, $PREFIX}",
-         @"{$TAG, $PREFIX}",
-         @"[(value2, ascending, compare:)]",
+         @"[tags, lowercase:(title)]",
+         @"['title', 'body', 'author', 'date']",
+         @"{$TAG, lowercase:($PREFIX)}",
+         @"{$TAG, lowercase:($PREFIX)}",
+         @"[(value3, ascending, compare:)]",
          nil);
 
     test(/*select*/ @[@"title", @"body", @"author", @"date"],
