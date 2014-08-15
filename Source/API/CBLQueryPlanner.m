@@ -34,6 +34,7 @@
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
     NSArray* _keyPredicates;                // Predicates whose LHS generate the key, at map time
     NSArray* _valueTemplate;                // Values desired
+    BOOL _explodeKey;                       // Emit each item of key separately?
     NSMutableArray* _filterPredicates;      // Predicates to go into _queryFilter
     NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
 
@@ -57,7 +58,7 @@
 
 - (instancetype) initWithView: (CBLView*)view
                        select: (NSArray*)valueTemplate
-                        where: (NSPredicate*)predicate
+               wherePredicate: (NSPredicate*)predicate
                       orderBy: (NSArray*)sortDescriptors
                         error: (NSError**)outError
 {
@@ -84,20 +85,84 @@
 
         // If the predicate contains a "property CONTAINS $item" test, then we should emit every
         // item of the 'property' array as a separate key during the map phase.
-        BOOL explodeKey = (_keyPredicates.count == 1 &&
-                           _equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
+        _explodeKey = (_equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
 
         if (_view) {
             [[self class] defineView: _view
                     withMapPredicate: mapPredicate
                        keyExpression: self.keyExpression
-                          explodeKey: explodeKey
+                          explodeKey: _explodeKey
                      valueExpression: self.valueExpression];
         }
 
         [self precomputeQuery];
+
+        LogTo(View, @"Created CBLQueryPlanner on %@:\n%@", view, self.explanation);
     }
     return self;
+}
+
+
+- (instancetype) initWithView: (CBLView*)view
+                       select: (NSArray*)valueTemplate
+                        where: (NSString*)predicate
+                      orderBy: (NSArray*)sortDescriptors
+                        error: (NSError**)outError
+{
+    return [self initWithView: view
+                       select: valueTemplate
+               wherePredicate: [NSPredicate predicateWithFormat: predicate argumentArray: nil]
+                      orderBy: sortDescriptors
+                        error: outError];
+}
+
+
+- (NSString*) explanation {
+    NSMutableString* out = [@"view.map = {\n" mutableCopy];
+    if (_mapPredicate)
+        [out appendFormat: @"    if (%@)\n    ", _mapPredicate];
+    if (_explodeKey) {
+        NSExpression* keyExpression = self.keyExpression;
+        if (keyExpression.expressionType != NSAggregateExpressionType) {
+            // looping over simple key:
+            [out appendFormat: @"    for (i in %@)\n", keyExpression];
+            if (_mapPredicate)
+                [out appendString: @"    "];
+            [out appendFormat: @"        emit(i, %@);\n};\n", self.valueExpression];
+        } else {
+            // looping over compound key:
+            NSArray* keys = keyExpression.collection;
+            [out appendFormat: @"    for (i in %@)\n", keys[0]];
+            if (_mapPredicate)
+                [out appendString: @"    "];
+            NSArray* restOfKey = [keys subarrayWithRange: NSMakeRange(1, keys.count-1)];
+            [out appendFormat: @"        emit({i, %@}, %@);\n};\n",
+                 [restOfKey componentsJoinedByString: @", "], self.valueExpression];
+        }
+    } else {
+        [out appendFormat: @"    emit(%@, %@);\n};\n", self.keyExpression, self.valueExpression];
+    }
+
+    if (_queryKeys)
+        [out appendFormat: @"query.keys = %@;\n", _queryKeys];
+    if (_queryStartKey)
+        [out appendFormat: @"query.startKey = %@;\n", _queryStartKey];
+    if (!_queryInclusiveStart)
+        [out appendFormat: @"query.inclusiveStart = NO;\n"];
+    if (_queryEndKey) {
+        [out appendFormat: @"query.endKey = %@", _queryEndKey];
+        if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType)
+            [out appendString: @"+\"\\uFFFE\""];
+        [out appendFormat: @";\n"];
+    }
+    if (!_queryInclusiveEnd)
+        [out appendFormat: @"query.inclusiveEnd = NO;\n"];
+    if (_queryFilter)
+        [out appendFormat: @"query.postFilter = %@;\n", _queryFilter];
+    if (_querySort)
+        [out appendFormat: @"query.sortDescriptors = [%@];\n",
+                                [_querySort componentsJoinedByString: @", "]];
+    return out;
 }
 
 
@@ -432,16 +497,36 @@
     NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
     NSString* version = [CBLJSON base64StringWithData: CBLSHA1Digest(archive)];
 
+    BOOL compoundKey = (keyExpression.expressionType == NSAggregateExpressionType);
+
     // Define the view's map block:
     [view setMapBlock: ^(NSDictionary *doc, CBLMapEmitBlock emit) {
         if (!mapPredicate || [mapPredicate evaluateWithObject: doc]) {  // check mapPredicate
             id key = [keyExpression expressionValueWithObject: doc context: nil];
             id value = [valueExpr expressionValueWithObject: doc context: nil];
-            if (explodeKey && [key isKindOfClass: [NSArray class]]) {
+            if (!key)
+                return;
+            if (!explodeKey) {
+                emit(key, value); // regular case
+            } else if (![key isKindOfClass: [NSArray class]]) {
+                return;
+            } else if (!compoundKey) {
+                // 'contains' test with single key; iterate over key:
                 for (id keyItem in key)
                     emit(keyItem, value);
-            } else if (key != nil) {
-                emit(key, value);
+            } else {
+                // 'contains' test with compound key; iterate over key[0], replacing it with each
+                // element in turn and emitting that as the key:
+                if ([key count] == 0)
+                    return;
+                NSArray* key0 = key[0];
+                if (![key0 isKindOfClass: [NSArray class]])
+                    return;
+                NSMutableArray* eachKey = [key mutableCopy];
+                for (id keyItem in key0) {
+                    eachKey[0] = keyItem;
+                    emit(eachKey, value);
+                }
             }
         }
     } version: version];
@@ -463,14 +548,15 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
 // This is called at initialization time only.
 - (BOOL) precomputeQuery {
     _queryInclusiveStart = _queryInclusiveEnd = YES;
-    NSMutableArray* startKey = [NSMutableArray array];
-    NSMutableArray* endKey   = [NSMutableArray array];
 
     if (_equalityKey.predicateOperatorType == NSInPredicateOperatorType) {
         // Using "key in $SET", so query should use .keys instead of .startKey/.endKey
         _queryKeys = keyExprForQuery(_equalityKey);
         return YES;
     }
+
+    NSMutableArray* startKey = [NSMutableArray array];
+    NSMutableArray* endKey   = [NSMutableArray array];
 
     if (_equalityKey) {
         // The LHS is the expression emitted as the view's key, and the RHS is a variable
@@ -533,8 +619,11 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
     CBLQuery* query = [_view createQuery];
 
     if (_queryKeys) {
-        query.keys = $cast(NSArray, [_queryKeys expressionValueWithObject: nil
-                                                                  context: mutableContext]);
+        id keys = [_queryKeys expressionValueWithObject: nil context: mutableContext];
+        if ([keys isKindOfClass: [NSDictionary class]] || [keys isKindOfClass: [NSSet class]])
+            keys = [keys allValues];
+        query.keys = $cast(NSArray, keys);
+        
     } else {
         id startKey = [_queryStartKey expressionValueWithObject: nil
                                                         context: mutableContext];

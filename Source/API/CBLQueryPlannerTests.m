@@ -65,13 +65,13 @@ static void test(NSArray* select,
     Log(@"Where:  %@", wherePred);
     Log(@"Order:  %@", orderKey);
     NSError* error;
-    CBLQueryPlanner* planner = [[CBLQueryPlanner alloc]
-                initWithView: nil
-                select: select
-                where: [NSPredicate predicateWithFormat: where]
-                orderBy: orderBy
-                error: &error];
+    CBLQueryPlanner* planner = [[CBLQueryPlanner alloc] initWithView: nil
+                                                              select: select
+                                                               where: where
+                                                             orderBy: orderBy
+                                                               error: &error];
     NSCAssert(planner, @"Couldn't create planner: %@", error);
+    Log(@"Explanation:\n%@", planner.explanation);
     BOOL result = YES;
     Log(@"Map pred --> %@", planner.mapPredicate);
     result = matchDesc(@"mapPredicate", planner.mapPredicate, expectedMapPred) && result;
