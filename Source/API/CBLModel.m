@@ -446,6 +446,16 @@
     return value;
 }
 
+- (id) getValueOfProperty: (NSString*)property ofClass: (Class)klass {
+    id value = _properties[property];
+    if (!value && !_isNew && ![_changedNames containsObject: property]) {
+        value = [_document propertyForKey: property];
+        if (![value isKindOfClass: klass])
+            value = nil;
+    }
+    return value;
+}
+
 
 - (BOOL) setValue: (id)value ofProperty: (NSString*)property {
     NSParameterAssert(_document);
