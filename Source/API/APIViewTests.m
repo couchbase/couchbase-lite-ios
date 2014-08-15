@@ -252,7 +252,9 @@ TestCase(API_AllDocsCustomFilter) {
         createDocumentWithProperties(db, @{@"_id": @"3", @"name": @"Wanda", @"skin": @"scaly"});
         return YES;
     }];
+    [db _clearDocumentCache];
 
+    Log(@" ---- QUERYIN' ----");
     CBLQuery* query = [db createAllDocumentsQuery];
     query.postFilter = [NSPredicate predicateWithFormat: @"document.properties.skin endswith 'y'"];
     CBLQueryEnumerator* rows = [query run: NULL];
