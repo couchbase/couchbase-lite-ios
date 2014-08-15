@@ -123,7 +123,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.requestHeaders = headers;
     
     [_changeTracker start];
-    if (!_continuous)
+    if (!_changeTracker.continuous)
         [self asyncTaskStarted];
 }
 
@@ -142,10 +142,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         return;
     LogTo(Sync, @"%@ STOPPING...", self);
     if (_changeTracker) {
+        BOOL continous = _changeTracker.continuous;
         _changeTracker.client = nil;  // stop it from calling my -changeTrackerStopped
         [_changeTracker stop];
         _changeTracker = nil;
-        if (!_continuous)
+        if (!continous)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -startChangeTracker
         if (!_caughtUp)
             [self asyncTasksFinished: 1]; // balances -asyncTaskStarted in -beginReplicating
@@ -249,12 +250,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSError* error = tracker.error;
     LogTo(Sync, @"%@: ChangeTracker stopped; error=%@", self, error.description);
     
+    BOOL continous = _changeTracker.continuous;
     _changeTracker = nil;
-    
-    // Need to get the continous flag here as the continous flag will get reset
-    // in CBL_Replication's stop method when there is a permanent error occurred.
-    // (See CBL_Replicator setError: and stop method)
-    BOOL continous = _continuous;
     
     if (error) {
         if (CBLIsOfflineError(error))
