@@ -54,6 +54,8 @@ typedef enum {
 /** Returns YES if the data is meant as a placeholder for the doc's entire data (a "*") */
 BOOL CBLValueIsEntireDoc(NSData* valueData);
 
+BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options);
+
 
 @interface CBLView ()
 {

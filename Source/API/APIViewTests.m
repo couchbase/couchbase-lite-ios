@@ -243,6 +243,28 @@ TestCase(API_ViewCustomFilter) {
 }
 
 
+TestCase(API_AllDocsCustomFilter) {
+    CBLDatabase* db = createEmptyDB();
+
+    [db inTransaction: ^BOOL {
+        createDocumentWithProperties(db, @{@"_id": @"1", @"name": @"Barry", @"skin": @"none"});
+        createDocumentWithProperties(db, @{@"_id": @"2", @"name": @"Terry", @"skin": @"furry"});
+        createDocumentWithProperties(db, @{@"_id": @"3", @"name": @"Wanda", @"skin": @"scaly"});
+        return YES;
+    }];
+
+    CBLQuery* query = [db createAllDocumentsQuery];
+    query.postFilter = [NSPredicate predicateWithFormat: @"document.properties.skin endswith 'y'"];
+    CBLQueryEnumerator* rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.key, @"2");
+    AssertEqual(rows.nextRow.key, @"3");
+    AssertNil(rows.nextRow);
+
+    closeTestDB(db);
+}
+
+
 #pragma mark - LIVE QUERIES:
 
 
@@ -474,12 +496,15 @@ TestCase(API_SharedMapBlocks) {
 TestCase(API_View) {
     RequireTestCase(API_CreateView);
     RequireTestCase(API_ViewCustomSort);
+    RequireTestCase(API_ViewCustomFilter);
+    RequireTestCase(API_AllDocsCustomFilter);
     RequireTestCase(API_ViewWithLinkedDocs);
     RequireTestCase(API_SharedMapBlocks);
     RequireTestCase(API_EmitNil);
     RequireTestCase(API_EmitDoc);
     RequireTestCase(API_LiveQuery);
     RequireTestCase(API_LiveQuery_DispatchQueue);
+    RequireTestCase(API_AsyncViewQuery);
 }
 
 

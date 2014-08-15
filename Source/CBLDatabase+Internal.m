@@ -1508,7 +1508,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                     docProperties: docContents];
             if (options->keys)
                 docs[docID] = row;
-            else
+            else if (CBLRowPassesFilter(self, row, options))
                 [rows addObject: row];
         }
     }
@@ -1535,7 +1535,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                       value: value
                                               docProperties: nil];
             }
-            [rows addObject: change];
+            if (CBLRowPassesFilter(self, change, options))
+                [rows addObject: change];
         }
     }
 

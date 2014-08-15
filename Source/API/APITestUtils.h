@@ -44,7 +44,17 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 __unused
 static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
                                                  NSDictionary* properties) {
-    CBLDocument* doc = [db createDocument];
+    CBLDocument* doc;
+    NSDictionary* userProperties;
+    if (properties.cbl_id) {
+        doc = [db documentWithID: properties.cbl_id];
+        NSMutableDictionary* props = [properties mutableCopy];
+        [props removeObjectForKey: @"_id"];
+        userProperties = props;
+    } else {
+        doc = [db createDocument];
+        userProperties = properties;
+    }
     CAssert(doc != nil);
     CAssertNil(doc.currentRevisionID);
     CAssertNil(doc.currentRevision);
@@ -55,7 +65,8 @@ static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
     
     CAssert(doc.documentID);
     CAssert(doc.currentRevisionID);
-    CAssertEqual(doc.userProperties, properties);
+
+    CAssertEqual(doc.userProperties, userProperties);
     CAssertEq(db[doc.documentID], doc);
     //Log(@"Created %p = %@", doc, doc);
     return doc;

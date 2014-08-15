@@ -238,7 +238,7 @@ BOOL CBLValueIsEntireDoc(NSData* valueData) {
 }
 
 
-static BOOL rowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options) {
+BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options) {
     if (options->filter) {
         row.database = db; // temporary; this may not be the final database instance
         if (![options->filter evaluateWithObject: row]) {
@@ -310,7 +310,7 @@ static BOOL rowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOpt
                                        docProperties: docContents];
         }
         
-        if (rowPassesFilter(db, row, options))
+        if (CBLRowPassesFilter(db, row, options))
             [rows addObject: row];
         return kCBLStatusOK;
     }];
@@ -361,7 +361,7 @@ static BOOL rowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOpt
                                                                         value: valueData];
         if (options->fullTextSnippets)
             row.snippet = [r stringForColumnIndex: 5];
-        if (rowPassesFilter(db, row, options))
+        if (CBLRowPassesFilter(db, row, options))
             [rows addObject: row];
     }
     return rows;
@@ -449,7 +449,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                                   key: key
                                                                 value: reduced
                                                         docProperties: nil];
-                if (rowPassesFilter(db, row, options))
+                if (CBLRowPassesFilter(db, row, options))
                     [rows addObject: row];
                 [keysToReduce removeAllObjects];
                 [valuesToReduce removeAllObjects];
@@ -487,7 +487,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                           key: key
                                                         value: reduced
                                                 docProperties: nil];
-        if (rowPassesFilter(db, row, options))
+        if (CBLRowPassesFilter(db, row, options))
             [rows addObject: row];
     }
     return rows;
