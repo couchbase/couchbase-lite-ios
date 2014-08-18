@@ -18,6 +18,7 @@
 .objc_class_name_CBLModel
 .objc_class_name_CBLModelFactory
 .objc_class_name_CBLJSON
+.objc_class_name_CBLAuthenticator
 .objc_class_name_MYDynamicObject
 
 _OBJC_CLASS_$_CBLDatabase
@@ -37,6 +38,7 @@ _OBJC_CLASS_$_CBLGeoQueryRow
 _OBJC_CLASS_$_CBLModel
 _OBJC_CLASS_$_CBLModelFactory
 _OBJC_CLASS_$_CBLJSON
+_OBJC_CLASS_$_CBLAuthenticator
 _OBJC_CLASS_$_MYDynamicObject
 
 # Public string constants:
