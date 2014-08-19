@@ -127,11 +127,11 @@ TestCase(CBL_Router_Server) {
     Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[]);
     Send(server, @"GET", @"/non-existent", kCBLStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kCBLStatusBadID, nil);
-    Send(server, @"PUT", @"/", kCBLStatusBadRequest, nil);
-    NSDictionary* response = Send(server, @"POST", @"/", kCBLStatusBadRequest, nil);
+    Send(server, @"PUT", @"/", kCBLStatusNotFound, nil);
+    NSDictionary* response = Send(server, @"POST", @"/", kCBLStatusNotFound, nil);
     
-    CAssertEqual(response[@"status"], @(400));
-    CAssertEqual(response[@"error"], @"bad_request");
+    CAssertEqual(response[@"status"], @(404));
+    CAssertEqual(response[@"error"], @"not_found");
     
     NSDictionary* session = Send(server, @"GET", @"/_session", kCBLStatusOK, nil);
     CAssert(session[@"ok"]);

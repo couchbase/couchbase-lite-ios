@@ -640,7 +640,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (CBLStatus) do_UNKNOWN {
-    return kCBLStatusBadRequest;
+    return kCBLStatusNotFound;
 }
 
 
