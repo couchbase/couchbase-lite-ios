@@ -355,7 +355,7 @@ TestCase(CBL_Router_Views) {
     Send(server, @"GET", @"/db/_design/design/_view/view?key=%22bonjour%22", kCBLStatusOK,
          $dict({@"offset", @0},
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}) )},
-               {@"total_rows", @1}));
+               {@"total_rows", @4}));
 
     // Query the view with "?keys="
     Send(server, @"GET", @"/db/_design/design/_view/view?keys=%5B%22bonjour%22,%22hello%22%5D",
@@ -363,7 +363,7 @@ TestCase(CBL_Router_Views) {
          $dict({@"offset", @0},
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
                                 $dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
-               {@"total_rows", @2}));
+               {@"total_rows", @4}));
     
     [server close];
 }
