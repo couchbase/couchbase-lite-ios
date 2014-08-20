@@ -455,6 +455,40 @@ TestCase(API_SaveModel) {
 }
 
 
+TestCase(API_SaveMutatedSubModel) {
+    NSError* error;
+    
+    CBLDatabase* db = createEmptyDB();
+    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TTestMutableSubModel* submodel = [[CBL_TTestMutableSubModel alloc] initWithFirstName: @"Jens" lastName: @"Alfke"];
+    model.mutableSubModel = submodel;
+    NSMutableDictionary* props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    CAssertEqual(props, (@{@"mutableSubModel":@{@"first": @"Jens", @"last": @"Alfke"}}));
+    [model save: &error];
+    CAssertNil(error);
+    
+    submodel.firstName = @"Pasin";
+    submodel.lastName = @"Suri";
+    props = [[model propertiesToSave] mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"mutableSubModel":@{@"first": @"Pasin", @"last": @"Suri"}}));
+    [model save: &error];
+    CAssertNil(error);
+    
+    submodel = model.mutableSubModel;
+    submodel.firstName = @"Wayne";
+    submodel.lastName = @"Carter";
+    props = [[model propertiesToSave] mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"mutableSubModel":@{@"first": @"Wayne", @"last": @"Carter"}}));
+    [model save: &error];
+    CAssertNil(error);
+}
+
+
 TestCase(API_ModelAttachments) {
     // Attempting to reproduce https://github.com/couchbase/couchbase-lite-ios/issues/63
     CBLDatabase* db = createEmptyDB();
@@ -520,6 +554,7 @@ TestCase(API_Model) {
     RequireTestCase(API_ModelEncodableProperties);
     RequireTestCase(API_ModelEncodablePropertiesNilValue);
     RequireTestCase(API_SaveModel);
+    RequireTestCase(API_SaveMutatedSubModel);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);
 }

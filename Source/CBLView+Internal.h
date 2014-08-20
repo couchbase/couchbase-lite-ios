@@ -72,6 +72,8 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 - (void) databaseClosing;
 
 @property (readonly) int viewID;
+@property (readonly) NSUInteger totalDocs;
+
 @end
 
 

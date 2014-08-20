@@ -225,13 +225,14 @@ static inline NSData* toJSONData( UU id object ) {
         const SequenceNumber forViewLastSequence = forView.lastSequenceIndexed;
         if (forView && forViewLastSequence >= dbMaxSequence)
             return kCBLStatusNotModified;
-
+        
         // Check whether we need to update at all,
         // and remove obsolete emitted results from the 'maps' table:
         SequenceNumber minLastSequence = dbMaxSequence;
         SequenceNumber viewLastSequence[views.count];
         unsigned deleted = 0;
         int i = 0;
+        NSMutableDictionary* viewTotalDocs = [[NSMutableDictionary alloc] init];
         NSMutableArray* mapBlocks = [[NSMutableArray alloc] initWithCapacity: views.count];
         for (CBLView* view in views) {
             CBLMapBlock mapBlock = view.mapBlock;
@@ -243,6 +244,9 @@ static inline NSData* toJSONData( UU id object ) {
                 Warn(@"%@ does not exist in the database!", view);
                 return kCBLStatusNotFound;
             }
+            
+            NSUInteger totalDocs = view.totalDocs;
+            viewTotalDocs[@(viewID)] = @(totalDocs);
 
             SequenceNumber last = (view==forView) ? forViewLastSequence : view.lastSequenceIndexed;
             viewLastSequence[i++] = last;
@@ -264,7 +268,11 @@ static inline NSData* toJSONData( UU id object ) {
                 }
                 if (!ok)
                     return self.lastDbError;
-                deleted += _fmdb.changes;
+                
+                // Update #deleted rows
+                int changes = _fmdb.changes;
+                deleted += changes;
+                viewTotalDocs[@(viewID)] = @([viewTotalDocs[@(viewID)] intValue] - changes);
             }
         }
         if (minLastSequence == dbMaxSequence)
@@ -286,8 +294,10 @@ static inline NSData* toJSONData( UU id object ) {
                                forSequence: sequence];
             if (status != kCBLStatusOK)
                 emitStatus = status;
-            else
+            else {
+                viewTotalDocs[@(curView.viewID)] = @([viewTotalDocs[@(curView.viewID)] intValue] + 1);
                 inserted++;
+            }
         };
 
         // Now scan every revision added since the last time the views were indexed:
@@ -341,6 +351,10 @@ static inline NSData* toJSONData( UU id object ) {
                         for (CBLView* view in views) {
                             [_fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
                                                  @(view.viewID), @(oldSequence)];
+                            int changes = _fmdb.changes;
+                            deleted += changes;
+                            viewTotalDocs[@(view.viewID)] =
+                                @([viewTotalDocs[@(view.viewID)] intValue] - changes);
                         }
                         if (CBLCompareRevIDs(oldRevID, revID) > 0) {
                             // It still 'wins' the conflict, so it's the one that
@@ -392,13 +406,15 @@ static inline NSData* toJSONData( UU id object ) {
         }
         [r close];
         
-        // Finally, record the last revision sequence number that was indexed:
+        // Finally, record the last revision sequence number that was indexed and update #rows:
         for (CBLView* view in views) {
-            if (![_fmdb executeUpdate: @"UPDATE views SET lastSequence=? WHERE view_id=?",
-                                       @(dbMaxSequence), @(view.viewID)])
+            int newTotalDocs = [viewTotalDocs[@(view.viewID)] intValue];
+            Assert(newTotalDocs >= 0);
+            if (![_fmdb executeUpdate: @"UPDATE views SET lastSequence=?, total_docs=? WHERE view_id=?",
+                                       @(dbMaxSequence), @(newTotalDocs), @(view.viewID)])
                 return self.lastDbError;
         }
-
+        
         LogTo(View, @"...Finished re-indexing (%@) to #%lld (deleted %u, added %u)",
               viewNames(views), dbMaxSequence, deleted, inserted);
         return kCBLStatusOK;
