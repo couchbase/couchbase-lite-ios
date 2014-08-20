@@ -560,17 +560,17 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                               }
                           }
                       }
+                      
+                      // Any leftover revisions that didn't get matched will be fetched individually:
+                      if (remainingRevs.count) {
+                          LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
+                                self, (unsigned)remainingRevs.count, (unsigned)bulkRevs.count);
+                          for (CBL_Revision* rev in remainingRevs)
+                              [self queueRemoteRevision: rev];
+                          [self pullRemoteRevisions];
+                      }
                   }
                   
-                  // Any leftover revisions that didn't get matched will be fetched individually:
-                  if (remainingRevs.count) {
-                      LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
-                            self, (unsigned)remainingRevs.count, (unsigned)bulkRevs.count);
-                      for (CBL_Revision* rev in remainingRevs)
-                          [self queueRemoteRevision: rev];
-                      [self pullRemoteRevisions];
-                  }
-
                   // Note that we've finished this task:
                   [self asyncTasksFinished: 1];
                   --_httpConnectionCount;
