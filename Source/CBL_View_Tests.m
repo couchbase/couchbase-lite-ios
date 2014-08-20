@@ -446,6 +446,25 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     CAssertEqual(rows, expectedRows);
 }
 
+TestCase(CBL_View_PrefixMatch) {
+    RequireTestCase(CBL_View_Query);
+    CBLDatabase *db = createDB();
+    putDocs(db);
+    CBLView* view = createView(db);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    // Query all rows:
+    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLStatus status;
+    options.endKey = @"f";
+    options.prefixMatchLevel = 1;
+    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                                   $dict({@"id",  @"44444"}, {@"key", @"four"}));
+    CAssertEqual(rows, expectedRows);
+    // TODO: Test prefixMatchLevel > 1
+}
+
 TestCase(CBL_View_EmitDocAsValue) {
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();

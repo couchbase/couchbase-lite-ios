@@ -22,6 +22,7 @@ typedef struct CBLQueryOptions {
     __unsafe_unretained NSString* fullTextQuery;
     __unsafe_unretained NSPredicate* filter;
     const struct CBLGeoRect* bbox;
+    unsigned prefixMatchLevel;
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;

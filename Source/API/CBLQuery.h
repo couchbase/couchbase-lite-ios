@@ -64,6 +64,13 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 /** If YES (the default) the endKey (or endKeyDocID) comparison uses "<=". Else it uses "<". */
 @property BOOL inclusiveEnd;
 
+/** If nonzero, enables prefix matching of string or array keys.
+    * A value of 1 treats the endKey itself as a prefix: if it's a string, keys in the index that come after the endKey, but begin with the same prefix, will be matched. (For example, if the endKey is "foo" then the key "foolish" in the index will be matched, but not "fong".) Or if the endKey is an array, any array beginning with those elements will be matched. (For example, if the endKey is [1], then [1, "x"] will match, but not [2].) If the key is any other type, there is no effect.
+    * A value of 2 assumes the endKey is an array and treats its final item as a prefix, using the rules above. (For example, an endKey of [1, "x"] will match [1, "xtc"] but not [1, "y"].)
+    * A value of 3 assumes the key is an array of arrays, etc.
+    Note that if the .descending property is also set, the search order is reversed and the above discussion applies to the startKey, _not_ the endKey. */
+@property NSUInteger prefixMatchLevel;
+
 /** An optional array of NSSortDescriptor objects.
     If set, overrides the default by-key ordering. See -[CBLQueryEnumerator sortUsingDescriptors:]. */
 @property (copy) NSArray* sortDescriptors;

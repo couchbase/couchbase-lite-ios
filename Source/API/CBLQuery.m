@@ -54,7 +54,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     BOOL _descending, _inclusiveStart, _inclusiveEnd, _prefetch, _mapOnly;
     CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
-    NSUInteger _groupLevel;
+    NSUInteger _prefixMatchLevel, _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
 }
 
@@ -94,6 +94,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         self.endKey = query.endKey;
         _inclusiveStart = query.inclusiveStart;
         _inclusiveEnd = query.inclusiveEnd;
+        _prefixMatchLevel = query.prefixMatchLevel;
         _descending = query.descending;
         _prefetch = query.prefetch;
         self.keys = query.keys;
@@ -129,7 +130,8 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
             database=_database, allDocsMode=_allDocsMode, sortDescriptors=_sortDescriptors,
-            inclusiveStart=_inclusiveStart, inclusiveEnd=_inclusiveEnd, postFilter=_postFilter;
+            inclusiveStart=_inclusiveStart, inclusiveEnd=_inclusiveEnd, postFilter=_postFilter,
+            prefixMatchLevel=_prefixMatchLevel;
 
 
 - (CBLLiveQuery*) asLiveQuery {
@@ -144,6 +146,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         .endKeyDocID = _endKeyDocID,
         .inclusiveStart = _inclusiveStart,
         .inclusiveEnd = _inclusiveEnd,
+        .prefixMatchLevel = (unsigned)_prefixMatchLevel,
         .keys = _keys,
         .fullTextQuery = _fullTextQuery,
         .fullTextSnippets = _fullTextSnippets,

@@ -111,39 +111,40 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         [sql appendString:@")"];
     }
 
-    NSData* startKey = toJSONData(options->startKey);
-    NSData* endKey = toJSONData(options->endKey);
-    NSData* minKey = startKey, *maxKey = endKey;
+    id minKey = options->startKey, maxKey = options->endKey;
     NSString* minKeyDocID = options->startKeyDocID;
     NSString* maxKeyDocID = options->endKeyDocID;
     BOOL inclusiveMin = options->inclusiveStart, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
-        NSData* min = minKey;
-        minKey = maxKey;
-        maxKey = min;
-        inclusiveMin = inclusiveMax;
-        inclusiveMax = YES;
+        minKey = options->endKey;
+        maxKey = options->startKey;
+        inclusiveMin = options->inclusiveEnd;
+        inclusiveMax = options->inclusiveStart;
         minKeyDocID = options->endKeyDocID;
         maxKeyDocID = options->startKeyDocID;
     }
+
     if (minKey) {
+        NSData* minKeyData = toJSONData(minKey);
         [sql appendString: (inclusiveMin ? @" AND key >= ?" : @" AND key > ?")];
         [sql appendString: collationStr];
-        [args addObject: minKey];
+        [args addObject: minKeyData];
         if (minKeyDocID && inclusiveMin) {
             //OPT: This calls the JSON collator a 2nd time unnecessarily.
             [sql appendFormat: @" AND (key > ? %@ OR docid >= ?)", collationStr];
-            [args addObject: minKey];
+            [args addObject: minKeyData];
             [args addObject: minKeyDocID];
         }
     }
     if (maxKey) {
+        maxKey = keyForPrefixMatch(maxKey, options->prefixMatchLevel);
+        NSData* maxKeyData = toJSONData(maxKey);
         [sql appendString: (inclusiveMax ? @" AND key <= ?" :  @" AND key < ?")];
         [sql appendString: collationStr];
-        [args addObject: maxKey];
+        [args addObject: maxKeyData];
         if (maxKeyDocID && inclusiveMax) {
             [sql appendFormat: @" AND (key < ? %@ OR docid <= ?)", collationStr];
-            [args addObject: maxKey];
+            [args addObject: maxKeyData];
             [args addObject: maxKeyDocID];
         }
     }
@@ -201,6 +202,28 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     }
     [r close];
     return status;
+}
+
+
+// Changes a maxKey into one that also extends to any key it matches as a prefix.
+static id keyForPrefixMatch(id key, unsigned depth) {
+    if (depth < 1)
+        return key;
+    if ([key isKindOfClass: [NSString class]]) {
+        // Kludge: prefix match a string by appending max possible character value to it
+        return [key stringByAppendingString: @"\uffffffff"];
+    } else if ([key isKindOfClass: [NSArray class]]) {
+        NSMutableArray* nuKey = [key mutableCopy];
+        if (depth == 1) {
+            [nuKey addObject: @{}];
+        } else {
+            id lastObject = keyForPrefixMatch(nuKey.lastObject, depth-1);
+            [nuKey replaceObjectAtIndex: nuKey.count-1 withObject: lastObject];
+        }
+        return nuKey;
+    } else {
+        return key;
+    }
 }
 
 
