@@ -286,13 +286,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                     CBL_Revision* rev = [dbForReduce getDocumentWithID: (NSString*)e.docID()
                                                               sequence: e.sequence()
                                                                 status: &status];
-                    if (!rev)
+                    if (rev)
                         Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
                     value = rev.properties;
                 } else {
-                    value = collatableValue.readNSObject() ?: $null;
+                    value = collatableValue.readNSObject();
                 }
-                [valuesToReduce addObject: value];
+                [valuesToReduce addObject: (value ?: $null)];
                 //TODO: Reduce the keys/values when there are too many; then rereduce at end
             }
 
