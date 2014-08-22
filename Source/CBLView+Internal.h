@@ -75,6 +75,8 @@ id CBLParseQueryValue(NSData* collatable);
 
 + (NSString*) fileNameToViewName: (NSString*)fileName;
 
+@property (readonly) NSUInteger totalDocs;
+
 @property (readonly) MapReduceIndex* index;
 
 @property (readonly) NSString* mapVersion;

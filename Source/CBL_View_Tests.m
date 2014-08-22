@@ -1122,6 +1122,65 @@ TestCase(CBL_View_FullTextQuery) {
 #endif
 
 
+
+TestCase(CBL_View_TotalDocs) {
+    CBLDatabase *db = createDB();
+    
+    // Create some docs
+    NSArray* docs = putDocs(db);
+    NSUInteger totalDocs = [docs count];
+    
+    // Create a view
+    CBLView* view = createView(db);
+    CAssertEq(view.totalDocs, 0u);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+    CAssertEq(view.totalDocs, totalDocs);
+    
+    // Create a conflict, won by the new revision:
+    NSDictionary* props;
+    CBLStatus status;
+    CBL_Revision* rev;
+    props = $dict({@"_id", @"44444"},
+                  {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                  {@"key", @"40ur"});
+    rev = [[CBL_Revision alloc] initWithProperties: props];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil];
+    CAssert(status < 300);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+    CAssertEq(view.totalDocs, totalDocs);
+    
+    // Create a conflict, won by the old revision:
+    props = $dict({@"_id", @"44444"},
+                  {@"_rev", @"1-...."},  // lower revID, will lose conflict
+                  {@"key", @"40ur"});
+    rev = [[CBL_Revision alloc] initWithProperties: props];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil];
+    CAssert(status < 300);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+    CAssertEq(view.totalDocs, totalDocs);
+    
+    // Update a doc
+    CBL_MutableRevision* nuRev = [[CBL_MutableRevision alloc] initWithDocID: rev.docID
+                                                                      revID: nil deleted:NO];
+    nuRev.properties = $dict({@"key", @"F0uR"});
+    rev = [db putRevision: nuRev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssert(status < 300);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+    CAssertEq(view.totalDocs, totalDocs);
+    
+    // Delete a doc
+    CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
+    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusOK);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+    CAssertEq(view.totalDocs, totalDocs - 1);
+    
+    // Delete the index
+    [view deleteIndex];
+    CAssertEq(view.totalDocs, 0u);
+}
+
+
 TestCase(CBLView) {
     RequireTestCase(CBL_View_Create);
     RequireTestCase(CBL_View_Index);

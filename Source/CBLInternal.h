@@ -12,7 +12,6 @@
 #import "CBLManager+Internal.h"
 #import "CBLView+Internal.h"
 #import "CBL_Server.h"
-#import "CBL_Router.h"
 #import "CBL_Replicator.h"
 #import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
@@ -66,11 +65,6 @@
 + (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
 + (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 #endif
-@end
-
-
-@interface CBL_Router ()
-- (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
 @end
 
 

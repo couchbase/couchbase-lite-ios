@@ -452,6 +452,12 @@ static id<CBLViewCompiler> sCompiler;
 #pragma mark - QUERYING:
 
 
+- (NSUInteger) totalDocs {
+    return 0; //TEMP: Implement this ASAP
+    //return self.index->rowCount();
+}
+
+
 - (SequenceNumber) lastSequenceIndexed {
     [self setupIndex]; // in case the _mapVersion changed, invalidating the index
     return self.index->lastSequenceIndexed();
