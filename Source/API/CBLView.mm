@@ -51,6 +51,12 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
 }
 
+static NSString* toJSONStr(id obj) {
+    if (!obj)
+        return @"nil";
+    return [CBLJSON stringWithJSONObject: obj options: CBLJSONWritingAllowFragments error: nil];
+}
+
 
 #pragma mark - C++ MAP/REDUCE GLUE:
 
@@ -89,6 +95,7 @@ public:
                 const Revision* node = vdoc.currentRevision();
                 NSDictionary* body = [CBLForestBridge bodyOfNode: node
                                                          options: kCBLIncludeLocalSeq];
+                LogTo(ViewVerbose, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
                 CocoaMappable mappable(cppDoc, body);
                 addMappable(mappable);
             }
@@ -103,12 +110,14 @@ private:
 class MapReduceBridge : public MapFn {
 public:
     CBLMapBlock mapBlock;
+    NSString* viewName;
 
     virtual void operator() (const Mappable& mappable, EmitFn& emitFn) {
         NSDictionary* doc = ((CocoaMappable&)mappable).body;
         if (!doc)
             return;
         CBLMapEmitBlock emit = ^(id key, id value) {
+            LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
             if (key) {
                 Collatable collKey, collValue;
                 collKey << key;
@@ -427,6 +436,7 @@ static id<CBLViewCompiler> sCompiler;
 
 - (void) setupIndex {
     _mapReduceBridge.mapBlock = self.mapBlock;
+    _mapReduceBridge.viewName = _name;
     self.index->setup(_indexType, &_mapReduceBridge, self.mapVersion.UTF8String);
 }
 
@@ -453,8 +463,7 @@ static id<CBLViewCompiler> sCompiler;
 
 
 - (NSUInteger) totalDocs {
-    return 0; //TEMP: Implement this ASAP
-    //return self.index->rowCount();
+    return self.index->rowCount();
 }
 
 

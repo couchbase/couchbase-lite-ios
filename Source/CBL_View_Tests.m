@@ -1141,17 +1141,17 @@ TestCase(CBL_View_TotalDocs) {
     CBLStatus status;
     CBL_Revision* rev;
     props = $dict({@"_id", @"44444"},
-                  {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                  {@"_rev", @"1-ffffff"},  // higher revID, will win conflict
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEq([view updateIndex], kCBLStatusOK);
     CAssertEq(view.totalDocs, totalDocs);
-    
+
     // Create a conflict, won by the old revision:
     props = $dict({@"_id", @"44444"},
-                  {@"_rev", @"1-...."},  // lower revID, will lose conflict
+                  {@"_rev", @"1-000000"},  // lower revID, will lose conflict
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
@@ -1169,8 +1169,10 @@ TestCase(CBL_View_TotalDocs) {
     CAssertEq(view.totalDocs, totalDocs);
     
     // Delete a doc
-    CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
-    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    Log(@"Deleting doc 33333...");
+    CBL_Revision* doc3 = docs[3];
+    CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: doc3.docID revID: nil deleted: YES];
+    [db putRevision: del prevRevisionID: doc3.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssertEq([view updateIndex], kCBLStatusOK);
     CAssertEq(view.totalDocs, totalDocs - 1);
@@ -1199,6 +1201,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_NumericKeys);
     RequireTestCase(CBL_View_Grouped);
     RequireTestCase(CBL_View_GroupedStrings);
+    RequireTestCase(CBL_View_TotalDocs);
 //  RequireTestCase(CBL_View_GeoQuery);
 //    RequireTestCase(CBL_View_FullTextQuery);
 }
