@@ -39,6 +39,10 @@ _OBJC_CLASS_$_CBLModelFactory
 _OBJC_CLASS_$_CBLJSON
 _OBJC_CLASS_$_MYDynamicObject
 
+# iOS only:
+.objc_class_name_CBLUITableSource
+_OBJC_CLASS_$_CBLUITableSource
+
 # Public string constants:
 _kCBLDatabaseChangeNotification
 _kCBLDocumentChangeNotification
