@@ -67,7 +67,7 @@ BOOL CBLValueIsEntireDoc(NSData* valueData);
 - (void) databaseClosing;
 
 @property (readonly) int viewID;
-@property (readonly) NSUInteger totalDocs;
+@property (readonly) NSUInteger totalRows;
 
 @end
 

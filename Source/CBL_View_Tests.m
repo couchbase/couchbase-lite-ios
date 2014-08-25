@@ -1041,14 +1041,14 @@ TestCase(CBL_View_TotalDocs) {
     
     // Create some docs
     NSArray* docs = putDocs(db);
-    NSUInteger totalDocs = [docs count];
+    NSUInteger totalRows = [docs count];
     
     // Create a view
     CBLView* view = createView(db);
-    CAssertEq(view.totalDocs, 0u);
+    CAssertEq(view.totalRows, 0u);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
-    
+    CAssertEq(view.totalRows, totalRows);
+
     // Create a conflict, won by the new revision:
     NSDictionary* props;
     CBLStatus status;
@@ -1060,7 +1060,7 @@ TestCase(CBL_View_TotalDocs) {
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
+    CAssertEq(view.totalRows, totalRows);
     
     // Create a conflict, won by the old revision:
     props = $dict({@"_id", @"44444"},
@@ -1070,7 +1070,7 @@ TestCase(CBL_View_TotalDocs) {
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
+    CAssertEq(view.totalRows, totalRows);
     
     // Update a doc
     CBL_MutableRevision* nuRev = [[CBL_MutableRevision alloc] initWithDocID: rev.docID
@@ -1079,18 +1079,18 @@ TestCase(CBL_View_TotalDocs) {
     rev = [db putRevision: nuRev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(status < 300);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
+    CAssertEq(view.totalRows, totalRows);
     
     // Delete a doc
     CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs - 1);
+    CAssertEq(view.totalRows, totalRows - 1);
     
     // Delete the index
     [view deleteIndex];
-    CAssertEq(view.totalDocs, 0u);
+    CAssertEq(view.totalRows, 0u);
 }
 
 

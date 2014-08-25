@@ -58,17 +58,17 @@
 }
 
 
-- (NSUInteger) totalDocs {
+- (NSUInteger) totalRows {
     CBLDatabase* db = _weakDB;
-    NSInteger totalDocs = [db.fmdb intForQuery: @"SELECT total_docs FROM views WHERE name=?", _name];
-    if (totalDocs == -1) { // mean unknown
-        totalDocs = [db.fmdb intForQuery: @"SELECT COUNT(view_id) FROM maps WHERE view_id=?",
+    NSInteger totalRows = [db.fmdb intForQuery: @"SELECT total_docs FROM views WHERE name=?", _name];
+    if (totalRows == -1) { // mean unknown
+        totalRows = [db.fmdb intForQuery: @"SELECT COUNT(view_id) FROM maps WHERE view_id=?",
                      @(self.viewID)];
         [db.fmdb executeUpdate: @"UPDATE views SET total_docs=? WHERE view_id=?",
-            @(totalDocs), @(self.viewID)];
+            @(totalRows), @(self.viewID)];
     }
-    assert(totalDocs >= 0);
-    return totalDocs;
+    Assert(totalRows >= 0);
+    return totalRows;
 }
 
 
