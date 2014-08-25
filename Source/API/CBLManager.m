@@ -221,7 +221,7 @@ static CBLManager* sInstance;
 
 - (id) copyWithZone: (NSZone*)zone {
     CBLManager *managerCopy = [[[self class] alloc] initWithDirectory: self.directory
-                                           options: &_options
+                                                              options: &_options
                                                                shared: _shared];
     
     managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
@@ -239,6 +239,7 @@ static CBLManager* sInstance;
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
     for (CBLDatabase* db in _databases.allValues) {
         [db close];
+        [_shared closedDatabase: db.name];
     }
     [_databases removeAllObjects];
     _shared = nil;
@@ -733,6 +734,35 @@ TestCase(CBLManager) {
 
     CAssertEq([dbm existingDatabaseNamed: @"foo" error: NULL], db);
     [dbm close];
+}
+
+TestCase(CBLManager_Close) {
+    RequireTestCase(CBLManager);
+    
+    NSError* error;
+    CBLManager* mgr1 = [[CBLManager sharedInstance] copy];
+    CBLDatabase* db = [mgr1 databaseNamed: @"test_db" error: &error];
+    CAssert(!error);
+    CAssert(db);
+    
+    error = nil;
+    CBLManager* mgr2 = [[CBLManager sharedInstance] copy];
+    db = [mgr2 databaseNamed: @"test_db" error: &error];
+    CAssert(!error);
+    CAssert(db);
+    
+    [mgr1 close];
+    NSInteger count = [[CBLManager sharedInstance].shared countForOpenedDatabase: @"test_db"];
+    CAssertEq(count, 1);
+    
+    [mgr2 close];
+    count = [[CBLManager sharedInstance].shared countForOpenedDatabase: @"test_db"];
+    CAssertEq(count, 0);
+    
+    error = nil;
+    BOOL result = [db deleteDatabase: &error];
+    CAssert(!error);
+    CAssert(result);
 }
 
 #endif
