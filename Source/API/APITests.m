@@ -133,8 +133,7 @@ TestCase(API_DeleteDatabase) {
     CAssert(error.code == kCBLStatusNotFound);
     CAssert(!db);
     
-    // Test with multiple CBLManger
-    // Delete the database getting from the shared manager
+    // Test with multiple CBLManger operating on the same thread
     // Copy the shared manager and create a new database
     error = nil;
     mgr = [CBLManager sharedInstance];
@@ -146,6 +145,8 @@ TestCase(API_DeleteDatabase) {
     // Get the database from the shared manager and delete
     error = nil;
     db = [mgr databaseNamed: @"test_db" error: &error];
+    // Close the copied manager before deleting the database
+    [copiedMgr close];
     result = [db deleteDatabase: &error];
     CAssert(!error);
     CAssert(result);
@@ -157,29 +158,29 @@ TestCase(API_DeleteDatabase) {
     CAssert(error.code == kCBLStatusNotFound);
     CAssert(!db);
     
-    // Test with multiple CBLManger
-    // Delete the database getting from a copied of the shared manager
-    // Copy the shared manager and create a new database
-    error = nil;
-    mgr = [CBLManager sharedInstance];
-    db = [mgr databaseNamed: @"test_db" error: &error];
-    CAssert(!error);
-    CAssert(db);
+    // Test with multiple CBLManger operating on different threads
+    dispatch_queue_t queue = dispatch_queue_create("DeleteDatabaseTest", NULL);
+    copiedMgr = [mgr copy];
+    copiedMgr.dispatchQueue = queue;
+    __block CBLDatabase* copiedMgrDb;
+    dispatch_sync(queue, ^{
+        NSError *error;
+        copiedMgrDb = [copiedMgr databaseNamed: @"test_db" error: &error];
+        CAssert(!error);
+        CAssert(copiedMgrDb);
+    });
     
     // Get the database from the shared manager and delete
     error = nil;
-    copiedMgr = [mgr copy];
-    db = [copiedMgr databaseNamed: @"test_db" error: &error];
+    db = [mgr databaseNamed: @"test_db" error: &error];
     result = [db deleteDatabase: &error];
     CAssert(!error);
     CAssert(result);
     
-    // Check if the database still exists or not
-    error = nil;
-    db = [mgr existingDatabaseNamed: @"test_db" error: &error];
-    CAssert(error);
-    CAssert(error.code == kCBLStatusNotFound);
-    CAssert(!db);
+    // Cleanup
+    dispatch_sync(queue, ^{
+        [copiedMgr close];
+    });
 }
 
 

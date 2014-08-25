@@ -97,7 +97,6 @@
 
 - (void) forgetDatabaseNamed: (NSString*)dbName {
     NSUInteger iterations = 0;
-    
     while(true) {
         NSUInteger count;
         @synchronized(self) {
@@ -105,11 +104,9 @@
         }
         if (count == 0)
             break;
-        
+        usleep(5*1000);
         if ((++iterations) % 200 == 0)
             Warn(@"%@: Still waiting to -forgetDatabaseNamed: \"%@\"", self, dbName);
-        
-        [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
     }
 }
 
