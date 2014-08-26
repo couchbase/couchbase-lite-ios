@@ -292,6 +292,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                 key TEXT NOT NULL COLLATE JSON, \
                 value TEXT); \
             CREATE INDEX maps_keys on maps(view_id, key COLLATE JSON); \
+            CREATE INDEX maps_sequence on maps(sequence); \
             CREATE TABLE attachments ( \
                 sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
                 filename TEXT NOT NULL, \
@@ -300,6 +301,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                 length INTEGER NOT NULL, \
                 revpos INTEGER DEFAULT 0); \
             CREATE INDEX attachments_by_sequence on attachments(sequence, filename); \
+            CREATE INDEX attachments_sequence on attachments(sequence); \
             CREATE TABLE replicators ( \
                 remote TEXT NOT NULL, \
                 push BOOLEAN, \
