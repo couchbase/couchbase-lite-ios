@@ -422,6 +422,25 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
             return NO;
         dbVersion = 12;
     }
+    
+    if (dbVersion < 13) {
+        // Version 13: Add rows to track number of rows in the views
+        NSString* sql = @"ALTER TABLE views ADD COLUMN total_docs INTEGER DEFAULT -1; \
+                          PRAGMA user_version = 13";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 13;
+    }
+    
+    if (dbVersion < 14) {
+        // Version 14: Add index for getting a document with doc and rev id
+        NSString* sql = @"CREATE INDEX IF NOT EXISTS revs_by_docid_revid ON revs(doc_id, revid desc, current, deleted); \
+        PRAGMA user_version = 14";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 14;
+    }
+
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
         return NO;

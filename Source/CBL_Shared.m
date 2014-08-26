@@ -110,4 +110,10 @@
     }
 }
 
+#if DEBUG
+- (NSUInteger) countForOpenedDatabase: (NSString*)dbName {
+    return [_openDatabaseNames countForObject: dbName];
+}
+#endif
+
 @end

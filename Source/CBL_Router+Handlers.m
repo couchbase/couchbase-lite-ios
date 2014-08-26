@@ -596,6 +596,7 @@
         if (!_changesFilter)
             return status;
         _changesFilterParams = [self.queries copy];
+        LogTo(CBL_Router, @"Filter params=%@", _changesFilterParams);
     }
     
     CBL_RevisionList* changes = [db changesSinceSequence: since
@@ -1084,7 +1085,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     }];
     id updateSeq = options->updateSeq ? @(view.lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
-                                 {@"total_rows", @(rows.count)},
+                                 {@"total_rows", @(view.totalRows)},
                                  {@"offset", @(options->skip)},
                                  {@"update_seq", updateSeq});
     return kCBLStatusOK;
