@@ -17,6 +17,7 @@
 .objc_class_name_CBLQuery
 .objc_class_name_CBLQueryEnumerator
 .objc_class_name_CBLQueryRow
+.objc_class_name_CBLReplication
 .objc_class_name_CBLRevision
 .objc_class_name_CBLSavedRevision
 .objc_class_name_CBLUnsavedRevision
@@ -39,6 +40,7 @@ _OBJC_CLASS_$_CBLModelFactory
 _OBJC_CLASS_$_CBLQuery
 _OBJC_CLASS_$_CBLQueryEnumerator
 _OBJC_CLASS_$_CBLQueryRow
+_OBJC_CLASS_$_CBLReplication
 _OBJC_CLASS_$_CBLRevision
 _OBJC_CLASS_$_CBLSavedRevision
 _OBJC_CLASS_$_CBLUnsavedRevision
