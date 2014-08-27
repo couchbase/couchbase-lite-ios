@@ -37,6 +37,7 @@
 #import "CollectionUtils.h"
 #import "Test.h"
 
+#define kMinHeartbeat 5.0
 
 @implementation CBL_Router (Handlers)
 
@@ -618,6 +619,17 @@
                                                  selector: @selector(dbChanged:)
                                                      name: CBL_DatabaseChangesNotification
                                                    object: db];
+
+        NSString* heartbeatParam = [self query:@"heartbeat"];
+        if (heartbeatParam) {
+            NSTimeInterval heartbeat = [heartbeatParam doubleValue] / 1000.0;
+            if (heartbeat <= 0)
+                return kCBLStatusBadRequest;
+            else if (heartbeat < kMinHeartbeat)
+                heartbeat = kMinHeartbeat;
+            [self startHeartbeat: heartbeat];
+        }
+        
         // Don't close connection; more data to come
         return 0;
     } else {

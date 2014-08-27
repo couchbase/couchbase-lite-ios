@@ -42,6 +42,7 @@ typedef void (^OnFinishedBlock)();
     NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
     BOOL _changesIncludeConflicts;
+    NSTimer *_heartbeatTimer;
 }
 
 - (instancetype) initWithServer: (CBL_Server*)server
@@ -80,6 +81,8 @@ typedef void (^OnFinishedBlock)();
 - (void) sendResponseHeaders;
 - (void) sendResponseBodyAndFinish: (BOOL)finished;
 - (void) finished;
+- (void) startHeartbeat: (NSTimeInterval)interval;
+- (void) stopHeartbeat;
 @end
 
 

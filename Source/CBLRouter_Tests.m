@@ -452,6 +452,57 @@ TestCase(CBL_Router_LongPollChanges) {
 }
 
 
+TestCase(CBL_Router_LongPollChanges_Heartbeat) {
+    RequireTestCase(CBL_Router_ContinuousChanges);
+    CBLManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+    
+    __block CBLResponse* response = nil;
+    NSMutableData* body = [NSMutableData data];
+    __block BOOL finished = NO;
+    
+    __block NSInteger heartbeat = 0;
+    NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=longpoll&heartbeat=5000"];
+    NSURLRequest* request = [NSURLRequest requestWithURL: url];
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
+    router.onResponseReady = ^(CBLResponse* routerResponse) {
+        CAssert(!response);
+        response = routerResponse;
+    };
+    router.onDataAvailable = ^(NSData* content, BOOL finished) {
+        NSString* str = [[NSString alloc] initWithData: content encoding: NSUTF8StringEncoding];
+        if ([str isEqualToString: @"\r\n"])
+            heartbeat++;
+        [body appendData: content];
+    };
+    router.onFinished = ^{
+        CAssert(!finished);
+        finished = YES;
+    };
+    
+    // Start:
+    [router start];
+    CAssert(!finished);
+    
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.5];
+    while ([[NSDate date] compare: timeout] == NSOrderedAscending
+           && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+        ;
+    
+    // Should now have received additional output from the router:
+    CAssert(body.length > 0);
+    CAssert(heartbeat == 2);
+    CAssert(!finished);
+    
+    // Now make a change to the database:
+    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hej"}), kCBLStatusCreated, nil);
+    CAssert(finished);
+    
+    [router stop];
+    [server close];
+}
+
+
 TestCase(CBL_Router_ContinuousChanges) {
     RequireTestCase(CBL_Router_Changes);
     CBLManager* server = createDBManager();
@@ -496,6 +547,71 @@ TestCase(CBL_Router_ContinuousChanges) {
     CAssert(!finished);
     
     [router stop];
+    [server close];
+}
+
+
+TestCase(CBL_Router_ContinuousChanges_Heartbeat) {
+    RequireTestCase(CBL_Router_ContinuousChanges);
+    CBLManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+    
+    __block CBLResponse* response = nil;
+    NSMutableData* body = [NSMutableData data];
+    __block BOOL finished = NO;
+    
+    __block NSInteger heartbeat = 0;
+    NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=continuous&heartbeat=5000"];
+    NSURLRequest* request = [NSURLRequest requestWithURL: url];
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
+    router.onResponseReady = ^(CBLResponse* routerResponse) {
+        CAssert(!response);
+        response = routerResponse;
+    };
+    router.onDataAvailable = ^(NSData* content, BOOL finished) {
+        NSString *str = [[NSString alloc] initWithData: content encoding: NSUTF8StringEncoding];
+        if ([str isEqualToString: @"\r\n"])
+            heartbeat++;
+        [body appendData: content];
+    };
+    router.onFinished = ^{
+        CAssert(!finished);
+        finished = YES;
+    };
+    
+    // Start:
+    [router start];
+    
+    // Should initially have a response and one line of output:
+    CAssert(response != nil);
+    CAssertEq(response.status, kCBLStatusOK);
+    CAssert(body.length == 0);
+    CAssert(!finished);
+
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.5];
+    while ([[NSDate date] compare: timeout] == NSOrderedAscending
+           && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+        ;
+    
+    // Should now have received additional output from the router:
+    CAssert(body.length > 0);
+    CAssert(heartbeat == 2);
+    CAssert(!finished);
+    
+    [router stop];
+    [server close];
+}
+
+
+TestCase(CBL_Router_Changes_BadHeartbeatParams) {
+    CBLManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+    Send(server, @"GET", @"/db/_changes?feed=continuous&heartbeat=foo", kCBLStatusBadRequest, nil);
+    Send(server, @"GET", @"/db/_changes?feed=continuous&heartbeat=-1", kCBLStatusBadRequest, nil);
+    Send(server, @"GET", @"/db/_changes?feed=continuous&heartbeat=-0", kCBLStatusBadRequest, nil);
+    Send(server, @"GET", @"/db/_changes?feed=longpoll&heartbeat=foo", kCBLStatusBadRequest, nil);
+    Send(server, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-1", kCBLStatusBadRequest, nil);
+    Send(server, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-0", kCBLStatusBadRequest, nil);
     [server close];
 }
 
@@ -868,7 +984,9 @@ TestCase(CBL_Router) {
     RequireTestCase(CBL_Router_Docs);
     RequireTestCase(CBL_Router_AllDocs);
     RequireTestCase(CBL_Router_LongPollChanges);
+    RequireTestCase(CBL_Router_LongPollChanges_Heartbeat);
     RequireTestCase(CBL_Router_ContinuousChanges);
+    RequireTestCase(CBL_Router_ContinuousChanges_Heartbeat);
     RequireTestCase(CBL_Router_GetAttachment);
     RequireTestCase(CBL_Router_GetJSONAttachment);
     RequireTestCase(CBL_Router_RevsDiff);
