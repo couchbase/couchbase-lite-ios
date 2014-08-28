@@ -195,7 +195,9 @@
     if ([self query: @"inclusive_end"])
         options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
     if ([self query: @"inclusive_start"])
-        options->inclusiveStart = [self boolQuery: @"inclusive_start"];
+        options->inclusiveStart = [self boolQuery: @"inclusive_start"]; // nonstandard
+    options->prefixMatchLevel = [self intQuery: @"prefix_match_level" // nonstandard
+                                  defaultValue: options->prefixMatchLevel];
     options->reduceSpecified = [self query: @"reduce"] != nil;
     options->reduce =  [self boolQuery: @"reduce"];
     options->group = [self boolQuery: @"group"];

@@ -71,8 +71,11 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     Note that if the .descending property is also set, the search order is reversed and the above discussion applies to the startKey, _not_ the endKey. */
 @property NSUInteger prefixMatchLevel;
 
-/** An optional array of NSSortDescriptor objects.
-    If set, overrides the default by-key ordering. See -[CBLQueryEnumerator sortUsingDescriptors:]. */
+/** An optional array of NSSortDescriptor objects; overrides the default by-key ordering.
+    Key-paths are interpreted relative to a CBLQueryRow object, so they should start with
+    "value" to refer to the value, or "key" to refer to the key.
+    A limited form of array indexing is supported, so you can refer to "key[1]" or "value[0]" if
+    the key or value are arrays. This only works with indexes from 0 to 3. */
 @property (copy) NSArray* sortDescriptors;
 
 /** An optional predicate that filters the resulting query rows.
