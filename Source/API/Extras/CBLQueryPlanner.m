@@ -320,8 +320,8 @@ static NSData* SHA1Digest(NSData* input) {
         case NSAnyKeyExpressionType:
             return NO;
         default:
-            [self fail: @"Unsupported expression type %ld: %@",
-                   expression.expressionType, expression];
+            [self fail: @"Unsupported expression type %d: %@",
+                   (int)expression.expressionType, expression];
             return NO;
     }
 }
@@ -391,8 +391,8 @@ static NSData* SHA1Digest(NSData* input) {
         case NSAnyKeyExpressionType:
             return expression;
         default:
-            [self fail: @"Unsupported expression type %ld: %@",
-             expression.expressionType, expression];
+            [self fail: @"Unsupported expression type %d: %@",
+                         (int)expression.expressionType, expression];
             return nil;
     }
 }
