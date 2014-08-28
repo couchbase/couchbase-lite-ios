@@ -55,7 +55,7 @@ TestCase(CBL_View_Create) {
                     reduceBlock: NULL version: @"2"];
     CAssert(changed);
     
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -189,7 +189,7 @@ TestCase(CBL_View_Index) {
     
     [view deleteIndex];
     
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -231,7 +231,7 @@ TestCase(CBL_View_IndexMultiple) {
     for (CBLView* view in views)
         CAssertEq(view.lastSequenceIndexed, kNDocs);
 
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -271,7 +271,7 @@ TestCase(CBL_View_ConflictWinner) {
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -311,7 +311,7 @@ TestCase(CBL_View_ConflictLoser) {
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -408,7 +408,7 @@ TestCase(CBL_View_Query) {
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
     CAssertEqual(rows, expectedRows);
 
-    CAssert([db close]);
+    [db _close];
 }
 
 TestCase(CBL_View_QueryStartKeyDocID) {
@@ -540,7 +540,7 @@ TestCase (CBL_View_NumericKeys) {
     AssertEq(rows.count, 1u);
     AssertEqual([rows[0] key], @(33547239));
 
-    CAssert([db close]);
+    [db _close];
 }
 
 TestCase(CBL_View_GeoQuery) {
@@ -588,7 +588,7 @@ TestCase(CBL_View_GeoQuery) {
     AssertEqual(row.geometryType, @"Point");
     AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
 
-    CAssert([db close]);
+    [db _close];
 }
 
 TestCase(CBL_View_AllDocsQuery) {
@@ -679,7 +679,7 @@ TestCase(CBL_View_AllDocsQuery) {
     expectedRows = $array(expectedConflict1);
     CAssertEqual(rowsToDicts(query), expectedRows);
 
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -715,7 +715,7 @@ TestCase(CBL_View_Reduce) {
     CAssertEq(reduced.count, 1u);
     double result = [reduced[0][@"value"] doubleValue];
     CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -785,7 +785,7 @@ TestCase(CBL_View_Grouped) {
                                     {@"value", @(248)}),
                               $dict({@"key", @[@"PiL", @"Metal Box"]}, 
                                     {@"value", @(309)})));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -817,7 +817,7 @@ TestCase(CBL_View_GroupedStrings) {
     CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
                               $dict({@"key", @"J"}, {@"value", @2}),
                               $dict({@"key", @"N"}, {@"value", @1})));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -863,7 +863,7 @@ TestCase(CBL_View_Collation) {
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -909,7 +909,7 @@ TestCase(CBL_View_CollationRaw) {
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -956,7 +956,7 @@ TestCase(CBL_View_LinkedDocs) {
                                          {@"value", $dict({@"_id", @"11111"})},
                                          {@"doc", docs[2]}));
     CAssertEqual(rows, expectedRows);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -1061,7 +1061,7 @@ TestCase(CBL_View_FullTextQuery) {
                                 {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -1070,14 +1070,14 @@ TestCase(CBL_View_TotalDocs) {
     
     // Create some docs
     NSArray* docs = putDocs(db);
-    NSUInteger totalDocs = [docs count];
+    NSUInteger totalRows = [docs count];
     
     // Create a view
     CBLView* view = createView(db);
-    CAssertEq(view.totalDocs, 0u);
+    CAssertEq(view.totalRows, 0u);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
-    
+    CAssertEq(view.totalRows, totalRows);
+
     // Create a conflict, won by the new revision:
     NSDictionary* props;
     CBLStatus status;
@@ -1089,7 +1089,7 @@ TestCase(CBL_View_TotalDocs) {
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
+    CAssertEq(view.totalRows, totalRows);
     
     // Create a conflict, won by the old revision:
     props = $dict({@"_id", @"44444"},
@@ -1099,7 +1099,7 @@ TestCase(CBL_View_TotalDocs) {
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
     CAssert(status < 300);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
+    CAssertEq(view.totalRows, totalRows);
     
     // Update a doc
     CBL_MutableRevision* nuRev = [[CBL_MutableRevision alloc] initWithDocID: rev.docID
@@ -1108,18 +1108,18 @@ TestCase(CBL_View_TotalDocs) {
     rev = [db putRevision: nuRev prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssert(status < 300);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs);
+    CAssertEq(view.totalRows, totalRows);
     
     // Delete a doc
     CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalDocs, totalDocs - 1);
+    CAssertEq(view.totalRows, totalRows - 1);
     
     // Delete the index
     [view deleteIndex];
-    CAssertEq(view.totalDocs, 0u);
+    CAssertEq(view.totalRows, 0u);
 }
 
 

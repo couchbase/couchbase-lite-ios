@@ -636,6 +636,7 @@ TestCase(CBL_Router_GetJSONAttachment) {
     CAssertEqual((response.headers)[@"Content-Type"], @"application/json");
     eTag = (response.headers)[@"Etag"];
     CAssert(eTag.length > 0);
+    [server close];
 }
 
 TestCase(CBL_Router_GetRange) {

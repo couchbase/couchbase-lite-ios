@@ -25,7 +25,7 @@ static CBLDatabase* createEmptyDB(void) {
 
 static void closeTestDB(CBLDatabase* db) {
     CAssert(db != nil);
-    CAssert([db close]);
+    [db _close];
 }
 
 

@@ -83,7 +83,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** An object that knows how to authenticate with a remote server.
     CBLAuthenticator is an opaque protocol; instances can be created by calling the factory methods
     of the class of the same name. */
-@property id<CBLAuthenticator> authenticator;
+@property (strong) id<CBLAuthenticator> authenticator;
 
 /** The credential (generally username+password) to use to authenticate to the remote database.
     This can either come from the URL itself (if it's of the form "http://user:pass@example.com")
