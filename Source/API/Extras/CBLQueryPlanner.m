@@ -9,7 +9,7 @@
 #import "CBLQueryPlanner.h"
 #import "CBLQueryPlanner+Private.h"
 #import <CouchbaseLite/CouchbaseLite.h>
-#import "CBLMisc.h"
+#import <CommonCrypto/CommonDigest.h>
 
 
 /*
@@ -25,6 +25,44 @@
  
     When each type is evaluated, it can assume that the earlier predicates are true.
  */
+
+
+
+// Standalone equivalents of stuff from MYUtilities:
+#ifndef $cast
+#define $cast(CLASSNAME,OBJ)    ((CLASSNAME*)(_cast([CLASSNAME class],(OBJ))))
+#define $castIf(CLASSNAME,OBJ)  ((CLASSNAME*)(_castIf([CLASSNAME class],(OBJ))))
+static inline id _cast(Class requiredClass, id object) {
+    NSCAssert([object isKindOfClass: requiredClass], @"Value is %@, not %@",
+              [object class], requiredClass);
+    return object;
+}
+static inline id _castIf(Class requiredClass, id object) {
+    return [object isKindOfClass: requiredClass] ? object : nil;
+}
+#endif
+
+#ifndef LogTo
+#define LOGGING 1
+#define LogTo(KEYWORD, FMT, ...)  if(!LOGGING) ; else NSLog(FMT, __VA_ARGS__)
+#define Warn(FMT, ...)            NSLog(@"WARNING: " #FMT, __VA_ARGS__)
+#endif
+
+static NSArray* $map(NSArray* array, id (^block)(id obj)) {
+    NSMutableArray* mapped = [[NSMutableArray alloc] initWithCapacity: array.count];
+    for (id obj in array) {
+        id mappedObj = block(obj);
+        if (mappedObj)
+            [mapped addObject: mappedObj];
+    }
+    return [mapped copy];
+}
+
+static NSData* SHA1Digest(NSData* input) {
+    unsigned char digest[CC_SHA1_DIGEST_LENGTH];
+    CC_SHA1(input.bytes, (CC_LONG)input.length, digest);
+    return [NSData dataWithBytes: &digest length: sizeof(digest)];
+}
 
 
 @implementation CBLQueryPlanner
@@ -460,22 +498,22 @@
 
 // The expression that should be emitted as the key
 - (NSExpression*) keyExpression {
-    return aggregateExpressions([_keyPredicates my_map:^id(NSComparisonPredicate* cp) {
+    return aggregateExpressions($map(_keyPredicates, ^id(NSComparisonPredicate* cp) {
         NSExpression* expr = cp.leftExpression;
         if (cp.options & NSCaseInsensitivePredicateOption)
             expr = [NSExpression expressionForFunction: @"lowercase:" arguments: @[expr]];
         return expr;
-    }]);
+    }));
 }
 
 
 // The expression that should be emitted as the value
 - (NSExpression*) valueExpression {
-    return aggregateExpressions([_valueTemplate my_map:^id(id item) {
+    return aggregateExpressions($map(_valueTemplate, ^id(id item) {
         if (![item isKindOfClass: [NSExpression class]])
-            item = [NSExpression expressionForKeyPath: $cast(NSString, item)];
+            item = [NSExpression expressionForKeyPath: $castIf(NSString, item)];
         return item;
-    }]);
+    }));
 }
 
 
@@ -495,7 +533,7 @@
     if (valueExpr)
         versioned[@"valueExpression"] = valueExpr;
     NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
-    NSString* version = [CBLJSON base64StringWithData: CBLSHA1Digest(archive)];
+    NSString* version = [CBLJSON base64StringWithData: SHA1Digest(archive)];
 
     BOOL compoundKey = (keyExpression.expressionType == NSAggregateExpressionType);
 
