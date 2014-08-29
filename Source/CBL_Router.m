@@ -136,18 +136,6 @@
     return result;
 }
 
-- (NSMutableDictionary*) jsonQueries {
-    NSMutableDictionary* queries = $mdict();
-    [self.queries enumerateKeysAndObjectsUsingBlock: ^(NSString* param, NSString* value, BOOL *stop) {
-        id parsed = [CBLJSON JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
-                                       options: CBLJSONReadingAllowFragments
-                                         error: nil];
-        if (parsed)
-            queries[param] = parsed;
-    }];
-    return queries;
-}
-
 
 - (BOOL) cacheWithEtag: (NSString*)etag {
     NSString* eTag = $sprintf(@"\"%@\"", etag);
@@ -206,6 +194,10 @@
     options->updateSeq = [self boolQuery: @"update_seq"];
     if ([self query: @"inclusive_end"])
         options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
+    if ([self query: @"inclusive_start"])
+        options->inclusiveStart = [self boolQuery: @"inclusive_start"]; // nonstandard
+    options->prefixMatchLevel = [self intQuery: @"prefix_match_level" // nonstandard
+                                  defaultValue: options->prefixMatchLevel];
     options->reduceSpecified = [self query: @"reduce"] != nil;
     options->reduce =  [self boolQuery: @"reduce"];
     options->group = [self boolQuery: @"group"];
@@ -574,21 +566,23 @@ static NSArray* splitPath( NSURL* url ) {
             _response.internalStatus = kCBLStatusNotAcceptable;
         }
     }
-
-    if (_response.body.isValidJSON)
+    
+    // When response body is not nil and there is no content-type given,
+    // set default value to 'application/json'.
+    if (_response.body && !_response[@"Content-Type"]) {
         _response[@"Content-Type"] = @"application/json";
-
+    }
+    
     if (_response.status == 200 && ($equal(_request.HTTPMethod, @"GET") ||
                                     $equal(_request.HTTPMethod, @"HEAD"))) {
         if (!_response[@"Cache-Control"])
             _response[@"Cache-Control"] = @"must-revalidate";
     }
 
-    for (NSString *key in [_server.customHTTPHeaders allKeys])
-    {
+    for (NSString *key in [_server.customHTTPHeaders allKeys]) {
         _response[key] = _server.customHTTPHeaders[key];
     }
-
+    
     if (_onResponseReady)
         _onResponseReady(_response);
 }
@@ -650,7 +644,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (CBLStatus) do_UNKNOWN {
-    return kCBLStatusBadRequest;
+    return kCBLStatusNotFound;
 }
 
 

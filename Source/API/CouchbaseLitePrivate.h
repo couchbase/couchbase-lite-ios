@@ -38,9 +38,9 @@
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
 - (void) addReplication: (CBLReplication*)repl;
 - (void) forgetReplication: (CBLReplication*)repl;
+- (void) _clearDocumentCache;
 #if DEBUG // for testing
 - (CBLDocument*) _cachedDocumentWithID: (NSString*)docID;
-- (void) _clearDocumentCache;
 #endif
 @end
 

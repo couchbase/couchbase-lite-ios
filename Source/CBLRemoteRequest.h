@@ -16,6 +16,9 @@
 typedef void (^CBLRemoteRequestCompletionBlock)(id result, NSError* error);
 
 
+void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
+
+
 /** Asynchronous HTTP request; a fairly simple wrapper around NSURLConnection that calls a completion block when ready. */
 @interface CBLRemoteRequest : NSObject <NSURLConnectionDelegate
 #if TARGET_OS_IPHONE || defined(__MAC_10_8)

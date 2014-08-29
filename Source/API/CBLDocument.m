@@ -28,7 +28,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     CBLDatabase* _database;
     NSString* _docID;
     CBLSavedRevision* _currentRevision;
-    __weak id _modelObject;
+    __weak id<CBLDocumentModel> _modelObject;
 #if ! CBLCACHE_IS_SMART
     __weak CBLCache* _owningCache;
 #endif
@@ -168,7 +168,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
             _currentRevision = nil;
     }
 
-    [_modelObject CBLDocument: self didChange: change];
+    id<CBLDocumentModel> model = _modelObject; // strong reference to it
+    [model CBLDocument: self didChange: change];
 
     NSNotification* n = [NSNotification notificationWithName: kCBLDocumentChangeNotification
                                                       object: self

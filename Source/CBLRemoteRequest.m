@@ -16,9 +16,9 @@
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
 #import "CBLMisc.h"
+#import "CBLStatus.h"
 #import "CBL_BlobStore.h"
 #import "CBLDatabase.h"
-#import "CBL_Router.h"
 #import "CBL_Replicator.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
@@ -232,7 +232,7 @@
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 
-static void WarnUntrustedCert(NSString* host, SecTrustRef trust) {
+void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     Warn(@"CouchbaseLite: SSL server <%@> not trusted; cert chain follows:", host);
 #if TARGET_OS_IPHONE
     for (CFIndex i = 0; i < SecTrustGetCertificateCount(trust); ++i) {
@@ -300,9 +300,9 @@ static void WarnUntrustedCert(NSString* host, SecTrustRef trust) {
             [sender useCredential: [NSURLCredential credentialForTrust: trust]
                     forAuthenticationChallenge: challenge];
         } else {
-            WarnUntrustedCert(space.host, trust);
-            LogTo(RemoteRequest, @"    challenge: cancel");
-            [sender cancelAuthenticationChallenge: challenge];
+            CBLWarnUntrustedCert(space.host, trust);
+            LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
+            [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
         }
     } else {
         LogTo(RemoteRequest, @"    challenge: performDefaultHandling");

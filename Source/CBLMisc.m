@@ -125,37 +125,32 @@ NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b) {
 }
 
 
-NSString* CBLEscapeID( NSString* docOrRevID ) {
-#ifdef GNUSTEP
-    docOrRevID = [docOrRevID stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
-    docOrRevID = [docOrRevID stringByReplacingOccurrencesOfString: @"&" withString: @"%26"];
-    docOrRevID = [docOrRevID stringByReplacingOccurrencesOfString: @"/" withString: @"%2F"];
-    return docOrRevID;
-#else
-    CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                                  (CFStringRef)docOrRevID,
-                                                                  NULL, (CFStringRef)@"?&/",
-                                                                  kCFStringEncodingUTF8);
-    #ifdef __OBJC_GC__
-    return NSMakeCollectable(escaped);
-    #else
-    return (__bridge_transfer NSString *)escaped;
-    #endif
-
-#endif
-}
-
-
 NSString* CBLEscapeURLParam( NSString* param ) {
+    // Escape all of the reserved characters according to section 2.2 in rfc3986
+    // http://tools.ietf.org/html/rfc3986#section-2.2
 #ifdef GNUSTEP
     param = [param stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+    param = [param stringByReplacingOccurrencesOfString: @":" withString: @"%3A"];
+    param = [param stringByReplacingOccurrencesOfString: @"/" withString: @"%2F"];
+    param = [param stringByReplacingOccurrencesOfString: @"?" withString: @"%3F"];
+    param = [param stringByReplacingOccurrencesOfString: @"@" withString: @"%40"];
+    param = [param stringByReplacingOccurrencesOfString: @"!" withString: @"%21"];
+    param = [param stringByReplacingOccurrencesOfString: @"$" withString: @"%24"];
     param = [param stringByReplacingOccurrencesOfString: @"&" withString: @"%26"];
+    param = [param stringByReplacingOccurrencesOfString: @"'" withString: @"%27"];
+    param = [param stringByReplacingOccurrencesOfString: @"(" withString: @"%28"];
+    param = [param stringByReplacingOccurrencesOfString: @")" withString: @"%29"];
+    param = [param stringByReplacingOccurrencesOfString: @"*" withString: @"%2A"];
     param = [param stringByReplacingOccurrencesOfString: @"+" withString: @"%2B"];
+    param = [param stringByReplacingOccurrencesOfString: @"," withString: @"%2C"];
+    param = [param stringByReplacingOccurrencesOfString: @";" withString: @"%3B"];
+    param = [param stringByReplacingOccurrencesOfString: @"=" withString: @"%3D"];
     return param;
 #else
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)param,
-                                                                  NULL, (CFStringRef)@"&+",
+                                                                  NULL,
+                                                                  (CFStringRef)@":/?@!$&'()*+,;=",
                                                                   kCFStringEncodingUTF8);
     #ifdef __OBJC_GC__
     return NSMakeCollectable(escaped);
@@ -273,7 +268,12 @@ BOOL CBLIsPermanentError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
     if ($equal(domain, NSURLErrorDomain)) {
-        return code == NSURLErrorBadURL || code == NSURLErrorUnsupportedURL;
+        return code == NSURLErrorBadURL
+            || code == NSURLErrorUnsupportedURL
+            || code == NSURLErrorUserCancelledAuthentication
+            || code == NSURLErrorUserAuthenticationRequired
+            || (code <= NSURLErrorSecureConnectionFailed &&
+                code >= NSURLErrorClientCertificateRequired);
     } else if ($equal(domain, CBLHTTPErrorDomain)) {
         return code >= 400 && code <= 499;
     } else {
@@ -360,10 +360,13 @@ TestCase(CBLQuoteString) {
     CAssertEqual(CBLUnquoteString(@"\"foo\\\""), nil);
 }
 
-TestCase(TDEscapeID) {
-    CAssertEqual(CBLEscapeID(@"foobar"), @"foobar");
-    CAssertEqual(CBLEscapeID(@"<script>alert('ARE YOU MY DADDY?')</script>"),
-                            @"%3Cscript%3Ealert('ARE%20YOU%20MY%20DADDY%3F')%3C%2Fscript%3E");
-    CAssertEqual(CBLEscapeID(@"foo/bar"), @"foo%2Fbar");
-    CAssertEqual(CBLEscapeID(@"foo&bar"), @"foo%26bar");
+
+TestCase(CBLEscapeURLParam) {
+    CAssertEqual(CBLEscapeURLParam(@"foobar"), @"foobar");
+    CAssertEqual(CBLEscapeURLParam(@"<script>alert('ARE YOU MY DADDY?')</script>"),
+                 @"%3Cscript%3Ealert%28%27ARE%20YOU%20MY%20DADDY%3F%27%29%3C%2Fscript%3E");
+    CAssertEqual(CBLEscapeURLParam(@"foo/bar"), @"foo%2Fbar");
+    CAssertEqual(CBLEscapeURLParam(@"foo&bar"), @"foo%26bar");
+    CAssertEqual(CBLEscapeURLParam(@":/?#[]@!$&'()*+,;="),
+                 @"%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D");
 }

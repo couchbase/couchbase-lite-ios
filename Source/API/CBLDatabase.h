@@ -60,6 +60,11 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 
 #pragma mark - HOUSEKEEPING:
 
+/** Closes a database.
+    This first stops all replications, and calls -saveAllModels: to save changes to CBLModel
+    objects. It returns NO if some models failed to save. */
+- (BOOL) close: (NSError**)error;
+
 /** Compacts the database file by purging non-current JSON bodies, pruning revisions older than
     the maxRevTreeDepth, deleting unused attachment files, and vacuuming the SQLite database. */
 - (BOOL) compact: (NSError**)outError;

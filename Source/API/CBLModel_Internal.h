@@ -24,6 +24,7 @@
 @property (readwrite, retain) CBLDocument* document;
 @property (readwrite) bool needsSave;
 @property (readonly) NSDictionary* currentProperties;
+- (id) getValueOfProperty: (NSString*)property ofClass: (Class)klass;
 - (void) cacheValue: (id)value ofProperty: (NSString*)property changed: (BOOL)changed;
 - (void) willSave: (NSSet*)changedProperties;   // overridable
 - (CBLModel*) modelWithDocID: (NSString*)docID

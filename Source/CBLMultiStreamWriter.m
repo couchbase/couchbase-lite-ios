@@ -140,6 +140,20 @@
     LogTo(CBLMultiStreamWriter, @"%@: Closed", self);
     [_output close];
     _output.delegate = nil;
+    
+    /*
+     https://github.com/couchbase/couchbase-lite-ios/issues/424
+     Workaround for a race condition in CFStream _CFStreamCopyRunLoopsAndModes. 
+     This outputstream needs to be retained just a little longer.
+     Source: https://github.com/AFNetworking/AFNetworking/issues/907
+     */
+    NSOutputStream* outputStream = _output;
+    double delayInSeconds = 2.0;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    dispatch_after(popTime, dispatch_get_main_queue(), ^{
+        outputStream.delegate = nil;
+    });
+    
     _output = nil;
     _input = nil;
     

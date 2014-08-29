@@ -213,7 +213,10 @@
     NSArray* result = [_db getAllDocs: options];
     if (!result)
         return _db.lastDbError;
-    result = [result my_map: ^id(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    result = [result my_map: ^id(CBLQueryRow* row) {
+        row.database = _db;
+        return row.asJSONDictionary;
+    }];
     _response.bodyObject = $dict({@"rows", result},
                                  {@"total_rows", @(result.count)},
                                  {@"offset", @(options->skip)},
@@ -592,7 +595,8 @@
         _changesFilter = [_db compileFilterNamed: filterName status: &status];
         if (!_changesFilter)
             return status;
-        _changesFilterParams = [self.jsonQueries copy];
+        _changesFilterParams = [self.queries copy];
+        LogTo(CBL_Router, @"Filter params=%@", _changesFilterParams);
     }
     
     CBL_RevisionList* changes = [db changesSinceSequence: since
@@ -1075,10 +1079,13 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSArray* rows = [view _queryWithOptions: options status: &status];
     if (!rows)
         return status;
-    rows = [rows my_map:^(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    rows = [rows my_map:^(CBLQueryRow* row) {
+        row.database = _db;
+        return row.asJSONDictionary;
+    }];
     id updateSeq = options->updateSeq ? @(view.lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
-                                 {@"total_rows", @(rows.count)},
+                                 {@"total_rows", @(view.totalRows)},
                                  {@"offset", @(options->skip)},
                                  {@"update_seq", updateSeq});
     return kCBLStatusOK;

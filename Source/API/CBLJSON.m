@@ -124,19 +124,25 @@ static NSDateFormatter* getISO8601Formatter() {
     if (!sFormatter) {
         // Thanks to DenNukem's answer in http://stackoverflow.com/questions/399527/
         sFormatter = [[NSDateFormatter alloc] init];
-        sFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-        sFormatter.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:0];
+        sFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
         sFormatter.calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
         sFormatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     }
+
     return sFormatter;
 }
 
 + (NSString*) JSONObjectWithDate: (NSDate*)date {
+    return [self JSONObjectWithDate:date timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+}
+
++ (NSString*) JSONObjectWithDate: (NSDate*)date timeZone:(NSTimeZone *)tz {
     if (!date)
         return nil;
     @synchronized(self) {
-        return [getISO8601Formatter() stringFromDate: date];
+        NSDateFormatter *formatter = getISO8601Formatter();
+        formatter.timeZone = tz;
+        return [formatter stringFromDate: date];
     }
 }
 
@@ -252,6 +258,14 @@ TestCase(CBLJSON_Date) {
     CAssert(isnan([CBLJSON absoluteTimeWithJSONObject: @""]));
 
     CAssertEqual([CBLJSON JSONObjectWithDate: date], @"2013-04-01T20:42:33.388Z");
+
+    date = [CBLJSON dateWithJSONObject:@"2014-07-30T17:09:00.000+02:00"];
+
+    CAssertEqual([CBLJSON JSONObjectWithDate:date
+                                    timeZone:[NSTimeZone timeZoneForSecondsFromGMT:3600*2]], @"2014-07-30T17:09:00.000+02:00");
+
+    CAssertEqual([CBLJSON JSONObjectWithDate:date
+                                    timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]], @"2014-07-30T15:09:00.000Z");
 }
 
 

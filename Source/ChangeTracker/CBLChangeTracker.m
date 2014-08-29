@@ -148,9 +148,6 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 }
 
 - (NSData*) changesFeedPOSTBody {
-    if (!_usePOST)
-        return nil;
-
     // The replicator always stores the last sequence as a string, but the server may treat it as
     // an integer. As a heuristic, convert it to a number if it looks like one:
     id since = _lastSequenceID;
@@ -211,6 +208,21 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 
 
 - (void) failedWithError: (NSError*)error {
+    // Map lower-level errors from CFStream to higher-level NSURLError ones:
+    NSString* domain = error.domain;
+    NSInteger code = error.code;
+    if ($equal(domain, NSPOSIXErrorDomain)) {
+        if (code == ECONNREFUSED)
+            error = [NSError errorWithDomain: NSURLErrorDomain
+                                        code: NSURLErrorCannotConnectToHost
+                                    userInfo: error.userInfo];
+    } else if ($equal(domain, NSURLErrorDomain)) {
+        if (code == NSURLErrorUserAuthenticationRequired)
+            error = [NSError errorWithDomain: CBLHTTPErrorDomain
+                                        code: kCBLStatusUnauthorized
+                                    userInfo: error.userInfo];
+    }
+
     // If the error may be transient (flaky network, server glitch), retry:
     if (!CBLIsPermanentError(error) && (_continuous || CBLMayBeTransientError(error))) {
         NSTimeInterval retryDelay = kInitialRetryDelay * (1 << MIN(_retryCount, 16U));
