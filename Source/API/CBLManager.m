@@ -736,31 +736,26 @@ TestCase(CBLManager) {
 
 TestCase(CBLManager_Close) {
     RequireTestCase(CBLManager);
-    
-    NSError* error;
-    CBLManager* mgr1 = [[CBLManager sharedInstance] copy];
-    CBLDatabase* db = [mgr1 databaseNamed: @"test_db" error: &error];
-    CAssert(!error);
+
+    CBLManager* mgrMain = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
+
+    CBLManager* mgr1 = [mgrMain copy];
+    CBLDatabase* db = [mgr1 databaseNamed: @"test_db" error: NULL];
     CAssert(db);
     
-    error = nil;
-    CBLManager* mgr2 = [[CBLManager sharedInstance] copy];
-    db = [mgr2 databaseNamed: @"test_db" error: &error];
-    CAssert(!error);
+    CBLManager* mgr2 = [mgrMain copy];
+    db = [mgr2 databaseNamed: @"test_db" error: NULL];
     CAssert(db);
     
     [mgr1 close];
-    NSInteger count = [[CBLManager sharedInstance].shared countForOpenedDatabase: @"test_db"];
+    NSInteger count = [mgrMain.shared countForOpenedDatabase: @"test_db"];
     CAssertEq(count, 1);
     
     [mgr2 close];
-    count = [[CBLManager sharedInstance].shared countForOpenedDatabase: @"test_db"];
+    count = [mgrMain.shared countForOpenedDatabase: @"test_db"];
     CAssertEq(count, 0);
     
-    error = nil;
-    BOOL result = [db deleteDatabase: &error];
-    CAssert(!error);
-    CAssert(result);
+    [mgrMain close];
 }
 
 #endif
