@@ -704,9 +704,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         }
         onCompletion(result, error);
     }];
-    req.delegate = self;
-    req.timeoutInterval = self.requestTimeout;
-    req.authorizer = _authorizer;
 
     if (self.canSendCompressedRequests)
         [req compressBody];
@@ -718,6 +715,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) addRemoteRequest: (CBLRemoteRequest*)request {
+    request.delegate = self;
+    request.timeoutInterval = self.requestTimeout;
+    request.authorizer = _authorizer;
+
     if (!_remoteRequests)
         _remoteRequests = [[NSMutableArray alloc] init];
     [_remoteRequests addObject: request];

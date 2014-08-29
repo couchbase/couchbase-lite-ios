@@ -453,8 +453,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                   [self startNextUpload];
               }
      ];
-    uploader.timeoutInterval = self.requestTimeout;
-    uploader.authorizer = _authorizer;
     [self addRemoteRequest: uploader];
     LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
     if (!_uploaderQueue)
