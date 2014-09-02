@@ -127,7 +127,9 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 #if TARGET_OS_IPHONE
 - (void) appBackgrounding: (NSNotification*)n {
-    [self autosaveAllModels: nil];
+    [self doAsync: ^{
+        [self autosaveAllModels: nil];
+    }
 }
 #endif
 
