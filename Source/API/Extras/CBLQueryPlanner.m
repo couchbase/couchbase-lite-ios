@@ -755,7 +755,7 @@ static NSComparisonPredicate* mergeComparisons(NSComparisonPredicate* p1,
             op2 == NSGreaterThanOrEqualToPredicateOperatorType) {
         NSExpression* range = [NSExpression expressionForAggregate: @[p2.rightExpression,
                                                                       p1.rightExpression]];
-        return [NSComparisonPredicate predicateWithLeftExpression: lhs
+        return (NSComparisonPredicate *) [NSComparisonPredicate predicateWithLeftExpression: lhs
                                                   rightExpression: range
                                                          modifier: p1.comparisonPredicateModifier
                                                              type: NSBetweenPredicateOperatorType

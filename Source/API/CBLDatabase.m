@@ -129,7 +129,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
 - (void) appBackgrounding: (NSNotification*)n {
     [self doAsync: ^{
         [self autosaveAllModels: nil];
-    }
+    }];
 }
 #endif
 
