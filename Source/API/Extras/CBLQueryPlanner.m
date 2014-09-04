@@ -83,6 +83,9 @@ static NSData* SHA1Digest(NSData* input) {
     BOOL _queryInclusiveStart, _queryInclusiveEnd;  // The inclusiveStart/End to use in queries
     NSPredicate* _queryFilter;              // Postprocessing filter predicate to use in the query
     NSArray* _querySort;                    // Sort descriptors for the query
+
+    // Used for -explanation
+    NSPredicate* _mapPredicate;
 }
 
 @synthesize view=_view;
@@ -108,9 +111,7 @@ static NSData* SHA1Digest(NSData* input) {
 
         // Scan the input:
         NSPredicate* mapPredicate = [self scanPredicate: predicate];
-#if DEBUG
         _mapPredicate = mapPredicate;
-#endif
         if (_error) {
             if (outError)
                 *outError = _error;
