@@ -23,6 +23,7 @@
 #import "CBLOAuth1Authorizer.h"
 #import "CBLBase64.h"
 #import "CBLInternal.h"
+#import "CBLMisc.h"
 #import "Test.h"
 #import "MYURLUtils.h"
 
@@ -76,7 +77,7 @@ NSURL* RemoteTestDBURL(NSString* dbName) {
 
 
 NSArray* RemoteTestDBAnchorCerts(void) {
-    NSData* certData = [NSData dataWithContentsOfFile: @"/Couchbase/sync_gateway/examples/ssl/cert.cer"];//FIX: Make portable
+    NSData* certData = [NSData dataWithContentsOfFile: CBLPathToTestFile(@"SelfSigned.cer")];
     Assert(certData, @"Couldn't load cert file");
     SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
     Assert(cert, @"Couldn't parse cert");
