@@ -52,6 +52,7 @@ _OBJC_CLASS_$_MYDynamicObject
 _OBJC_CLASS_$_CBLUITableSource
 
 # Public string constants:
+_CBLHTTPErrorDomain
 _kCBLDatabaseChangeNotification
 _kCBLDocumentChangeNotification
 _kCBLReplicationChangeNotification
@@ -88,8 +89,8 @@ _CBLVersion
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
 
-.objc_class_name_GCDAsyncSocket
-.objc_class_name_WebSocket
+.objc_class_name_CBL_GCDAsyncSocket
+.objc_class_name_CBL_WebSocket
 
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
