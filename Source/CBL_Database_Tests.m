@@ -193,7 +193,7 @@ TestCase(CBL_Database_CRUD) {
     // Make sure old rev is missing:
     CAssertNil([db getDocumentWithID: rev1.docID revisionID: rev1.revID]);
 
-    CAssert([db close]);
+    [db _close];
     
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
 }
@@ -208,7 +208,7 @@ TestCase(CBL_Database_EmptyDoc) {
     NSArray* keys = @[rev.docID];
     options.keys = keys;
     [db getAllDocs: &options]; // raises an exception :(
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -237,7 +237,7 @@ TestCase(CBL_Database_DeleteWithProperties) {
     CAssert([rev3.revID hasPrefix: @"3-"]);     // new rev is child of tombstone rev
     readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
     CAssertEqual(readRev.revID, rev3.revID);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -251,7 +251,7 @@ TestCase(CBL_Database_DeleteAndRecreate) {
     Log(@"Deleted: %@ -- %@", rev2, rev2.properties);
     CBL_Revision* rev3 = putDoc(db, $dict({@"_id", @"dock"}, {@"property", @"value"}));
     Log(@"Recreated: %@ -- %@", rev3, rev3.properties);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -347,7 +347,7 @@ TestCase(CBL_Database_Validation) {
     CAssert(validationCalled);
     CAssertEq(status, kCBLStatusForbidden);
     
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -486,7 +486,7 @@ TestCase(CBL_Database_RevTree) {
     CAssertEq(nPruned, 0u);
 
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -531,7 +531,7 @@ TestCase(CBL_Database_RevTreeConflict) {
     CAssertEqual(change, announcement(rev, rev));
 
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -539,12 +539,12 @@ TestCase(CBL_Database_DeterministicRevIDs) {
     CBLDatabase* db = createDB();
     CBL_Revision* rev = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
     NSString* revID = rev.revID;
-    CAssert([db close]);
+    [db _close];
 
     db = createDB();
     rev = putDoc(db, $dict({@"_id", @"mydoc"}, {@"key", @"value"}));
     CAssertEqual(rev.revID, revID);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -565,7 +565,7 @@ TestCase(CBL_Database_DuplicateRev) {
                      status: &status];
     CAssertEq(status, kCBLStatusOK);
     CAssertEqual(rev2b, rev2a);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -703,7 +703,7 @@ TestCase(CBL_Database_Attachments) {
     CAssertEq([db compact], kCBLStatusOK);  // This clears the body of the first revision
     CAssertEq(attachments.count, 1u);
     CAssertEqual(attachments.allKeys, @[[CBL_BlobStore keyDataForBlob: attach2]]);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -810,7 +810,7 @@ TestCase(CBL_Database_PutAttachment) {
     // Get the updated revision:
     CBL_Revision* gotRev3 = [db getDocumentWithID: rev3.docID revisionID: rev3.revID];
     CAssertNil((gotRev3.properties)[@"_attachments"]);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -926,7 +926,7 @@ TestCase(CBL_Database_EncodedAttachment) {
                             options: kCBLIncludeAttachments
                              status: &status];
     CAssertEqual(gotRev1[@"_attachments"], attachmentDict);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -983,7 +983,7 @@ TestCase(CBL_Database_ReplicatorSequences) {
     [db setLastSequence: @"lastpush" withCheckpointID: @"push"];
     CAssertEqual([db lastSequenceWithCheckpointID: @"pull"], @"newerpull");
     CAssertEqual([db lastSequenceWithCheckpointID: @"push"], @"lastpush");
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -1047,7 +1047,7 @@ TestCase(CBL_Database_LocalDocs) {
     readRev = [db getLocalDocumentWithID: revD.docID revisionID: nil];
     CAssertNil(readRev);
     
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -1083,7 +1083,7 @@ TestCase(CBL_Database_FindMissingRevisions) {
     CAssertEqual([db getPossibleAncestorRevisionIDs: revToFind3 limit: 0 hasAttachment: &hasAtt],
                  nil);
     CAssertEq(hasAtt, NO);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -1110,7 +1110,7 @@ TestCase(CBL_Database_Purge) {
 
     CBL_RevisionList* remainingRevs = [db getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
     CAssertEq(remainingRevs.count, 0u);
-    CAssert([db close]);
+    [db _close];
 }
 
 

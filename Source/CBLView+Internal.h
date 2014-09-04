@@ -20,7 +20,9 @@ typedef struct CBLQueryOptions {
     __unsafe_unretained NSString* endKeyDocID;
     __unsafe_unretained NSArray* keys;
     __unsafe_unretained NSString* fullTextQuery;
+    __unsafe_unretained NSPredicate* filter;
     const struct CBLGeoRect* bbox;
+    unsigned prefixMatchLevel;
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
@@ -29,6 +31,7 @@ typedef struct CBLQueryOptions {
     BOOL includeDocs;
     BOOL updateSeq;
     BOOL localSeq;
+    BOOL inclusiveStart;
     BOOL inclusiveEnd;
     BOOL reduceSpecified;
     BOOL reduce;                   // Ignore if !reduceSpecified
@@ -51,6 +54,8 @@ typedef enum {
 
 /** Returns YES if the data is meant as a placeholder for the doc's entire data (a "*") */
 BOOL CBLValueIsEntireDoc(NSData* valueData);
+
+BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options);
 
 
 @interface CBLView ()

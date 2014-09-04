@@ -425,7 +425,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     self.changesTotal++;
     [self asyncTaskStarted];
 
-    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeID(rev.docID));
+    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
                                   initWithURL: CBLAppendToURL(_remote, path)
                                      streamer: bodyStream
@@ -453,8 +453,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                   [self startNextUpload];
               }
      ];
-    uploader.timeoutInterval = self.requestTimeout;
-    uploader.authorizer = _authorizer;
     [self addRemoteRequest: uploader];
     LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
     if (!_uploaderQueue)
@@ -477,7 +475,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     }
 
     [self asyncTaskStarted];
-    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeID(rev.docID));
+    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     [self sendAsyncRequest: @"PUT"
                       path: path
                       body: rev.properties

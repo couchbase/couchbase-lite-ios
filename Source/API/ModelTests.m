@@ -13,40 +13,9 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CouchbaseLitePrivate.h"
-#import "CBLModelArray.h"
-#import "CBLInternal.h"
-#import "Test.h"
-
-
 #if DEBUG
-
-
-static CBLDatabase* createEmptyDB(void) {
-    CBLManager* dbmgr = [CBLManager sharedInstance];
-    CAssert(dbmgr);
-    NSError* error;
-    CBLDatabase* db = [dbmgr createEmptyDatabaseNamed: @"test_db" error: &error];
-    CAssert(db, @"Couldn't create db: %@", error);
-    return db;
-}
-
-
-static void closeTestDB(CBLDatabase* db) {
-    CAssert(db != nil);
-    CAssert([db close]);
-}
-
-
-static CBLDatabase* reopenTestDB(CBLDatabase* db) {
-    closeTestDB(db);
-    [[CBLManager sharedInstance] _forgetDatabase: db];
-    NSError* error;
-    CBLDatabase* db2 = [[CBLManager sharedInstance] databaseNamed: @"test_db" error: &error];
-    CAssert(db2, @"Couldn't reopen db: %@", error);
-    CAssert(db2 != db, @"reopenTestDB couldn't make a new instance");
-    return db2;
-}
+#import "APITestUtils.h"
+#import "CBLModelArray.h"
 
 
 #pragma mark - TEST MODEL:
@@ -251,7 +220,7 @@ TestCase(API_ModelDynamicProperties) {
     CAssertEqual(model.data, data);
 
     Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
-    [db close];
+    [db _close];
 }
 
 
@@ -311,7 +280,7 @@ TestCase(API_ModelEncodableProperties) {
                            @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"},
                            @"_id": doc3.documentID,
                            @"_rev": doc3.currentRevisionID}));
-    [db close];
+    [db _close];
 }
 
 
@@ -327,7 +296,7 @@ TestCase(API_ModelEncodablePropertiesNilValue) { // See #247
     emptyModel = [[CBL_TestModel alloc] initWithDocument:document];
     AssertNil(emptyModel.mutableSubModel);
 
-    [db close];
+    [db _close];
 }
 
 
@@ -357,7 +326,7 @@ TestCase(API_ModelDeleteProperty) {
     model.data = nil;
     CAssertEqual(model.data, nil);      // Tests issue CouchCocoa #73
 
-    [db close];
+    [db _close];
 }
 
 
@@ -482,7 +451,7 @@ TestCase(API_SaveModel) {
         CAssertEq(others[1], other);
         CAssertEqual(((CBL_TestModel*)others[0]).document.documentID, model2ID);
     }
-    [db close];
+    [db _close];
 }
 
 
@@ -560,7 +529,7 @@ TestCase(API_ModelAttachments) {
         [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content:newAttData];
         CAssert([model save: &error], @"Final save failed: %@", error);
     }
-    [db close];
+    [db _close];
 }
 
 
@@ -576,7 +545,7 @@ TestCase(API_ModelPropertyObservation) {
         [model save: NULL];
     }
     [model removeObserver: observer forKeyPath: @"dict.name"];
-    [db close];
+    [db _close];
 }
 
 

@@ -251,7 +251,7 @@ TestCase(CBL_Pusher) {
         return;
     }
     
-    [db close];
+    [db _close];
     [server close];
 }
 
@@ -288,7 +288,7 @@ TestCase(CBL_Puller) {
     CAssert([doc.revID hasPrefix: @"1-"]);
     CAssertEqual(doc[@"fnord"], $true);
 
-    [db close];
+    [db _close];
     [server close];
 }
 
@@ -324,7 +324,7 @@ TestCase(CBL_Puller_Continuous) {
     CAssert([doc.revID hasPrefix: @"1-"]);
     CAssertEqual(doc[@"fnord"], $true);
 
-    [db close];
+    [db _close];
     [server close];
 }
 
@@ -343,7 +343,7 @@ TestCase(CBL_Puller_Continuous_PermanentError) {
     NSError* error = CBLStatusToNSError(kCBLStatusNotFound, nil);
     replic8Continuous(db, remoteURL, NO, nil, error);
     
-    [db close];
+    [db _close];
     [server close];
 }
 
@@ -366,7 +366,7 @@ TestCase(CBL_Puller_AuthFailure) {
     NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
     replic8Continuous(db, remoteURL, NO, nil, error);
 
-    [db close];
+    [db _close];
     [server close];
 }
 
@@ -439,7 +439,7 @@ TestCase(CBL_Puller_DocIDs) {
     CAssert([doc.revID hasPrefix: @"2-"]);
     CAssertEqual(doc[@"foo"], @1);
     
-    [db close];
+    [db _close];
     [server close];
 }
 
@@ -479,7 +479,7 @@ TestCase(CBL_Pusher_DocIDs) {
     CAssertEqual((rows[0])[@"id"], @"doc4");
     CAssertEqual((rows[1])[@"id"], @"doc7");
 
-    [db close];
+    [db _close];
     [server close];
 }
 
@@ -509,7 +509,7 @@ TestCase(CBL_Puller_FromCouchApp) {
         CAssert(data);
         CAssertEq([data length], [attachment[@"length"] unsignedLongLongValue]);
     }
-    [db close];
+    [db _close];
     [server close];
 }
 

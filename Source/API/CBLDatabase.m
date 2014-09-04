@@ -53,8 +53,6 @@ static id<CBLFilterCompiler> sFilterCompiler;
 @implementation CBLDatabase
 {
     CBLCache* _docCache;
-    CBLModelFactory* _modelFactory;  // used in category method in CBLModelFactory.m
-    NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
     NSMutableSet* _allReplications;
 }
 
@@ -83,8 +81,6 @@ static id<CBLFilterCompiler> sFilterCompiler;
                                                      name: UIApplicationDidEnterBackgroundNotification
                                                    object: nil];
 #endif
-        if (0)
-            _modelFactory = nil;  // appeases static analyzer
     }
     return self;
 }
@@ -92,8 +88,8 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 - (void)dealloc {
     if (_isOpen) {
-        //Warn(@"%@ dealloced without being closed first!", self);
-        [self close];
+        Assert(!_manager);
+        [self _close];
     }
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
@@ -131,7 +127,9 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 #if TARGET_OS_IPHONE
 - (void) appBackgrounding: (NSNotification*)n {
-    [self autosaveAllModels: nil];
+    [self doAsync: ^{
+        [self autosaveAllModels: nil];
+    }];
 }
 #endif
 
@@ -187,37 +185,25 @@ static void catchInBlock(void (^block)()) {
 }
 
 
-- (BOOL) close {
-    (void)[self saveAllModels: NULL];  // ?? Or should I return NO if this fails?
-
-    if (![self closeInternal])
+- (BOOL) close: (NSError**)outError {
+    if (![self saveAllModels: outError])
         return NO;
-
-    [self _clearDocumentCache];
-    _modelFactory = nil;
-    return YES;
-}
-
-
-- (BOOL) closeForDeletion {
-    // There is no need to save any changes!
-    for (CBLModel* model in _unsavedModelsMutable.copy)
-        model.needsSave = false;
-    _unsavedModelsMutable = nil;
-    [self close];
-    [_manager _forgetDatabase: self];
+    for (CBLReplication* repl in self.allReplications)
+        [repl stop];
+    [self _close];
     return YES;
 }
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
     LogTo(CBLDatabase, @"Deleting %@", _path);
-    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
+    [[NSNotificationCenter defaultCenter] postNotificationName:CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
-    if (_isOpen && ![self closeForDeletion])
-        return NO;
-    [_manager _forgetDatabase: self];
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [self _close];
+
+    // Wait for all threads to close this database file:
+    [_manager.shared forgetDatabaseNamed: _name];
+
     if (!self.exists) {
         return YES;
     }

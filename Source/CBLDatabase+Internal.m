@@ -16,6 +16,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLInternal.h"
+#import "CBLModel_Internal.h"
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
 #import "CBLCollateJSON.h"
@@ -478,13 +479,20 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return YES;
 }
 
-- (BOOL) closeInternal {
+- (void) _close {
     if (!_isOpen)
-        return NO;
-    
+        return;
+
     LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
     Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
             _transactionLevel);
+
+    // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
+    // be any, because the public -close: method saves changes first.)
+    for (CBLModel* model in _unsavedModelsMutable.copy)
+        model.needsSave = false;
+    _unsavedModelsMutable = nil;
+
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
                                                         object: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self
@@ -502,11 +510,14 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     
     _activeReplicators = nil;
     
-    if (![_fmdb close])
-        return NO;
+    [_fmdb close]; // this returns BOOL, but its implementation never returns NO
     _isOpen = NO;
     _transactionLevel = 0;
-    return YES;
+
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [self _clearDocumentCache];
+    _modelFactory = nil;
+    [_manager _forgetDatabase: self];
 }
 
 
@@ -700,7 +711,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
             [self doAsync: ^{
                 LogTo(CBLDatabase, @"%@: Notified of deletion; closing", self);
-                [self closeForDeletion];
+                [self _close];
             }];
         }
     }
@@ -1423,13 +1434,14 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 - (NSArray*) getAllDocs: (const CBLQueryOptions*)options {
     if (!options)
         options = &kDefaultCBLQueryOptions;
+    BOOL includeDocs = (options->includeDocs || options->filter);
     BOOL includeDeletedDocs = (options->allDocsMode == kCBLIncludeDeleted);
     
     // Generate the SELECT statement, based on the options:
     BOOL cacheQuery = YES;
     NSMutableString* sql = [@"SELECT revs.doc_id, docid, revid, sequence" mutableCopy];
-    if (options->includeDocs)
-        [sql appendString: @", json"];
+    if (includeDocs)
+        [sql appendString: @", json, no_attachments"];
     if (includeDeletedDocs)
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
@@ -1492,15 +1504,18 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             BOOL deleted = includeDeletedDocs && [r boolForColumn: @"deleted"];
 
             NSDictionary* docContents = nil;
-            if (options->includeDocs) {
+            if (includeDocs) {
                 // Fill in the document contents:
                 NSData* json = [r dataNoCopyForColumnIndex: 4];
+                CBLContentOptions contentOptions = options->content;
+                if ([r boolForColumnIndex: 5])
+                    contentOptions |= kCBLNoAttachments; // doc has no attachments
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID
                                                          revID: revID
                                                        deleted: deleted
                                                       sequence: sequence
-                                                       options: options->content];
+                                                       options: contentOptions];
                 Assert(docContents);
             }
             
@@ -1527,7 +1542,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                     docProperties: docContents];
             if (options->keys)
                 docs[docID] = row;
-            else
+            else if (CBLRowPassesFilter(self, row, options))
                 [rows addObject: row];
         }
     }
@@ -1554,7 +1569,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                       value: value
                                               docProperties: nil];
             }
-            [rows addObject: change];
+            if (CBLRowPassesFilter(self, change, options))
+                [rows addObject: change];
         }
     }
 

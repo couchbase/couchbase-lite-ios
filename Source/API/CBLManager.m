@@ -238,8 +238,7 @@ static CBLManager* sInstance;
     Assert(self != sInstance, @"Please don't close the sharedInstance!");
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
     for (CBLDatabase* db in _databases.allValues) {
-        [db close];
-        [_shared closedDatabase: db.name];
+        [db _close];
     }
     [_databases removeAllObjects];
     _shared = nil;
@@ -494,15 +493,14 @@ static CBLManager* sInstance;
 }
 
 
+// Called when a database is being closed
 - (void) _forgetDatabase: (CBLDatabase*)db {
     NSString* name = db.name;
     [_replications my_removeMatching: ^int(CBLReplication* repl) {
         return [repl localDatabase] == db;
     }];
     [_databases removeObjectForKey: name];
-    CBL_Shared* shared = _shared;
-    [shared closedDatabase: name];
-    [shared forgetDatabaseNamed: name];
+    [_shared closedDatabase: name];
 }
 
 
@@ -738,31 +736,26 @@ TestCase(CBLManager) {
 
 TestCase(CBLManager_Close) {
     RequireTestCase(CBLManager);
-    
-    NSError* error;
-    CBLManager* mgr1 = [[CBLManager sharedInstance] copy];
-    CBLDatabase* db = [mgr1 databaseNamed: @"test_db" error: &error];
-    CAssert(!error);
+
+    CBLManager* mgrMain = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
+
+    CBLManager* mgr1 = [mgrMain copy];
+    CBLDatabase* db = [mgr1 databaseNamed: @"test_db" error: NULL];
     CAssert(db);
     
-    error = nil;
-    CBLManager* mgr2 = [[CBLManager sharedInstance] copy];
-    db = [mgr2 databaseNamed: @"test_db" error: &error];
-    CAssert(!error);
+    CBLManager* mgr2 = [mgrMain copy];
+    db = [mgr2 databaseNamed: @"test_db" error: NULL];
     CAssert(db);
     
     [mgr1 close];
-    NSInteger count = [[CBLManager sharedInstance].shared countForOpenedDatabase: @"test_db"];
+    NSInteger count = [mgrMain.shared countForOpenedDatabase: @"test_db"];
     CAssertEq(count, 1);
     
     [mgr2 close];
-    count = [[CBLManager sharedInstance].shared countForOpenedDatabase: @"test_db"];
+    count = [mgrMain.shared countForOpenedDatabase: @"test_db"];
     CAssertEq(count, 0);
     
-    error = nil;
-    BOOL result = [db deleteDatabase: &error];
-    CAssert(!error);
-    CAssert(result);
+    [mgrMain close];
 }
 
 #endif

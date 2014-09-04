@@ -9,7 +9,7 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
+@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared, CBLModelFactory;
 struct CBLQueryOptions;      // declared in CBLView+Internal.h
 
 
@@ -75,6 +75,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     NSMutableArray* _changesToNotify;
     bool _postingChangeNotifications;
     NSDate* _startTime;
+    CBLModelFactory* _modelFactory;
+    NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
 #if DEBUG
     CBL_Shared* _debug_shared;
 #endif
@@ -85,8 +87,6 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readonly) BOOL isOpen;
 
 - (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
-- (BOOL) close;
-- (BOOL) closeForDeletion;
 
 @end
 
@@ -105,7 +105,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 #endif
 - (BOOL) openFMDB: (NSError**)outError;
 - (BOOL) open: (NSError**)outError;
-- (BOOL) closeInternal;
+- (void) _close; // closes without saving CBLModels.
 
 @property (nonatomic, readonly) CBL_FMDatabase* fmdb;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;

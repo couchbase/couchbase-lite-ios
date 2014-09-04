@@ -48,6 +48,31 @@ int main (int argc, const char * argv[]) {
 
 
 - (void) applicationDidFinishLaunching: (NSNotification*)n {
+    // Ensure that every public class is an exported symbol in the CouchbaseLite framework:
+    [CBLAttachment class];
+    [CBLAuthenticator class];
+    [CBLDatabase class];
+    [CBLDatabaseChange class];
+    [CBLDocument class];
+    [CBLFullTextQueryRow class];
+    [CBLGeoQueryRow class];
+    [CBLJSON class];
+    [CBLLiveQuery class];
+    [CBLManager class];
+    [CBLModel class];
+    [CBLModelFactory class];
+    [CBLQuery class];
+    [CBLQueryEnumerator class];
+    [CBLQueryRow class];
+    [CBLReplication class];
+    [CBLRevision class];
+    [CBLSavedRevision class];
+    [CBLUnsavedRevision class];
+    [CBLView class];
+    Assert(&kCBLDatabaseChangeNotification != nil);
+    Assert(&kCBLDocumentChangeNotification != nil);
+    Assert(&kCBLReplicationChangeNotification != nil);
+
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* dbName = bundleInfo[@"DemoDatabase"];
     if (!dbName) {

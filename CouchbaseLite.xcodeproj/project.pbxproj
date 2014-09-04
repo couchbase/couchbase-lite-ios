@@ -132,11 +132,7 @@
 		2753159614ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156614ACEFC90065964D /* HTTPDynamicFileResponse.h */; };
 		2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156814ACEFC90065964D /* HTTPFileResponse.h */; };
 		2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753156A14ACEFC90065964D /* HTTPRedirectResponse.h */; };
-		275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */; };
-		275315C014ACF0330065964D /* DDASLLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B314ACF0330065964D /* DDASLLogger.h */; };
-		275315C414ACF0330065964D /* DDFileLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B514ACF0330065964D /* DDFileLogger.h */; };
 		275315C814ACF0330065964D /* DDLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B714ACF0330065964D /* DDLog.h */; };
-		275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B914ACF0330065964D /* DDTTYLogger.h */; };
 		275315DC14ACF0A20065964D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 275315DA14ACF0A20065964D /* InfoPlist.strings */; };
 		275315E014ACF0A20065964D /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
 		275315E514ACF1130065964D /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753155414ACEFC90065964D /* DDNumber.m */; };
@@ -470,6 +466,10 @@
 		27B945B217692E2000B2DF2D /* CBLModel_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945B017692E2000B2DF2D /* CBLModel_Internal.h */; };
 		27B945B317692E2000B2DF2D /* CBLModel_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945B017692E2000B2DF2D /* CBLModel_Internal.h */; };
 		27B945B417692E2000B2DF2D /* CBLModel+Properties.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945B117692E2000B2DF2D /* CBLModel+Properties.m */; };
+		27B960C719AFA90100AAA1FD /* CBLQueryPlanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D2E705199BC06300D09A1D /* CBLQueryPlanner.m */; };
+		27B960C819AFA90300AAA1FD /* CBLQueryPlanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D2E705199BC06300D09A1D /* CBLQueryPlanner.m */; };
+		27B960C919AFA90D00AAA1FD /* CBLQueryPlannerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D2E706199BC06300D09A1D /* CBLQueryPlannerTests.m */; };
+		27B960CA19AFA90E00AAA1FD /* CBLQueryPlannerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D2E706199BC06300D09A1D /* CBLQueryPlannerTests.m */; };
 		27BDA81E181973EF00F27A11 /* CBLBulkDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */; };
 		27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */; };
 		27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */; };
@@ -484,6 +484,7 @@
 		27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
 		27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
+		27D2E707199BC06300D09A1D /* CBLQueryPlanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D2E704199BC06300D09A1D /* CBLQueryPlanner.h */; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
 		27D90B1815601C340000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27D90B1915601C350000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -613,6 +614,8 @@
 		27F94127176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */; };
 		27F94128176F8235007BAEBE /* CBLJSONValidator.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */; };
 		27F94129176F823A007BAEBE /* CBLJSONValidator.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */; };
+		27F9D0C41999644D00112E9D /* APIViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F9D0C31999644D00112E9D /* APIViewTests.m */; };
+		27F9D0C51999644D00112E9D /* APIViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F9D0C31999644D00112E9D /* APIViewTests.m */; };
 		27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
 		27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
 		27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */; };
@@ -970,17 +973,8 @@
 		2753156B14ACEFC90065964D /* HTTPRedirectResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPRedirectResponse.m; sourceTree = "<group>"; };
 		275315A814ACF00B0065964D /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
 		275315A914ACF00B0065964D /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
-		275315B014ACF0330065964D /* About.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = About.txt; sourceTree = "<group>"; };
-		275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDAbstractDatabaseLogger.h; sourceTree = "<group>"; };
-		275315B214ACF0330065964D /* DDAbstractDatabaseLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDAbstractDatabaseLogger.m; sourceTree = "<group>"; };
-		275315B314ACF0330065964D /* DDASLLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDASLLogger.h; sourceTree = "<group>"; };
-		275315B414ACF0330065964D /* DDASLLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDASLLogger.m; sourceTree = "<group>"; };
-		275315B514ACF0330065964D /* DDFileLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDFileLogger.h; sourceTree = "<group>"; };
-		275315B614ACF0330065964D /* DDFileLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDFileLogger.m; sourceTree = "<group>"; };
 		275315B714ACF0330065964D /* DDLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDLog.h; sourceTree = "<group>"; };
 		275315B814ACF0330065964D /* DDLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDLog.m; sourceTree = "<group>"; };
-		275315B914ACF0330065964D /* DDTTYLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDTTYLogger.h; sourceTree = "<group>"; };
-		275315BA14ACF0330065964D /* DDTTYLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDTTYLogger.m; sourceTree = "<group>"; };
 		275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		275315D914ACF0A20065964D /* CouchbaseLiteListener-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CouchbaseLiteListener-Info.plist"; sourceTree = "<group>"; };
 		275315DB14ACF0A20065964D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -1246,6 +1240,10 @@
 		27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLUICollectionSource.m; path = Extras/CBLUICollectionSource.m; sourceTree = "<group>"; };
 		27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLUICollectionSource.h; path = Extras/CBLUICollectionSource.h; sourceTree = "<group>"; };
 		27CF5D2C152F514A0015D7A9 /* CBLStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLStatus.m; sourceTree = "<group>"; };
+		27D2E704199BC06300D09A1D /* CBLQueryPlanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryPlanner.h; path = Extras/CBLQueryPlanner.h; sourceTree = "<group>"; };
+		27D2E705199BC06300D09A1D /* CBLQueryPlanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLQueryPlanner.m; path = Extras/CBLQueryPlanner.m; sourceTree = "<group>"; };
+		27D2E706199BC06300D09A1D /* CBLQueryPlannerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLQueryPlannerTests.m; path = Extras/CBLQueryPlannerTests.m; sourceTree = "<group>"; };
+		27D2E70C199BCED100D09A1D /* CBLQueryPlanner+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLQueryPlanner+Private.h"; path = "Extras/CBLQueryPlanner+Private.h"; sourceTree = "<group>"; };
 		27D90B1615601C2F0000735E /* MYErrorUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
 		27D90B1715601C2F0000735E /* MYErrorUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYErrorUtils.m; sourceTree = "<group>"; };
 		27DA42F6158E66DD00F9E7B5 /* CBLRevision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRevision.h; sourceTree = "<group>"; };
@@ -1340,6 +1338,8 @@
 		27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONValidator.h; sourceTree = "<group>"; };
 		27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSONValidator.m; sourceTree = "<group>"; };
 		27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSONValidatorTests.m; sourceTree = "<group>"; };
+		27F9D0C31999644D00112E9D /* APIViewTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = APIViewTests.m; sourceTree = "<group>"; };
+		27F9D0C61999645A00112E9D /* APITestUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = APITestUtils.h; sourceTree = "<group>"; };
 		27FA59EF179EFDA20043460A /* build_docs.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_docs.sh; sourceTree = "<group>"; };
 		27FA59F0179EFDA20043460A /* Doxyfile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Doxyfile; sourceTree = "<group>"; };
 		27FA59F1179EFDA20043460A /* Doxyfile-DocSet */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "Doxyfile-DocSet"; sourceTree = "<group>"; };
@@ -1673,6 +1673,9 @@
 				277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */,
 				277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */,
 				277EF39C17F4DEDD00F7B7F7 /* CBLQuery+Geo.m */,
+				27D2E704199BC06300D09A1D /* CBLQueryPlanner.h */,
+				27D2E70C199BCED100D09A1D /* CBLQueryPlanner+Private.h */,
+				27D2E705199BC06300D09A1D /* CBLQueryPlanner.m */,
 			);
 			name = Views/Queries;
 			sourceTree = "<group>";
@@ -1762,17 +1765,8 @@
 		275315AF14ACF0330065964D /* CocoaLumberjack */ = {
 			isa = PBXGroup;
 			children = (
-				275315B014ACF0330065964D /* About.txt */,
-				275315B114ACF0330065964D /* DDAbstractDatabaseLogger.h */,
-				275315B214ACF0330065964D /* DDAbstractDatabaseLogger.m */,
-				275315B314ACF0330065964D /* DDASLLogger.h */,
-				275315B414ACF0330065964D /* DDASLLogger.m */,
-				275315B514ACF0330065964D /* DDFileLogger.h */,
-				275315B614ACF0330065964D /* DDFileLogger.m */,
 				275315B714ACF0330065964D /* DDLog.h */,
 				275315B814ACF0330065964D /* DDLog.m */,
-				275315B914ACF0330065964D /* DDTTYLogger.h */,
-				275315BA14ACF0330065964D /* DDTTYLogger.m */,
 			);
 			name = CocoaLumberjack;
 			path = vendor/CocoaHTTPServer/Vendor/CocoaLumberjack;
@@ -2058,8 +2052,11 @@
 			isa = PBXGroup;
 			children = (
 				27846FF015D5C8250030122F /* APITests.m */,
+				27F9D0C31999644D00112E9D /* APIViewTests.m */,
 				27B945A41767E06B00B2DF2D /* ModelTests.m */,
 				27A98EA317BEDC9900943528 /* ReplicationAPITests.m */,
+				27D2E706199BC06300D09A1D /* CBLQueryPlannerTests.m */,
+				27F9D0C61999645A00112E9D /* APITestUtils.h */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -2513,13 +2510,10 @@
 				2753159A14ACEFC90065964D /* HTTPFileResponse.h in Headers */,
 				2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */,
 				277B5D3B1821A8380088881E /* yajl_lex.h in Headers */,
-				275315BC14ACF0330065964D /* DDAbstractDatabaseLogger.h in Headers */,
-				275315C014ACF0330065964D /* DDASLLogger.h in Headers */,
-				275315C414ACF0330065964D /* DDFileLogger.h in Headers */,
+				27D2E707199BC06300D09A1D /* CBLQueryPlanner.h in Headers */,
 				27BDA81E181973EF00F27A11 /* CBLBulkDownloader.h in Headers */,
 				275315C814ACF0330065964D /* DDLog.h in Headers */,
 				27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */,
-				275315CC14ACF0330065964D /* DDTTYLogger.h in Headers */,
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
 				277B5DC91821A8B60088881E /* yajl_parse.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
@@ -3179,6 +3173,7 @@
 				2776A59316A0C3A6006FF199 /* CBLPersonaAuthorizer.m in Sources */,
 				27A98EA517BEDC9900943528 /* ReplicationAPITests.m in Sources */,
 				2776A63116A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
+				27F9D0C41999644D00112E9D /* APIViewTests.m in Sources */,
 				271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */,
 				27DA435115918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
@@ -3441,6 +3436,7 @@
 				277EF48117F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
 				277EF48717F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
 				277EF46017F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
+				27F9D0C51999644D00112E9D /* APIViewTests.m in Sources */,
 				277EF43C17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,
 				277EF47517F4DF3700F7B7F7 /* stem_UTF_8_porter.c in Sources */,
 				277EF44217F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
@@ -3493,6 +3489,8 @@
 				93F85F76199BDCB200A379A9 /* CBLRouter_Tests.m in Sources */,
 				27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */,
 				27F94124176F7448007BAEBE /* CBLJSONValidator.m in Sources */,
+				27B960CA19AFA90E00AAA1FD /* CBLQueryPlannerTests.m in Sources */,
+				27B960C819AFA90300AAA1FD /* CBLQueryPlanner.m in Sources */,
 				AA1776B91857ADDB00CB01A3 /* CBLIncrementalStore.m in Sources */,
 				27F94127176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */,
 				AA1776BA1857ADDB00CB01A3 /* CBLIncrementalStoreTests.m in Sources */,
@@ -3504,9 +3502,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				27C706D31488679500F0F099 /* DemoAppController.m in Sources */,
+				27B960C919AFA90D00AAA1FD /* CBLQueryPlannerTests.m in Sources */,
 				271EFF0C185F6A6C00142804 /* CBLIncrementalStore.m in Sources */,
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
 				27F94126176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */,
+				27B960C719AFA90100AAA1FD /* CBLQueryPlanner.m in Sources */,
 				271EFF0D185F6A6C00142804 /* CBLIncrementalStoreTests.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
 				27FFE20517BBF17C0040AE60 /* CBLRouter_Tests.m in Sources */,
@@ -3931,6 +3931,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -3965,6 +3966,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_SIGN_COMPARE = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;

@@ -55,7 +55,7 @@ TestCase(CBL_View_Create) {
                     reduceBlock: NULL version: @"2"];
     CAssert(changed);
     
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -189,7 +189,7 @@ TestCase(CBL_View_Index) {
     
     [view deleteIndex];
     
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -231,7 +231,7 @@ TestCase(CBL_View_IndexMultiple) {
     for (CBLView* view in views)
         CAssertEq(view.lastSequenceIndexed, kNDocs);
 
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -271,7 +271,7 @@ TestCase(CBL_View_ConflictWinner) {
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -311,7 +311,7 @@ TestCase(CBL_View_ConflictLoser) {
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -343,7 +343,17 @@ TestCase(CBL_View_Query) {
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
 
+    // Start/end query without inclusive start:
+    options.inclusiveStart = NO;
+    options.startKey = @"five";
+    rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
+                          $dict({@"id",  @"11111"}, {@"key", @"one"}));
+    CAssertEqual(rows, expectedRows);
+
     // Start/end query without inclusive end:
+    options.inclusiveStart = YES;
+    options.startKey = @"a";
     options.inclusiveEnd = NO;
     rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
@@ -398,7 +408,7 @@ TestCase(CBL_View_Query) {
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
     CAssertEqual(rows, expectedRows);
 
-    CAssert([db close]);
+    [db _close];
 }
 
 TestCase(CBL_View_QueryStartKeyDocID) {
@@ -434,6 +444,25 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
     CAssertEqual(rows, expectedRows);
+}
+
+TestCase(CBL_View_PrefixMatch) {
+    RequireTestCase(CBL_View_Query);
+    CBLDatabase *db = createDB();
+    putDocs(db);
+    CBLView* view = createView(db);
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    // Query all rows:
+    CBLQueryOptions options = kDefaultCBLQueryOptions;
+    CBLStatus status;
+    options.endKey = @"f";
+    options.prefixMatchLevel = 1;
+    NSArray* rows = rowsToDicts([view _queryWithOptions: &options status: &status]);
+    NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                                   $dict({@"id",  @"44444"}, {@"key", @"four"}));
+    CAssertEqual(rows, expectedRows);
+    // TODO: Test prefixMatchLevel > 1
 }
 
 TestCase(CBL_View_EmitDocAsValue) {
@@ -511,7 +540,7 @@ TestCase (CBL_View_NumericKeys) {
     AssertEq(rows.count, 1u);
     AssertEqual([rows[0] key], @(33547239));
 
-    CAssert([db close]);
+    [db _close];
 }
 
 TestCase(CBL_View_GeoQuery) {
@@ -559,7 +588,7 @@ TestCase(CBL_View_GeoQuery) {
     AssertEqual(row.geometryType, @"Point");
     AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
 
-    CAssert([db close]);
+    [db _close];
 }
 
 TestCase(CBL_View_AllDocsQuery) {
@@ -650,7 +679,7 @@ TestCase(CBL_View_AllDocsQuery) {
     expectedRows = $array(expectedConflict1);
     CAssertEqual(rowsToDicts(query), expectedRows);
 
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -686,7 +715,7 @@ TestCase(CBL_View_Reduce) {
     CAssertEq(reduced.count, 1u);
     double result = [reduced[0][@"value"] doubleValue];
     CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -756,7 +785,7 @@ TestCase(CBL_View_Grouped) {
                                     {@"value", @(248)}),
                               $dict({@"key", @[@"PiL", @"Metal Box"]}, 
                                     {@"value", @(309)})));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -788,7 +817,7 @@ TestCase(CBL_View_GroupedStrings) {
     CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
                               $dict({@"key", @"J"}, {@"value", @2}),
                               $dict({@"key", @"N"}, {@"value", @1})));
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -834,7 +863,7 @@ TestCase(CBL_View_Collation) {
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -880,7 +909,7 @@ TestCase(CBL_View_CollationRaw) {
     i = 0;
     for (NSDictionary* row in rows)
         CAssertEqual(row[@"key"], testKeys[i++]);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -927,7 +956,7 @@ TestCase(CBL_View_LinkedDocs) {
                                          {@"value", $dict({@"_id", @"11111"})},
                                          {@"doc", docs[2]}));
     CAssertEqual(rows, expectedRows);
-    CAssert([db close]);
+    [db _close];
 }
 
 
@@ -1032,7 +1061,7 @@ TestCase(CBL_View_FullTextQuery) {
                                 {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rows), expectedRows);
-    CAssert([db close]);
+    [db _close];
 }
 
 
