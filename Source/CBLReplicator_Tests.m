@@ -133,7 +133,7 @@ void DeleteRemoteDB(NSURL* dbURL) {
 
 
 static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push,
-                         NSString* filter, NSArray* docIDs)
+                         NSString* filter, NSArray* docIDs, NSError* expectError)
 {
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO];
@@ -146,16 +146,24 @@ static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push,
     
     CAssert(repl.running);
     Log(@"Waiting for replicator to finish...");
-    while (repl.running || repl.savingCheckpoint) {
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
+    while ((repl.running || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
     }
     CAssert(!repl.running);
     CAssert(!repl.savingCheckpoint);
-    CAssertNil(repl.error);
+    if (expectError) {
+        CAssert(!repl.running);
+        AssertEqual(repl.error.domain, expectError.domain);
+        AssertEq(repl.error.code, expectError.code);
+        Log(@"...replicator got expected error %@", repl.error);
+    } else {
+        CAssertNil(repl.error);
+        Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+    }
     CAssert(!repl.active);
-    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     return repl.lastSequence;
 }
 
@@ -175,8 +183,9 @@ static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
     // Start the replicator and wait for it to go active, then inactive:
     CAssert(repl.running);
     Log(@"Waiting for replicator to go idle...");
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     bool wasActive = repl.active;
-    while (repl.running || repl.savingCheckpoint) {
+    while ((repl.running || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
@@ -244,7 +253,7 @@ TestCase(CBL_Pusher) {
     NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
     if (remoteDB) {
         DeleteRemoteDB(remoteDB);
-        id lastSeq = replic8(db, remoteDB, YES, @"filter", nil);
+        id lastSeq = replic8(db, remoteDB, YES, @"filter", nil, nil);
         CAssertEqual(lastSeq, @"3");
         CAssertEq(filterCalls, 2);
     } else {
@@ -268,7 +277,7 @@ TestCase(CBL_Puller) {
     CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
     
-    id lastSeq = replic8(db, remoteURL, NO, nil, nil);
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
     CAssertEqual(lastSeq, @2);
     
     CAssertEq(db.documentCount, 2u);
@@ -276,7 +285,7 @@ TestCase(CBL_Puller) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -378,10 +387,37 @@ TestCase(CBL_Puller_SSL) {
     CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
 
-    replic8Continuous(db, remoteURL, NO, nil, [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorServerCertificateUntrusted userInfo: nil]);
+    Log(@"Replicating without root cert; should fail...");
+    replic8(db, remoteURL, NO, nil, nil,
+            [NSError errorWithDomain: NSURLErrorDomain
+                                code: NSURLErrorServerCertificateUntrusted userInfo: nil]);
 
+    Log(@"Now replicating with root cert installed...");
     [CBL_Replicator setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
-    id lastSeq = replic8(db, remoteURL, NO, nil, nil);
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
+    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CAssert([lastSeq intValue] >= 2);
+
+    CAssertEq(db.documentCount, 2u);
+    CAssertEq(db.lastSequenceNumber, 2);
+}
+
+TestCase(CBL_Puller_SSL_Continuous) {
+    RequireTestCase(CBL_Pusher);
+    NSURL* remoteURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    Log(@"Replicating without root cert; should fail...");
+    replic8Continuous(db, remoteURL, NO, nil,
+                      [NSError errorWithDomain: NSURLErrorDomain
+                                          code: NSURLErrorServerCertificateUntrusted
+                                      userInfo: nil]);
+
+    Log(@"Now replicating with root cert installed...");
+    [CBL_Replicator setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
+    id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil);
     [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
     CAssert([lastSeq intValue] >= 2);
 
@@ -432,7 +468,7 @@ TestCase(CBL_Puller_DocIDs) {
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil);
+    replic8(db, RemoteTestDBURL(kScratchDBName), NO, nil, nil, nil);
     CAssertEq(db.lastSequenceNumber, 3);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -464,7 +500,7 @@ TestCase(CBL_Pusher_DocIDs) {
     NSURL* remoteDB = RemoteTestDBURL(kScratchDBName);
     if (remoteDB) {
         DeleteRemoteDB(remoteDB);
-        replic8(db, remoteDB, YES, nil, @[@"doc4", @"doc7"]);
+        replic8(db, remoteDB, YES, nil, @[@"doc4", @"doc7"], nil);
     } else {
         Warn(@"Skipping rest of test CBL_Pusher_DocIDs (no remote test DB URL)");
         return;
@@ -497,7 +533,7 @@ TestCase(CBL_Puller_FromCouchApp) {
     CBLDatabase* db = [server databaseNamed: kCouchAppDBName error: NULL];
     CAssert(db);
     
-    replic8(db, remote, NO, nil, nil);
+    replic8(db, remote, NO, nil, nil, nil);
 
     CBLStatus status;
     CBL_Revision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kCBLIncludeAttachments status: &status];
