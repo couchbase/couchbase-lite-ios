@@ -502,12 +502,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (keysToReduce.count > 0 || lastKeyData) {
         // Finish the last group (or the entire list, if no grouping):
         id key = group ? groupKey(lastKeyData, groupLevel) : $null;
-        id reduced = nil;
-        if (reduce) {
-            reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-            LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
+        id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
+        LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
-        }
         CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: nil
                                                      sequence: 0
                                                           key: key
