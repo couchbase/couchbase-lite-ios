@@ -806,7 +806,9 @@ static BOOL sOnlyTrustAnchorCerts;
                                            {@"filterParams", _filterParameters},
                                          //{@"headers", _requestHeaders}, (removed; see #143)
                                            {@"docids", _docIDs});
-        _remoteCheckpointDocID = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
+        NSError *error;
+        _remoteCheckpointDocID = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec error: &error]);
+        Assert(!error);
     }
     return _remoteCheckpointDocID;
 }

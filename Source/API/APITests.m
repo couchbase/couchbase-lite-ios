@@ -414,6 +414,18 @@ TestCase(API_DeleteMultipleDocuments) {
 }
 #endif
 
+
+TestCase(API_SaveDocumentWithNaNProperty) {
+    CBLDatabase* db = createEmptyDB();
+    NSDictionary* properties = @{@"aNumber": [NSDecimalNumber notANumber]};
+    CBLDocument* doc = [db createDocument];
+    NSError* error;
+    CBLSavedRevision* rev = [doc putProperties: properties error: &error];
+    CAssertEq(error.code, 400);
+    CAssert(!rev);
+}
+
+
 TestCase(API_DeleteDocument) {
     CBLDatabase* db = createEmptyDB();
     NSDictionary* properties = @{@"testName": @"testDeleteDocument"};
@@ -772,6 +784,7 @@ TestCase(API) {
     RequireTestCase(API_DeleteDatabase);
     RequireTestCase(API_CreateDocument);
     RequireTestCase(API_CreateRevisions);
+    RequireTestCase(API_SaveDocumentWithNaNProperty);
     RequireTestCase(API_DeleteDocument);
     RequireTestCase(API_PurgeDocument);
     RequireTestCase(API_AllDocuments);

@@ -194,7 +194,7 @@
     // Create canonical JSON -- this is important, because the JSON data returned here will be used
     // to create the new revision ID, and we need to guarantee that equivalent revision bodies
     // result in equal revision IDs.
-    NSData* json = [CBLCanonicalJSON canonicalData: properties];
+    NSData* json = [CBLCanonicalJSON canonicalData: properties error: nil];
     return json;
 }
 

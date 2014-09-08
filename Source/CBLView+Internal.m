@@ -100,7 +100,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     }
 
     // Version string is based on a digest of the properties:
-    NSString* version = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: viewProps]);
+    NSError* error;
+    NSString* version = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: viewProps error: &error]);
+    if (error) {
+        Warn(@"View %@ has invalid JSON values: %@", _name, error);
+        return NO;
+    }
 
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 
