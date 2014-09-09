@@ -17,6 +17,7 @@
     NSString* _ignoreKeyPrefix;
     NSArray* _whitelistedKeys;
     NSMutableString* _output;
+    NSError* _error;
 }
 
 - (instancetype) initWithObject: (id)object;
@@ -34,12 +35,14 @@
 /** Canonical form of UTF-8 encoded JSON data from the input object tree. */
 @property (readonly) NSData* canonicalData;
 
+@property (readonly) NSError* error;
+
 
 /** Convenience method that instantiates a CBLCanonicalJSON object and uses it to encode the object. */
-+ (NSData*) canonicalData: (id)rootObject;
++ (NSData*) canonicalData: (id)rootObject error: (NSError**)error;
 
 /** Convenience method that instantiates a CBLCanonicalJSON object and uses it to encode the object, returning a string. */
-+ (NSString*) canonicalString: (id)rootObject;
++ (NSString*) canonicalString: (id)rootObject error: (NSError**)error;
 
 
 /** Returns a dictionary's keys in the same order in which they would be written out in canonical JSON. */

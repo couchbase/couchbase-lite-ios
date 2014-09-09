@@ -401,7 +401,13 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 [bodyStream setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
                 // Use canonical JSON encoder so that _attachments keys will be written in the
                 // same order that this for loop is processing the attachments.
-                NSData* json = [CBLCanonicalJSON canonicalData: rev.properties];
+                NSError* error;
+                NSData* json = [CBLCanonicalJSON canonicalData: rev.properties error: &error];
+                if (error) {
+                    Warn(@"%@: Creating canonical JSON data got an error: %@", self, error);
+                    return NO;
+                }
+
                 if (self.canSendCompressedRequests)
                     [bodyStream addGZippedData: json];
                 else

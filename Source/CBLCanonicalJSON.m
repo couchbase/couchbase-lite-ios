@@ -16,6 +16,7 @@
 #import "CBLCanonicalJSON.h"
 #import <math.h>
 
+NSString* const CBLCanonicalJSONErrorDomain = @"CBLCanonicalJSON";
 
 @interface CBLCanonicalJSON ()
 - (void) encode: (id)object;
@@ -36,7 +37,7 @@
 
 
 
-@synthesize ignoreKeyPrefix=_ignoreKeyPrefix, whitelistedKeys=_whitelistedKeys;
+@synthesize ignoreKeyPrefix=_ignoreKeyPrefix, whitelistedKeys=_whitelistedKeys, error=_error;
 
 
 - (void) encodeString: (NSString*)string {
@@ -87,6 +88,14 @@
 
 
 - (void) encodeNumber: (NSNumber*)number {
+    if ([[NSDecimalNumber notANumber] isEqualToNumber: number]) {
+        _error = [NSError errorWithDomain: CBLCanonicalJSONErrorDomain
+                                     code: 1
+                                 userInfo: @{NSLocalizedDescriptionKey:
+                                                 @"Cannot encode NaN value"}];
+        return;
+    }
+
     const char* encoding = number.objCType;
     if (encoding[0] == 'c')
         [_output appendString:[number boolValue] ? @"true" : @"false"];
@@ -104,6 +113,8 @@
         else
             [_output appendString: @","];
         [self encode: item];
+        if (_error)
+            break;
     }
     [_output appendString: @"]"];
 }
@@ -150,6 +161,8 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
         [self encodeString: key];
         [_output appendString: @":"];
         [self encode: dict[key]];
+        if (_error)
+            break;
     }
     [_output appendString: @"}"];
 }
@@ -175,7 +188,10 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 - (void) encode {
     if (!_output) {
         _output = [[NSMutableString alloc] init];
+        _error = nil;
         [self encode: _input];
+        if (_error)
+            _output = nil;
     }
 }
 
@@ -192,16 +208,20 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 }
 
 
-+ (NSString*) canonicalString: (id)rootObject {
++ (NSString*) canonicalString: (id)rootObject error: (NSError**)outError {
     CBLCanonicalJSON* encoder = [[self alloc] initWithObject: rootObject];
     NSString* result = encoder.canonicalString;
+    if (outError)
+        *outError = encoder.error;
     return result;
 }
 
 
-+ (NSData*) canonicalData: (id)rootObject {
++ (NSData*) canonicalData: (id)rootObject error: (NSError**)outError {
     CBLCanonicalJSON* encoder = [[self alloc] initWithObject: rootObject];
     NSData* result = encoder.canonicalData;
+    if (outError)
+        *outError = encoder.error;
     return result;
 }
 
@@ -213,7 +233,7 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 #if DEBUG
 
 static void roundtrip( id obj ) {
-    NSData* json = [CBLCanonicalJSON canonicalData: obj];
+    NSData* json = [CBLCanonicalJSON canonicalData: obj error: nil];
     Log(@"%@ --> `%@`", [obj description], [json my_UTF8ToString]);
     NSError* error;
     id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
@@ -223,7 +243,7 @@ static void roundtrip( id obj ) {
 }
 
 static void roundtripFloat( double n ) {
-    NSData* json = [CBLCanonicalJSON canonicalData: @(n)];
+    NSData* json = [CBLCanonicalJSON canonicalData: @(n) error: nil];
     NSError* error;
     id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
     CAssert(reconstituted, @"`%@` was unparseable: %@",
@@ -235,9 +255,9 @@ static void roundtripFloat( double n ) {
 }
 
 TestCase(CBLCanonicalJSON_Encoding) {
-    CAssertEqual([CBLCanonicalJSON canonicalString: $true], @"true");
-    CAssertEqual([CBLCanonicalJSON canonicalString: $false], @"false");
-    CAssertEqual([CBLCanonicalJSON canonicalString: $null], @"null");
+    CAssertEqual([CBLCanonicalJSON canonicalString: $true error: nil], @"true");
+    CAssertEqual([CBLCanonicalJSON canonicalString: $false error: nil], @"false");
+    CAssertEqual([CBLCanonicalJSON canonicalString: $null error: nil], @"null");
 }
 
 TestCase(CBLCanonicalJSON_RoundTrip) {
@@ -284,6 +304,13 @@ TestCase(CBLCanonicalJSON_RoundTrip) {
     roundtrip(@{@"key": @"value"});
     roundtrip(@{@"\"key\"": $false});
     roundtrip(@{@"\"key\"": $false, @"": @{}});
+}
+
+TestCase(CBLCanonicalJSON_NaNProperty) {
+    NSError* error;
+    NSData* json = [CBLCanonicalJSON canonicalData: [NSDecimalNumber notANumber] error: &error];
+    CAssert(!json);
+    CAssertEqual(error.domain, CBLCanonicalJSONErrorDomain);
 }
 
 #endif

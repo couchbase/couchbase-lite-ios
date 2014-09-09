@@ -500,6 +500,16 @@ TestCase(API_SaveMutatedSubModel) {
 }
 
 
+TestCase(API_SaveModelWithNaNProperty) {
+    CBLDatabase* db = createEmptyDB();
+    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    model.doubly = sqrt(-1);
+    NSError* error;
+    [model save: &error];
+    CAssertEq(error.code, 400);
+}
+
+
 TestCase(API_ModelAttachments) {
     // Attempting to reproduce https://github.com/couchbase/couchbase-lite-ios/issues/63
     CBLDatabase* db = createEmptyDB();
@@ -566,6 +576,7 @@ TestCase(API_Model) {
     RequireTestCase(API_ModelEncodablePropertiesNilValue);
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_SaveMutatedSubModel);
+    RequireTestCase(API_SaveModelWithNaNProperty);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);
 }
