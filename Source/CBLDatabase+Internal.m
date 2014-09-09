@@ -442,6 +442,15 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         dbVersion = 14;
     }
 
+    if (dbVersion < 15) {
+        // Version 15: Add sequence index on maps and attachments for revs(sequence) on DELETE CASCADE
+        NSString* sql = @"CREATE INDEX maps_sequence ON maps(sequence); \
+                          CREATE INDEX attachments_sequence ON attachments(sequence); \
+                          PRAGMA user_version = 15";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 15;
+    }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
         return NO;
