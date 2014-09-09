@@ -45,6 +45,12 @@ static ValueConverter valueConverterToClass(Class toClass) {
                 return [NSDecimalNumber decimalNumberWithString: rawValue];
             return nil;
         };
+    } else if (toClass == [NSURL class]) {
+        return ^id(id rawValue, CBLModel* self, NSString* property) {
+            if ([rawValue isKindOfClass: [NSString class]])
+                return [NSURL URLWithString: rawValue];
+            return nil;
+        };
     } else if ([toClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
         return ^id(id rawValue, CBLModel* self, NSString* property) {
             if (!rawValue)

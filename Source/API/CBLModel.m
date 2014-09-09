@@ -388,6 +388,8 @@
         value = [CBLJSON JSONObjectWithDate: value];
     else if ([value isKindOfClass: [NSDecimalNumber class]])
         value = [value stringValue];
+    else if ([value isKindOfClass: [NSURL class]])
+        value = [value absoluteString];
     else if ([value isKindOfClass: [CBLModel class]])
         value = ((CBLModel*)value).document.documentID;
     else if ([value isKindOfClass: [NSArray class]]) {
