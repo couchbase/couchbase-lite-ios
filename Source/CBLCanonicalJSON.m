@@ -19,7 +19,7 @@
 NSString* const CBLCanonicalJSONErrorDomain = @"CBLCanonicalJSON";
 
 @interface CBLCanonicalJSON ()
-- (void) encode: (id)object error: (NSError**)outError;
+- (void) encode: (id)object;
 @end
 
 
@@ -87,12 +87,12 @@ NSString* const CBLCanonicalJSONErrorDomain = @"CBLCanonicalJSON";
 }
 
 
-- (void) encodeNumber: (NSNumber*)number error: (NSError**)outError {
+- (void) encodeNumber: (NSNumber*)number {
     if ([[NSDecimalNumber notANumber] isEqualToNumber: number]) {
-        if (outError)
-            *outError = [NSError errorWithDomain: CBLCanonicalJSONErrorDomain code: 1
-                                        userInfo: @{NSLocalizedDescriptionKey:
-                                                        @"Cannot encode NaN value"}];
+        _error = [NSError errorWithDomain: CBLCanonicalJSONErrorDomain
+                                     code: 1
+                                 userInfo: @{NSLocalizedDescriptionKey:
+                                                 @"Cannot encode NaN value"}];
         return;
     }
 
@@ -104,7 +104,7 @@ NSString* const CBLCanonicalJSONErrorDomain = @"CBLCanonicalJSON";
 }
 
 
-- (void) encodeArray: (NSArray*)array error: (NSError**)outError {
+- (void) encodeArray: (NSArray*)array {
     [_output appendString: @"["];
     BOOL first = YES;
     for (id item in array) {
@@ -112,14 +112,9 @@ NSString* const CBLCanonicalJSONErrorDomain = @"CBLCanonicalJSON";
             first = NO;
         else
             [_output appendString: @","];
-        NSError* error;
-        [self encode: item error: &error];
-        if (error) {
-            if (outError)
-                *outError = error;
+        [self encode: item];
+        if (_error)
             break;
-        }
-
     }
     [_output appendString: @"]"];
 }
@@ -150,7 +145,7 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
 }
 
 
-- (void) encodeDictionary: (NSDictionary*)dict error: (NSError**)outError {
+- (void) encodeDictionary: (NSDictionary*)dict {
     [_output appendString: @"{"];
     BOOL first = YES;
     for (NSString* key in [[self class] orderedKeys: dict]) {
@@ -165,29 +160,25 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
             [_output appendString: @","];
         [self encodeString: key];
         [_output appendString: @":"];
-        NSError* error;
-        [self encode: dict[key] error: &error];
-        if (error) {
-            if (outError)
-                *outError = error;
+        [self encode: dict[key]];
+        if (_error)
             break;
-        }
     }
     [_output appendString: @"}"];
 }
 
 
-- (void) encode: (id)object error: (NSError**)outError {
+- (void) encode: (id)object {
     if ([object isKindOfClass: [NSString class]]) {
         [self encodeString: object];
     } else if ([object isKindOfClass: [NSNumber class]]) {
-        [self encodeNumber: object error:outError];
+        [self encodeNumber: object];
     } else if ([object isKindOfClass: [NSNull class]]) {
         [_output appendString: @"null"];
     } else if ([object isKindOfClass: [NSDictionary class]]) {
-        [self encodeDictionary: object error:outError];
+        [self encodeDictionary: object];
     } else if ([object isKindOfClass: [NSArray class]]) {
-        [self encodeArray: object error:outError];
+        [self encodeArray: object];
     } else {
         Assert(NO, @"Can't encode instances of %@ as JSON", [object class]);
     }
@@ -198,12 +189,9 @@ static NSComparisonResult compareCanonStrings( id s1, id s2, void *context) {
     if (!_output) {
         _output = [[NSMutableString alloc] init];
         _error = nil;
-        NSError* error;
-        [self encode: _input error:&error];
-        if (error) {
+        [self encode: _input];
+        if (_error)
             _output = nil;
-            _error = error;
-        }
     }
 }
 
