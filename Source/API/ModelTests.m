@@ -110,6 +110,7 @@
 @property NSData* data;
 @property NSDate* date;
 @property NSDecimalNumber* decimal;
+@property NSURL* url;
 @property CBL_TestModel* other;
 @property NSArray* strings;
 @property NSArray* dates;
@@ -130,7 +131,7 @@
 
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
 @dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly, dict;
-@dynamic str, data, date, decimal, other, strings, dates, others, Capitalized;
+@dynamic str, data, date, decimal, url, other, strings, dates, others, Capitalized;
 @dynamic subModel, subModels, mutableSubModel;
 @synthesize reloadCount;
 
@@ -218,6 +219,10 @@ TestCase(API_ModelDynamicProperties) {
     CAssertEqual(model.str, @"LEET");
     CAssertEqual(model.strings, strings);
     CAssertEqual(model.data, data);
+
+    NSURL* url = [NSURL URLWithString: @"http://bogus"];
+    model.url = url;
+    CAssertEqual(model.url, url);
 
     Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
     [db _close];
@@ -334,6 +339,7 @@ TestCase(API_SaveModel) {
     NSDate* date = [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252];
     NSArray* dates = @[date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392837521]];
     NSDecimalNumber* decimal = [NSDecimalNumber decimalNumberWithString: @"12345.6789"];
+    NSURL* url = [NSURL URLWithString: @"http://bogus"];
 
     CBLDatabase* db = createEmptyDB();
     NSString* modelID, *model2ID, *model3ID;
@@ -353,6 +359,7 @@ TestCase(API_SaveModel) {
         model.date = date;
         model.dates = dates;
         model.decimal = decimal;
+        model.url = url;
 
         CAssert(model.isNew);
         CAssert(model.needsSave);
@@ -364,7 +371,8 @@ TestCase(API_SaveModel) {
                                                 @"date": @"2013-06-12T23:40:52.000Z",
                                                 @"dates": @[@"2013-06-12T23:40:52.000Z",
                                                             @"2013-06-13T17:32:01.000Z"],
-                                                @"decimal": @"12345.6789"}));
+                                                @"decimal": @"12345.6789",
+                                                @"url": @"http://bogus"}));
 
         CBL_TestModel* model2 = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
         model2ID = model2.document.documentID;
@@ -382,6 +390,7 @@ TestCase(API_SaveModel) {
         CAssertEqual(model.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
         CAssertEqual(model.dates, dates);
         CAssertEqual(model.decimal, decimal);
+        CAssertEqual(model.url, url);
         CAssertEq(model.other, model3);
         CAssertEqual(model.others, (@[model2, model3]));
 
@@ -400,6 +409,7 @@ TestCase(API_SaveModel) {
                                @"date": @"2013-06-12T23:40:52.000Z",
                                @"dates": @[@"2013-06-12T23:40:52.000Z", @"2013-06-13T17:32:01.000Z"],
                                @"decimal": @"12345.6789",
+                               @"url": @"http://bogus",
                                @"other": model3.document.documentID,
                                @"others": @[model2.document.documentID, model3.document.documentID],
                                @"_id": props[@"_id"],
@@ -443,6 +453,7 @@ TestCase(API_SaveModel) {
         CAssertEqual(modelAgain.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
         CAssertEqual(modelAgain.dates, dates);
         CAssertEqual(modelAgain.decimal, decimal);
+        CAssertEqual(modelAgain.url, url);
 
         CBL_TestModel *other = modelAgain.other;
         CAssertEqual(modelAgain.other.document.documentID, model3ID);
