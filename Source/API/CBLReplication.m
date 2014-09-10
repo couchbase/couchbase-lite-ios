@@ -370,6 +370,17 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
+#pragma mark - PUSH REPLICATION ONLY:
+
+
+- (NSSet*) pendingDocumentIDs {
+    return [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
+        CBL_RevisionList* revs = ($castIf(CBL_Pusher, bgReplicator)).unpushedRevisions;
+        return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
+    }];
+}
+
+
 #pragma mark - BACKGROUND OPERATIONS:
 
 

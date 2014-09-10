@@ -262,10 +262,16 @@ TestCase(RunPushReplication) {
     CBLReplication* repl = [db createPushReplication: remoteDbURL];
     repl.createTarget = YES;
     [repl start];
+
+    NSSet* unpushed = repl.pendingDocumentIDs;
+    CAssertEq(unpushed.count, (unsigned)kNDocuments);
+
     CAssertEqual(db.allReplications, @[repl]);
     runReplication(repl, kNDocuments);
     AssertNil(repl.lastError);
     CAssertEqual(db.allReplications, @[]);
+    CAssertEq(repl.pendingDocumentIDs.count, 0u);
+
     [db.manager close];
 }
 

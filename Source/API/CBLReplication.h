@@ -166,6 +166,14 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 @property (nonatomic, readonly) unsigned changesCount;
 
 
+/** The IDs of documents that have local changes that have not yet been pushed to the server
+    by this replication. This only considers documents that this replication would push: documents
+    that aren't matched by its filter or documentIDs (if any) are ignored.
+    If the replication hasn't started yet, or if it's encountered an error, or if it's not a push
+    replication at all, the value of this property is nil. */
+@property (readonly) NSSet* pendingDocumentIDs;
+
+
 #ifdef CBL_DEPRECATED
 @property (nonatomic, copy) NSString* facebookEmailAddress
     __attribute__((deprecated("set authenticator property instead")));
