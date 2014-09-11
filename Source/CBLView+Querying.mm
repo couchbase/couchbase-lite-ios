@@ -78,7 +78,7 @@ static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQuer
         iterator = [self _regularQueryWithOptions: options status: outStatus];
     if (options->descending)
         iterator = reverseIterator(iterator, options);
-    LogTo(View, @"Query %@: Returning iterator", _name);
+    LogTo(Query, @"Query %@: Returning iterator", _name);
     return iterator;
 }
 
@@ -106,52 +106,54 @@ static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQuer
     *outStatus = kCBLStatusOK;
     CBLDatabase* db = _weakDB;
     return ^CBLQueryRow*() {
-        if (!e)
-            return nil;
+        while (e) {
+            id docContents = nil;
+            id key = e.key().readNSObject();
+            id value = nil;
+            NSString* docID = (NSString*)e.docID();
+            SequenceNumber sequence = e.sequence();
 
-        id docContents = nil;
-        id key = e.key().readNSObject();
-        id value = nil;
-        NSString* docID = (NSString*)e.docID();
-        SequenceNumber sequence = e.sequence();
+            if (options->includeDocs) {
+                NSDictionary* valueDict = nil;
+                NSString* linkedID = nil;
+                if (e.value().peekTag() == CollatableReader::kMap) {
+                    value = e.value().readNSObject();
+                    valueDict = $castIf(NSDictionary, value);
+                    linkedID = valueDict.cbl_id;
+                }
+                if (linkedID) {
+                    // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
+                    NSString* linkedRev = valueDict.cbl_rev; // usually nil
+                    CBLStatus linkedStatus;
+                    CBL_Revision* linked = [db getDocumentWithID: linkedID
+                                                      revisionID: linkedRev
+                                                         options: options->content
+                                                          status: &linkedStatus];
+                    docContents = linked ? linked.properties : $null;
+                    sequence = linked.sequence;
+                } else {
+                    CBLStatus status;
+                    CBL_Revision* rev = [db getDocumentWithID: docID revisionID: nil
+                                                      options: options->content status: &status];
+                    docContents = rev.properties;
+                }
+            }
 
-        if (options->includeDocs) {
-            NSDictionary* valueDict = nil;
-            NSString* linkedID = nil;
-            if (e.value().peekTag() == CollatableReader::kMap) {
-                value = e.value().readNSObject();
-                valueDict = $castIf(NSDictionary, value);
-                linkedID = valueDict.cbl_id;
-            }
-            if (linkedID) {
-                // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                NSString* linkedRev = valueDict.cbl_rev; // usually nil
-                CBLStatus linkedStatus;
-                CBL_Revision* linked = [db getDocumentWithID: linkedID
-                                                  revisionID: linkedRev
-                                                     options: options->content
-                                                      status: &linkedStatus];
-                docContents = linked ? linked.properties : $null;
-                sequence = linked.sequence;
-            } else {
-                CBLStatus status;
-                CBL_Revision* rev = [db getDocumentWithID: docID revisionID: nil
-                                                  options: options->content status: &status];
-                docContents = rev.properties;
-            }
+            if (!value)
+                value = e.value().data().copiedNSData();
+            e.next();
+
+            LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
+                  _name, CBLJSONString(key), value, CBLJSONString(docID));
+            auto row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                 sequence: sequence
+                                                      key: key
+                                                    value: value
+                                            docProperties: docContents];
+            if (CBLRowPassesFilter(db, row, options))
+                return row;
         }
-
-        if (!value)
-            value = e.value().data().copiedNSData();
-        e.next();
-
-        LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
-              _name, CBLJSONString(key), value, CBLJSONString(docID));
-        return [[CBLQueryRow alloc] initWithDocID: docID
-                                         sequence: sequence
-                                              key: key
-                                            value: value
-                                    docProperties: docContents];
+        return nil;
     };
 }
 
@@ -246,10 +248,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
 
     __block id lastKey = nil;
-    CBLDatabase* dbForReduce;
+    CBLDatabase* db = _weakDB;
     NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
     if (reduce) {
-        dbForReduce = _weakDB;
         keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
         valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
     }
@@ -272,6 +273,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                              key: (group ? groupKey(lastKey, groupLevel) : $null)
                                            value: callReduce(reduce, keysToReduce,valuesToReduce)
                                    docProperties: nil];
+                LogTo(QueryVerbose, @"Query %@: Reduced row with key=%@, value=%@",
+                                    _name, CBLJSONString(row.key), CBLJSONString(row.value));
+                if (!CBLRowPassesFilter(db, row, options))
+                    row = nil;
                 [keysToReduce removeAllObjects];
                 [valuesToReduce removeAllObjects];
             }
@@ -283,9 +288,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                 id value;
                 if (collatableValue.peekTag() == CollatableReader::kSpecial) {
                     CBLStatus status;
-                    CBL_Revision* rev = [dbForReduce getDocumentWithID: (NSString*)e.docID()
-                                                              sequence: e.sequence()
-                                                                status: &status];
+                    CBL_Revision* rev = [db getDocumentWithID: (NSString*)e.docID()
+                                                     sequence: e.sequence()
+                                                       status: &status];
                     if (rev)
                         Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
                     value = rev.properties;
@@ -354,6 +359,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (options->limit > 0)
         forestOpts.limit = options->limit;
 //    forestOpts.descending = options->descending;
+    forestOpts.inclusiveStart = options->inclusiveStart;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (options.keys) {
         std::vector<Collatable> collatableKeys;
@@ -369,6 +375,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             std::swap(startKey, endKey);
             std::swap(startKeyDocID, endKeyDocID);
         }
+        endKey = keyForPrefixMatch(endKey, options->prefixMatchLevel);
+
         return IndexEnumerator(*index,
                                Collatable(startKey),
                                nsstring_slice(startKeyDocID),
@@ -379,7 +387,44 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-#pragma mark - OTHER:
+#pragma mark - UTILITIES:
+
+
+// Changes a maxKey into one that also extends to any key it matches as a prefix.
+static id keyForPrefixMatch(id key, unsigned depth) {
+    if (depth < 1)
+        return key;
+    if ([key isKindOfClass: [NSString class]]) {
+        // Kludge: prefix match a string by appending max possible character value to it
+        return [key stringByAppendingString: @"\uffffffff"];
+    } else if ([key isKindOfClass: [NSArray class]]) {
+        NSMutableArray* nuKey = [key mutableCopy];
+        if (depth == 1) {
+            [nuKey addObject: @{}];
+        } else {
+            id lastObject = keyForPrefixMatch(nuKey.lastObject, depth-1);
+            [nuKey replaceObjectAtIndex: nuKey.count-1 withObject: lastObject];
+        }
+        return nuKey;
+    } else {
+        return key;
+    }
+}
+
+
+BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options) {
+    NSPredicate* filter = options.filter;
+    if (filter) {
+        row.database = db; // temporary; this may not be the final database instance
+        if (![filter evaluateWithObject: row]) {
+            LogTo(QueryVerbose, @"   ... on 2nd thought, filter predicate skipped that row");
+            return NO;
+        }
+        row.database = nil;
+    }
+    return YES;
+}
+
 
 // This is really just for unit tests & debugging
 #if DEBUG

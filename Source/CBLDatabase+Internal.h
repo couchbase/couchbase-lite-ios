@@ -9,7 +9,8 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
+@class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase,
+       CBLDatabaseChange, CBL_Shared, CBLModelFactory;
 
 #ifdef __cplusplus
 namespace forestdb {
@@ -96,6 +97,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
     NSMutableArray* _changesToNotify;
     bool _postingChangeNotifications;
     NSDate* _startTime;
+    CBLModelFactory* _modelFactory;
+    NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
 #if DEBUG
     CBL_Shared* _debug_shared;
 #endif
@@ -106,8 +109,6 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 @property (nonatomic, readonly) BOOL isOpen;
 
 - (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
-- (BOOL) close;
-- (BOOL) closeForDeletion;
 
 @end
 
@@ -125,7 +126,7 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 + (instancetype) createEmptyDBAtPath: (NSString*)path;
 #endif
 - (BOOL) open: (NSError**)outError;
-- (BOOL) closeInternal;
+- (void) _close; // closes without saving CBLModels.
 
 + (void) setAutoCompact: (BOOL)autoCompact;
 - (BOOL) _compact: (NSError**)outError;

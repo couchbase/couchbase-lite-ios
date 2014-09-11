@@ -704,9 +704,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         }
         onCompletion(result, error);
     }];
-    req.delegate = self;
-    req.timeoutInterval = self.requestTimeout;
-    req.authorizer = _authorizer;
 
     if (self.canSendCompressedRequests)
         [req compressBody];
@@ -718,6 +715,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) addRemoteRequest: (CBLRemoteRequest*)request {
+    request.delegate = self;
+    request.timeoutInterval = self.requestTimeout;
+    request.authorizer = _authorizer;
+
     if (!_remoteRequests)
         _remoteRequests = [[NSMutableArray alloc] init];
     [_remoteRequests addObject: request];
@@ -805,8 +806,10 @@ static BOOL sOnlyTrustAnchorCerts;
                                            {@"filterParams", _filterParameters},
                                          //{@"headers", _requestHeaders}, (removed; see #143)
                                            {@"docids", _docIDs});
+        NSError *error;
         _remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
-                                                                             error: NULL]);
+                                                                             error: &error]);
+        Assert(!error);
     }
     return _remoteCheckpointDocID;
 }

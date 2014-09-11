@@ -13,40 +13,9 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CouchbaseLitePrivate.h"
-#import "CBLModelArray.h"
-#import "CBLInternal.h"
-#import "Test.h"
-
-
 #if DEBUG
-
-
-static CBLDatabase* createEmptyDB(void) {
-    CBLManager* dbmgr = [CBLManager sharedInstance];
-    CAssert(dbmgr);
-    NSError* error;
-    CBLDatabase* db = [dbmgr createEmptyDatabaseNamed: @"test_db" error: &error];
-    CAssert(db, @"Couldn't create db: %@", error);
-    return db;
-}
-
-
-static void closeTestDB(CBLDatabase* db) {
-    CAssert(db != nil);
-    CAssert([db close]);
-}
-
-
-static CBLDatabase* reopenTestDB(CBLDatabase* db) {
-    closeTestDB(db);
-    [[CBLManager sharedInstance] _forgetDatabase: db];
-    NSError* error;
-    CBLDatabase* db2 = [[CBLManager sharedInstance] databaseNamed: @"test_db" error: &error];
-    CAssert(db2, @"Couldn't reopen db: %@", error);
-    CAssert(db2 != db, @"reopenTestDB couldn't make a new instance");
-    return db2;
-}
+#import "APITestUtils.h"
+#import "CBLModelArray.h"
 
 
 #pragma mark - TEST MODEL:
@@ -141,6 +110,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 @property NSData* data;
 @property NSDate* date;
 @property NSDecimalNumber* decimal;
+@property NSURL* url;
 @property CBL_TestModel* other;
 @property NSArray* strings;
 @property NSArray* dates;
@@ -161,7 +131,7 @@ static CBLDatabase* reopenTestDB(CBLDatabase* db) {
 
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
 @dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly, dict;
-@dynamic str, data, date, decimal, other, strings, dates, others, Capitalized;
+@dynamic str, data, date, decimal, url, other, strings, dates, others, Capitalized;
 @dynamic subModel, subModels, mutableSubModel;
 @synthesize reloadCount;
 
@@ -250,8 +220,12 @@ TestCase(API_ModelDynamicProperties) {
     CAssertEqual(model.strings, strings);
     CAssertEqual(model.data, data);
 
+    NSURL* url = [NSURL URLWithString: @"http://bogus"];
+    model.url = url;
+    CAssertEqual(model.url, url);
+
     Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
-    [db close];
+    [db _close];
 }
 
 
@@ -311,7 +285,7 @@ TestCase(API_ModelEncodableProperties) {
                            @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"},
                            @"_id": doc3.documentID,
                            @"_rev": doc3.currentRevisionID}));
-    [db close];
+    [db _close];
 }
 
 
@@ -327,7 +301,7 @@ TestCase(API_ModelEncodablePropertiesNilValue) { // See #247
     emptyModel = [[CBL_TestModel alloc] initWithDocument:document];
     AssertNil(emptyModel.mutableSubModel);
 
-    [db close];
+    [db _close];
 }
 
 
@@ -357,7 +331,7 @@ TestCase(API_ModelDeleteProperty) {
     model.data = nil;
     CAssertEqual(model.data, nil);      // Tests issue CouchCocoa #73
 
-    [db close];
+    [db _close];
 }
 
 
@@ -365,6 +339,7 @@ TestCase(API_SaveModel) {
     NSDate* date = [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252];
     NSArray* dates = @[date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392837521]];
     NSDecimalNumber* decimal = [NSDecimalNumber decimalNumberWithString: @"12345.6789"];
+    NSURL* url = [NSURL URLWithString: @"http://bogus"];
 
     CBLDatabase* db = createEmptyDB();
     NSString* modelID, *model2ID, *model3ID;
@@ -384,6 +359,7 @@ TestCase(API_SaveModel) {
         model.date = date;
         model.dates = dates;
         model.decimal = decimal;
+        model.url = url;
 
         CAssert(model.isNew);
         CAssert(model.needsSave);
@@ -395,7 +371,8 @@ TestCase(API_SaveModel) {
                                                 @"date": @"2013-06-12T23:40:52.000Z",
                                                 @"dates": @[@"2013-06-12T23:40:52.000Z",
                                                             @"2013-06-13T17:32:01.000Z"],
-                                                @"decimal": @"12345.6789"}));
+                                                @"decimal": @"12345.6789",
+                                                @"url": @"http://bogus"}));
 
         CBL_TestModel* model2 = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
         model2ID = model2.document.documentID;
@@ -413,6 +390,7 @@ TestCase(API_SaveModel) {
         CAssertEqual(model.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
         CAssertEqual(model.dates, dates);
         CAssertEqual(model.decimal, decimal);
+        CAssertEqual(model.url, url);
         CAssertEq(model.other, model3);
         CAssertEqual(model.others, (@[model2, model3]));
 
@@ -431,6 +409,7 @@ TestCase(API_SaveModel) {
                                @"date": @"2013-06-12T23:40:52.000Z",
                                @"dates": @[@"2013-06-12T23:40:52.000Z", @"2013-06-13T17:32:01.000Z"],
                                @"decimal": @"12345.6789",
+                               @"url": @"http://bogus",
                                @"other": model3.document.documentID,
                                @"others": @[model2.document.documentID, model3.document.documentID],
                                @"_id": props[@"_id"],
@@ -474,6 +453,7 @@ TestCase(API_SaveModel) {
         CAssertEqual(modelAgain.date, [NSDate dateWithTimeIntervalSinceReferenceDate: 392773252]);
         CAssertEqual(modelAgain.dates, dates);
         CAssertEqual(modelAgain.decimal, decimal);
+        CAssertEqual(modelAgain.url, url);
 
         CBL_TestModel *other = modelAgain.other;
         CAssertEqual(modelAgain.other.document.documentID, model3ID);
@@ -482,7 +462,7 @@ TestCase(API_SaveModel) {
         CAssertEq(others[1], other);
         CAssertEqual(((CBL_TestModel*)others[0]).document.documentID, model2ID);
     }
-    [db close];
+    [db _close];
 }
 
 
@@ -517,6 +497,16 @@ TestCase(API_SaveMutatedSubModel) {
     CAssertEqual(props, (@{@"mutableSubModel":@{@"first": @"Wayne", @"last": @"Carter"}}));
     [model save: &error];
     CAssertNil(error);
+}
+
+
+TestCase(API_SaveModelWithNaNProperty) {
+    CBLDatabase* db = createEmptyDB();
+    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    model.doubly = sqrt(-1);
+    NSError* error;
+    [model save: &error];
+    CAssertEq(error.code, 400);
 }
 
 
@@ -560,7 +550,7 @@ TestCase(API_ModelAttachments) {
         [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content:newAttData];
         CAssert([model save: &error], @"Final save failed: %@", error);
     }
-    [db close];
+    [db _close];
 }
 
 
@@ -576,7 +566,7 @@ TestCase(API_ModelPropertyObservation) {
         [model save: NULL];
     }
     [model removeObserver: observer forKeyPath: @"dict.name"];
-    [db close];
+    [db _close];
 }
 
 
@@ -586,6 +576,7 @@ TestCase(API_Model) {
     RequireTestCase(API_ModelEncodablePropertiesNilValue);
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_SaveMutatedSubModel);
+    RequireTestCase(API_SaveModelWithNaNProperty);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);
 }

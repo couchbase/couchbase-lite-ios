@@ -113,6 +113,9 @@ static NSDictionary* getDocProperties(const Document& doc) {
         // PUT:
         __block CBL_Revision* result = nil;
         *outStatus = [self _try: ^CBLStatus {
+            NSData* json = revision.asCanonicalJSON;
+            if (!json)
+                return kCBLStatusBadJSON;
             Transaction t(self.localDocs);
             forestdb::slice key(docID.UTF8String);
             Document doc = _localDocs->get(key);
@@ -129,7 +132,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
                 }
             }
             NSString* newRevID = $sprintf(@"%d-local", ++generation);
-            t.set(key, nsstring_slice(newRevID), forestdb::slice(revision.asCanonicalJSON));
+            t.set(key, nsstring_slice(newRevID), forestdb::slice(json));
             result = [revision mutableCopyWithDocID: docID revID: newRevID];
             return kCBLStatusCreated;
         }];

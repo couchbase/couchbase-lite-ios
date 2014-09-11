@@ -185,12 +185,12 @@
 
 
 - (NSData*) asCanonicalJSON {
-    return [[self class] asCanonicalJSON: self.properties];
+    return [[self class] asCanonicalJSON: self.properties error: NULL];
 }
 
 /** Returns the JSON to be stored into the database.
     This has all the special keys like "_id" stripped out, and keys in canonical order. */
-+ (NSData*) asCanonicalJSON: (UU NSDictionary*)properties {
++ (NSData*) asCanonicalJSON: (UU NSDictionary*)properties error: (NSError**)outError {
     static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -222,9 +222,8 @@
     // Create canonical JSON -- this is important, because the JSON data returned here will be used
     // to create the new revision ID, and we need to guarantee that equivalent revision bodies
     // result in equal revision IDs.
-    NSData* json = [CBJSONEncoder canonicalEncoding: (editedProperties ?: properties)
-                                              error: nil];
-    return json;
+    return [CBJSONEncoder canonicalEncoding: (editedProperties ?: properties)
+                                      error: outError];
 }
 
 

@@ -101,7 +101,7 @@
 
 // These properties are overridden to be settable:
 @property (readwrite) BOOL isDeletion;
-@property (readwrite) NSMutableDictionary* properties;
+@property (readwrite, copy) NSMutableDictionary* properties;
 @property (readwrite, copy) NSDictionary* userProperties;
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key;
 

@@ -13,64 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CouchbaseLitePrivate.h"
-#import "CBLInternal.h"
-#import "Test.h"
-
-
 #if DEBUG
-
-
-static CBLDatabase* createEmptyDB(void) {
-    CBLManager* dbmgr = [CBLManager sharedInstance];
-    CAssert(dbmgr);
-    NSError* error;
-    CBLDatabase* db = [dbmgr createEmptyDatabaseNamed: @"test_db" error: &error];
-    CAssert(db, @"Couldn't create test_db: %@", error);
-    return db;
-}
-
-
-static void closeTestDB(CBLDatabase* db) {
-    CAssert(db != nil);
-    CAssert([db close]);
-}
-
-
-static CBLDocument* createDocumentWithProperties(CBLDatabase* db,
-                                                 NSDictionary* properties) {
-    CBLDocument* doc = [db createDocument];
-    CAssert(doc != nil);
-    CAssertNil(doc.currentRevisionID);
-    CAssertNil(doc.currentRevision);
-    CAssert(doc.documentID, @"Document has no ID"); // 'untitled' docs are no longer untitled (8/10/12)
-
-    NSError* error;
-    CAssert([doc putProperties: properties error: &error], @"Couldn't save: %@", error);  // save it!
-    
-    CAssert(doc.documentID);
-    CAssert(doc.currentRevisionID);
-    CAssertEqual(doc.properties[@"_id"], doc.documentID);
-    CAssertEqual(doc.properties[@"_rev"], doc.currentRevisionID);
-    CAssertEq([doc.properties[@"_deleted"] boolValue], doc.isDeleted);
-    CAssertEqual(doc.userProperties, properties);
-    CAssertEq(db[doc.documentID], doc);
-    //Log(@"Created %p = %@", doc, doc);
-    return doc;
-}
-
-
-static void createDocuments(CBLDatabase* db, unsigned n) {
-    [db inTransaction: ^BOOL {
-        for (unsigned i=0; i<n; i++) {
-            @autoreleasepool {
-                NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
-                createDocumentWithProperties(db, properties);
-            }
-        }
-        return YES;
-    }];
-}
+#import "APITestUtils.h"
 
 
 #pragma mark - SERVER & DOCUMENTS:
@@ -113,6 +57,78 @@ TestCase(API_ExcludedFromBackup) {
     dbmgr.excludedFromBackup = YES;
     AssertEq(dbmgr.excludedFromBackup, YES);
     [dbmgr close];
+}
+
+TestCase(API_DeleteDatabase) {
+    // Test with single manager
+    // Create a new database
+    NSError* error;
+    CBLManager* mgr = [CBLManager sharedInstance];
+    CBLDatabase* db = [mgr createEmptyDatabaseNamed: @"test_db" error: &error];
+    CAssert(!error);
+    CAssert(db);
+    
+    // Delete the database
+    error = nil;
+    BOOL result = [db deleteDatabase: &error];
+    CAssert(!error);
+    CAssert(result);
+    
+    // Check if the database still exists or not
+    error = nil;
+    db = [mgr existingDatabaseNamed: @"test_db" error: &error];
+    CAssert(error);
+    CAssert(error.code == kCBLStatusNotFound);
+    CAssert(!db);
+    
+    // Test with multiple CBLManger operating on the same thread
+    // Copy the shared manager and create a new database
+    error = nil;
+    mgr = [CBLManager sharedInstance];
+    CBLManager* copiedMgr = [mgr copy];
+    db = [copiedMgr databaseNamed: @"test_db" error: &error];
+    CAssert(!error);
+    CAssert(db);
+    
+    // Get the database from the shared manager and delete
+    error = nil;
+    db = [mgr databaseNamed: @"test_db" error: &error];
+    // Close the copied manager before deleting the database
+    [copiedMgr close];
+    result = [db deleteDatabase: &error];
+    CAssert(!error);
+    CAssert(result);
+    
+    // Check if the database still exists or not
+    error = nil;
+    db = [mgr existingDatabaseNamed: @"test_db" error: &error];
+    CAssert(error);
+    CAssert(error.code == kCBLStatusNotFound);
+    CAssert(!db);
+    
+    // Test with multiple CBLManger operating on different threads
+    dispatch_queue_t queue = dispatch_queue_create("DeleteDatabaseTest", NULL);
+    copiedMgr = [mgr copy];
+    copiedMgr.dispatchQueue = queue;
+    __block CBLDatabase* copiedMgrDb;
+    dispatch_sync(queue, ^{
+        NSError *error;
+        copiedMgrDb = [copiedMgr databaseNamed: @"test_db" error: &error];
+        CAssert(!error);
+        CAssert(copiedMgrDb);
+    });
+    
+    // Get the database from the shared manager and delete
+    error = nil;
+    db = [mgr databaseNamed: @"test_db" error: &error];
+    result = [db deleteDatabase: &error];
+    CAssert(!error);
+    CAssert(result);
+    
+    // Cleanup
+    dispatch_sync(queue, ^{
+        [copiedMgr close];
+    });
 }
 
 
@@ -399,6 +415,18 @@ TestCase(API_DeleteMultipleDocuments) {
 }
 #endif
 
+
+TestCase(API_SaveDocumentWithNaNProperty) {
+    CBLDatabase* db = createEmptyDB();
+    NSDictionary* properties = @{@"aNumber": [NSDecimalNumber notANumber]};
+    CBLDocument* doc = [db createDocument];
+    NSError* error;
+    CBLSavedRevision* rev = [doc putProperties: properties error: &error];
+    CAssertEq(error.code, 400);
+    CAssert(!rev);
+}
+
+
 TestCase(API_DeleteDocument) {
     CBLDatabase* db = createEmptyDB();
     NSDictionary* properties = @{@"testName": @"testDeleteDocument"};
@@ -427,6 +455,28 @@ TestCase(API_PurgeDocument) {
     
     CBLDocument* redoc = [db _cachedDocumentWithID:doc.documentID];
     CAssert(!redoc);
+    closeTestDB(db);
+}
+
+TestCase(API_Validation) {
+    CBLDatabase* db = createEmptyDB();
+
+    [db setValidationNamed: @"uncool"
+                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
+                     if (!newRevision.properties[@"groovy"])
+                         [context rejectWithMessage: @"uncool"];
+                 }];
+    
+    NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
+    CBLDocument* doc = [db createDocument];
+    NSError *error;
+    CAssert([doc putProperties: properties error: &error]);
+    
+    properties = @{ @"foo": @"bar" };
+    doc = [db createDocument];
+    CAssert(![doc putProperties: properties error: &error]);
+    CAssertEq(error.code, 403);
+    //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
     closeTestDB(db);
 }
 
@@ -485,29 +535,6 @@ TestCase(API_LocalDocs) {
     CAssert(![db deleteLocalDocumentWithID: @"dock" error: &error],
             @"Second delete should have failed");
     CAssertEq(error.code, kCBLStatusNotFound);
-    closeTestDB(db);
-}
-
-
-TestCase(API_Validation) {
-    CBLDatabase* db = createEmptyDB();
-
-    [db setValidationNamed: @"uncool"
-                 asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context) {
-                     if (!newRevision.properties[@"groovy"])
-                         [context rejectWithMessage: @"uncool"];
-                 }];
-    
-    NSDictionary* properties = @{ @"groovy" : @"right on", @"foo": @"bar" };
-    CBLDocument* doc = [db createDocument];
-    NSError *error;
-    CAssert([doc putProperties: properties error: &error]);
-    
-    properties = @{ @"foo": @"bar" };
-    doc = [db createDocument];
-    CAssert(![doc putProperties: properties error: &error]);
-    CAssertEq(error.code, 403);
-    //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
     closeTestDB(db);
 }
 
@@ -740,6 +767,7 @@ TestCase(API_ChangeTracking) {
 }
 
 
+#if 0 //TEMP
 #pragma mark - VIEWS:
 
 
@@ -1278,6 +1306,8 @@ TestCase(API_MapReduce) {
 }
 
 
+#endif //TEMP
+
 TestCase(API_ChangeUUID) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
     CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
@@ -1296,8 +1326,10 @@ TestCase(API_ChangeUUID) {
 
 TestCase(API) {
     RequireTestCase(API_Manager);
+    RequireTestCase(API_DeleteDatabase);
     RequireTestCase(API_CreateDocument);
     RequireTestCase(API_CreateRevisions);
+    RequireTestCase(API_SaveDocumentWithNaNProperty);
     RequireTestCase(API_DeleteDocument);
     RequireTestCase(API_PurgeDocument);
     RequireTestCase(API_AllDocuments);
@@ -1305,18 +1337,8 @@ TestCase(API) {
     RequireTestCase(API_History);
     RequireTestCase(API_Attachments);
     RequireTestCase(API_ChangeTracking);
-    RequireTestCase(API_CreateView);
-    RequireTestCase(API_Validation);
-    RequireTestCase(API_CreateView);
-    RequireTestCase(API_ViewCustomSort);
-    RequireTestCase(API_ViewWithLinkedDocs);
-    RequireTestCase(API_SharedMapBlocks);
-    RequireTestCase(API_EmitNil);
-    RequireTestCase(API_EmitDoc);
-    RequireTestCase(API_LiveQuery);
-    RequireTestCase(API_LiveQuery_DispatchQueue);
+    RequireTestCase(API_View);
     RequireTestCase(API_Model);
-
     RequireTestCase(API_Replicator);
 }
 

@@ -389,7 +389,7 @@ TestCase(UpgradeDB) {
     CBLStatus status = [upgrade import];
     AssertEq(status, kCBLStatusOK);
     Log(@"Upgradeed %lu docs, %lu revisions", (unsigned long)upgrade.numDocs, (unsigned long)upgrade.numRevs);
-    [db close];
+    [db _close];
 }
 
 #endif

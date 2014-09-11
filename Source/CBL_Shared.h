@@ -37,4 +37,8 @@
 
 @property CBL_Server* backgroundServer;
 
+#if DEBUG
+- (NSUInteger) countForOpenedDatabase: (NSString*)dbName;
+#endif
+
 @end

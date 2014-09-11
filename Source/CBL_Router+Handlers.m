@@ -1093,7 +1093,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSArray* rows = [self queryIteratorAllRows: iterator];
     id updateSeq = options->updateSeq ? @(view.lastSequenceIndexed) : nil;
     _response.bodyObject = $dict({@"rows", rows},
-                                 {@"total_rows", @(view.totalDocs)},
+                                 {@"total_rows", @(view.totalRows)},
                                  {@"offset", @(options->skip)},
                                  {@"update_seq", updateSeq});
     return kCBLStatusOK;

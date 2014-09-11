@@ -36,6 +36,32 @@ static void RunViewPerformanceTest(void);
     exit(0);
 #endif
 
+    // Ensure that every public class is an exported symbol in the CouchbaseLite framework:
+    [CBLAttachment class];
+    [CBLAuthenticator class];
+    [CBLDatabase class];
+    [CBLDatabaseChange class];
+    [CBLDocument class];
+    [CBLFullTextQueryRow class];
+    [CBLGeoQueryRow class];
+    [CBLJSON class];
+    [CBLLiveQuery class];
+    [CBLManager class];
+    [CBLModel class];
+    [CBLModelFactory class];
+    [CBLQuery class];
+    [CBLQueryEnumerator class];
+    [CBLQueryRow class];
+    [CBLReplication class];
+    [CBLRevision class];
+    [CBLSavedRevision class];
+    [CBLUnsavedRevision class];
+    [CBLView class];
+    NSAssert(&kCBLDatabaseChangeNotification != nil, @"Invalid value");
+    NSAssert(&kCBLDocumentChangeNotification != nil, @"Invalid value");
+    NSAssert(&kCBLReplicationChangeNotification != nil, @"Invalid value");
+    NSAssert(CBLHTTPErrorDomain != nil, @"Invalid value");
+
     // Add the navigation controller's view to the window and display.
 	[window addSubview:navigationController.view];
 	[window makeKeyAndVisible];

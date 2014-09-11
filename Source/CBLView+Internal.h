@@ -21,6 +21,7 @@
 {
     @public
     const struct CBLGeoRect* bbox;
+    unsigned prefixMatchLevel;
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
@@ -29,6 +30,7 @@
     BOOL includeDocs;
     BOOL updateSeq;
     BOOL localSeq;
+    BOOL inclusiveStart;
     BOOL inclusiveEnd;
     BOOL reduceSpecified;
     BOOL reduce;                   // Ignore if !reduceSpecified
@@ -44,6 +46,7 @@
 @property (copy, nonatomic) NSString* startKeyDocID;
 @property (copy, nonatomic) NSString* endKeyDocID;
 @property (copy, nonatomic) NSArray* keys;
+@property (copy, nonatomic) NSPredicate* filter;
 @property (copy, nonatomic) NSString* fullTextQuery;
 
 @end
@@ -60,6 +63,8 @@ typedef enum {
 BOOL CBLValueIsEntireDoc(NSData* valueData);
 id CBLParseQueryValue(NSData* collatable);
 
+BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options);
+
 
 @interface CBLView ()
 {
@@ -75,7 +80,7 @@ id CBLParseQueryValue(NSData* collatable);
 
 + (NSString*) fileNameToViewName: (NSString*)fileName;
 
-@property (readonly) NSUInteger totalDocs;
+@property (readonly) NSUInteger totalRows;
 
 @property (readonly) MapReduceIndex* index;
 

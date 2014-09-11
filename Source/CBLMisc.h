@@ -44,10 +44,6 @@ NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b);
 /** Convenience function to JSON-encode an object to a string. */
 NSString* CBLJSONString( id object );
 
-/** Escapes a document or revision ID for use in a URL.
-    This does the usual %-escaping, but makes sure that '/' is escaped in case the ID appears in the path portion of the URL, and that '&' is escaped in case the ID appears in a query value. */
-NSString* CBLEscapeID( NSString* param ) __attribute__((nonnull));
-
 /** Escapes a string to be used as the value of a query parameter in a URL.
     This does the usual %-escaping, but makes sure that '&' is also escaped. */
 NSString* CBLEscapeURLParam( NSString* param ) __attribute__((nonnull));

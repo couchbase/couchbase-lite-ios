@@ -235,7 +235,7 @@ using namespace forestdb;
             dispatch_semaphore_signal(jsonSemaphore);
         });
 #else
-        json = [CBL_Revision asCanonicalJSON: properties];
+        json = [CBL_Revision asCanonicalJSON: properties error: NULL];
         if (!json) {
             *outStatus = kCBLStatusBadJSON;
             return nil;

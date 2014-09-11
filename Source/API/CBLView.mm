@@ -136,12 +136,13 @@ public:
 
 @implementation CBLQueryOptions
 
-@synthesize startKey, endKey, startKeyDocID, endKeyDocID, keys, fullTextQuery;
+@synthesize startKey, endKey, startKeyDocID, endKeyDocID, keys, filter, fullTextQuery;
 
 - (instancetype)init {
     self = [super init];
     if (self) {
         limit = UINT_MAX;
+        inclusiveStart = YES;
         inclusiveEnd = YES;
         fullTextRanking = YES;
         // everything else will default to nil/0/NO
@@ -385,7 +386,12 @@ static id<CBLViewCompiler> sCompiler;
     }
 
     // Version string is based on a digest of the properties:
+    NSError* error;
     NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: NULL]);
+    if (!version) {
+        Warn(@"View %@ has invalid JSON values: %@", _name, error);
+        return NO;
+    }
 
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 
@@ -462,7 +468,7 @@ static id<CBLViewCompiler> sCompiler;
 #pragma mark - QUERYING:
 
 
-- (NSUInteger) totalDocs {
+- (NSUInteger) totalRows {
     return self.index->rowCount();
 }
 

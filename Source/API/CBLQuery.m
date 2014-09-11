@@ -58,10 +58,10 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     NSString* _startKeyDocID;
     NSString* _endKeyDocID;
     CBLIndexUpdateMode _indexUpdateMode;
-    BOOL _descending, _prefetch, _mapOnly;
+    BOOL _descending, _inclusiveStart, _inclusiveEnd, _prefetch, _mapOnly;
     CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
-    NSUInteger _groupLevel;
+    NSUInteger _prefixMatchLevel, _groupLevel;
 }
 
 
@@ -71,6 +71,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     if (self) {
         _database = database;
         _view = view;
+        _inclusiveStart = _inclusiveEnd = YES;
         _limit = UINT_MAX;
         _fullTextRanking = YES;
         _mapOnly = (view.reduceBlock == nil);
@@ -83,6 +84,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     CBLView* view = [database makeAnonymousView];
     if (self = [self initWithDatabase: database view: view]) {
         _temporaryView = YES;
+        _inclusiveStart = _inclusiveEnd = YES;
         [view setMapBlock: mapBlock reduceBlock: nil version: @""];
     }
     return self;
@@ -96,10 +98,14 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         _skip = query.skip;
         self.startKey = query.startKey;
         self.endKey = query.endKey;
+        _inclusiveStart = query.inclusiveStart;
+        _inclusiveEnd = query.inclusiveEnd;
+        _prefixMatchLevel = query.prefixMatchLevel;
         _descending = query.descending;
         _prefetch = query.prefetch;
         self.keys = query.keys;
         self.sortDescriptors = query.sortDescriptors;
+        self.postFilter = query.postFilter;
         if (query->_isGeoQuery) {
             _isGeoQuery = YES;
             _boundingBox = query->_boundingBox;
@@ -129,7 +135,10 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 @synthesize  limit=_limit, skip=_skip, descending=_descending, startKey=_startKey, endKey=_endKey,
             prefetch=_prefetch, keys=_keys, groupLevel=_groupLevel, startKeyDocID=_startKeyDocID,
             endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
-            database=_database, allDocsMode=_allDocsMode, sortDescriptors=_sortDescriptors;
+            database=_database, allDocsMode=_allDocsMode, sortDescriptors=_sortDescriptors,
+            inclusiveStart=_inclusiveStart, inclusiveEnd=_inclusiveEnd, postFilter=_postFilter,
+            prefixMatchLevel=_prefixMatchLevel;
+
 
 - (NSString*) description {
     NSMutableString *desc = [NSMutableString stringWithFormat: @"%@[%@",
@@ -158,34 +167,36 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     return desc;
 }
 
-
-
 - (CBLLiveQuery*) asLiveQuery {
     return [[CBLLiveQuery alloc] initWithQuery: self];
 }
 
 - (CBLQueryOptions*) queryOptions {
     CBLQueryOptions* options = [CBLQueryOptions new];
-    options.startKey = _startKey,
-    options.endKey = _endKey,
-    options.startKeyDocID = _startKeyDocID,
-    options.endKeyDocID = _endKeyDocID,
-    options.keys = _keys,
-    options.fullTextQuery = _fullTextQuery,
-    options->fullTextSnippets = _fullTextSnippets,
-    options->fullTextRanking = _fullTextRanking,
-    options->bbox = (_isGeoQuery ? &_boundingBox : NULL),
-    options->skip = (unsigned)_skip,
-    options->limit = (unsigned)_limit,
-    options->reduce = !_mapOnly,
-    options->reduceSpecified = YES,
-    options->groupLevel = (unsigned)_groupLevel,
-    options->descending = _descending,
-    options->includeDocs = _prefetch,
-    options->updateSeq = YES,
-    options->inclusiveEnd = YES,
-    options->allDocsMode = _allDocsMode,
+    options.startKey = _startKey;
+    options.endKey = _endKey;
+    options.startKeyDocID = _startKeyDocID;
+    options.endKeyDocID = _endKeyDocID;
+    options->inclusiveStart = _inclusiveStart;
+    options->inclusiveEnd = _inclusiveEnd;
+    options->prefixMatchLevel = (unsigned)_prefixMatchLevel;
+    options.keys = _keys;
+    options.fullTextQuery = _fullTextQuery;
+    options->fullTextSnippets = _fullTextSnippets;
+    options->fullTextRanking = _fullTextRanking;
+    options->bbox = (_isGeoQuery ? &_boundingBox : NULL);
+    options->skip = (unsigned)_skip;
+    options->limit = (unsigned)_limit;
+    options->reduce = !_mapOnly;
+    options->reduceSpecified = YES;
+    options->groupLevel = (unsigned)_groupLevel;
+    options->descending = _descending;
+    options->includeDocs = _prefetch;
+    options->updateSeq = YES;
+    options->allDocsMode = _allDocsMode;
     options->indexUpdateMode = _indexUpdateMode;
+    options->indexUpdateMode = _indexUpdateMode;
+    options.filter = _postFilter;
     return options;
 }
 
@@ -470,7 +481,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     if ((SequenceNumber)_sequenceNumber == dbSequence)
         return NO;
     if (_view && _view.lastSequenceIndexed == dbSequence
-              && _view.lastSequenceChangedAt == (SequenceNumber)_sequenceNumber)
+        && _view.lastSequenceChangedAt == (SequenceNumber)_sequenceNumber)
         return NO;
     return YES;
 }
@@ -491,7 +502,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         else
             return [[NSSortDescriptor alloc] initWithKey: newKeyPath
                                                ascending: desc.ascending
-                                                selector:desc.selector];
+                                                selector: desc.selector];
     }];
 
     // Now the sorting is trivial:
@@ -725,6 +736,10 @@ static inline BOOL isNonMagicValue(id value) {
 }
 
 
+// Custom key & value indexing properties. These are used by the extended "key[0]" / "value[2]"
+// key-path syntax (see keyPathForQueryRow(), below.) They're also useful when creating Cocoa
+// bindings to query rows, on Mac OS X.
+
 - (id) keyAtIndex: (NSUInteger)index {
     id key = self.key;
     if ([key isKindOfClass:[NSArray class]])
@@ -863,48 +878,41 @@ static inline BOOL isNonMagicValue(id value) {
 
 
 
-// Tweaks a key-path for use with a CBLQueryRow. Unless the path starts with one of the main
-// public properties, it's interpreted as relative to the value.
+// Tweaks a key-path for use with a CBLQueryRow. The "key" and "value" properties can be
+// indexed as arrays using a syntax like "key[0]". (Yes, this is a hack.)
 static NSString* keyPathForQueryRow(NSString* keyPath) {
-    static NSArray* kRootKeys;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        kRootKeys = @[@"key", @"value", @"documentID", @"sourceDocumentID",
-                      @"document", @"documentProperties", @"sequenceNumber"];
-    });
-    for (NSString* rootKey in kRootKeys) {
-        if ([keyPath hasPrefix: rootKey]) {
-            NSUInteger len = rootKey.length;
-            if (keyPath.length == len)
-                return keyPath;
-            unichar ch = [keyPath characterAtIndex: len];
-            if (ch == '.')
-                return keyPath;
-            else if (ch == '[') {
-                // Fake array index syntax:
-                if (keyPath.length < len+3 || [keyPath characterAtIndex: len+2] != ']')
-                    return nil;
-                ch = [keyPath characterAtIndex: len+1];
-                if (!isdigit(ch))
-                    return nil;
-                NSMutableString* newKey = [keyPath mutableCopy];
-                [newKey deleteCharactersInRange: NSMakeRange(len+2, 1)];
-                [newKey deleteCharactersInRange: NSMakeRange(len+0, 1)];
-                return newKey;
-            }
-        }
-    }
-    return [@"value." stringByAppendingString: keyPath];
+    NSRange bracket = [keyPath rangeOfString: @"["];
+    if (bracket.length == 0)
+        return keyPath;
+    if (![keyPath hasPrefix: @"key["] && ![keyPath hasPrefix: @"value["])
+        return nil;
+    NSUInteger indexPos = NSMaxRange(bracket);
+    if (keyPath.length < indexPos+2 || [keyPath characterAtIndex: indexPos+1] != ']')
+        return nil;
+    unichar ch = [keyPath characterAtIndex: indexPos];
+    if (!isdigit(ch))
+        return nil;
+    // Delete the brackets, e.g. turning "value[1]" into "value1". CBLQueryRow
+    // just so happens to have custom properties key0..key3 and value0..value3.
+    NSMutableString* newKey = [keyPath mutableCopy];
+    [newKey deleteCharactersInRange: NSMakeRange(indexPos+1, 1)]; // delete ']'
+    [newKey deleteCharactersInRange: NSMakeRange(indexPos-1, 1)]; // delete '['
+    return newKey;
 }
 
 
 TestCase(CBLQuery_KeyPathForQueryRow) {
     AssertEqual(keyPathForQueryRow(@"value"),           @"value");
     AssertEqual(keyPathForQueryRow(@"value.foo"),       @"value.foo");
-    AssertEqual(keyPathForQueryRow(@"foo"),             @"value.foo");
     AssertEqual(keyPathForQueryRow(@"value[0]"),        @"value0");
     AssertEqual(keyPathForQueryRow(@"key[3].foo"),      @"key3.foo");
+    AssertEqual(keyPathForQueryRow(@"value[0].foo"),    @"value0.foo");
+    AssertEqual(keyPathForQueryRow(@"[2]"),             nil);
+    AssertEqual(keyPathForQueryRow(@"sequence[2]"),     nil);
+    AssertEqual(keyPathForQueryRow(@"value.addresses[2]"),nil);
     AssertEqual(keyPathForQueryRow(@"value["),          nil);
     AssertEqual(keyPathForQueryRow(@"value[0"),         nil);
-    AssertEqual(keyPathForQueryRow(@"value[x]"),        nil);
+    AssertEqual(keyPathForQueryRow(@"value[0"),         nil);
+    AssertEqual(keyPathForQueryRow(@"value[0}"),        nil);
+    AssertEqual(keyPathForQueryRow(@"value[d]"),        nil);
 }

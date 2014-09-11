@@ -1,5 +1,5 @@
 //
-//  CBLDatabase+Internal.m
+//  CBLDatabase+Internal.mm
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 6/19/10.
@@ -20,6 +20,7 @@ extern "C" {
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+LocalDocs.h"
 #import "CBLInternal.h"
+#import "CBLModel_Internal.h"
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
 #import "CBLCollateJSON.h"
@@ -220,13 +221,20 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     return YES;
 }
 
-- (BOOL) closeInternal {
+- (void) _close {
     if (!_isOpen)
-        return NO;
+        return;
     
     LogTo(CBLDatabase, @"Closing <%p> %@", self, _dir);
     Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
             _transactionLevel);
+
+    // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
+    // be any, because the public -close: method saves changes first.)
+    for (CBLModel* model in _unsavedModelsMutable.copy)
+        model.needsSave = false;
+    _unsavedModelsMutable = nil;
+    
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
                                                         object: self];
     [[NSNotificationCenter defaultCenter] removeObserver: self
@@ -251,7 +259,11 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
     _isOpen = NO;
     _transactionLevel = 0;
-    return YES;
+
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [self _clearDocumentCache];
+    _modelFactory = nil;
+    [_manager _forgetDatabase: self];
 }
 
 
@@ -436,7 +448,7 @@ static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
             [self doAsync: ^{
                 LogTo(CBLDatabase, @"%@: Notified of deletion; closing", self);
-                [self closeForDeletion];
+                [self _close];
             }];
         }
     }
@@ -872,9 +884,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     if (!options)
         options = [CBLQueryOptions new];
     auto forestOpts = DocEnumerator::Options::kDefault;
+    BOOL includeDocs = (options->includeDocs || options.filter);
 //  forestOpts.descending = options->descending;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
-    if (!options->includeDocs && !(options->allDocsMode >= kCBLShowConflicts))
+    if (!includeDocs && !(options->allDocsMode >= kCBLShowConflicts))
         forestOpts.contentOptions = Database::kMetaOnly;
     __block unsigned limit = options->limit;
     __block unsigned skip = options->skip;
@@ -909,6 +922,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             NSString* docID = (NSString*)doc.docID();
             if (!doc.exists()) {
                 e.next();
+                LogTo(QueryVerbose, @"AllDocs: No such row with key=\"%@\"",
+                      docID);
                 return [[CBLQueryRow alloc] initWithDocID: nil
                                                  sequence: 0
                                                       key: docID
@@ -920,7 +935,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             SequenceNumber sequence = doc.sequence();
 
             NSDictionary* docContents = nil;
-            if (options->includeDocs) {
+            if (includeDocs) {
                 // Fill in the document contents:
                 docContents = [CBLForestBridge bodyOfNode: doc.currentRevision()
                                                   options: options->content];
@@ -938,16 +953,20 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             NSDictionary* value = $dict({@"rev", revID},
                                         {@"deleted", (deleted ?$true : nil)},
                                         {@"_conflicts", conflicts});  // (not found in CouchDB)
-            LogTo(ViewVerbose, @"AllDocs: Found row with key=\"%@\", value=%@",
+            LogTo(QueryVerbose, @"AllDocs: Found row with key=\"%@\", value=%@",
                   docID, value);
+            auto row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                 sequence: sequence
+                                                      key: docID
+                                                    value: value
+                                            docProperties: docContents];
+            if (!CBLRowPassesFilter(self, row, options))
+                continue;
+
             e.next();
             if (limit > 0 && --limit == 0)
                 e.close();
-            return [[CBLQueryRow alloc] initWithDocID: docID
-                                             sequence: sequence
-                                                  key: docID
-                                                value: value
-                                        docProperties: docContents];
+            return row;
         }
         return nil;
     };
