@@ -305,6 +305,20 @@ TestCase(API_ModelEncodablePropertiesNilValue) { // See #247
 }
 
 
+TestCase(API_ModelTypeProperty) {
+    CBLDatabase* db = createEmptyDB();
+    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+
+    model.type = @"Dummy";
+    CAssertEqual(model.type, @"Dummy");
+    CAssertEqual([model getValueOfProperty:@"type"], @"Dummy");
+    CAssertEqual(model.propertiesToSave, (@{@"_id": model.document.documentID,
+                                            @"type": @"Dummy"}));
+
+    [db _close];
+}
+
+
 TestCase(API_ModelDeleteProperty) {
     NSArray* strings = @[@"fee", @"fie", @"foe", @"fum"];
     NSData* data = [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding];
@@ -574,6 +588,7 @@ TestCase(API_Model) {
     RequireTestCase(API_ModelDynamicProperties);
     RequireTestCase(API_ModelEncodableProperties);
     RequireTestCase(API_ModelEncodablePropertiesNilValue);
+    RequireTestCase(API_ModelTypeProperty);
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_SaveMutatedSubModel);
     RequireTestCase(API_SaveModelWithNaNProperty);

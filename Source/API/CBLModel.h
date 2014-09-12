@@ -47,6 +47,9 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 /** Is this model new, never before saved? */
 @property (readonly) bool isNew;
 
+/** A type property of the document. */
+@property (copy, nonatomic) NSString* type;
+
 #pragma mark - SAVING:
 
 /** Writes any changes to a new revision of the document.
