@@ -44,6 +44,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 @implementation CBLReplication
 {
+    NSSet* _pendingDocIDs;
     bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
 }
@@ -334,6 +335,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [_database forgetReplication: self];
     }
 
+    _pendingDocIDs = nil; // forget cached IDs
+
     BOOL changed = NO;
     if (!$equal(error, _lastError)) {
         self.lastError = error;
@@ -374,10 +377,19 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (NSSet*) pendingDocumentIDs {
-    return [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
-        CBL_RevisionList* revs = ($castIf(CBL_Pusher, bgReplicator)).unpushedRevisions;
-        return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
-    }];
+    if (!_pendingDocIDs && _started && !_pull) {
+        _pendingDocIDs = [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
+            CBL_RevisionList* revs = ($castIf(CBL_Pusher, bgReplicator)).unpushedRevisions;
+            return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
+        }];
+    }
+    return _pendingDocIDs;
+}
+
+- (BOOL) isDocumentPending: (CBLDocument*)doc {
+    return doc && [self.pendingDocumentIDs containsObject: doc.documentID];
+    //OPT: It may be cheaper to do this by fetching the replicator's checkpoint sequence and
+    // comparing the doc's sequence to it.
 }
 
 

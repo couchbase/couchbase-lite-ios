@@ -173,6 +173,12 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
     replication at all, the value of this property is nil. */
 @property (readonly) NSSet* pendingDocumentIDs;
 
+/** Returns YES if a document has local changes that this replication will push to its server, but
+    hasn't yet. This only considers documents that this replication would push: it returns NO for
+    a document that isn't matched by its filter or documentIDs, even if that document has local
+    changes. */
+- (BOOL) isDocumentPending: (CBLDocument*)doc;
+
 
 #ifdef CBL_DEPRECATED
 @property (nonatomic, copy) NSString* facebookEmailAddress

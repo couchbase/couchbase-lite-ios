@@ -265,12 +265,15 @@ TestCase(RunPushReplication) {
 
     NSSet* unpushed = repl.pendingDocumentIDs;
     CAssertEq(unpushed.count, (unsigned)kNDocuments);
+    CAssert([repl isDocumentPending: [db documentWithID: @"doc-1"]]);
+    CAssert(![repl isDocumentPending: [db documentWithID: @"nosuchdoc"]]);
 
     CAssertEqual(db.allReplications, @[repl]);
     runReplication(repl, kNDocuments);
     AssertNil(repl.lastError);
     CAssertEqual(db.allReplications, @[]);
     CAssertEq(repl.pendingDocumentIDs.count, 0u);
+    CAssert(![repl isDocumentPending: [db documentWithID: @"doc-1"]]);
 
     [db.manager close];
 }
