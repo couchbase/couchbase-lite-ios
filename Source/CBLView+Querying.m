@@ -498,8 +498,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         [valuesToReduce addObject: valueOrData ?: $null];
         return kCBLStatusOK;
     }];
-
-    if (keysToReduce.count > 0) {
+    
+    if (keysToReduce.count > 0 || lastKeyData) {
         // Finish the last group (or the entire list, if no grouping):
         id key = group ? groupKey(lastKeyData, groupLevel) : $null;
         id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
