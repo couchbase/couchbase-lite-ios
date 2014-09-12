@@ -651,6 +651,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 /** Posts a local NSNotification of a new revision of a document. */
 - (void) notifyChange: (CBLDatabaseChange*)change {
     LogTo(CBLDatabase, @"Added: %@ (seq=%lld)", change.addedRevision, change.addedRevision.sequence);
+    [self notifyDocumentsRevisionAdded:@[change]];
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
     [_changesToNotify addObject: change];
@@ -659,6 +660,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 /** Posts a local NSNotification of multiple new revisions. */
 - (void) notifyChanges: (NSArray*)changes {
+    [self notifyDocumentsRevisionAdded:changes];
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
     [_changesToNotify addObjectsFromArray: changes];

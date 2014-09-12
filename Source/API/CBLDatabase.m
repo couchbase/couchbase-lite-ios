@@ -94,14 +94,20 @@ static id<CBLFilterCompiler> sFilterCompiler;
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
+- (void) notifyDocumentsRevisionAdded: (NSArray*)changes {
+    for (CBLDatabaseChange* change in changes) {
+        // Notify the corresponding instantiated CBLDocument object (if any):
+        [[self _cachedDocumentWithID: change.documentID] revisionAdded: change];
+    }
+}
 
 - (void) postPublicChangeNotification: (NSArray*)changes {
     BOOL external = NO;
     for (CBLDatabaseChange* change in changes) {
-        // Notify the corresponding instantiated CBLDocument object (if any):
-        [[self _cachedDocumentWithID: change.documentID] revisionAdded: change];
-        if (change.source != nil)
+        if (change.source != nil) {
             external = YES;
+            break;
+        }
     }
 
     // Post the public kCBLDatabaseChangeNotification:
