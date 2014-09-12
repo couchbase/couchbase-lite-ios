@@ -28,15 +28,6 @@
 #define kReduceBatchSize 100
 
 
-const CBLQueryOptions kDefaultCBLQueryOptions = {
-    .limit = UINT_MAX,
-    .inclusiveStart = YES,
-    .inclusiveEnd = YES,
-    .fullTextRanking = YES
-    // everything else will default to nil/0/NO
-};
-
-
 static inline NSString* toJSONString( id object ) {
     if (!object)
         return nil;
@@ -79,7 +70,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                              onRow: (QueryRowBlock)onRow
 {
     if (!options)
-        options = &kDefaultCBLQueryOptions;
+        options = [CBLQueryOptions new];
 
     // OPT: It would be faster to use separate tables for raw-or ascii-collated views so that
     // they could be indexed with the right collation, instead of having to specify it here.
@@ -100,10 +91,10 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     [sql appendString: @" WHERE maps.view_id=?"];
     NSMutableArray* args = $marray(@(self.viewID));
 
-    if (options->keys) {
+    if (options.keys) {
         [sql appendString:@" AND key in ("];
         NSString* item = @"?";
-        for (NSString * key in options->keys) {
+        for (NSString * key in options.keys) {
             [sql appendString: item];
             item = @",?";
             [args addObject: toJSONData(key)];
@@ -111,17 +102,17 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         [sql appendString:@")"];
     }
 
-    id minKey = options->startKey, maxKey = options->endKey;
-    NSString* minKeyDocID = options->startKeyDocID;
-    NSString* maxKeyDocID = options->endKeyDocID;
+    id minKey = options.startKey, maxKey = options.endKey;
+    NSString* minKeyDocID = options.startKeyDocID;
+    NSString* maxKeyDocID = options.endKeyDocID;
     BOOL inclusiveMin = options->inclusiveStart, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
-        minKey = options->endKey;
-        maxKey = options->startKey;
+        minKey = options.endKey;
+        maxKey = options.startKey;
         inclusiveMin = options->inclusiveEnd;
         inclusiveMax = options->inclusiveStart;
-        minKeyDocID = options->endKeyDocID;
-        maxKeyDocID = options->startKeyDocID;
+        minKeyDocID = options.endKeyDocID;
+        maxKeyDocID = options.startKeyDocID;
     }
 
     if (minKey) {
@@ -171,7 +162,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     [sql appendString: (options->descending ? @", docid DESC" : @", docid")];
 
     [sql appendString: @" LIMIT ? OFFSET ?"];
-    int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
+    int limit = (options->limit != kCBLQueryOptionsDefaultLimit) ? options->limit : -1;
     [args addObject: @(limit)];
     [args addObject: @(options->skip)];
 
@@ -228,7 +219,7 @@ static id keyForPrefixMatch(id key, unsigned depth) {
 
 
 // Should this query be run as grouped/reduced?
-- (BOOL) groupOrReduceWithOptions: (const CBLQueryOptions*) options {
+- (BOOL) groupOrReduceWithOptions: (CBLQueryOptions*) options {
     if (options->group || options->groupLevel > 0)
         return YES;
     else if (options->reduceSpecified)
@@ -239,13 +230,13 @@ static id keyForPrefixMatch(id key, unsigned depth) {
 
 
 /** Main internal call to query a view. */
-- (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
+- (NSArray*) _queryWithOptions: (CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus
 {
     if (!options)
-        options = &kDefaultCBLQueryOptions;
+        options = [CBLQueryOptions new];
     NSArray* rows;
-    if (options->fullTextQuery)
+    if (options.fullTextQuery)
         rows = [self _fullTextQueryWithOptions: options status: outStatus];
     else if ([self groupOrReduceWithOptions: options])
         rows = [self _reducedQueryWithOptions: options status: outStatus];
@@ -261,10 +252,10 @@ BOOL CBLValueIsEntireDoc(NSData* valueData) {
 }
 
 
-BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options) {
-    if (options->filter) {
+BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, CBLQueryOptions* options) {
+    if (options.filter) {
         row.database = db; // temporary; this may not be the final database instance
-        if (![options->filter evaluateWithObject: row]) {
+        if (![options.filter evaluateWithObject: row]) {
             LogTo(ViewVerbose, @"   ... on 2nd thought, filter predicate skipped that row");
             return NO;
         }
@@ -274,7 +265,7 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 }
 
 
-- (NSArray*) _regularQueryWithOptions: (const CBLQueryOptions*)options
+- (NSArray*) _regularQueryWithOptions: (CBLQueryOptions*)options
                                status: (CBLStatus*)outStatus
 {
     CBLDatabase* db = _weakDB;
@@ -361,10 +352,10 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
     if (options->descending)
         [sql appendString: @" DESC"];
     [sql appendString: @" LIMIT ? OFFSET ?"];
-    int limit = (options->limit != kDefaultCBLQueryOptions.limit) ? options->limit : -1;
+    int limit = (options->limit != kCBLQueryOptionsDefaultLimit) ? options->limit : -1;
 
     CBLDatabase* db = _weakDB;
-    CBL_FMResultSet* r = [db.fmdb executeQuery: sql, options->fullTextQuery, @(self.viewID),
+    CBL_FMResultSet* r = [db.fmdb executeQuery: sql, options.fullTextQuery, @(self.viewID),
                                                 @(limit), @(options->skip)];
     if (!r) {
         *outStatus = db.lastDbError;
@@ -433,7 +424,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-- (NSMutableArray*) _reducedQueryWithOptions: (const CBLQueryOptions*)options
+- (NSMutableArray*) _reducedQueryWithOptions: (CBLQueryOptions*)options
                                       status: (CBLStatus*)outStatus
 {
     CBLDatabase* db = _weakDB;
@@ -498,8 +489,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         [valuesToReduce addObject: valueOrData ?: $null];
         return kCBLStatusOK;
     }];
-
-    if (keysToReduce.count > 0) {
+    
+    if (keysToReduce.count > 0 || lastKeyData) {
         // Finish the last group (or the entire list, if no grouping):
         id key = group ? groupKey(lastKeyData, groupLevel) : $null;
         id reduced = callReduce(reduce, keysToReduce, valuesToReduce);

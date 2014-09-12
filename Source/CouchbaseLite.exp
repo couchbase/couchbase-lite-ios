@@ -22,7 +22,6 @@
 .objc_class_name_CBLSavedRevision
 .objc_class_name_CBLUnsavedRevision
 .objc_class_name_CBLView
-.objc_class_name_MYDynamicObject
 
 _OBJC_CLASS_$_CBLAttachment
 _OBJC_CLASS_$_CBLAuthenticator
@@ -45,7 +44,6 @@ _OBJC_CLASS_$_CBLRevision
 _OBJC_CLASS_$_CBLSavedRevision
 _OBJC_CLASS_$_CBLUnsavedRevision
 _OBJC_CLASS_$_CBLView
-_OBJC_CLASS_$_MYDynamicObject
 
 # iOS only:
 .objc_class_name_CBLUITableSource
@@ -72,6 +70,7 @@ _CBLTextKey
 _CBLVersion
 
 # Non-public symbols that are used by CBLRouter and CBLListener:
+.objc_class_name_CBLQueryOptions
 .objc_class_name_CBL_BlobStore
 .objc_class_name_CBL_BlobStoreWriter
 .objc_class_name_CBL_Body
@@ -92,6 +91,24 @@ _CBLVersion
 .objc_class_name_CBL_GCDAsyncSocket
 .objc_class_name_CBL_WebSocket
 
+_OBJC_IVAR_$_CBLQueryOptions.skip
+_OBJC_IVAR_$_CBLQueryOptions.groupLevel
+_OBJC_IVAR_$_CBLQueryOptions.descending
+_OBJC_IVAR_$_CBLQueryOptions.updateSeq
+_OBJC_IVAR_$_CBLQueryOptions.inclusiveStart
+_OBJC_IVAR_$_CBLQueryOptions.inclusiveEnd
+_OBJC_IVAR_$_CBLQueryOptions.prefixMatchLevel
+_OBJC_IVAR_$_CBLQueryOptions.includeDocs
+_OBJC_IVAR_$_CBLQueryOptions.reduceSpecified
+_OBJC_IVAR_$_CBLQueryOptions.reduce
+_OBJC_IVAR_$_CBLQueryOptions.limit
+_OBJC_IVAR_$_CBLQueryOptions.content
+_OBJC_IVAR_$_CBLQueryOptions.group
+_OBJC_IVAR_$_CBLQueryOptions.fullTextSnippets
+_OBJC_IVAR_$_CBLQueryOptions.fullTextRanking
+_OBJC_IVAR_$_CBLQueryOptions.allDocsMode
+_OBJC_IVAR_$_CBLQueryOptions.bbox
+
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
 _CBLStatusFromNSError
@@ -104,4 +121,3 @@ _CBL_ReplicatorProgressChangedNotification
 _CBL_ReplicatorStoppedNotification
 
 _kDefaultCBLChangesOptions
-_kDefaultCBLQueryOptions

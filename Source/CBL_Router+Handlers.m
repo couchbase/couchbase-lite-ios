@@ -187,18 +187,18 @@
     if ([self cacheWithEtag: $sprintf(@"%lld", db.lastSequenceNumber)])
         return kCBLStatusNotModified;
     
-    CBLQueryOptions options;
-    if (![self getQueryOptions: &options])
+    CBLQueryOptions *options = [self getQueryOptions];
+    if (!options)
         return kCBLStatusBadParam;
-    return [self doAllDocs: &options];
+    return [self doAllDocs: options];
 }
 
 - (CBLStatus) do_POST_all_docs: (CBLDatabase*)db {
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
-    CBLQueryOptions options;
-    if (![self getQueryOptions: &options])
+    CBLQueryOptions *options = [self getQueryOptions];
+    if (!options)
         return kCBLStatusBadParam;
-    
+
     NSDictionary* body = self.bodyAsDictionary;
     if (!body)
         return kCBLStatusBadJSON;
@@ -206,10 +206,10 @@
     if (![docIDs isKindOfClass: [NSArray class]])
         return kCBLStatusBadParam;
     options.keys = docIDs;
-    return [self doAllDocs: &options];
+    return [self doAllDocs: options];
 }
 
-- (CBLStatus) doAllDocs: (const CBLQueryOptions*)options {
+- (CBLStatus) doAllDocs: (CBLQueryOptions*)options {
     NSArray* result = [_db getAllDocs: options];
     if (!result)
         return _db.lastDbError;
@@ -1054,8 +1054,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (!view)
         return status;
     
-    CBLQueryOptions options;
-    if (![self getQueryOptions: &options])
+    CBLQueryOptions *options = [self getQueryOptions];
+    if (!options)
         return kCBLStatusBadRequest;
     if (keys)
         options.keys = keys;
@@ -1066,15 +1066,15 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     
     // Check for conditional GET and set response Etag header:
     if (!keys) {
-        SequenceNumber eTag = options.includeDocs ? _db.lastSequenceNumber : view.lastSequenceIndexed;
+        SequenceNumber eTag = options->includeDocs ? _db.lastSequenceNumber : view.lastSequenceIndexed;
         if ([self cacheWithEtag: $sprintf(@"%lld", eTag)])
             return kCBLStatusNotModified;
     }
-    return [self queryView: view withOptions: &options];
+    return [self queryView: view withOptions: options];
 }
 
 
-- (CBLStatus) queryView: (CBLView*)view withOptions: (const CBLQueryOptions*)options {
+- (CBLStatus) queryView: (CBLView*)view withOptions: (CBLQueryOptions*)options {
     CBLStatus status;
     NSArray* rows = [view _queryWithOptions: options status: &status];
     if (!rows)
@@ -1115,8 +1115,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (!props)
         return kCBLStatusBadJSON;
     
-    CBLQueryOptions options;
-    if (![self getQueryOptions: &options])
+    CBLQueryOptions *options = [self getQueryOptions];
+    if (!options)
         return kCBLStatusBadRequest;
     
     if ([self cacheWithEtag: $sprintf(@"%lld", _db.lastSequenceNumber)])  // conditional GET
@@ -1130,7 +1130,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         CBLStatus status = [view updateIndex];
         if (status >= kCBLStatusBadRequest)
             return status;
-        return [self queryView: view withOptions: &options];
+        return [self queryView: view withOptions: options];
     } @finally {
         [view deleteView];
     }

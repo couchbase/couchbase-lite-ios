@@ -45,6 +45,43 @@ NSData* CBLContentsOfTestFile(NSString* name) {
 #endif
 
 
+BOOL CBLWithStringBytes(UU NSString* str, void (^block)(const char*, size_t)) {
+    // First attempt: Get a C string directly from the CFString if it's in the right format:
+    const char* cstr = CFStringGetCStringPtr((CFStringRef)str, kCFStringEncodingUTF8);
+    if (cstr) {
+        block(cstr, strlen(cstr));
+        return YES;
+    }
+
+    NSUInteger byteCount;
+    if (str.length < 256) {
+        // First try to copy the UTF-8 into a smallish stack-based buffer:
+        char stackBuf[256];
+        NSRange remaining;
+        BOOL ok = [str getBytes: stackBuf maxLength: sizeof(stackBuf) usedLength: &byteCount
+                       encoding: NSUTF8StringEncoding options: 0
+                          range: NSMakeRange(0, str.length) remainingRange: &remaining];
+        if (ok && remaining.length == 0) {
+            block(stackBuf, byteCount);
+            return YES;
+        }
+    }
+
+    // Otherwise malloc a buffer to copy the UTF-8 into:
+    NSUInteger maxByteCount = [str maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
+    char* buf = malloc(maxByteCount);
+    if (!buf)
+        return NO;
+    BOOL ok = [str getBytes: buf maxLength: maxByteCount usedLength: &byteCount
+                   encoding: NSUTF8StringEncoding options: 0
+                      range: NSMakeRange(0, str.length) remainingRange: NULL];
+    if (ok)
+        block(buf, byteCount);
+    free(buf);
+    return ok;
+}
+
+
 NSString* CBLCreateUUID() {
 #ifdef GNUSTEP
     uuid_t uuid;
@@ -123,6 +160,15 @@ NSData* CBLHMACSHA256(NSData* key, NSData* data) {
 NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b) {
     SInt64 diff = a - b;
     return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+}
+
+
+NSString* CBLJSONString( id object ) {
+    if (!object)
+        return nil;
+    return [CBLJSON stringWithJSONObject: object
+                                 options: CBLJSONWritingAllowFragments
+                                   error: NULL];
 }
 
 

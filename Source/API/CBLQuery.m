@@ -18,6 +18,7 @@
 #import "CBLView+Internal.h"
 #import "CBLDatabase.h"
 #import "CBL_Server.h"
+#import "CBLMisc.h"
 #import "MYBlockUtils.h"
 
 
@@ -27,7 +28,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
 - (NSArray*) queryViewNamed: (NSString*)viewName
-                    options: (CBLQueryOptions)options
+                    options: (CBLQueryOptions*)options
                lastSequence: (SequenceNumber*)outLastSequence
                      status: (CBLStatus*)outStatus;
 @end
@@ -66,8 +67,8 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         _database = database;
         _view = view;
         _inclusiveStart = _inclusiveEnd = YES;
-        _limit = kDefaultCBLQueryOptions.limit;  // this has a nonzero default (UINT_MAX)
-        _fullTextRanking = kDefaultCBLQueryOptions.fullTextRanking; // defaults to YES
+        _limit = kCBLQueryOptionsDefaultLimit;
+        _fullTextRanking = YES;
         _mapOnly = (view.reduceBlock == nil);
     }
     return self;
@@ -134,36 +135,62 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
             prefixMatchLevel=_prefixMatchLevel;
 
 
+- (NSString*) description {
+    NSMutableString *desc = [NSMutableString stringWithFormat: @"%@[%@",
+                             [self class], (_view ? _view.name : @"AllDocs")];
+#if DEBUG
+    if (_startKey)
+        [desc appendFormat: @", start=%@", CBLJSONString(_startKey)];
+    if (_endKey)
+        [desc appendFormat: @", end=%@", CBLJSONString(_endKey)];
+    if (_keys)
+        [desc appendFormat: @", keys=[..%lu keys...]", (unsigned long)_keys.count];
+    if (_skip)
+        [desc appendFormat: @", skip=%lu", (unsigned long)_skip];
+    if (_descending)
+        [desc appendFormat: @", descending"];
+    if (_limit != UINT_MAX)
+        [desc appendFormat: @", limit=%lu", (unsigned long)_limit];
+    if (_groupLevel)
+        [desc appendFormat: @", groupLevel=%lu", (unsigned long)_groupLevel];
+    if (_mapOnly)
+        [desc appendFormat: @", mapOnly=YES"];
+    if (_allDocsMode)
+        [desc appendFormat: @", allDocsMode=%d", _allDocsMode];
+#endif
+    [desc appendString: @"]"];
+    return desc;
+}
+
+
 - (CBLLiveQuery*) asLiveQuery {
     return [[CBLLiveQuery alloc] initWithQuery: self];
 }
 
-- (CBLQueryOptions) queryOptions {
-    return (CBLQueryOptions) {
-        .startKey = _startKey,
-        .endKey = _endKey,
-        .startKeyDocID = _startKeyDocID,
-        .endKeyDocID = _endKeyDocID,
-        .inclusiveStart = _inclusiveStart,
-        .inclusiveEnd = _inclusiveEnd,
-        .prefixMatchLevel = (unsigned)_prefixMatchLevel,
-        .keys = _keys,
-        .fullTextQuery = _fullTextQuery,
-        .fullTextSnippets = _fullTextSnippets,
-        .fullTextRanking = _fullTextRanking,
-        .bbox = (_isGeoQuery ? &_boundingBox : NULL),
-        .skip = (unsigned)_skip,
-        .limit = (unsigned)_limit,
-        .reduce = !_mapOnly,
-        .reduceSpecified = YES,
-        .groupLevel = (unsigned)_groupLevel,
-        .descending = _descending,
-        .includeDocs = _prefetch,
-        .updateSeq = YES,
-        .allDocsMode = _allDocsMode,
-        .indexUpdateMode = _indexUpdateMode,
-        .filter = _postFilter
-    };
+- (CBLQueryOptions*) queryOptions {
+    CBLQueryOptions* options = [CBLQueryOptions new];
+    options.startKey = _startKey,
+    options.endKey = _endKey,
+    options.startKeyDocID = _startKeyDocID,
+    options.endKeyDocID = _endKeyDocID,
+    options.keys = _keys,
+    options.fullTextQuery = _fullTextQuery,
+    options->fullTextSnippets = _fullTextSnippets,
+    options->fullTextRanking = _fullTextRanking,
+    options->bbox = (_isGeoQuery ? &_boundingBox : NULL),
+    options->skip = (unsigned)_skip,
+    options->limit = (unsigned)_limit,
+    options->reduce = !_mapOnly,
+    options->reduceSpecified = YES,
+    options->groupLevel = (unsigned)_groupLevel,
+    options->descending = _descending,
+    options->includeDocs = _prefetch,
+    options->updateSeq = YES,
+    options->inclusiveEnd = YES,
+    options->allDocsMode = _allDocsMode,
+    options->indexUpdateMode = _indexUpdateMode;
+    options.filter = _postFilter;
+    return options;
 }
 
 
@@ -190,7 +217,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 - (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete {
     LogTo(Query, @"%@: Async query %@/%@...", self, _database.name, (_view.name ?: @"_all_docs"));
     NSString* viewName = _view.name;
-    CBLQueryOptions options = self.queryOptions;
+    CBLQueryOptions *options = self.queryOptions;
     
     [_database.manager backgroundTellDatabaseNamed: _database.name to: ^(CBLDatabase *bgdb) {
         // On the background server thread, run the query:
@@ -675,7 +702,7 @@ static inline BOOL isNonMagicValue(id value) {
 @implementation CBLDatabase (Views)
 
 - (NSArray*) queryViewNamed: (NSString*)viewName
-                    options: (CBLQueryOptions)options
+                    options: (CBLQueryOptions*)options
                lastSequence: (SequenceNumber*)outLastSequence
                      status: (CBLStatus*)outStatus
 {
@@ -690,23 +717,23 @@ static inline BOOL isNonMagicValue(id value) {
                 break;
             }
             lastSequence = view.lastSequenceIndexed;
-            if (options.indexUpdateMode == kCBLUpdateIndexBefore || lastSequence <= 0) {
+            if (options->indexUpdateMode == kCBLUpdateIndexBefore || lastSequence <= 0) {
                 status = [view updateIndex];
                 if (CBLStatusIsError(status)) {
                     Warn(@"Failed to update view index: %d", status);
                     break;
                 }
                 lastSequence = view.lastSequenceIndexed;
-            } else if (options.indexUpdateMode == kCBLUpdateIndexAfter &&
+            } else if (options->indexUpdateMode == kCBLUpdateIndexAfter &&
                        lastSequence < self.lastSequenceNumber) {
                 [self doAsync: ^{
                     [view updateIndex];
                 }];
             }
-            rows = [view _queryWithOptions: &options status: &status];
+            rows = [view _queryWithOptions: options status: &status];
         } else {
             // nil view means query _all_docs
-            rows = [self getAllDocs: &options];
+            rows = [self getAllDocs: options];
             status = rows ? kCBLStatusOK :self.lastDbError; //FIX: getALlDocs should return status
             lastSequence = self.lastSequenceNumber;
         }

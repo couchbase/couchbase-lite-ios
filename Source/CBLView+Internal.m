@@ -17,7 +17,7 @@
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLCollateJSON.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "CBLMisc.h"
 #import "CBLGeometry.h"
 
@@ -50,6 +50,27 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 @property (readonly, nonatomic) CBLGeoRect rect;
 @property (readonly, nonatomic) NSData* geoJSONData;
 @end
+
+
+@implementation CBLQueryOptions
+
+@synthesize startKey, endKey, startKeyDocID, endKeyDocID, keys, fullTextQuery, filter;
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        limit = kCBLQueryOptionsDefaultLimit;
+        inclusiveStart = YES;
+        inclusiveEnd = YES;
+        fullTextRanking = YES;
+        // everything else will default to nil/0/NO
+    }
+    return self;
+}
+
+@end
+
+
 
 
 @implementation CBLView (Internal)
@@ -101,7 +122,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
     // Version string is based on a digest of the properties:
     NSError* error;
-    NSString* version = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: viewProps error: &error]);
+    NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: &error]);
     if (error) {
         Warn(@"View %@ has invalid JSON values: %@", _name, error);
         return NO;
