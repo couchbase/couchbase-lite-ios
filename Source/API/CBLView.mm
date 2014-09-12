@@ -469,7 +469,7 @@ static id<CBLViewCompiler> sCompiler;
 
 
 - (NSUInteger) totalRows {
-    return self.index->rowCount();
+    return (NSUInteger) self.index->rowCount();
 }
 
 
