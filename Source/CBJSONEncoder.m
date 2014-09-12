@@ -10,7 +10,8 @@
 #import "CBLMisc.h"
 #include "yajl/yajl_gen.h"
 
-#define UU __unsafe_unretained
+
+NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 
 
 @implementation CBJSONEncoder
@@ -114,9 +115,17 @@
 - (BOOL) encodeNumber: (UU NSNumber*)number {
     yajl_gen_status status;
     switch (number.objCType[0]) {
-        case 'c':
-            status = yajl_gen_bool(_gen, number.boolValue);
+        case 'c': {
+            // The only way to tell whether an NSNumber with 'char' type is a boolean is to
+            // compare it against the singleton kCFBoolean objects:
+            if (number == (id)kCFBooleanTrue)
+                status = yajl_gen_bool(_gen, number.boolValue);
+            else if (number == (id)kCFBooleanFalse)
+                status = yajl_gen_bool(_gen, number.boolValue);
+            else
+                status = yajl_gen_integer(_gen, number.longLongValue);
             break;
+        }
         case 'f':
         case 'd': {
             // Based on yajl_gen_double, except yajl uses too many significant figures (20 not 16)
@@ -204,8 +213,104 @@
 - (NSError*) error {
     if (_status == yajl_gen_status_ok)
         return nil;
-    return [NSError errorWithDomain: @"YAJL" code: _status userInfo: nil];
+    return [NSError errorWithDomain: CBJSONEncoderErrorDomain code: _status userInfo: nil];
 }
 
 
 @end
+
+
+
+#if DEBUG
+
+static void roundtrip( id obj ) {
+    NSData* json = [CBJSONEncoder canonicalEncoding: obj error: nil];
+    Log(@"%@ --> `%@`", [obj description], [json my_UTF8ToString]);
+    NSError* error;
+    id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
+    CAssert(reconstituted, @"Canonical JSON `%@` was unparseable: %@",
+            [json my_UTF8ToString], error);
+    CAssertEqual(reconstituted, obj);
+}
+
+static void roundtripFloat( double n ) {
+    NSData* json = [CBJSONEncoder canonicalEncoding: @(n) error: nil];
+    NSError* error;
+    id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
+    CAssert(reconstituted, @"`%@` was unparseable: %@",
+            [json my_UTF8ToString], error);
+    double delta = [reconstituted doubleValue] / n - 1.0;
+    Log(@"%g --> `%@` (error = %g)", n, [json my_UTF8ToString], delta);
+    CAssert(fabs(delta) < 1.0e-15, @"`%@` had floating point roundoff error of %g (%g vs %g)",
+            [json my_UTF8ToString], delta, [reconstituted doubleValue], n);
+}
+
+static NSString* canonicalString(id obj) {
+    return [[NSString alloc] initWithData: [CBJSONEncoder canonicalEncoding: obj error: nil]
+                                 encoding: NSUTF8StringEncoding];
+}
+
+TestCase(CBJSONEncoder_Encoding) {
+    CAssertEqual(canonicalString(@YES), @"true");
+    CAssertEqual(canonicalString(@NO), @"false");
+    CAssertEqual(canonicalString(@1), @"1");
+    CAssertEqual(canonicalString(@0), @"0");
+    CAssertEqual(canonicalString([NSNumber numberWithChar: 2]), @"2");
+    CAssertEqual(canonicalString($null), @"null");
+    CAssertEqual(canonicalString(@(3.1)), @"3.1");
+}
+
+TestCase(CBJSONEncoder_RoundTrip) {
+    roundtrip($true);
+    roundtrip($false);
+    roundtrip($null);
+    
+    roundtrip(@0);
+    roundtrip(@INT_MAX);
+    roundtrip(@INT_MIN);
+    roundtrip(@UINT_MAX);
+    roundtrip(@INT64_MAX);
+    roundtrip(@UINT64_MAX);
+    
+    roundtripFloat(111111.111111);
+    roundtripFloat(M_PI);
+    roundtripFloat(6.02e23);
+    roundtripFloat(1.23456e-18);
+    roundtripFloat(1.0e-37);
+    roundtripFloat(UINT_MAX);
+    roundtripFloat(UINT64_MAX);
+    roundtripFloat(UINT_MAX + 0.01);
+    roundtripFloat(1.0e38);
+    
+    roundtrip(@"");
+    roundtrip(@"ordinary string");
+    roundtrip(@"\\");
+    roundtrip(@"xx\\");
+    roundtrip(@"\\xx");
+    roundtrip(@"\"\\");
+    roundtrip(@"\\.\"");
+    roundtrip(@"...\\.\"...");
+    roundtrip(@"...\\..\"...");
+    roundtrip(@"\r\nHELO\r \tTHER");
+    roundtrip(@"\037wow\037");
+    roundtrip(@"\001");
+    roundtrip(@"\u1234");
+    
+    roundtrip(@[]);
+    roundtrip(@[@[]]);
+    roundtrip(@[@"foo", @"bar", $null]);
+    
+    roundtrip(@{});
+    roundtrip(@{@"key": @"value"});
+    roundtrip(@{@"\"key\"": $false});
+    roundtrip(@{@"\"key\"": $false, @"": @{}});
+}
+
+TestCase(CBJSONEncoder_NaNProperty) {
+    NSError* error;
+    NSData* json = [CBJSONEncoder canonicalEncoding: [NSDecimalNumber notANumber] error: &error];
+    CAssert(!json);
+    CAssertEqual(error.domain, CBJSONEncoderErrorDomain);
+}
+
+#endif

@@ -34,3 +34,4 @@
 
 @end
 
+extern NSString* const CBJSONEncoderErrorDomain;
