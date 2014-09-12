@@ -10,7 +10,16 @@
 #import "CBL_Revision.h"
 
 
+// In a method/function implementation (not declaration), declaring an object parameter as
+// __unsafe_unretained avoids the implicit retain at the start of the function and releasse at
+// the end. In a performance-sensitive function, those can be significant overhead. Of course this
+// should never be used if the object might be released during the function.
+#define UU __unsafe_unretained
+
+
 extern NSString* const CBLHTTPErrorDomain;
+
+BOOL CBLWithStringBytes(NSString* str, void (^block)(const char*, size_t));
 
 NSString* CBLCreateUUID( void );
 
