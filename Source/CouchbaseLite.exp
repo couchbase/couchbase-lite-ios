@@ -22,7 +22,6 @@
 .objc_class_name_CBLSavedRevision
 .objc_class_name_CBLUnsavedRevision
 .objc_class_name_CBLView
-.objc_class_name_MYDynamicObject
 
 _OBJC_CLASS_$_CBLAttachment
 _OBJC_CLASS_$_CBLAuthenticator
@@ -45,7 +44,6 @@ _OBJC_CLASS_$_CBLRevision
 _OBJC_CLASS_$_CBLSavedRevision
 _OBJC_CLASS_$_CBLUnsavedRevision
 _OBJC_CLASS_$_CBLView
-_OBJC_CLASS_$_MYDynamicObject
 
 # iOS only:
 .objc_class_name_CBLUITableSource
@@ -101,7 +99,9 @@ _OBJC_IVAR_$_CBLQueryOptions.skip
 _OBJC_IVAR_$_CBLQueryOptions.groupLevel
 _OBJC_IVAR_$_CBLQueryOptions.descending
 _OBJC_IVAR_$_CBLQueryOptions.updateSeq
+_OBJC_IVAR_$_CBLQueryOptions.inclusiveStart
 _OBJC_IVAR_$_CBLQueryOptions.inclusiveEnd
+_OBJC_IVAR_$_CBLQueryOptions.prefixMatchLevel
 _OBJC_IVAR_$_CBLQueryOptions.includeDocs
 _OBJC_IVAR_$_CBLQueryOptions.reduceSpecified
 _OBJC_IVAR_$_CBLQueryOptions.reduce

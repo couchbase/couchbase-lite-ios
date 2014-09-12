@@ -894,6 +894,36 @@ TestCase(CBL_View_GroupedStrings) {
 }
 
 
+TestCase(CBL_View_Grouped_NoReduce) {
+    RequireTestCase(CBL_View_Grouped);
+    CBLDatabase *db = createDB();
+    putDoc(db, $dict({@"_id", @"1"}, {@"type", @"A"}));
+    putDoc(db, $dict({@"_id", @"2"}, {@"type", @"A"}));
+    putDoc(db, $dict({@"_id", @"3"}, {@"type", @"B"}));
+    putDoc(db, $dict({@"_id", @"4"}, {@"type", @"B"}));
+    putDoc(db, $dict({@"_id", @"5"}, {@"type", @"C"}));
+    putDoc(db, $dict({@"_id", @"6"}, {@"type", @"C"}));
+    
+    CBLView* view = [db viewNamed: @"GroupByType"];
+    [view setMapBlock: MAPBLOCK({
+        NSString *type = doc[@"type"];
+        if (type)
+            emit(type, nil);
+    }) version:@"1.0"];
+    
+    CAssertEq([view updateIndex], kCBLStatusOK);
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    options->groupLevel = 1;
+    CBLStatus status;
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    CAssertEq(status, kCBLStatusOK);
+    CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"error", @"not_found"}),
+                              $dict({@"key", @"B"}, {@"error", @"not_found"}),
+                              $dict({@"key", @"C"}, {@"error", @"not_found"})));
+    [db _close];
+}
+
+
 TestCase(CBL_View_Collation) {
     // Based on CouchDB's "view_collation.js" test
     RequireTestCase(CBL_View_Query);
@@ -1227,14 +1257,16 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_ConflictWinner);
     RequireTestCase(CBL_View_ConflictLoser);
     RequireTestCase(CBL_View_LinkedDocs);
+    RequireTestCase(CBL_View_Grouped);
+    RequireTestCase(CBL_View_GroupedStrings);
+    RequireTestCase(CBL_View_Grouped_NoReduce);
     RequireTestCase(CBL_View_Collation);
     RequireTestCase(CBL_View_CollationRaw);
     RequireTestCase(CBL_View_NumericKeys);
-    RequireTestCase(CBL_View_Grouped);
-    RequireTestCase(CBL_View_GroupedStrings);
-    RequireTestCase(CBL_View_TotalDocs);
+    RequireTestCase(CBL_View_Reduce);
 //  RequireTestCase(CBL_View_GeoQuery);
-//    RequireTestCase(CBL_View_FullTextQuery);
+//  RequireTestCase(CBL_View_FullTextQuery);
+    RequireTestCase(CBL_View_TotalDocs);
 }
 
 
