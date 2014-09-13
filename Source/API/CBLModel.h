@@ -47,9 +47,6 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 /** Is this model new, never before saved? */
 @property (readonly) bool isNew;
 
-/** A type property of the document. */
-@property (copy, nonatomic) NSString* type;
-
 #pragma mark - SAVING:
 
 /** Writes any changes to a new revision of the document.
@@ -189,6 +186,11 @@ NS_DESIGNATED_INITIALIZER
     In general you'll find it easier to implement the '+propertyItemClass' method(s) rather
     than overriding this one. */
 + (Class) itemClassForArrayProperty: (NSString*)property;
+
+/** The type of document. This is optional, but is commonly used in document databases 
+    to distinguish different types of documents. CBLModelFactory can use this property to 
+    determine what CBLModel subclass to instantiate for a document. */
+@property (copy, nonatomic) NSString* type;
 
 @end
 
