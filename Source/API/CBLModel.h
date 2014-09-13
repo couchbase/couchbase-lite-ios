@@ -47,11 +47,19 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 /** Is this model new, never before saved? */
 @property (readonly) bool isNew;
 
+/** Defines the type of document used. Set this to a unique string that defines your model 
+    to instantiate classes via CBLModelFactory. Make sure you register the class type via 
+    [CBLModelFactory registerClass: ofType:] message. */
+@property (strong, nonatomic) NSString* type;
+
 #pragma mark - SAVING:
 
 /** Writes any changes to a new revision of the document.
     Returns YES without doing anything, if no changes have been made. */
 - (BOOL) save: (NSError**)outError;
+
+/** Writes any changes to a new revision of the document as a synchronous event to be done later.*/
+- (void) saveEventually;
 
 /** Should changes be saved back to the database automatically?
     Defaults to NO, requiring you to call -save manually. */
@@ -93,6 +101,16 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 - (void) markExternallyChanged;
 
 #pragma mark - PROPERTIES & ATTACHMENTS:
+
+/** 
+    With CBLNestedModels, we may want to the model to not clear nested models that have been gotten
+    but not yet changed. Allows classes that hold onto a CBLModel to freely allow other classes to hold
+    properties that CBLNestedModels without fear that the CBLNestedModel may be dealloc'd under low memory conditions.
+ 
+    YES (Default) - will hold all properties and not clear any from the cache if they have been gotten
+    NO - will clear any properties that have not changed
+ */
+- (void)shouldHoldAllProperties:(BOOL)holdAllProperties;
 
 /** Gets a property by name.
     You can use this for document properties that you haven't added @@property declarations for. */

@@ -30,6 +30,10 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		0377B5AE18FBAA83005C04C9 /* CBLNestedModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0377B5AF18FBAA83005C04C9 /* CBLNestedModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0377B5B018FBAA83005C04C9 /* CBLNestedModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0377B5AD18FBAA83005C04C9 /* CBLNestedModel.m */; };
+		0377B5B218FBAA83005C04C9 /* CBLNestedModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0377B5AD18FBAA83005C04C9 /* CBLNestedModel.m */; };
 		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
 		270489B017A0968E001E0FB9 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
 		270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */; };
@@ -907,6 +911,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLNestedModel.h; sourceTree = "<group>"; };
+		0377B5AD18FBAA83005C04C9 /* CBLNestedModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLNestedModel.m; sourceTree = "<group>"; };
 		2700BC5B14B64AA600B5B297 /* CBL_Router+Handlers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBL_Router+Handlers.m"; sourceTree = "<group>"; };
 		270B3DEA1489359000E0A926 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CouchbaseLite-Info.plist"; sourceTree = "<group>"; };
@@ -2301,6 +2307,8 @@
 				27DA435615918C8E00F9E7B5 /* CBLModelFactory.m */,
 				27B945A71768E63200B2DF2D /* CBLModelArray.h */,
 				27B945A81768E63200B2DF2D /* CBLModelArray.m */,
+				0377B5AC18FBAA83005C04C9 /* CBLNestedModel.h */,
+				0377B5AD18FBAA83005C04C9 /* CBLNestedModel.m */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -2557,6 +2565,7 @@
 				27F128AB156AC004008465C2 /* NSMutableURLRequest+Parameters.h in Headers */,
 				27F128B1156AC1CA008465C2 /* CBLOAuth1Authorizer.h in Headers */,
 				270F5705156AE0BF000FEB8F /* CBLAuthorizer.h in Headers */,
+				0377B5AE18FBAA83005C04C9 /* CBLNestedModel.h in Headers */,
 				27ED8630157D0FC600712B33 /* CBLDocument.h in Headers */,
 				27726AAF1889835F00AE6931 /* CBLJSON.h in Headers */,
 				277B5D361821A8380088881E /* yajl_encode.h in Headers */,
@@ -2607,6 +2616,7 @@
 				27B945B317692E2000B2DF2D /* CBLModel_Internal.h in Headers */,
 				275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */,
 				27B0B8051492BDE800A817AD /* CouchbaseLite.h in Headers */,
+				0377B5AF18FBAA83005C04C9 /* CBLNestedModel.h in Headers */,
 				27DA43621592387400F9E7B5 /* CBLManager.h in Headers */,
 				27DA43631592387400F9E7B5 /* CBLDatabase.h in Headers */,
 				27DA43641592387400F9E7B5 /* CBLDocument.h in Headers */,
@@ -3179,6 +3189,7 @@
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */,
+				0377B5B018FBAA83005C04C9 /* CBLNestedModel.m in Sources */,
 				277B5DCF1821AE990088881E /* CBLJSONReader.m in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
@@ -3458,6 +3469,7 @@
 				277EF43317F4DF3700F7B7F7 /* stem_ISO_8859_1_english.c in Sources */,
 				277EF48117F4DF3700F7B7F7 /* stem_UTF_8_spanish.c in Sources */,
 				277EF48717F4DF3700F7B7F7 /* stem_UTF_8_turkish.c in Sources */,
+				0377B5B218FBAA83005C04C9 /* CBLNestedModel.m in Sources */,
 				277EF46017F4DF3700F7B7F7 /* stem_UTF_8_english.c in Sources */,
 				27F9D0C51999644D00112E9D /* APIViewTests.m in Sources */,
 				277EF43C17F4DF3700F7B7F7 /* stem_ISO_8859_1_german.c in Sources */,

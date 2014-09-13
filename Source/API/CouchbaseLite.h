@@ -31,6 +31,7 @@
 #import "CBLModel.h"
 #import "CBLModelFactory.h"
 #import "CBLJSON.h"
+#import "CBLNestedModel.h"
 
 #if TARGET_OS_IPHONE
 #import "CBLUITableSource.h"

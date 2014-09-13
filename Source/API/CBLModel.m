@@ -26,7 +26,7 @@
 
 
 @implementation CBLModel
-
+@dynamic type;
 
 - (instancetype) init {
     return [self initWithDocument: nil];
@@ -44,6 +44,8 @@
             _isNew = true;
             LogTo(CBLModel, @"%@ init", self);
         }
+        
+        [self shouldHoldAllProperties:YES];
     }
     return self;
 }
@@ -85,6 +87,9 @@
     if(_needsSave)
         Warn(@"%@ dealloced with unsaved changes!", self); // should be impossible
     _document.modelObject = nil;
+    
+    // Clears notification observer on ios
+    [self shouldHoldAllProperties:YES];
 }
 
 
@@ -296,6 +301,9 @@
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return;
     _isNew = NO;
+#if !(TARGET_OS_IPHONE)
+    _properties = nil;
+#endif
     _changedNames = nil;
     _changedAttachments = nil;
     self.needsSave = NO;
@@ -338,6 +346,11 @@
     return ok;
 }
 
+- (void) saveEventually {
+    [self.database doAsync: ^{
+        [self save: NULL];
+    }];
+}
 
 + (BOOL) saveModels: (NSArray*)models error: (NSError**)outError {
     if (models.count == 0)
@@ -397,9 +410,20 @@
             value = [value docIDs];
         else
             value = [value my_map:^id(id obj) { return [self externalizePropertyValue: obj]; }];
+    } else if([value isKindOfClass:[NSDictionary class]]) {
+        NSDictionary* oldDict = (NSDictionary*)value;
+        NSMutableDictionary* dictionary = [NSMutableDictionary dictionaryWithCapacity:[value count]];
+        [oldDict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+            dictionary[key] = [self externalizePropertyValue:obj];
+        }];
+        
+        value = [dictionary copy];
     } else if ([value conformsToProtocol: @protocol(CBLJSONEncoding)]) {
         value = [(id<CBLJSONEncoding>)value encodeAsJSON];
+    } else if ([value isKindOfClass:[CBLNestedModel class]]) {
+        value = [(CBLNestedModel*)value encodeToJSON];
     }
+    
     return value;
 }
 
@@ -510,6 +534,32 @@
     return value;
 }
 
+- (void)shouldHoldAllProperties:(BOOL)holdAllProperties {
+#if TARGET_OS_IPHONE
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIApplicationDidReceiveMemoryWarningNotification
+                                                  object:nil];
+    
+    if(!holdAllProperties) {
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(removeUnchangedCachedProperties:)
+                                                     name:UIApplicationDidReceiveMemoryWarningNotification
+                                                   object:nil];
+    }
+#endif
+}
+
+
+- (void) removeUnchangedCachedProperties: (NSNotification*)notification {
+    // Remove unchanged cached values in _properties:
+    if (_changedNames && _properties) {
+        NSMutableSet* removeKeys = [NSMutableSet setWithArray: [_properties allKeys]];
+        [removeKeys minusSet: _changedNames];
+        [_properties removeObjectsForKeys: removeKeys.allObjects];
+    } else {
+        _properties = nil;
+    }
+}
 
 #pragma mark - ATTACHMENTS:
 
