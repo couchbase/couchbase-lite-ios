@@ -66,6 +66,11 @@
     if (!revision.deleted) {
         // PUT:
         NSData* json = [self encodeDocumentJSON: revision];
+        if (!json) {
+            *outStatus = kCBLStatusBadJSON;
+            return nil;
+        }
+        
         NSString* newRevID;
         if (prevRevID) {
             unsigned generation = [CBL_Revision generationFromRevID: prevRevID];

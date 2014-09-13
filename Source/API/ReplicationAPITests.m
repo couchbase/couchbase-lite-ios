@@ -297,7 +297,7 @@ TestCase(RunPullReplication) {
 
 TestCase(RunReplicationWithError) {
     RequireTestCase(CreateReplicators);
-    NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://couchbase.com/no_such_db"];
+    NSURL* const fakeRemoteURL = RemoteTestDBURL(@"no-such-db");
     CBLDatabase* db = createEmptyManagerAndDb();
 
     // Create a replication:
@@ -317,7 +317,7 @@ TestCase(RunReplicationWithError) {
 
 TestCase(ReplicationChannelsProperty) {
     CBLDatabase* db = createEmptyManagerAndDb();
-    NSURL* const fakeRemoteURL = [NSURL URLWithString: @"http://couchbase.com/no_such_db"];
+    NSURL* const fakeRemoteURL = RemoteTestDBURL(@"no-such-db");
     CBLReplication* r1 = [db createPullReplication: fakeRemoteURL];
 
     CAssertNil(r1.channels);

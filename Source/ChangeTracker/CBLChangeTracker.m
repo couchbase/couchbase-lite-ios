@@ -22,6 +22,7 @@
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "CBLJSONReader.h"
+#import "MYURLUtils.h"
 
 
 #define kDefaultHeartbeat (5 * 60.0)
@@ -171,6 +172,35 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
         [post addEntriesFromDictionary: filterParameters];
     return [CBLJSON dataWithJSONObject: post options: 0 error: NULL];
 }
+
+- (NSDictionary*) TLSSettings {
+    if (!_databaseURL.my_isHTTPS)
+        return nil;
+    // Enable SSL for this connection.
+    // Disable TLS 1.2 support because it breaks compatibility with some SSL servers;
+    // workaround taken from Apple technote TN2287:
+    // http://developer.apple.com/library/ios/#technotes/tn2287/
+    // Disable automatic cert-chain checking, because that's the only way to allow self-signed
+    // certs. We will check the cert later in -checkSSLCert.
+    return $dict( {(id)kCFStreamSSLLevel, @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"},
+                  {(id)kCFStreamSSLValidatesCertificateChain, @NO} );
+}
+
+
+- (BOOL) checkServerTrust: (SecTrustRef)sslTrust forURL: (NSURL*)url {
+    BOOL trusted = [_client changeTrackerApproveSSLTrust: sslTrust
+                                                 forHost: url.host
+                                                    port: (UInt16)url.port.intValue];
+    if (!trusted) {
+        //TODO: This error could be made more precise
+        LogTo(ChangeTracker, @"%@: Rejected server certificate", self);
+        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                   code: NSURLErrorServerCertificateUntrusted
+                                               userInfo: nil]];
+    }
+    return trusted;
+}
+
 
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%p %@]", [self class], self, self.databaseName];

@@ -60,6 +60,7 @@ static void RunViewPerformanceTest(void);
     NSAssert(&kCBLDatabaseChangeNotification != nil, @"Invalid value");
     NSAssert(&kCBLDocumentChangeNotification != nil, @"Invalid value");
     NSAssert(&kCBLReplicationChangeNotification != nil, @"Invalid value");
+    NSAssert(CBLHTTPErrorDomain != nil, @"Invalid value");
 
     // Add the navigation controller's view to the window and display.
 	[window addSubview:navigationController.view];

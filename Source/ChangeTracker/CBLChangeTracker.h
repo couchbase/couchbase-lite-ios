@@ -100,6 +100,8 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly) NSString* feed;
 @property (readonly) NSString* changesFeedPath;
 @property (readonly) NSData* changesFeedPOSTBody;
+@property (readonly) NSDictionary* TLSSettings;
+- (BOOL) checkServerTrust: (SecTrustRef)sslTrust forURL: (NSURL*)url;
 - (void) retryAfterDelay: (NSTimeInterval)retryDelay;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;

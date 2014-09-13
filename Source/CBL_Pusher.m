@@ -23,7 +23,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "CBLRevision.h"
 #import "CBLDocument.h"
 
@@ -391,7 +391,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
     CBLMultipartWriter* bodyStream = nil;
     NSDictionary* attachments = rev.attachments;
-    for (NSString* attachmentName in [CBLCanonicalJSON orderedKeys: attachments]) {
+    for (NSString* attachmentName in [CBJSONEncoder orderedKeys: attachments]) {
         NSDictionary* attachment = attachments[attachmentName];
         if (attachment[@"follows"]) {
             if (!bodyStream) {
@@ -401,7 +401,13 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 [bodyStream setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
                 // Use canonical JSON encoder so that _attachments keys will be written in the
                 // same order that this for loop is processing the attachments.
-                NSData* json = [CBLCanonicalJSON canonicalData: rev.properties];
+                NSError* error;
+                NSData* json = [CBJSONEncoder canonicalEncoding: rev.properties error: &error];
+                if (error) {
+                    Warn(@"%@: Creating canonical JSON data got an error: %@", self, error);
+                    return NO;
+                }
+
                 if (self.canSendCompressedRequests)
                     [bodyStream addGZippedData: json];
                 else

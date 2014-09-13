@@ -8,7 +8,7 @@
 
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
-@class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter;
+@class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter, CBLQueryOptions;
 
 
 typedef CBLStatus (^OnAccessCheckBlock)(CBLDatabase*, NSString *docID, SEL action);
@@ -72,7 +72,7 @@ typedef void (^OnFinishedBlock)();
 @property NSDictionary* queries;
 - (BOOL) cacheWithEtag: (NSString*)etag;
 - (CBLContentOptions) contentOptions;
-- (BOOL) getQueryOptions: (struct CBLQueryOptions*)options;
+- (CBLQueryOptions*) getQueryOptions;
 - (BOOL) explicitlyAcceptsType: (NSString*)mimeType;
 @property (readonly) NSDictionary* bodyAsDictionary;
 @property (readonly) NSString* ifMatch;

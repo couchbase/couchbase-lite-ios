@@ -60,6 +60,7 @@
     LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, url.resourceSpecifier);
     _ws = [[WebSocketClient alloc] initWithURLRequest: request];
     _ws.delegate = self;
+    [_ws useTLS: self.TLSSettings];
     NSError* error;
     if (![_ws connect: &error]) {
         self.error = error;
@@ -90,6 +91,12 @@
 #pragma mark - WEBSOCKET DELEGATE API:
 
 // THESE ARE CALLED ON THE WEBSOCKET'S DISPATCH QUEUE, NOT MY THREAD!!
+
+- (void) webSocket: (WebSocket*)ws didSecureWithTrust: (SecTrustRef)trust atURL:(NSURL *)url {
+    MYOnThread(_thread, ^{
+        [self checkServerTrust: trust forURL: url];
+    });
+}
 
 - (void) webSocketDidOpen: (WebSocket *)ws {
     MYOnThread(_thread, ^{
@@ -129,23 +136,17 @@
 }
 
 /** Called after the WebSocket closes, either intentionally or due to an error. */
-- (void) webSocket: (WebSocket *)ws
-  didCloseWithCode: (WebSocketCloseCode)code
-            reason: (NSString*)reason
+- (void) webSocket:(WebSocket *)ws
+         didCloseWithError: (NSError*)error
 {
     MYOnThread(_thread, ^{
         if (ws != _ws)
             return;
         _ws = nil;
-        if (code == kWebSocketCloseNormal) {
+        if (error == nil) {
             LogTo(ChangeTracker, @"%@: closed", self);
             [self stop];
         } else {
-            LogTo(ChangeTracker, @"%@: disconnected with error %d / %@", self, code, reason);
-            NSDictionary* info = $dict({NSLocalizedFailureReasonErrorKey, reason});
-            NSError* error = [NSError errorWithDomain: @"WebSocket"
-                                                 code: code
-                                             userInfo: info];
             [self failedWithError: error];
         }
     });

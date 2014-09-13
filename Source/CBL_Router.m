@@ -177,9 +177,9 @@
 }
 
 
-- (BOOL) getQueryOptions: (CBLQueryOptions*)options {
+- (CBLQueryOptions*) getQueryOptions {
     // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
-    *options = kDefaultCBLQueryOptions;
+    CBLQueryOptions* options = [CBLQueryOptions new];
     options->skip = [self intQuery: @"skip" defaultValue: options->skip];
     options->limit = [self intQuery: @"limit" defaultValue: options->limit];
     options->groupLevel = [self intQuery: @"group_level" defaultValue: options->groupLevel];
@@ -207,35 +207,35 @@
     NSError* error = nil;
     id keys = [self jsonQuery: @"keys" error: &error];
     if (error || (keys && ![keys isKindOfClass: [NSArray class]]))
-        return NO;
+        return nil;
     if (!keys) {
         id key = [self jsonQuery: @"key" error: &error];
         if (error)
-            return NO;
+            return nil;
         if (key)
             keys = @[key];
     }
     
     if (keys) {
-        options->keys = [self retainQuery: keys];
+        options.keys = [self retainQuery: keys];
     } else {
         // Handle 'startkey' and 'endkey':
-        options->startKey = [self retainQuery: [self jsonQuery: @"startkey" error: &error]];
+        options.startKey = [self retainQuery: [self jsonQuery: @"startkey" error: &error]];
         if (error)
-            return NO;
-        options->endKey = [self retainQuery: [self jsonQuery: @"endkey" error: &error]];
+            return nil;
+        options.endKey = [self retainQuery: [self jsonQuery: @"endkey" error: &error]];
         if (error)
-            return NO;
-        options->startKeyDocID = [self retainQuery: [self jsonQuery: @"startkey_docid" error: &error]];
+            return nil;
+        options.startKeyDocID = [self retainQuery: [self jsonQuery: @"startkey_docid" error: &error]];
         if (error)
-            return NO;
-        options->endKeyDocID = [self retainQuery: [self jsonQuery: @"endkey_docid" error: &error]];
+            return nil;
+        options.endKeyDocID = [self retainQuery: [self jsonQuery: @"endkey_docid" error: &error]];
         if (error)
-            return NO;
+            return nil;
     }
 
     // Nonstandard full-text search options 'full_text', 'snippets', 'ranking':
-    options->fullTextQuery = [self retainQuery: [self query: @"full_text"]];
+    options.fullTextQuery = [self retainQuery: [self query: @"full_text"]];
     options->fullTextSnippets = [self boolQuery: @"snippets"];
     if ([self query: @"ranking"])
         options->fullTextRanking = [self boolQuery: @"ranking"];
@@ -245,13 +245,13 @@
     if (bboxString) {
         CBLGeoRect bbox;
         if (!CBLGeoCoordsStringToRect(bboxString, &bbox))
-            return NO;
+            return nil;
         NSData* savedBbox = [NSData dataWithBytes: &bbox length: sizeof(bbox)];
         [_queryRetainer addObject: savedBbox];
         options->bbox = savedBbox.bytes;
     }
 
-    return YES;
+    return options;
 }
 
 

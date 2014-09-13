@@ -10,7 +10,16 @@
 #import "CBL_Revision.h"
 
 
+// In a method/function implementation (not declaration), declaring an object parameter as
+// __unsafe_unretained avoids the implicit retain at the start of the function and releasse at
+// the end. In a performance-sensitive function, those can be significant overhead. Of course this
+// should never be used if the object might be released during the function.
+#define UU __unsafe_unretained
+
+
 extern NSString* const CBLHTTPErrorDomain;
+
+BOOL CBLWithStringBytes(NSString* str, void (^block)(const char*, size_t));
 
 NSString* CBLCreateUUID( void );
 
@@ -27,6 +36,9 @@ NSData* CBLHMACSHA256(NSData* key, NSData* data) __attribute__((nonnull));
 NSString* CBLHexFromBytes( const void* bytes, size_t length) __attribute__((nonnull));
 
 NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b);
+
+/** Convenience function to JSON-encode an object to a string. */
+NSString* CBLJSONString( id object );
 
 /** Escapes a string to be used as the value of a query parameter in a URL.
     This does the usual %-escaping, but makes sure that '&' is also escaped. */

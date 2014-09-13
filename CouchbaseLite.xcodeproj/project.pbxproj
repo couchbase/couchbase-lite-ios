@@ -116,6 +116,8 @@
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */; };
+		274E163219B90F520066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
+		274E163319B90F740066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
 		275072A418E49BEA00A80C5A /* CBLIncrementalStore.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */; };
 		275072A518E49BEA00A80C5A /* CBLIncrementalStore.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */; };
 		2751D4E4151BAE7000F7FD57 /* CBLManager+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */; };
@@ -361,13 +363,13 @@
 		2785B48D18D3F11900CBB41A /* CBLReplication+Transformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2785BE9D16BC87EA00A3E881 /* CBL_URLProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* CBL_URLProtocol.h */; };
 		2785BE9E16BC87ED00A3E881 /* CBL_Router.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* CBL_Router.h */; };
-		278B0CA0152A8B1900577747 /* CBLCanonicalJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 278B0C9E152A8B1900577747 /* CBLCanonicalJSON.h */; };
-		278B0CA1152A8B1900577747 /* CBLCanonicalJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 278B0C9F152A8B1900577747 /* CBLCanonicalJSON.m */; };
-		278B0CA2152A8B1900577747 /* CBLCanonicalJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 278B0C9F152A8B1900577747 /* CBLCanonicalJSON.m */; };
 		278D359A19118FBC00C9C8EC /* CBLAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022818F8572700A488F7 /* CBLAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */; };
 		278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27919E4519C3972300C51699 /* CBJSONEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27919E4319C3972300C51699 /* CBJSONEncoder.h */; };
+		27919E4619C3972300C51699 /* CBJSONEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27919E4419C3972300C51699 /* CBJSONEncoder.m */; };
+		27919E4719C3972300C51699 /* CBJSONEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27919E4419C3972300C51699 /* CBJSONEncoder.m */; };
 		279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* CBLRemoteRequest.h */; };
 		279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* CBLRemoteRequest.m */; };
 		279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* CBLRemoteRequest.m */; };
@@ -832,6 +834,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		274E162A19B90EE00066CA5E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27538F8517F144E6004C3BFD /* Copy Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -945,6 +956,7 @@
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
 		274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmptyAppDelegate.m; sourceTree = "<group>"; };
 		274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Attachments.m"; sourceTree = "<group>"; };
+		274E163119B90F420066CA5E /* TestData */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestData; sourceTree = SOURCE_ROOT; };
 		274F9807152E6E0C00247C46 /* CBLStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStatus.h; sourceTree = "<group>"; };
 		2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLManager+Internal.h"; sourceTree = "<group>"; };
 		2753155314ACEFC90065964D /* DDNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDNumber.h; sourceTree = "<group>"; };
@@ -1153,10 +1165,10 @@
 		27846FB715D475DF0030122F /* MYStreamUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYStreamUtils.h; sourceTree = "<group>"; };
 		27846FB815D475DF0030122F /* MYStreamUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYStreamUtils.m; sourceTree = "<group>"; };
 		27846FF015D5C8250030122F /* APITests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = APITests.m; sourceTree = "<group>"; };
-		278B0C9E152A8B1900577747 /* CBLCanonicalJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLCanonicalJSON.h; sourceTree = "<group>"; };
-		278B0C9F152A8B1900577747 /* CBLCanonicalJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLCanonicalJSON.m; sourceTree = "<group>"; };
 		278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYURLUtils.h; sourceTree = "<group>"; };
 		278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYURLUtils.m; sourceTree = "<group>"; };
+		27919E4319C3972300C51699 /* CBJSONEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBJSONEncoder.h; sourceTree = "<group>"; };
+		27919E4419C3972300C51699 /* CBJSONEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBJSONEncoder.m; sourceTree = "<group>"; };
 		279906E1149A65B7003D4338 /* CBLRemoteRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRemoteRequest.h; sourceTree = "<group>"; };
 		279906E2149A65B8003D4338 /* CBLRemoteRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRemoteRequest.m; sourceTree = "<group>"; };
 		279906EC149ABFC1003D4338 /* CBLBatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBatcher.h; sourceTree = "<group>"; };
@@ -1550,6 +1562,7 @@
 				27821BB4148E7D590099B373 /* Replicator */,
 				27E2E62E159A26A1005B9234 /* Networking */,
 				2776A5A316A48EEB006FF199 /* Auth */,
+				27919E3D19C38FCB00C51699 /* JSON */,
 				279EB2D8149192DF00E74185 /* Support */,
 				2713789014BCCA7B0058C5CD /* Tests */,
 			);
@@ -2061,6 +2074,22 @@
 			name = Tests;
 			sourceTree = "<group>";
 		};
+		27919E3D19C38FCB00C51699 /* JSON */ = {
+			isa = PBXGroup;
+			children = (
+				27919E4319C3972300C51699 /* CBJSONEncoder.h */,
+				27919E4419C3972300C51699 /* CBJSONEncoder.m */,
+				27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */,
+				27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */,
+				27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */,
+				277B5DCC1821AE990088881E /* CBLJSONReader.h */,
+				277B5DCD1821AE990088881E /* CBLJSONReader.m */,
+				279EB2D91491C34300E74185 /* CBLCollateJSON.h */,
+				279EB2DA1491C34300E74185 /* CBLCollateJSON.m */,
+			);
+			name = JSON;
+			sourceTree = "<group>";
+		};
 		279EB2D7149192C700E74185 /* Router */ = {
 			isa = PBXGroup;
 			children = (
@@ -2081,17 +2110,8 @@
 				279EB2D01491442500E74185 /* CBLInternal.h */,
 				276BA0AC17DD13FA00D367CB /* CBLParseDate.c */,
 				276BA0AF17DD222400D367CB /* CBLParseDate.h */,
-				278B0C9E152A8B1900577747 /* CBLCanonicalJSON.h */,
-				278B0C9F152A8B1900577747 /* CBLCanonicalJSON.m */,
-				27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */,
-				27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */,
-				27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */,
-				277B5DCC1821AE990088881E /* CBLJSONReader.h */,
-				277B5DCD1821AE990088881E /* CBLJSONReader.m */,
 				27B0B79C1492932700A817AD /* CBLBase64.h */,
 				27B0B79D1492932700A817AD /* CBLBase64.m */,
-				279EB2D91491C34300E74185 /* CBLCollateJSON.h */,
-				279EB2DA1491C34300E74185 /* CBLCollateJSON.m */,
 				279906EC149ABFC1003D4338 /* CBLBatcher.h */,
 				279906ED149ABFC2003D4338 /* CBLBatcher.m */,
 				279C7E2C14F424090004A1E8 /* CBLSequenceMap.h */,
@@ -2137,6 +2157,7 @@
 				27731F3B14967A8400815D67 /* ConfigViewController.xib */,
 				274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */,
 				274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */,
+				274E163119B90F420066CA5E /* TestData */,
 				27B0B8121492C16300A817AD /* Supporting Files */,
 			);
 			path = "Demo-iOS";
@@ -2496,6 +2517,7 @@
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
 				2762AB5818D36F1B00649D47 /* CBLReplication+Transformation.h in Headers */,
+				27919E4519C3972300C51699 /* CBJSONEncoder.h in Headers */,
 				2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
 				272401BE1860CBE00080E082 /* GCDAsyncSocket.h in Headers */,
 				2753157E14ACEFC90065964D /* HTTPConnection.h in Headers */,
@@ -2530,7 +2552,6 @@
 				279C7E2E14F424090004A1E8 /* CBLSequenceMap.h in Headers */,
 				27ADC079152502EE001ABC1D /* CBLMultipartDocumentReader.h in Headers */,
 				277B5DC71821A8B60088881E /* yajl_common.h in Headers */,
-				278B0CA0152A8B1900577747 /* CBLCanonicalJSON.h in Headers */,
 				278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */,
 				277EF41117F4DF3700F7B7F7 /* fts3Int.h in Headers */,
 				27F128AB156AC004008465C2 /* NSMutableURLRequest+Parameters.h in Headers */,
@@ -2793,6 +2814,7 @@
 				27B0B8071492C16300A817AD /* Sources */,
 				27B0B8081492C16300A817AD /* Frameworks */,
 				27B0B8091492C16300A817AD /* Resources */,
+				274E162A19B90EE00066CA5E /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -2983,6 +3005,7 @@
 				27FAEEF4164C8A4D00A3C0C2 /* couchbase-mobile-icon-nameless.png in Resources */,
 				27FAEEF5164C8A4D00A3C0C2 /* item_background.png in Resources */,
 				27FAEEF6164C8A4D00A3C0C2 /* item_background~ipad.png in Resources */,
+				274E163219B90F520066CA5E /* TestData in Resources */,
 				27FAEEF7164C8A4D00A3C0C2 /* list_area___background_middle~ipad.png in Resources */,
 				27FAEEF8164C8A4D00A3C0C2 /* list_area___checkbox___checked.png in Resources */,
 				27FAEEF9164C8A4D00A3C0C2 /* list_area___checkbox___unchecked.png in Resources */,
@@ -3003,6 +3026,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				274E163319B90F740066CA5E /* TestData in Resources */,
 				27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3143,7 +3167,6 @@
 				279C7E2F14F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				272401CC1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */,
 				27ADC07A152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
-				278B0CA1152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
 				27A720A1152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27E7FAED155D78DA0025F93A /* CBLChangeTracker_Tests.m in Sources */,
@@ -3188,6 +3211,7 @@
 				278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
 				270B3E161489382F00E0A926 /* FMDatabase.m in Sources */,
 				27A82E3814A1145000C0B850 /* FMDatabaseAdditions.m in Sources */,
+				27919E4619C3972300C51699 /* CBJSONEncoder.m in Sources */,
 				270B3E181489382F00E0A926 /* FMResultSet.m in Sources */,
 				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				2762AB5918D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */,
@@ -3361,7 +3385,6 @@
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
-				278B0CA2152A8B1900577747 /* CBLCanonicalJSON.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
 				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
@@ -3466,6 +3489,7 @@
 				272401CD1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */,
 				277EF45D17F4DF3700F7B7F7 /* stem_UTF_8_dutch.c in Sources */,
 				277EF44E17F4DF3700F7B7F7 /* stem_ISO_8859_1_spanish.c in Sources */,
+				27919E4719C3972300C51699 /* CBJSONEncoder.m in Sources */,
 				2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */,
 				277EF48D17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
 			);

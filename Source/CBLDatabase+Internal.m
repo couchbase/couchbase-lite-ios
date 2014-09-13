@@ -52,8 +52,10 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 #if 0
 + (void) initialize {
     if (self == [CBLDatabase class]) {
+        Log(@"SQLite version %s", sqlite3_libversion());
         int i = 0;
-        while (NULL != (const char *opt = sqlite3_compileoption_get(i++)))
+        const char* opt;
+        while (NULL != (opt = sqlite3_compileoption_get(i++)))
                Log(@"SQLite has option '%s'", opt);
     }
 }
@@ -442,6 +444,15 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         dbVersion = 14;
     }
 
+    if (dbVersion < 15) {
+        // Version 15: Add sequence index on maps and attachments for revs(sequence) on DELETE CASCADE
+        NSString* sql = @"CREATE INDEX maps_sequence ON maps(sequence); \
+                          CREATE INDEX attachments_sequence ON attachments(sequence); \
+                          PRAGMA user_version = 15";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 15;
+    }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
         return NO;
@@ -1431,10 +1442,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 //FIX: This has a lot of code in common with -[CBLView queryWithOptions:status:]. Unify the two!
-- (NSArray*) getAllDocs: (const CBLQueryOptions*)options {
+- (NSArray*) getAllDocs: (CBLQueryOptions*)options {
     if (!options)
-        options = &kDefaultCBLQueryOptions;
-    BOOL includeDocs = (options->includeDocs || options->filter);
+        options = [CBLQueryOptions new];
+    BOOL includeDocs = (options->includeDocs || options.filter);
     BOOL includeDeletedDocs = (options->allDocsMode == kCBLIncludeDeleted);
     
     // Generate the SELECT statement, based on the options:
@@ -1445,10 +1456,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     if (includeDeletedDocs)
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
-    if (options->keys) {
-        if (options->keys.count == 0)
+    if (options.keys) {
+        if (options.keys.count == 0)
             return @[];
-        [sql appendFormat: @" revs.doc_id IN (SELECT doc_id FROM docs WHERE docid IN (%@)) AND", [CBLDatabase joinQuotedStrings: options->keys]];
+        [sql appendFormat: @" revs.doc_id IN (SELECT doc_id FROM docs WHERE docid IN (%@)) AND", [CBLDatabase joinQuotedStrings: options.keys]];
         cacheQuery = NO; // we've put hardcoded key strings in the query
     }
     [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
@@ -1456,11 +1467,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         [sql appendString: @" AND deleted=0"];
 
     NSMutableArray* args = $marray();
-    id minKey = options->startKey, maxKey = options->endKey;
+    id minKey = options.startKey, maxKey = options.endKey;
     BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
         minKey = maxKey;
-        maxKey = options->startKey;
+        maxKey = options.startKey;
         inclusiveMin = inclusiveMax;
         inclusiveMax = YES;
     }
@@ -1491,7 +1502,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         return nil;
     
     NSMutableArray* rows = $marray();
-    NSMutableDictionary* docs = options->keys ? $mdict() : nil;
+    NSMutableDictionary* docs = options.keys ? $mdict() : nil;
 
     BOOL keepGoing = [r next]; // Go to first result row
     while (keepGoing) {
@@ -1540,7 +1551,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                               key: docID
                                                             value: value
                                                     docProperties: docContents];
-            if (options->keys)
+            if (options.keys)
                 docs[docID] = row;
             else if (CBLRowPassesFilter(self, row, options))
                 [rows addObject: row];
@@ -1549,8 +1560,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     [r close];
 
     // If given doc IDs, sort the output into that order, and add entries for missing docs:
-    if (options->keys) {
-        for (NSString* docID in options->keys) {
+    if (options.keys) {
+        for (NSString* docID in options.keys) {
             CBLQueryRow* change = docs[docID];
             if (!change) {
                 NSDictionary* value = nil;
