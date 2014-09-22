@@ -535,8 +535,10 @@ static void convertRevIDs(NSArray* revIDs,
     NSDictionary* validations = [self.shared valuesOfType: @"validation" inDatabaseNamed: _name];
     if (validations.count == 0)
         return kCBLStatusOK;
-    CBLSavedRevision* publicRev = [[CBLSavedRevision alloc] initWithDatabase: self revision: newRev];
-    [publicRev _setParentRevisionID: parentRevID];
+    CBLSavedRevision* publicRev;
+    publicRev = [[CBLSavedRevision alloc] initForValidationWithDatabase: self
+                                                               revision: newRev
+                                                       parentRevisionID: parentRevID];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
                                                                         revision: oldRev
                                                                      newRevision: newRev];

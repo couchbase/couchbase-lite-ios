@@ -144,11 +144,24 @@
 }
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db revision: (CBL_Revision*)rev {
+- (instancetype) initWithDatabase: (CBLDatabase*)db
+                         revision: (CBL_Revision*)rev
+{
     CBLDocument* doc = [db documentWithID: rev.docID];
     return [self initWithDocument: doc revision: rev];
 }
 
+- (instancetype) initForValidationWithDatabase: (CBLDatabase*)db
+                                      revision: (CBL_Revision*)rev
+                              parentRevisionID: (NSString*)parentRevID
+{
+    self = [self initWithDatabase: db revision: rev];
+    if (self) {
+        _parentRevID = parentRevID.copy;
+        _checkedProperties = YES;
+    }
+    return self;
+}
 
 - (BOOL) isEqual: (id)object {
     if (object == self)
@@ -175,10 +188,6 @@
         return [_document revisionWithID: _parentRevID];
     CBLDocument* document = _document;
     return [document revisionFromRev: [document.database getParentRevision: _rev]];
-}
-
-- (void) _setParentRevisionID: (NSString*)parentRevID {
-    _parentRevID = parentRevID.copy;
 }
 
 
