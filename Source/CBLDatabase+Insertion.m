@@ -331,14 +331,18 @@ using namespace forestdb;
 
         // Add the revision to the database:
         int status;
-        const Revision* fdbRev = doc.insert(revidBuffer(newRevID), json,
-                                            deleting,
-                                            (putRev.attachments != nil),
-                                            revNode, allowConflict, status);
-        if (fdbRev)
-            putRev.sequence = fdbRev->sequence;
-        else if (CBLStatusIsError((CBLStatus)status))
-            return (CBLStatus)status;
+        BOOL isWinner;
+        {
+            const Revision* fdbRev = doc.insert(revidBuffer(newRevID), json,
+                                                deleting,
+                                                (putRev.attachments != nil),
+                                                revNode, allowConflict, status);
+            if (fdbRev)
+                putRev.sequence = fdbRev->sequence;
+            else if (CBLStatusIsError((CBLStatus)status))
+                return (CBLStatus)status;
+            isWinner = (fdbRev == doc.currentRevision());
+        } // prune call will invalidate fdbRev ptr, so let it go out of scope
         doc.prune((unsigned)self.maxRevTreeDepth);
         doc.save(*_forestTransaction);
 #if DEBUG
@@ -346,7 +350,7 @@ using namespace forestdb;
 #endif
 
         change = [self changeWithNewRevision: putRev
-                                isWinningRev: (fdbRev && fdbRev->index() == 0)
+                                isWinningRev: isWinner
                                          doc: doc
                                       source: nil];
 

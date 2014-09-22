@@ -767,546 +767,60 @@ TestCase(API_ChangeTracking) {
 }
 
 
-#if 0 //TEMP
-#pragma mark - VIEWS:
+#pragma mark - TOGGLE TEST
 
 
-TestCase(API_CreateView) {
+TestCase(API_DocGenerations) {
+    static const int kNumberOfDocuments = 300;
+    static const int kNumberOfGenerations = 300;
+
     CBLDatabase* db = createEmptyDB();
-
-    CBLView* view = [db viewNamed: @"vu"];
-    CAssert(view);
-    CAssertEq(view.database, db);
-    CAssertEqual(view.name, @"vu");
-    CAssert(view.mapBlock == NULL);
-    CAssert(view.reduceBlock == NULL);
-
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], nil);
-    }) version: @"1"];
-
-    CAssert(view.mapBlock != nil);
-
-    static const NSUInteger kNDocs = 50;
-    createDocuments(db, kNDocs);
-
-    CBLQuery* query = [view createQuery];
-    CAssertEq(query.database, db);
-    query.startKey = @23;
-    query.endKey = @33;
-    CBLQueryEnumerator* rows = [query run: NULL];
-    CAssert(rows);
-    CAssertEq(rows.count, (NSUInteger)11);
-
-    int expectedKey = 23;
-    for (CBLQueryRow* row in rows) {
-        CAssertEq([row.key intValue], expectedKey);
-        CAssertEq(row.sequenceNumber, (UInt64)expectedKey+1);
-        ++expectedKey;
-    }
-    closeTestDB(db);
-}
-
-
-#if 0
-TestCase(API_RunSlowView) {
-    CBLDatabase* db = createEmptyDB();
-    static const NSUInteger kNDocs = 50;
-    [self createDocuments: kNDocs];
-    
-    CBLQuery* query = [db slowQueryWithMap: @"function(doc){emit(doc.sequence,null);};"];
-    query.startKey = [NSNumber numberWithInt: 23];
-    query.endKey = [NSNumber numberWithInt: 33];
-    CBLQueryEnumerator* rows = [query rows: NULL];
-    CAssert(rows);
-    CAssertEq(rows.count, (NSUInteger)11);
-    CAssertEq(rows.totalCount, kNDocs);
-    
-    int expectedKey = 23;
-    for (CBLQueryRow* row in rows) {
-        CAssertEq([row.key intValue], expectedKey);
-        ++expectedKey;
-    }
-    closeTestDB(db);
-}
-#endif
-
-
-TestCase(API_ViewWithLinkedDocs) {
-    CBLDatabase* db = createEmptyDB();
-    static const NSUInteger kNDocs = 50;
-    NSMutableArray* docs = [NSMutableArray array];
-    NSString* lastDocID = @"";
-    for (NSUInteger i=0; i<kNDocs; i++) {
-        NSDictionary* properties = @{ @"sequence" : @(i),
-                                      @"prev": lastDocID };
-        CBLDocument* doc = createDocumentWithProperties(db, properties);
-        [docs addObject: doc];
-        lastDocID = doc.documentID;
-    }
-    
-    // The map function will emit the ID of the previous document, causing that document to be
-    // included when include_docs (aka prefetch) is enabled.
-    CBLQuery* query = [db slowQueryWithMap: MAPBLOCK({
-        emit(doc[@"sequence"], @{ @"_id": doc[@"prev"] });
-    })];
-    query.startKey = @23;
-    query.endKey = @33;
-    query.prefetch = YES;
-    CBLQueryEnumerator* rows = [query run: NULL];
-    CAssert(rows);
-    CAssertEq(rows.count, (NSUInteger)11);
-    
-    int rowNumber = 23;
-    for (CBLQueryRow* row in rows) {
-        CAssertEq([row.key intValue], rowNumber);
-        CBLDocument* prevDoc = docs[rowNumber-1];
-        CAssertEqual(row.documentID, prevDoc.documentID);
-        CAssertEq(row.document, prevDoc);
-        ++rowNumber;
-    }
-    closeTestDB(db);
-}
-
-
-TestCase(API_EmitNil) {
-    RequireTestCase(API_CreateView);
-    CBLDatabase* db = createEmptyDB();
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], nil);
-    }) version: @"1"];
-
-    CBLDocument* doc1 = createDocumentWithProperties(db, @{@"sequence": @1});
-    __unused CBLDocument* doc2 = createDocumentWithProperties(db, @{@"sequence": @2});
-    CBLQuery* query = view.createQuery;
-    NSArray* result1 = [[query run: NULL] allObjects];
-    AssertEqual([(CBLQueryRow*)result1[0] key], @1);
-    AssertEqual([(CBLQueryRow*)result1[0] value], nil);
-    AssertEqual([(CBLQueryRow*)result1[1] key], @2);
-    AssertEqual([(CBLQueryRow*)result1[1] value], nil);
-
-    // Update doc1
-    [doc1 update:^BOOL(CBLUnsavedRevision *rev) {
-        rev[@"something"] = @"else";
-        return YES;
-    } error: NULL];
-
-    // Query again and verify that the results sets are not considered equal:
-    NSArray* result2 = [[query run: NULL] allObjects];
-    Assert(![result2 isEqual: result1]);
-    AssertEqual([(CBLQueryRow*)result2[0] key], @1);
-    AssertEqual([(CBLQueryRow*)result2[0] value], nil);
-}
-
-
-TestCase(API_EmitDoc) {
-    RequireTestCase(API_CreateView);
-    CBLDatabase* db = createEmptyDB();
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], doc);
-    }) version: @"1"];
-
-    CBLDocument* doc1 = createDocumentWithProperties(db, @{@"sequence": @1});
-    CBLDocument* doc2 = createDocumentWithProperties(db, @{@"sequence": @2});
-    CBLQuery* query = view.createQuery;
-    NSArray* result1 = [[query run: NULL] allObjects];
-    AssertEqual([(CBLQueryRow*)result1[0] key], @1);
-    AssertEqual([(CBLQueryRow*)result1[0] value], doc1.properties);
-    AssertEqual([(CBLQueryRow*)result1[1] key], @2);
-    AssertEqual([(CBLQueryRow*)result1[1] value], doc2.properties);
-    NSDictionary* initialDoc1Properties = doc1.properties;
-
-    // Update doc1
-    [doc1 update:^BOOL(CBLUnsavedRevision *rev) {
-        rev[@"something"] = @"else";
-        return YES;
-    } error: NULL];
-
-    // Query again and verify that the results sets are not considered equal:
-    NSArray* result2 = [[query run: NULL] allObjects];
-    Assert(![result2 isEqual: result1]);
-    AssertEqual([(CBLQueryRow*)result2[0] key], @1);
-    AssertEqual([(CBLQueryRow*)result2[0] value], doc1.properties);
-
-    // Rows from initial query should still return the revisions they were created with:
-    AssertEqual([(CBLQueryRow*)result1[0] key], @1);
-    AssertEqual([(CBLQueryRow*)result1[0] value], initialDoc1Properties); // i.e. _not_ doc1.properties
-}
-
-
-TestCase(API_ViewCustomSort) {
-    RequireTestCase(CBLQuery_KeyPathForQueryRow);
-    CBLDatabase* db = createEmptyDB();
-
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"name"], doc[@"skin"]);
-    }) version: @"1"];
-
-    CAssert(view.mapBlock != nil);
-
-    [db inTransaction: ^BOOL {
-        createDocumentWithProperties(db, @{@"name": @"Barry", @"skin": @"none"});
-        createDocumentWithProperties(db, @{@"name": @"Terry", @"skin": @"furry"});
-        createDocumentWithProperties(db, @{@"name": @"Wanda", @"skin": @"scaly"});
-        return YES;
-    }];
-
-    CBLQuery* query = [view createQuery];
-    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"value" ascending: NO]];
-    CBLQueryEnumerator* rows = [query run: NULL];
-
-    AssertEqual(rows.nextRow.value, @"scaly");
-    AssertEqual(rows.nextRow.value, @"none");
-    AssertEqual(rows.nextRow.value, @"furry");
-    AssertNil(rows.nextRow);
-
-    // Now test a keypath that implicitly refers to the value:
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"name"], @{@"skin": doc[@"skin"]});
-    }) version: @"2"];
-
-    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"skin" ascending: NO]];
-    rows = [query run: NULL];
-
-    AssertEqual(rows.nextRow.value, @{@"skin": @"scaly"});
-    AssertEqual(rows.nextRow.value, @{@"skin": @"none"});
-    AssertEqual(rows.nextRow.value, @{@"skin": @"furry"});
-    AssertNil(rows.nextRow);
-
-    // Now test a keypath with an array:
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"name"], @[doc[@"skin"]]);
-    }) version: @"3"];
-
-    query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"value[0]" ascending: NO]];
-    rows = [query run: NULL];
-
-    AssertEqual(rows.nextRow.value, @[@"scaly"]);
-    AssertEqual(rows.nextRow.value, @[@"none"]);
-    AssertEqual(rows.nextRow.value, @[@"furry"]);
-    AssertNil(rows.nextRow);
-
-    closeTestDB(db);
-}
-
-
-TestCase(API_LiveQuery) {
-    RequireTestCase(API_CreateView);
-    CBLDatabase* db = createEmptyDB();
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], nil);
-    }) version: @"1"];
-
-    static const NSUInteger kNDocs = 50;
-    createDocuments(db, kNDocs);
-
-    CBLLiveQuery* query = [[view createQuery] asLiveQuery];
-    query.startKey = @23;
-    query.endKey = @33;
-    Log(@"Created %@", query);
-    CAssertNil(query.rows);
-
-    Log(@"Waiting for live query to update...");
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
-    bool finished = false;
-    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
-            break;
-        CBLQueryEnumerator* rows = query.rows;
-        Log(@"Live query rows = %@", rows);
-        if (rows != nil) {
-            CAssertEq(rows.count, (NSUInteger)11);
-
-            int expectedKey = 23;
-            for (CBLQueryRow* row in rows) {
-                CAssertEq(row.document.database, db);
-                CAssertEq([row.key intValue], expectedKey);
-                ++expectedKey;
-            }
-            finished = true;
-        }
-    }
-    [query stop];
-    CAssert(finished, @"Live query timed out!");
-    closeTestDB(db);
-}
-
-
-@interface TestLiveQueryObserver : NSObject
-@property (copy) NSDictionary*change;
-@property unsigned changeCount;
-@end
-
-@implementation TestLiveQueryObserver
-@synthesize change=_change, changeCount=_changeCount;
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    self.change = change;
-    ++_changeCount;
-}
-@end
-
-
-TestCase(API_LiveQuery_DispatchQueue) {
-    RequireTestCase(API_LiveQuery);
-    CBLManager* dbmgr = [CBLManager createEmptyAtTemporaryPath: @"LiveQuery_DispatchQueue"];
-    dispatch_queue_t queue = dispatch_queue_create("LiveQuery", NULL);
-    dbmgr.dispatchQueue = queue;
-    __block CBLDatabase* db;
-    __block CBLView* view;
-    __block CBLLiveQuery* query;
-    TestLiveQueryObserver* observer = [[TestLiveQueryObserver alloc] init];
-    dispatch_sync(queue, ^{
-        NSError* error;
-        db = [dbmgr createEmptyDatabaseNamed: @"test_db" error: &error];
-        view = [db viewNamed: @"vu"];
-        [view setMapBlock: MAPBLOCK({
-            emit(doc[@"sequence"], nil);
-        }) version: @"1"];
-
-        static const NSUInteger kNDocs = 50;
-        createDocuments(db, kNDocs);
-
-        query = [[view createQuery] asLiveQuery];
-        query.startKey = @23;
-        query.endKey = @33;
-        Log(@"Created %@", query);
-        CAssertNil(query.rows);
-
-        [query addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: NULL];
-    });
-
-    Log(@"Waiting for live query to complete...");
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
-    bool finished = false;
-    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
-        usleep(1000);
-        if (observer.change) {
-            CBLQueryEnumerator* rows = observer.change[NSKeyValueChangeNewKey];
-            Log(@"Live query rows = %@", rows);
-            if (rows != nil) {
-                CAssertEq(rows.count, (NSUInteger)11);
-
-                int expectedKey = 23;
-                for (CBLQueryRow* row in rows) {
-                    CAssertEq(row.document.database, db);
-                    CAssertEq([row.key intValue], expectedKey);
-                    ++expectedKey;
-                }
-                finished = true;
-            }
-        }
-    }
-    Assert(finished, @"LiveQuery didn't complete");
-
-    dispatch_async(queue, ^{
-        NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(29)};
-        createDocumentWithProperties(db, properties);
-    });
-
-    Log(@"Waiting for live query to update again...");
-    timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
-    finished = false;
-    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
-        usleep(1000);
-        if (observer.changeCount == 2) {
-            CBLQueryEnumerator* rows = observer.change[NSKeyValueChangeNewKey];
-            Log(@"Live query rows = %@", rows);
-            if (rows != nil) {
-                CAssertEq(rows.count, (NSUInteger)12);
-                finished = true;
-            }
-        }
-    }
-    Assert(finished, @"LiveQuery didn't update");
-
-    // Clean up:
-    dispatch_sync(queue, ^{
-        [query removeObserver: observer forKeyPath: @"rows"];
-        [query stop];
-        closeTestDB(db);
-        [dbmgr close];
-    });
-}
-
-
-TestCase(API_AsyncViewQuery) {
-    RequireTestCase(API_CreateView);
-    CBLDatabase* db = createEmptyDB();
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], nil);
-    }) version: @"1"];
-
-    static const NSUInteger kNDocs = 50;
-    createDocuments(db, kNDocs);
-
-    CBLQuery* query = [view createQuery];
-    query.startKey = @23;
-    query.endKey = @33;
-
-    __block bool finished = false;
-    NSThread* curThread = [NSThread currentThread];
-    [query runAsync: ^(CBLQueryEnumerator *rows, NSError* error) {
-        Log(@"Async query finished!");
-        CAssertEq([NSThread currentThread], curThread);
-        CAssert(rows);
-        CAssertNil(error);
-        CAssertEq(rows.count, (NSUInteger)11);
-
-        int expectedKey = 23;
-        for (CBLQueryRow* row in rows) {
-            CAssertEq(row.document.database, db);
-            CAssertEq([row.key intValue], expectedKey);
-            ++expectedKey;
-        }
-        finished = true;
-    }];
-
-    Log(@"Waiting for async query to finish...");
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 5.0];
-    while (!finished) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
-            break;
-    }
-    CAssert(finished, @"Async query timed out!");
-    closeTestDB(db);
-}
-
-
-TestCase(API_ViewStale) {
-    RequireTestCase(API_CreateView);
-    CBLDatabase* db = createEmptyDB();
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        if (doc[@"sequence"])
-            emit(doc[@"sequence"], nil);
-    }) version: @"1"];
-
-    createDocuments(db, 10);
-
-    CBLQuery* query = [view createQuery];
-    CBLQueryEnumerator* e = [query run: nil];
-    AssertEq(e.sequenceNumber, (uint64_t)10);
-    AssertEq(view.lastSequenceChangedAt, 10);
-
-    createDocumentWithProperties(db, @{@"foo": @1337}); // Won't be indexed by the view
-    Assert(e.stale);
-
-    [view updateIndex];
-    AssertEq(view.lastSequenceChangedAt, 10); // unchanged
-    Assert(!e.stale);
-}
-
-
-// Make sure that a database's map/reduce functions are shared with the shadow database instance
-// running in the background server.
-TestCase(API_SharedMapBlocks) {
-    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
-    CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
-    [db setFilterNamed: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
-        return YES;
-    }];
-    [db setValidationNamed: @"val" asBlock: VALIDATIONBLOCK({ })];
-    CBLView* view = [db viewNamed: @"view"];
-    BOOL ok = [view setMapBlock: MAPBLOCK({
-        // nothing
-    }) reduceBlock:^id(NSArray *keys, NSArray *values, BOOL rereduce) {
-        return nil;
-    } version: @"1"];
-    CAssert(ok, @"Couldn't set map/reduce");
-
-    CBLMapBlock map = view.mapBlock;
-    CBLReduceBlock reduce = view.reduceBlock;
-    CBLFilterBlock filter = [db filterNamed: @"phil"];
-    CBLValidationBlock validation = [db validationNamed: @"val"];
-
-    id result = [mgr.backgroundServer waitForDatabaseNamed: @"db" to: ^id(CBLDatabase *serverDb) {
-        CAssert(serverDb != nil);
-        CBLView* serverView = [serverDb viewNamed: @"view"];
-        CAssert(serverView != nil);
-        CAssertEq([serverDb filterNamed: @"phil"], filter);
-        CAssertEq([serverDb validationNamed: @"val"], validation);
-        CAssertEq(serverView.mapBlock, map);
-        CAssertEq(serverView.reduceBlock, reduce);
-        return @"ok";
-    }];
-    CAssertEqual(result, @"ok");
-    closeTestDB(db);
-    [mgr close];
-}
-
-
-TestCase(API_MapReduce) {
-    // Adapted from Ashvinder's Test12_QueryView.m in WorkerBee
-    static const int kNumberOfDocuments = 1000;
-    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_MapReduce"];
-    CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
-
-    // Populate database:
+    NSDictionary* props = @{@"toggle": @YES};
+    NSMutableArray *docs = [NSMutableArray array];
     [db inTransaction:^BOOL{
-        for (int i = 0; i < kNumberOfDocuments; i++) {
+        for (int j = 0; j < kNumberOfDocuments; j++) {
             @autoreleasepool {
-                NSString* name = [NSString stringWithFormat:@"%@%@", @"n", @(i)];
-                bool vacant = (i+2) % 2 ? 1 : 0;
-                NSDictionary* props = @{@"name":name,
-                                        @"apt": @(i),
-                                        @"phone":@(408100000+i),
-                                        @"vacant":@(vacant)};
                 CBLDocument* doc = [db createDocument];
+                [docs addObject:doc];
                 NSError* error;
                 Assert([doc putProperties: props error: &error]);
             }
         }
+        Log(@"Created %d documents",kNumberOfDocuments);
         return YES;
     }];
 
-    // Define view:
-    CBLView* view = [db viewNamed: @"vacant"];
-    [view setMapBlock: MAPBLOCK({
-        id v = [doc objectForKey: @"vacant"];
-        id name = [doc objectForKey: @"name"];
-        if (v && name) emit(name, v);
-    }) reduceBlock: REDUCEBLOCK({return [CBLView totalValues:values];})
-              version: @"3"];
+    NSDate *start = [NSDate date];
 
+    for (int i = 1; i <= kNumberOfGenerations; i++) {
+        NSDate *inter_start = [NSDate date];
 
-    // Index view:
-    [view updateIndex];
+        [db inTransaction:^BOOL{
+            for (CBLDocument *doc in docs) {
+                @autoreleasepool {
+                    NSError* error;
+                    CBLSavedRevision* newRev = [doc update:^BOOL(CBLUnsavedRevision *rev) {
+                        bool wasChecked = [rev[@"toggle"] boolValue];
+                        rev[@"toggle"] = @(!wasChecked);
+                        return YES;
+                    } error: &error];
+                    Assert(newRev != nil, @"Failed to save: %@", error);
+                }
+            }
+            return YES;
+        }];
 
-    // Query:
-    CBLQuery* query = [[db viewNamed: @"vacant"] createQuery];
-    query.descending = NO;
-    query.mapOnly = YES;
-
-    __unused NSString *key, *value;
-    NSError *error;
-    CBLQueryEnumerator *rowEnum = [query run: &error];
-    int i = 0;
-    for (CBLQueryRow* row in rowEnum) {
-        @autoreleasepool {
-            key = row.key;
-            value = row.value;
-            i++;
-        }
+        NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:inter_start];
+        Log(@"Time for %d docs: %f, count: %d", kNumberOfDocuments, executionTime, i);
     }
-    AssertEq(i, kNumberOfDocuments);
 
-    // Reduced query:
-    query = [[db viewNamed: @"vacant"] createQuery];
-    query.mapOnly = NO;
-    rowEnum = [query run: &error];
-    CBLQueryRow *row = [rowEnum rowAtIndex:0];
-    Log(@"Vacant: %@",row.value);
-    AssertEqual(row.value, @(500));
+    NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
+    Log(@"Total Time Taken: %f",executionTime);
+
+    [db _close];
 }
 
 
-#endif //TEMP
 
 TestCase(API_ChangeUUID) {
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_SharedMapBlocks"];
