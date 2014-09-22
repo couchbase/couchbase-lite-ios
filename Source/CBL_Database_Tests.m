@@ -1124,7 +1124,25 @@ TestCase(CBL_Database_FindMissingRevisions) {
 
 
 TestCase(CBL_Database_Purge) {
-    /*TEMP
+    RequireTestCase(CBL_Database_PurgeRevs);
+    CBLDatabase* db = createDB();
+    CBL_Revision* rev1 = putDoc(db, $dict({@"_id", @"doc"}, {@"key", @"1"}));
+    CBL_Revision* rev2 = putDoc(db, $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"}));
+    putDoc(db, $dict({@"_id", @"doc"}, {@"_rev", rev2.revID}, {@"key", @"3"}));
+
+    // Purge the entire document:
+    NSDictionary* toPurge = $dict({@"doc", @[@"*"]});
+    NSDictionary* result;
+    CAssertEq([db purgeRevisions: toPurge result: &result], kCBLStatusOK);
+    CAssertEqual(result, toPurge);
+
+    CBL_RevisionList* remainingRevs = [db getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
+    CAssertEq(remainingRevs.count, 0u);
+    [db _close];
+}
+
+
+TestCase(CBL_Database_PurgeRevs) {
     CBLDatabase* db = createDB();
     CBL_Revision* rev1 = putDoc(db, $dict({@"_id", @"doc"}, {@"key", @"1"}));
     CBL_Revision* rev2 = putDoc(db, $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"}));
@@ -1137,18 +1155,14 @@ TestCase(CBL_Database_Purge) {
     CAssertEqual(result, $dict({@"doc", @[]}));
     CAssertEq([result[@"doc"] count], 0u);
 
-    // Purge rev3:
+    // Purge rev3, which will remove all ancestors too:
     toPurge = $dict({@"doc", @[rev3.revID]});
     CAssertEq([db purgeRevisions: toPurge result: &result], kCBLStatusOK);
-    CAssertEqual([result allKeys], @[@"doc"]);
-    NSSet* purged = [NSSet setWithArray: result[@"doc"]];
-    NSSet* expectedPurged = [NSSet setWithObjects: rev1.revID, rev2.revID, rev3.revID, nil];
-    CAssertEqual(purged, expectedPurged);
+    CAssertEqual(result, toPurge);
 
     CBL_RevisionList* remainingRevs = [db getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
     CAssertEq(remainingRevs.count, 0u);
     [db _close];
-     */
 }
 
 
