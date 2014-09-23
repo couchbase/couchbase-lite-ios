@@ -118,7 +118,15 @@
                                "WHERE name=? AND version!=?", 
                               version, _name, version])
         return NO;
-    return (fmdb.changes > 0);
+    
+    if (fmdb.changes > 0) {
+        // update any live queries that might be listening to this view, now that it has changed
+        [db postPublicChangeNotification:@[]];
+    
+        return YES;
+    } else {
+        return NO;
+    }
 }
 
 
