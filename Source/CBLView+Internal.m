@@ -298,7 +298,11 @@ static inline NSData* toJSONData( UU id object ) {
                 // Update #deleted rows
                 int changes = _fmdb.changes;
                 deleted += changes;
-                viewTotalRows[@(viewID)] = @([viewTotalRows[@(viewID)] intValue] - changes);
+                
+                // Only count these deletes as changes if this isn't a view reset to 0
+                if (last != 0) {
+                    viewTotalRows[@(viewID)] = @([viewTotalRows[@(viewID)] intValue] - changes);
+                }
             }
         }
         if (minLastSequence == dbMaxSequence)
