@@ -24,6 +24,7 @@
 #import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
 
+NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 
 @implementation CBLView
 
@@ -121,7 +122,7 @@
     
     if (fmdb.changes > 0) {
         // update any live queries that might be listening to this view, now that it has changed
-        [db postPublicChangeNotification:@[]];
+        [self postPublicChangeNotification];
     
         return YES;
     } else {
@@ -173,6 +174,13 @@
     return [[CBLQuery alloc] initWithDatabase: self.database view: self];
 }
 
+- (void) postPublicChangeNotification {
+    // Post the public kCBLViewChangeNotification:
+    NSNotification* notification = [NSNotification notificationWithName: kCBLViewChangeNotification
+                                                                 object: self
+                                                               userInfo: nil];
+    [_weakDB postNotification:notification];
+}
 
 + (NSNumber*) totalValues: (NSArray*)values {
     double total = 0;

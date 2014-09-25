@@ -21,7 +21,6 @@
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
 
-
 static NSString* keyPathForQueryRow(NSString* keyPath);
 
 
@@ -45,7 +44,6 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 @implementation CBLQuery
 {
     CBLDatabase* _database;
-    CBLView* _view;              // nil for _all_docs query
     BOOL _temporaryView;
     NSUInteger _limit, _skip;
     id _startKey, _endKey;
@@ -57,6 +55,8 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     NSArray *_keys;
     NSUInteger _prefixMatchLevel, _groupLevel;
     SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
+    
+    @protected CBLView* _view;              // nil for _all_docs query
 }
 
 
@@ -274,6 +274,14 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
                                                  selector: @selector(databaseChanged)
                                                      name: kCBLDatabaseChangeNotification 
                                                    object: self.database];
+        
+        //view can be null for _all_docs query
+        if (_view) {
+            [[NSNotificationCenter defaultCenter] addObserver: self
+                                                     selector: @selector(databaseChanged)
+                                                         name: kCBLViewChangeNotification
+                                                       object: _view];
+        }
         [self update];
     }
 }
@@ -285,6 +293,13 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         [[NSNotificationCenter defaultCenter] removeObserver: self
                                                         name: kCBLDatabaseChangeNotification
                                                       object: self.database];
+        
+        //view can be null for _all_docs query
+        if (_view) {
+            [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                            name: kCBLViewChangeNotification
+                                                          object: _view];
+        }
     }
     if (_willUpdate) {
         _willUpdate = NO;
