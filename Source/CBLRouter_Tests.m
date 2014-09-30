@@ -143,8 +143,6 @@ TestCase(CBL_Router_Server) {
     NSDictionary* asserted = SendBody(server, @"POST", @"/_persona_assertion", $dict({@"assertion", sampleAssertion}), kCBLStatusOK, nil);
     CAssert(asserted[@"ok"]);
     CAssertEqual(asserted[@"email"], @"jens@mooseyard.com");
-
-    [server close];
 }
 
 
@@ -169,7 +167,6 @@ TestCase(CBL_Router_Databases) {
     Send(server, @"PUT", @"/database%2Fwith%2Fslashes", kCBLStatusCreated, nil);
     dbInfo = Send(server, @"GET", @"/database%2Fwith%2Fslashes", kCBLStatusOK, nil);
     CAssertEqual(dbInfo[@"db_name"], @"database/with/slashes");
-    [server close];
 }
 
 
@@ -230,7 +227,6 @@ TestCase(CBL_Router_Docs) {
     RequireTestCase(CBL_Router_Databases);
     CBLManager* server = createDBManager();
     populateDocs(server);
-    [server close];
 }
 
 
@@ -256,7 +252,6 @@ TestCase(CBL_Router_LocalDocs) {
     Send(server, @"GET", @"/db/_changes", kCBLStatusOK,
          $dict({@"last_seq", @0},
                {@"results", @[]}));
-    [server close];
 }
 
 
@@ -304,7 +299,6 @@ TestCase(CBL_Router_AllDocs) {
                                     {@"doc", $dict({@"message", @"bonjour"},
                                                    {@"_id", @"doc3"}, {@"_rev", revID3} )})
                               ));
-    [server close];
 }
 
 
@@ -364,8 +358,6 @@ TestCase(CBL_Router_Views) {
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
                                 $dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
                {@"total_rows", @4}));
-    
-    [server close];
 }
 
 
@@ -402,7 +394,6 @@ TestCase(CBL_Router_Changes) {
     Send(server, @"GET", @"/db/_changes?since=5", kCBLStatusOK,
          $dict({@"last_seq", @5},
                {@"results", @[]}));
-    [server close];
 }
 
 
@@ -448,7 +439,6 @@ TestCase(CBL_Router_LongPollChanges) {
                                                           {@"changes", $array($dict({@"rev", revID6}))},
                                                           {@"seq", @6}))}));
     [router stop];
-    [server close];
 }
 
 
@@ -496,7 +486,6 @@ TestCase(CBL_Router_ContinuousChanges) {
     CAssert(!finished);
     
     [router stop];
-    [server close];
 }
 
 
@@ -597,7 +586,6 @@ TestCase(CBL_Router_GetAttachment) {
                                                                      {@"length", @(attach2.length)},
                                                                      {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                                                      {@"revpos", @1})})}));
-    [server close];
 }
 
 TestCase(CBL_Router_GetJSONAttachment) {
@@ -636,7 +624,6 @@ TestCase(CBL_Router_GetJSONAttachment) {
     CAssertEqual((response.headers)[@"Content-Type"], @"application/json");
     eTag = (response.headers)[@"Etag"];
     CAssert(eTag.length > 0);
-    [server close];
 }
 
 TestCase(CBL_Router_GetRange) {
@@ -674,8 +661,6 @@ TestCase(CBL_Router_GetRange) {
                                  {@"If-None-Match", eTag}),
                            nil);
     CAssertEq(response.status, 304);
-
-    [server close];
 }
 
 
@@ -707,7 +692,6 @@ TestCase(CBL_Router_PutMultipart) {
                            $dict({@"Content-Type", @"multipart/related; boundary=\"BOUNDARY\""}),
                                        [body dataUsingEncoding: NSUTF8StringEncoding]);
     CAssertEq(response.status, kCBLStatusCreated);
-    [server close];
 }
 
 
@@ -752,8 +736,6 @@ TestCase(CBL_Router_OpenRevs) {
     // We've been forcing JSON, but verify that open_revs defaults to multipart:
     CBLResponse* response = SendRequest(server, @"GET", uri, nil, nil);
     CAssert([response.headers[@"Content-Type"] hasPrefix: @"multipart/mixed;"]);
-
-    [server close];
 }
 
 
@@ -821,8 +803,6 @@ TestCase(CBL_Router_RevsDiff) {
                 @"ids": @[ [doc1r3ID substringFromIndex: 2], [doc1r2ID substringFromIndex: 2],
                            [doc1r1ID substringFromIndex: 2] ]
          } } );
-
-    [server close];
 }
 
 
@@ -858,7 +838,6 @@ TestCase(CBL_Router_AccessCheck) {
     
     CAssert(calledOnAccessCheck);
     CAssert(router.response.status == 401);
-    [server close];
 }
 
 

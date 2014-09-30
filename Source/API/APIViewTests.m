@@ -49,7 +49,6 @@ TestCase(API_CreateView) {
         CAssertEq(row.sequenceNumber, (UInt64)expectedKey+1);
         ++expectedKey;
     }
-    closeTestDB(db);
 }
 
 
@@ -86,7 +85,6 @@ TestCase(API_ViewWithLinkedDocs) {
         CAssertEq(row.document, prevDoc);
         ++rowNumber;
     }
-    closeTestDB(db);
 }
 
 
@@ -209,8 +207,6 @@ TestCase(API_ViewCustomSort) {
     AssertEqual(rows.nextRow.value, @[@"none"]);
     AssertEqual(rows.nextRow.value, @[@"furry"]);
     AssertNil(rows.nextRow);
-
-    closeTestDB(db);
 }
 
 
@@ -238,8 +234,6 @@ TestCase(API_ViewCustomFilter) {
     AssertEqual(rows.nextRow.value, @"furry");
     AssertEqual(rows.nextRow.value, @"scaly");
     AssertNil(rows.nextRow);
-
-    closeTestDB(db);
 }
 
 
@@ -262,8 +256,6 @@ TestCase(API_AllDocsCustomFilter) {
     AssertEqual(rows.nextRow.key, @"2");
     AssertEqual(rows.nextRow.key, @"3");
     AssertNil(rows.nextRow);
-
-    closeTestDB(db);
 }
 
 
@@ -272,7 +264,7 @@ TestCase(API_AllDocsCustomFilter) {
 
 TestCase(API_LiveQuery) {
     RequireTestCase(API_CreateView);
-    CBLDatabase* db = createEmptyDB();
+    CBLDatabase* db = createManagerAndEmptyDBAtPath(@"API_LiveQuery");
     CBLView* view = [db viewNamed: @"vu"];
     [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
@@ -309,7 +301,6 @@ TestCase(API_LiveQuery) {
     }
     [query stop];
     CAssert(finished, @"Live query timed out!");
-    closeTestDB(db);
 }
 
 
@@ -405,7 +396,6 @@ TestCase(API_LiveQuery_DispatchQueue) {
     dispatch_sync(queue, ^{
         [query removeObserver: observer forKeyPath: @"rows"];
         [query stop];
-        closeTestDB(db);
         [dbmgr close];
     });
 }
@@ -413,7 +403,7 @@ TestCase(API_LiveQuery_DispatchQueue) {
 
 TestCase(API_AsyncViewQuery) {
     RequireTestCase(API_CreateView);
-    CBLDatabase* db = createEmptyDB();
+    CBLDatabase* db = createManagerAndEmptyDBAtPath(@"API_AsyncViewQuery");
     CBLView* view = [db viewNamed: @"vu"];
     [view setMapBlock: MAPBLOCK({
         emit(doc[@"sequence"], nil);
@@ -451,13 +441,12 @@ TestCase(API_AsyncViewQuery) {
             break;
     }
     CAssert(finished, @"Async query timed out!");
-    closeTestDB(db);
 }
 
 // Ensure that when the view mapblock changes, a related live query
 // will be notified and automatically updated
 TestCase(API_LiveQuery_UpdatesWhenViewChanges) {
-    CBLDatabase* db = createEmptyDB();
+    CBLDatabase* db = createManagerAndEmptyDBAtPath(@"UpdatesWhenViewChanges");
     
     CBLView* view = [db viewNamed: @"vu"];
     
@@ -542,8 +531,6 @@ TestCase(API_LiveQuery_UpdatesWhenViewChanges) {
     
     [liveQuery stop];
     [liveQuery removeObserver:observer forKeyPath:@"rows"];
-    
-    closeTestDB(db);
 }
 
 
@@ -580,7 +567,6 @@ TestCase(API_SharedMapBlocks) {
         return @"ok";
     }];
     CAssertEqual(result, @"ok");
-    closeTestDB(db);
     [mgr close];
 }
 

@@ -41,6 +41,10 @@
     [_backgroundServer close];
 }
 
+- (BOOL) isDatabaseOpened: (NSString*)dbName {
+    return [_openDatabaseNames containsObject: dbName];
+}
+
 - (void) openedDatabase: (NSString*)dbName {
     @synchronized(self) {
         [_openDatabaseNames addObject: dbName];

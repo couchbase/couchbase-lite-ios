@@ -16,11 +16,10 @@ static CBL_BlobStore* createStore(void) {
     NSError* error;
     CBL_BlobStore* store = [[CBL_BlobStore alloc] initWithPath: path error: &error];
     CAssert(store, @"Couldn't create CBL_BlobStore: %@", error);
+    AfterThisTest(^{
+        [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
+    });
     return store;
-}
-
-static void deleteStore(CBL_BlobStore* store) {
-    [[NSFileManager defaultManager] removeItemAtPath: store.path error: NULL];
 }
 
 
@@ -34,7 +33,6 @@ TestCase(CBL_BlobStoreBasic) {
 
     NSData* readItem = [store blobForKey: key];
     CAssertEqual(readItem, item);
-    deleteStore(store);
 }
 
 
@@ -51,8 +49,6 @@ TestCase(CBL_BlobStoreWriter) {
     
     NSData* readItem = [store blobForKey: writer.blobKey];
     CAssertEqual(readItem, [@"part 1, part 2, part 3" dataUsingEncoding: NSUTF8StringEncoding]);
-    
-    deleteStore(store);
 }
 
 

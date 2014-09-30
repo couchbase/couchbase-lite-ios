@@ -210,6 +210,10 @@ static CBLManager* sInstance;
                                                 error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
+    AfterThisTest(^{
+        [dbm close];
+        [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
+    });
     return dbm;
 }
 
