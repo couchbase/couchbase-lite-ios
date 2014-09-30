@@ -64,7 +64,6 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
-    int _transactionLevel;
     NSThread* _thread;
     dispatch_queue_t _dispatchQueue;    // One and only one of _thread or _dispatchQueue is set
     NSCache* _docIDs;
@@ -235,5 +234,9 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (BOOL) runFilter: (CBLFilterBlock)filter
             params: (NSDictionary*)filterParams
         onRevision: (CBL_Revision*)rev;
+
+/** Post an NSNotification. handles if the database is running on a separate dispatch_thread
+ (issue #364). */
+- (void) postNotification: (NSNotification*)notification;
 
 @end

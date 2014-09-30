@@ -749,6 +749,7 @@
     if (maxDepth == 0)
         maxDepth = self.maxRevTreeDepth;
 
+    Log(@"CBLDatabase: Pruning revisions to max depth %ld...", (unsigned long)maxDepth);
     *outPruned = 0;
     // First find which docs need pruning, and by how much:
     NSMutableDictionary* toPrune = $mdict();

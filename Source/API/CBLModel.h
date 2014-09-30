@@ -187,6 +187,11 @@ NS_DESIGNATED_INITIALIZER
     than overriding this one. */
 + (Class) itemClassForArrayProperty: (NSString*)property;
 
+/** The type of document. This is optional, but is commonly used in document databases 
+    to distinguish different types of documents. CBLModelFactory can use this property to 
+    determine what CBLModel subclass to instantiate for a document. */
+@property (copy, nonatomic) NSString* type;
+
 @end
 
 

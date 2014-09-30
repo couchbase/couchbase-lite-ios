@@ -48,7 +48,7 @@
 @end
 
 #define kCBLQueryOptionsDefaultLimit UINT_MAX
-
+extern NSString* const kCBLViewChangeNotification;
 
 typedef enum {
     kCBLViewCollationUnicode,

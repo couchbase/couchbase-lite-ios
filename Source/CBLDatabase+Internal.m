@@ -126,13 +126,14 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _readOnly = readOnly;
         _fmdb = [[CBL_FMDatabase alloc] initWithPath: _path];
         _fmdb.dispatchQueue = manager.dispatchQueue;
-        _fmdb.busyRetryTimeout = kSQLiteBusyTimeout;
+        _fmdb.databaseLock = [_manager.shared lockForDatabaseNamed: name];
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
         _fmdb.logsErrors = WillLogTo(CBLDatabase);
 #endif
         _fmdb.traceExecution = WillLogTo(CBLDatabaseVerbose);
+
         _docIDs = [[NSCache alloc] init];
         _docIDs.countLimit = kDocIDCacheSize;
         _dispatchQueue = manager.dispatchQueue;
@@ -495,8 +496,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         return;
 
     LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
-    Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
-            _transactionLevel);
 
     // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
     // be any, because the public -close: method saves changes first.)
@@ -523,7 +522,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     
     [_fmdb close]; // this returns BOOL, but its implementation never returns NO
     _isOpen = NO;
-    _transactionLevel = 0;
 
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [self _clearDocumentCache];
@@ -587,33 +585,24 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 - (BOOL) beginTransaction {
-    if (![_fmdb executeUpdate: $sprintf(@"SAVEPOINT tdb%d", _transactionLevel + 1)]) {
-        Warn(@"Failed to create savepoint transaction!");
+    if (![_fmdb beginTransaction]) {
+        Warn(@"Failed to create SQLite transaction!");
         return NO;
     }
-    ++_transactionLevel;
-    LogTo(CBLDatabase, @"Begin transaction (level %d)...", _transactionLevel);
+    LogTo(CBLDatabase, @"Begin transaction (level %d)...", _fmdb.transactionLevel);
     return YES;
 }
 
 - (BOOL) endTransaction: (BOOL)commit {
-    Assert(_transactionLevel > 0);
-    BOOL ok = YES;
-    if (commit) {
-        LogTo(CBLDatabase, @"Commit transaction (level %d)", _transactionLevel);
-    } else {
-        LogTo(CBLDatabase, @"CANCEL transaction (level %d)", _transactionLevel);
-        if (![_fmdb executeUpdate: $sprintf(@"ROLLBACK TO tdb%d", _transactionLevel)]) {
-            Warn(@"Failed to rollback transaction!");
-            ok = NO;
-        }
+    LogTo(CBLDatabase, @"%@ transaction (level %d)",
+          (commit ? @"Commit" : @"Abort"), _fmdb.transactionLevel);
+
+    BOOL ok = [_fmdb endTransaction: commit];
+    if (!ok)
+        Warn(@"Failed to end transaction!");
+
+    if (!commit)
         [_changesToNotify removeAllObjects];
-    }
-    if (![_fmdb executeUpdate: $sprintf(@"RELEASE tdb%d", _transactionLevel)]) {
-        Warn(@"Failed to release transaction!");
-        ok = NO;
-    }
-    --_transactionLevel;
     [self postChangeNotifications];
     return ok;
 }
@@ -634,7 +623,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         }
         if (status == kCBLStatusDBBusy) {
             // retry if locked out:
-            if (_transactionLevel > 1)
+            if (_fmdb.transactionLevel > 1)
                 break;
             if (++retries > kTransactionMaxRetries) {
                 Warn(@"%@: Db busy, too many retries, giving up", self);
@@ -670,7 +659,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     // This is a 'while' instead of an 'if' because when we finish posting notifications, there
     // might be new ones that have arrived as a result of notification handlers making document
     // changes of their own (the replicator manager will do this.) So we need to check again.
-    while (_transactionLevel == 0 && _isOpen && !_postingChangeNotifications
+    while (_fmdb.transactionLevel == 0 && _isOpen && !_postingChangeNotifications
             && _changesToNotify.count > 0)
     {
         _postingChangeNotifications = true; // Disallow re-entrant calls
@@ -1586,6 +1575,23 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     }
 
     return rows;
+}
+
+- (void) postNotification: (NSNotification*)notification
+{
+    if (_dispatchQueue) {
+        // NSNotificationQueue is runloop-based, doesn't work on dispatch queues. (#364)
+        [self doAsync:^{
+            [[NSNotificationCenter defaultCenter] postNotification: notification];
+        }];
+    } else {
+        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
+        [queue enqueueNotification: notification
+                      postingStyle: NSPostASAP
+                      coalesceMask: NSNotificationNoCoalescing
+                          forModes: @[NSRunLoopCommonModes]];
+    }
+
 }
 
 
