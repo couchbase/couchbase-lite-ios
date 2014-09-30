@@ -153,8 +153,6 @@ TestCase(API_CreateDocument) {
     CAssertEqual(doc2.currentRevision.revisionID, currentRevisionID);
 
     CAssertNil([db existingDocumentWithID: @"b0gus"]);
-
-    closeTestDB(db);
 }
 
 
@@ -165,8 +163,6 @@ TestCase(API_ExistingDocument) {
     CBLDocument* doc = [db documentWithID: @"missing"];
     Assert(doc != nil);
     AssertNil([db existingDocumentWithID: @"missing"]);
-
-    closeTestDB(db);
 }
 
 
@@ -213,7 +209,6 @@ TestCase(API_CreateRevisions) {
     CBLSavedRevision* rev3 = [newRev save: &error];
     CAssert(rev3);
     CAssertEqual(rev3.userProperties, newRev.userProperties);
-    closeTestDB(db);
 }
 
 TestCase(API_RevisionIdEquivalentRevisions) {
@@ -248,7 +243,6 @@ TestCase(API_RevisionIdEquivalentRevisions) {
     // since both rev2a and rev2b have same content, they should have
     // the same rev ids.
     CAssertEqual(rev2a.revisionID, rev2b.revisionID);
-    
 }
 
 TestCase(API_CreateNewRevisions) {
@@ -323,8 +317,6 @@ TestCase(API_CreateNewRevisions) {
     CAssertEqual([doc getLeafRevisions: &error], @[rev3]);
     CBLDocument* doc2 = db[doc.documentID];
     CAssertEq(doc2, doc);
-
-    closeTestDB(db);
 }
 
 #if 0
@@ -361,7 +353,6 @@ TestCase(API_SaveMultipleDocuments) {
         CAssertEqual([doc.currentRevision.properties objectForKey: @"misc"],
                              @"updated!");
     }
-    closeTestDB(db);
 }
 
 
@@ -386,7 +377,6 @@ TestCase(API_SaveMultipleUnsavedDocuments) {
         CAssertEqual([doc.currentRevision.properties objectForKey: @"order"],
                              [NSNumber numberWithInt: i]);
     }
-    closeTestDB(db);
 }
 
 
@@ -410,7 +400,6 @@ TestCase(API_DeleteMultipleDocuments) {
     }
     
     CAssertEq([db getDocumentCount], (NSInteger)0);
-    closeTestDB(db);
 }
 #endif
 
@@ -439,7 +428,6 @@ TestCase(API_DeleteDocument) {
     // currentRevision is inconsistent with a freshly-loaded CBLDocument's behavior, where if the
     // document was previously deleted its currentRevision will initially be nil. (#265)
     CAssertNil(doc.currentRevision);
-    closeTestDB(db);
 }
 
 
@@ -454,7 +442,6 @@ TestCase(API_PurgeDocument) {
     
     CBLDocument* redoc = [db _cachedDocumentWithID:doc.documentID];
     CAssert(!redoc);
-    closeTestDB(db);
 }
 
 TestCase(API_Validation) {
@@ -476,7 +463,6 @@ TestCase(API_Validation) {
     CAssert(![doc putProperties: properties error: &error]);
     CAssertEq(error.code, 403);
     //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
-    closeTestDB(db);
 }
 
 TestCase(API_AllDocuments) {
@@ -506,7 +492,6 @@ TestCase(API_AllDocuments) {
         n++;
     }
     CAssertEq(n, kNDocs);
-    closeTestDB(db);
 }
 
 
@@ -534,7 +519,6 @@ TestCase(API_LocalDocs) {
     CAssert(![db deleteLocalDocumentWithID: @"dock" error: &error],
             @"Second delete should have failed");
     CAssertEq(error.code, kCBLStatusNotFound);
-    closeTestDB(db);
 }
 
 #pragma mark - HISTORY
@@ -576,7 +560,6 @@ TestCase(API_History) {
     
     CAssertEqual([doc getConflictingRevisions: &error], @[rev2]);
     CAssertEqual([doc getLeafRevisions: &error], @[rev2]);
-    closeTestDB(db);
 }
 
 
@@ -618,8 +601,6 @@ TestCase(API_Conflict) {
     AssertEq(revs.count, 2u);
     AssertEqual(revs[0], defaultRev);
     AssertEqual(revs[1], otherRev);
-    
-    closeTestDB(db);
 }
 
 TestCase(API_Resolve_Conflict) {
@@ -673,9 +654,6 @@ TestCase(API_Resolve_Conflict) {
     AssertEq([[doc getLeafRevisions: &error] count], 2u);
     AssertEq([[doc getConflictingRevisions: &error] count], 1u);
     AssertEqual(doc.currentRevision, newRevSaved);
-    
-    closeTestDB(db);
-
 }
 
 
@@ -735,7 +713,6 @@ TestCase(API_Attachments) {
     CAssert(!error);
     CAssert(rev4);
     CAssertEq([rev4.attachmentNames count], (NSUInteger)0);
-    closeTestDB(db);
 }
 
 #pragma mark - CHANGE TRACKING
@@ -759,7 +736,6 @@ TestCase(API_ChangeTracking) {
     CAssertEq(changeCount, 1);
     
     CAssertEq(db.lastSequenceNumber, 5);
-    closeTestDB(db);
 }
 
 
