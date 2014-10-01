@@ -154,8 +154,6 @@ TestCase(API_CreateDocument) {
     CAssertEqual(doc2.currentRevision.revisionID, currentRevisionID);
 
     CAssertNil([db existingDocumentWithID: @"b0gus"]);
-
-    closeTestDB(db);
 }
 
 
@@ -166,8 +164,6 @@ TestCase(API_ExistingDocument) {
     CBLDocument* doc = [db documentWithID: @"missing"];
     Assert(doc != nil);
     AssertNil([db existingDocumentWithID: @"missing"]);
-
-    closeTestDB(db);
 }
 
 
@@ -214,7 +210,6 @@ TestCase(API_CreateRevisions) {
     CBLSavedRevision* rev3 = [newRev save: &error];
     CAssert(rev3);
     CAssertEqual(rev3.userProperties, newRev.userProperties);
-    closeTestDB(db);
 }
 
 TestCase(API_RevisionIdEquivalentRevisions) {
@@ -249,7 +244,6 @@ TestCase(API_RevisionIdEquivalentRevisions) {
     // since both rev2a and rev2b have same content, they should have
     // the same rev ids.
     CAssertEqual(rev2a.revisionID, rev2b.revisionID);
-    
 }
 
 TestCase(API_CreateNewRevisions) {
@@ -324,8 +318,6 @@ TestCase(API_CreateNewRevisions) {
     CAssertEqual([doc getLeafRevisions: &error], @[rev3]);
     CBLDocument* doc2 = db[doc.documentID];
     CAssertEq(doc2, doc);
-
-    closeTestDB(db);
 }
 
 #if 0
@@ -362,7 +354,6 @@ TestCase(API_SaveMultipleDocuments) {
         CAssertEqual([doc.currentRevision.properties objectForKey: @"misc"],
                              @"updated!");
     }
-    closeTestDB(db);
 }
 
 
@@ -387,7 +378,6 @@ TestCase(API_SaveMultipleUnsavedDocuments) {
         CAssertEqual([doc.currentRevision.properties objectForKey: @"order"],
                              [NSNumber numberWithInt: i]);
     }
-    closeTestDB(db);
 }
 
 
@@ -411,7 +401,6 @@ TestCase(API_DeleteMultipleDocuments) {
     }
     
     CAssertEq([db getDocumentCount], (NSInteger)0);
-    closeTestDB(db);
 }
 #endif
 
@@ -440,7 +429,6 @@ TestCase(API_DeleteDocument) {
     // currentRevision is inconsistent with a freshly-loaded CBLDocument's behavior, where if the
     // document was previously deleted its currentRevision will initially be nil. (#265)
     CAssertNil(doc.currentRevision);
-    closeTestDB(db);
 }
 
 
@@ -455,7 +443,6 @@ TestCase(API_PurgeDocument) {
     
     CBLDocument* redoc = [db _cachedDocumentWithID:doc.documentID];
     CAssert(!redoc);
-    closeTestDB(db);
 }
 
 TestCase(API_Validation) {
@@ -477,7 +464,6 @@ TestCase(API_Validation) {
     CAssert(![doc putProperties: properties error: &error]);
     CAssertEq(error.code, 403);
     //CAssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
-    closeTestDB(db);
 }
 
 TestCase(API_AllDocuments) {
@@ -507,7 +493,6 @@ TestCase(API_AllDocuments) {
         n++;
     }
     CAssertEq(n, kNDocs);
-    closeTestDB(db);
 }
 
 
@@ -535,7 +520,6 @@ TestCase(API_LocalDocs) {
     CAssert(![db deleteLocalDocumentWithID: @"dock" error: &error],
             @"Second delete should have failed");
     CAssertEq(error.code, kCBLStatusNotFound);
-    closeTestDB(db);
 }
 
 
@@ -578,7 +562,6 @@ TestCase(API_History) {
     
     CAssertEqual([doc getConflictingRevisions: &error], @[rev2]);
     CAssertEqual([doc getLeafRevisions: &error], @[rev2]);
-    closeTestDB(db);
 }
 
 
@@ -619,8 +602,6 @@ TestCase(API_Conflict) {
     AssertEq(revs.count, 2u);
     AssertEqual(revs[0], defaultRev);
     AssertEqual(revs[1], otherRev);
-    
-    closeTestDB(db);
 }
 
 TestCase(API_Resolve_Conflict) {
@@ -673,9 +654,6 @@ TestCase(API_Resolve_Conflict) {
     AssertEq([[doc getLeafRevisions: &error] count], 2u);
     AssertEq([[doc getConflictingRevisions: &error] count], 1u);
     AssertEqual(doc.currentRevision, newRevSaved);
-    
-    closeTestDB(db);
-
 }
 
 
@@ -735,7 +713,6 @@ TestCase(API_Attachments) {
     CAssert(!error);
     CAssert(rev4);
     CAssertEq([rev4.attachmentNames count], (NSUInteger)0);
-    closeTestDB(db);
 }
 
 #pragma mark - CHANGE TRACKING
@@ -763,7 +740,86 @@ TestCase(API_ChangeTracking) {
 
     CAssertEq(changeCount, 5);
     CAssertEq(notificationCount, 1); // All 5 changes should be batched in one notification
-    closeTestDB(db);
+}
+
+
+static void lotsaWrites(CBLDatabase* db, NSUInteger nTransactions, NSUInteger nDocs) {
+    for (NSUInteger t = 1; t <= nTransactions; t++) {
+        BOOL ok = [db inTransaction: ^BOOL {
+            Log(@"Transaction #%u ...", (unsigned)t);
+            @autoreleasepool {
+                for (NSUInteger d = 1; d <= nDocs; d++) {
+                    CBLDocument* doc = [db createDocument];
+                    NSDictionary* props = @{@"transaction": @(t),
+                                            @"doc": @(d)};
+                    NSError* error;
+                    Assert([doc putProperties: props error: &error], @"put failed: %@", error);
+                }
+                return YES;
+            }
+        }];
+        Assert(ok, @"Transaction failed!");
+    }
+}
+
+static void lotsaReads(CBLDatabase* db, NSUInteger nReads) {
+    NSUInteger docCount = 0;
+    for (NSUInteger t = 1; t <= nReads; t++) {
+        @autoreleasepool {
+            usleep(10*1000);
+            CBLStatus status;
+            CBLQueryIteratorBlock allDocs = [db getAllDocs: nil status: &status];
+            Assert(allDocs, @"getAllDocs failed: status %d", status);
+            CBLQueryRow* row;
+            NSUInteger newCount = 0;
+            while (nil != (row = allDocs())) {
+                ++newCount;
+            }
+            //NSLog(@"Reader found %lu docs", (unsigned long)newCount);
+            Assert(newCount >= docCount, @"Wrong doc count (used to be %ld)", (unsigned long)docCount);
+            docCount = newCount;
+        }
+    }
+}
+
+
+TestCase(API_ConcurrentWrites) {
+    const NSUInteger kNTransactions = 100;
+    const NSUInteger kNDocs = 100;
+    CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_ConcurrentWrites"];
+    CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
+    Log(@"Main thread writer: %@", db);
+
+    CBLManager* bgmgr = [mgr copy];
+    dispatch_queue_t writingQueue = dispatch_queue_create("ConcurrentWritesTest",  NULL);
+    dispatch_async(writingQueue, ^{
+        CBLDatabase* bgdb = [bgmgr databaseNamed: @"db" error: nil];
+        Log(@"bg writer: %@", bgdb);
+        lotsaWrites(bgdb, kNTransactions, kNDocs);
+    });
+
+    CBLManager* readQueueMgr = [mgr copy];
+    dispatch_queue_t readingQueue = dispatch_queue_create("reading",  NULL);
+    dispatch_async(readingQueue, ^{
+        CBLDatabase* bgdb = [readQueueMgr databaseNamed: @"db" error: nil];
+        Log(@"bg reader: %@", bgdb);
+        lotsaReads(bgdb, kNTransactions);
+    });
+
+    CBLManager* readQueue2Mgr = [mgr copy];
+    dispatch_queue_t readingQueue2 = dispatch_queue_create("reading",  NULL);
+    dispatch_async(readingQueue2, ^{
+        CBLDatabase* bgdb = [readQueue2Mgr databaseNamed: @"db" error: nil];
+        Log(@"bg2 reader: %@", bgdb);
+        lotsaReads(bgdb, kNTransactions);
+    });
+
+    lotsaWrites(db, kNTransactions, kNDocs);
+
+    // Wait for queue to finish the previous block:
+    dispatch_sync(writingQueue, ^{  });
+    dispatch_sync(readingQueue, ^{  });
+    dispatch_sync(readingQueue2, ^{  });
 }
 
 

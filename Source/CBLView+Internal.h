@@ -52,6 +52,8 @@
 @end
 
 
+extern NSString* const kCBLViewChangeNotification;
+
 typedef enum {
     kCBLViewCollationUnicode,
     kCBLViewCollationRaw,

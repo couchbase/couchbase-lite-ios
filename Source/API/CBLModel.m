@@ -27,6 +27,7 @@
 
 @implementation CBLModel
 
+@dynamic type;
 
 - (instancetype) init {
     return [self initWithDocument: nil];

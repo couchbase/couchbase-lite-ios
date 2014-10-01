@@ -260,9 +260,6 @@ TestCase(CBL_Pusher) {
         Warn(@"Skipping rest of test CBL_Pusher (no remote test DB URL)");
         return;
     }
-    
-    [db _close];
-    [server close];
 }
 
 
@@ -297,9 +294,6 @@ TestCase(CBL_Puller) {
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"1-"]);
     CAssertEqual(doc[@"fnord"], $true);
-
-    [db _close];
-    [server close];
 }
 
 TestCase(CBL_Puller_Continuous) {
@@ -333,9 +327,6 @@ TestCase(CBL_Puller_Continuous) {
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"1-"]);
     CAssertEqual(doc[@"fnord"], $true);
-
-    [db _close];
-    [server close];
 }
 
 TestCase(CBL_Puller_Continuous_PermanentError) {
@@ -352,9 +343,6 @@ TestCase(CBL_Puller_Continuous_PermanentError) {
     
     NSError* error = CBLStatusToNSError(kCBLStatusNotFound, nil);
     replic8Continuous(db, remoteURL, NO, nil, error);
-    
-    [db _close];
-    [server close];
 }
 
 TestCase(CBL_Puller_AuthFailure) {
@@ -375,9 +363,6 @@ TestCase(CBL_Puller_AuthFailure) {
 
     NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
     replic8Continuous(db, remoteURL, NO, nil, error);
-
-    [db _close];
-    [server close];
 }
 
 TestCase(CBL_Puller_SSL) {
@@ -476,9 +461,6 @@ TestCase(CBL_Puller_DocIDs) {
     CAssert(doc);
     CAssert([doc.revID hasPrefix: @"2-"]);
     CAssertEqual(doc[@"foo"], @1);
-
-    [db _close];
-    [server close];
 }
 
 
@@ -516,9 +498,6 @@ TestCase(CBL_Pusher_DocIDs) {
     CAssertEq(rows.count, 2u);
     CAssertEqual((rows[0])[@"id"], @"doc4");
     CAssertEqual((rows[1])[@"id"], @"doc7");
-
-    [db _close];
-    [server close];
 }
 
 
@@ -547,8 +526,6 @@ TestCase(CBL_Puller_FromCouchApp) {
         CAssert(data);
         CAssertEq([data length], [attachment[@"length"] unsignedLongLongValue]);
     }
-    [db _close];
-    [server close];
 }
 
 
@@ -653,8 +630,6 @@ TestCase(ParseReplicatorProperties) {
     CAssertEq(createTarget, NO);
     CAssertEqual(headers, $dict({@"Excellence", @"Most"}));
     CAssert([authorizer isKindOfClass: [CBLOAuth1Authorizer class]]);
-    
-    [dbManager close];
 }
 
 

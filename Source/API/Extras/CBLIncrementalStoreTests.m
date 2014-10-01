@@ -307,6 +307,8 @@ TestCase(CBLIncrementalStoreCreateAndUpdate)
     AssertEq(entry.subentries.count, (unsigned int)1);
     AssertEqual([entry.subentries valueForKeyPath:@"text"], [NSSet setWithObject:@"Subentry abc"]);
     AssertEqual([entry.subentries valueForKeyPath:@"number"], [NSSet setWithObject:@123]);
+    
+    Assert([entry.decimalNumber isKindOfClass:[NSDecimalNumber class]], @"decimalNumber must be with type NSDecimalNumber");
 
     [store.database _close];
 }

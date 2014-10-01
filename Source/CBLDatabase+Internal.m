@@ -224,7 +224,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 - (void) _close {
     if (!_isOpen)
         return;
-    
+
     LogTo(CBLDatabase, @"Closing <%p> %@", self, _dir);
     Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
             _transactionLevel);
@@ -970,6 +970,23 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         }
         return nil;
     };
+}
+
+- (void) postNotification: (NSNotification*)notification
+{
+    if (_dispatchQueue) {
+        // NSNotificationQueue is runloop-based, doesn't work on dispatch queues. (#364)
+        [self doAsync:^{
+            [[NSNotificationCenter defaultCenter] postNotification: notification];
+        }];
+    } else {
+        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
+        [queue enqueueNotification: notification
+                      postingStyle: NSPostASAP
+                      coalesceMask: NSNotificationNoCoalescing
+                          forModes: @[NSRunLoopCommonModes]];
+    }
+
 }
 
 

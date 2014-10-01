@@ -1158,6 +1158,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                         value = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
                         break;
                     case NSDecimalAttributeType:
+                        value = [NSDecimalNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
+                        break;
                     case NSDoubleAttributeType:
                     case NSFloatAttributeType:
                         value = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];

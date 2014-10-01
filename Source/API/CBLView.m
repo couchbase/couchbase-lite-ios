@@ -70,6 +70,7 @@ public:
     __strong NSDictionary* body;
 };
 
+NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 
 class CocoaIndexer : public MapReduceDispatchIndexer {
 public:
@@ -343,6 +344,10 @@ public:
              forType: @"mapVersion" name: _name inDatabaseNamed: db.name];
     [shared setValue: [reduceBlock copy]
              forType: @"reduce" name: _name inDatabaseNamed: db.name];
+    if (changed) {
+        // update any live queries that might be listening to this view, now that it has changed
+        [self postPublicChangeNotification];
+    }
     return changed;
 }
 
@@ -456,6 +461,13 @@ static id<CBLViewCompiler> sCompiler;
     return [self.database updateIndexes: @[self] forView: self];
 }
 
+- (void) postPublicChangeNotification {
+    // Post the public kCBLViewChangeNotification:
+    NSNotification* notification = [NSNotification notificationWithName: kCBLViewChangeNotification
+                                                                 object: self
+                                                               userInfo: nil];
+    [_weakDB postNotification:notification];
+}
 
 + (NSNumber*) totalValues: (NSArray*)values {
     double total = 0;

@@ -114,7 +114,8 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 
 - (BOOL) encodeNumber: (UU NSNumber*)number {
     yajl_gen_status status;
-    switch (number.objCType[0]) {
+    char ctype = number.objCType[0];
+    switch (ctype) {
         case 'c': {
             // The only way to tell whether an NSNumber with 'char' type is a boolean is to
             // compare it against the singleton kCFBoolean objects:
@@ -136,7 +137,7 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
                 status = yajl_gen_invalid_number;
                 break;
             }
-            unsigned len = sprintf(str, "%.16g", n);
+            unsigned len = sprintf(str, (ctype=='f' ? "%.6g" : "%.16g"), n);
             if (strspn(str, "0123456789-") == strlen(str)) {
                 strcat(str, ".0");
                 len += 2;

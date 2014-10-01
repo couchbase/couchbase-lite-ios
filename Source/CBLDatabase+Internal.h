@@ -240,4 +240,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
             params: (NSDictionary*)filterParams
         onRevision: (CBL_Revision*)rev;
 
+/** Post an NSNotification. handles if the database is running on a separate dispatch_thread
+ (issue #364). */
+- (void) postNotification: (NSNotification*)notification;
+
 @end
