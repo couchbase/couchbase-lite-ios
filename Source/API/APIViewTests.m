@@ -401,6 +401,41 @@ TestCase(API_LiveQuery_DispatchQueue) {
 }
 
 
+TestCase(API_LiveQuery_UpdateInterval) {
+    RequireTestCase(API_LiveQuery);
+    CBLDatabase* db = createManagerAndEmptyDBAtPath(@"API_LiveQuery");
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], nil);
+    }) version: @"1"];
+
+    createDocuments(db, 10);
+
+    CBLLiveQuery* query = [[view createQuery] asLiveQuery];
+    query.updateInterval = 0.25;
+    Log(@"Created %@", query);
+
+    TestLiveQueryObserver* observer = [TestLiveQueryObserver new];
+    [query addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew
+                   context: NULL];
+    AfterThisTest(^{
+        [query removeObserver:observer forKeyPath:@"rows"];
+    });
+
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    while (timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.05]])
+            break;
+        createDocuments(db, 1);
+    }
+    [query stop];
+
+    Log(@"LiveQuery notified observers %d times", observer.changeCount);
+    CAssert(observer.changeCount >= 7 && observer.changeCount <= 8);
+}
+
+
 TestCase(API_AsyncViewQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createManagerAndEmptyDBAtPath(@"API_AsyncViewQuery");
@@ -471,7 +506,10 @@ TestCase(API_LiveQuery_UpdatesWhenViewChanges) {
     TestLiveQueryObserver* observer = [TestLiveQueryObserver new];
 
     [liveQuery addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: NULL];
-    
+    AfterThisTest(^{
+        [liveQuery removeObserver:observer forKeyPath:@"rows"];
+    });
+
     Log(@"Waiting for live query to update...");
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
     bool finished = false;
@@ -530,7 +568,6 @@ TestCase(API_LiveQuery_UpdatesWhenViewChanges) {
     CAssert(finished, @"Live query timed out!");
     
     [liveQuery stop];
-    [liveQuery removeObserver:observer forKeyPath:@"rows"];
 }
 
 

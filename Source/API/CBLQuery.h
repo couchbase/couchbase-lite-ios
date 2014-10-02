@@ -143,6 +143,11 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     changes. All you need to do is use KVO to observe changes to the .rows property. */
 @interface CBLLiveQuery : CBLQuery
 
+/** The shortest interval at which the query will update, regardless of how often the
+    database changes. Defaults to 0.5 sec. Increase this if the query is expensive and
+    the database updates frequently, to limit CPU consumption. */
+@property (nonatomic) NSTimeInterval updateInterval;
+
 /** Starts observing database changes. The .rows property will now update automatically. (You 
     usually don't need to call this yourself, since accessing or observing the .rows property will
     call -start for you.) */
