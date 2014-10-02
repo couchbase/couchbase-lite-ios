@@ -746,10 +746,10 @@ TestCase(API_ChangeTracking) {
 static void lotsaWrites(CBLDatabase* db, NSUInteger nTransactions, NSUInteger nDocs) {
     for (NSUInteger t = 1; t <= nTransactions; t++) {
         BOOL ok = [db inTransaction: ^BOOL {
-            Log(@"Transaction #%u ...", (unsigned)t);
+            Log(@"++++ Transaction #%u ...", (unsigned)t);
             @autoreleasepool {
                 for (NSUInteger d = 1; d <= nDocs; d++) {
-                    CBLDocument* doc = [db createDocument];
+                    CBLDocument* doc = [db createDocument];// [db documentWithID: $sprintf(@"%03lu.%03lu", t, d)];
                     NSDictionary* props = @{@"transaction": @(t),
                                             @"doc": @(d)};
                     NSError* error;
@@ -767,6 +767,7 @@ static void lotsaReads(CBLDatabase* db, NSUInteger nReads) {
     for (NSUInteger t = 1; t <= nReads; t++) {
         @autoreleasepool {
             usleep(10*1000);
+            //Log(@"---- Reading from %@ ...", db);
             CBLStatus status;
             CBLQueryIteratorBlock allDocs = [db getAllDocs: nil status: &status];
             Assert(allDocs, @"getAllDocs failed: status %d", status);
@@ -775,26 +776,26 @@ static void lotsaReads(CBLDatabase* db, NSUInteger nReads) {
             while (nil != (row = allDocs())) {
                 ++newCount;
             }
-            //NSLog(@"Reader found %lu docs", (unsigned long)newCount);
-            Assert(newCount >= docCount, @"Wrong doc count (used to be %ld)", (unsigned long)docCount);
+            //Log(@"Reader found %lu docs", (unsigned long)newCount);
+            Assert(newCount >= docCount, @"Wrong doc count %ld (used to be %ld)",
+                   (unsigned long)newCount, (unsigned long)docCount);
             docCount = newCount;
         }
     }
 }
 
-
 TestCase(API_ConcurrentWrites) {
-    const NSUInteger kNTransactions = 100;
+    const NSUInteger kNTransactions = 44;
     const NSUInteger kNDocs = 100;
     CBLManager* mgr = [CBLManager createEmptyAtTemporaryPath: @"API_ConcurrentWrites"];
     CBLDatabase* db = [mgr databaseNamed: @"db" error: nil];
-    Log(@"Main thread writer: %@", db);
+    Log(@"Main thread writer: %@, forestdb=%p", db, db.forestDB);
 
     CBLManager* bgmgr = [mgr copy];
     dispatch_queue_t writingQueue = dispatch_queue_create("ConcurrentWritesTest",  NULL);
     dispatch_async(writingQueue, ^{
         CBLDatabase* bgdb = [bgmgr databaseNamed: @"db" error: nil];
-        Log(@"bg writer: %@", bgdb);
+        Log(@"bg writer: %@, forestdb=%p", bgdb, bgdb.forestDB);
         lotsaWrites(bgdb, kNTransactions, kNDocs);
     });
 
@@ -802,7 +803,7 @@ TestCase(API_ConcurrentWrites) {
     dispatch_queue_t readingQueue = dispatch_queue_create("reading",  NULL);
     dispatch_async(readingQueue, ^{
         CBLDatabase* bgdb = [readQueueMgr databaseNamed: @"db" error: nil];
-        Log(@"bg reader: %@", bgdb);
+        Log(@"bg reader: %@, forestdb=%p", bgdb, bgdb.forestDB);
         lotsaReads(bgdb, kNTransactions);
     });
 
@@ -810,7 +811,7 @@ TestCase(API_ConcurrentWrites) {
     dispatch_queue_t readingQueue2 = dispatch_queue_create("reading",  NULL);
     dispatch_async(readingQueue2, ^{
         CBLDatabase* bgdb = [readQueue2Mgr databaseNamed: @"db" error: nil];
-        Log(@"bg2 reader: %@", bgdb);
+        Log(@"bg2 reader: %@, forestdb=%p", bgdb, bgdb.forestDB);
         lotsaReads(bgdb, kNTransactions);
     });
 
@@ -819,7 +820,7 @@ TestCase(API_ConcurrentWrites) {
     // Wait for queue to finish the previous block:
     dispatch_sync(writingQueue, ^{  });
     dispatch_sync(readingQueue, ^{  });
-    dispatch_sync(readingQueue2, ^{  });
+    dispatch_sync(readingQueue2,^{  });
 }
 
 
