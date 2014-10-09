@@ -36,6 +36,7 @@
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
+- (BOOL) waitFor: (BOOL (^)())block;
 - (void) addReplication: (CBLReplication*)repl;
 - (void) forgetReplication: (CBLReplication*)repl;
 - (void) _clearDocumentCache;

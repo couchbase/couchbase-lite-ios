@@ -38,6 +38,9 @@ NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
+NSString* const CBL_PrivateRunloopMode = @"CouchbaseLitePrivate";
+NSArray* CBL_RunloopModes;
+
 #define kDocIDCacheSize 1000
 
 #define kSQLiteBusyTimeout 5.0 // seconds
@@ -49,17 +52,18 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 @implementation CBLDatabase (Internal)
 
 
-#if 0
 + (void) initialize {
     if (self == [CBLDatabase class]) {
+        CBL_RunloopModes = @[NSRunLoopCommonModes, CBL_PrivateRunloopMode];
+#if 0
         Log(@"SQLite version %s", sqlite3_libversion());
         int i = 0;
         const char* opt;
         while (NULL != (opt = sqlite3_compileoption_get(i++)))
                Log(@"SQLite has option '%s'", opt);
+#endif
     }
 }
-#endif
 
 
 - (CBL_FMDatabase*) fmdb {
@@ -140,11 +144,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (!_dispatchQueue)
             _thread = [NSThread currentThread];
         _startTime = [NSDate date];
-
-        if (0) {
-            // Appease the static analyzer by using these category ivars in this source file:
-            _pendingAttachmentsByDigest = nil;
-        }
     }
     return self;
 }
