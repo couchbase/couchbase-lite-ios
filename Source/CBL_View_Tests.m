@@ -604,7 +604,7 @@ TestCase (CBL_View_NumericKeys) {
     AssertEqual([rows[0] key], @(33547239));
 }
 
-#if 0 //FIX: REIMPLEMENT GO
+#if 0 //FIX: REIMPLEMENT GEO
 TestCase(CBL_View_GeoQuery) {
     RequireTestCase(CBLGeometry);
     RequireTestCase(CBL_View_Index);
@@ -915,32 +915,30 @@ TestCase(CBL_View_Grouped_NoReduce) {
 TestCase(CBL_View_Collation) {
     // Based on CouchDB's "view_collation.js" test
     RequireTestCase(CBL_View_Query);
-    NSArray* testKeys = @[$null,
-                                                   $false,
-                                                   $true,
-                                                   @0,
-#if 0 // FIX: CBForest currently can't handle floats as keys
-                                                   @(2.5),
-#endif
-                                                   @(10),
-                                                   @" ", @"_", @"~", 
-                                                   @"a",
-                                                   @"A",
+    NSArray* testKeys = @[ $null,
+                           $false,
+                           $true,
+                           @0,
+                           @(2.5),
+                           @(10),
+                           @" ", @"_", @"~",
+                           @"a",
+                           @"A",
 #if 0 // FIX
-                                                   @"aa",
+                           @"aa",
 #endif
-                                                   @"b",
+                           @"b",
 #if 0 // FIX
-                                                   @"B",
+                           @"B",
 #endif
-                                                   @"ba",
-                                                   @"bb",
-                                                   @[@"a"],
-                                                   @[@"b"],
-                                                   @[@"b", @"c"],
-                                                   @[@"b", @"c", @"a"],
-                                                   @[@"b", @"d"],
-                                                   @[@"b", @"d", @"e"]];
+                           @"ba",
+                           @"bb",
+                           @[@"a"],
+                           @[@"b"],
+                           @[@"b", @"c"],
+                           @[@"b", @"c", @"a"],
+                           @[@"b", @"d"],
+                           @[@"b", @"d", @"e"] ];
     CBLDatabase *db = createDB();
     int i = 0;
     for (id key in testKeys)
@@ -951,7 +949,7 @@ TestCase(CBL_View_Collation) {
         emit(doc[@"name"], nil);
     }) reduceBlock: NULL version:@"1.0"];
     [view updateIndex];
-    
+
     CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status = -1;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
@@ -964,28 +962,28 @@ TestCase(CBL_View_Collation) {
 
 
 TestCase(CBL_View_CollationRaw) {
-    NSArray* testKeys = @[@0,
-                                                   @(2.5),
-                                                   @(10),
-                                                   $false,
-                                                   $null,
-                                                   $true,
-                                                   @[@"a"],
-                                                   @[@"b"],
-                                                   @[@"b", @"c"],
-                                                   @[@"b", @"c", @"a"],
-                                                   @[@"b", @"d"],
-                                                   @[@"b", @"d", @"e"],
-                                                   @" ",
-                                                   @"A",
-                                                   @"B",
-                                                   @"_",
-                                                   @"a",
-                                                   @"aa",
-                                                   @"b",
-                                                   @"ba",
-                                                   @"bb",
-                                                   @"~"];
+    NSArray* testKeys = @[ @0,
+                           @(2.5),
+                           @(10),
+                           $false,
+                           $null,
+                           $true,
+                           @[@"a"],
+                           @[@"b"],
+                           @[@"b", @"c"],
+                           @[@"b", @"c", @"a"],
+                           @[@"b", @"d"],
+                           @[@"b", @"d", @"e"],
+                           @" ",
+                           @"A",
+                           @"B",
+                           @"_",
+                           @"a",
+                           @"aa",
+                           @"b",
+                           @"ba",
+                           @"bb",
+                           @"~" ];
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
     int i = 0;
@@ -997,7 +995,7 @@ TestCase(CBL_View_CollationRaw) {
         emit(doc[@"name"], nil);
     }) reduceBlock: NULL version:@"1.0"];
     view.collation = kCBLViewCollationRaw;
-    
+
     CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
@@ -1053,7 +1051,7 @@ TestCase(CBL_View_LinkedDocs) {
 }
 
 
-#if 0
+#if 0 //FIX: REIMPLEMENT FULL-TEXT
 TestCase(CBL_View_FullTextQuery) {
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
