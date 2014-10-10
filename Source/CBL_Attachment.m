@@ -65,6 +65,8 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     if (self) {
         NSNumber* explicitLength = $castIf(NSNumber, attachInfo[@"length"]);
         self->length = explicitLength.unsignedLongLongValue;
+        explicitLength = $castIf(NSNumber, attachInfo[@"encoded_length"]);
+        self->encodedLength = explicitLength.unsignedLongLongValue;
 
         _digest = $castIf(NSString, attachInfo[@"digest"]);
         if (_digest)

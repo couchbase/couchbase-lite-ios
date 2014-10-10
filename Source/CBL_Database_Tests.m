@@ -716,10 +716,25 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-static CBL_Revision* putDocWithAttachment(CBLDatabase* db, NSString* docID, NSString* attachmentText) {
-    NSString* base64 = [CBLBase64 encode: [attachmentText dataUsingEncoding: NSUTF8StringEncoding]];
+static CBL_Revision* putDocWithAttachment(CBLDatabase* db,
+                                          NSString* docID,
+                                          NSString* attachmentText,
+                                          BOOL compress)
+{
+    NSData* attachmentData = [attachmentText dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* encoding = nil;
+    NSNumber* length = nil;
+    if (compress) {
+        length = @(attachmentData.length);
+        encoding = @"gzip";
+        attachmentData = [NSData gtm_dataByGzippingData: attachmentData];
+    }
+    NSString* base64 = [CBLBase64 encode: attachmentData];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                                           {@"data", base64})});
+                                                           {@"data", base64},
+                                                           {@"encoding", encoding},
+                                                           {@"length", length}
+                                                           )});
     NSDictionary* props = $dict({@"_id", docID},
                                 {@"foo", @1},
                                 {@"bar", $false},
@@ -738,7 +753,7 @@ TestCase(CBL_Database_PutAttachment) {
     CBLDatabase* db = createDB();
     
     // Put a revision that includes an _attachments dict:
-    CBL_Revision* rev1 = putDocWithAttachment(db, nil, @"This is the body of attach1");
+    CBL_Revision* rev1 = putDocWithAttachment(db, nil, @"This is the body of attach1", NO);
     CAssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                                 {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                                 {@"length", @(27)},
@@ -818,6 +833,34 @@ TestCase(CBL_Database_PutAttachment) {
 }
 
 
+TestCase(CBL_Database_PutEncodedAttachment) {
+    RequireTestCase(CBL_Database_PutAttachment);
+    CBLDatabase* db = createDB();
+    CBL_Revision* rev1 = putDocWithAttachment(db, nil, @"This is the body of attach1", YES);
+    CAssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                                {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                                                {@"length", @(27)},
+                                                                {@"encoded_length", @(45)},
+                                                                {@"encoding", @"gzip"},
+                                                                {@"stub", $true},
+                                                                {@"revpos", @1})}));
+
+    // Examine the attachment store:
+    CAssertEq(db.attachmentStore.count, 1u);
+
+    // Get the revision:
+    CBL_Revision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
+    NSDictionary* attachmentDict = gotRev1[@"_attachments"];
+    CAssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                         {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                                         {@"length", @(27)},
+                                                         {@"encoded_length", @(45)},
+                                                         {@"encoding", @"gzip"},
+                                                         {@"stub", $true},
+                                                         {@"revpos", @1})}));
+}
+
+
 // Test that updating an attachment via a PUT correctly updates its revpos.
 TestCase(CBL_Database_AttachmentRevPos) {
     RequireTestCase(CBL_Database_PutAttachment);
@@ -865,7 +908,7 @@ TestCase(CBL_Database_GarbageCollectAttachments) {
     NSMutableArray* revs = $marray();
     for (int i=0; i<100; i++) {
         [revs addObject: putDocWithAttachment(db, $sprintf(@"doc-%d", i),
-                                              $sprintf(@"Attachment #%d", i))];
+                                              $sprintf(@"Attachment #%d", i), NO)];
     }
     for (int i=0; i<40; i++) {
         CBLStatus status;
@@ -1165,6 +1208,7 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_ReplicatorSequences);
     RequireTestCase(CBL_Database_EmptyDoc);
     RequireTestCase(CBL_Database_PutAttachment);
+    RequireTestCase(CBL_Database_PutEncodedAttachment);
     RequireTestCase(CBL_Database_GarbageCollectAttachments);
 //    RequireTestCase(CBL_Database_EncodedAttachment);
     RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
