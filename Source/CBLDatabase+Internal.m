@@ -408,14 +408,7 @@ NSArray* CBL_RunloopModes;
         dbVersion = 10;
     }
 
-    if (dbVersion < 11) {
-        // Version 11: Add another index
-        NSString* sql = @"CREATE INDEX revs_cur_deleted ON revs(current,deleted); \
-                          PRAGMA user_version = 11";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 11;
-    }
+    // (Version 11 used to create the index revs_cur_deleted, which is obsoleted in version 16)
 
     if (dbVersion < 12) {
         // Version 12: Because of a bug fix that changes JSON collation, invalidate view indexes
@@ -452,6 +445,18 @@ NSArray* CBL_RunloopModes;
         if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 15;
+    }
+
+    if (dbVersion < 16) {
+        // Version 16: Fix the very suboptimal index revs_cur_deleted.
+        // The new revs_current is an optimal index for finding the winning revision of a doc.
+        NSString* sql = @"DROP INDEX IF EXISTS revs_current; \
+                          DROP INDEX IF EXISTS revs_cur_deleted; \
+                          CREATE INDEX revs_current ON revs(doc_id, current desc, deleted, revid desc);\
+                          PRAGMA user_version = 16";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 16;
     }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
