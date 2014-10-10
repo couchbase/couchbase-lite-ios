@@ -49,12 +49,24 @@
 }
 
 
+static int collateRevIDs(void *context,
+                         int len1, const void * chars1,
+                         int len2, const void * chars2)
+{
+    abort();
+}
+
+
 - (CBLStatus) import {
     // Open source (SQLite) database:
     int err = sqlite3_open_v2(_path.fileSystemRepresentation, &_sqlite,
                               SQLITE_OPEN_READONLY, NULL);
     if (err)
         return sqliteErrToStatus(err);
+
+    sqlite3_create_collation(_sqlite, "REVID", SQLITE_UTF8,
+                             NULL, collateRevIDs);
+
 
     // Open destination database:
     NSError* error;
