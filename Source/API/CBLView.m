@@ -265,7 +265,7 @@ public:
 //        _index->indexType = _indexType;  // In case it was changed while index was closed
 //    if (_indexType == kCBLFullTextIndex)
 //        _index->textTokenizer = [[CBTextTokenizer alloc] init];
-    LogTo(View, @"%@: Opened index %p", self, _index);
+    LogTo(View, @"%@: Opened index %p (type %d)", self, _index, _index->indexType());
     return _index;
 }
 

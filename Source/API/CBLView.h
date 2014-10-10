@@ -11,7 +11,7 @@
 
 
 typedef enum {
-    kCBLMapReduceIndex, /**< Regular map/reduce index with JSON keys. */
+    kCBLMapReduceIndex = 1, /**< Regular map/reduce index with JSON keys. */
     kCBLFullTextIndex,  /**< Keys must be strings and will be indexed by the words they contain. */
     kCBLGeoIndex        /**< Geo-query index; not supported yet. */
 } CBLViewIndexType;
