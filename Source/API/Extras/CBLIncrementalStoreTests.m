@@ -39,14 +39,14 @@ NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *context, N
 @property (nonatomic, retain) NSNumber * number;
 @property (nonatomic, retain) NSDecimalNumber * decimalNumber;
 @property (nonatomic, retain) NSNumber * doubleNumber;
-@property (nonatomic, retain) NSSet *subentries;
+@property (nonatomic, retain) NSSet *subEntries;
 @property (nonatomic, retain) NSSet *files;
 @end
 @interface Entry (CoreDataGeneratedAccessors)
-- (void)addSubentriesObject:(Subentry *)value;
-- (void)removeSubentriesObject:(Subentry *)value;
-- (void)addSubentries:(NSSet *)values;
-- (void)removeSubentries:(NSSet *)values;
+- (void)addSubEntriesObject:(Subentry *)value;
+- (void)removeSubEntriesObject:(Subentry *)value;
+- (void)addSubEntries:(NSSet *)values;
+- (void)removeSubEntries:(NSSet *)values;
 
 - (void)addFilesObject:(File *)value;
 - (void)removeFilesObject:(File *)value;
@@ -187,7 +187,7 @@ TestCase(CBLIncrementalStoreCBLIntegration)
                                                        inManagedObjectContext:context];
     subentry.number = @123;
     subentry.text = @"abc";
-    [entry addSubentriesObject:subentry];
+    [entry addSubEntriesObject:subentry];
     
     File *file = [NSEntityDescription insertNewObjectForEntityForName:@"File"
                                                inManagedObjectContext:context];
@@ -287,7 +287,7 @@ TestCase(CBLIncrementalStoreCreateAndUpdate)
     
     subentry.text = @"Subentry abc";
     
-    [entry addSubentriesObject:subentry];
+    [entry addSubEntriesObject:subentry];
     
     success = [context save:&error];
     Assert(success, @"Could not save context after update 2: %@", error);
@@ -304,9 +304,9 @@ TestCase(CBLIncrementalStoreCreateAndUpdate)
     
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert(entry, @"Entry could not be loaded: %@", error);
-    AssertEq(entry.subentries.count, (unsigned int)1);
-    AssertEqual([entry.subentries valueForKeyPath:@"text"], [NSSet setWithObject:@"Subentry abc"]);
-    AssertEqual([entry.subentries valueForKeyPath:@"number"], [NSSet setWithObject:@123]);
+    AssertEq(entry.subEntries.count, (unsigned int)1);
+    AssertEqual([entry.subEntries valueForKeyPath:@"text"], [NSSet setWithObject:@"Subentry abc"]);
+    AssertEqual([entry.subEntries valueForKeyPath:@"number"], [NSSet setWithObject:@123]);
     
     Assert([entry.decimalNumber isKindOfClass:[NSDecimalNumber class]], @"decimalNumber must be with type NSDecimalNumber");
 
@@ -760,7 +760,7 @@ NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [subentry setManagedObjectClassName:@"Subentry"];
     
     NSRelationshipDescription *entryFiles = CBLISRelationshipDescription(@"files", YES, YES, NSCascadeDeleteRule, file);
-    NSRelationshipDescription *entrySubentries = CBLISRelationshipDescription(@"subentries", YES, YES, NSCascadeDeleteRule, subentry);
+    NSRelationshipDescription *entrySubentries = CBLISRelationshipDescription(@"subEntries", YES, YES, NSCascadeDeleteRule, subentry);
     NSRelationshipDescription *fileEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
     NSRelationshipDescription *subentryEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
     
@@ -799,7 +799,7 @@ NSManagedObjectModel *CBLISTestCoreDataModel(void)
 }
 
 @implementation Entry
-@dynamic check, created_at, text, text2, number, decimalNumber, doubleNumber, subentries, files;
+@dynamic check, created_at, text, text2, number, decimalNumber, doubleNumber, subEntries, files;
 @end
 
 @implementation Subentry
