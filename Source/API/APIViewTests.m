@@ -457,7 +457,7 @@ TestCase(API_LiveQuery_UpdateInterval) {
     [query stop];
 
     Log(@"LiveQuery notified observers %d times", observer.changeCount);
-    CAssert(observer.changeCount >= 7 && observer.changeCount <= 8);
+    CAssert(observer.changeCount >= 7 && observer.changeCount <= 9);
 }
 
 
