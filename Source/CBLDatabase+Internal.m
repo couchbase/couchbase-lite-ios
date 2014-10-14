@@ -58,9 +58,34 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 @implementation CBLDatabase (Internal)
 
 
+static void FDBLogCallback(forestdb::logLevel level, const char *message) {
+    switch (level) {
+        case forestdb::kDebug:
+            LogTo(CBLDatabaseVerbose, @"ForestDB: %s", message);
+            break;
+        case forestdb::kInfo:
+            LogTo(CBLDatabase, @"ForestDB: %s", message);
+            break;
+        case forestdb::kWarning:
+            Warn(@"%s", message);
+        case forestdb::kError:
+            Warn(@"ForestDB error: %s", message);
+        default:
+            break;
+    }
+}
+
+
 + (void) initialize {
-    if (self == [CBLDatabase class])
+    if (self == [CBLDatabase class]) {
         [self setAutoCompact: YES];
+
+        forestdb::LogCallback = FDBLogCallback;
+        if (WillLogTo(CBLDatabaseVerbose))
+            forestdb::LogLevel = kDebug;
+        else if (WillLogTo(CBLDatabase))
+            forestdb::LogLevel = kInfo;
+    }
 }
 
 
