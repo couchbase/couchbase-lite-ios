@@ -182,7 +182,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     // http://developer.apple.com/library/ios/#technotes/tn2287/
     // Disable automatic cert-chain checking, because that's the only way to allow self-signed
     // certs. We will check the cert later in -checkSSLCert.
-    return $dict( {(id)kCFStreamSSLLevel, @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"},
+    return $dict( {(id)kCFStreamSSLLevel, (id)kCFStreamSocketSecurityLevelTLSv1},
                   {(id)kCFStreamSSLValidatesCertificateChain, @NO} );
 }
 
