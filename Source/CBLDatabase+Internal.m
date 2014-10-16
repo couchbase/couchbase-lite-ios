@@ -496,40 +496,39 @@ NSArray* CBL_RunloopModes;
 }
 
 - (void) _close {
-    if (!_isOpen)
-        return;
+    if (_isOpen) {
+        LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
 
-    LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
+        // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
+        // be any, because the public -close: method saves changes first.)
+        for (CBLModel* model in _unsavedModelsMutable.copy)
+            model.needsSave = false;
+        _unsavedModelsMutable = nil;
 
-    // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
-    // be any, because the public -close: method saves changes first.)
-    for (CBLModel* model in _unsavedModelsMutable.copy)
-        model.needsSave = false;
-    _unsavedModelsMutable = nil;
+        [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
+                                                            object: self];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseChangesNotification
+                                                      object: nil];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseWillBeDeletedNotification
+                                                      object: nil];
+        for (CBLView* view in _views.allValues)
+            [view databaseClosing];
+        
+        _views = nil;
+        for (CBL_Replicator* repl in _activeReplicators.copy)
+            [repl databaseClosing];
+        
+        _activeReplicators = nil;
+        
+        [_fmdb close]; // this returns BOOL, but its implementation never returns NO
+        _isOpen = NO;
 
-    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
-                                                        object: self];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: CBL_DatabaseChangesNotification
-                                                  object: nil];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: CBL_DatabaseWillBeDeletedNotification
-                                                  object: nil];
-    for (CBLView* view in _views.allValues)
-        [view databaseClosing];
-    
-    _views = nil;
-    for (CBL_Replicator* repl in _activeReplicators.copy)
-        [repl databaseClosing];
-    
-    _activeReplicators = nil;
-    
-    [_fmdb close]; // this returns BOOL, but its implementation never returns NO
-    _isOpen = NO;
-
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [self _clearDocumentCache];
-    _modelFactory = nil;
+        [[NSNotificationCenter defaultCenter] removeObserver: self];
+        [self _clearDocumentCache];
+        _modelFactory = nil;
+    }
     [_manager _forgetDatabase: self];
 }
 
