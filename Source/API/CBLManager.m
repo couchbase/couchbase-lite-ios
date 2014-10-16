@@ -419,6 +419,7 @@ static CBLManager* sInstance;
         if (![db deleteDatabase: outError])
             return nil;
     } else {
+        AssertEq([_shared countForOpenedDatabase: name], 0u);
         if (![CBLDatabase deleteDatabaseFilesAtPath: [self pathForDatabaseNamed: name]
                                               error: outError])
             return nil;

@@ -44,6 +44,7 @@ static CBLDatabase* createEmptyDB(void) {
 
 __unused
 static CBLDatabase* reopenTestDB(CBLDatabase* db) {
+    CAssert(db != nil);
     [db _close];
     [[CBLManager sharedInstance] _forgetDatabase: db];
     NSError* error;
