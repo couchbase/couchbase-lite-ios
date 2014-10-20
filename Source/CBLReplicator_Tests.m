@@ -528,6 +528,58 @@ TestCase(CBL_Puller_FromCouchApp) {
 }
 
 
+TestCase(CBL_Puller_DatabaseValidation) {
+    RequireTestCase(CBL_Pusher);
+
+    NSURL* remote = RemoteTestDBURL(kScratchDBName);
+    if (!remote) {
+        Warn(@"Skipping test: no remote URL");
+        return;
+    }
+    
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBLPuller_DBValidation_Test"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    [db setValidationNamed:@"OnlyDoc1" asBlock:^(CBLRevision *newRevision, id<CBLValidationContext> context) {
+        if (![newRevision.document.documentID isEqualToString:@"doc1"]) {
+            [context reject];
+        }
+    }];
+
+    // Start a named document pull replication.
+    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
+                                                         push: NO continuous: NO];
+    repl.authorizer = authorizer();
+    [repl start];
+
+    // Let the replicator run.
+    CAssert(repl.running);
+    Log(@"Waiting for replicator to finish...");
+    while (repl.running || repl.savingCheckpoint) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+    }
+    CAssert(!repl.running);
+    CAssert(!repl.savingCheckpoint);
+    CAssertNil(repl.error);
+    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+    id lastSeq = repl.lastSequence;
+    CAssertEqual(lastSeq, @2);
+
+    Log(@"GOT DOCS: %@", [db getAllDocs:nil]);
+
+    CAssertEq(db.documentCount, 1u);
+    CAssertEq(db.lastSequenceNumber, 2);
+
+    CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
+    CAssert(doc);
+    CAssert([doc.revID hasPrefix: @"2-"]);
+    CAssertEqual(doc[@"foo"], @1);
+}
+
+
 @interface CBLManager (Seekrit)
 - (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
                             toDatabase: (CBLDatabase**)outDatabase   // may be NULL
@@ -639,6 +691,7 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Puller_Continuous_PermanentError);
     RequireTestCase(CBL_Puller_AuthFailure);
     RequireTestCase(CBL_Puller_FromCouchApp);
+    RequireTestCase(CBL_Puller_DatabaseValidation);
     RequireTestCase(CBLPuller_DocIDs);
     RequireTestCase(ParseReplicatorProperties);
 }
