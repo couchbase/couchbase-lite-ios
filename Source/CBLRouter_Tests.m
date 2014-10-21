@@ -127,11 +127,11 @@ TestCase(CBL_Router_Server) {
     Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[]);
     Send(server, @"GET", @"/non-existent", kCBLStatusNotFound, nil);
     Send(server, @"GET", @"/BadName", kCBLStatusBadID, nil);
-    Send(server, @"PUT", @"/", kCBLStatusNotFound, nil);
-    NSDictionary* response = Send(server, @"POST", @"/", kCBLStatusNotFound, nil);
+    Send(server, @"PUT", @"/", kCBLStatusMethodNotAllowed, nil);
+    NSDictionary* response = Send(server, @"POST", @"/", kCBLStatusMethodNotAllowed, nil);
     
-    CAssertEqual(response[@"status"], @(404));
-    CAssertEqual(response[@"error"], @"not_found");
+    CAssertEqual(response[@"status"], @(405));
+    CAssertEqual(response[@"error"], @"method_not_allowed");
     
     NSDictionary* session = Send(server, @"GET", @"/_session", kCBLStatusOK, nil);
     CAssert(session[@"ok"]);
@@ -358,6 +358,32 @@ TestCase(CBL_Router_Views) {
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
                                 $dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
                {@"total_rows", @4}));
+}
+
+
+TestCase(CBL_Router_NoMappedSelectors) {
+    CBLManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+
+    NSDictionary* response = nil;
+
+    response = Send(server, @"GET", @"/", kCBLStatusOK, nil);
+
+    response = Send(server, @"POST", @"/", kCBLStatusMethodNotAllowed, nil);
+    CAssertEqual(response[@"status"], @(405));
+    CAssertEqual(response[@"error"], @"method_not_allowed");
+
+    response = Send(server, @"PUT", @"/", kCBLStatusMethodNotAllowed, nil);
+    CAssertEqual(response[@"status"], @(405));
+    CAssertEqual(response[@"error"], @"method_not_allowed");
+
+    response = Send(server, @"POST", @"/db/doc1", kCBLStatusMethodNotAllowed, nil);
+    CAssertEqual(response[@"status"], @(405));
+    CAssertEqual(response[@"error"], @"method_not_allowed");
+
+    response = Send(server, @"GET", @"/db/_session", kCBLStatusNotFound, nil);
+    CAssertEqual(response[@"status"], @(404));
+    CAssertEqual(response[@"error"], @"not_found");
 }
 
 
