@@ -19,6 +19,7 @@ typedef enum {
     kCBLStatusUnauthorized   = 401,
     kCBLStatusForbidden      = 403,
     kCBLStatusNotFound       = 404,
+    kCBLStatusMethodNotAllowed = 405,
     kCBLStatusNotAcceptable  = 406,
     kCBLStatusConflict       = 409,
     kCBLStatusDuplicate      = 412,      // Formally known as "Precondition Failed"
