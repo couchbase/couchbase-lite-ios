@@ -16,6 +16,7 @@
 extern "C" {
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
+#import "CBLSpecialKey.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLCollateJSON.h"
@@ -25,6 +26,7 @@ extern "C" {
 }
 #import <CBForest/CBForest.hh>
 #import <CBForest/MapReduceDispatchIndexer.hh>
+#import <CBForest/Tokenizer.hh>
 using namespace forestdb;
 #import "CBLForestBridge.h"
 
@@ -112,25 +114,59 @@ class MapReduceBridge : public MapFn {
 public:
     CBLMapBlock mapBlock;
     NSString* viewName;
+    CBLViewIndexType indexType;
 
     virtual void operator() (const Mappable& mappable, EmitFn& emitFn) {
         NSDictionary* doc = ((CocoaMappable&)mappable).body;
         if (!doc)
             return;
         CBLMapEmitBlock emit = ^(id key, id value) {
-            LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
-            if (key) {
-                Collatable collKey, collValue;
-                collKey << key;
-                if (value == doc)
-                    collValue.addSpecial(); // placeholder for doc
-                else if (value)
-                    collValue << value;
-                emitFn(collKey, collValue);
+            if (indexType == kCBLFullTextIndex) {
+                Assert([key isKindOfClass: [NSString class]]);
+                LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, toJSONStr(value));
+                emitTextTokens(key, value, doc, emitFn);
+            } else if ([key isKindOfClass: [CBLSpecialKey class]]) {
+                CBLSpecialKey *specialKey = key;
+                LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, toJSONStr(value));
+                NSString* text = specialKey.text;
+                if (text) {
+                    emitTextTokens(text, value, doc, emitFn);
+                } else {
+                    //CBLGeoRect rect = specialKey.rect;
+                    Warn(@"Geo-querying is temporarily out of order");
+                }
+            } else if (key) {
+                LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
+                callEmit(key, value, doc, emitFn);
             }
         };
-        mapBlock(doc, emit);
+        mapBlock(doc, emit);  // Call the apps' map block!
     }
+
+private:
+    void emitTextTokens(NSString* text, id value, NSDictionary* doc, EmitFn& emitFn) {
+        if (!_tokenizer)
+            _tokenizer = new Tokenizer("en", true);
+        for (TokenIterator i(*_tokenizer, nsstring_slice(text), true); i; ++i) {
+            NSString* token = [[NSString alloc] initWithBytes: i.token().data()
+                                                       length: i.token().length()
+                                                     encoding: NSUTF8StringEncoding];
+            value = @[@(i.wordOffset()), @(i.wordLength())];
+            callEmit(token, value, doc, emitFn);
+        }
+    }
+
+    void callEmit(id key, id value, NSDictionary* doc, EmitFn& emitFn) {
+        Collatable collKey, collValue;
+        collKey << key;
+        if (value == doc)
+            collValue.addSpecial(); // placeholder for doc
+        else if (value)
+            collValue << value;
+        emitFn(collKey, collValue);
+    }
+
+    Tokenizer* _tokenizer;
 };
 
 
@@ -448,6 +484,7 @@ static id<CBLViewCompiler> sCompiler;
 - (void) setupIndex {
     _mapReduceBridge.mapBlock = self.mapBlock;
     _mapReduceBridge.viewName = _name;
+    _mapReduceBridge.indexType = _indexType;
     self.index->setup(_indexType, &_mapReduceBridge, self.mapVersion.UTF8String);
 }
 

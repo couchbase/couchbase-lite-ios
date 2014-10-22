@@ -37,9 +37,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 
 @implementation CBLFullTextQueryRow
 {
-    UInt64 _fullTextID;
-    __weak NSString* _fullText;
-    NSArray* _matchOffsets;
+    NSMutableArray* _matchOffsets;
     NSString* _snippet;
 }
 
@@ -47,29 +45,24 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
-                    fullTextID: (UInt64)fullTextID
-                  matchOffsets: (NSString*)matchOffsets
-                         value: (id)value
 {
-    self = [super initWithDocID: docID sequence: sequence key: $null value: value docProperties: nil];
+    self = [super initWithDocID: docID sequence: sequence key: $null value: nil docProperties: nil];
     if (self) {
-        _fullTextID = fullTextID;
-        // Parse the offsets as a space-delimited list of numbers, into an NSArray.
-        // (See http://sqlite.org/fts3.html#section_4_1 )
-        _matchOffsets = [[matchOffsets componentsSeparatedByString: @" "] my_map:^id(NSString* str) {
-            return @([str integerValue]);
-        }];
+        _matchOffsets = [[NSMutableArray alloc] initWithCapacity: 4];
     }
     return self;
 }
 
+- (void) addTerm: (NSUInteger)term atRange: (NSRange)range {
+    [_matchOffsets addObject: @"?"]; //FIX
+    [_matchOffsets addObject: @(term)];
+    [_matchOffsets addObject: @(range.location)];
+    [_matchOffsets addObject: @(range.length)];
+}
+
 - (NSString*) fullText {
-    NSString* fullText = _fullText;
-    if (!fullText) {
-        fullText = [self.database _indexedTextWithID: _fullTextID];
-        _fullText = fullText;
-    }
-    return fullText;
+    Warn(@"CBLFullTextQueryRow.fullText property not supported");   //TODO
+    return nil;
 }
 
 - (NSUInteger) matchCount {
@@ -103,7 +96,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 }
 
 
-// Override to add FTS result info
+// Overridden to add FTS result info
 - (NSDictionary*) asJSONDictionary {
     NSMutableDictionary* dict = [[super asJSONDictionary] mutableCopy];
     if (!dict[@"error"]) {

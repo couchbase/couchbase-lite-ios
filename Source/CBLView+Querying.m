@@ -22,6 +22,7 @@ extern "C" {
 #import "ExceptionUtils.h"
 }
 #import <CBForest/CBForest.hh>
+#import <CBForest/Tokenizer.hh>
 
 
 using namespace forestdb;
@@ -315,9 +316,6 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (CBLQueryIteratorBlock) _fullTextQueryWithOptions: (CBLQueryOptions*)options
                                              status: (CBLStatus*)outStatus
 {
-#if 1
-    return nil; //FIX
-#else
     MapReduceIndex* index = self.index;
     if (!index) {
         *outStatus = kCBLStatusNotFound;
@@ -326,25 +324,43 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         *outStatus = kCBLStatusBadRequest;
         return nil;
     }
-    NSError* error;
-    NSEnumerator* e = [index enumerateDocsContainingWords: options.fullTextQuery
-                                                      all: YES
-                                                    error: &error];
-    if (!e) {
-        *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
-        return nil;
+
+    // Tokenize the query string:
+    LogTo(QueryVerbose, @"Full-text search for:");
+    std::vector<std::string> queryTokens;
+    std::vector<Collatable> collatableKeys;
+    Tokenizer tokenizer("en", true);
+    for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
+        collatableKeys.push_back(Collatable(i.token()));
+        queryTokens.push_back(i.token());
     }
-    return ^CBLQueryRow*() {
-        NSString* docID = e.nextObject;
-        if (!docID)
-            return nil;
-        return [[CBLQueryRow alloc] initWithDocID: docID
-                                         sequence: 0
-                                              key: options.fullTextQuery
-                                            value: nil
-                                    docProperties: nil];
+
+    LogTo(QueryVerbose, @"Iterating index...");
+    NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
+    *outStatus = kCBLStatusOK;
+    DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
+    for (IndexEnumerator e = IndexEnumerator(*index, collatableKeys, forestOpts); e; ++e) {
+        NSString* docID = (NSString*)e.docID();
+        CBLFullTextQueryRow* row = docRows[docID];
+        if (!row) {
+            row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
+                                                    sequence: e.sequence()];
+            docRows[docID] = row;
+        }
+        std::string token = (std::string)e.key().readString();
+        auto term = std::find(queryTokens.begin(), queryTokens.end(), token) - queryTokens.begin();
+        NSRange range;
+        CollatableReader reader(e.value());
+        reader.beginArray();
+        range.location = (NSUInteger)reader.readDouble();
+        range.length = (NSUInteger)reader.readDouble();
+        [row addTerm: term atRange: range];
     };
-#endif
+
+    NSEnumerator* rowEnum = docRows.objectEnumerator;
+    return ^CBLQueryRow*() {
+        return rowEnum.nextObject;
+    };
 }
 
 

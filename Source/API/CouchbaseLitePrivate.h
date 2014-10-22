@@ -137,10 +137,8 @@
 
 @interface CBLFullTextQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID
-                      sequence: (SequenceNumber)sequence
-                    fullTextID: (UInt64)fullTextID
-                  matchOffsets: (NSString*)matchOffsets
-                         value: (id)value;
+                      sequence: (SequenceNumber)sequence;
+- (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
 @property (nonatomic) NSString* snippet;
 @end
 

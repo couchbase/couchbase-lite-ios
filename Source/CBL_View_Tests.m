@@ -1051,7 +1051,6 @@ TestCase(CBL_View_LinkedDocs) {
 }
 
 
-#if 0 //FIX: REIMPLEMENT FULL-TEXT
 TestCase(CBL_View_FullTextQuery) {
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
@@ -1082,7 +1081,7 @@ TestCase(CBL_View_FullTextQuery) {
     }) reduceBlock: NULL version: @"1"];
     CAssertEq([otherView updateIndex], kCBLStatusOK);
 
-    // Try a query with the public API:
+    // Query the full-text index:
     CBLQuery* query = [view createQuery];
     query.fullTextQuery = @"dog name";
     NSArray* rows = [[query run: NULL] allObjects];
@@ -1108,11 +1107,11 @@ TestCase(CBL_View_FullTextQuery) {
                                          {@"value", @"33333"}));
     CAssertEqual(rowsToDicts(rowIter), expectedRows);
 
-    // Try a query with the public API:
-    CBLQuery* query = [view createQuery];
+    // Try a query with snippets:
+    query = [view createQuery];
     query.fullTextQuery = @"(was NOT barking) OR dog";
     query.fullTextSnippets = YES;
-    NSArray* rows = [[query run: NULL] allObjects];
+    rows = [[query run: NULL] allObjects];
     CAssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
@@ -1143,7 +1142,7 @@ TestCase(CBL_View_FullTextQuery) {
 
     // Now delete a document:
     CBL_Revision* rev = docs[3];
-    CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
+    CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
     CAssertEq(status, kCBLStatusOK);
 
@@ -1161,8 +1160,6 @@ TestCase(CBL_View_FullTextQuery) {
                                 {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rowIter), expectedRows);
 }
-#endif
-
 
 
 TestCase(CBL_View_TotalDocs) {
