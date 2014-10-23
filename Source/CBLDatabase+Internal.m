@@ -31,6 +31,7 @@
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "MYBlockUtils.h"
+#import "MYReadWriteLock.h"
 #import "ExceptionUtils.h"
 
 
@@ -130,7 +131,7 @@ NSArray* CBL_RunloopModes;
         _readOnly = readOnly;
         _fmdb = [[CBL_FMDatabase alloc] initWithPath: _path];
         _fmdb.dispatchQueue = manager.dispatchQueue;
-        _fmdb.databaseLock = [_manager.shared lockForDatabaseNamed: name];
+        _fmdb.databaseLock = [self.shared lockForDatabaseNamed: _name];
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
