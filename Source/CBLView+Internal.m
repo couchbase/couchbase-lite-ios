@@ -275,6 +275,9 @@ static inline NSData* toJSONData( UU id object ) {
         for (CBLView* view in inputViews) {
             CBLMapBlock mapBlock = view.mapBlock;
             if (mapBlock == NULL) {
+                Assert(view != forView,
+                       @"Cannot index view %@: no map block registered",
+                       view.name);
                 LogTo(ViewVerbose, @"    %@ has no map block; skipping it", view.name);
                 continue;
             }
