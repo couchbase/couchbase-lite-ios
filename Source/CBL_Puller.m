@@ -129,7 +129,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (BOOL) canUseWebSockets {
-    id option = _options[@"websocket"];
+    id option = _options[kCBLReplicatorOption_UseWebSocket];
     if (option)
         return [option boolValue];
     return [self serverIsSyncGatewayVersion: @"0.91"]
