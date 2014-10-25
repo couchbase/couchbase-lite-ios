@@ -24,6 +24,11 @@ extern NSString* const CBL_DatabaseWillCloseNotification;
 extern NSString* const CBL_DatabaseWillBeDeletedNotification;
 
 
+/** A private runloop mode for waiting on. */
+extern NSString* const CBL_PrivateRunloopMode;
+
+/** Runloop modes that events/blocks will be scheduled to run in. Includes CBL_PrivateRunloopMode. */
+extern NSArray* CBL_RunloopModes;
 
 
 /** Options for what metadata to include in document bodies */

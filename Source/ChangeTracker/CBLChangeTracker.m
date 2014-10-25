@@ -55,6 +55,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
 @synthesize docIDs = _docIDs, pollInterval=_pollInterval, usePOST=_usePOST;
+@synthesize paused=_paused;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -182,7 +183,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     // http://developer.apple.com/library/ios/#technotes/tn2287/
     // Disable automatic cert-chain checking, because that's the only way to allow self-signed
     // certs. We will check the cert later in -checkSSLCert.
-    return $dict( {(id)kCFStreamSSLLevel, @"kCFStreamSocketSecurityLevelTLSv1_0SSLv3"},
+    return $dict( {(id)kCFStreamSSLLevel, (id)kCFStreamSocketSecurityLevelTLSv1},
                   {(id)kCFStreamSSLValidatesCertificateChain, @NO} );
 }
 

@@ -21,6 +21,11 @@
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
 
+
+// Default value of CBLLiveQuery.updateInterval
+#define kDefaultLiveQueryUpdateInterval 0.5
+
+
 static NSString* keyPathForQueryRow(NSString* keyPath);
 
 
@@ -54,9 +59,9 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     CBLAllDocsMode _allDocsMode;
     NSArray *_keys;
     NSUInteger _prefixMatchLevel, _groupLevel;
-    SInt64 _lastSequence;       // The db's lastSequence the last time -rows was called
-    
-    @protected CBLView* _view;              // nil for _all_docs query
+
+    @protected
+    CBLView* _view;              // nil for _all_docs query
 }
 
 
@@ -196,9 +201,10 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 
 - (CBLQueryEnumerator*) run: (NSError**)outError {
     CBLStatus status;
+    SInt64 lastSequence;
     NSArray* rows = [_database queryViewNamed: _view.name
                                       options: self.queryOptions
-                                 lastSequence: &_lastSequence
+                                 lastSequence: &lastSequence
                                        status: &status];
     if (!rows) {
         if (outError)
@@ -207,7 +213,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     }
     CBLQueryEnumerator* result = [[CBLQueryEnumerator alloc] initWithDatabase: _database
                                                                          rows: rows
-                                                               sequenceNumber: _lastSequence];
+                                                               sequenceNumber: lastSequence];
     if (_sortDescriptors)
         [result sortUsingDescriptors: _sortDescriptors];
     return result;
@@ -227,7 +233,8 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
                                      options: options
                                 lastSequence: &lastSequence
                                       status: &status];
-        [_database.manager doAsync:^{
+        LogTo(QueryVerbose, @"%@: Async query done, messaging main thread...", self);
+        [_database doAsync:^{
             // Back on original thread, call the onComplete block:
             LogTo(Query, @"%@: ...async query finished (%u rows)", self, (unsigned)rows.count);
             NSError* error = nil;
@@ -254,12 +261,23 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 
 @implementation CBLLiveQuery
 {
-    BOOL _observing, _willUpdate;
+    BOOL _observing, _willUpdate, _updateAgain;
+    SequenceNumber _lastSequence, _isUpdatingAtSequence;
+    CFAbsoluteTime _lastUpdatedAt;
     CBLQueryEnumerator* _rows;
 }
 
 
-@synthesize lastError=_lastError;
+@synthesize lastError=_lastError, updateInterval=_updateInterval;
+
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database view: (CBLView*)view {
+    self = [super initWithDatabase: database view: view];
+    if (self) {
+        _updateInterval = kDefaultLiveQueryUpdateInterval;
+    }
+    return self;
+}
 
 
 - (void) dealloc {
@@ -271,14 +289,14 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     if (!_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self 
-                                                 selector: @selector(databaseChanged)
+                                                 selector: @selector(databaseChanged:)
                                                      name: kCBLDatabaseChangeNotification 
                                                    object: self.database];
         
         //view can be null for _all_docs query
         if (_view) {
             [[NSNotificationCenter defaultCenter] addObserver: self
-                                                     selector: @selector(databaseChanged)
+                                                     selector: @selector(viewChanged:)
                                                          name: kCBLViewChangeNotification
                                                        object: _view];
         }
@@ -290,22 +308,9 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 - (void) stop {
     if (_observing) {
         _observing = NO;
-        [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                        name: kCBLDatabaseChangeNotification
-                                                      object: self.database];
-        
-        //view can be null for _all_docs query
-        if (_view) {
-            [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                            name: kCBLViewChangeNotification
-                                                          object: _view];
-        }
+        [[NSNotificationCenter defaultCenter] removeObserver: self];
     }
-    if (_willUpdate) {
-        _willUpdate = NO;
-        [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(update)
-                                                   object: nil];
-    }
+    _willUpdate = NO; // cancels the delayed update started by -databaseChanged
 }
 
 
@@ -340,41 +345,78 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 }
 
 
-- (void) databaseChanged {
-    if (!_willUpdate) {
-        _willUpdate = YES;
-        [self.database doAsync: ^{
-            [self update];
-        }];
+- (void) databaseChanged: (NSNotification*)n {
+    if (_willUpdate)
+        return;
+
+    // Use double the update interval if this is a remote change (coming from a pull replication):
+    NSTimeInterval updateInterval = _updateInterval * 2;
+    for (CBLDatabaseChange* change in n.userInfo[@"changes"]) {
+        if (change.source == nil) {
+            updateInterval /= 2;
+            break;
+        }
     }
+
+    // Schedule an update, respecting the updateInterval:
+    _willUpdate = YES;
+    NSTimeInterval updateDelay = (_lastUpdatedAt + updateInterval) - CFAbsoluteTimeGetCurrent();
+    updateDelay = MAX(0, MIN(_updateInterval, updateDelay));
+    LogTo(Query, @"%@: Will update after %g sec...", self, updateDelay);
+    [self.database doAsyncAfterDelay: updateDelay block: ^{
+        if (_willUpdate)
+            [self update];
+    }];
+}
+
+
+- (void) viewChanged: (NSNotification*)n {
+    _lastSequence = 0;  // force an update even though the db's lastSequence hasn't changed
+    [self update];
 }
 
 
 - (void) update {
+    SequenceNumber lastSequence = self.database.lastSequenceNumber;
+    if (_rows && _lastSequence >= lastSequence) {
+        return; // db hasn't changed since last query
+    }
+    if (_isUpdatingAtSequence > 0) {
+        // Update already in progress; only schedule another one if db has changed since
+        if (_isUpdatingAtSequence < lastSequence) {
+            _isUpdatingAtSequence = lastSequence;
+            _updateAgain = YES;
+        }
+        return;
+    }
+
     _willUpdate = NO;
+    _updateAgain = NO;
+    _isUpdatingAtSequence = lastSequence;
+    _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
     [self runAsync: ^(CBLQueryEnumerator *rows, NSError* error) {
+        // Async update finished:
+        _isUpdatingAtSequence = 0;
         _lastError = error;
         if (error) {
             Warn(@"%@: Error updating rows: %@", self, error);
-        } else if(![rows isEqual: _rows]) {
-            LogTo(Query, @"%@: ...Rows changed! (now %lu)", self, (unsigned long)rows.count);
-            self.rows = rows;   // Triggers KVO notification
+        } else {
+            _lastSequence = (SequenceNumber)rows.sequenceNumber;
+            if (![rows isEqual: _rows]) {
+                LogTo(Query, @"%@: ...Rows changed! (now %lu)", self, (unsigned long)rows.count);
+                self.rows = rows;   // Triggers KVO notification
+            }
         }
+        if (_updateAgain)
+            [self update];
     }];
 }
 
 
 - (BOOL) waitForRows {
     [self start];
-    while (!_rows && !_lastError) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate distantFuture]]) {
-            Warn(@"CBLQuery waitForRows: Runloop stopped");
-            break;
-        }
-    }
-
-    return _rows != nil;
+    return [self.database waitFor: ^BOOL { return _rows != nil || _lastError != nil; }]
+        && _rows != nil;
 }
 
 

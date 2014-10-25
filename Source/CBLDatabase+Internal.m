@@ -31,12 +31,16 @@
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "MYBlockUtils.h"
+#import "MYReadWriteLock.h"
 #import "ExceptionUtils.h"
 
 
 NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
+
+NSString* const CBL_PrivateRunloopMode = @"CouchbaseLitePrivate";
+NSArray* CBL_RunloopModes;
 
 #define kDocIDCacheSize 1000
 
@@ -49,17 +53,18 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 @implementation CBLDatabase (Internal)
 
 
-#if 0
 + (void) initialize {
     if (self == [CBLDatabase class]) {
+        CBL_RunloopModes = @[NSRunLoopCommonModes, CBL_PrivateRunloopMode];
+#if 0
         Log(@"SQLite version %s", sqlite3_libversion());
         int i = 0;
         const char* opt;
         while (NULL != (opt = sqlite3_compileoption_get(i++)))
                Log(@"SQLite has option '%s'", opt);
+#endif
     }
 }
-#endif
 
 
 - (CBL_FMDatabase*) fmdb {
@@ -126,7 +131,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         _readOnly = readOnly;
         _fmdb = [[CBL_FMDatabase alloc] initWithPath: _path];
         _fmdb.dispatchQueue = manager.dispatchQueue;
-        _fmdb.databaseLock = [_manager.shared lockForDatabaseNamed: name];
+        _fmdb.databaseLock = [self.shared lockForDatabaseNamed: _name];
 #if DEBUG
         _fmdb.logsErrors = YES;
 #else
@@ -140,11 +145,6 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (!_dispatchQueue)
             _thread = [NSThread currentThread];
         _startTime = [NSDate date];
-
-        if (0) {
-            // Appease the static analyzer by using these category ivars in this source file:
-            _pendingAttachmentsByDigest = nil;
-        }
     }
     return self;
 }
@@ -409,14 +409,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         dbVersion = 10;
     }
 
-    if (dbVersion < 11) {
-        // Version 11: Add another index
-        NSString* sql = @"CREATE INDEX revs_cur_deleted ON revs(current,deleted); \
-                          PRAGMA user_version = 11";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 11;
-    }
+    // (Version 11 used to create the index revs_cur_deleted, which is obsoleted in version 16)
 
     if (dbVersion < 12) {
         // Version 12: Because of a bug fix that changes JSON collation, invalidate view indexes
@@ -453,6 +446,18 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 15;
+    }
+
+    if (dbVersion < 16) {
+        // Version 16: Fix the very suboptimal index revs_cur_deleted.
+        // The new revs_current is an optimal index for finding the winning revision of a doc.
+        NSString* sql = @"DROP INDEX IF EXISTS revs_current; \
+                          DROP INDEX IF EXISTS revs_cur_deleted; \
+                          CREATE INDEX revs_current ON revs(doc_id, current desc, deleted, revid desc);\
+                          PRAGMA user_version = 16";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 16;
     }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
@@ -492,40 +497,39 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 }
 
 - (void) _close {
-    if (!_isOpen)
-        return;
+    if (_isOpen) {
+        LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
 
-    LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
+        // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
+        // be any, because the public -close: method saves changes first.)
+        for (CBLModel* model in _unsavedModelsMutable.copy)
+            model.needsSave = false;
+        _unsavedModelsMutable = nil;
 
-    // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
-    // be any, because the public -close: method saves changes first.)
-    for (CBLModel* model in _unsavedModelsMutable.copy)
-        model.needsSave = false;
-    _unsavedModelsMutable = nil;
+        [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
+                                                            object: self];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseChangesNotification
+                                                      object: nil];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseWillBeDeletedNotification
+                                                      object: nil];
+        for (CBLView* view in _views.allValues)
+            [view databaseClosing];
+        
+        _views = nil;
+        for (CBL_Replicator* repl in _activeReplicators.copy)
+            [repl databaseClosing];
+        
+        _activeReplicators = nil;
+        
+        [_fmdb close]; // this returns BOOL, but its implementation never returns NO
+        _isOpen = NO;
 
-    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
-                                                        object: self];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: CBL_DatabaseChangesNotification
-                                                  object: nil];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: CBL_DatabaseWillBeDeletedNotification
-                                                  object: nil];
-    for (CBLView* view in _views.allValues)
-        [view databaseClosing];
-    
-    _views = nil;
-    for (CBL_Replicator* repl in _activeReplicators.copy)
-        [repl databaseClosing];
-    
-    _activeReplicators = nil;
-    
-    [_fmdb close]; // this returns BOOL, but its implementation never returns NO
-    _isOpen = NO;
-
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [self _clearDocumentCache];
-    _modelFactory = nil;
+        [[NSNotificationCenter defaultCenter] removeObserver: self];
+        [self _clearDocumentCache];
+        _modelFactory = nil;
+    }
     [_manager _forgetDatabase: self];
 }
 

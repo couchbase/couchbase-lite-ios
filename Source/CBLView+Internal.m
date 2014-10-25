@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLView+Internal.h"
+#import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLCollateJSON.h"
@@ -87,6 +88,16 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 #if DEBUG
 - (void) setCollation: (CBLViewCollation)collation {
     _collation = collation;
+}
+
+// for unit tests only
+- (void) forgetMapBlock {
+    CBLDatabase* db = _weakDB;
+    CBL_Shared* shared = db.shared;
+    [shared setValue: nil
+             forType: @"map" name: _name inDatabaseNamed: db.name];
+    [shared setValue: nil
+             forType: @"reduce" name: _name inDatabaseNamed: db.name];
 }
 #endif
 
@@ -242,8 +253,8 @@ static inline NSData* toJSONData( UU id object ) {
 @implementation CBLDatabase (ViewIndexing)
 
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
-- (CBLStatus) updateIndexes: (NSArray*)views forView: (CBLView*)forView {
-    LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), forView.name);
+- (CBLStatus) updateIndexes: (NSArray*)inputViews forView: (CBLView*)forView {
+    LogTo(View, @"Checking indexes of (%@) for %@", viewNames(inputViews), forView.name);
 
     CBLStatus status = [self _inTransaction: ^CBLStatus {
         // If the view the update is for doesn't need any update, don't do anything:
@@ -255,22 +266,28 @@ static inline NSData* toJSONData( UU id object ) {
         // Check whether we need to update at all,
         // and remove obsolete emitted results from the 'maps' table:
         SequenceNumber minLastSequence = dbMaxSequence;
-        SequenceNumber viewLastSequence[views.count];
+        SequenceNumber viewLastSequence[inputViews.count];
         unsigned deleted = 0;
         int i = 0;
         NSMutableDictionary* viewTotalRows = [[NSMutableDictionary alloc] init];
-        NSMutableArray* mapBlocks = [[NSMutableArray alloc] initWithCapacity: views.count];
-        for (CBLView* view in views) {
+        NSMutableArray* views = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
+        NSMutableArray* mapBlocks = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
+        for (CBLView* view in inputViews) {
             CBLMapBlock mapBlock = view.mapBlock;
-            Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", view.name);
+            if (mapBlock == NULL) {
+                Assert(view != forView,
+                       @"Cannot index view %@: no map block registered",
+                       view.name);
+                LogTo(ViewVerbose, @"    %@ has no map block; skipping it", view.name);
+                continue;
+            }
+
+            [views addObject: view];
             [mapBlocks addObject: mapBlock];
 
             int viewID = view.viewID;
-            if (viewID <= 0) {
-                Warn(@"%@ does not exist in the database!", view);
-                return kCBLStatusNotFound;
-            }
-            
+            Assert(viewID > 0, @"%@ not found in database", view);
+
             NSUInteger totalRows = view.totalRows;
             viewTotalRows[@(viewID)] = @(totalRows);
 
@@ -451,7 +468,7 @@ static inline NSData* toJSONData( UU id object ) {
     }];
     
     if (status >= kCBLStatusBadRequest)
-        Warn(@"CouchbaseLite: Failed to rebuild views (%@): %d", viewNames(views), status);
+        Warn(@"CouchbaseLite: Failed to rebuild views (%@): %d", viewNames(inputViews), status);
     return status;
 }
 

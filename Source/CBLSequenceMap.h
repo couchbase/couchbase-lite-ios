@@ -28,6 +28,7 @@
 - (void) removeSequence: (SequenceNumber)sequence;
 
 @property (readonly) BOOL isEmpty;
+@property (readonly) NSUInteger count;
 
 /** Returns the maximum consecutively-removed sequence number.
     This is one less than the minimum remaining sequence number. */

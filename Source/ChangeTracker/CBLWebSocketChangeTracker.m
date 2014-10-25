@@ -13,6 +13,9 @@
 #import "MYBlockUtils.h"
 
 
+#define kMaxPendingMessages 2
+
+
 @interface CBLWebSocketChangeTracker () <WebSocketDelegate>
 @end
 
@@ -23,6 +26,7 @@
     WebSocketClient* _ws;
     BOOL _running;
     CFAbsoluteTime _startTime;
+    int32_t _pendingMessageCount;   // How many incoming WebSocket messages haven't been parsed yet?
 }
 
 
@@ -71,6 +75,7 @@
     _running = YES;
     _caughtUp = NO;
     _startTime = CFAbsoluteTimeGetCurrent();
+    _pendingMessageCount = 0;
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, url);
     return YES;
 }
@@ -85,6 +90,16 @@
         [_ws disconnect];
     }
     [super stop];
+}
+
+- (void) setPaused:(BOOL)paused {
+    [super setPaused: paused];
+
+    // Pause the WebSocket if the client paused _or_ there are too many incoming messages:
+    paused = paused || _pendingMessageCount >= kMaxPendingMessages;
+    if (paused != _ws.readPaused)
+        LogTo(ChangeTracker, @"%@: %@ WebSocket", self, (paused ? @"PAUSE" : @"RESUME"));
+    _ws.readPaused = paused;
 }
 
 
@@ -109,7 +124,7 @@
 }
 
 /** Called when a WebSocket receives a textual message from its peer. */
-- (void) webSocket: (WebSocket *)ws
+- (BOOL) webSocket: (WebSocket *)ws
          didReceiveMessage: (NSString *)msg
 {
     MYOnThread(_thread, ^{
@@ -132,7 +147,11 @@
                 [_ws closeWithCode: kWebSocketCloseDataError reason: @"Unparseable change entry"];
             }
         }
+        OSAtomicDecrement32Barrier(&_pendingMessageCount);
+        [self setPaused: self.paused]; // this will resume the WebSocket unless self.paused
     });
+    // Tell the WebSocket to pause its reader if too many messages are waiting to be processed:
+    return (OSAtomicIncrement32Barrier(&_pendingMessageCount) < kMaxPendingMessages);
 }
 
 /** Called after the WebSocket closes, either intentionally or due to an error. */
