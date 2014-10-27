@@ -11,6 +11,7 @@
 #import "WebSocketClient.h"
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
+#import <libkern/OSAtomic.h>
 
 
 #define kMaxPendingMessages 2
