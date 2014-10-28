@@ -45,25 +45,6 @@ id CBLParseQueryValue(NSData* collatable) {
 #pragma mark - QUERYING:
 
 
-static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQueryOptions* options) {
-    NSMutableArray* rows = $marray();
-    while(true) {
-        CBLQueryRow* row = iter();
-        if (row)
-            [rows addObject: row];
-        else
-            break;
-    }
-    while (!options->inclusiveEnd && rows.count > 0 && $equal([rows[0] key], options.endKey))
-        [rows removeObjectAtIndex: 0];
-    
-    NSEnumerator* e = [rows reverseObjectEnumerator];
-    return ^CBLQueryRow*() {
-        return e.nextObject;
-    };
-}
-
-
 /** Main internal call to query a view. */
 - (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
                                      status: (CBLStatus*)outStatus
@@ -77,8 +58,6 @@ static CBLQueryIteratorBlock reverseIterator(CBLQueryIteratorBlock iter, CBLQuer
         iterator = [self _reducedQueryWithOptions: options status: outStatus];
     else
         iterator = [self _regularQueryWithOptions: options status: outStatus];
-    if (options->descending)
-        iterator = reverseIterator(iterator, options);
     LogTo(Query, @"Query %@: Returning iterator", _name);
     return iterator;
 }
@@ -374,7 +353,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     forestOpts.skip = options->skip;
     if (options->limit > 0)
         forestOpts.limit = options->limit;
-//    forestOpts.descending = options->descending;
+    forestOpts.descending = options->descending;
     forestOpts.inclusiveStart = options->inclusiveStart;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (options.keys) {
@@ -385,19 +364,12 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                collatableKeys,
                                forestOpts);
     } else {
-        id startKey = options.startKey, endKey = options.endKey;
-        NSString *startKeyDocID = options.startKeyDocID, *endKeyDocID = options.endKeyDocID;
-        if (options->descending) {
-            std::swap(startKey, endKey);
-            std::swap(startKeyDocID, endKeyDocID);
-        }
-        endKey = keyForPrefixMatch(endKey, options->prefixMatchLevel);
-
+        id endKey = keyForPrefixMatch(options.endKey, options->prefixMatchLevel);
         return IndexEnumerator(*index,
-                               Collatable(startKey),
-                               nsstring_slice(startKeyDocID),
+                               Collatable(options.startKey),
+                               nsstring_slice(options.startKeyDocID),
                                Collatable(endKey),
-                               nsstring_slice(endKeyDocID),
+                               nsstring_slice(options.endKeyDocID),
                                forestOpts);
     }
 }
