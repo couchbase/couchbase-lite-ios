@@ -24,12 +24,15 @@
 
 
 // Configuration for the sqlite3-unicodesn library:
-#define SQLITE_ENABLE_FTS4 
+#define SQLITE_ENABLE_FTS4
 #define SQLITE_ENABLE_FTS4_UNICODE61
 
 
 // Rename the MYUtilities classes to avoid collisions:
 #define MYDynamicObject             CBL_MYDynamicObject
+
+#define MYClassFromType             CBL_MYClassFromType
+#define MYGetPropertyInfo           CBL_MYGetPropertyInfo
 
 // Rename the GCDAsyncSocket classes to avoid collisions:
 #define GCDAsyncSocket              CBL_GCDAsyncSocket
@@ -37,6 +40,14 @@
 #define GCDAsyncReadPacket          CBL_GCDAsyncReadPacket
 #define GCDAsyncWritePacket         CBL_GCDAsyncWritePacket
 #define GCDAsyncSpecialPacket       CBL_GCDAsyncSpecialPacket
+
+#define GCDAsyncSocketErrorDomain   CBL_GCDAsyncSocketErrorDomain
+#define GCDAsyncSocketException     CBL_GCDAsyncSocketException
+#define GCDAsyncSocketQueueName     CBL_GCDAsyncSocketQueueName
+#define GCDAsyncSocketThreadName    CBL_GCDAsyncSocketThreadName
+#define GCDAsyncSocketSSLCipherSuites       CBL_GCDAsyncSocketSSLCipherSuites
+#define GCDAsyncSocketSSLProtocolVersionMax CBL_GCDAsyncSocketSSLProtocolVersionMax
+#define GCDAsyncSocketSSLProtocolVersionMin CBL_GCDAsyncSocketSSLProtocolVersionMin
 
 // Rename the CocoaLumberjack classes to avoid collisions:
 #define DDLog                       CBL_DDLog
@@ -67,3 +78,5 @@
 #define WebSocket                   CBL_WebSocket
 #define WebSocketClient             CBL_WebSocketClient
 #define WebSocketHTTPLogic          CBL_WebSocketHTTPLogic
+
+#define WebSocketErrorDomain        CBL_WebSocketErrorDomain
