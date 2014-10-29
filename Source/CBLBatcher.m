@@ -76,6 +76,9 @@
         // There are more objects left, so schedule them Real Soon:
         [self scheduleWithDelay: 0.0];
     }
+
+    __unused id retainSelf = self;  // Prevent _processor block from deallocating me (#508)
+
     _processor(toProcess);
     _lastProcessedTime = CFAbsoluteTimeGetCurrent();
 }
@@ -115,6 +118,8 @@
 
 
 - (void) flushAll {
+    __unused id retainSelf = self;  // Prevent _processor block from deallocating me (#508)
+
     while (_inbox.count > 0) {
         [self unschedule];
         NSArray* toProcess = _inbox;
