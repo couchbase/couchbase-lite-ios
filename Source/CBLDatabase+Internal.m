@@ -1233,6 +1233,7 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
 - (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
                                isDeleted: (BOOL*)outIsDeleted
                               isConflict: (BOOL*)outIsConflict // optional
+                                  status: (CBLStatus*)outStatus
 {
     Assert(docNumericID > 0);
     CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs"
@@ -1240,6 +1241,11 @@ static NSDictionary* makeRevisionHistoryDict(NSArray* history) {
                                            " ORDER BY deleted asc, revid desc LIMIT 2",
                                           @(docNumericID)];
     NSString* revID = nil;
+    if (!r) {
+        *outStatus = self.lastDbStatus;
+        return nil;
+    }
+    *outStatus = kCBLStatusOK;
     if ([r next]) {
         revID = [r stringForColumnIndex: 0];
         *outIsDeleted = [r boolForColumnIndex: 1];
@@ -1561,9 +1567,12 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 SInt64 docNumericID = [self getDocNumericID: docID];
                 if (docNumericID > 0) {
                     BOOL deleted;
+                    CBLStatus status;
                     NSString* revID = [self winningRevIDOfDocNumericID: docNumericID
                                                              isDeleted: &deleted
-                                                            isConflict: NULL];
+                                                            isConflict: NULL
+                                                                status: &status];
+                    AssertEq(status, kCBLStatusOK);
                     if (revID)
                         value = $dict({@"rev", revID}, {@"deleted", $true});
                 }

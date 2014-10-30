@@ -183,7 +183,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
                                             options: (CBLContentOptions)options;
 - (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
                                isDeleted: (BOOL*)outIsDeleted
-                              isConflict: (BOOL*)outIsConflict;
+                              isConflict: (BOOL*)outIsConflict
+                                  status: (CBLStatus*)outStatus;
 
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
 

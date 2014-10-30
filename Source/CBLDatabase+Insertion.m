@@ -200,9 +200,9 @@
 
 
 - (CBL_Revision*) winnerWithDocID: (SInt64)docNumericID
-                      oldWinner: (NSString*)oldWinningRevID
-                     oldDeleted: (BOOL)oldWinnerWasDeletion
-                         newRev: (CBL_Revision*)newRev
+                        oldWinner: (NSString*)oldWinningRevID
+                       oldDeleted: (BOOL)oldWinnerWasDeletion
+                           newRev: (CBL_Revision*)newRev
 {
     if (!oldWinningRevID)
         return newRev;
@@ -216,9 +216,12 @@
     } else {
         // Doc was alive. How does this deletion affect the winning rev ID?
         BOOL deleted;
+        CBLStatus status;
         NSString* winningRevID = [self winningRevIDOfDocNumericID: docNumericID
                                                         isDeleted: &deleted
-                                                       isConflict: NULL];
+                                                       isConflict: NULL
+                                                           status: &status];
+        AssertEq(status, kCBLStatusOK);
         if (!$equal(winningRevID, oldWinningRevID)) {
             if ($equal(winningRevID, newRev.revID))
                 return newRev;
@@ -296,9 +299,13 @@
         if (docNumericID > 0) {
             // Look up which rev is the winner, before this insertion
             //OPT: This rev ID could be cached in the 'docs' row
+            CBLStatus status;
             oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
                                                      isDeleted: &oldWinnerWasDeletion
-                                                    isConflict: &wasConflicted];
+                                                    isConflict: &wasConflicted
+                                                        status: &status];
+            if (CBLStatusIsError(status))
+                return status;
         }
 
         SequenceNumber parentSequence = 0;
@@ -424,7 +431,7 @@
                 return self.lastDbError;
             LogTo(CBLDatabase, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
             newRev.body = nil;
-            return kCBLStatusOK;
+            // don't return yet; update the parent's current just to be sure (see #509)
         }
         
         // Make replaced rev non-current:
@@ -433,6 +440,9 @@
                                        @(parentSequence)])
                 return self.lastDbError;
         }
+
+        if (!sequence)
+            return kCBLStatusOK;  // duplicate rev; see above
 
         // Store any attachments:
         status = [self processAttachments: attachments
@@ -518,9 +528,13 @@
         // Look up which rev is the winner, before this insertion
         //OPT: This rev ID could be cached in the 'docs' row
         BOOL oldWinnerWasDeletion;
+        CBLStatus tempStatus;
         NSString* oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
                                                            isDeleted: &oldWinnerWasDeletion
-                                                          isConflict: &inConflict];
+                                                          isConflict: &inConflict
+                                                              status: &tempStatus];
+        if (CBLStatusIsError(tempStatus))
+            return tempStatus;
 
         // Walk through the remote history in chronological order, matching each revision ID to
         // a local revision. When the list diverges, start creating blank local revisions to fill
