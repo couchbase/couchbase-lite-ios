@@ -8,7 +8,8 @@
 
 #import "MYDynamicObject.h"
 #import "CBLDocument.h"
-@class CBLAttachment, CBLDatabase, CBLDocument;
+
+@class CBLAttachment, CBLDatabase;
 
 
 NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properties in subclasses
