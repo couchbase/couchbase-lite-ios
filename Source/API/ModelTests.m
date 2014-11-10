@@ -515,6 +515,55 @@ TestCase(API_SaveModelWithNaNProperty) {
 }
 
 
+TestCase(API_SaveMutableSubmodels) {
+    NSError *error;
+    CBLDatabase* db = createEmptyDB();
+    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+
+    CBL_TTestMutableSubModel* submodel = [[CBL_TTestMutableSubModel alloc]
+                                          initWithFirstName: @"Phasin"
+                                          lastName: @"Suri"];
+    model.subModels = @[submodel];
+    NSMutableDictionary* props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Phasin", @"last": @"Suri"}]}));
+    CAssertEq(model.needsSave, YES);
+    [model save: &error];
+    CAssertNil(error);
+
+    props = [model.propertiesToSave mutableCopy];
+    CBL_TTestMutableSubModel* subModel = [model.subModels firstObject];
+    subModel.firstName = @"Pasin";
+    props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Pasin", @"last": @"Suri"}]}));
+    CAssertEq(model.needsSave, YES);
+    [model save: &error];
+    CAssertNil(error);
+
+    NSMutableArray* newSubModels = [NSMutableArray arrayWithArray: model.subModels];
+    model.subModels = newSubModels;
+    props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Pasin", @"last": @"Suri"}]}));
+    CAssertEq(model.needsSave, NO);
+
+    newSubModels = [NSMutableArray arrayWithArray: model.subModels];
+    subModel = [model.subModels firstObject];
+    subModel.lastName = @"Suriyen";
+    model.subModels = newSubModels;
+    props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Pasin", @"last": @"Suriyen"}]}));
+    CAssertEq(model.needsSave, YES);
+    [model save: &error];
+    CAssertNil(error);
+}
+
+
 TestCase(API_ModelAttachments) {
     // Attempting to reproduce https://github.com/couchbase/couchbase-lite-ios/issues/63
     CBLDatabase* db = createEmptyDB();
@@ -581,6 +630,7 @@ TestCase(API_Model) {
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_SaveMutatedSubModel);
     RequireTestCase(API_SaveModelWithNaNProperty);
+    RequireTestCase(API_SaveMutableSubmodels);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);
 }

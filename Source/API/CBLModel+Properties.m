@@ -259,6 +259,16 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             impBlock = ^(CBLModel* receiver, NSArray* value) {
                 [receiver setArray: value forProperty: property ofModelClass: itemClass];
             };
+        } else if ([itemClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
+            impBlock = ^(CBLModel* receiver, NSArray* value) {
+                __weak CBLModel* weakSelf = receiver;
+                for (id<CBLJSONEncoding> subValue in value) {
+                    [subValue setOnMutate:^{
+                        [weakSelf markPropertyNeedsSave: property];
+                    }];
+                }
+                [receiver setValue: value ofProperty: property];
+            };
         } else {
             // Scalar-valued array:
             impBlock = ^(CBLModel* receiver, NSArray* value) {
