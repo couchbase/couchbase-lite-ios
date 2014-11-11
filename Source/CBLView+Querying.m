@@ -307,7 +307,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     // Tokenize the query string:
     LogTo(QueryVerbose, @"Full-text search for:");
     std::vector<std::string> queryTokens;
-    std::vector<Collatable> collatableKeys;
+    std::vector<KeyRange> collatableKeys;
     Tokenizer tokenizer("en", true);
     for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
         collatableKeys.push_back(Collatable(i.token()));
@@ -357,7 +357,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     forestOpts.inclusiveStart = options->inclusiveStart;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     if (options.keys) {
-        std::vector<Collatable> collatableKeys;
+        std::vector<KeyRange> collatableKeys;
         for (id key in options.keys)
             collatableKeys.push_back(Collatable(key));
         return IndexEnumerator(*index,
