@@ -313,7 +313,7 @@ static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
 
 
 - (SequenceNumber) _lastSequence {
-    return _forest->getInfo().last_seqnum;
+    return _forest->lastSequence();
 }
 
 
