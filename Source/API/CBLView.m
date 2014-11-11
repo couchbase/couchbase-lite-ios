@@ -25,6 +25,7 @@ extern "C" {
 #import "ExceptionUtils.h"
 }
 #import <CBForest/CBForest.hh>
+#import <CBForest/GeoIndex.hh>
 #import <CBForest/MapReduceDispatchIndexer.hh>
 #import <CBForest/Tokenizer.hh>
 using namespace forestdb;
@@ -132,8 +133,7 @@ public:
                 if (text) {
                     emitTextTokens(text, value, doc, emitFn);
                 } else {
-                    //CBLGeoRect rect = specialKey.rect;
-                    Warn(@"Geo-querying is temporarily out of order");
+                    emitGeo(specialKey.rect, value, doc, emitFn);
                 }
             } else if (key) {
                 LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
@@ -154,6 +154,18 @@ private:
             value = @[@(i.wordOffset()), @(i.wordLength())];
             callEmit(token, value, doc, emitFn);
         }
+    }
+
+    void emitGeo(CBLGeoRect rect, id value, NSDictionary* doc, EmitFn& emitFn) {
+        geohash::area area(geohash::coord(rect.min.x, rect.min.y),
+                           geohash::coord(rect.max.x, rect.max.y));
+        Collatable collKey, collValue;
+        collKey << area.mid(); // HACK: Can only emit points for now
+        if (value == doc)
+            collValue.addSpecial(); // placeholder for doc
+        else if (value)
+            collValue << value;
+        emitFn(collKey, collValue);
     }
 
     void callEmit(id key, id value, NSDictionary* doc, EmitFn& emitFn) {

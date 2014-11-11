@@ -1195,7 +1195,7 @@
 		27DA4343159125B500F9E7B5 /* CBLManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLManager.h; sourceTree = "<group>"; };
 		27DA4344159125B500F9E7B5 /* CBLManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLManager.m; sourceTree = "<group>"; };
 		27DA434815912AFD00F9E7B5 /* CBLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLView.h; sourceTree = "<group>"; };
-		27DA434915912AFD00F9E7B5 /* CBLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLView.m; sourceTree = "<group>"; };
+		27DA434915912AFD00F9E7B5 /* CBLView.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = CBLView.m; sourceTree = "<group>"; };
 		27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CouchbaseLitePrivate.h; sourceTree = "<group>"; };
 		27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYDynamicObject.h; sourceTree = "<group>"; };
 		27DA434F15918C0200F9E7B5 /* MYDynamicObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYDynamicObject.m; sourceTree = "<group>"; };
