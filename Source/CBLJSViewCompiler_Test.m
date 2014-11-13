@@ -83,8 +83,28 @@ TestCase(JSFilterFunctionWithParams) {
 }
 
 
+TestCase(JSLogFunction) {
+    // This case will test that calling log() function doesn't cause any errors running the JS map
+    // map function.
+    CBLJSViewCompiler* c = [[CBLJSViewCompiler alloc] init];
+    CBLMapBlock mapBlock = [c compileMapFunction: @"function(doc){log('Log Message'); emit(doc.key, doc);}"
+                                        language: @"javascript"];
+    CAssert(mapBlock);
+
+    NSDictionary* doc = @{@"_id": @"doc1", @"_rev": @"1-xyzzy", @"key": @"value"};
+    NSMutableArray* emitted = [NSMutableArray array];
+    CBLMapEmitBlock emit = ^(id key, id value) {
+        [emitted addObject: value];
+    };
+    mapBlock(doc, emit);
+    CAssertEqual(emitted, (@[doc]));
+}
+
+
 TestCase(CBLJSCompiler) {
     RequireTestCase(JSMapFunction);
     RequireTestCase(JSReduceFunction);
     RequireTestCase(JSFilterFunction);
+    RequireTestCase(JSFilterFunctionWithParams);
+    RequireTestCase(JSLogFunction);
 }
