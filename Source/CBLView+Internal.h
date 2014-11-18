@@ -115,6 +115,8 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
     @return  200 if updated, 304 if already up-to-date, else an error code */
 - (CBLStatus) updateIndexAlone;
 
+- (CBLStatus) updateIndexes: (NSArray*)views;
+
 @end
 
 
@@ -129,10 +131,4 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 - (NSArray*) dump;
 #endif
 
-@end
-
-
-@interface CBLDatabase (ViewIndexing)
-- (CBLStatus) updateIndexes: (NSArray*)views
-                    forView: (CBLView*)forView;
 @end

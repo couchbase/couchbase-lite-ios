@@ -130,6 +130,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     CBLDatabase *db = [[self alloc] initWithDir: dir name: nil manager: nil readOnly: NO];
     if (![db open: nil])
         return nil;
+    AssertEq(db.lastSequenceNumber, 0); // Sanity check that this is not a pre-existing db
     return db;
 }
 #endif
@@ -303,8 +304,8 @@ static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
     opts.contentOptions = Database::kMetaOnly;
 
     NSUInteger count = 0;
-    for (DocEnumerator e(_forest, forestdb::slice::null, forestdb::slice::null, opts); e; ++e) {
-        VersionedDocument vdoc(_forest, *e);
+    for (DocEnumerator e(*_forest, forestdb::slice::null, forestdb::slice::null, opts); e; ++e) {
+        VersionedDocument vdoc(*_forest, *e);
         if (!vdoc.isDeleted())
             ++count;
     }
@@ -336,8 +337,8 @@ static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
 
 
 - (BOOL) _compact: (NSError**)outError {
-    CBLStatus status = [self _inTransaction:^CBLStatus() {
-        _forestTransaction->compact();
+    CBLStatus status = [self _try: ^{
+        _forest->compact();
         return kCBLStatusOK;
     }];
     if (CBLStatusIsError(status)) {
@@ -367,7 +368,7 @@ static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
                              do: (CBLStatus(^)(VersionedDocument&))block
 {
     try {
-        VersionedDocument doc(_forest, docID);
+        VersionedDocument doc(*_forest, docID);
         if (!doc.exists())
             return kCBLStatusNotFound;
         return block(doc);
@@ -759,9 +760,9 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     *outStatus = [self _try:^CBLStatus{
-        for (DocEnumerator e(_forest, lastSequence+1, UINT64_MAX, forestOpts); e; ++e) {
+        for (DocEnumerator e(*_forest, lastSequence+1, UINT64_MAX, forestOpts); e; ++e) {
             @autoreleasepool {
-                VersionedDocument doc(_forest, *e);
+                VersionedDocument doc(*_forest, *e);
                 NSArray* revIDs;
                 if (options->includeConflicts)
                     revIDs = [CBLForestBridge getCurrentRevisionIDs: doc];
@@ -922,9 +923,9 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
         std::vector<std::string> docIDs;
         for (NSString* docID in options.keys)
             docIDs.push_back(docID.UTF8String);
-        e = DocEnumerator(_forest, docIDs, forestOpts);
+        e = DocEnumerator(*_forest, docIDs, forestOpts);
     } else {
-        e = DocEnumerator(_forest,
+        e = DocEnumerator(*_forest,
                           nsstring_slice(options.startKey),
                           nsstring_slice(options.endKey),
                           forestOpts);
@@ -943,7 +944,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                 continue;
             }
 
-            VersionedDocument doc(_forest, *e);
+            VersionedDocument doc(*_forest, *e);
             NSString* docID = (NSString*)doc.docID();
             if (!doc.exists()) {
                 e.next();

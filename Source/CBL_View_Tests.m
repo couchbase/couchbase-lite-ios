@@ -286,7 +286,7 @@ TestCase(CBL_View_IndexMultiple) {
     CAssertEq(status, kCBLStatusNotModified); // should not update v3
 
     NSArray* views = @[v1, v2, v3];
-    status = [db updateIndexes: views forView: v3];
+    status = [v3 updateIndexes: views];
     CAssert(status < 300);
 
     for (CBLView* view in views)

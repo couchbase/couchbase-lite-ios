@@ -502,50 +502,51 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         config.wal_flush_before_commit = true;
         config.seqtree_opt = false;
         Database attachmentIndex(path.fileSystemRepresentation, FDB_OPEN_FLAG_CREATE, config);
-        Transaction attachmentTransaction(&attachmentIndex);
+        {
+            Transaction attachmentTransaction(&attachmentIndex);
 
-        DocEnumerator::Options options = DocEnumerator::Options::kDefault;
-        options.contentOptions = Database::kMetaOnly;
+            DocEnumerator::Options options = DocEnumerator::Options::kDefault;
+            options.contentOptions = Database::kMetaOnly;
 
-        LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
-        for (DocEnumerator e(_forest, slice::null, slice::null, options); e; ++e) {
-            VersionedDocument doc(_forest, *e);
-            if (!doc.hasAttachments() || (doc.isDeleted() && !doc.isConflicted()))
-                continue;
-            doc.read();
-            // Since db is assumed to have just been compacted, we know that non-current revisions
-            // won't have any bodies. So only scan the current revs.
-            auto revNodes = doc.currentRevisions();
-            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
-                if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
-                    alloc_slice body = (*revNode)->readBody();
-                    if (body.size > 0) {
-                        NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
-                                                                options: 0 error: NULL];
-                        NSDictionary* attachments = rev.cbl_attachments;
-                        for (NSString* key in attachments) {
-                            NSDictionary* att = attachments[key];
-                            NSString* digest = att[@"digest"];
-                            CBLBlobKey blobKey;
-                            if (digestToBlobKey(digest, &blobKey)) {
-                                attachmentTransaction.set(forestdb::slice(&blobKey, sizeof(blobKey)),
-                                                          forestdb::slice("x", 1));
+            LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
+            for (DocEnumerator e(*_forest, slice::null, slice::null, options); e; ++e) {
+                VersionedDocument doc(*_forest, *e);
+                if (!doc.hasAttachments() || (doc.isDeleted() && !doc.isConflicted()))
+                    continue;
+                doc.read();
+                // Since db is assumed to have just been compacted, we know that non-current revisions
+                // won't have any bodies. So only scan the current revs.
+                auto revNodes = doc.currentRevisions();
+                for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
+                    if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
+                        alloc_slice body = (*revNode)->readBody();
+                        if (body.size > 0) {
+                            NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
+                                                                    options: 0 error: NULL];
+                            NSDictionary* attachments = rev.cbl_attachments;
+                            for (NSString* key in attachments) {
+                                NSDictionary* att = attachments[key];
+                                NSString* digest = att[@"digest"];
+                                CBLBlobKey blobKey;
+                                if (digestToBlobKey(digest, &blobKey)) {
+                                    attachmentTransaction.set(forestdb::slice(&blobKey, sizeof(blobKey)),
+                                                              forestdb::slice("x", 1));
+                                }
                             }
                         }
                     }
                 }
             }
+            LogTo(CBLDatabase, @"    ...found %llu attachments", attachmentIndex.getInfo().doc_count);
+
+            Database* attachmentIndexP = &attachmentIndex; // workaround to allow block below to call it
+            NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
+                return attachmentIndexP->get(forestdb::slice(&blobKey, sizeof(blobKey))).exists();
+            }];
+
+            LogTo(CBLDatabase, @"    ... deleted %ld obsolete attachment files.", (long)deleted);
         }
-        LogTo(CBLDatabase, @"    ...found %llu attachments", attachmentIndex.getInfo().doc_count);
-
-        Database* attachmentIndexP = &attachmentIndex; // workaround to allow block below to call it
-        NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
-            return attachmentIndexP->get(forestdb::slice(&blobKey, sizeof(blobKey))).exists();
-        }];
-
-        LogTo(CBLDatabase, @"    ... deleted %ld obsolete attachment files.", (long)deleted);
-
-        attachmentTransaction.deleteDatabase();
+        attachmentIndex.deleteDatabase();
         return kCBLStatusOK;
     }];
     return !CBLStatusIsError(status);

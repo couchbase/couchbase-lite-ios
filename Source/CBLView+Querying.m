@@ -318,7 +318,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
     *outStatus = kCBLStatusOK;
     DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
-    for (IndexEnumerator e = IndexEnumerator(*index, collatableKeys, forestOpts); e; ++e) {
+    for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e; ++e) {
         NSString* docID = (NSString*)e.docID();
         CBLFullTextQueryRow* row = docRows[docID];
         if (!row) {
@@ -360,12 +360,12 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         std::vector<KeyRange> collatableKeys;
         for (id key in options.keys)
             collatableKeys.push_back(Collatable(key));
-        return IndexEnumerator(*index,
+        return IndexEnumerator(index,
                                collatableKeys,
                                forestOpts);
     } else {
         id endKey = keyForPrefixMatch(options.endKey, options->prefixMatchLevel);
-        return IndexEnumerator(*index,
+        return IndexEnumerator(index,
                                Collatable(options.startKey),
                                nsstring_slice(options.startKeyDocID),
                                Collatable(endKey),

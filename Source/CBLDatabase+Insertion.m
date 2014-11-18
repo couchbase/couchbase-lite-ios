@@ -258,7 +258,7 @@ using namespace forestdb;
         }
 
         // Parse the document revision tree:
-        VersionedDocument doc(_forest, rawDoc);
+        VersionedDocument doc(*_forest, rawDoc);
         const Revision* revNode;
 
         if (prevRevID) {
@@ -420,7 +420,7 @@ static void convertRevIDs(NSArray* revIDs,
 
     status = [self _inTransaction: ^CBLStatus {
         // First get the CBForest doc:
-        VersionedDocument doc(_forest, docID);
+        VersionedDocument doc(*_forest, docID);
 
         // Add the revision & ancestry to the doc:
         std::vector<revidBuffer> historyBuffers;
@@ -486,7 +486,7 @@ static void convertRevIDs(NSArray* revIDs,
     LogTo(CBLDatabase, @"Purging %lu docs...", (unsigned long)docsToRevs.count);
     return [self _inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
-            VersionedDocument doc(_forest, docID);
+            VersionedDocument doc(*_forest, docID);
             if (!doc.exists())
                 return kCBLStatusNotFound;
 

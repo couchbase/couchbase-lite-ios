@@ -75,18 +75,11 @@ public:
 
 NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 
-class CocoaIndexer : public MapReduceDispatchIndexer {
+class CocoaIndexer : public MapReduceIndexer {
 public:
-    static bool updateIndex(MapReduceIndex* index) {
-        std::vector<MapReduceIndex*> indexes;
-        indexes.push_back(index);
-        CocoaIndexer indexer(indexes);
-        return indexer.run();
-    }
-
-    CocoaIndexer(std::vector<MapReduceIndex*> indexes)
-    :MapReduceDispatchIndexer(indexes),
-     _db(indexes[0]->sourceDatabase())
+    CocoaIndexer(std::vector<MapReduceIndex*> indexes, Transaction &t)
+    :MapReduceIndexer(indexes, t),
+     _sourceStore(indexes[0]->sourceStore())
     { }
 
     virtual void addDocument(const Document& cppDoc) {
@@ -95,7 +88,7 @@ public:
             addMappable(mappable);
         } else {
             @autoreleasepool {
-                VersionedDocument vdoc(_db, cppDoc);
+                VersionedDocument vdoc(_sourceStore, cppDoc);
                 const Revision* node = vdoc.currentRevision();
                 NSDictionary* body = [CBLForestBridge bodyOfNode: node
                                                          options: kCBLIncludeLocalSeq];
@@ -107,7 +100,7 @@ public:
     }
 
 private:
-    Database* _db;
+    KeyStore _sourceStore;
 };
 
 
@@ -208,6 +201,7 @@ private:
 @implementation CBLView
 {
     NSString* _path;
+    Database* _indexDB;
     MapReduceIndex* _index;
     CBLViewIndexType _indexType;
     MapReduceBridge _mapReduceBridge;
@@ -291,16 +285,17 @@ private:
 
 
 - (MapReduceIndex*) openIndexWithOptions: (Database::openFlags)options {
+    Assert(!_indexDB);
     Assert(!_index);
-    MapReduceIndex::config config = MapReduceIndex::defaultConfig();
+    auto config = Database::defaultConfig();
     config.buffercache_size = kViewBufferCacheSize;
     config.wal_threshold = 8192;
     config.wal_flush_before_commit = true;
     config.seqtree_opt = YES;
     config.compaction_threshold = 50;
     try {
-        _index = new MapReduceIndex(_path.fileSystemRepresentation, options, config,
-                                    _weakDB.forestDB);
+        _indexDB = new Database(_path.fileSystemRepresentation, options, config);
+        _index = new MapReduceIndex(_indexDB, "index", *_weakDB.forestDB);
     } catch (forestdb::error x) {
         Warn(@"Unable to open index of %@: ForestDB error %d", self, x.status);
         return nil;
@@ -321,11 +316,12 @@ private:
 - (void) closeIndex {
     [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
                                                object: nil];
-    if (_index) {
-        delete _index;
-        _index = NULL;
-        LogTo(View, @"%@: Closed index db", self);
-    }
+    if (_indexDB)
+        LogTo(View, @"%@: Closing index db", self);
+    delete _indexDB;
+    _indexDB = NULL;
+    delete _index;
+    _index = NULL;
 }
 
 - (void) closeIndexSoon {
@@ -343,8 +339,8 @@ private:
 
 - (void) deleteIndex {
     if (self.index) {
-        IndexTransaction t(_index);
-        t.erase();
+        Transaction t(_indexDB);
+        _index->erase(t);
     }
 }
 
@@ -497,18 +493,53 @@ static id<CBLViewCompiler> sCompiler;
     _mapReduceBridge.mapBlock = self.mapBlock;
     _mapReduceBridge.viewName = _name;
     _mapReduceBridge.indexType = _indexType;
-    self.index->setup(_indexType, &_mapReduceBridge, self.mapVersion.UTF8String);
+    (void)self.index; // open db
+    {
+        Transaction t(_indexDB);
+        _index->setup(t, _indexType, &_mapReduceBridge, self.mapVersion.UTF8String);
+    }
 }
 
 
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
-    return [self.database updateIndexes: self.viewsInGroup forView: self];
+    return [self updateIndexes: self.viewsInGroup];
 }
 
 - (CBLStatus) updateIndexAlone {
-    return [self.database updateIndexes: @[self] forView: self];
+    return [self updateIndexes: @[self]];
 }
+
+- (CBLStatus) updateIndexes: (NSArray*)views {
+    try {
+        std::vector<MapReduceIndex*> indexes;
+        for (CBLView* view in views) {
+            [view setupIndex];
+            CBLMapBlock mapBlock = view.mapBlock;
+            Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
+            MapReduceIndex* index = view.index;
+            if (!index)
+                return kCBLStatusNotFound;
+            indexes.push_back(index);
+        }
+        (void)self.index;
+        bool updated;
+        {
+            Transaction t(_indexDB);
+            CocoaIndexer indexer(indexes, t);
+            indexer.triggerOnIndex(_index);
+            updated = indexer.run();
+        }
+        return updated ? kCBLStatusOK : kCBLStatusNotModified;
+    } catch (forestdb::error x) {
+        Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
+        return CBLStatusFromForestDBStatus(x.status);
+    } catch (...) {
+        Warn(@"Unexpected exception indexing %@", self);
+        return kCBLStatusException;
+    }
+}
+
 
 - (void) postPublicChangeNotification {
     // Post the public kCBLViewChangeNotification:
@@ -556,38 +587,4 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 
-@end
-
-
-
-
-@implementation CBLDatabase (ViewIndexing)
-
-- (CBLStatus) updateIndexes: (NSArray*)views
-                    forView: (CBLView*)forView
-{
-    try {
-        std::vector<MapReduceIndex*> indexes;
-        for (CBLView* view in views) {
-            [view setupIndex];
-            CBLMapBlock mapBlock = view.mapBlock;
-            Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
-            MapReduceIndex* index = view.index;
-            if (!index)
-                return kCBLStatusNotFound;
-            indexes.push_back(index);
-        }
-        CocoaIndexer indexer(indexes);
-        if (forView)
-            indexer.triggerOnIndex(forView.index);
-        bool updated = indexer.run();
-        return updated ? kCBLStatusOK : kCBLStatusNotModified;
-    } catch (forestdb::error x) {
-        Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
-        return CBLStatusFromForestDBStatus(x.status);
-    } catch (...) {
-        Warn(@"Unexpected exception indexing %@", self);
-        return kCBLStatusException;
-    }
-}
 @end

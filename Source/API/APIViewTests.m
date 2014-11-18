@@ -17,6 +17,7 @@
 
 
 TestCase(API_CreateView) {
+    RequireTestCase(CBLView);
     CBLDatabase* db = createEmptyDB();
 
     CBLView* view = [db viewNamed: @"vu"];
@@ -53,6 +54,7 @@ TestCase(API_CreateView) {
 
 
 TestCase(API_ViewWithLinkedDocs) {
+    RequireTestCase(CBLView);
     CBLDatabase* db = createEmptyDB();
     static const NSUInteger kNDocs = 50;
     NSMutableArray* docs = [NSMutableArray array];
@@ -574,6 +576,7 @@ TestCase(API_SharedMapBlocks) {
 
 
 TestCase(API_View) {
+    RequireTestCase(CBLView);
     RequireTestCase(API_CreateView);
     RequireTestCase(API_ViewCustomSort);
     RequireTestCase(API_ViewCustomFilter);
