@@ -34,7 +34,6 @@
 {
     self = [super init];
     if (self) {
-        [self awakeFromInitializer];
         if (document) {
             LogTo(CBLModel, @"%@ initWithDocument: %@ @%p", self.class, document, document);
             self.document = document;
@@ -43,6 +42,7 @@
             _isNew = true;
             LogTo(CBLModel, @"%@ init", self);
         }
+        [self awakeFromInitializer];
     }
     return self;
 }
