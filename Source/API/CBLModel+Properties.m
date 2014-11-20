@@ -263,9 +263,11 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             impBlock = ^(CBLModel* receiver, NSArray* value) {
                 __weak CBLModel* weakSelf = receiver;
                 for (id<CBLJSONEncoding> subValue in value) {
-                    [subValue setOnMutate:^{
-                        [weakSelf markPropertyNeedsSave: property];
-                    }];
+                    if ([subValue respondsToSelector: @selector(setOnMutate:)]) {
+                        [subValue setOnMutate:^{
+                            [weakSelf markPropertyNeedsSave: property];
+                        }];
+                    }
                 }
                 [receiver setValue: value ofProperty: property];
             };
