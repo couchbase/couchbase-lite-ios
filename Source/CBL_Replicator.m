@@ -334,21 +334,18 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
     
     _online = NO;
-    if ([NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
-        [self goOnline];    // local-to-local replication
-    } else {
-        // Start reachability checks. (This creates another ref cycle, because
-        // the block also retains a ref to self. Cycle is also broken in -stopped.)
-        _host = [[CBLReachability alloc] initWithHostName: _remote.host];
-        
-        __weak id weakSelf = self;
-        _host.onChange = ^{
-            CBL_Replicator *strongSelf = weakSelf;
-            [strongSelf reachabilityChanged:strongSelf->_host];
-        };
-        [_host start];
-        [self reachabilityChanged: _host];
-    }
+    [self goOnline];
+
+    // Start reachability checks. (This creates another ref cycle, because
+    // the block also retains a ref to self. Cycle is also broken in -stopped.)
+    _host = [[CBLReachability alloc] initWithHostName: _remote.host];
+
+    __weak id weakSelf = self;
+    _host.onChange = ^{
+        CBL_Replicator *strongSelf = weakSelf;
+        [strongSelf reachabilityChanged:strongSelf->_host];
+    };
+    [_host start];
 }
 
 
@@ -496,6 +493,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             if (!_continuous) {
                 [self stopped];
             } else if (_error) /*(_revisionsFailed > 0)*/ {
+                [self reachabilityChanged: _host];
+
                 LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
                       self, _revisionsFailed, kRetryDelay);
                 [NSObject cancelPreviousPerformRequestsWithTarget: self
