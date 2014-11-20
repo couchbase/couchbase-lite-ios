@@ -24,6 +24,9 @@
 @property (readwrite, retain) CBLDocument* document;
 @property (readwrite) bool needsSave;
 @property (readonly) NSDictionary* currentProperties;
+
+- (instancetype) initWithDocument: (CBLDocument*)document NS_DESIGNATED_INITIALIZER;
+
 - (id) getValueOfProperty: (NSString*)property ofClass: (Class)klass;
 - (void) cacheValue: (id)value ofProperty: (NSString*)property changed: (BOOL)changed;
 - (void) willSave: (NSSet*)changedProperties;   // overridable

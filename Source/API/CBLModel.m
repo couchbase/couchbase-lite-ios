@@ -29,14 +29,12 @@
 
 @dynamic type;
 
-- (instancetype) init {
-    return [self initWithDocument: nil];
-}
 
 - (instancetype) initWithDocument: (CBLDocument*)document
 {
     self = [super init];
     if (self) {
+        [self awakeFromInitializer];
         if (document) {
             LogTo(CBLModel, @"%@ initWithDocument: %@ @%p", self.class, document, document);
             self.document = document;
@@ -50,13 +48,16 @@
 }
 
 
-- (instancetype) initWithNewDocumentInDatabase: (CBLDatabase*)database {
++ (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database {
     NSParameterAssert(database);
-    self = [self initWithDocument: nil];
-    if (self) {
-        self.database = database;
+    if (self == [CBLModel class]) {
+        Warn(@"Couldn't create a model object for a new document from the base CBLModel class.");
+        return nil;
     }
-    return self;
+
+    CBLModel *model = [[self alloc] initWithDocument:nil];
+    model.database = database;
+    return model;
 }
 
 
@@ -159,6 +160,10 @@
     return @{@"_deleted": $true, @"_rev": _document.currentRevision.revisionID};
 }
 
+
+- (void) awakeFromInitializer {
+    // subclasses can override this
+}
 
 - (void) didLoadFromDocument {
     // subclasses can override this

@@ -28,14 +28,9 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
     If you call this method on a CBLModel subclass, it will always instantiate an instance of that class; e.g. [MyWidgetModel modelForDocument: doc] always creates a MyWidgetModel. */
 + (instancetype) modelForDocument: (CBLDocument*)document               __attribute__((nonnull));
 
-/** Creates a new "untitled" model with a new unsaved document.
-    The document won't be written to the database until -save is called. */
-- (instancetype) initWithNewDocumentInDatabase: (CBLDatabase*)database  __attribute__((nonnull));
-
-/** Creates a new "untitled" model object with no document or database at all yet.
-    Setting its .database property will cause it to create a CBLDocument.
-    (This method is mostly here so that NSController objects can create CBLModels.) */
-- (instancetype) init;
+/** Returns a new "untitled" CBLModel with a new unsaved document.
+ The document won't be written to the database until -save is called. */
++ (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database  __attribute__((nonnull));
 
 /** The document this item is associated with. Will be nil if it's new and unsaved. */
 @property (readonly, retain) CBLDocument* document;
@@ -142,13 +137,11 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 
 #pragma mark - PROTECTED (FOR SUBCLASSES TO OVERRIDE)
 
-/** Designated initializer. Do not call directly except from subclass initializers; to create a new instance call +modelForDocument: instead.
-    @param document  The document. Nil if this is created new (-init was called). */
-- (instancetype) initWithDocument: (CBLDocument*)document
-#ifdef NS_DESIGNATED_INITIALIZER
-NS_DESIGNATED_INITIALIZER
-#endif
-;
+
+/* Called when the model's initializer is called when the model object is created. You should override this if you need to initialize
+   any ivars or perform custom initialization when the model object is created.
+ */
+- (void)awakeFromInitializer;
 
 /** The document ID to use when creating a new document.
     Default is nil, which means to assign no ID (the server will assign one). */
