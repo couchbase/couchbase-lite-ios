@@ -205,7 +205,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
     try {
         _forest = new Database(std::string(forestPath.UTF8String), options, config);
-        _forest->setLogCallback(&fdbLogCallback, (__bridge void*)self);
     } catch (forestdb::error err) {
         if (outError)
             *outError = CBLStatusToNSError(CBLStatusFromForestDBStatus(err.status), nil);
@@ -281,8 +280,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     delete _forest;
     _forest = NULL;
 
-    [self closeLocalDocs];
-
     _isOpen = NO;
     _transactionLevel = 0;
 
@@ -290,12 +287,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     [self _clearDocumentCache];
     _modelFactory = nil;
     [_manager _forgetDatabase: self];
-}
-
-
-static void fdbLogCallback(int err_code, const char *err_msg, void *ctx_data) {
-    CBLDatabase* db = (__bridge CBLDatabase*)ctx_data;
-    Log(@"%@: forestdb error %d: %@", db, err_code, [NSString stringWithUTF8String: err_msg]);
 }
 
 
@@ -772,6 +763,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                     CBL_MutableRevision* rev = [CBLForestBridge revisionObjectFromForestDoc: doc
                                                                                       revID: revID
                                                                          options: contentOptions];
+                    Assert(rev);
                     if ([self runFilter: filter params: filterParams onRevision: rev])
                         [changes addRev: rev];
                 }

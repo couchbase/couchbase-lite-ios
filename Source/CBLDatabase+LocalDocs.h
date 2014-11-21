@@ -25,8 +25,6 @@
                              revisionID: (NSString*)revID
                                obeyMVCC: (BOOL)obeyMVCC;
 
-- (void) closeLocalDocs;
-
 - (NSString*) infoForKey: (NSString*)key;
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key;
 

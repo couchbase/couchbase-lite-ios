@@ -30,38 +30,6 @@ using namespace forestdb;
 @implementation CBLDatabase (LocalDocs)
 
 
-- (Database*) localDocs {
-    if (!_localDocs) {
-        NSString* path = [_dir stringByAppendingPathComponent: @"local.forest"];
-        Database::config config = Database::defaultConfig();
-        config.buffercache_size = 128*1024;
-        config.wal_threshold = 128;
-        config.wal_flush_before_commit = true;
-        config.seqtree_opt = false;
-        _localDocs = new Database(path.fileSystemRepresentation, FDB_OPEN_FLAG_CREATE, config);
-        LogTo(CBLDatabase, @"%@: Opened _local docs db", self);
-    }
-    [self closeLocalDocsSoon];
-    return _localDocs;
-}
-
-- (void) closeLocalDocs {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeLocalDocs)
-                                               object: nil];
-    if (_localDocs) {
-        delete _localDocs;
-        _localDocs = nil;
-        LogTo(CBLDatabase, @"%@: Closed _local docs db", self);
-    }
-}
-
-- (void) closeLocalDocsSoon {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeLocalDocs)
-                                               object: nil];
-    [self performSelector: @selector(closeLocalDocs) withObject: nil afterDelay: kCloseDelay];
-}
-
-
 static NSDictionary* getDocProperties(const Document& doc) {
     NSData* bodyData = doc.body().uncopiedNSData();
     if (!bodyData)
@@ -75,7 +43,8 @@ static NSDictionary* getDocProperties(const Document& doc) {
 {
     if (![docID hasPrefix: @"_local/"])
         return nil;
-    Document doc = self.localDocs->get((forestdb::slice)docID.UTF8String);
+    KeyStore localDocs(_forest, "_local");
+    Document doc = localDocs.get((forestdb::slice)docID.UTF8String);
     if (!doc.exists())
         return nil;
     NSString* gotRevID = (NSString*)doc.meta();
@@ -111,14 +80,15 @@ static NSDictionary* getDocProperties(const Document& doc) {
         return *outStatus < 300 ? revision : nil;
     } else {
         // PUT:
+        KeyStore localDocs(_forest, "_local");
         __block CBL_Revision* result = nil;
-        *outStatus = [self _try: ^CBLStatus {
+        *outStatus = [self _inTransaction: ^CBLStatus {
+            KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
             NSData* json = revision.asCanonicalJSON;
             if (!json)
                 return kCBLStatusBadJSON;
-            Transaction t(self.localDocs);
             forestdb::slice key(docID.UTF8String);
-            Document doc = _localDocs->get(key);
+            Document doc = localWriter.get(key);
             unsigned generation = [CBL_Revision generationFromRevID: prevRevID];
             if (obeyMVCC) {
                 if (prevRevID) {
@@ -132,7 +102,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
                 }
             }
             NSString* newRevID = $sprintf(@"%d-local", ++generation);
-            t.set(key, nsstring_slice(newRevID), forestdb::slice(json));
+            localWriter.set(key, nsstring_slice(newRevID), forestdb::slice(json));
             result = [revision mutableCopyWithDocID: docID revID: newRevID];
             return kCBLStatusCreated;
         }];
@@ -152,15 +122,16 @@ static NSDictionary* getDocProperties(const Document& doc) {
         return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
     }
 
-    return [self _try: ^CBLStatus {
-        Transaction t(self.localDocs);
-        Document doc = _localDocs->get(forestdb::slice(docID.UTF8String));
+    KeyStore localDocs(_forest, "_local");
+    return [self _inTransaction: ^CBLStatus {
+        KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
+        Document doc = localWriter.get(forestdb::slice(docID.UTF8String));
         if (!doc.exists())
             return kCBLStatusNotFound;
         else if (obeyMVCC && !$equal(revID, (NSString*)doc.meta()))
             return kCBLStatusConflict;
         else {
-            t.del(doc);
+            localWriter.del(doc);
             return kCBLStatusOK;
         }
     }];
@@ -171,9 +142,10 @@ static NSDictionary* getDocProperties(const Document& doc) {
 
 
 - (NSString*) infoForKey: (NSString*)key {
+    KeyStore infoStore(_forest, "info");
     __block NSString* value = nil;
     [self _try: ^CBLStatus {
-        Document doc = self.localDocs->get((forestdb::slice)key.UTF8String);
+        Document doc = infoStore.get((forestdb::slice)key.UTF8String);
         value = (NSString*)doc.body();
         return kCBLStatusOK;
     }];
@@ -182,9 +154,10 @@ static NSDictionary* getDocProperties(const Document& doc) {
 
 
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key {
-    return [self _try: ^CBLStatus {
-        Transaction t(self.localDocs);
-        t.set((forestdb::slice)key.UTF8String, (forestdb::slice)info.UTF8String);
+    KeyStore infoStore(_forest, "info");
+    return [self _inTransaction: ^CBLStatus {
+        KeyStoreWriter infoWriter = (*_forestTransaction)(infoStore);
+        infoWriter.set((forestdb::slice)key.UTF8String, (forestdb::slice)info.UTF8String);
         return kCBLStatusOK;
     }];
 }

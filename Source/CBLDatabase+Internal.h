@@ -15,17 +15,20 @@
 #ifdef __cplusplus
 namespace forestdb {
     class Database;
+    class KeyStore;
     class Transaction;
     class VersionedDocument;
     class MapReduceIndex;
 }
 typedef forestdb::Database Database;
+typedef forestdb::KeyStore KeyStore;
 typedef forestdb::Transaction Transaction;
 typedef forestdb::VersionedDocument VersionedDocument;
 typedef forestdb::MapReduceIndex MapReduceIndex;
 #else
 // Fake structs to appease the compiler when in non-C++ mode:
 typedef struct _cpp_Database Database;
+typedef struct _cpp_KeyStore KeyStore;
 typedef struct _cpp_Transaction Transaction;
 typedef struct _cpp_VersionedDocument VersionedDocument;
 typedef struct _cpp_MapReduceIndex MapReduceIndex;
@@ -84,7 +87,7 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
     CBLManager* _manager;
     Database* _forest;
     Transaction* _forestTransaction;
-    Database* _localDocs;
+    KeyStore* _localDocs;
     BOOL _readOnly;
     BOOL _isOpen;
     int _transactionLevel;
