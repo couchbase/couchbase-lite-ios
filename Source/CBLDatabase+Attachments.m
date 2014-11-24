@@ -509,7 +509,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
             options.contentOptions = Database::kMetaOnly;
 
             LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
-            for (DocEnumerator e(*_forest, slice::null, slice::null, options); e; ++e) {
+            for (DocEnumerator e(*_forest, slice::null, slice::null, options); e.next(); ) {
                 VersionedDocument doc(*_forest, *e);
                 if (!doc.hasAttachments() || (doc.isDeleted() && !doc.isConflicted()))
                     continue;

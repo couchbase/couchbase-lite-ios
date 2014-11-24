@@ -117,6 +117,7 @@ static void CheckCacheable(CBLManager* server, NSString* path) {
 
 
 TestCase(CBL_Router_Server) {
+    RequireTestCase(CBLDatabase);
     RequireTestCase(CBLManager);
     CBLManager* server = createDBManager();
     Send(server, @"GET", @"/", kCBLStatusOK, $dict({@"CouchbaseLite", @"Welcome"},
@@ -224,6 +225,7 @@ static NSArray* populateDocs(CBLManager* server) {
 
 
 TestCase(CBL_Router_Docs) {
+    RequireTestCase(CBL_View_AllDocsQuery);
     RequireTestCase(CBL_Router_Databases);
     CBLManager* server = createDBManager();
     populateDocs(server);

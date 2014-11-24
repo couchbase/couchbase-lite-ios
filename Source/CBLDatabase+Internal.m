@@ -295,7 +295,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     opts.contentOptions = Database::kMetaOnly;
 
     NSUInteger count = 0;
-    for (DocEnumerator e(*_forest, forestdb::slice::null, forestdb::slice::null, opts); e; ++e) {
+    for (DocEnumerator e(*_forest, forestdb::slice::null, forestdb::slice::null, opts); e.next(); ) {
         VersionedDocument vdoc(*_forest, *e);
         if (!vdoc.isDeleted())
             ++count;
@@ -751,7 +751,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     *outStatus = [self _try:^CBLStatus{
-        for (DocEnumerator e(*_forest, lastSequence+1, UINT64_MAX, forestOpts); e; ++e) {
+        for (DocEnumerator e(*_forest, lastSequence+1, UINT64_MAX, forestOpts); e.next(); ) {
             @autoreleasepool {
                 VersionedDocument doc(*_forest, *e);
                 NSArray* revIDs;
@@ -924,7 +924,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     }
 
     return ^CBLQueryRow*() {
-        for (; e; e.next()) {
+        while (e.next()) {
             VersionedDocument::Flags flags = VersionedDocument::flagsOfDocument(*e);
             BOOL deleted = (flags & VersionedDocument::kDeleted) != 0;
             if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
@@ -939,7 +939,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             VersionedDocument doc(*_forest, *e);
             NSString* docID = (NSString*)doc.docID();
             if (!doc.exists()) {
-                e.next();
                 LogTo(QueryVerbose, @"AllDocs: No such row with key=\"%@\"",
                       docID);
                 return [[CBLQueryRow alloc] initWithDocID: nil
@@ -981,7 +980,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
             if (!CBLRowPassesFilter(self, row, options))
                 continue;
 
-            e.next();
             if (limit > 0 && --limit == 0)
                 e.close();
             return row;

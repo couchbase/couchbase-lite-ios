@@ -86,7 +86,7 @@ id CBLParseQueryValue(NSData* collatable) {
     *outStatus = kCBLStatusOK;
     CBLDatabase* db = _weakDB;
     return ^CBLQueryRow*() {
-        while (e) {
+        while (e.next()) {
             id docContents = nil;
             id key = e.key().readNSObject();
             id value = nil;
@@ -121,7 +121,6 @@ id CBLParseQueryValue(NSData* collatable) {
 
             if (!value)
                 value = e.value().data().copiedNSData();
-            e.next();
 
             LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                   _name, CBLJSONString(key), value, CBLJSONString(docID));
@@ -245,7 +244,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     return ^CBLQueryRow*() {
         CBLQueryRow* row = nil;
         do {
-            id key = e ? e.key().readNSObject() : nil;
+            id key = e.next() ? e.key().readNSObject() : nil;
             if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
                 // key doesn't match lastKey; emit a grouped/reduced row for what came before:
                 row = [[CBLQueryRow alloc] initWithDocID: nil
@@ -282,7 +281,6 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             }
 
             lastKey = key;
-            e.next();
         } while (!row && lastKey);
         return row;
     };
@@ -318,7 +316,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
     *outStatus = kCBLStatusOK;
     DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
-    for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e; ++e) {
+    for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e.next(); ) {
         NSString* docID = (NSString*)e.docID();
         CBLFullTextQueryRow* row = docRows[docID];
         if (!row) {
@@ -423,11 +421,10 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
     NSMutableArray* result = $marray();
 
     IndexEnumerator e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
-    while (e) {
+    while (e.next()) {
         [result addObject: $dict({@"key", CBLJSONString(e.key().readNSObject())},
                                  {@"value", CBLJSONString(e.value().readNSObject())},
                                  {@"seq", @(e.sequence())})];
-        ++e;
     }
     return result;
 }
