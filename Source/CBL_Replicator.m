@@ -494,14 +494,18 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                 [self stopped];
             } else if (_error) /*(_revisionsFailed > 0)*/ {
                 [self reachabilityChanged: _host];
-
-                LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
-                      self, _revisionsFailed, kRetryDelay);
-                [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                         selector: @selector(retryIfReady)
-                                                           object: nil];
-                [self performSelector: @selector(retryIfReady)
-                           withObject: nil afterDelay: kRetryDelay];
+                if (_online) {
+                    LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
+                          self, _revisionsFailed, kRetryDelay);
+                    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                             selector: @selector(retryIfReady)
+                                                               object: nil];
+                    [self performSelector: @selector(retryIfReady)
+                               withObject: nil afterDelay: kRetryDelay];
+                } else {
+                    LogTo(Sync, @"%@: Failed to xfer %u revisions; Remote host not reachable",
+                          self, _revisionsFailed);
+                }
             }
         }
     }
