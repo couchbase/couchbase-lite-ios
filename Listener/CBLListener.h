@@ -33,7 +33,11 @@
     The keys are NSStrings and values are NSData. Total size should be kept small (under 1kbyte if possible) as this data is multicast over UDP. */
 @property (copy) NSDictionary* TXTRecordDictionary;
 
-/** The URL at which the listener can be reached. */
+/** The URL at which the listener can be reached from another computer/device.
+    This URL will only work for _local_ clients, i.e. over the same WiFi LAN or over Bluetooth.
+    Allowing remote clients to connect is a difficult task that involves traversing routers or
+    firewalls and translating local to global IP addresses, and it's generally impossible over
+    cell networks because telcos don't allow incoming IP connections to mobile devices. */
 @property (readonly) NSURL* URL;
 
 

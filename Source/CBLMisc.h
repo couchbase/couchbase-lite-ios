@@ -76,6 +76,9 @@ BOOL CBLIsFileExistsError( NSError* error );
 /** Removes a file if it exists; does nothing if it doesn't. */
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) __attribute__((nonnull(1)));
 
+/** Returns the hostname of this computer/device (will be of the form "___.local") */
+NSString* CBLGetHostName(void);
+
 /** Returns the input URL without the query string or fragment identifier, just ending with the path. */
 NSURL* CBLURLWithoutQuery( NSURL* url ) __attribute__((nonnull));
 

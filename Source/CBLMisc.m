@@ -344,6 +344,21 @@ BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
 }
 
 
+NSString* CBLGetHostName() {
+    // From <http://stackoverflow.com/a/16902907/98077>
+    char baseHostName[256];
+    if (gethostname(baseHostName, 255) != 0)
+        return nil;
+    baseHostName[255] = '\0';
+    NSString* hostName = [NSString stringWithUTF8String: baseHostName];
+#if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+    if (![hostName hasSuffix: @".local"])
+        hostName = [hostName stringByAppendingString: @".local"];
+#endif
+    return hostName;
+}
+
+
 NSURL* CBLURLWithoutQuery( NSURL* url ) {
 #ifdef GNUSTEP
     // No CFURL on GNUstep :(
@@ -416,4 +431,14 @@ TestCase(CBLEscapeURLParam) {
     CAssertEqual(CBLEscapeURLParam(@"foo&bar"), @"foo%26bar");
     CAssertEqual(CBLEscapeURLParam(@":/?#[]@!$&'()*+,;="),
                  @"%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D");
+}
+
+
+TestCase(CBLGetHostName) {
+    NSString* host = CBLGetHostName();
+    Log(@"CBLGetHostName returned: <%@>", host);
+    Assert(host, @"Can't get hostname");
+    Assert([host rangeOfString: @"^[-a-zA-Z0-9]+\\.local\\.?$"
+                       options: NSRegularExpressionSearch].length > 0,
+           @"Invalid hostname: \"%@\"", host);
 }

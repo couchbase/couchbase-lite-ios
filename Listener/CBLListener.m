@@ -18,6 +18,7 @@
 #import "CBLHTTPConnection.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Server.h"
+#import "CBLMisc.h"
 #import "Logging.h"
 
 #import "HTTPServer.h"
@@ -29,9 +30,6 @@
 #import <netinet/in.h>
 #import <ifaddrs.h>
 #import <arpa/inet.h>
-
-
-static NSArray* GetIPv4Addresses(void);
 
 
 @interface CBL_MYDDLogger : DDAbstractLogger
@@ -112,12 +110,12 @@ static NSArray* GetIPv4Addresses(void);
 
 
 - (NSURL*) URL {
+    NSString* hostName = CBLGetHostName();
     UInt16 port = self.port;
-    NSArray* addresses = GetIPv4Addresses();
-    if (port == 0 || addresses.count == 0)
+    if (port == 0 || hostName == nil)
         return nil;
     NSString* urlStr = [NSString stringWithFormat: @"http%@://%@:%d/",
-                        (_SSLIdentity ? @"s" : @""), addresses[0], port];
+                        (_SSLIdentity ? @"s" : @""), hostName, port];
     return [NSURL URLWithString: urlStr];
 }
 
@@ -157,37 +155,3 @@ static NSArray* GetIPv4Addresses(void);
 }
 
 @end
-
-
-
-static NSArray* GetIPv4Addresses(void) {
-    // getifaddrs returns a linked list of interface entries;
-    // find each active non-loopback interface whose name begins with "en" (an ugly hack
-    // to identify WiFi or Ethernet as opposed to a cellular connection.)
-    // IPv6 addresses are added, but at the end of the array to make them easier to skip
-    // since for most purposes IPv4 addresses are still preferred.
-    NSMutableArray* addresses = [NSMutableArray array];
-    NSUInteger ipv4count = 0;
-    struct ifaddrs *interfaces;
-    if( getifaddrs(&interfaces) == 0 ) {
-        struct ifaddrs *interface;
-        for( interface=interfaces; interface; interface=interface->ifa_next ) {
-            if( (interface->ifa_flags & IFF_UP) && ! (interface->ifa_flags & IFF_LOOPBACK)
-               && (strncmp(interface->ifa_name, "en", 2) == 0)) {
-                const struct sockaddr_in *addr = (const struct sockaddr_in*) interface->ifa_addr;
-                if( addr && (addr->sin_family==AF_INET || addr->sin_family==AF_INET6)) {
-                    char addrBuf[64];
-                    if (inet_ntop(addr->sin_family, &addr->sin_addr, addrBuf, sizeof(addrBuf))) {
-                        NSString* addrStr = @(addrBuf);
-                        if (addr->sin_family==AF_INET)
-                            [addresses insertObject: addrStr atIndex: ipv4count++];
-                        else
-                            [addresses addObject: addrStr];     // put ipv6 addrs at the end
-                    }
-                }
-            }
-        }
-        freeifaddrs(interfaces);
-    }
-    return addresses;
-}
