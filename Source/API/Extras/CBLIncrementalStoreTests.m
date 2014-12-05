@@ -718,10 +718,10 @@ TestCase(CBLIncrementalStoreFetchWithPredicates)
 #pragma mark -
 #pragma mark - Test Core Data Model
 
-NSAttributeDescription *CBLISAttributeDescription(NSString *name, BOOL optional, NSAttributeType type, id defaultValue);
+NSAttributeDescription *CBLISAttributeDescription(NSString *name, BOOL optional, NSAttributeType type, id defaultValue, BOOL storedInExternalRecord );
 NSRelationshipDescription *CBLISRelationshipDescription(NSString *name, BOOL optional, BOOL toMany, NSDeleteRule deletionRule, NSEntityDescription *destinationEntity);
 
-NSAttributeDescription *CBLISAttributeDescription(NSString *name, BOOL optional, NSAttributeType type, id defaultValue)
+NSAttributeDescription *CBLISAttributeDescription(NSString *name, BOOL optional, NSAttributeType type, id defaultValue, BOOL storedInExternalRecord )
 {
     NSAttributeDescription *attribute = [NSAttributeDescription new];
     [attribute setName:name];
@@ -730,6 +730,9 @@ NSAttributeDescription *CBLISAttributeDescription(NSString *name, BOOL optional,
     if (defaultValue) {
         [attribute setDefaultValue:defaultValue];
     }
+    
+    attribute.storedInExternalRecord = storedInExternalRecord;
+
     return attribute;
 }
 NSRelationshipDescription *CBLISRelationshipDescription(NSString *name, BOOL optional, BOOL toMany, NSDeleteRule deletionRule, NSEntityDescription *destinationEntity)
@@ -770,26 +773,26 @@ NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [subentryEntry setInverseRelationship:entrySubentries];
     
     [entry setProperties:@[
-                           CBLISAttributeDescription(@"check", YES, NSBooleanAttributeType, nil),
-                           CBLISAttributeDescription(@"created_at", YES, NSDateAttributeType, nil),
-                           CBLISAttributeDescription(@"decimalNumber", YES, NSDecimalAttributeType, @(0.0)),
-                           CBLISAttributeDescription(@"doubleNumber", YES, NSDoubleAttributeType, @(0.0)),
-                           CBLISAttributeDescription(@"number", YES, NSInteger16AttributeType, @(0)),
-                           CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil),
-                           CBLISAttributeDescription(@"text2", YES, NSStringAttributeType, nil),
+                           CBLISAttributeDescription(@"check", YES, NSBooleanAttributeType, nil, FALSE),
+                           CBLISAttributeDescription(@"created_at", YES, NSDateAttributeType, nil, FALSE),
+                           CBLISAttributeDescription(@"decimalNumber", YES, NSDecimalAttributeType, @(0.0), FALSE),
+                           CBLISAttributeDescription(@"doubleNumber", YES, NSDoubleAttributeType, @(0.0), FALSE),
+                           CBLISAttributeDescription(@"number", YES, NSInteger16AttributeType, @(0), FALSE),
+                           CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil, FALSE),
+                           CBLISAttributeDescription(@"text2", YES, NSStringAttributeType, nil, FALSE),
                            entryFiles,
                            entrySubentries
                            ]];
     
     [file setProperties:@[
-                          CBLISAttributeDescription(@"data", YES, NSBinaryDataAttributeType, nil),
-                          CBLISAttributeDescription(@"filename", YES, NSStringAttributeType, nil),
+                          CBLISAttributeDescription(@"data", YES, NSBinaryDataAttributeType, nil, YES),
+                          CBLISAttributeDescription(@"filename", YES, NSStringAttributeType, nil, FALSE),
                           fileEntry
                           ]];
     
     [subentry setProperties:@[
-                              CBLISAttributeDescription(@"number", YES, NSInteger32AttributeType, @(0)),
-                              CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil),
+                              CBLISAttributeDescription(@"number", YES, NSInteger32AttributeType, @(0), FALSE),
+                              CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil, FALSE),
                               subentryEntry
                               ]];
     
