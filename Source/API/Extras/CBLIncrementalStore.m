@@ -380,13 +380,29 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                 if (![attr isKindOfClass:[NSAttributeDescription class]]) continue;
                 
                 if ([attr isTransient]) continue;
-                if ([attr attributeType] != NSBinaryDataAttributeType) continue;
+                if (![attr isStoredInExternalRecord]) continue;
                 
-                NSData *data = [object valueForKey:attr.name];
-                if (!data) continue;
+                NSData *data = nil;/* = [object valueForKey:attr.name];*/
                 
-                [revision setAttachmentNamed:attr.name withContentType:@"application/binary"
-                                     content:data];
+                if ( [attr attributeType] == NSTransformableAttributeType )
+                {
+                    if ( ! attr.valueTransformerName )
+                        continue;
+                    
+                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
+                    data = [transformer transformedValue:[object valueForKey:attr.name]];
+                }
+                else {
+                    data = [object valueForKey:attr.name];
+                }
+                
+                if (data) {
+                    [revision setAttachmentNamed:attr.name withContentType:@"application/binary"
+                                         content:data];
+                } else {
+                    [revision removeAttachmentNamed:attr.name];
+                }
+
             }
             
             
@@ -431,9 +447,21 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                 if (![attr isKindOfClass:[NSAttributeDescription class]]) continue;
                 
                 if ([attr isTransient]) continue;
-                if ([attr attributeType] != NSBinaryDataAttributeType) continue;
+                if (![attr isStoredInExternalRecord]) continue;
                 
-                NSData *data = [object valueForKey:attr.name];
+                NSData *data = nil;
+                
+                if ( [attr attributeType] == NSTransformableAttributeType )
+                {
+                    if ( ! attr.valueTransformerName )
+                        continue;
+                    
+                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
+                    data = [transformer transformedValue:[object valueForKey:attr.name]];
+                }
+                else {
+                    data = [object valueForKey:attr.name];
+                }
                 
                 if (data) {
                     [revision setAttachmentNamed:attr.name withContentType:@"application/binary"
@@ -1016,9 +1044,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             }
             
             // skip binary attributes to not load them into memory here. They are added as attachments
-            if ([attr attributeType] == NSBinaryDataAttributeType) {
-                continue;
-            }
+            if ( [attr isStoredInExternalRecord] )  continue;
             
             id value = [object valueForKey:property];
             
@@ -1117,10 +1143,19 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
             }
             
             // handle binary attributes specially
-            if ([attr attributeType] == NSBinaryDataAttributeType) {
+            if ([attr isStoredInExternalRecord]) {
                 id value = [self _loadDataForAttachmentWithName:property ofDocumentWithID:documentID];
                 if (value) {
-                    [result setObject:value forKey:property];
+                    if ( [attr attributeType] == NSTransformableAttributeType ) {
+                        if (attr.valueTransformerName) {
+                            NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
+                            value = [transformer reverseTransformedValue:value];
+                            [result setObject:value forKey:property];
+                        }
+                    }
+                    else {
+                        [result setObject:value forKey:property];
+                    }
                 }
                 
                 continue;
