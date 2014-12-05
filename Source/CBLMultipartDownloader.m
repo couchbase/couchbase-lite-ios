@@ -27,12 +27,14 @@
 - (instancetype) initWithURL: (NSURL*)url
                     database: (CBLDatabase*)database
               requestHeaders: (NSDictionary *) requestHeaders
+        allowsCellularAccess: (BOOL)allowsCellularAccess
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     self = [super initWithMethod: @"GET" 
                              URL: url 
                             body: nil
                   requestHeaders: requestHeaders
+            allowsCellularAccess: allowsCellularAccess
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
@@ -131,8 +133,9 @@ TestCase(CBLMultipartDownloader) {
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;
     [[[CBLMultipartDownloader alloc] initWithURL: url
-                                       database: db
-                                 requestHeaders: nil
+                                        database: db
+                                  requestHeaders: nil
+                            allowsCellularAccess: YES
                                    onCompletion: ^(id result, NSError * error)
      {
          CAssertNil(error);

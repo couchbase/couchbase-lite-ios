@@ -31,6 +31,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
     id<CBLAuthorizer> _authorizer;
     id<CBLRemoteRequestDelegate> _delegate;
     CBLRemoteRequestCompletionBlock _onCompletion;
+    bool _allowsCellularAccess;
     NSURLConnection* _connection;
     int _status;
     NSDictionary* _responseHeaders;
@@ -44,11 +45,14 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
                             URL: (NSURL*)url
                            body: (id)body
                  requestHeaders: (NSDictionary *)requestHeaders
+           allowsCellularAccess: (BOOL)allowsCellularAccess
                    onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @property NSTimeInterval timeoutInterval;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
 @property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
+/** Set the value to false to avoid sending data over a cellular connection. The default value is YES. */
+@property (nonatomic) bool allowsCellularAccess;
 
 /** Applies GZip compression to the request body if appropriate. */
 - (BOOL) compressBody;

@@ -42,6 +42,7 @@
 - (instancetype) initWithDbURL: (NSURL*)dbURL
                       database: (CBLDatabase*)database
                 requestHeaders: (NSDictionary *) requestHeaders
+          allowsCellularAccess: (BOOL)allowsCellularAccess
                      revisions: (NSArray*)revs
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
@@ -64,6 +65,7 @@
                              URL: CBLAppendToURL(dbURL, @"_bulk_get?revs=true&attachments=true")
                             body: body
                   requestHeaders: requestHeaders
+            allowsCellularAccess: allowsCellularAccess
                     onCompletion: onCompletion];
     if (self) {
         _db = database;

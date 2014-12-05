@@ -40,7 +40,6 @@
 #define kCouchAppDBName @"couchapp_helloworld"
 
 
-
 /** Returns the base URL of a replication-compatible server that has the necessary databases for
     unit tests. All unit tests that connect to a server should call this function to get the server
     address, so it can be configured at runtime.
@@ -116,6 +115,7 @@ void DeleteRemoteDB(NSURL* dbURL) {
                                                                      URL: dbURL
                                                                     body: nil
                                                           requestHeaders: nil
+                                                    allowsCellularAccess: YES
                                                             onCompletion:
         ^(id result, NSError *err) {
             finished = YES;
@@ -198,7 +198,13 @@ static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
     CAssert(!repl.savingCheckpoint);
 
     if (expectError) {
-        CAssert(!repl.running);
+        if (CBLIsPermanentError(expectError)) {
+            CAssert(!repl.running);
+            CAssert(!repl.online);
+        } else {
+            CAssert(repl.running);
+            CAssert(repl.online);
+        }
         AssertEqual(repl.error.domain, expectError.domain);
         AssertEq(repl.error.code, expectError.code);
         Log(@"...replicator finished. error=%@", repl.error);
@@ -211,6 +217,40 @@ static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
     [repl stop];
     return result;
 }
+
+@interface CBLFailURLProtocol : NSURLProtocol
+
++ (void)setError: (NSError*)error;
+
+@end
+
+@implementation CBLFailURLProtocol
+
+static NSError* _error = nil;
+
++ (void) setError: (NSError*)error {
+    _error = error;
+}
+
++ (BOOL) canInitWithRequest: (NSURLRequest*)request {
+    return YES;
+}
+
++ (NSURLRequest*) canonicalRequestForRequest: (NSURLRequest*)request {
+    return request;
+}
+
+- (void) startLoading {
+    if (_error)
+        [self.client URLProtocol: self didFailWithError: _error];
+}
+
+- (void) stopLoading {
+    // Do nothing
+}
+
+@end
+
 
 
 TestCase(CBL_Pusher) {
@@ -683,6 +723,120 @@ TestCase(ParseReplicatorProperties) {
     CAssert([authorizer isKindOfClass: [CBLOAuth1Authorizer class]]);
 }
 
+TestCase(CBL_Pusher_Continuous_ReachabilityError) {
+    RequireTestCase(CBL_Pusher);
+    NSURL* remoteURL = RemoteTestDBURL(kScratchDBName);
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+        return;
+    }
+
+
+    NSError* error = [NSError errorWithDomain: NSURLErrorDomain
+                                         code: NSURLErrorNotConnectedToInternet
+                                     userInfo: nil];
+    [NSURLProtocol registerClass:[CBLFailURLProtocol class]];
+    [CBLFailURLProtocol setError:error];
+
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: nil];
+    CAssert(db);
+
+    replic8Continuous(db, remoteURL, YES, nil, error);
+
+    [NSURLProtocol unregisterClass:[CBLFailURLProtocol class]];
+    [CBLFailURLProtocol setError:nil];
+}
+
+TestCase(CBL_Puller_Continuous_ReachabilityError) {
+    RequireTestCase(CBL_Puller);
+    NSURL* remoteURL = RemoteTestDBURL(kScratchDBName);
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+        return;
+    }
+
+    NSError* error = [NSError errorWithDomain: NSURLErrorDomain
+                                         code: NSURLErrorNotConnectedToInternet
+                                     userInfo: nil];
+    [NSURLProtocol registerClass:[CBLFailURLProtocol class]];
+    [CBLFailURLProtocol setError:error];
+
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: nil];
+    CAssert(db);
+
+    replic8Continuous(db, remoteURL, NO, nil, error);
+
+    [NSURLProtocol unregisterClass:[CBLFailURLProtocol class]];
+    [CBLFailURLProtocol setError:nil];
+}
+
+TestCase(CBL_Puller_Retry) {
+#if 1
+    // This test takes about one minute to run, so let's leave it turned off normally.
+    // This test is testing to check the continuous replicator retry logic after getting
+    // a non permanent error.
+    RequireTestCase(CBL_Puller);
+    NSURL* remoteURL = RemoteTestDBURL(kScratchDBName);
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+        return;
+    }
+
+    NSError* error = [NSError errorWithDomain: NSURLErrorDomain
+                                         code: NSURLErrorNotConnectedToInternet
+                                     userInfo: nil];
+    [NSURLProtocol registerClass:[CBLFailURLProtocol class]];
+    [CBLFailURLProtocol setError:error];
+
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: nil];
+    CAssert(db);
+
+    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remoteURL
+                                                         push: NO continuous: YES];
+    [repl start];
+
+    // Start the replicator and wait for it to go active, then inactive:
+    CAssert(repl.running);
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
+    while ((repl.running || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+        else if (!repl.active)
+            break;
+    }
+
+    CAssert(repl.running);
+    CAssert(repl.online);
+    AssertEqual(repl.error.domain, error.domain);
+    AssertEq(repl.error.code, error.code);
+    Log(@"...replicator is unactive. error=%@", repl.error);
+
+    [NSURLProtocol unregisterClass:[CBLFailURLProtocol class]];
+    [CBLFailURLProtocol setError:nil];
+
+    Log(@"...replicator is waiting to retry...");
+
+    timeout = [NSDate dateWithTimeIntervalSinceNow: 62];
+    while ((repl.running || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+        else if (!repl.error)
+            break;
+    }
+
+    CAssert(repl.running);
+    CAssertNil(repl.error);
+    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+
+    [repl stop];
+#endif
+}
+
 
 TestCase(CBLReplicator) {
     RequireTestCase(CBL_Pusher);
@@ -692,7 +846,10 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Puller_AuthFailure);
     RequireTestCase(CBL_Puller_FromCouchApp);
     RequireTestCase(CBL_Puller_DatabaseValidation);
-    RequireTestCase(CBLPuller_DocIDs);
+    RequireTestCase(CBL_Puller_DocIDs);
+    RequireTestCase(CBL_Pusher_Continuous_ReachabilityError);
+    RequireTestCase(CBL_Puller_Continuous_ReachabilityError);
+    RequireTestCase(CBL_Puller_Retry);
     RequireTestCase(ParseReplicatorProperties);
 }
 

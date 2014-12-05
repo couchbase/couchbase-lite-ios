@@ -436,6 +436,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                                   initWithURL: CBLAppendToURL(_remote, path)
                                      streamer: bodyStream
                                requestHeaders: self.requestHeaders
+                         allowsCellularAccess: self.allowsCellularAccess
                                  onCompletion: ^(CBLMultipartUploader* result, NSError *error) {
                   [self removeRemoteRequest: uploader];
                   if (error) {

@@ -395,19 +395,16 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self checkSession];
 }
 
+
 - (void) retryIfReady {
-    if (!_running)
+    if (!_online && !self.error)
         return;
 
-    if (_online) {
-        LogTo(Sync, @"%@ RETRYING, to transfer missed revisions...", self);
-        _revisionsFailed = 0;
-        [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(retryIfReady) object: nil];
-        [self retry];
-    } else {
-        [self performSelector: @selector(retryIfReady) withObject: nil afterDelay: kRetryDelay];
-    }
+    LogTo(Sync, @"%@ RETRYING, to transfer missed revisions...", self);
+    _revisionsFailed = 0;
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(retryIfReady) object: nil];
+    [self retry];
 }
 
 
@@ -445,36 +442,25 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
     BOOL reachable = host.reachable && !_suspended;
     if (reachable) {
-    // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
-    NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
-                              lowercaseString];
-        if (network) {
-            BOOL wifi = host.reachableByWiFi;
-            if ($equal(network, @"wifi") || $equal(network, @"!cell"))
-                reachable = wifi;
-            else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
-                reachable = !wifi;
-            else
-                Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
-        }
+        [self retryIfReady];
     }
-
-    if (reachable)
-        [self goOnline];
-    else if (host.reachabilityKnown || _suspended)
-        [self goOffline];
 }
+
 
 - (BOOL) suspended {
     return _suspended;
 }
+
 
 // When suspended, the replicator acts as though it's offline, stopping all network activity.
 // This is used by the iOS backgrounding support (see CBLReplication+Backgrounding.m)
 - (void) setSuspended: (BOOL)suspended {
     if (suspended != _suspended) {
         _suspended = suspended;
-        [self reachabilityChanged: _host];
+        if (_suspended)
+            [self goOffline];
+        else
+            [self goOnline];
     }
 }
 
@@ -493,19 +479,13 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             if (!_continuous) {
                 [self stopped];
             } else if (_error) /*(_revisionsFailed > 0)*/ {
-                [self reachabilityChanged: _host];
-                if (_online) {
-                    LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
-                          self, _revisionsFailed, kRetryDelay);
-                    [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                             selector: @selector(retryIfReady)
-                                                               object: nil];
-                    [self performSelector: @selector(retryIfReady)
-                               withObject: nil afterDelay: kRetryDelay];
-                } else {
-                    LogTo(Sync, @"%@: Failed to xfer %u revisions; Remote host not reachable",
-                          self, _revisionsFailed);
-                }
+                LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
+                      self, _revisionsFailed, kRetryDelay);
+                [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                         selector: @selector(retryIfReady)
+                                                           object: nil];
+                [self performSelector: @selector(retryIfReady)
+                           withObject: nil afterDelay: kRetryDelay];
             }
         }
     }
@@ -665,6 +645,13 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+- (BOOL) allowsCellularAccess {
+    id option = _options[kCBLReplicatorOption_AllowsCellularAccess];
+    if (option)
+        return [option boolValue];
+    return  YES;
+}
+
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
         && [[_serverType substringFromIndex: 23] compare: minVersion] >= 0;
@@ -694,10 +681,11 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     __weak CBL_Replicator *weakSelf = self;
     __block CBLRemoteJSONRequest *req = nil;
     req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
-                                                  URL: url
-                                                 body: body
-                                       requestHeaders: self.requestHeaders
-                                         onCompletion: ^(id result, NSError* error) {
+                                                   URL: url
+                                                  body: body
+                                        requestHeaders: self.requestHeaders
+                                  allowsCellularAccess: self.allowsCellularAccess
+                                          onCompletion: ^(id result, NSError* error) {
         CBL_Replicator *strongSelf = weakSelf;
         [strongSelf removeRemoteRequest: req];
         id<CBLAuthorizer> auth = req.authorizer;

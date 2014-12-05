@@ -113,6 +113,10 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     (Derived from options key "connection_timeout", in milliseconds.) */
 @property (readonly) NSTimeInterval requestTimeout;
 
+/** Determine whether the replicator is allowed to send or receive data over a cellular connection.
+    (Derived from option key "AllowsCellularAccess option.)" */
+@property (readonly) BOOL allowsCellularAccess;
+
 /** Hook for transforming document body, e.g., encryption and decryption during replication */
 @property (strong, nonatomic) RevisionBodyTransformationBlock revisionBodyTransformationBlock;
 
@@ -123,8 +127,8 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 
 // Supported keys in the .options dictionary:
 #define kCBLReplicatorOption_Reset @"reset"
-#define kCBLReplicatorOption_Timeout @"connection_timeout"  // CouchDB specifies this name
-#define kCBLReplicatorOption_Heartbeat @"heartbeat"         // NSNumber, in ms
-#define kCBLReplicatorOption_PollInterval @"poll"           // NSNumber, in ms
-#define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"
-#define kCBLReplicatorOption_UseWebSocket @"websocket"      // Boolean; default is YES
+#define kCBLReplicatorOption_Timeout @"connection_timeout"      // CouchDB specifies this name
+#define kCBLReplicatorOption_Heartbeat @"heartbeat"             // NSNumber, in ms
+#define kCBLReplicatorOption_PollInterval @"poll"               // NSNumber, in ms
+#define kCBLReplicatorOption_AllowsCellularAccess @"cellular"   // Boolean; default is YES
+#define kCBLReplicatorOption_UseWebSocket @"websocket"          // Boolean; default is YES

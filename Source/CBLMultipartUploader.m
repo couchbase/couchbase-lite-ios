@@ -21,13 +21,15 @@
 - (instancetype) initWithURL: (NSURL *)url
                     streamer: (CBLMultipartWriter*)writer
               requestHeaders: (NSDictionary *) requestHeaders
+        allowsCellularAccess: (BOOL)allowsCellularAccess
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     Assert(writer);
     self = [super initWithMethod: @"PUT" 
                              URL: url 
                             body: writer
-                  requestHeaders: requestHeaders 
+                  requestHeaders: requestHeaders
+            allowsCellularAccess: allowsCellularAccess
                     onCompletion: onCompletion];
     if (self) {
         _multipartWriter = writer;

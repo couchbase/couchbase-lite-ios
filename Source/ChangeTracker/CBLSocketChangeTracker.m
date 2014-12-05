@@ -79,6 +79,8 @@
         return NO;
 
     CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+    CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyNoCellular,
+                            self.allowsCellularAccess ? kCFBooleanFalse : kCFBooleanTrue);
     _http.handleRedirects = NO;  // CFStream will handle redirects instead
 
     // Configure HTTP proxy -- CFNetwork makes us do this manually, unlike NSURLConnection :-p
