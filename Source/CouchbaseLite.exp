@@ -109,6 +109,7 @@ _OBJC_IVAR_$_CBLQueryOptions.fullTextRanking
 _OBJC_IVAR_$_CBLQueryOptions.allDocsMode
 _OBJC_IVAR_$_CBLQueryOptions.bbox
 
+_CBLGetHostName
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
 _CBLStatusFromNSError

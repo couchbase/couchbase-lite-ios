@@ -349,6 +349,9 @@
 		277EF49117F4EA0000F7B7F7 /* CBLQuery+Geo.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		277EF49417F5F3CB00F7B7F7 /* CBLView+Querying.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF49317F5F3CB00F7B7F7 /* CBLView+Querying.m */; };
 		277EF49517F5F3CB00F7B7F7 /* CBLView+Querying.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF49317F5F3CB00F7B7F7 /* CBLView+Querying.m */; };
+		278097561A32817A00876DE6 /* MYAnonymousIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 278097541A32817A00876DE6 /* MYAnonymousIdentity.h */; };
+		278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
+		278097581A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		27821BB7148E7D6F0099B373 /* CBL_Replicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* CBL_Replicator.h */; };
 		27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* CBL_Replicator.m */; };
 		27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* CBLReplicator_Tests.m */; };
@@ -1155,6 +1158,8 @@
 		277EF40717F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sqlite3_unicodesn_tokenizer.c; sourceTree = "<group>"; };
 		277EF40817F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sqlite3_unicodesn_tokenizer.h; sourceTree = "<group>"; };
 		277EF49317F5F3CB00F7B7F7 /* CBLView+Querying.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLView+Querying.m"; sourceTree = "<group>"; };
+		278097541A32817A00876DE6 /* MYAnonymousIdentity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYAnonymousIdentity.h; sourceTree = "<group>"; };
+		278097551A32817A00876DE6 /* MYAnonymousIdentity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYAnonymousIdentity.m; sourceTree = "<group>"; };
 		27821BB5148E7D6F0099B373 /* CBL_Replicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Replicator.h; sourceTree = "<group>"; };
 		27821BB6148E7D6F0099B373 /* CBL_Replicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Replicator.m; sourceTree = "<group>"; };
 		27821BBB149001B20099B373 /* CBLReplicator_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReplicator_Tests.m; sourceTree = "<group>"; };
@@ -2351,6 +2356,8 @@
 				27F0749D11CD5B4F00E9A2AB /* Test.h */,
 				27F0749E11CD5B4F00E9A2AB /* Test.m */,
 				27E3476D19994F5A00076EAC /* Test_Assertions.m */,
+				278097541A32817A00876DE6 /* MYAnonymousIdentity.h */,
+				278097551A32817A00876DE6 /* MYAnonymousIdentity.m */,
 				279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */,
 				279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */,
 				27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */,
@@ -2586,6 +2593,7 @@
 				2785BE9E16BC87ED00A3E881 /* CBL_Router.h in Headers */,
 				2785BE9D16BC87EA00A3E881 /* CBL_URLProtocol.h in Headers */,
 				2753160C14ACFC2A0065964D /* CBLHTTPConnection.h in Headers */,
+				278097561A32817A00876DE6 /* MYAnonymousIdentity.h in Headers */,
 				27E11F0D14ACFFC60006B340 /* CBLHTTPServer.h in Headers */,
 				27E11F1014AD15940006B340 /* CBLHTTPResponse.h in Headers */,
 			);
@@ -3288,6 +3296,7 @@
 				27DA4360159230B100F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27B678B71804B62500B06D11 /* CBLHTTPServer.m in Sources */,
 				27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */,
+				278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */,
 				2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */,
 				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
 				279CE39014D1EDA0009F3FA6 /* Test.m in Sources */,
@@ -3551,6 +3560,7 @@
 				27DA435F159230AC00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4361159230B200F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61715993CB4005B9234 /* CBL_URLProtocol.m in Sources */,
+				278097581A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */,
 				27E3475D19969A4200076EAC /* Logging.m in Sources */,
 				27E3477019994FB600076EAC /* Test_Assertions.m in Sources */,
 				27E3475E19969A4200076EAC /* CollectionUtils.m in Sources */,

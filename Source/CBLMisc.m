@@ -31,9 +31,11 @@
 #if DEBUG
 NSString* CBLPathToTestFile(NSString* name) {
     // The iOS and Mac test apps have the TestData folder copied into their Resources dir.
-    return [[NSBundle mainBundle] pathForResource: name.stringByDeletingPathExtension
-                                           ofType: name.pathExtension
-                                      inDirectory: @"TestData"];
+    NSString* path =  [[NSBundle mainBundle] pathForResource: name.stringByDeletingPathExtension
+                                                      ofType: name.pathExtension
+                                                 inDirectory: @"TestData"];
+    Assert(path, @"Can't find test file \"%@\"", name);
+    return path;
 }
 
 NSData* CBLContentsOfTestFile(NSString* name) {

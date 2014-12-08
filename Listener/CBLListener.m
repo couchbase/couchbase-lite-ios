@@ -20,6 +20,7 @@
 #import "CBL_Server.h"
 #import "CBLMisc.h"
 #import "Logging.h"
+#import "MYAnonymousIdentity.h"
 
 #import "HTTPServer.h"
 #import "HTTPLogging.h"
@@ -142,6 +143,29 @@
     _SSLIdentity = identity;
 }
 
+- (BOOL) setAnonymousSSLIdentityWithLabel: (NSString*)label error: (NSError**)outError {
+    SecIdentityRef identity = MYGetOrCreateAnonymousIdentity(label,
+                                                     kMYAnonymousIdentityDefaultExpirationInterval,
+                                                     outError);
+    self.SSLIdentity = identity;
+    self.SSLExtraCertificates = nil;
+    return (identity != NULL);
+}
+
+- (NSData*) SSLIdentityDigest {
+    if (!_SSLIdentity)
+        return nil;
+    SecCertificateRef cert = NULL;
+    SecIdentityCopyCertificate(_SSLIdentity, &cert);
+    return MYGetCertificatePublicKeyDigest(cert);
+}
+
++ (void) runTestCases {
+#if DEBUG
+    const char* argv[] = {"Test_All"};
+    RunTestCases(1, argv);
+#endif
+}
 
 @end
 
