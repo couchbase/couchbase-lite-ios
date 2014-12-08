@@ -20,6 +20,7 @@ typedef void (^CBLBulkDownloaderDocumentBlock)(NSDictionary*);
 - (instancetype) initWithDbURL: (NSURL*)dbURL
                       database: (CBLDatabase*)database
                 requestHeaders: (NSDictionary *) requestHeaders
+          allowsCellularAccess: (BOOL)allowsCellularAccess
                      revisions: (NSArray*)revs
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;

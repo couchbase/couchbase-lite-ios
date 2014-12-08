@@ -19,6 +19,7 @@
 - (instancetype) initWithURL: (NSURL *)url
                     streamer: (CBLMultipartWriter*)streamer
               requestHeaders: (NSDictionary *) requestHeaders
+        allowsCellularAccess: (BOOL)allowsCellularAccess
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @end

@@ -267,7 +267,10 @@ BOOL CBLIsOfflineError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
     if ($equal(domain, NSURLErrorDomain))
-        return code == NSURLErrorDNSLookupFailed
+        return code == NSURLErrorCannotFindHost
+            || code == NSURLErrorCannotConnectToHost
+            || code == NSURLErrorDNSLookupFailed
+            || code == NSURLErrorNetworkConnectionLost
             || code == NSURLErrorNotConnectedToInternet
 #ifndef GNUSTEP
             || code == NSURLErrorInternationalRoamingOff

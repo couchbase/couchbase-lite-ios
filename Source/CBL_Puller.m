@@ -118,6 +118,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
     _changeTracker.usePOST = [self serverIsSyncGatewayVersion: @"0.93"];
+    _changeTracker.allowsCellularAccess = self.allowsCellularAccess;
 
     unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
@@ -179,18 +180,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) stopped {
     _downloadsToInsert = nil;
     [super stopped];
-}
-
-
-- (BOOL) goOnline {
-    if ([super goOnline])
-        return YES;
-    // If we were already online (i.e. server is reachable) but got a reachability-change event,
-    // tell the tracker to retry in case it's in retry mode after a transient failure. (I.e. the
-    // state of the network might be better now.)
-    if (self.running && self.online)
-        [_changeTracker retry];
-    return NO;
 }
 
 
@@ -420,9 +409,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     __weak CBL_Puller *weakSelf = self;
     __block CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
-                                           database: db
-                                     requestHeaders: self.requestHeaders
-                                       onCompletion:
+                                            database: db
+                                      requestHeaders: self.requestHeaders
+                                allowsCellularAccess: self.allowsCellularAccess
+                                        onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBL_Puller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
@@ -471,6 +461,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     dl = [[CBLBulkDownloader alloc] initWithDbURL: _remote
                                          database: _db
                                    requestHeaders: self.requestHeaders
+                             allowsCellularAccess: self.allowsCellularAccess
                                         revisions: bulkRevs
                                        onDocument:
           ^(NSDictionary* props) {

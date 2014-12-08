@@ -271,6 +271,49 @@ TestCase(CBLWebSocketChangeTracker_Auth) {
     [tester run: tracker expectingChanges: expected];
 }
 
+TestCase(CBLChangeTracker_ReachabilityError) {
+    CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
+    NSURL* url = [NSURL URLWithString: @"https://localhost:5999/db"];
+
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client: tester];
+    [tester run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCannotConnectToHost userInfo: nil]];
+}
+
+TestCase(CBLChangeTracker_NotAllowCellularAccess) {
+#if 0
+    // This test is disabled by default as it requires to test on a real device
+    // with cellular network access. Configure the remote url that can be accessed via
+    // your cellular network before running the test.
+    NSURL* url = $url(@"http://<host>:<port>/<database>");
+    if (!url) {
+        Warn(@"Skipping test; no remote DB URL configured");
+        return;
+    }
+
+    CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client: tester];
+    tracker.allowsCellularAccess = NO;
+    [tester run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCannotConnectToHost userInfo: nil]];
+#endif
+}
+
+TestCase(CBLWebSocketChangeTracker_NotAllowCellularAccess) {
+#if 0
+    // This test is disabled by default as it requires to test on a real device
+    // with cellular network access. Configure the remote url that can be accessed via
+    // your cellular network before running the test.
+    NSURL* url = $url(@"http://<host>:<port>/<database>");
+    if (!url) {
+        Warn(@"Skipping test; no remote DB URL configured");
+        return;
+    }
+
+    CBLChangeTrackerTester* tester = [[CBLChangeTrackerTester alloc] init];
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kWebSocket conflicts: NO lastSequence: 0 client: tester];
+    tracker.allowsCellularAccess = NO;
+    [tester run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCannotConnectToHost userInfo: nil]];
+#endif
+}
 
 TestCase(CBLChangeTracker_Retry) {
 #if 0 // This test takes 31 seconds to run, so let's leave it turned off normally
@@ -290,6 +333,9 @@ TestCase(CBLChangeTracker) {
     RequireTestCase(CBLChangeTracker_Auth);
     RequireTestCase(CBLChangeTracker_AuthFailure);
     RequireTestCase(CBLChangeTracker_Retry);
+    RequireTestCase(CBLChangeTracker_ReachabilityError);
+    RequireTestCase(CBLChangeTracker_NotAllowCellularAccess);
+    RequireTestCase(CBLWebSocketChangeTracker_NotAllowCellularAccess);
     RequireTestCase(CBLWebSocketChangeTracker_Auth);
 }
 

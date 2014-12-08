@@ -65,6 +65,7 @@
     LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, url.resourceSpecifier);
     _ws = [[WebSocketClient alloc] initWithURLRequest: request];
     _ws.delegate = self;
+    _ws.allowsCellularAccess = self.allowsCellularAccess;
     [_ws useTLS: self.TLSSettings];
     NSError* error;
     if (![_ws connect: &error]) {

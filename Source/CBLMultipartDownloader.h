@@ -22,6 +22,7 @@
 - (instancetype) initWithURL: (NSURL*)url
                     database: (CBLDatabase*)database
               requestHeaders: (NSDictionary *) requestHeaders
+        allowsCellularAccess: (BOOL)allowsCellularAccess
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @property (readonly) NSDictionary* document;

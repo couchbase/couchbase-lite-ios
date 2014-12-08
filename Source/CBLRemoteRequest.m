@@ -36,6 +36,7 @@
 
 
 @synthesize delegate=_delegate, responseHeaders=_responseHeaders;
+@synthesize allowsCellularAccess=_allowsCellularAccess;
 
 
 + (NSString*) userAgentHeader {
@@ -57,14 +58,17 @@
                             URL: (NSURL*)url
                            body: (id)body
                  requestHeaders: (NSDictionary *)requestHeaders
+           allowsCellularAccess: (BOOL)allowsCellularAccess
                    onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     self = [super init];
     if (self) {
         _onCompletion = [onCompletion copy];
+        _allowsCellularAccess = allowsCellularAccess;
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
         _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+        _request.allowsCellularAccess = allowsCellularAccess;
         
         // Add headers.
         [_request setValue: [[self class] userAgentHeader] forHTTPHeaderField:@"User-Agent"];
@@ -82,6 +86,12 @@
     return self;
 }
 
+- (void)setAllowsCellularAccess:(bool)allowsCellularAccess {
+    if (_allowsCellularAccess != allowsCellularAccess) {
+        _allowsCellularAccess = allowsCellularAccess;
+        _request.allowsCellularAccess = _allowsCellularAccess;
+    }
+}
 
 - (NSTimeInterval) timeoutInterval {
     return _request.timeoutInterval;
@@ -376,7 +386,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     }
     
     // If the error is likely transient, retry:
-    if (CBLMayBeTransientError(error) && [self retry])
+    if (!CBLIsOfflineError(error) && CBLMayBeTransientError(error) && [self retry])
         return;
     
     [self clearConnection];

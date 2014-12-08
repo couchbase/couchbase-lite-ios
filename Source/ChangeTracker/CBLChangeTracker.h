@@ -61,6 +61,7 @@ typedef enum CBLChangeTrackerMode {
     id<CBLAuthorizer> _authorizer;
     unsigned _retryCount;
     BOOL _caughtUp;
+    BOOL _allowsCellularAccess;
 }
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
@@ -80,6 +81,7 @@ typedef enum CBLChangeTrackerMode {
 @property (strong, nonatomic) NSDictionary *requestHeaders;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
 @property (nonatomic) BOOL usePOST;
+@property (nonatomic) BOOL allowsCellularAccess;
 
 @property (nonatomic) CBLChangeTrackerMode mode;
 @property (copy) NSString* filterName;

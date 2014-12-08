@@ -54,6 +54,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
+@synthesize allowsCellularAccess=_allowsCellularAccess;
 @synthesize docIDs = _docIDs, pollInterval=_pollInterval, usePOST=_usePOST;
 @synthesize paused=_paused;
 
@@ -82,6 +83,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
         _mode = mode;
         _heartbeat = kDefaultHeartbeat;
         _includeConflicts = includeConflicts;
+        _allowsCellularAccess = YES;
         self.lastSequenceID = lastSequenceID;
     }
     return self;
@@ -243,7 +245,7 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     NSString* domain = error.domain;
     NSInteger code = error.code;
     if ($equal(domain, NSPOSIXErrorDomain)) {
-        if (code == ECONNREFUSED)
+        if (code == ECONNREFUSED || code == ENETDOWN || code == ENETUNREACH || code == ENOTCONN)
             error = [NSError errorWithDomain: NSURLErrorDomain
                                         code: NSURLErrorCannotConnectToHost
                                     userInfo: error.userInfo];
@@ -255,7 +257,9 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
     }
 
     // If the error may be transient (flaky network, server glitch), retry:
-    if (!CBLIsPermanentError(error) && (_continuous || CBLMayBeTransientError(error))) {
+    if (!CBLIsPermanentError(error)
+            && !CBLIsOfflineError(error)
+            && (_continuous || CBLMayBeTransientError(error))) {
         NSTimeInterval retryDelay = kInitialRetryDelay * (1 << MIN(_retryCount, 16U));
         retryDelay = MIN(retryDelay, kMaxRetryDelay);
         ++_retryCount;
