@@ -128,3 +128,4 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 #define kCBLReplicatorOption_PollInterval @"poll"           // NSNumber, in ms
 #define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"
 #define kCBLReplicatorOption_UseWebSocket @"websocket"      // Boolean; default is YES
+#define kCBLReplicatorOption_PinnedCert @"pinnedCert"       // NSData or (hex) NSString

@@ -195,6 +195,8 @@
 		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2769845B198863B5009687A3 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
 		2769845C198863B6009687A3 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
+		276B231A1A36646000CAF010 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
+		276B231B1A36646100CAF010 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276F25FB18A3386100A70679 /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 276F25F918A3386100A70679 /* DDData.h */; };
@@ -3250,6 +3252,7 @@
 				277EF41817F4DF3700F7B7F7 /* libstemmer_utf8.c in Sources */,
 				27726AB01889835F00AE6931 /* CBLJSON.m in Sources */,
 				272401C71860D0850080E082 /* WebSocketHTTPLogic.m in Sources */,
+				276B231A1A36646000CAF010 /* MYAnonymousIdentity.m in Sources */,
 				277EF43517F4DF3700F7B7F7 /* stem_ISO_8859_1_finnish.c in Sources */,
 				277EF44117F4DF3700F7B7F7 /* stem_ISO_8859_1_italian.c in Sources */,
 				277EF46B17F4DF3700F7B7F7 /* stem_UTF_8_hungarian.c in Sources */,
@@ -3349,6 +3352,7 @@
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
 				27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */,
 				27B0B7D21492B87D00A817AD /* CBLCollateJSON.m in Sources */,
+				276B231B1A36646100CAF010 /* MYAnonymousIdentity.m in Sources */,
 				27B0B7D51492B88F00A817AD /* CBL_Replicator.m in Sources */,
 				27B0B7D61492B8A200A817AD /* CBL_Puller.m in Sources */,
 				27B0B7D71492B8A200A817AD /* CBL_Pusher.m in Sources */,

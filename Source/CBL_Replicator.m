@@ -28,6 +28,7 @@
 #import "CBJSONEncoder.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
+#import "MYAnonymousIdentity.h"
 
 
 #define kProcessDelay 0.5
@@ -77,6 +78,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     CFAbsoluteTime _startTime;
     CBLReachability* _host;
     BOOL _suspended;
+    NSData* _pinnedCertData;
 }
 
 @synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
@@ -303,6 +305,17 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     // Did client request a reset (i.e. starting over from first sequence?)
     if (_options[kCBLReplicatorOption_Reset] != nil) {
         [db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
+    }
+
+    id digest = _options[kCBLReplicatorOption_PinnedCert];
+    if (digest) {
+        if ([digest isKindOfClass: [NSData class]])
+            _pinnedCertData = digest;
+        else if ([digest isKindOfClass: [NSString class]])
+            _pinnedCertData = CBLDataFromHex(digest);
+        if (_pinnedCertData.length != 20)
+            Warn(@"Invalid replicator %@ property value \"%@\"",
+                 kCBLReplicatorOption_PinnedCert, digest);
     }
 
     // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
@@ -758,6 +771,23 @@ static BOOL sOnlyTrustAnchorCerts;
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust
                      forHost: (NSString*)host port: (UInt16)port
 {
+        SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+    if (_pinnedCertData) {
+        if (_pinnedCertData.length == CC_SHA1_DIGEST_LENGTH) {
+        NSData* certKeyDigest = MYGetCertificatePublicKeyDigest(cert);
+            if (![certKeyDigest isEqual: _pinnedCertData]) {
+                Warn(@"%@: SSL cert digest %@ doesn't match pinnedCert %@",
+                     self, certKeyDigest, _pinnedCertData);
+            return NO;
+        }
+        } else {
+            NSData* certData = CFBridgingRelease(SecCertificateCopyData(cert));
+            if (![certData isEqual: _pinnedCertData]) {
+                Warn(@"%@: SSL cert does not equal pinnedCert", self);
+                return NO;
+    }
+        }
+    } else {
     @synchronized([self class]) {
         if (sAnchorCerts.count > 0) {
             SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
@@ -767,10 +797,13 @@ static BOOL sOnlyTrustAnchorCerts;
     SecTrustResultType result;
     OSStatus err = SecTrustEvaluate(trust, &result);
     if (err) {
-        Warn(@"SecTrustEvaluate failed with err %d for host %@:%d", (int)err, host, port);
+            Warn(@"%@: SecTrustEvaluate failed with err %d", self, (int)err);
+            return NO;
+        }
+        if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified) {
+            Warn(@"%@: SSL cert is not trustworthy (result=%d)", self, result);
         return NO;
     }
-    return result == kSecTrustResultProceed || result == kSecTrustResultUnspecified;
 }
 
 

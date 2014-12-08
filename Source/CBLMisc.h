@@ -35,6 +35,9 @@ NSData* CBLHMACSHA256(NSData* key, NSData* data) __attribute__((nonnull));
     The result is lowercase. This is important for CouchDB compatibility. */
 NSString* CBLHexFromBytes( const void* bytes, size_t length) __attribute__((nonnull));
 
+/** Parses hex dump to NSData. Returns nil if length is odd or any character is not a hex digit. */
+NSData* CBLDataFromHex(NSString* hex);
+
 NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b);
 
 /** Convenience function to JSON-encode an object to a string. */

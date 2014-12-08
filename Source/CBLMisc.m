@@ -145,6 +145,23 @@ NSString* CBLHexFromBytes( const void* bytes, size_t length) {
                                    encoding: NSASCIIStringEncoding];
 }
 
+NSData* CBLDataFromHex(NSString* hex) {
+    const char* chars = hex.UTF8String;
+    NSUInteger len = strlen(chars);
+    if (len % 2)
+        return nil;
+    NSMutableData* data = [NSMutableData dataWithLength: len/2];
+    uint8_t *bytes = data.mutableBytes;
+    NSUInteger bytePos = 0;
+    for (NSUInteger i = 0; i < len; i += 2) {
+        int d1 = chars[i], d2 = chars[i+1];
+        if (!ishexnumber(d1) || !ishexnumber(d2))
+            return nil;
+        bytes[bytePos++] = (uint8_t)(16 * digittoint(d1) + digittoint(d2));
+    }
+    return data;
+}
+
 
 NSData* CBLHMACSHA1(NSData* key, NSData* data) {
     UInt8 hmac[SHA_DIGEST_LENGTH];
