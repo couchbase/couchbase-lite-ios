@@ -118,6 +118,8 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 
 - (CBL_Revision *) transformRevision:(CBL_Revision *)rev;
 
+@property (readonly) SecCertificateRef serverCert;
+
 @end
 
 

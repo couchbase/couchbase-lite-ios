@@ -78,6 +78,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     CFAbsoluteTime _startTime;
     CBLReachability* _host;
     BOOL _suspended;
+    SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
 }
 
@@ -130,6 +131,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self stop];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [_host stop];
+    cfrelease(_serverCert);
 }
 
 
@@ -162,6 +164,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 @synthesize authorizer=_authorizer;
 @synthesize requestHeaders = _requestHeaders;
+@synthesize serverCert=_serverCert;
 
 
 - (BOOL) isPush {
@@ -771,41 +774,44 @@ static BOOL sOnlyTrustAnchorCerts;
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust
                      forHost: (NSString*)host port: (UInt16)port
 {
-        SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+    SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
     if (_pinnedCertData) {
         if (_pinnedCertData.length == CC_SHA1_DIGEST_LENGTH) {
-        NSData* certKeyDigest = MYGetCertificatePublicKeyDigest(cert);
+            NSData* certKeyDigest = MYGetCertificatePublicKeyDigest(cert);
             if (![certKeyDigest isEqual: _pinnedCertData]) {
                 Warn(@"%@: SSL cert digest %@ doesn't match pinnedCert %@",
                      self, certKeyDigest, _pinnedCertData);
-            return NO;
-        }
+                return NO;
+            }
         } else {
             NSData* certData = CFBridgingRelease(SecCertificateCopyData(cert));
             if (![certData isEqual: _pinnedCertData]) {
                 Warn(@"%@: SSL cert does not equal pinnedCert", self);
                 return NO;
-    }
+            }
         }
     } else {
-    @synchronized([self class]) {
-        if (sAnchorCerts.count > 0) {
-            SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
-            SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);
+        @synchronized([self class]) {
+            if (sAnchorCerts.count > 0) {
+                SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
+                SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);
+            }
         }
-    }
-    SecTrustResultType result;
-    OSStatus err = SecTrustEvaluate(trust, &result);
-    if (err) {
+        SecTrustResultType result;
+        OSStatus err = SecTrustEvaluate(trust, &result);
+        if (err) {
             Warn(@"%@: SecTrustEvaluate failed with err %d", self, (int)err);
             return NO;
         }
         if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified) {
             Warn(@"%@: SSL cert is not trustworthy (result=%d)", self, result);
-        return NO;
+            return NO;
+        }
     }
-}
 
+    // Server is trusted. Record its cert in case the client wants to pin it:
+    cfSetObj(&_serverCert, cert);
+    return YES;
 }
 
 

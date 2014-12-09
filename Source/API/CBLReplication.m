@@ -55,7 +55,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @synthesize headers=_headers, OAuth=_OAuth, customProperties=_customProperties;
 @synthesize running = _running, completedChangesCount=_completedChangesCount;
 @synthesize changesCount=_changesCount, lastError=_lastError, status=_status;
-@synthesize authenticator=_authenticator;
+@synthesize authenticator=_authenticator, serverCertificate=_serverCertificate;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -76,6 +76,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (void) dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+    cfrelease(_serverCertificate);
 }
 
 
@@ -222,7 +223,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
     [CBL_Replicator setAnchorCerts: certs onlyThese: onlyThese];
 }
@@ -282,7 +282,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         }];
 
         // Initialize the status to something other than kCBLReplicationStopped:
-        [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0];
+        [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0
+                serverCert: NULL];
 
         [_database addReplication: self];
     }
@@ -326,6 +327,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                 error: (NSError*)error
             processed: (NSUInteger)changesProcessed
               ofTotal: (NSUInteger)changesTotal
+           serverCert: (SecCertificateRef)serverCert
 {
     if (!_started)
         return;
@@ -358,6 +360,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         self.running = running;
         changed = YES;
     }
+
+    cfSetObj(&_serverCertificate, serverCert);
 
     if (changed) {
         static const char* kStatusNames[] = {"stopped", "offline", "idle", "active"};
@@ -414,7 +418,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [_database doAsync: ^{
             [self updateStatus: kCBLReplicationStopped
                          error: CBLStatusToNSError(status, nil)
-                     processed: 0 ofTotal: 0];
+                     processed: 0 ofTotal: 0 serverCert: NULL];
         }];
         return;
     }
@@ -468,8 +472,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSError* error = _bg_replicator.error;
     NSUInteger changes = _bg_replicator.changesProcessed;
     NSUInteger total = _bg_replicator.changesTotal;
+    SecCertificateRef serverCert = _bg_replicator.serverCert;
+    cfretain(serverCert);
     [_database doAsync: ^{
-        [self updateStatus: status error: error processed: changes ofTotal: total];
+        [self updateStatus: status error: error processed: changes ofTotal: total
+                serverCert: serverCert];
+        cfrelease(serverCert);
     }];
     
     if (status == kCBLReplicationStopped) {

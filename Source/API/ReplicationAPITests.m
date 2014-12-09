@@ -315,6 +315,27 @@ TestCase(RunReplicationWithError) {
 }
 
 
+TestCase(RunSSLReplication) {
+    RequireTestCase(RunPullReplication);
+    NSURL* remoteDbURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    CBLDatabase* db = createEmptyManagerAndDb();
+
+    Log(@"Pulling SSL...");
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+
+    NSArray* serverCerts = RemoteTestDBAnchorCerts();
+    [CBL_Replicator setAnchorCerts: serverCerts onlyThese: NO];
+    runReplication(repl, 2);
+    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+
+    AssertNil(repl.lastError);
+    SecCertificateRef gotServerCert = repl.serverCertificate;
+    Assert(gotServerCert);
+    Assert(CFEqual(gotServerCert, (SecCertificateRef)serverCerts[0]));
+    [db.manager close];
+}
+
+
 TestCase(ReplicationChannelsProperty) {
     CBLDatabase* db = createEmptyManagerAndDb();
     NSURL* const fakeRemoteURL = RemoteTestDBURL(@"no-such-db");

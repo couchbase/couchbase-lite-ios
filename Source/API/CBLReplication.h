@@ -125,6 +125,10 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
         root certs; if YES, it replaces them (so *only* the given certs will be trusted.) */
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
 
+/** The server's SSL certificate. This will be NULL until the first HTTPS response is received
+    from the server. */
+@property (readonly) SecCertificateRef serverCertificate;
+
 #pragma mark - STATUS:
 
 /** Starts the replication, asynchronously.
