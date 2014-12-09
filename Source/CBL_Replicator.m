@@ -806,6 +806,7 @@ static BOOL sOnlyTrustAnchorCerts;
     }
 }
 
+}
 
 
 // From CBLRemoteRequestDelegate protocol
