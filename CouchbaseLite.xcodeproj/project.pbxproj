@@ -1551,8 +1551,8 @@
 				275315D714ACF0A20065964D /* Listener */,
 				27538F5217F13B03004C3BFD /* LiteServ App */,
 				792867C1178DE01900248AF0 /* CBLJSViewCompiler */,
-				27C706CA1488679500F0F099 /* Demo-Mac */,
-				27B0B8111492C16300A817AD /* Demo-iOS */,
+				27C706CA1488679500F0F099 /* Test-Mac */,
+				27B0B8111492C16300A817AD /* Test-iOS */,
 				27FA59EE179EFD730043460A /* Documentation */,
 				2753154D14ACEF350065964D /* vendor */,
 				27C70696148864BA00F0F099 /* Frameworks */,
@@ -2139,7 +2139,7 @@
 			path = ChangeTracker;
 			sourceTree = "<group>";
 		};
-		27B0B8111492C16300A817AD /* Demo-iOS */ = {
+		27B0B8111492C16300A817AD /* Test-iOS */ = {
 			isa = PBXGroup;
 			children = (
 				27B0B81A1492C16300A817AD /* DemoAppDelegate.h */,
@@ -2156,7 +2156,7 @@
 				274E163119B90F420066CA5E /* TestData */,
 				27B0B8121492C16300A817AD /* Supporting Files */,
 			);
-			path = "Demo-iOS";
+			path = "Test-iOS";
 			sourceTree = "<group>";
 		};
 		27B0B8121492C16300A817AD /* Supporting Files */ = {
@@ -2220,7 +2220,7 @@
 			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
-		27C706CA1488679500F0F099 /* Demo-Mac */ = {
+		27C706CA1488679500F0F099 /* Test-Mac */ = {
 			isa = PBXGroup;
 			children = (
 				27C706CB1488679500F0F099 /* DemoAppController.h */,
@@ -2238,7 +2238,7 @@
 				27F1E4AA16979A0B00F0E50F /* CBLJSViewCompiler_Test.m */,
 				27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */,
 			);
-			path = "Demo-Mac";
+			path = "Test-Mac";
 			sourceTree = "<group>";
 		};
 		27DA4300158F9D7A00F9E7B5 /* API */ = {
@@ -4089,14 +4089,14 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
+				INFOPLIST_FILE = "Test-iOS/iOS Empty App-Info.plist";
 				LD_GENERATE_MAP_FILE = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Couchbase Lite Empty App";
@@ -4121,9 +4121,9 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo-iOS/iOS Empty App-Info.plist";
+				INFOPLIST_FILE = "Test-iOS/iOS Empty App-Info.plist";
 				LD_GENERATE_MAP_FILE = YES;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
@@ -4259,7 +4259,7 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -4267,7 +4267,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
+				INFOPLIST_FILE = "Test-iOS/iOS Demo-Info.plist";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "CBL Test";
 				PROVISIONING_PROFILE = "";
@@ -4292,9 +4292,9 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Demo-iOS/iOS Demo-Prefix.pch";
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo-iOS/iOS Demo-Info.plist";
+				INFOPLIST_FILE = "Test-iOS/iOS Demo-Info.plist";
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "CBL Test";
@@ -4319,7 +4319,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
+				INFOPLIST_FILE = "Test-Mac/ShoppingDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				PRODUCT_NAME = "Couchbase Lite Demo";
 				VALID_ARCHS = x86_64;
@@ -4339,7 +4339,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				INFOPLIST_FILE = "Demo-Mac/ShoppingDemo-Info.plist";
+				INFOPLIST_FILE = "Test-Mac/ShoppingDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				PRODUCT_NAME = "Couchbase Lite Demo";
 				VALID_ARCHS = x86_64;
