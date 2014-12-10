@@ -7,6 +7,8 @@
 //
 
 #import "CBLQueryPlanner+Private.h"
+#import "CBLView.h"
+#import "APITestUtils.h"
 #import "Test.h"
 
 
@@ -65,11 +67,11 @@ static void test(NSArray* select,
     Log(@"Where:  %@", wherePred);
     Log(@"Order:  %@", orderKey);
     NSError* error;
-    CBLQueryPlanner* planner = [[CBLQueryPlanner alloc] initWithView: nil
-                                                              select: select
-                                                               where: where
-                                                             orderBy: orderBy
-                                                               error: &error];
+    CBLQueryPlanner* planner = [[CBLQueryPlanner alloc] initWithDatabase: nil
+                                                                  select: select
+                                                                   where: where
+                                                                 orderBy: orderBy
+                                                                   error: &error];
     NSCAssert(planner, @"Couldn't create planner: %@", error);
     Log(@"Explanation:\n%@", planner.explanation);
     BOOL result = YES;
@@ -95,7 +97,7 @@ static void test(NSArray* select,
 }
 
 
-TestCase(CBLQueryPlanner) {
+TestCase(CBLQueryPlanner_Plan) {
     test(/*select*/ @[@"wingspan"],
          /*where*/ @"name in $NAMES",
          /*order by*/ @"name",
@@ -203,6 +205,37 @@ TestCase(CBLQueryPlanner) {
          nil,
          @"[(value1, ascending, compare:)]",
          @"value1 CONTAINS $NAME");
+}
+
+
+TestCase(CBLQueryPlanner_ViewGeneration) {
+    CBLDatabase* db = createEmptyDB();
+
+    NSError* error;
+    CBLQueryPlanner* p1 = [[CBLQueryPlanner alloc] initWithDatabase: db
+                                                             select: @[@"wingspan"]
+                                                              where: @"name in $NAMES"
+                                                            orderBy: nil
+                                                              error: &error];
+    Assert(p1);
+    Log(@"Explanation: %@", p1.explanation);
+    AssertEqual(p1.view.name, @"planned-2McEVZlRUX/tPUaZo4wtarevkgU=");
+
+    CBLQueryPlanner* p2 = [[CBLQueryPlanner alloc] initWithDatabase: db
+                                                             select: @[@"wingspan"]
+                                                              where: @"name >= $NAME1"
+                                                            orderBy: nil
+                                                              error: &error];
+    Assert(p2);
+    Log(@"Explanation: %@", p2.explanation);
+    AssertEqual(p2.view.name, @"planned-2McEVZlRUX/tPUaZo4wtarevkgU=");
+    AssertEq(p2.view, p1.view);
+}
+
+
+TestCase(CBLQueryPlanner) {
+    RequireTestCase(CBLQueryPlanner_Plan);
+    RequireTestCase(CBLQueryPlanner_ViewGeneration);
 }
 
 

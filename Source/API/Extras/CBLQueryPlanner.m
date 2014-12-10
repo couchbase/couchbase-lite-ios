@@ -98,6 +98,7 @@ static NSData* SHA1Digest(NSData* input) {
 
 
 - (instancetype) initWithView: (CBLView*)view
+                   inDatabase: (CBLDatabase*)database
                        select: (NSArray*)valueTemplate
                wherePredicate: (NSPredicate*)predicate
                       orderBy: (NSArray*)sortDescriptors
@@ -105,7 +106,6 @@ static NSData* SHA1Digest(NSData* input) {
 {
     self = [super init];
     if (self) {
-        _view = view;
         _valueTemplate = valueTemplate;
         _querySort = sortDescriptors;
 
@@ -126,12 +126,14 @@ static NSData* SHA1Digest(NSData* input) {
         // item of the 'property' array as a separate key during the map phase.
         _explodeKey = (_equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
 
-        if (_view) {
-            [[self class] defineView: _view
-                    withMapPredicate: mapPredicate
-                       keyExpression: self.keyExpression
-                          explodeKey: _explodeKey
-                     valueExpression: self.valueExpression];
+        if (database) {
+            // (We allow a nil database and just skip creating a view; useful for unit tests.)
+            _view = [[self class] defineView: view
+                                  inDatabase: database
+                            withMapPredicate: mapPredicate
+                               keyExpression: self.keyExpression
+                                  explodeKey: _explodeKey
+                             valueExpression: self.valueExpression];
         }
 
         [self precomputeQuery];
@@ -142,13 +144,35 @@ static NSData* SHA1Digest(NSData* input) {
 }
 
 
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           select: (NSArray*)valueTemplate
+                   wherePredicate: (NSPredicate*)predicate
+                          orderBy: (NSArray*)sortDescriptors
+                            error: (NSError**)outError
+{
+    return [self initWithView: nil inDatabase: database select: valueTemplate
+               wherePredicate:predicate orderBy: sortDescriptors error: outError];
+}
+
+
 - (instancetype) initWithView: (CBLView*)view
                        select: (NSArray*)valueTemplate
-                        where: (NSString*)predicate
+               wherePredicate: (NSPredicate*)predicate
                       orderBy: (NSArray*)sortDescriptors
                         error: (NSError**)outError
 {
-    return [self initWithView: view
+    return [self initWithView: view inDatabase: view.database select: valueTemplate
+               wherePredicate:predicate orderBy: sortDescriptors error: outError];
+}
+
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           select: (NSArray*)valueTemplate
+                            where: (NSString*)predicate
+                          orderBy: (NSArray*)sortDescriptors
+                            error: (NSError**)outError
+{
+    return [self initWithDatabase: database
                        select: valueTemplate
                wherePredicate: [NSPredicate predicateWithFormat: predicate argumentArray: nil]
                       orderBy: sortDescriptors
@@ -520,11 +544,12 @@ static NSData* SHA1Digest(NSData* input) {
 
 // Sets the view's map block. (This is a class method to avoid having the block accidentally close
 // over any instance variables, creating a reference cycle.)
-+ (void) defineView: (CBLView*)view
-   withMapPredicate: (NSPredicate*)mapPredicate
-      keyExpression: (NSExpression*)keyExpression
-         explodeKey: (BOOL)explodeKey
-    valueExpression: (NSExpression*)valueExpr
++ (CBLView*) defineView: (CBLView*)view
+             inDatabase: (CBLDatabase*)db
+       withMapPredicate: (NSPredicate*)mapPredicate
+          keyExpression: (NSExpression*)keyExpression
+             explodeKey: (BOOL)explodeKey
+        valueExpression: (NSExpression*)valueExpr
 {
     // Compute a map-block version string that's unique to this configuration:
     NSMutableDictionary* versioned = [NSMutableDictionary dictionary];
@@ -535,6 +560,9 @@ static NSData* SHA1Digest(NSData* input) {
         versioned[@"valueExpression"] = valueExpr;
     NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
     NSString* version = [CBLJSON base64StringWithData: SHA1Digest(archive)];
+
+    if (!view)
+        view = [db viewNamed: [NSString stringWithFormat: @"planned-%@", version]];
 
     BOOL compoundKey = (keyExpression.expressionType == NSAggregateExpressionType);
 
@@ -569,6 +597,7 @@ static NSData* SHA1Digest(NSData* input) {
             }
         }
     } version: version];
+    return view;
 }
 
 

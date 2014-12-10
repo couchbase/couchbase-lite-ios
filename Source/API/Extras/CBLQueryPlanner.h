@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLView, CBLQuery;
+@class CBLDatabase, CBLView, CBLQuery;
 
 
 /** A higher-level interface to views and queries that feels more like a traditional query language.
@@ -15,8 +15,8 @@
     CBLQueries. */
 @interface CBLQueryPlanner : NSObject
 
-/** Initializes a CBLQueryPlanner and configures its view's map block.
-    @param view  The view to configure
+/** Initializes a CBLQueryPlanner.
+    @param database The database to index and query.
     @param valueTemplate  The values you want in queries. The array items are either keypath
                 strings or NSExpressions; in either case they're evaluated relative to the
                 document being indexed.
@@ -26,22 +26,30 @@
                 post-processing applied to the query results.
     @param sortDescriptors  The sort order you want the results in. If possible, the view's key
                 will take these into account so the results are naturally sorted; otherwise the
-                query results will be sorted afterwards.
+                query results will be sorted afterwards. If you don't care about sorting, use nil.
     @param outError  If the planner doesn't know how to handle the input, this will be filled in
                 with an NSError describing the problem.
     @return  The initialized CBLQueryPlanner, or nil on error. */
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           select: (NSArray*)valueTemplate
+                   wherePredicate: (NSPredicate*)predicate
+                          orderBy: (NSArray*)sortDescriptors
+                            error: (NSError**)outError;
+
+/** Initializes a CBLQueryPlanner.
+    This is a convenience initializer that parses a predicate string for you;
+    see the main initializer for details. */
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           select: (NSArray*)valueTemplate
+                            where: (NSString*)predicateStr
+                          orderBy: (NSArray*)sortDescriptors
+                            error: (NSError**)outError;
+
+/** Initializes a CBLQueryPlanner, using an explicitly chosen view.
+    See the main initializer for details. */
 - (instancetype) initWithView: (CBLView*)view
                        select: (NSArray*)valueTemplate
                wherePredicate: (NSPredicate*)predicate
-                      orderBy: (NSArray*)sortDescriptors
-                        error: (NSError**)outError;
-
-/** Initializes a CBLQueryPlanner and configures its view's map block.
-    This is a convenience initializer that parses a predicate string for you;
-    see the other initializer for details. */
-- (instancetype) initWithView: (CBLView*)view
-                       select: (NSArray*)valueTemplate
-                        where: (NSString*)predicateStr
                       orderBy: (NSArray*)sortDescriptors
                         error: (NSError**)outError;
 
