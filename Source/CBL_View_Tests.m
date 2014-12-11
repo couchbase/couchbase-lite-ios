@@ -1088,11 +1088,46 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEq(rows.count, 1u);
     CAssertEqual([rows[0] documentID], @"33333");
 
+    // Now delete a document:
+    CBL_Revision* rev = docs[3];
+    CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
+    CBLStatus status;
+    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusOK);
+
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    // Make sure the deleted doc doesn't still show up in the query results:
+    rows = [[query run: NULL] allObjects];
+    CAssertEq(rows.count, 0u);
+}
+
+#if 0 // Boolean operators and snippets are not available (yet) with ForestDB
+TestCase(CBL_View_FullTextQuery_Advanced) {
+    RequireTestCase(CBL_View_FullTextQuery);
+    CBLDatabase *db = createDB();
+    CBLStatus status;
+
+    NSMutableArray* docs = $marray();
+    [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"text", @"it was a dark"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"text", @"and STöRMy night."}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"text", @"outside somewhere"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"text", @"a dog whøse ñame was “Dog”"}))];
+    [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
+
+    CBLView* view = [db viewNamed: @"fts"];
+    view.indexType = kCBLFullTextIndex;
+    [view setMapBlock: MAPBLOCK({
+        if (doc[@"text"])
+            emit(doc[@"text"], doc[@"_id"]);
+    }) reduceBlock: NULL version: @"1"];
+
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
     CBLQueryOptions *options = [CBLQueryOptions new];
     options.fullTextQuery = @"stormy OR dog";
     options->fullTextRanking = NO;
     options->fullTextSnippets = YES;
-    CBLStatus status;
     CBLQueryIteratorBlock rowIter = [view _queryWithOptions: options status: &status];
     CAssert(rowIter, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rowIter);
@@ -1108,10 +1143,10 @@ TestCase(CBL_View_FullTextQuery) {
     CAssertEqual(rowsToDicts(rowIter), expectedRows);
 
     // Try a query with snippets:
-    query = [view createQuery];
+    CBLQuery* query = [view createQuery];
     query.fullTextQuery = @"(was NOT barking) OR dog";
     query.fullTextSnippets = YES;
-    rows = [[query run: NULL] allObjects];
+    NSArray* rows = [[query run: NULL] allObjects];
     CAssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
@@ -1160,6 +1195,7 @@ TestCase(CBL_View_FullTextQuery) {
                                 {@"value", @"44444"}));
     CAssertEqual(rowsToDicts(rowIter), expectedRows);
 }
+#endif
 
 
 TestCase(CBL_View_TotalDocs) {
