@@ -931,7 +931,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                     status = kCBLStatusBadRequest;
             }
             _response.internalStatus = status;
-            [self finished];
+            [self sendResponseHeaders];
+            [self sendResponseBodyAndFinish: YES];
         }];
 
         if (CBLStatusIsError(status))
