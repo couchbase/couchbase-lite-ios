@@ -123,6 +123,9 @@
                          mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
 @end
 
+@interface CBLQueryEnumerator ()
++ (NSSortDescriptor*) asNSSortDescriptor: (id)descOrStr; // Converts NSString to NSSortDescriptor
+@end
 
 @interface CBLQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID

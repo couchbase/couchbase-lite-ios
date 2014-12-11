@@ -1,14 +1,14 @@
 //
-//  CBLQueryPlanner.m
+//  CBLQueryBuilder.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/4/14.
 //
 //
 
-#import "CBLQueryPlanner.h"
-#import "CBLQueryPlanner+Private.h"
-#import <CouchbaseLite/CouchbaseLite.h>
+#import "CBLQueryBuilder.h"
+#import "CBLQueryBuilder+Private.h"
+#import "CouchbaseLitePrivate.h"
 #import <CommonCrypto/CommonDigest.h>
 
 
@@ -27,37 +27,6 @@
  */
 
 
-
-// Standalone equivalents of stuff from MYUtilities:
-#ifndef $cast
-#define $cast(CLASSNAME,OBJ)    ((CLASSNAME*)(_cast([CLASSNAME class],(OBJ))))
-#define $castIf(CLASSNAME,OBJ)  ((CLASSNAME*)(_castIf([CLASSNAME class],(OBJ))))
-static inline id _cast(Class requiredClass, id object) {
-    NSCAssert([object isKindOfClass: requiredClass], @"Value is %@, not %@",
-              [object class], requiredClass);
-    return object;
-}
-static inline id _castIf(Class requiredClass, id object) {
-    return [object isKindOfClass: requiredClass] ? object : nil;
-}
-#endif
-
-#ifndef LogTo
-#define LOGGING 1
-#define LogTo(KEYWORD, FMT, ...)  if(!LOGGING) ; else NSLog(FMT, __VA_ARGS__)
-#define Warn(FMT, ...)            NSLog(@"WARNING: " #FMT, __VA_ARGS__)
-#endif
-
-static NSArray* $map(NSArray* array, id (^block)(id obj)) {
-    NSMutableArray* mapped = [[NSMutableArray alloc] initWithCapacity: array.count];
-    for (id obj in array) {
-        id mappedObj = block(obj);
-        if (mappedObj)
-            [mapped addObject: mappedObj];
-    }
-    return [mapped copy];
-}
-
 static NSData* SHA1Digest(NSData* input) {
     unsigned char digest[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1(input.bytes, (CC_LONG)input.length, digest);
@@ -65,14 +34,13 @@ static NSData* SHA1Digest(NSData* input) {
 }
 
 
-@implementation CBLQueryPlanner
+@implementation CBLQueryBuilder
 {
     // These are only used during initialization:
     NSComparisonPredicate* _equalityKey;    // Predicate with equality test, used as key
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
     NSArray* _keyPredicates;                // Predicates whose LHS generate the key, at map time
     NSArray* _valueTemplate;                // Values desired
-    BOOL _explodeKey;                       // Emit each item of key separately?
     NSMutableArray* _filterPredicates;      // Predicates to go into _queryFilter
     NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
 
@@ -85,6 +53,7 @@ static NSData* SHA1Digest(NSData* input) {
     NSArray* _querySort;                    // Sort descriptors for the query
 
     // Used for -explanation
+    BOOL _explodeKey;                       // Emit each item of key separately?
     NSPredicate* _mapPredicate;
 }
 
@@ -107,11 +76,13 @@ static NSData* SHA1Digest(NSData* input) {
     self = [super init];
     if (self) {
         _valueTemplate = valueTemplate;
-        _querySort = sortDescriptors;
+
+        _querySort = [sortDescriptors my_map: ^id(id descOrStr) {
+            return [CBLQueryEnumerator asNSSortDescriptor: descOrStr];
+        }];
 
         // Scan the input:
-        NSPredicate* mapPredicate = [self scanPredicate: predicate];
-        _mapPredicate = mapPredicate;
+        _mapPredicate = [self scanPredicate: predicate];
         if (_error) {
             if (outError)
                 *outError = _error;
@@ -130,7 +101,7 @@ static NSData* SHA1Digest(NSData* input) {
             // (We allow a nil database and just skip creating a view; useful for unit tests.)
             _view = [[self class] defineView: view
                                   inDatabase: database
-                            withMapPredicate: mapPredicate
+                            withMapPredicate: _mapPredicate
                                keyExpression: self.keyExpression
                                   explodeKey: _explodeKey
                              valueExpression: self.valueExpression];
@@ -138,7 +109,7 @@ static NSData* SHA1Digest(NSData* input) {
 
         [self precomputeQuery];
 
-        LogTo(View, @"Created CBLQueryPlanner on %@:\n%@", view, self.explanation);
+        LogTo(Query, @"Created CBLQueryBuilder on %@:\n%@", view, self.explanation);
     }
     return self;
 }
@@ -178,6 +149,38 @@ static NSData* SHA1Digest(NSData* input) {
                       orderBy: sortDescriptors
                         error: outError];
 }
+
+
+#if 0
+- (void) encodeWithCoder:(NSCoder *)coder {
+    [coder encodeObject: _queryStartKey         forKey: @"queryStartKey"];
+    [coder encodeObject: _queryEndKey           forKey: @"queryEndKey"];
+    [coder encodeObject: _queryKeys             forKey: @"queryKeys"];
+    [coder encodeBool:   _queryInclusiveStart   forKey: @"queryInclusiveStart"];
+    [coder encodeBool:   _queryInclusiveEnd     forKey: @"queryInclusiveEnd"];
+    [coder encodeObject: _queryFilter           forKey: @"queryFilter"];
+    [coder encodeObject: _querySort             forKey: @"querySort"];
+    [coder encodeObject: _mapPredicate          forKey: @"mapPredicate"];
+    [coder encodeObject: _view.name             forKey: @"viewName"];
+}
+
+
+- (instancetype) initWithCoder:(NSCoder *)decoder {
+    self = [super init];
+    if (self) {
+        _queryStartKey      = [decoder decodeObjectForKey: @"queryStartKey"];
+        _queryEndKey        = [decoder decodeObjectForKey: @"queryEndKey"];
+        _queryKeys          = [decoder decodeObjectForKey: @"queryKeys"];
+        _queryInclusiveStart= [decoder decodeBoolForKey:   @"queryInclusiveStart"];
+        _queryInclusiveEnd  = [decoder decodeBoolForKey:   @"queryInclusiveEnd"];
+        _queryFilter        = [decoder decodeObjectForKey: @"queryFilter"];
+        _querySort          = [decoder decodeObjectForKey: @"querySort"];
+        _mapPredicate       = [decoder decodeObjectForKey: @"mapPredicate"];
+        NSString* viewName  = [decoder decodeObjectForKey: @"viewName"];
+    }
+    return self;
+}
+#endif
 
 
 - (NSString*) explanation {
@@ -523,22 +526,22 @@ static NSData* SHA1Digest(NSData* input) {
 
 // The expression that should be emitted as the key
 - (NSExpression*) keyExpression {
-    return aggregateExpressions($map(_keyPredicates, ^id(NSComparisonPredicate* cp) {
+    return aggregateExpressions([_keyPredicates my_map: ^id(NSComparisonPredicate* cp) {
         NSExpression* expr = cp.leftExpression;
         if (cp.options & NSCaseInsensitivePredicateOption)
             expr = [NSExpression expressionForFunction: @"lowercase:" arguments: @[expr]];
         return expr;
-    }));
+    }]);
 }
 
 
 // The expression that should be emitted as the value
 - (NSExpression*) valueExpression {
-    return aggregateExpressions($map(_valueTemplate, ^id(id item) {
+    return aggregateExpressions([_valueTemplate my_map: ^id(id item) {
         if (![item isKindOfClass: [NSExpression class]])
             item = [NSExpression expressionForKeyPath: $castIf(NSString, item)];
         return item;
-    }));
+    }]);
 }
 
 
@@ -561,8 +564,18 @@ static NSData* SHA1Digest(NSData* input) {
     NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
     NSString* version = [CBLJSON base64StringWithData: SHA1Digest(archive)];
 
-    if (!view)
-        view = [db viewNamed: [NSString stringWithFormat: @"planned-%@", version]];
+    if (!view) {
+        NSString* viewID = [NSString stringWithFormat: @"planned-%@", version];
+        if (![db existingViewNamed: viewID]) {
+            // Logging makes it easier to detect misuse where someone creates lots of builders with
+            // slightly different predicates containing hardcoded variable values, which will
+            // result in lots of unnecessary views being created.
+            // (For example, "doc.price < 100", "doc.price < 50", "doc.price < 200" ...
+            // instead of "doc.price < $PRICE" with $PRICE being filled in at query time.)
+            Log(@"CBLQueryBuilder: Creating new view '%@'", viewID);
+        }
+        view = [db viewNamed: viewID];
+    }
 
     BOOL compoundKey = (keyExpression.expressionType == NSAggregateExpressionType);
 
@@ -721,6 +734,12 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
 }
 
 
+- (CBLQueryEnumerator*) runQueryWithContext: (NSDictionary*)context
+                                      error: (NSError**)outError {
+    return [[self createQueryWithContext: context] run: outError];
+}
+
+
 #pragma mark - UTILITIES:
 
 
@@ -731,7 +750,7 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
         message = [[NSString alloc] initWithFormat: message arguments: args];
         va_end(args);
         NSDictionary* userInfo = @{NSLocalizedFailureReasonErrorKey: message};
-        _error = [NSError errorWithDomain: @"CBLQueryPlanner" code: -1 userInfo: userInfo];
+        _error = [NSError errorWithDomain: @"CBLQueryBuilder" code: -1 userInfo: userInfo];
     }
 }
 

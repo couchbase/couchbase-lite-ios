@@ -1,12 +1,12 @@
 //
-//  CBLQueryPlannerTests.m
+//  CBLQueryBuilderTests.m
 //  Tunes
 //
 //  Created by Jens Alfke on 8/12/14.
 //  Copyright (c) 2014 CouchBase, Inc. All rights reserved.
 //
 
-#import "CBLQueryPlanner+Private.h"
+#import "CBLQueryBuilder+Private.h"
 #import "CBLView.h"
 #import "APITestUtils.h"
 #import "Test.h"
@@ -60,44 +60,46 @@ static void test(NSArray* select,
 {
     NSPredicate* wherePred = [NSPredicate predicateWithFormat: where];
     NSArray* orderBy = nil;
-    if (orderKey)
-        orderBy = @[[NSSortDescriptor sortDescriptorWithKey: orderKey ascending: YES]];
+    if (orderKey) {
+        orderBy = @[orderKey];
+        //orderBy = @[[NSSortDescriptor sortDescriptorWithKey: orderKey ascending: YES]];
+    }
     Log(@"--------------");
     Log(@"Select: %@", desc(select));
     Log(@"Where:  %@", wherePred);
     Log(@"Order:  %@", orderKey);
     NSError* error;
-    CBLQueryPlanner* planner = [[CBLQueryPlanner alloc] initWithDatabase: nil
+    CBLQueryBuilder* builder = [[CBLQueryBuilder alloc] initWithDatabase: nil
                                                                   select: select
                                                                    where: where
                                                                  orderBy: orderBy
                                                                    error: &error];
-    NSCAssert(planner, @"Couldn't create planner: %@", error);
-    Log(@"Explanation:\n%@", planner.explanation);
+    NSCAssert(builder, @"Couldn't create query builder: %@", error);
+    Log(@"Explanation:\n%@", builder.explanation);
     BOOL result = YES;
-    Log(@"Map pred --> %@", planner.mapPredicate);
-    result = matchDesc(@"mapPredicate", planner.mapPredicate, expectedMapPred) && result;
-    Log(@"Key expr --> %@", desc(planner.keyExpression));
-    result = matchDesc(@"keyExpression", planner.keyExpression, expectedKeyExprs) && result;
-    Log(@"Value -->    %@", desc(planner.valueExpression));
-    result = matchDesc(@"valueExpression", planner.valueExpression, expectedValues) && result;
-    Log(@"StartKey --> %@", desc(planner.queryStartKey));
-    result = matchDesc(@"queryStartKey", planner.queryStartKey, expectedStartKey) && result;
-    Log(@"EndKey -->   %@", desc(planner.queryEndKey));
-    result = matchDesc(@"queryEndKey", planner.queryEndKey, expectedEndKey) && result;
-    Log(@"Keys -->     %@", desc(planner.queryKeys));
-    result = matchDesc(@"queryKeys", planner.queryKeys, expectedKeys) && result;
-    Log(@"Sort -->     %@", desc(planner.sortDescriptors));
-    result = matchDesc(@"sortDescriptors", planner.sortDescriptors, expectedSorts) && result;
-    Log(@"Filter -->   %@", planner.filter);
-    result = matchDesc(@"filter", planner.filter, expectedFilter) && result;
+    Log(@"Map pred --> %@", builder.mapPredicate);
+    result = matchDesc(@"mapPredicate", builder.mapPredicate, expectedMapPred) && result;
+    Log(@"Key expr --> %@", desc(builder.keyExpression));
+    result = matchDesc(@"keyExpression", builder.keyExpression, expectedKeyExprs) && result;
+    Log(@"Value -->    %@", desc(builder.valueExpression));
+    result = matchDesc(@"valueExpression", builder.valueExpression, expectedValues) && result;
+    Log(@"StartKey --> %@", desc(builder.queryStartKey));
+    result = matchDesc(@"queryStartKey", builder.queryStartKey, expectedStartKey) && result;
+    Log(@"EndKey -->   %@", desc(builder.queryEndKey));
+    result = matchDesc(@"queryEndKey", builder.queryEndKey, expectedEndKey) && result;
+    Log(@"Keys -->     %@", desc(builder.queryKeys));
+    result = matchDesc(@"queryKeys", builder.queryKeys, expectedKeys) && result;
+    Log(@"Sort -->     %@", desc(builder.sortDescriptors));
+    result = matchDesc(@"sortDescriptors", builder.sortDescriptors, expectedSorts) && result;
+    Log(@"Filter -->   %@", builder.filter);
+    result = matchDesc(@"filter", builder.filter, expectedFilter) && result;
 
     NSCAssert(result, @"Incorrect query plan");
     Log(@"**OK**");
 }
 
 
-TestCase(CBLQueryPlanner_Plan) {
+TestCase(CBLQueryBuilder_Plan) {
     test(/*select*/ @[@"wingspan"],
          /*where*/ @"name in $NAMES",
          /*order by*/ @"name",
@@ -208,11 +210,11 @@ TestCase(CBLQueryPlanner_Plan) {
 }
 
 
-TestCase(CBLQueryPlanner_ViewGeneration) {
+TestCase(CBLQueryBuilder_ViewGeneration) {
     CBLDatabase* db = createEmptyDB();
 
     NSError* error;
-    CBLQueryPlanner* p1 = [[CBLQueryPlanner alloc] initWithDatabase: db
+    CBLQueryBuilder* p1 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
                                                               where: @"name in $NAMES"
                                                             orderBy: nil
@@ -221,7 +223,7 @@ TestCase(CBLQueryPlanner_ViewGeneration) {
     Log(@"Explanation: %@", p1.explanation);
     AssertEqual(p1.view.name, @"planned-2McEVZlRUX/tPUaZo4wtarevkgU=");
 
-    CBLQueryPlanner* p2 = [[CBLQueryPlanner alloc] initWithDatabase: db
+    CBLQueryBuilder* p2 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
                                                               where: @"name >= $NAME1"
                                                             orderBy: nil
@@ -233,9 +235,9 @@ TestCase(CBLQueryPlanner_ViewGeneration) {
 }
 
 
-TestCase(CBLQueryPlanner) {
-    RequireTestCase(CBLQueryPlanner_Plan);
-    RequireTestCase(CBLQueryPlanner_ViewGeneration);
+TestCase(CBLQueryBuilder) {
+    RequireTestCase(CBLQueryBuilder_Plan);
+    RequireTestCase(CBLQueryBuilder_ViewGeneration);
 }
 
 

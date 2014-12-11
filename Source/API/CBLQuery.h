@@ -193,12 +193,15 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 /** Resets the enumeration so the next call to -nextObject or -nextRow will return the first row. */
 - (void) reset;
 
-/** Re-sorts the rows based on the given NSSortDescriptors.
+/** Re-sorts the rows based on the given sort descriptors.
     This operation requires that all rows be loaded into memory, so you can't have previously
     called -nextObject, -nextRow or for...in on this enumerator. (But it's fine to use them
     _after_ calling this method.)
     You can call this method multiple times with different sort descriptors, but the effects
     on any in-progress enumeration are undefined.
+    The items in the array can be NSSortDescriptors or simply NSStrings. An NSString will be
+    treated as an NSSortDescriptor with the string as the keyPath; prefix with a "-" for descending
+    sort.
     Key-paths are interpreted relative to a CBLQueryRow, so they should start with
     "value" to refer to the value, or "key" to refer to the key.
     A limited form of array indexing is supported, so you can refer to "key[1]" or "value[0]" if

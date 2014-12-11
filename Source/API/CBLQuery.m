@@ -476,7 +476,8 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 
 - (void) sortUsingDescriptors: (NSArray*)sortDescriptors {
     // First make the key-paths relative to each row's value unless they start from a root key:
-    sortDescriptors = [sortDescriptors my_map: ^id(NSSortDescriptor* desc) {
+    sortDescriptors = [sortDescriptors my_map: ^id(id descOrString) {
+        NSSortDescriptor* desc = [[self class] asNSSortDescriptor: descOrString];
         NSString* keyPath = desc.key;
         NSString* newKeyPath = keyPathForQueryRow(keyPath);
         Assert(newKeyPath, @"Invalid CBLQueryRow key path \"%@\"", keyPath);
@@ -494,6 +495,17 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 
     // Now the sorting is trivial:
     _rows = [_rows sortedArrayUsingDescriptors: sortDescriptors];
+}
+
+
++ (NSSortDescriptor*) asNSSortDescriptor: (id)desc {
+    if ([desc isKindOfClass: [NSString class]]) {
+        BOOL ascending = ![desc hasPrefix: @"-"];
+        if (!ascending)
+            desc = [desc substringFromIndex: 1];
+        desc = [NSSortDescriptor sortDescriptorWithKey: desc ascending: ascending];
+    }
+    return desc;
 }
 
 
