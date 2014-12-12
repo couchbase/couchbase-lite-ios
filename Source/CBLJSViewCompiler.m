@@ -16,13 +16,11 @@
 #import "CBLJSViewCompiler.h"
 #import "CBLJSFunction.h"
 #import "CBLRevision.h"
-#import "Logging.h"
 #import <JavaScriptCore/JavaScript.h>
 #import <JavaScriptCore/JSStringRefCF.h>
 
 
-/* NOTE: JavaScriptCore is not a public system framework on iOS, so you'll need to link your iOS app
-   with your own copy of it. See <https://github.com/phoboslab/JavaScriptCore-iOS>. */
+/* NOTE: If you build this, you'll need to link against JavaScriptCore.framework */
 
 /* NOTE: This source file requires ARC. */
 
@@ -80,7 +78,7 @@ static JSValueRef LogCallback(JSContextRef ctx, JSObjectRef function, JSObjectRe
     id message = nil;
     if (argumentCount > 0) {
         message = ValueToID(ctx, arguments[0]);
-        Log(@"%@", message);
+        NSLog(@"JS: %@", message);
     }
     return JSValueMakeUndefined(ctx);
 }
