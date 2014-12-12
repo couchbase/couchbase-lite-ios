@@ -235,9 +235,33 @@ TestCase(CBLQueryBuilder_ViewGeneration) {
 }
 
 
+TestCase(CBLQueryBuilder_Explanation) {
+    NSError* error;
+    CBLQueryBuilder* b = [[CBLQueryBuilder alloc]
+                            initWithDatabase: createEmptyDB()
+                            select: @[@"title", @"body", @"author", @"date"]
+                            where: @"type == 'post' and tags contains $TAG"
+                            orderBy: @[@"-date"]
+                            error: &error];
+    NSString* exp = b.explanation;
+    Log(@"Explanation = \n%@", exp);
+    AssertEqual(exp,
+@"// view \"builder-+nWvuTVG43pphUMxD0HgzuDYhYU=\":\n\
+view.map = {\n\
+    if (type == \"post\")\n\
+        for (i in tags)\n\
+            emit([i, date], [title, body, author]);\n\
+};\n\
+query.startKey = [$TAG];\n\
+query.endKey = [$TAG];\n\
+query.prefixMatchLevel = 1;\n");
+}
+
+
 TestCase(CBLQueryBuilder) {
     RequireTestCase(CBLQueryBuilder_Plan);
     RequireTestCase(CBLQueryBuilder_ViewGeneration);
+    RequireTestCase(CBLQueryBuilder_Explanation);
 }
 
 

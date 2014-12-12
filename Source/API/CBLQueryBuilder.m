@@ -49,6 +49,7 @@ static NSData* SHA1Digest(NSData* input) {
     NSExpression* _queryEndKey;             // The endKey to use in queries
     NSExpression* _queryKeys;               // The 'keys' array to use in queries
     BOOL _queryInclusiveStart, _queryInclusiveEnd;  // The inclusiveStart/End to use in queries
+    uint8_t _queryPrefixMatchLevel;         // The prefixMatchLevel to use in queries
     NSPredicate* _queryFilter;              // Postprocessing filter predicate to use in the query
     NSArray* _querySort;                    // Sort descriptors for the query
 
@@ -183,18 +184,32 @@ static NSData* SHA1Digest(NSData* input) {
 #endif
 
 
+// Makes printed expression more JavaScript-like by changing array brackets from {} to [].
+static NSString* printExpr(NSExpression* expr) {
+    NSString* desc = expr.description;
+    if ([desc hasPrefix: @"{"] && [desc hasSuffix: @"}"])
+        desc = $sprintf(@"[%@]", [desc substringWithRange: NSMakeRange(1, desc.length-2)]);
+    return desc;
+}
+
+
 - (NSString*) explanation {
-    NSMutableString* out = [@"view.map = {\n" mutableCopy];
+    NSMutableString* out = [NSMutableString string];
+    if (_view)
+        [out appendFormat: @"// view \"%@\":\n", _view.name];
+    [out appendString: @"view.map = {\n"];
     if (_mapPredicate)
         [out appendFormat: @"    if (%@)\n    ", _mapPredicate];
+    NSString* keyExprStr = printExpr(self.keyExpression);
+    NSString* valExprStr = printExpr(self.valueExpression);
     if (_explodeKey) {
         NSExpression* keyExpression = self.keyExpression;
         if (keyExpression.expressionType != NSAggregateExpressionType) {
             // looping over simple key:
-            [out appendFormat: @"    for (i in %@)\n", keyExpression];
+            [out appendFormat: @"    for (i in %@)\n", keyExprStr];
             if (_mapPredicate)
                 [out appendString: @"    "];
-            [out appendFormat: @"        emit(i, %@);\n};\n", self.valueExpression];
+            [out appendFormat: @"        emit(i, %@);\n};\n", valExprStr];
         } else {
             // looping over compound key:
             NSArray* keys = keyExpression.collection;
@@ -202,27 +217,27 @@ static NSData* SHA1Digest(NSData* input) {
             if (_mapPredicate)
                 [out appendString: @"    "];
             NSArray* restOfKey = [keys subarrayWithRange: NSMakeRange(1, keys.count-1)];
-            [out appendFormat: @"        emit({i, %@}, %@);\n};\n",
-                 [restOfKey componentsJoinedByString: @", "], self.valueExpression];
+            [out appendFormat: @"        emit([i, %@], %@);\n};\n",
+                 [restOfKey componentsJoinedByString: @", "], valExprStr];
         }
     } else {
-        [out appendFormat: @"    emit(%@, %@);\n};\n", self.keyExpression, self.valueExpression];
+        [out appendFormat: @"    emit(%@, %@);\n};\n", keyExprStr, valExprStr];
     }
 
-    if (_queryKeys)
+    if (_queryKeys) {
         [out appendFormat: @"query.keys = %@;\n", _queryKeys];
-    if (_queryStartKey)
-        [out appendFormat: @"query.startKey = %@;\n", _queryStartKey];
-    if (!_queryInclusiveStart)
-        [out appendFormat: @"query.inclusiveStart = NO;\n"];
-    if (_queryEndKey) {
-        [out appendFormat: @"query.endKey = %@", _queryEndKey];
-        if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType)
-            [out appendString: @"+\"\\uFFFE\""];
-        [out appendFormat: @";\n"];
+    } else {
+        if (_queryStartKey)
+            [out appendFormat: @"query.startKey = %@;\n", printExpr(_queryStartKey)];
+        if (!_queryInclusiveStart)
+            [out appendFormat: @"query.inclusiveStart = NO;\n"];
+        if (_queryEndKey)
+            [out appendFormat: @"query.endKey = %@;\n", printExpr(_queryEndKey)];
+        if (!_queryInclusiveEnd)
+            [out appendString: @"query.inclusiveEnd = NO;\n"];
+        if (_queryPrefixMatchLevel)
+            [out appendFormat: @"query.prefixMatchLevel = %u;\n", _queryPrefixMatchLevel];
     }
-    if (!_queryInclusiveEnd)
-        [out appendFormat: @"query.inclusiveEnd = NO;\n"];
     if (_queryFilter)
         [out appendFormat: @"query.postFilter = %@;\n", _queryFilter];
     if (_querySort)
@@ -565,7 +580,7 @@ static NSData* SHA1Digest(NSData* input) {
     NSString* version = [CBLJSON base64StringWithData: SHA1Digest(archive)];
 
     if (!view) {
-        NSString* viewID = [NSString stringWithFormat: @"planned-%@", version];
+        NSString* viewID = [NSString stringWithFormat: @"builder-%@", version];
         if (![db existingViewNamed: viewID]) {
             // Logging makes it easier to detect misuse where someone creates lots of builders with
             // slightly different predicates containing hardcoded variable values, which will
@@ -663,12 +678,14 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
             case NSGreaterThanPredicateOperatorType:
                 [startKey addObject: keyExpr];
                 _queryInclusiveStart = (op == NSGreaterThanOrEqualToPredicateOperatorType);
-                [endKey addObject: @{}];
+                if (endKey.count > 0)
+                    [endKey addObject: @{}];
                 _queryInclusiveEnd = NO;
                 break;
             case NSBeginsWithPredicateOperatorType:
                 [startKey addObject: keyExpr];
-                [endKey addObject: keyExpr];  // can't append \uFFFF until query time
+                [endKey addObject: keyExpr];
+                _queryPrefixMatchLevel = 1;
                 break;
             case NSBetweenPredicateOperatorType: {
                 // key must be an aggregate expression:
@@ -686,6 +703,8 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
     if (_keyPredicates.count > 1) {
         _queryStartKey = [NSExpression expressionForAggregate: startKey];
         _queryEndKey   = [NSExpression expressionForAggregate: endKey];
+        if (endKey.count < _keyPredicates.count)
+            _queryPrefixMatchLevel = 1;
     } else {
         _queryStartKey = startKey.firstObject;
         _queryEndKey   = endKey.firstObject;
@@ -706,27 +725,11 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
         query.keys = $cast(NSArray, keys);
         
     } else {
-        id startKey = [_queryStartKey expressionValueWithObject: nil
-                                                        context: mutableContext];
-        id endKey = [_queryEndKey expressionValueWithObject: nil
-                                                    context: mutableContext];
-        if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType) {
-            // The only way to do a prefix match is to make the endKey the startKey + a high character
-            if ([endKey isKindOfClass: [NSArray class]]) {
-                NSString* str = $cast(NSString, [startKey lastObject]);
-                str = [str stringByAppendingString: @"\uFFFE"];
-                NSMutableArray* newEnd = [endKey mutableCopy];
-                [newEnd replaceObjectAtIndex: newEnd.count-1 withObject: str];
-                endKey = newEnd;
-            } else {
-                endKey = [$cast(NSString, startKey) stringByAppendingString: @"\uFFFE"];
-            }
-        }
-
-        query.startKey = startKey;
-        query.endKey = endKey;
+        query.startKey = [_queryStartKey expressionValueWithObject: nil context: mutableContext];
+        query.endKey = [_queryEndKey expressionValueWithObject: nil context: mutableContext];
         query.inclusiveStart = _queryInclusiveStart;
         query.inclusiveEnd = _queryInclusiveEnd;
+        query.prefixMatchLevel = _queryPrefixMatchLevel;
     }
     query.sortDescriptors = _querySort;
     query.postFilter = [_queryFilter predicateWithSubstitutionVariables: mutableContext];
