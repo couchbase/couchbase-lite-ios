@@ -83,7 +83,8 @@ static NSData* SHA1Digest(NSData* input) {
         }];
 
         // Scan the input:
-        _mapPredicate = [self scanPredicate: predicate];
+        BOOL anyVars;
+        _mapPredicate = [self scanPredicate: predicate anyVariables: &anyVars];
         if (_error) {
             if (outError)
                 *outError = _error;
@@ -253,7 +254,10 @@ static NSString* printExpr(NSExpression* expr) {
 // Recursively scans the predicate at initialization time looking for variables.
 // Predicates using variables are stored in _equalityKey and _otherKey, and removed from the
 // overall predicate. (If nothing is left, returns nil.)
-- (NSPredicate*) scanPredicate: (NSPredicate*)pred {
+// *outAnyVariables will be set to YES if the predicate contains any variables.
+- (NSPredicate*) scanPredicate: (NSPredicate*)pred
+                  anyVariables: (BOOL*)outAnyVariables
+{
     if ([pred isKindOfClass: [NSComparisonPredicate class]]) {
         // Comparison of expressions, e.g. "a < b":
         NSComparisonPredicate* cp = (NSComparisonPredicate*)pred;
@@ -272,24 +276,24 @@ static NSString* printExpr(NSExpression* expr) {
         }
         [self addKeyPredicate: cp];
         // Result of this comparison is unknown at indexing time, so return nil:
+        *outAnyVariables = YES;
         return nil;
 
     } else if ([pred isKindOfClass: [NSCompoundPredicate class]]) {
         // Logical compound of sub-predicates, e.g. "a AND b AND c":
         NSCompoundPredicate* cp = (NSCompoundPredicate*)pred;
-        if (cp.compoundPredicateType != NSAndPredicateType) {
-            [self fail: @"Sorry, the OR and NOT operators aren't supported yet"];
+        __block BOOL anyVars = NO;
+        NSArray* subpredicates = [cp.subpredicates my_map: ^NSPredicate*(NSPredicate* sub) {
+            return [self scanPredicate: sub anyVariables: &anyVars];
+        }];
+        if (anyVars)
+            *outAnyVariables = YES;
+        if (subpredicates.count == 0) {
+            return nil;                 // all terms are variable, so return unknown
+        } else if (anyVars && cp.compoundPredicateType != NSAndPredicateType) {
+            [self fail: @"Sorry, the OR and NOT operators aren't supported with variables yet"];
             return nil;
-        }
-        NSMutableArray* subpredicates = [NSMutableArray array];
-        for (NSPredicate* sub in cp.subpredicates) {
-            NSPredicate* scanned = [self scanPredicate: sub];  // Recurse!!
-            if (scanned)
-                [subpredicates addObject: scanned];
-        }
-        if (subpredicates.count == 0)
-            return nil;                 // all terms are unknown, so return unknown
-        else if (subpredicates.count == 1 && cp.compoundPredicateType != NSNotPredicateType)
+        } else if (subpredicates.count == 1 && cp.compoundPredicateType != NSNotPredicateType)
             return subpredicates[0];    // AND or OR of one predicate, so just return it
         else
             return [[NSCompoundPredicate alloc] initWithType: cp.compoundPredicateType

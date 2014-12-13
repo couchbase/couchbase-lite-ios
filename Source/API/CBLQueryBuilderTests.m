@@ -74,7 +74,7 @@ static void test(NSArray* select,
                                                                    where: where
                                                                  orderBy: orderBy
                                                                    error: &error];
-    NSCAssert(builder, @"Couldn't create query builder: %@", error);
+    Assert(builder, @"Couldn't create query builder: %@", error);
     Log(@"Explanation:\n%@", builder.explanation);
     BOOL result = YES;
     Log(@"Map pred --> %@", builder.mapPredicate);
@@ -94,7 +94,7 @@ static void test(NSArray* select,
     Log(@"Filter -->   %@", builder.filter);
     result = matchDesc(@"filter", builder.filter, expectedFilter) && result;
 
-    NSCAssert(result, @"Incorrect query plan");
+    Assert(result, @"Incorrect query builder");
     Log(@"**OK**");
 }
 
@@ -207,6 +207,18 @@ TestCase(CBLQueryBuilder_Plan) {
          nil,
          @"[(value1, ascending, compare:)]",
          @"value1 CONTAINS $NAME");
+
+    test(/*select*/ @[@"count"],
+         /*where*/ @"type == 'foo' or type == 'bar'", // OR is legal if args are not variable
+         /*order by*/ @"date",
+         @"type == \"foo\" OR type == \"bar\"",
+         @"date",
+         @"count",
+         nil,
+         nil,
+         nil,
+         nil,
+         nil);
 }
 
 
@@ -221,7 +233,7 @@ TestCase(CBLQueryBuilder_ViewGeneration) {
                                                               error: &error];
     Assert(p1);
     Log(@"Explanation: %@", p1.explanation);
-    AssertEqual(p1.view.name, @"planned-2McEVZlRUX/tPUaZo4wtarevkgU=");
+    AssertEqual(p1.view.name, @"builder-2McEVZlRUX/tPUaZo4wtarevkgU=");
 
     CBLQueryBuilder* p2 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
@@ -230,7 +242,7 @@ TestCase(CBLQueryBuilder_ViewGeneration) {
                                                               error: &error];
     Assert(p2);
     Log(@"Explanation: %@", p2.explanation);
-    AssertEqual(p2.view.name, @"planned-2McEVZlRUX/tPUaZo4wtarevkgU=");
+    AssertEqual(p2.view.name, @"builder-2McEVZlRUX/tPUaZo4wtarevkgU=");
     AssertEq(p2.view, p1.view);
 }
 
