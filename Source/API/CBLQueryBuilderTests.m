@@ -222,6 +222,24 @@ TestCase(CBLQueryBuilder_Plan) {
 }
 
 
+TestCase(CBLQueryBuilder_IllegalPredicates) {
+    NSArray* preds = @[ @"price + $DELTA < 100",
+                        @"price[5] = 10",
+                        @"price < limit",
+                        ];
+    for (NSString* pred in preds) {
+        NSError* error;
+        CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: nil
+                                                                select: nil where: pred
+                                                               orderBy: nil error: &error];
+        if (b)
+            Log(@"Failed to reject; explanation:\n%@", b.explanation);
+        Assert(b == nil, @"Illegal predicate was accepted: %@", pred);
+        Log(@"Rejected %@  --  %@", pred, error.localizedFailureReason);
+    }
+}
+
+
 TestCase(CBLQueryBuilder_ViewGeneration) {
     CBLDatabase* db = createEmptyDB();
 
@@ -272,6 +290,7 @@ query.prefixMatchLevel = 1;\n");
 
 TestCase(CBLQueryBuilder) {
     RequireTestCase(CBLQueryBuilder_Plan);
+    RequireTestCase(CBLQueryBuilder_IllegalPredicates);
     RequireTestCase(CBLQueryBuilder_ViewGeneration);
     RequireTestCase(CBLQueryBuilder_Explanation);
 }

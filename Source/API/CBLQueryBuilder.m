@@ -27,6 +27,14 @@
  */
 
 
+// Attributes of an expression, as returned from -expressionAttributes:
+typedef unsigned ExpressionAttributes;
+enum {
+    kExprUsesVariable = 1u,  // Does the expression involve a $-variable?
+    kExprUsesDoc      = 2u   // Does the expression involve a doc property (key path)?
+};
+
+
 static NSData* SHA1Digest(NSData* input) {
     unsigned char digest[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1(input.bytes, (CC_LONG)input.length, digest);
@@ -95,6 +103,13 @@ static NSData* SHA1Digest(NSData* input) {
         _querySort = [self createQuerySortDescriptors];
         _queryFilter = [self createQueryFilter];
 
+        if (_keyPredicates.count == 0) {
+            [self fail: @"No keys!"];
+            if (outError)
+                *outError = _error;
+            return nil;
+        }
+
         // If the predicate contains a "property CONTAINS $item" test, then we should emit every
         // item of the 'property' array as a separate key during the map phase.
         _explodeKey = (_equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
@@ -153,7 +168,7 @@ static NSData* SHA1Digest(NSData* input) {
 }
 
 
-#if 0
+#if 0 // (Does it make sense to make this class archivable??)
 - (void) encodeWithCoder:(NSCoder *)coder {
     [coder encodeObject: _queryStartKey         forKey: @"queryStartKey"];
     [coder encodeObject: _queryEndKey           forKey: @"queryEndKey"];
@@ -185,7 +200,7 @@ static NSData* SHA1Digest(NSData* input) {
 #endif
 
 
-// Makes printed expression more JavaScript-like by changing array brackets from {} to [].
+// Makes a printed expression more JavaScript-like by changing array brackets from {} to [].
 static NSString* printExpr(NSExpression* expr) {
     NSString* desc = expr.description;
     if ([desc hasPrefix: @"{"] && [desc hasSuffix: @"}"])
@@ -261,15 +276,24 @@ static NSString* printExpr(NSExpression* expr) {
     if ([pred isKindOfClass: [NSComparisonPredicate class]]) {
         // Comparison of expressions, e.g. "a < b":
         NSComparisonPredicate* cp = (NSComparisonPredicate*)pred;
-        BOOL lhsIsVariable = [self expressionUsesVariable: cp.leftExpression];
-        BOOL rhsIsVariable = [self expressionUsesVariable: cp.rightExpression];
-        if (!lhsIsVariable && !rhsIsVariable)
-            return cp;
+        ExpressionAttributes lhs = [self expressionAttributes: cp.leftExpression];
+        ExpressionAttributes rhs = [self expressionAttributes: cp.rightExpression];
+        if (!((lhs|rhs) & kExprUsesVariable))
+            return cp;      // Neither side uses a variable
+
+        if (((lhs & kExprUsesVariable) && (lhs & kExprUsesDoc))) {
+            [self fail: @"Expression mixes doc properties and variables: %@", cp.leftExpression];
+            return nil;
+        }
+        if (((rhs & kExprUsesVariable) && (rhs & kExprUsesDoc))) {
+            [self fail: @"Expression mixes doc properties and variables: %@", cp.rightExpression];
+            return nil;
+        }
 
         // Comparison involves a variable, so save variable expression as a key:
-        if (lhsIsVariable) {
-            if (rhsIsVariable) {
-                [self fail: @"Both sides can't be variable: %@", pred];
+        if (lhs & kExprUsesVariable) {
+            if (rhs & kExprUsesVariable) {
+                [self fail: @"Both sides can't use variables: %@", pred];
                 return nil;
             }
             cp = flipComparison(cp); // Always put variable on RHS
@@ -342,34 +366,35 @@ static NSString* printExpr(NSExpression* expr) {
 
 
 // Returns YES if an NSExpression's value involves evaluating a variable.
-- (BOOL) expressionUsesVariable: (NSExpression*)expression {
+- (ExpressionAttributes) expressionAttributes: (NSExpression*)expression {
     switch (expression.expressionType) {
         case NSVariableExpressionType:
-            return YES;
-        case NSFunctionExpressionType:
-            for (NSExpression* expr in expression.arguments)
-                if ([self expressionUsesVariable: expr])
-                    return YES;
-            return NO;
+            return kExprUsesVariable;
+        case NSKeyPathExpressionType:
+            return kExprUsesDoc;
+        case NSConstantValueExpressionType:
+            return 0;
         case NSUnionSetExpressionType:
         case NSIntersectSetExpressionType:
         case NSMinusSetExpressionType:
-            return [self expressionUsesVariable: expression.leftExpression]
-                || [self expressionUsesVariable: expression.rightExpression];
-        case NSAggregateExpressionType:
+            return [self expressionAttributes: expression.leftExpression]
+                 | [self expressionAttributes: expression.rightExpression];
+        case NSFunctionExpressionType: {
+            ExpressionAttributes attrs = 0;
+            for (NSExpression* expr in expression.arguments)
+                attrs |= [self expressionAttributes: expr];
+            return attrs;
+        }
+        case NSAggregateExpressionType: {
+            ExpressionAttributes attrs = 0;
             for (NSExpression* expr in expression.collection)
-                if ([self expressionUsesVariable: expr])
-                    return YES;
-            return NO;
-        case NSConstantValueExpressionType:
-        case NSEvaluatedObjectExpressionType:
-        case NSKeyPathExpressionType:
-        case NSAnyKeyExpressionType:
-            return NO;
+                attrs |= [self expressionAttributes: expr];
+            return attrs;
+        }
         default:
             [self fail: @"Unsupported expression type %d: %@",
                    (int)expression.expressionType, expression];
-            return NO;
+            return 0;
     }
 }
 
@@ -684,7 +709,6 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
                 _queryInclusiveStart = (op == NSGreaterThanOrEqualToPredicateOperatorType);
                 if (endKey.count > 0)
                     [endKey addObject: @{}];
-                _queryInclusiveEnd = NO;
                 break;
             case NSBeginsWithPredicateOperatorType:
                 [startKey addObject: keyExpr];
