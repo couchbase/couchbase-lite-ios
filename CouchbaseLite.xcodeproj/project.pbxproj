@@ -116,6 +116,9 @@
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */; };
+		274C6C261A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C6C241A3F838500F9BDF7 /* CBLReduceFuncs.m */; };
+		274C6C271A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C6C241A3F838500F9BDF7 /* CBLReduceFuncs.m */; };
+		274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */ = {isa = PBXBuildFile; fileRef = 274C6C251A3F838500F9BDF7 /* CBLReduceFuncs.h */; };
 		274E163219B90F520066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
 		274E163319B90F740066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
 		275072A418E49BEA00A80C5A /* CBLIncrementalStore.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */; };
@@ -963,6 +966,8 @@
 		274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmptyAppDelegate.h; sourceTree = "<group>"; };
 		274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmptyAppDelegate.m; sourceTree = "<group>"; };
 		274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Attachments.m"; sourceTree = "<group>"; };
+		274C6C241A3F838500F9BDF7 /* CBLReduceFuncs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReduceFuncs.m; sourceTree = "<group>"; };
+		274C6C251A3F838500F9BDF7 /* CBLReduceFuncs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReduceFuncs.h; sourceTree = "<group>"; };
 		274E163119B90F420066CA5E /* TestData */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestData; sourceTree = SOURCE_ROOT; };
 		274F9807152E6E0C00247C46 /* CBLStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStatus.h; sourceTree = "<group>"; };
 		2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLManager+Internal.h"; sourceTree = "<group>"; };
@@ -1696,6 +1701,8 @@
 				27D2E704199BC06300D09A1D /* CBLQueryBuilder.h */,
 				27D2E70C199BCED100D09A1D /* CBLQueryBuilder+Private.h */,
 				27D2E705199BC06300D09A1D /* CBLQueryBuilder.m */,
+				274C6C241A3F838500F9BDF7 /* CBLReduceFuncs.m */,
+				274C6C251A3F838500F9BDF7 /* CBLReduceFuncs.h */,
 			);
 			name = Views/Queries;
 			sourceTree = "<group>";
@@ -2539,6 +2546,7 @@
 				277B5DC91821A8B60088881E /* yajl_parse.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
 				279CE40014D749A7009F3FA6 /* CBLMultipartReader.h in Headers */,
+				274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */,
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */,
 				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
@@ -3226,6 +3234,7 @@
 				277B5D2D1821A8380088881E /* yajl_alloc.c in Sources */,
 				277EF40C17F4DF3700F7B7F7 /* fts3_unicode2.c in Sources */,
 				277EF42A17F4DF3700F7B7F7 /* utilities_sq3.c in Sources */,
+				274C6C261A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */,
 				277EF48C17F4DF3700F7B7F7 /* sqlite3_unicodesn_tokenizer.c in Sources */,
 				277EF40E17F4DF3700F7B7F7 /* fts3_unicodesn.c in Sources */,
 				277EF42C17F4DF3700F7B7F7 /* stem_ISO_8859_1_danish.c in Sources */,
@@ -3385,6 +3394,7 @@
 				27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */,
 				2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */,
 				27DA42FA158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
+				274C6C271A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */,
 				27DA42FF158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,

@@ -8,8 +8,9 @@
 
 #import "CBLQueryBuilder.h"
 #import "CBLQueryBuilder+Private.h"
+#import "CBLReduceFuncs.h"
 #import "CouchbaseLitePrivate.h"
-#import <CommonCrypto/CommonDigest.h>
+#import "CBLMisc.h"
 
 
 /*
@@ -35,13 +36,6 @@ enum {
 };
 
 
-static NSData* SHA1Digest(NSData* input) {
-    unsigned char digest[CC_SHA1_DIGEST_LENGTH];
-    CC_SHA1(input.bytes, (CC_LONG)input.length, digest);
-    return [NSData dataWithBytes: &digest length: sizeof(digest)];
-}
-
-
 @implementation CBLQueryBuilder
 {
     // These are only used during initialization:
@@ -49,6 +43,7 @@ static NSData* SHA1Digest(NSData* input) {
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
     NSArray* _keyPredicates;                // Predicates whose LHS generate the key, at map time
     NSArray* _valueTemplate;                // Values desired
+    NSArray* _reduceFunctions;              // Name of reduce function to apply to each value
     NSMutableArray* _filterPredicates;      // Predicates to go into _queryFilter
     NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
 
@@ -69,9 +64,9 @@ static NSData* SHA1Digest(NSData* input) {
 @synthesize view=_view;
 
 #if DEBUG // allow unit tests to inspect these internal properties
-@synthesize mapPredicate=_mapPredicate, sortDescriptors=_querySort, filter=_queryFilter,
-            queryStartKey=_queryStartKey, queryEndKey=_queryEndKey, queryKeys=_queryKeys,
-            queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
+@synthesize mapPredicate=_mapPredicate, sortDescriptors=_querySort, filter=_queryFilter;
+@synthesize queryStartKey=_queryStartKey, queryEndKey=_queryEndKey, queryKeys=_queryKeys;
+@synthesize queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
 #endif
 
 
@@ -84,15 +79,15 @@ static NSData* SHA1Digest(NSData* input) {
 {
     self = [super init];
     if (self) {
-        _valueTemplate = valueTemplate;
-
         _querySort = [sortDescriptors my_map: ^id(id descOrStr) {
             return [CBLQueryEnumerator asNSSortDescriptor: descOrStr];
         }];
 
         // Scan the input:
+        [self scanValueTemplate: valueTemplate];  // sets _valueTemplate, _reduceFunctions
         BOOL anyVars;
         _mapPredicate = [self scanPredicate: predicate anyVariables: &anyVars];
+
         if (_error) {
             if (outError)
                 *outError = _error;
@@ -104,10 +99,8 @@ static NSData* SHA1Digest(NSData* input) {
         _queryFilter = [self createQueryFilter];
 
         if (_keyPredicates.count == 0) {
-            [self fail: @"No keys!"];
-            if (outError)
-                *outError = _error;
-            return nil;
+            // If no key is needed, just emit an empty string as the key
+            _keyPredicates = @[ [NSPredicate predicateWithFormat: @"'' == ''"] ];
         }
 
         // If the predicate contains a "property CONTAINS $item" test, then we should emit every
@@ -121,7 +114,8 @@ static NSData* SHA1Digest(NSData* input) {
                             withMapPredicate: _mapPredicate
                                keyExpression: self.keyExpression
                                   explodeKey: _explodeKey
-                             valueExpression: self.valueExpression];
+                             valueExpression: self.valueExpression
+                             reduceFunctions: _reduceFunctions];
         }
 
         [self precomputeQuery];
@@ -238,6 +232,20 @@ static NSString* printExpr(NSExpression* expr) {
         }
     } else {
         [out appendFormat: @"    emit(%@, %@);\n};\n", keyExprStr, valExprStr];
+    }
+
+    if (_reduceFunctions) {
+        if (_reduceFunctions.count == 1) {
+            NSString* fn = _reduceFunctions[0];
+            NSString* impl = [fn stringByAppendingString: @"(values)"];
+            [out appendFormat: @"view.reduce = {return %@;}", impl];
+        } else {
+            NSString* impl = [[_reduceFunctions my_map: ^NSString*(NSString* fn) {
+                return [fn stringByAppendingString: @"(values)"];
+                //FIX: "(values)" is misleading; it's really the i'th element of each value
+            }] componentsJoinedByString: @", "];
+            [out appendFormat: @"view.reduce = {return [%@];}", impl];
+        }
     }
 
     if (_queryKeys) {
@@ -396,6 +404,32 @@ static NSString* printExpr(NSExpression* expr) {
                    (int)expression.expressionType, expression];
             return 0;
     }
+}
+
+
+- (void) scanValueTemplate: (NSArray*)valueTemplate {
+    NSMutableArray* reduceFns = $marray();
+    _valueTemplate = [valueTemplate my_map: ^id(id value) {
+        NSExpression* expr = $castIf(NSExpression, value);
+        if (expr.expressionType == NSFunctionExpressionType) {
+            NSString* fnName = expr.function;
+            if ([fnName hasSuffix: @":"]) {
+                fnName = [fnName substringToIndex: fnName.length-1];
+                if (CBLGetReduceFunc(fnName)) {
+                    // This value is using an aggregate function like sum() or average(). Save the fn
+                    // name, and make the emitted value be the reduce function name:
+                    [reduceFns addObject: fnName];
+                    return expr.arguments[0];
+                }
+            }
+        }
+        return value; // default
+    }];
+
+    if (reduceFns.count == valueTemplate.count)
+        _reduceFunctions = [reduceFns copy];
+    else if (reduceFns.count > 0)
+        [self fail: @"Can't have both regular and reduced/aggregate values"];
 }
 
 
@@ -570,7 +604,7 @@ static NSString* printExpr(NSExpression* expr) {
 
 // The expression that should be emitted as the key
 - (NSExpression*) keyExpression {
-    return aggregateExpressions([_keyPredicates my_map: ^id(NSComparisonPredicate* cp) {
+    return combineExpressions([_keyPredicates my_map: ^id(NSComparisonPredicate* cp) {
         NSExpression* expr = cp.leftExpression;
         if (cp.options & NSCaseInsensitivePredicateOption)
             expr = [NSExpression expressionForFunction: @"lowercase:" arguments: @[expr]];
@@ -581,7 +615,7 @@ static NSString* printExpr(NSExpression* expr) {
 
 // The expression that should be emitted as the value
 - (NSExpression*) valueExpression {
-    return aggregateExpressions([_valueTemplate my_map: ^id(id item) {
+    return combineExpressions([_valueTemplate my_map: ^id(id item) {
         if (![item isKindOfClass: [NSExpression class]])
             item = [NSExpression expressionForKeyPath: $castIf(NSString, item)];
         return item;
@@ -597,6 +631,7 @@ static NSString* printExpr(NSExpression* expr) {
           keyExpression: (NSExpression*)keyExpression
              explodeKey: (BOOL)explodeKey
         valueExpression: (NSExpression*)valueExpr
+        reduceFunctions: (NSArray*)reduceFunctions
 {
     // Compute a map-block version string that's unique to this configuration:
     NSMutableDictionary* versioned = [NSMutableDictionary dictionary];
@@ -605,8 +640,10 @@ static NSString* printExpr(NSExpression* expr) {
         versioned[@"mapPredicate"] = mapPredicate;
     if (valueExpr)
         versioned[@"valueExpression"] = valueExpr;
+    if (reduceFunctions)
+        versioned[@"reduceFunctions"] = reduceFunctions;
     NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
-    NSString* version = [CBLJSON base64StringWithData: SHA1Digest(archive)];
+    NSString* version = [CBLJSON base64StringWithData: CBLSHA1Digest(archive)];
 
     if (!view) {
         NSString* viewID = [NSString stringWithFormat: @"builder-%@", version];
@@ -653,8 +690,20 @@ static NSString* printExpr(NSExpression* expr) {
                 }
             }
         }
-    } version: version];
+    } reduceBlock: [self defineReduceBlockForFunctions: reduceFunctions]
+          version: version];
     return view;
+}
+
+
+// Creates a reduce block given an array of function names corresponding to the emitted values.
++ (CBLReduceBlock) defineReduceBlockForFunctions: (NSArray*)functions {
+    if (functions.count == 0)
+        return nil;
+    else if (functions.count == 1)
+        return CBLGetReduceFunc(functions[0]);
+    else
+        Assert(NO, @"Can't handle multiple reduced values yet");
 }
 
 
@@ -845,7 +894,9 @@ static NSComparisonPredicate* mergeComparisons(NSComparisonPredicate* p1,
 }
 
 
-static NSExpression* aggregateExpressions(NSArray* expressions) {
+// Turns an NSArray of NSExpressions into either nil, the single expression if there's only one,
+// or an aggregate (tuple) expression.
+static NSExpression* combineExpressions(NSArray* expressions) {
     switch (expressions.count) {
         case 0:     return nil;
         case 1:     return expressions[0];

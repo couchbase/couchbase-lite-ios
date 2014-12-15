@@ -224,8 +224,6 @@ TestCase(CBLQueryBuilder_Plan) {
 
 TestCase(CBLQueryBuilder_IllegalPredicates) {
     NSArray* preds = @[ @"price + $DELTA < 100",
-                        @"price[5] = 10",
-                        @"price < limit",
                         ];
     for (NSString* pred in preds) {
         NSError* error;
@@ -288,11 +286,34 @@ query.prefixMatchLevel = 1;\n");
 }
 
 
+TestCase(CBLQueryBuilder_Reduce) {
+    CBLDatabase* db = createEmptyDB();
+    createDocuments(db, 100);
+
+    NSError* error;
+    NSExpression* sum = [NSExpression expressionWithFormat: @"median(sequence)"];
+    CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                            select: @[sum]
+                                                             where: @"testName=='testDatabase'"
+                                                           orderBy: nil
+                                                             error: &error];
+    Assert(b, @"Failed to build: %@", error);
+    Log(@"%@", b.explanation);
+
+    CBLQuery* query = [b createQueryWithContext: nil];
+    CBLQueryRow* row = [[query run: &error] nextObject];
+    Assert(row, @"Query failed: %@", error);
+    Log(@"%@", row);
+    AssertEqual(row.value, @(49.5));
+}
+
+
 TestCase(CBLQueryBuilder) {
     RequireTestCase(CBLQueryBuilder_Plan);
     RequireTestCase(CBLQueryBuilder_IllegalPredicates);
     RequireTestCase(CBLQueryBuilder_ViewGeneration);
     RequireTestCase(CBLQueryBuilder_Explanation);
+    RequireTestCase(CBLQueryBuilder_Reduce);
 }
 
 
