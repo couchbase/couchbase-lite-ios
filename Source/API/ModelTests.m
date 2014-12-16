@@ -524,7 +524,7 @@ TestCase(API_SaveMutableSubmodels) {
                                           initWithFirstName: @"Phasin"
                                           lastName: @"Suri"];
     model.subModels = @[submodel];
-    NSMutableDictionary* props = [model.propertiesToSave mutableCopy];
+    __unused NSMutableDictionary* props = [model.propertiesToSave mutableCopy];
     [props removeObjectForKey: @"_id"];
     CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Phasin", @"last": @"Suri"}]}));
     CAssertEq(model.needsSave, YES);

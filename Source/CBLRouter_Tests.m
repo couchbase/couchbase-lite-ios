@@ -365,7 +365,7 @@ TestCase(CBL_Router_NoMappedSelectors) {
     CBLManager* server = createDBManager();
     Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
 
-    NSDictionary* response = nil;
+    __unused NSDictionary* response = nil;
 
     response = Send(server, @"GET", @"/", kCBLStatusOK, nil);
 
