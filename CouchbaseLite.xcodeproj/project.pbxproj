@@ -30,6 +30,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		270035841A40E7160015B9F4 /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D2E704199BC06300D09A1D /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 2753156914ACEFC90065964D /* HTTPFileResponse.m */; };
 		270489B017A0968E001E0FB9 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
 		270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */; };
@@ -494,7 +495,7 @@
 		27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
 		27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
-		27D2E707199BC06300D09A1D /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D2E704199BC06300D09A1D /* CBLQueryBuilder.h */; };
+		27D2E707199BC06300D09A1D /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D2E704199BC06300D09A1D /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
 		27D90B1815601C340000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27D90B1915601C350000735E /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -2622,6 +2623,7 @@
 				27DA43651592387400F9E7B5 /* CBLRevision.h in Headers */,
 				27DA43661592387400F9E7B5 /* CBLView.h in Headers */,
 				27726AB3188983B800AE6931 /* CBLGeometry.h in Headers */,
+				270035841A40E7160015B9F4 /* CBLQueryBuilder.h in Headers */,
 				27DA43671592387400F9E7B5 /* CBLQuery.h in Headers */,
 				27DA43681592387400F9E7B5 /* CBLModel.h in Headers */,
 				27DA43691592387400F9E7B5 /* CBLModelFactory.h in Headers */,

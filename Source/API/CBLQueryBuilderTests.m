@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 CouchBase, Inc. All rights reserved.
 //
 
+#import <CouchbaseLite/CouchbaseLite.h>
 #import "CBLQueryBuilder+Private.h"
-#import "CBLView.h"
 #import "APITestUtils.h"
 #import "Test.h"
 
