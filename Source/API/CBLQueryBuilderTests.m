@@ -224,6 +224,7 @@ TestCase(CBLQueryBuilder_Plan) {
 
 TestCase(CBLQueryBuilder_IllegalPredicates) {
     NSArray* preds = @[ @"price + $DELTA < 100",
+                        @"color = $COLOR or color = $OTHER_COLOR",
                         ];
     for (NSString* pred in preds) {
         NSError* error;

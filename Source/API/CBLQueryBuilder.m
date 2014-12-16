@@ -234,17 +234,17 @@ static NSString* printExpr(NSExpression* expr) {
         [out appendFormat: @"    emit(%@, %@);\n};\n", keyExprStr, valExprStr];
     }
 
-    if (_reduceFunctions) {
+    if (_reduceFunctions.count > 0) {
         if (_reduceFunctions.count == 1) {
             NSString* fn = _reduceFunctions[0];
             NSString* impl = [fn stringByAppendingString: @"(values)"];
-            [out appendFormat: @"view.reduce = {return %@;}", impl];
+            [out appendFormat: @"view.reduce = {return %@;}\n", impl];
         } else {
             NSString* impl = [[_reduceFunctions my_map: ^NSString*(NSString* fn) {
                 return [fn stringByAppendingString: @"(values)"];
                 //FIX: "(values)" is misleading; it's really the i'th element of each value
             }] componentsJoinedByString: @", "];
-            [out appendFormat: @"view.reduce = {return [%@];}", impl];
+            [out appendFormat: @"view.reduce = {return [%@];}\n", impl];
         }
     }
 
@@ -318,14 +318,16 @@ static NSString* printExpr(NSExpression* expr) {
         NSArray* subpredicates = [cp.subpredicates my_map: ^NSPredicate*(NSPredicate* sub) {
             return [self scanPredicate: sub anyVariables: &anyVars];
         }];
-        if (anyVars)
+        if (anyVars) {
             *outAnyVariables = YES;
-        if (subpredicates.count == 0) {
+            if (cp.compoundPredicateType != NSAndPredicateType) {
+                [self fail: @"Sorry, the OR and NOT operators aren't supported with variables yet"];
+                return nil;
+            }
+        }
+        if (subpredicates.count == 0)
             return nil;                 // all terms are variable, so return unknown
-        } else if (anyVars && cp.compoundPredicateType != NSAndPredicateType) {
-            [self fail: @"Sorry, the OR and NOT operators aren't supported with variables yet"];
-            return nil;
-        } else if (subpredicates.count == 1 && cp.compoundPredicateType != NSNotPredicateType)
+        else if (subpredicates.count == 1 && cp.compoundPredicateType != NSNotPredicateType)
             return subpredicates[0];    // AND or OR of one predicate, so just return it
         else
             return [[NSCompoundPredicate alloc] initWithType: cp.compoundPredicateType
@@ -408,6 +410,8 @@ static NSString* printExpr(NSExpression* expr) {
 
 
 - (void) scanValueTemplate: (NSArray*)valueTemplate {
+    if (!valueTemplate)
+        return;
     NSMutableArray* reduceFns = $marray();
     _valueTemplate = [valueTemplate my_map: ^id(id value) {
         NSExpression* expr = $castIf(NSExpression, value);
