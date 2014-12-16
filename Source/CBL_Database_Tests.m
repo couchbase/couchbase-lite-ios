@@ -1099,6 +1099,39 @@ TestCase(CBL_Database_Purge) {
 }
 
 
+TestCase(CBL_Database_DeleteDatabase) {
+    CBLDatabase* db = createDB();
+
+    // Add a revision and an attachment:
+    CBL_Revision* rev1;
+    CBLStatus status;
+    rev1 = [db putRevision: [CBL_Revision revisionWithProperties: $dict({@"foo", @1},
+                                                                        {@"bar", $false})]
+            prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusCreated);
+    CAssert(![db sequenceHasAttachments: rev1.sequence]);
+
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    insertAttachment(db, attach1,
+                     rev1.sequence,
+                     @"attach", @"text/plain",
+                     kCBLAttachmentEncodingNone,
+                     attach1.length,
+                     0,
+                     rev1.generation);
+
+    NSFileManager* manager = [NSFileManager defaultManager];
+    NSString* attachmentStorePath = db.attachmentStorePath;
+    CAssertEq([manager fileExistsAtPath: attachmentStorePath], YES);
+
+    NSError* error;
+    BOOL result = [db deleteDatabase: &error];
+    CAssertEq(result, YES);
+    CAssertNil(error);
+    CAssertEq([manager fileExistsAtPath: attachmentStorePath], NO);
+}
+
+
 TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_CRUD);
     RequireTestCase(CBL_Database_DeleteWithProperties);
@@ -1112,6 +1145,7 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_PutAttachment);
     RequireTestCase(CBL_Database_EncodedAttachment);
     RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
+    RequireTestCase(CBL_Database_DeleteDatabase);
 }
 
 

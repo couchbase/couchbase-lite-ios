@@ -100,7 +100,7 @@ NSArray* CBL_RunloopModes;
     return CBLRemoveFileIfExists(dbPath, outError)
         && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-wal"], outError)
         && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-shm"], outError)
-        && CBLRemoveFileIfExists([self attachmentStorePath: dbPath], outError);
+        && CBLRemoveFileIfExistsAsync([self attachmentStorePath: dbPath], outError);
 }
 
 
