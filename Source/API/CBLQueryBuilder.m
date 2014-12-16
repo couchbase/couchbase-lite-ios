@@ -86,6 +86,7 @@ enum {
         // Scan the input:
         [self scanValueTemplate: valueTemplate];  // sets _valueTemplate, _reduceFunctions
         BOOL anyVars;
+        _filterPredicates = [NSMutableArray array];
         _mapPredicate = [self scanPredicate: predicate anyVariables: &anyVars];
 
         if (_error) {
@@ -304,9 +305,13 @@ static NSString* printExpr(NSExpression* expr) {
                 [self fail: @"Both sides can't use variables: %@", pred];
                 return nil;
             }
-            cp = flipComparison(cp); // Always put variable on RHS
+            NSComparisonPredicate* flipped = flipComparison(cp); // Always put variable on RHS
+            if (!flipped)
+                [_filterPredicates addObject: cp];  // Not flippable; save for post-filter
+            cp = flipped;
         }
-        [self addKeyPredicate: cp];
+        if (cp)
+            [self addKeyPredicate: cp];
         // Result of this comparison is unknown at indexing time, so return nil:
         *outAnyVariables = YES;
         return nil;
@@ -368,8 +373,6 @@ static NSString* printExpr(NSExpression* expr) {
     }
 
     // If we fell through, cp can't be used as part of the key, so save it for query time:
-    if (!_filterPredicates)
-        _filterPredicates = [NSMutableArray array];
     [_filterPredicates addObject: cp];
     return NO;
 }
@@ -444,12 +447,12 @@ static NSString* printExpr(NSExpression* expr) {
     // Update each of _filterPredicates to make its keypath relative to the query rows' values.
     for (NSUInteger i = 0; i < _filterPredicates.count; ++i) {
         NSComparisonPredicate* cp = _filterPredicates[i];
-        NSExpression* lhs = [self rewriteKeyPathsInExpression: cp.leftExpression];
-        cp = [[NSComparisonPredicate alloc] initWithLeftExpression: lhs
-                                                   rightExpression: cp.rightExpression
-                                                          modifier: cp.comparisonPredicateModifier
-                                                              type: cp.predicateOperatorType
-                                                           options: cp.options];
+        cp = [[NSComparisonPredicate alloc]
+                  initWithLeftExpression: [self rewriteKeyPathsInExpression: cp.leftExpression]
+                         rightExpression: [self rewriteKeyPathsInExpression: cp.rightExpression]
+                                modifier: cp.comparisonPredicateModifier
+                                    type: cp.predicateOperatorType
+                                 options: cp.options];
         [_filterPredicates replaceObjectAtIndex: i withObject: cp];
     }
     // Combine the filterPredicates into a single predicate:
@@ -674,6 +677,9 @@ static NSString* printExpr(NSExpression* expr) {
             if (!explodeKey) {
                 emit(key, value); // regular case
             } else if (![key isKindOfClass: [NSArray class]]) {
+                if ([key isKindOfClass: [NSString class]])
+                    Warn(@"CBLQueryBuilder: '%@ contains...' expected %@ to be an array"
+                        " but it's a string; remember not to use 'contains' as a string operation!", keyExpression, keyExpression);
                 return;
             } else if (!compoundKey) {
                 // 'contains' test with single key; iterate over key:

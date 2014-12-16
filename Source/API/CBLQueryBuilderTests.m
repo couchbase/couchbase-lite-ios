@@ -287,6 +287,27 @@ query.prefixMatchLevel = 1;\n");
 }
 
 
+TestCase(CBLQueryBuilder_StringIn) {
+    CBLDatabase* db = createEmptyDB();
+    createDocuments(db, 100);
+
+    NSError* error;
+    CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                            select: nil
+                                                             where: @"$PATTERN in _id"
+                                                           orderBy: nil
+                                                             error: &error];
+    Assert(b, @"Failed to build: %@", error);
+    Log(@"%@", b.explanation);
+
+    CBLQueryEnumerator* e = [b runQueryWithContext: @{@"PATTERN": @"AA"} error: &error];
+    Assert(e, @"Query failed: %@", error);
+    for (CBLQueryRow* row in e) {
+        Assert([row.documentID rangeOfString: @"AA"].length > 0);
+    }
+}
+
+
 TestCase(CBLQueryBuilder_Reduce) {
     CBLDatabase* db = createEmptyDB();
     createDocuments(db, 100);
@@ -314,6 +335,7 @@ TestCase(CBLQueryBuilder) {
     RequireTestCase(CBLQueryBuilder_IllegalPredicates);
     RequireTestCase(CBLQueryBuilder_ViewGeneration);
     RequireTestCase(CBLQueryBuilder_Explanation);
+    RequireTestCase(CBLQueryBuilder_StringIn);
     RequireTestCase(CBLQueryBuilder_Reduce);
 }
 
