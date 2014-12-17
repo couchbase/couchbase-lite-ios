@@ -261,12 +261,16 @@ TestCase(CBL_View_IndexMultiple) {
     CBLView* v1 = createViewNamed(db, @"agroup/view1");
     CBLView* v2 = createViewNamed(db, @"other/view2");
     CBLView* v3 = createViewNamed(db, @"other/view3");
+    CBLView* vX = createViewNamed(db, @"other/viewX");
     CBLView* v4 = createViewNamed(db, @"view4");
     CBLView* v5 = createViewNamed(db, @"view5");
 
+    [vX forgetMapBlock]; // To reproduce #438
+
     AssertEqual(v1.viewsInGroup, (@[v1]));
-    AssertEqual(v2.viewsInGroup, (@[v2, v3]));
-    AssertEqual(v3.viewsInGroup, (@[v2, v3]));
+    AssertEqual(v2.viewsInGroup, (@[v2, v3, vX]));
+    AssertEqual(v3.viewsInGroup, (@[v2, v3, vX]));
+    AssertEqual(vX.viewsInGroup, (@[v2, v3, vX]));
     AssertEqual(v4.viewsInGroup, (@[v4])); // because GROUP_VIEWS_BY_DEFAULT isn't enabled
     AssertEqual(v5.viewsInGroup, (@[v5]));
 
@@ -289,7 +293,7 @@ TestCase(CBL_View_IndexMultiple) {
     status = [v3 updateIndexes: views];
     CAssert(status < 300);
 
-    for (CBLView* view in views)
+    for (CBLView* view in @[v2, v3])
         CAssertEq(view.lastSequenceIndexed, kNDocs);
 }
 

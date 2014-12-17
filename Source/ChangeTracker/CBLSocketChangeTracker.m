@@ -35,6 +35,7 @@
     NSInputStream* _trackingInput;
     CFAbsoluteTime _startTime;
     bool _gotResponseHeaders;
+    bool _readyToRead;
 }
 
 - (BOOL) start {
@@ -94,6 +95,7 @@
         CFReadStreamSetProperty(cfInputStream, kCFStreamPropertySSLSettings, (CFTypeRef)tls);
 
     _gotResponseHeaders = false;
+    _readyToRead = NO;
 
     _trackingInput = (NSInputStream*)CFBridgingRelease(cfInputStream);
     [_trackingInput setDelegate: self];
@@ -166,10 +168,21 @@
 }
 
 
+- (void) setPaused:(BOOL)paused {
+    if (paused != super.paused)
+        LogTo(ChangeTracker, @"%@: %@", self, (paused ? @"PAUSE" : @"RESUME"));
+    [super setPaused: paused];
+    if (!paused && _readyToRead)
+        [self readFromInput];
+}
+
+
 #pragma mark - STREAM HANDLING:
 
 
 - (void) readFromInput {
+    Assert(_readyToRead);
+    _readyToRead = false;
     uint8_t buffer[kReadLength];
     NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
     if (bytesRead > 0)
@@ -248,7 +261,9 @@
                 if (![self checkSSLCert] || ![self readResponseHeader])
                     return;
             }
-            [self readFromInput];
+            _readyToRead = true;
+            if (!self.paused)
+                [self readFromInput];
             break;
         }
             

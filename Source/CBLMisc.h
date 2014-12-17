@@ -39,6 +39,9 @@ char* CBLAppendHex( char *dst, const void* bytes, size_t length);
     The result is lowercase. This is important for CouchDB compatibility. */
 NSString* CBLHexFromBytes( const void* bytes, size_t length) __attribute__((nonnull));
 
+/** Parses hex dump to NSData. Returns nil if length is odd or any character is not a hex digit. */
+NSData* CBLDataFromHex(NSString* hex);
+
 NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b);
 
 /** Convenience function to JSON-encode an object to a string. */
@@ -82,6 +85,9 @@ BOOL CBLIsFileExistsError( NSError* error );
 
 /** Removes a file if it exists; does nothing if it doesn't. */
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) __attribute__((nonnull(1)));
+
+/** Returns the hostname of this computer/device (will be of the form "___.local") */
+NSString* CBLGetHostName(void);
 
 /** Returns the input URL without the query string or fragment identifier, just ending with the path. */
 NSURL* CBLURLWithoutQuery( NSURL* url ) __attribute__((nonnull));

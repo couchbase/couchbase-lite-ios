@@ -20,14 +20,19 @@
 #import "MYBlockUtils.h"
 
 #import <CouchbaseLite/CouchbaseLite.h>
+#import <CouchbaseLiteListener/CBLListener.h>
 
 #undef FOR_TESTING_PURPOSES
 #ifdef FOR_TESTING_PURPOSES
-#import <CouchbaseLiteListener/CBLListener.h>
 @interface DemoAppController () <CBLViewCompiler>
 @end
 static CBLListener* sListener;
 #endif
+
+
+@interface CBLListener (Testing)
++ (void) runTestCases;
+@end
 
 #define ENABLE_REPLICATION
 
@@ -37,6 +42,7 @@ static CBLListener* sListener;
 
 int main (int argc, const char * argv[]) {
     RunTestCases(argc,argv);
+    [CBLListener runTestCases];
     return NSApplicationMain(argc, argv);
 }
 

@@ -31,6 +31,9 @@
 }
 
 
+- (NSUInteger) count {
+    return _sequences.count;
+}
 
 
 - (SequenceNumber) addValue: (id)value {

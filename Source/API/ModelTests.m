@@ -225,7 +225,6 @@ TestCase(API_ModelDynamicProperties) {
     CAssertEqual(model.url, url);
 
     Log(@"Model: %@", [CBLJSON stringWithJSONObject: model.propertiesToSave options: 0 error: NULL]);
-    [db _close];
 }
 
 
@@ -285,7 +284,6 @@ TestCase(API_ModelEncodableProperties) {
                            @"mutableSubModel": @{@"first": @"Jed", @"last": @"Pookie"},
                            @"_id": doc3.documentID,
                            @"_rev": doc3.currentRevisionID}));
-    [db _close];
 }
 
 
@@ -300,8 +298,6 @@ TestCase(API_ModelEncodablePropertiesNilValue) { // See #247
     CBLDocument *document = [db documentWithID:documentID];
     emptyModel = [[CBL_TestModel alloc] initWithDocument:document];
     AssertNil(emptyModel.mutableSubModel);
-
-    [db _close];
 }
 
 
@@ -314,8 +310,6 @@ TestCase(API_ModelTypeProperty) {
     CAssertEqual([model getValueOfProperty:@"type"], @"Dummy");
     CAssertEqual(model.propertiesToSave, (@{@"_id": model.document.documentID,
                                             @"type": @"Dummy"}));
-
-    [db _close];
 }
 
 
@@ -344,8 +338,6 @@ TestCase(API_ModelDeleteProperty) {
     CAssertEqual(model.data, data);
     model.data = nil;
     CAssertEqual(model.data, nil);      // Tests issue CouchCocoa #73
-
-    [db _close];
 }
 
 
@@ -476,7 +468,6 @@ TestCase(API_SaveModel) {
         CAssertEq(others[1], other);
         CAssertEqual(((CBL_TestModel*)others[0]).document.documentID, model2ID);
     }
-    [db _close];
 }
 
 
@@ -524,6 +515,55 @@ TestCase(API_SaveModelWithNaNProperty) {
 }
 
 
+TestCase(API_SaveMutableSubmodels) {
+    NSError *error;
+    CBLDatabase* db = createEmptyDB();
+    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+
+    CBL_TTestMutableSubModel* submodel = [[CBL_TTestMutableSubModel alloc]
+                                          initWithFirstName: @"Phasin"
+                                          lastName: @"Suri"];
+    model.subModels = @[submodel];
+    __unused NSMutableDictionary* props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Phasin", @"last": @"Suri"}]}));
+    CAssertEq(model.needsSave, YES);
+    [model save: &error];
+    CAssertNil(error);
+
+    props = [model.propertiesToSave mutableCopy];
+    CBL_TTestMutableSubModel* subModel = [model.subModels firstObject];
+    subModel.firstName = @"Pasin";
+    props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Pasin", @"last": @"Suri"}]}));
+    CAssertEq(model.needsSave, YES);
+    [model save: &error];
+    CAssertNil(error);
+
+    NSMutableArray* newSubModels = [NSMutableArray arrayWithArray: model.subModels];
+    model.subModels = newSubModels;
+    props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Pasin", @"last": @"Suri"}]}));
+    CAssertEq(model.needsSave, NO);
+
+    newSubModels = [NSMutableArray arrayWithArray: model.subModels];
+    subModel = [model.subModels firstObject];
+    subModel.lastName = @"Suriyen";
+    model.subModels = newSubModels;
+    props = [model.propertiesToSave mutableCopy];
+    [props removeObjectForKey: @"_id"];
+    [props removeObjectForKey: @"_rev"];
+    CAssertEqual(props, (@{@"subModels": @[@{@"first": @"Pasin", @"last": @"Suriyen"}]}));
+    CAssertEq(model.needsSave, YES);
+    [model save: &error];
+    CAssertNil(error);
+}
+
+
 TestCase(API_ModelAttachments) {
     // Attempting to reproduce https://github.com/couchbase/couchbase-lite-ios/issues/63
     CBLDatabase* db = createEmptyDB();
@@ -564,7 +604,6 @@ TestCase(API_ModelAttachments) {
         [model setAttachmentNamed: @"Caption.txt" withContentType: @"text/plain" content:newAttData];
         CAssert([model save: &error], @"Final save failed: %@", error);
     }
-    [db _close];
 }
 
 
@@ -580,7 +619,6 @@ TestCase(API_ModelPropertyObservation) {
         [model save: NULL];
     }
     [model removeObserver: observer forKeyPath: @"dict.name"];
-    [db _close];
 }
 
 
@@ -592,6 +630,7 @@ TestCase(API_Model) {
     RequireTestCase(API_SaveModel);
     RequireTestCase(API_SaveMutatedSubModel);
     RequireTestCase(API_SaveModelWithNaNProperty);
+    RequireTestCase(API_SaveMutableSubmodels);
     RequireTestCase(API_ModelDeleteProperty);
     RequireTestCase(API_ModelAttachments);
 }

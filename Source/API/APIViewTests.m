@@ -14,6 +14,7 @@
 
 #if DEBUG
 #import "APITestUtils.h"
+#import "MYBlockUtils.h"
 
 
 TestCase(API_CreateView) {
@@ -284,9 +285,9 @@ TestCase(API_LiveQuery) {
     Log(@"Waiting for live query to update...");
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
     bool finished = false;
-    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
-            break;
+    while (!finished) {
+        [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout];
+        Assert(timeout.timeIntervalSinceNow > 0.0, @"timed out waiting for live query");
         CBLQueryEnumerator* rows = query.rows;
         Log(@"Live query rows = %@", rows);
         if (rows != nil) {
@@ -403,6 +404,65 @@ TestCase(API_LiveQuery_DispatchQueue) {
 }
 
 
+TestCase(API_LiveQuery_WaitForRows) {
+    RequireTestCase(API_LiveQuery);
+    CBLDatabase* db = createManagerAndEmptyDBAtPath(@"API_LiveQuery");
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], nil);
+    }) version: @"1"];
+
+    createDocuments(db, 1000);
+
+    // Schedule a garden variety event on the default runloop mode; we want to ensure
+    // that this does _not_ trigger during the -waitForRows call.
+    __block BOOL delayedBlockRan = NO;
+    MYAfterDelay(0.0, ^{
+        delayedBlockRan = YES;
+    });
+
+    CBLLiveQuery* query = [[view createQuery] asLiveQuery];
+    Assert([query waitForRows]);
+    Assert(!delayedBlockRan, @"waitForRows accidentally allowed a default-mode event");
+    [query stop];
+}
+
+
+TestCase(API_LiveQuery_UpdateInterval) {
+    RequireTestCase(API_LiveQuery);
+    CBLDatabase* db = createManagerAndEmptyDBAtPath(@"API_LiveQuery");
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], nil);
+    }) version: @"1"];
+
+    createDocuments(db, 10);
+
+    CBLLiveQuery* query = [[view createQuery] asLiveQuery];
+    query.updateInterval = 0.25;
+    Log(@"Created %@", query);
+
+    TestLiveQueryObserver* observer = [TestLiveQueryObserver new];
+    [query addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew
+                   context: NULL];
+    AfterThisTest(^{
+        [query removeObserver:observer forKeyPath:@"rows"];
+    });
+
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    while (timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.05]])
+            break;
+        createDocuments(db, 1);
+    }
+    [query stop];
+
+    Log(@"LiveQuery notified observers %d times", observer.changeCount);
+    CAssert(observer.changeCount >= 7 && observer.changeCount <= 9);
+}
+
+
 TestCase(API_AsyncViewQuery) {
     RequireTestCase(API_CreateView);
     CBLDatabase* db = createManagerAndEmptyDBAtPath(@"API_AsyncViewQuery");
@@ -473,12 +533,15 @@ TestCase(API_LiveQuery_UpdatesWhenViewChanges) {
     TestLiveQueryObserver* observer = [TestLiveQueryObserver new];
 
     [liveQuery addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: NULL];
-    
-    Log(@"Waiting for live query to update...");
+    AfterThisTest(^{
+        [liveQuery removeObserver:observer forKeyPath:@"rows"];
+    });
+
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
     bool finished = false;
     while (!finished && timeout.timeIntervalSinceNow > 0.0) {
 
+        Log(@"Waiting for live query FIRST update...");
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
             break;
 
@@ -505,10 +568,10 @@ TestCase(API_LiveQuery_UpdatesWhenViewChanges) {
         emit(@2, nil);
     }) version: @"2"];
     
-    Log(@"Waiting for live query to update...");
     timeout = [NSDate dateWithTimeIntervalSinceNow: 10.0];
     finished = false;
     while (!finished && timeout.timeIntervalSinceNow > 0.0) {
+        Log(@"Waiting for live query SECOND update...");
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
             break;
         
@@ -532,7 +595,6 @@ TestCase(API_LiveQuery_UpdatesWhenViewChanges) {
     CAssert(finished, @"Live query timed out!");
     
     [liveQuery stop];
-    [liveQuery removeObserver:observer forKeyPath:@"rows"];
 }
 
 

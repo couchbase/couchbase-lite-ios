@@ -270,6 +270,16 @@ private:
 - (void) setCollation: (CBLViewCollation)collation {
     _collation = collation;
 }
+
+// for unit tests only
+- (void) forgetMapBlock {
+    CBLDatabase* db = _weakDB;
+    CBL_Shared* shared = db.shared;
+    [shared setValue: nil
+             forType: @"map" name: _name inDatabaseNamed: db.name];
+    [shared setValue: nil
+             forType: @"reduce" name: _name inDatabaseNamed: db.name];
+}
 #endif
 
 
@@ -511,16 +521,17 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 - (CBLStatus) updateIndexes: (NSArray*)views {
+    LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), self.name);
     try {
         std::vector<MapReduceIndex*> indexes;
         for (CBLView* view in views) {
             [view setupIndex];
             CBLMapBlock mapBlock = view.mapBlock;
-            Assert(mapBlock, @"Cannot reindex view '%@' which has no map block set", _name);
             MapReduceIndex* index = view.index;
-            if (!index)
-                return kCBLStatusNotFound;
-            indexes.push_back(index);
+            if (mapBlock && index)
+                indexes.push_back(index);
+            else
+                LogTo(ViewVerbose, @"    %@ has no map block; skipping it", view.name);
         }
         (void)self.index;
         bool updated;
@@ -538,6 +549,10 @@ static id<CBLViewCompiler> sCompiler;
         Warn(@"Unexpected exception indexing %@", self);
         return kCBLStatusException;
     }
+}
+
+static NSString* viewNames(NSArray* views) {
+    return [[views my_map: ^(CBLView* view) {return view.name;}] componentsJoinedByString: @", "];
 }
 
 

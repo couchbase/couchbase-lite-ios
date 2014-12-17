@@ -148,7 +148,8 @@ static void usage(void) {
             "\t[--user <username>]      Username for connecting to remote database\n"
             "\t[--password <password>]  Password for connecting to remote database\n"
             "\t[--realm <realm>]        HTTP realm for connecting to remote database\n"
-            "\t[--ssl <identityname>]   Identity pref name to use for SSL serving\n"
+            "\t[--ssl]                  Serve over SSL\n"
+            "\t[--sslas <identityname>] Identity pref name to use for SSL serving\n"
             "Runs Couchbase Lite as a faceless server.\n");
 }
 
@@ -168,7 +169,7 @@ int main (int argc, const char * argv[])
         CBLManagerOptions options = {};
         const char* replArg = NULL, *user = NULL, *password = NULL, *realm = NULL;
         const char* identityName = NULL;
-        BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO;
+        BOOL auth = NO, pull = NO, createTarget = NO, continuous = NO, useSSL = NO;
 
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--help") == 0) {
@@ -202,6 +203,9 @@ int main (int argc, const char * argv[])
             } else if (strcmp(argv[i], "--realm") == 0) {
                 realm = argv[++i];
             } else if (strcmp(argv[i], "--ssl") == 0) {
+                useSSL = YES;
+            } else if (strcmp(argv[i], "--sslas") == 0) {
+                useSSL = YES;
                 identityName = argv[++i];
             } else if (strncmp(argv[i], "-Log", 4) == 0) {
                 ++i; // Ignore MYUtilities logging flags
@@ -236,16 +240,27 @@ int main (int argc, const char * argv[])
             Log(@"Auth required: user='cbl', password='%@'", password);
         }
 
-        if (identityName) {
-            NSString* name = [NSString stringWithUTF8String: identityName];
-            SecIdentityRef identity = SecIdentityCopyPreferred((__bridge CFStringRef)name, NULL, NULL);
-            if (!identity) {
-                Warn(@"FATAL: Couldn't find identity pref named '%@'", name);
-                exit(1);
+        if (useSSL) {
+            NSString* name;
+            if (identityName) {
+                name = [NSString stringWithUTF8String: identityName];
+                SecIdentityRef identity = SecIdentityCopyPreferred((__bridge CFStringRef)name, NULL, NULL);
+                if (!identity) {
+                    Warn(@"FATAL: Couldn't find identity pref named '%@'", name);
+                    exit(1);
+                }
+                listener.SSLIdentity = identity;
+                CFRelease(identity);
+            } else {
+                name = @"LiteServ";
+                NSError* error;
+                if (![listener setAnonymousSSLIdentityWithLabel: name error: &error]) {
+                    Warn(@"FATAL: Couldn't get/create default SSL identity: %@",
+                         error.localizedDescription);
+                    exit(1);
+                }
             }
-            Log(@"Serving SSL with %@", identity);
-            listener.SSLIdentity = identity;
-            CFRelease(identity);
+            Log(@"Serving SSL as identity '%@' %@", name, listener.SSLIdentityDigest);
         }
 
         // Advertise via Bonjour, and set a TXT record just as an example:

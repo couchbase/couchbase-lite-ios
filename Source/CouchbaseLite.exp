@@ -15,6 +15,7 @@
 .objc_class_name_CBLModelArray
 .objc_class_name_CBLModelFactory
 .objc_class_name_CBLQuery
+.objc_class_name_CBLQueryBuilder
 .objc_class_name_CBLQueryEnumerator
 .objc_class_name_CBLQueryRow
 .objc_class_name_CBLReplication
@@ -37,6 +38,7 @@ _OBJC_CLASS_$_CBLModel
 _OBJC_CLASS_$_CBLModelArray
 _OBJC_CLASS_$_CBLModelFactory
 _OBJC_CLASS_$_CBLQuery
+_OBJC_CLASS_$_CBLQueryBuilder
 _OBJC_CLASS_$_CBLQueryEnumerator
 _OBJC_CLASS_$_CBLQueryRow
 _OBJC_CLASS_$_CBLReplication
@@ -113,6 +115,7 @@ _OBJC_IVAR_$_CBLQueryOptions.fullTextRanking
 _OBJC_IVAR_$_CBLQueryOptions.allDocsMode
 _OBJC_IVAR_$_CBLQueryOptions.bbox
 
+_CBLGetHostName
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
 _CBLStatusFromNSError

@@ -32,9 +32,11 @@
 #if DEBUG
 NSString* CBLPathToTestFile(NSString* name) {
     // The iOS and Mac test apps have the TestData folder copied into their Resources dir.
-    return [[NSBundle mainBundle] pathForResource: name.stringByDeletingPathExtension
-                                           ofType: name.pathExtension
-                                      inDirectory: @"TestData"];
+    NSString* path =  [[NSBundle mainBundle] pathForResource: name.stringByDeletingPathExtension
+                                                      ofType: name.pathExtension
+                                                 inDirectory: @"TestData"];
+    Assert(path, @"Can't find test file \"%@\"", name);
+    return path;
 }
 
 NSData* CBLContentsOfTestFile(NSString* name) {
@@ -145,6 +147,23 @@ NSString* CBLHexFromBytes( const void* bytes, size_t length) {
     return [[NSString alloc] initWithBytes: hex
                                     length: 2*length
                                   encoding: NSASCIIStringEncoding];
+}
+
+NSData* CBLDataFromHex(NSString* hex) {
+    const char* chars = hex.UTF8String;
+    NSUInteger len = strlen(chars);
+    if (len % 2)
+        return nil;
+    NSMutableData* data = [NSMutableData dataWithLength: len/2];
+    uint8_t *bytes = data.mutableBytes;
+    NSUInteger bytePos = 0;
+    for (NSUInteger i = 0; i < len; i += 2) {
+        int d1 = chars[i], d2 = chars[i+1];
+        if (!ishexnumber(d1) || !ishexnumber(d2))
+            return nil;
+        bytes[bytePos++] = (uint8_t)(16 * digittoint(d1) + digittoint(d2));
+    }
+    return data;
 }
 
 
@@ -348,6 +367,21 @@ BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
 }
 
 
+NSString* CBLGetHostName() {
+    // From <http://stackoverflow.com/a/16902907/98077>
+    char baseHostName[256];
+    if (gethostname(baseHostName, 255) != 0)
+        return nil;
+    baseHostName[255] = '\0';
+    NSString* hostName = [NSString stringWithUTF8String: baseHostName];
+#if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+    if (![hostName hasSuffix: @".local"])
+        hostName = [hostName stringByAppendingString: @".local"];
+#endif
+    return hostName;
+}
+
+
 NSURL* CBLURLWithoutQuery( NSURL* url ) {
 #ifdef GNUSTEP
     // No CFURL on GNUstep :(
@@ -420,4 +454,14 @@ TestCase(CBLEscapeURLParam) {
     CAssertEqual(CBLEscapeURLParam(@"foo&bar"), @"foo%26bar");
     CAssertEqual(CBLEscapeURLParam(@":/?#[]@!$&'()*+,;="),
                  @"%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D");
+}
+
+
+TestCase(CBLGetHostName) {
+    NSString* host = CBLGetHostName();
+    Log(@"CBLGetHostName returned: <%@>", host);
+    Assert(host, @"Can't get hostname");
+    Assert([host rangeOfString: @"^[-a-zA-Z0-9]+\\.local\\.?$"
+                       options: NSRegularExpressionSearch].length > 0,
+           @"Invalid hostname: \"%@\"", host);
 }

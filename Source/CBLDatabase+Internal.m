@@ -54,6 +54,9 @@ NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
 
+NSString* const CBL_PrivateRunloopMode = @"CouchbaseLitePrivate";
+NSArray* CBL_RunloopModes;
+
 
 @implementation CBLDatabase (Internal)
 
@@ -78,6 +81,8 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 + (void) initialize {
     if (self == [CBLDatabase class]) {
+        CBL_RunloopModes = @[NSRunLoopCommonModes, CBL_PrivateRunloopMode];
+
         [self setAutoCompact: YES];
 
         forestdb::LogCallback = FDBLogCallback;
@@ -152,11 +157,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         if (!_dispatchQueue)
             _thread = [NSThread currentThread];
         _startTime = [NSDate date];
-
-        if (0) {
-            // Appease the static analyzer by using these category ivars in this source file:
-            _pendingAttachmentsByDigest = nil;
-        }
     }
     return self;
 }
@@ -247,45 +247,44 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 - (void) _close {
-    if (!_isOpen)
-        return;
+    if (_isOpen) {
+        LogTo(CBLDatabase, @"Closing <%p> %@", self, _dir);
+        Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
+                _transactionLevel);
 
-    LogTo(CBLDatabase, @"Closing <%p> %@", self, _dir);
-    Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
-            _transactionLevel);
+        // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
+        // be any, because the public -close: method saves changes first.)
+        for (CBLModel* model in _unsavedModelsMutable.copy)
+            model.needsSave = false;
+        _unsavedModelsMutable = nil;
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
+                                                            object: self];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseChangesNotification
+                                                      object: nil];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseWillBeDeletedNotification
+                                                      object: nil];
+        for (CBLView* view in _views.allValues)
+            [view databaseClosing];
+        
+        _views = nil;
+        for (CBL_Replicator* repl in _activeReplicators.copy)
+            [repl databaseClosing];
+        
+        _activeReplicators = nil;
 
-    // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
-    // be any, because the public -close: method saves changes first.)
-    for (CBLModel* model in _unsavedModelsMutable.copy)
-        model.needsSave = false;
-    _unsavedModelsMutable = nil;
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillCloseNotification
-                                                        object: self];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: CBL_DatabaseChangesNotification
-                                                  object: nil];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: CBL_DatabaseWillBeDeletedNotification
-                                                  object: nil];
-    for (CBLView* view in _views.allValues)
-        [view databaseClosing];
-    
-    _views = nil;
-    for (CBL_Replicator* repl in _activeReplicators.copy)
-        [repl databaseClosing];
-    
-    _activeReplicators = nil;
+        delete _forest;
+        _forest = NULL;
 
-    delete _forest;
-    _forest = NULL;
+        _isOpen = NO;
+        _transactionLevel = 0;
 
-    _isOpen = NO;
-    _transactionLevel = 0;
-
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [self _clearDocumentCache];
-    _modelFactory = nil;
+        [[NSNotificationCenter defaultCenter] removeObserver: self];
+        [self _clearDocumentCache];
+        _modelFactory = nil;
+    }
     [_manager _forgetDatabase: self];
 }
 

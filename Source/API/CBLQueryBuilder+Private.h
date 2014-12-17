@@ -6,12 +6,12 @@
 //
 //
 
-#import "CBLQueryPlanner.h"
+#import "CBLQueryBuilder.h"
 
 
 #if DEBUG
 
-@interface CBLQueryPlanner ()
+@interface CBLQueryBuilder ()
 
 // These properties show the innards of how the view/query are processed. Not usually needed.
 @property (readonly, nonatomic) NSPredicate* mapPredicate;

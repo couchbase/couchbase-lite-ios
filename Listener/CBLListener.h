@@ -33,12 +33,19 @@
     The keys are NSStrings and values are NSData. Total size should be kept small (under 1kbyte if possible) as this data is multicast over UDP. */
 @property (copy) NSDictionary* TXTRecordDictionary;
 
-/** The URL at which the listener can be reached. */
+/** The URL at which the listener can be reached from another computer/device.
+    This URL will only work for _local_ clients, i.e. over the same WiFi LAN or over Bluetooth.
+    Allowing remote clients to connect is a difficult task that involves traversing routers or
+    firewalls and translating local to global IP addresses, and it's generally impossible over
+    cell networks because telcos don't allow incoming IP connections to mobile devices. */
 @property (readonly) NSURL* URL;
 
 
 /** If set to YES, remote requests will not be allowed to make any changes to the server or its databases. */
 @property BOOL readOnly;
+
+
+#pragma mark - AUTHENTICATION:
 
 /** If set to YES, all requests will be required to authenticate.
     Setting the .passwords property automatically enables this.*/
@@ -55,6 +62,8 @@
 - (NSString*) passwordForUser: (NSString*)username;
 
 
+#pragma mark - SSL:
+
 /** Private key and certificate to use for incoming SSL connections.
     If nil (the default) SSL connections are not accepted. */
 @property (nonatomic) SecIdentityRef SSLIdentity;
@@ -63,6 +72,23 @@
     is not directly signed by a CA cert known to the OS. */
 @property (strong, nonatomic) NSArray* SSLExtraCertificates;
 
+/** The SHA-1 digest of the SSL identity's public key, which can be used as a unique 'fingerprint'
+    of the identity. For example, you can send this digest to someone else over an existing secure
+    channel (like iMessage or a QR code) and the recipient can then make an SSL connection to this
+    listener and verify its identity by comparing digests. */
+@property (readonly) NSData* SSLIdentityDigest;
+
+/** Generates an anonymous identity with a 2048-bit RSA key-pair and sets it as the SSL identity.
+    It's anonymous in that it's self-signed and the "subject" and "issuer" strings are just fixed
+    placeholders; this makes it less useful for identification, but it still provides encryption
+    of the HTTP traffic.
+    The certificate and key are stored in the keychain under the given label; if they already exist
+    and haven't expired, the existing identity will be used instead of creating a new one. */
+- (BOOL) setAnonymousSSLIdentityWithLabel: (NSString*)label
+                                    error: (NSError**)outError;
+
+
+#pragma mark - START / STOP:
 
 /** Starts the listener. */
 - (BOOL) start: (NSError**)outError;

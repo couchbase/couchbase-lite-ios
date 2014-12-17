@@ -36,6 +36,7 @@
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
+- (BOOL) waitFor: (BOOL (^)())block;
 - (void) addReplication: (CBLReplication*)repl;
 - (void) forgetReplication: (CBLReplication*)repl;
 - (void) _clearDocumentCache;
@@ -124,6 +125,9 @@
                          mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
 @end
 
+@interface CBLQueryEnumerator ()
++ (NSSortDescriptor*) asNSSortDescriptor: (id)descOrStr; // Converts NSString to NSSortDescriptor
+@end
 
 @interface CBLQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID

@@ -122,8 +122,8 @@
 @protocol CBLDocumentModel <NSObject>
 /** Called whenever a new revision is added to the document.
     (Equivalent to kCBLDocumentChangeNotification.) */
-- (void) CBLDocument: (CBLDocument*)doc
-           didChange: (CBLDatabaseChange*)change                        __attribute__((nonnull));
+- (void) document: (CBLDocument*)doc
+        didChange: (CBLDatabaseChange*)change                        __attribute__((nonnull));
 @end
 
 

@@ -26,6 +26,7 @@
 #import "CBLQuery.h"
 #import "CBLQuery+FullTextSearch.h"
 #import "CBLQuery+Geo.h"
+#import "CBLQueryBuilder.h"
 #import "CBLAuthenticator.h"
 #import "CBLReplication.h"
 #import "CBLModel.h"

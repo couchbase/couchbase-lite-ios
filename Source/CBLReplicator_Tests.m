@@ -169,7 +169,7 @@ static NSString* replic8(CBLDatabase* db, NSURL* remote, BOOL push,
 
 
 static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
-                                   BOOL push, NSString* filter,
+                                   BOOL push, NSString* filter, NSDictionary* options,
                                    NSError* expectError)
 {
     CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
@@ -178,6 +178,7 @@ static NSString* replic8Continuous(CBLDatabase* db, NSURL* remote,
         ((CBL_Pusher*)repl).createTarget = YES;
     repl.filterName = filter;
     repl.authorizer = authorizer();
+    repl.options = options;
     [repl start];
 
     // Start the replicator and wait for it to go active, then inactive:
@@ -307,7 +308,7 @@ TestCase(CBL_Puller_Continuous) {
     CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
     CAssert(db);
 
-    id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil);
+    id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
     CAssertEqual(lastSeq, @2);
 
     CAssertEq(db.documentCount, 2u);
@@ -315,7 +316,7 @@ TestCase(CBL_Puller_Continuous) {
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
-    replic8Continuous(db, remoteURL, NO, nil, nil);
+    replic8Continuous(db, remoteURL, NO, nil, nil, nil);
     CAssertEq(db.lastSequenceNumber, 2);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
@@ -342,7 +343,7 @@ TestCase(CBL_Puller_Continuous_PermanentError) {
     CAssert(db);
     
     NSError* error = CBLStatusToNSError(kCBLStatusNotFound, nil);
-    replic8Continuous(db, remoteURL, NO, nil, error);
+    replic8Continuous(db, remoteURL, NO, nil, nil, error);
 }
 
 TestCase(CBL_Puller_AuthFailure) {
@@ -362,7 +363,7 @@ TestCase(CBL_Puller_AuthFailure) {
     CAssert(db);
 
     NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
-    replic8Continuous(db, remoteURL, NO, nil, error);
+    replic8Continuous(db, remoteURL, NO, nil, nil, error);
 }
 
 TestCase(CBL_Puller_SSL) {
@@ -395,14 +396,40 @@ TestCase(CBL_Puller_SSL_Continuous) {
     CAssert(db);
 
     Log(@"Replicating without root cert; should fail...");
-    replic8Continuous(db, remoteURL, NO, nil,
+    replic8Continuous(db, remoteURL, NO, nil, nil,
                       [NSError errorWithDomain: NSURLErrorDomain
                                           code: NSURLErrorServerCertificateUntrusted
                                       userInfo: nil]);
 
     Log(@"Now replicating with root cert installed...");
     [CBL_Replicator setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
-    id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil);
+    id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
+    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CAssert([lastSeq intValue] >= 2);
+
+    CAssertEq(db.documentCount, 2u);
+    CAssertEq(db.lastSequenceNumber, 2);
+}
+
+TestCase(CBL_Puller_SSL_Pinned) {
+    RequireTestCase(CBL_Puller_SSL_Continuous);
+    NSURL* remoteURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    Log(@"Replicating with wrong pinned cert; should fail...");
+    NSString* digest = @"123456789abcdef0123456789abcdef012345678";
+    replic8Continuous(db, remoteURL, NO, nil, @{kCBLReplicatorOption_PinnedCert: digest},
+                      [NSError errorWithDomain: NSURLErrorDomain
+                                          code: NSURLErrorServerCertificateUntrusted
+                                      userInfo: nil]);
+
+    Log(@"Now replicating with correct pinned cert...");
+    digest = @"dff813775424b4dd8e1032dda95eecb53e3c7726";
+    id lastSeq = replic8Continuous(db, remoteURL, NO, nil,
+                                   @{kCBLReplicatorOption_PinnedCert: digest},
+                                   nil);
     [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
     CAssert([lastSeq intValue] >= 2);
 
@@ -529,6 +556,59 @@ TestCase(CBL_Puller_FromCouchApp) {
 }
 
 
+TestCase(CBL_Puller_DatabaseValidation) {
+    RequireTestCase(CBL_Pusher);
+
+    NSURL* remote = RemoteTestDBURL(kScratchDBName);
+    if (!remote) {
+        Warn(@"Skipping test: no remote URL");
+        return;
+    }
+    
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBLPuller_DBValidation_Test"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    [db setValidationNamed:@"OnlyDoc1" asBlock:^(CBLRevision *newRevision, id<CBLValidationContext> context) {
+        if (![newRevision.document.documentID isEqualToString:@"doc1"]) {
+            [context reject];
+        }
+    }];
+
+    // Start a named document pull replication.
+    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
+                                                         push: NO continuous: NO];
+    repl.authorizer = authorizer();
+    [repl start];
+
+    // Let the replicator run.
+    CAssert(repl.running);
+    Log(@"Waiting for replicator to finish...");
+    while (repl.running || repl.savingCheckpoint) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+    }
+    CAssert(!repl.running);
+    CAssert(!repl.savingCheckpoint);
+    CAssertNil(repl.error);
+    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+    id lastSeq = repl.lastSequence;
+    CAssertEqual(lastSeq, @2);
+
+    CBLStatus status;
+    Log(@"GOT DOCS: %@", [db getAllDocs:nil status: &status]);
+
+    CAssertEq(db.documentCount, 1u);
+    CAssertEq(db.lastSequenceNumber, 1);
+
+    CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
+    CAssert(doc);
+    CAssert([doc.revID hasPrefix: @"2-"]);
+    CAssertEqual(doc[@"foo"], @1);
+}
+
+
 @interface CBLManager (Seekrit)
 - (CBLStatus) parseReplicatorProperties: (NSDictionary*)properties
                             toDatabase: (CBLDatabase**)outDatabase   // may be NULL
@@ -640,8 +720,8 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Puller_Continuous_PermanentError);
     RequireTestCase(CBL_Puller_AuthFailure);
     RequireTestCase(CBL_Puller_FromCouchApp);
-    RequireTestCase(CBL_Puller_DocIDs);
-    RequireTestCase(CBL_Pusher_DocIDs);
+    RequireTestCase(CBL_Puller_DatabaseValidation);
+    RequireTestCase(CBLPuller_DocIDs);
     RequireTestCase(ParseReplicatorProperties);
 }
 

@@ -1,15 +1,16 @@
 //
-//  CBLQueryPlanner.m
+//  CBLQueryBuilder.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/4/14.
 //
 //
 
-#import "CBLQueryPlanner.h"
-#import "CBLQueryPlanner+Private.h"
-#import <CouchbaseLite/CouchbaseLite.h>
-#import <CommonCrypto/CommonDigest.h>
+#import "CBLQueryBuilder.h"
+#import "CBLQueryBuilder+Private.h"
+#import "CBLReduceFuncs.h"
+#import "CouchbaseLitePrivate.h"
+#import "CBLMisc.h"
 
 
 /*
@@ -27,52 +28,22 @@
  */
 
 
-
-// Standalone equivalents of stuff from MYUtilities:
-#ifndef $cast
-#define $cast(CLASSNAME,OBJ)    ((CLASSNAME*)(_cast([CLASSNAME class],(OBJ))))
-#define $castIf(CLASSNAME,OBJ)  ((CLASSNAME*)(_castIf([CLASSNAME class],(OBJ))))
-static inline id _cast(Class requiredClass, id object) {
-    NSCAssert([object isKindOfClass: requiredClass], @"Value is %@, not %@",
-              [object class], requiredClass);
-    return object;
-}
-static inline id _castIf(Class requiredClass, id object) {
-    return [object isKindOfClass: requiredClass] ? object : nil;
-}
-#endif
-
-#ifndef LogTo
-#define LOGGING 1
-#define LogTo(KEYWORD, FMT, ...)  if(!LOGGING) ; else NSLog(FMT, __VA_ARGS__)
-#define Warn(FMT, ...)            NSLog(@"WARNING: " #FMT, __VA_ARGS__)
-#endif
-
-static NSArray* $map(NSArray* array, id (^block)(id obj)) {
-    NSMutableArray* mapped = [[NSMutableArray alloc] initWithCapacity: array.count];
-    for (id obj in array) {
-        id mappedObj = block(obj);
-        if (mappedObj)
-            [mapped addObject: mappedObj];
-    }
-    return [mapped copy];
-}
-
-static NSData* SHA1Digest(NSData* input) {
-    unsigned char digest[CC_SHA1_DIGEST_LENGTH];
-    CC_SHA1(input.bytes, (CC_LONG)input.length, digest);
-    return [NSData dataWithBytes: &digest length: sizeof(digest)];
-}
+// Attributes of an expression, as returned from -expressionAttributes:
+typedef unsigned ExpressionAttributes;
+enum {
+    kExprUsesVariable = 1u,  // Does the expression involve a $-variable?
+    kExprUsesDoc      = 2u   // Does the expression involve a doc property (key path)?
+};
 
 
-@implementation CBLQueryPlanner
+@implementation CBLQueryBuilder
 {
     // These are only used during initialization:
     NSComparisonPredicate* _equalityKey;    // Predicate with equality test, used as key
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
     NSArray* _keyPredicates;                // Predicates whose LHS generate the key, at map time
     NSArray* _valueTemplate;                // Values desired
-    BOOL _explodeKey;                       // Emit each item of key separately?
+    NSArray* _reduceFunctions;              // Name of reduce function to apply to each value
     NSMutableArray* _filterPredicates;      // Predicates to go into _queryFilter
     NSError* _error;                        // Set during -scanPredicate: if predicate is invalid
 
@@ -81,23 +52,26 @@ static NSData* SHA1Digest(NSData* input) {
     NSExpression* _queryEndKey;             // The endKey to use in queries
     NSExpression* _queryKeys;               // The 'keys' array to use in queries
     BOOL _queryInclusiveStart, _queryInclusiveEnd;  // The inclusiveStart/End to use in queries
+    uint8_t _queryPrefixMatchLevel;         // The prefixMatchLevel to use in queries
     NSPredicate* _queryFilter;              // Postprocessing filter predicate to use in the query
     NSArray* _querySort;                    // Sort descriptors for the query
 
     // Used for -explanation
+    BOOL _explodeKey;                       // Emit each item of key separately?
     NSPredicate* _mapPredicate;
 }
 
 @synthesize view=_view;
 
 #if DEBUG // allow unit tests to inspect these internal properties
-@synthesize mapPredicate=_mapPredicate, sortDescriptors=_querySort, filter=_queryFilter,
-            queryStartKey=_queryStartKey, queryEndKey=_queryEndKey, queryKeys=_queryKeys,
-            queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
+@synthesize mapPredicate=_mapPredicate, sortDescriptors=_querySort, filter=_queryFilter;
+@synthesize queryStartKey=_queryStartKey, queryEndKey=_queryEndKey, queryKeys=_queryKeys;
+@synthesize queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
 #endif
 
 
 - (instancetype) initWithView: (CBLView*)view
+                   inDatabase: (CBLDatabase*)database
                        select: (NSArray*)valueTemplate
                wherePredicate: (NSPredicate*)predicate
                       orderBy: (NSArray*)sortDescriptors
@@ -105,13 +79,16 @@ static NSData* SHA1Digest(NSData* input) {
 {
     self = [super init];
     if (self) {
-        _view = view;
-        _valueTemplate = valueTemplate;
-        _querySort = sortDescriptors;
+        _querySort = [sortDescriptors my_map: ^id(id descOrStr) {
+            return [CBLQueryEnumerator asNSSortDescriptor: descOrStr];
+        }];
 
         // Scan the input:
-        NSPredicate* mapPredicate = [self scanPredicate: predicate];
-        _mapPredicate = mapPredicate;
+        [self scanValueTemplate: valueTemplate];  // sets _valueTemplate, _reduceFunctions
+        BOOL anyVars;
+        _filterPredicates = [NSMutableArray array];
+        _mapPredicate = [self scanPredicate: predicate anyVariables: &anyVars];
+
         if (_error) {
             if (outError)
                 *outError = _error;
@@ -122,33 +99,63 @@ static NSData* SHA1Digest(NSData* input) {
         _querySort = [self createQuerySortDescriptors];
         _queryFilter = [self createQueryFilter];
 
+        if (_keyPredicates.count == 0) {
+            // If no key is needed, just emit an empty string as the key
+            _keyPredicates = @[ [NSPredicate predicateWithFormat: @"'' == ''"] ];
+        }
+
         // If the predicate contains a "property CONTAINS $item" test, then we should emit every
         // item of the 'property' array as a separate key during the map phase.
         _explodeKey = (_equalityKey.predicateOperatorType == NSContainsPredicateOperatorType);
 
-        if (_view) {
-            [[self class] defineView: _view
-                    withMapPredicate: mapPredicate
-                       keyExpression: self.keyExpression
-                          explodeKey: _explodeKey
-                     valueExpression: self.valueExpression];
+        if (database) {
+            // (We allow a nil database and just skip creating a view; useful for unit tests.)
+            _view = [[self class] defineView: view
+                                  inDatabase: database
+                            withMapPredicate: _mapPredicate
+                               keyExpression: self.keyExpression
+                                  explodeKey: _explodeKey
+                             valueExpression: self.valueExpression
+                             reduceFunctions: _reduceFunctions];
         }
 
         [self precomputeQuery];
 
-        LogTo(View, @"Created CBLQueryPlanner on %@:\n%@", view, self.explanation);
+        LogTo(Query, @"Created CBLQueryBuilder on %@:\n%@", view, self.explanation);
     }
     return self;
 }
 
 
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           select: (NSArray*)valueTemplate
+                   wherePredicate: (NSPredicate*)predicate
+                          orderBy: (NSArray*)sortDescriptors
+                            error: (NSError**)outError
+{
+    return [self initWithView: nil inDatabase: database select: valueTemplate
+               wherePredicate:predicate orderBy: sortDescriptors error: outError];
+}
+
+
 - (instancetype) initWithView: (CBLView*)view
                        select: (NSArray*)valueTemplate
-                        where: (NSString*)predicate
+               wherePredicate: (NSPredicate*)predicate
                       orderBy: (NSArray*)sortDescriptors
                         error: (NSError**)outError
 {
-    return [self initWithView: view
+    return [self initWithView: view inDatabase: view.database select: valueTemplate
+               wherePredicate:predicate orderBy: sortDescriptors error: outError];
+}
+
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                           select: (NSArray*)valueTemplate
+                            where: (NSString*)predicate
+                          orderBy: (NSArray*)sortDescriptors
+                            error: (NSError**)outError
+{
+    return [self initWithDatabase: database
                        select: valueTemplate
                wherePredicate: [NSPredicate predicateWithFormat: predicate argumentArray: nil]
                       orderBy: sortDescriptors
@@ -156,18 +163,64 @@ static NSData* SHA1Digest(NSData* input) {
 }
 
 
+#if 0 // (Does it make sense to make this class archivable??)
+- (void) encodeWithCoder:(NSCoder *)coder {
+    [coder encodeObject: _queryStartKey         forKey: @"queryStartKey"];
+    [coder encodeObject: _queryEndKey           forKey: @"queryEndKey"];
+    [coder encodeObject: _queryKeys             forKey: @"queryKeys"];
+    [coder encodeBool:   _queryInclusiveStart   forKey: @"queryInclusiveStart"];
+    [coder encodeBool:   _queryInclusiveEnd     forKey: @"queryInclusiveEnd"];
+    [coder encodeObject: _queryFilter           forKey: @"queryFilter"];
+    [coder encodeObject: _querySort             forKey: @"querySort"];
+    [coder encodeObject: _mapPredicate          forKey: @"mapPredicate"];
+    [coder encodeObject: _view.name             forKey: @"viewName"];
+}
+
+
+- (instancetype) initWithCoder:(NSCoder *)decoder {
+    self = [super init];
+    if (self) {
+        _queryStartKey      = [decoder decodeObjectForKey: @"queryStartKey"];
+        _queryEndKey        = [decoder decodeObjectForKey: @"queryEndKey"];
+        _queryKeys          = [decoder decodeObjectForKey: @"queryKeys"];
+        _queryInclusiveStart= [decoder decodeBoolForKey:   @"queryInclusiveStart"];
+        _queryInclusiveEnd  = [decoder decodeBoolForKey:   @"queryInclusiveEnd"];
+        _queryFilter        = [decoder decodeObjectForKey: @"queryFilter"];
+        _querySort          = [decoder decodeObjectForKey: @"querySort"];
+        _mapPredicate       = [decoder decodeObjectForKey: @"mapPredicate"];
+        NSString* viewName  = [decoder decodeObjectForKey: @"viewName"];
+    }
+    return self;
+}
+#endif
+
+
+// Makes a printed expression more JavaScript-like by changing array brackets from {} to [].
+static NSString* printExpr(NSExpression* expr) {
+    NSString* desc = expr.description;
+    if ([desc hasPrefix: @"{"] && [desc hasSuffix: @"}"])
+        desc = $sprintf(@"[%@]", [desc substringWithRange: NSMakeRange(1, desc.length-2)]);
+    return desc;
+}
+
+
 - (NSString*) explanation {
-    NSMutableString* out = [@"view.map = {\n" mutableCopy];
+    NSMutableString* out = [NSMutableString string];
+    if (_view)
+        [out appendFormat: @"// view \"%@\":\n", _view.name];
+    [out appendString: @"view.map = {\n"];
     if (_mapPredicate)
         [out appendFormat: @"    if (%@)\n    ", _mapPredicate];
+    NSString* keyExprStr = printExpr(self.keyExpression);
+    NSString* valExprStr = printExpr(self.valueExpression);
     if (_explodeKey) {
         NSExpression* keyExpression = self.keyExpression;
         if (keyExpression.expressionType != NSAggregateExpressionType) {
             // looping over simple key:
-            [out appendFormat: @"    for (i in %@)\n", keyExpression];
+            [out appendFormat: @"    for (i in %@)\n", keyExprStr];
             if (_mapPredicate)
                 [out appendString: @"    "];
-            [out appendFormat: @"        emit(i, %@);\n};\n", self.valueExpression];
+            [out appendFormat: @"        emit(i, %@);\n};\n", valExprStr];
         } else {
             // looping over compound key:
             NSArray* keys = keyExpression.collection;
@@ -175,27 +228,41 @@ static NSData* SHA1Digest(NSData* input) {
             if (_mapPredicate)
                 [out appendString: @"    "];
             NSArray* restOfKey = [keys subarrayWithRange: NSMakeRange(1, keys.count-1)];
-            [out appendFormat: @"        emit({i, %@}, %@);\n};\n",
-                 [restOfKey componentsJoinedByString: @", "], self.valueExpression];
+            [out appendFormat: @"        emit([i, %@], %@);\n};\n",
+                 [restOfKey componentsJoinedByString: @", "], valExprStr];
         }
     } else {
-        [out appendFormat: @"    emit(%@, %@);\n};\n", self.keyExpression, self.valueExpression];
+        [out appendFormat: @"    emit(%@, %@);\n};\n", keyExprStr, valExprStr];
     }
 
-    if (_queryKeys)
-        [out appendFormat: @"query.keys = %@;\n", _queryKeys];
-    if (_queryStartKey)
-        [out appendFormat: @"query.startKey = %@;\n", _queryStartKey];
-    if (!_queryInclusiveStart)
-        [out appendFormat: @"query.inclusiveStart = NO;\n"];
-    if (_queryEndKey) {
-        [out appendFormat: @"query.endKey = %@", _queryEndKey];
-        if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType)
-            [out appendString: @"+\"\\uFFFE\""];
-        [out appendFormat: @";\n"];
+    if (_reduceFunctions.count > 0) {
+        if (_reduceFunctions.count == 1) {
+            NSString* fn = _reduceFunctions[0];
+            NSString* impl = [fn stringByAppendingString: @"(values)"];
+            [out appendFormat: @"view.reduce = {return %@;}\n", impl];
+        } else {
+            NSString* impl = [[_reduceFunctions my_map: ^NSString*(NSString* fn) {
+                return [fn stringByAppendingString: @"(values)"];
+                //FIX: "(values)" is misleading; it's really the i'th element of each value
+            }] componentsJoinedByString: @", "];
+            [out appendFormat: @"view.reduce = {return [%@];}\n", impl];
+        }
     }
-    if (!_queryInclusiveEnd)
-        [out appendFormat: @"query.inclusiveEnd = NO;\n"];
+
+    if (_queryKeys) {
+        [out appendFormat: @"query.keys = %@;\n", _queryKeys];
+    } else {
+        if (_queryStartKey)
+            [out appendFormat: @"query.startKey = %@;\n", printExpr(_queryStartKey)];
+        if (!_queryInclusiveStart)
+            [out appendFormat: @"query.inclusiveStart = NO;\n"];
+        if (_queryEndKey)
+            [out appendFormat: @"query.endKey = %@;\n", printExpr(_queryEndKey)];
+        if (!_queryInclusiveEnd)
+            [out appendString: @"query.inclusiveEnd = NO;\n"];
+        if (_queryPrefixMatchLevel)
+            [out appendFormat: @"query.prefixMatchLevel = %u;\n", _queryPrefixMatchLevel];
+    }
     if (_queryFilter)
         [out appendFormat: @"query.postFilter = %@;\n", _queryFilter];
     if (_querySort)
@@ -211,42 +278,60 @@ static NSData* SHA1Digest(NSData* input) {
 // Recursively scans the predicate at initialization time looking for variables.
 // Predicates using variables are stored in _equalityKey and _otherKey, and removed from the
 // overall predicate. (If nothing is left, returns nil.)
-- (NSPredicate*) scanPredicate: (NSPredicate*)pred {
+// *outAnyVariables will be set to YES if the predicate contains any variables.
+- (NSPredicate*) scanPredicate: (NSPredicate*)pred
+                  anyVariables: (BOOL*)outAnyVariables
+{
     if ([pred isKindOfClass: [NSComparisonPredicate class]]) {
         // Comparison of expressions, e.g. "a < b":
         NSComparisonPredicate* cp = (NSComparisonPredicate*)pred;
-        BOOL lhsIsVariable = [self expressionUsesVariable: cp.leftExpression];
-        BOOL rhsIsVariable = [self expressionUsesVariable: cp.rightExpression];
-        if (!lhsIsVariable && !rhsIsVariable)
-            return cp;
+        ExpressionAttributes lhs = [self expressionAttributes: cp.leftExpression];
+        ExpressionAttributes rhs = [self expressionAttributes: cp.rightExpression];
+        if (!((lhs|rhs) & kExprUsesVariable))
+            return cp;      // Neither side uses a variable
+
+        if (((lhs & kExprUsesVariable) && (lhs & kExprUsesDoc))) {
+            [self fail: @"Expression mixes doc properties and variables: %@", cp.leftExpression];
+            return nil;
+        }
+        if (((rhs & kExprUsesVariable) && (rhs & kExprUsesDoc))) {
+            [self fail: @"Expression mixes doc properties and variables: %@", cp.rightExpression];
+            return nil;
+        }
 
         // Comparison involves a variable, so save variable expression as a key:
-        if (lhsIsVariable) {
-            if (rhsIsVariable) {
-                [self fail: @"Both sides can't be variable: %@", pred];
+        if (lhs & kExprUsesVariable) {
+            if (rhs & kExprUsesVariable) {
+                [self fail: @"Both sides can't use variables: %@", pred];
                 return nil;
             }
-            cp = flipComparison(cp); // Always put variable on RHS
+            NSComparisonPredicate* flipped = flipComparison(cp); // Always put variable on RHS
+            if (!flipped)
+                [_filterPredicates addObject: cp];  // Not flippable; save for post-filter
+            cp = flipped;
         }
-        [self addKeyPredicate: cp];
+        if (cp)
+            [self addKeyPredicate: cp];
         // Result of this comparison is unknown at indexing time, so return nil:
+        *outAnyVariables = YES;
         return nil;
 
     } else if ([pred isKindOfClass: [NSCompoundPredicate class]]) {
         // Logical compound of sub-predicates, e.g. "a AND b AND c":
         NSCompoundPredicate* cp = (NSCompoundPredicate*)pred;
-        if (cp.compoundPredicateType != NSAndPredicateType) {
-            [self fail: @"Sorry, the OR and NOT operators aren't supported yet"];
-            return nil;
-        }
-        NSMutableArray* subpredicates = [NSMutableArray array];
-        for (NSPredicate* sub in cp.subpredicates) {
-            NSPredicate* scanned = [self scanPredicate: sub];  // Recurse!!
-            if (scanned)
-                [subpredicates addObject: scanned];
+        __block BOOL anyVars = NO;
+        NSArray* subpredicates = [cp.subpredicates my_map: ^NSPredicate*(NSPredicate* sub) {
+            return [self scanPredicate: sub anyVariables: &anyVars];
+        }];
+        if (anyVars) {
+            *outAnyVariables = YES;
+            if (cp.compoundPredicateType != NSAndPredicateType) {
+                [self fail: @"Sorry, the OR and NOT operators aren't supported with variables yet"];
+                return nil;
+            }
         }
         if (subpredicates.count == 0)
-            return nil;                 // all terms are unknown, so return unknown
+            return nil;                 // all terms are variable, so return unknown
         else if (subpredicates.count == 1 && cp.compoundPredicateType != NSNotPredicateType)
             return subpredicates[0];    // AND or OR of one predicate, so just return it
         else
@@ -288,43 +373,70 @@ static NSData* SHA1Digest(NSData* input) {
     }
 
     // If we fell through, cp can't be used as part of the key, so save it for query time:
-    if (!_filterPredicates)
-        _filterPredicates = [NSMutableArray array];
     [_filterPredicates addObject: cp];
     return NO;
 }
 
 
 // Returns YES if an NSExpression's value involves evaluating a variable.
-- (BOOL) expressionUsesVariable: (NSExpression*)expression {
+- (ExpressionAttributes) expressionAttributes: (NSExpression*)expression {
     switch (expression.expressionType) {
         case NSVariableExpressionType:
-            return YES;
-        case NSFunctionExpressionType:
-            for (NSExpression* expr in expression.arguments)
-                if ([self expressionUsesVariable: expr])
-                    return YES;
-            return NO;
+            return kExprUsesVariable;
+        case NSKeyPathExpressionType:
+            return kExprUsesDoc;
+        case NSConstantValueExpressionType:
+            return 0;
         case NSUnionSetExpressionType:
         case NSIntersectSetExpressionType:
         case NSMinusSetExpressionType:
-            return [self expressionUsesVariable: expression.leftExpression]
-                || [self expressionUsesVariable: expression.rightExpression];
-        case NSAggregateExpressionType:
+            return [self expressionAttributes: expression.leftExpression]
+                 | [self expressionAttributes: expression.rightExpression];
+        case NSFunctionExpressionType: {
+            ExpressionAttributes attrs = 0;
+            for (NSExpression* expr in expression.arguments)
+                attrs |= [self expressionAttributes: expr];
+            return attrs;
+        }
+        case NSAggregateExpressionType: {
+            ExpressionAttributes attrs = 0;
             for (NSExpression* expr in expression.collection)
-                if ([self expressionUsesVariable: expr])
-                    return YES;
-            return NO;
-        case NSConstantValueExpressionType:
-        case NSEvaluatedObjectExpressionType:
-        case NSKeyPathExpressionType:
-        case NSAnyKeyExpressionType:
-            return NO;
+                attrs |= [self expressionAttributes: expr];
+            return attrs;
+        }
         default:
             [self fail: @"Unsupported expression type %d: %@",
                    (int)expression.expressionType, expression];
-            return NO;
+            return 0;
     }
+}
+
+
+- (void) scanValueTemplate: (NSArray*)valueTemplate {
+    if (!valueTemplate)
+        return;
+    NSMutableArray* reduceFns = $marray();
+    _valueTemplate = [valueTemplate my_map: ^id(id value) {
+        NSExpression* expr = $castIf(NSExpression, value);
+        if (expr.expressionType == NSFunctionExpressionType) {
+            NSString* fnName = expr.function;
+            if ([fnName hasSuffix: @":"]) {
+                fnName = [fnName substringToIndex: fnName.length-1];
+                if (CBLGetReduceFunc(fnName)) {
+                    // This value is using an aggregate function like sum() or average(). Save the fn
+                    // name, and make the emitted value be the reduce function name:
+                    [reduceFns addObject: fnName];
+                    return expr.arguments[0];
+                }
+            }
+        }
+        return value; // default
+    }];
+
+    if (reduceFns.count == valueTemplate.count)
+        _reduceFunctions = [reduceFns copy];
+    else if (reduceFns.count > 0)
+        [self fail: @"Can't have both regular and reduced/aggregate values"];
 }
 
 
@@ -335,12 +447,12 @@ static NSData* SHA1Digest(NSData* input) {
     // Update each of _filterPredicates to make its keypath relative to the query rows' values.
     for (NSUInteger i = 0; i < _filterPredicates.count; ++i) {
         NSComparisonPredicate* cp = _filterPredicates[i];
-        NSExpression* lhs = [self rewriteKeyPathsInExpression: cp.leftExpression];
-        cp = [[NSComparisonPredicate alloc] initWithLeftExpression: lhs
-                                                   rightExpression: cp.rightExpression
-                                                          modifier: cp.comparisonPredicateModifier
-                                                              type: cp.predicateOperatorType
-                                                           options: cp.options];
+        cp = [[NSComparisonPredicate alloc]
+                  initWithLeftExpression: [self rewriteKeyPathsInExpression: cp.leftExpression]
+                         rightExpression: [self rewriteKeyPathsInExpression: cp.rightExpression]
+                                modifier: cp.comparisonPredicateModifier
+                                    type: cp.predicateOperatorType
+                                 options: cp.options];
         [_filterPredicates replaceObjectAtIndex: i withObject: cp];
     }
     // Combine the filterPredicates into a single predicate:
@@ -499,32 +611,34 @@ static NSData* SHA1Digest(NSData* input) {
 
 // The expression that should be emitted as the key
 - (NSExpression*) keyExpression {
-    return aggregateExpressions($map(_keyPredicates, ^id(NSComparisonPredicate* cp) {
+    return combineExpressions([_keyPredicates my_map: ^id(NSComparisonPredicate* cp) {
         NSExpression* expr = cp.leftExpression;
         if (cp.options & NSCaseInsensitivePredicateOption)
             expr = [NSExpression expressionForFunction: @"lowercase:" arguments: @[expr]];
         return expr;
-    }));
+    }]);
 }
 
 
 // The expression that should be emitted as the value
 - (NSExpression*) valueExpression {
-    return aggregateExpressions($map(_valueTemplate, ^id(id item) {
+    return combineExpressions([_valueTemplate my_map: ^id(id item) {
         if (![item isKindOfClass: [NSExpression class]])
             item = [NSExpression expressionForKeyPath: $castIf(NSString, item)];
         return item;
-    }));
+    }]);
 }
 
 
 // Sets the view's map block. (This is a class method to avoid having the block accidentally close
 // over any instance variables, creating a reference cycle.)
-+ (void) defineView: (CBLView*)view
-   withMapPredicate: (NSPredicate*)mapPredicate
-      keyExpression: (NSExpression*)keyExpression
-         explodeKey: (BOOL)explodeKey
-    valueExpression: (NSExpression*)valueExpr
++ (CBLView*) defineView: (CBLView*)view
+             inDatabase: (CBLDatabase*)db
+       withMapPredicate: (NSPredicate*)mapPredicate
+          keyExpression: (NSExpression*)keyExpression
+             explodeKey: (BOOL)explodeKey
+        valueExpression: (NSExpression*)valueExpr
+        reduceFunctions: (NSArray*)reduceFunctions
 {
     // Compute a map-block version string that's unique to this configuration:
     NSMutableDictionary* versioned = [NSMutableDictionary dictionary];
@@ -533,8 +647,23 @@ static NSData* SHA1Digest(NSData* input) {
         versioned[@"mapPredicate"] = mapPredicate;
     if (valueExpr)
         versioned[@"valueExpression"] = valueExpr;
+    if (reduceFunctions)
+        versioned[@"reduceFunctions"] = reduceFunctions;
     NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
-    NSString* version = [CBLJSON base64StringWithData: SHA1Digest(archive)];
+    NSString* version = [CBLJSON base64StringWithData: CBLSHA1Digest(archive)];
+
+    if (!view) {
+        NSString* viewID = [NSString stringWithFormat: @"builder-%@", version];
+        if (![db existingViewNamed: viewID]) {
+            // Logging makes it easier to detect misuse where someone creates lots of builders with
+            // slightly different predicates containing hardcoded variable values, which will
+            // result in lots of unnecessary views being created.
+            // (For example, "doc.price < 100", "doc.price < 50", "doc.price < 200" ...
+            // instead of "doc.price < $PRICE" with $PRICE being filled in at query time.)
+            Log(@"CBLQueryBuilder: Creating new view '%@'", viewID);
+        }
+        view = [db viewNamed: viewID];
+    }
 
     BOOL compoundKey = (keyExpression.expressionType == NSAggregateExpressionType);
 
@@ -548,6 +677,9 @@ static NSData* SHA1Digest(NSData* input) {
             if (!explodeKey) {
                 emit(key, value); // regular case
             } else if (![key isKindOfClass: [NSArray class]]) {
+                if ([key isKindOfClass: [NSString class]])
+                    Warn(@"CBLQueryBuilder: '%@ contains...' expected %@ to be an array"
+                        " but it's a string; remember not to use 'contains' as a string operation!", keyExpression, keyExpression);
                 return;
             } else if (!compoundKey) {
                 // 'contains' test with single key; iterate over key:
@@ -568,7 +700,20 @@ static NSData* SHA1Digest(NSData* input) {
                 }
             }
         }
-    } version: version];
+    } reduceBlock: [self defineReduceBlockForFunctions: reduceFunctions]
+          version: version];
+    return view;
+}
+
+
+// Creates a reduce block given an array of function names corresponding to the emitted values.
++ (CBLReduceBlock) defineReduceBlockForFunctions: (NSArray*)functions {
+    if (functions.count == 0)
+        return nil;
+    else if (functions.count == 1)
+        return CBLGetReduceFunc(functions[0]);
+    else
+        Assert(NO, @"Can't handle multiple reduced values yet");
 }
 
 
@@ -621,12 +766,13 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
             case NSGreaterThanPredicateOperatorType:
                 [startKey addObject: keyExpr];
                 _queryInclusiveStart = (op == NSGreaterThanOrEqualToPredicateOperatorType);
-                [endKey addObject: @{}];
-                _queryInclusiveEnd = NO;
+                if (endKey.count > 0)
+                    [endKey addObject: @{}];
                 break;
             case NSBeginsWithPredicateOperatorType:
                 [startKey addObject: keyExpr];
-                [endKey addObject: keyExpr];  // can't append \uFFFF until query time
+                [endKey addObject: keyExpr];
+                _queryPrefixMatchLevel = 1;
                 break;
             case NSBetweenPredicateOperatorType: {
                 // key must be an aggregate expression:
@@ -644,6 +790,8 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
     if (_keyPredicates.count > 1) {
         _queryStartKey = [NSExpression expressionForAggregate: startKey];
         _queryEndKey   = [NSExpression expressionForAggregate: endKey];
+        if (endKey.count < _keyPredicates.count)
+            _queryPrefixMatchLevel = 1;
     } else {
         _queryStartKey = startKey.firstObject;
         _queryEndKey   = endKey.firstObject;
@@ -664,31 +812,21 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
         query.keys = $cast(NSArray, keys);
         
     } else {
-        id startKey = [_queryStartKey expressionValueWithObject: nil
-                                                        context: mutableContext];
-        id endKey = [_queryEndKey expressionValueWithObject: nil
-                                                    context: mutableContext];
-        if (_otherKey.predicateOperatorType == NSBeginsWithPredicateOperatorType) {
-            // The only way to do a prefix match is to make the endKey the startKey + a high character
-            if ([endKey isKindOfClass: [NSArray class]]) {
-                NSString* str = $cast(NSString, [startKey lastObject]);
-                str = [str stringByAppendingString: @"\uFFFE"];
-                NSMutableArray* newEnd = [endKey mutableCopy];
-                [newEnd replaceObjectAtIndex: newEnd.count-1 withObject: str];
-                endKey = newEnd;
-            } else {
-                endKey = [$cast(NSString, startKey) stringByAppendingString: @"\uFFFE"];
-            }
-        }
-
-        query.startKey = startKey;
-        query.endKey = endKey;
+        query.startKey = [_queryStartKey expressionValueWithObject: nil context: mutableContext];
+        query.endKey = [_queryEndKey expressionValueWithObject: nil context: mutableContext];
         query.inclusiveStart = _queryInclusiveStart;
         query.inclusiveEnd = _queryInclusiveEnd;
+        query.prefixMatchLevel = _queryPrefixMatchLevel;
     }
     query.sortDescriptors = _querySort;
     query.postFilter = [_queryFilter predicateWithSubstitutionVariables: mutableContext];
     return query;
+}
+
+
+- (CBLQueryEnumerator*) runQueryWithContext: (NSDictionary*)context
+                                      error: (NSError**)outError {
+    return [[self createQueryWithContext: context] run: outError];
 }
 
 
@@ -702,7 +840,7 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
         message = [[NSString alloc] initWithFormat: message arguments: args];
         va_end(args);
         NSDictionary* userInfo = @{NSLocalizedFailureReasonErrorKey: message};
-        _error = [NSError errorWithDomain: @"CBLQueryPlanner" code: -1 userInfo: userInfo];
+        _error = [NSError errorWithDomain: @"CBLQueryBuilder" code: -1 userInfo: userInfo];
     }
 }
 
@@ -766,7 +904,9 @@ static NSComparisonPredicate* mergeComparisons(NSComparisonPredicate* p1,
 }
 
 
-static NSExpression* aggregateExpressions(NSArray* expressions) {
+// Turns an NSArray of NSExpressions into either nil, the single expression if there's only one,
+// or an aggregate (tuple) expression.
+static NSExpression* combineExpressions(NSArray* expressions) {
     switch (expressions.count) {
         case 0:     return nil;
         case 1:     return expressions[0];

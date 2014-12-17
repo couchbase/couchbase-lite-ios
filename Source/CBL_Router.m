@@ -407,7 +407,27 @@ static NSArray* splitPath( NSURL* url ) {
              _request.HTTPMethod, _request.URL.path, message);
         Assert([self respondsToSelector: @selector(do_GETRoot)],
                @"CBL_Router(Handlers) is missing -- app may be linked without -ObjC linker flag.");
-        sel = @selector(do_UNKNOWN);
+
+        // Check if there is an alternative method:
+        BOOL hasAltMethod = NO;
+        NSString* curDoMethod = [NSString stringWithFormat: @"do_%@", method];
+        for (NSString* aMethod in @[@"GET", @"POST", @"PUT", @"DELETE"]) {
+            if (![aMethod isEqualToString: method]) {
+                NSString* altDoMethod = [NSString stringWithFormat: @"do_%@", aMethod];
+                NSString* altMessage = [message stringByReplacingOccurrencesOfString: curDoMethod
+                                                                          withString: altDoMethod];
+                SEL altSel = NSSelectorFromString(altMessage);
+                if (altSel && [self respondsToSelector: altSel]) {
+                    LogTo(CBLRouter,
+                          @"Found an alternative request type: %@"
+                          " for the mapped selector: %@", aMethod, message);
+                    hasAltMethod = YES;
+                    break;
+                }
+            }
+        }
+
+        sel = hasAltMethod ? @selector(do_METHOD_NOT_ALLOWED) : @selector(do_UNKNOWN);
     }
     
     if (_onAccessCheck) {
@@ -645,6 +665,11 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (CBLStatus) do_UNKNOWN {
     return kCBLStatusNotFound;
+}
+
+
+- (CBLStatus) do_METHOD_NOT_ALLOWED {
+    return kCBLStatusMethodNotAllowed;
 }
 
 

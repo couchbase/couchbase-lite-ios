@@ -87,7 +87,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 
 /** The credential (generally username+password) to use to authenticate to the remote database.
     This can either come from the URL itself (if it's of the form "http://user:pass@example.com")
-    or be stored in the NSURLCredentialStore, which is a wrapper around the Keychain. */
+    or be stored in the NSURLCredentialStorage, which is a wrapper around the Keychain. */
 @property (nonatomic, strong) NSURLCredential* credential;
 
 /** OAuth parameters that the replicator should use when authenticating to the remote database.
@@ -124,6 +124,10 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
     @param onlyThese  If NO, the given certs are appended to the system's built-in list of trusted
         root certs; if YES, it replaces them (so *only* the given certs will be trusted.) */
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
+
+/** The server's SSL certificate. This will be NULL until the first HTTPS response is received
+    from the server. */
+@property (readonly) SecCertificateRef serverCertificate;
 
 #pragma mark - STATUS:
 

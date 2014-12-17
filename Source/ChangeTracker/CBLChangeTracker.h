@@ -91,6 +91,8 @@ typedef enum CBLChangeTrackerMode {
 - (BOOL) start;
 - (void) stop;
 
+@property (nonatomic) BOOL paused;
+
 /** Asks the tracker to retry connecting, _if_ it's currently disconnected but waiting to retry.
     This should be called when the reachability of the remote host changes, or when the
     app is reactivated. */

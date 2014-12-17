@@ -45,6 +45,7 @@ The native APIs are Objective-C (iOS, Mac) and Java (Android), but an optional i
 * Demo apps:
     * [Grocery Sync][18] - implements a simple shared grocery list.
     * [TodoLite-iOS](https://github.com/couchbaselabs/TodoLite-iOS) - a generic ToDo list with photos and sharing. 
+    * [CRM](https://github.com/couchbaselabs/Couchbase-Lite-Demo-CRM) - An enterprise CRM
 * Or if you want to ask questions or get help, join the [mailing list][17].
 
 ## Platforms ##

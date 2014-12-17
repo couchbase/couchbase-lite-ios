@@ -170,7 +170,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     }
 
     id<CBLDocumentModel> model = _modelObject; // strong reference to it
-    [model CBLDocument: self didChange: change];
+    [model document: self didChange: change];
 
     NSNotification* n = [NSNotification notificationWithName: kCBLDocumentChangeNotification
                                                       object: self

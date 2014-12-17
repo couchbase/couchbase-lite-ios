@@ -93,6 +93,7 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 #if DEBUG  // for unit tests only
 @property (readonly) NSString* indexFilePath;
 - (void) setCollation: (CBLViewCollation)collation;
+- (void) forgetMapBlock;
 #endif
 
 @end

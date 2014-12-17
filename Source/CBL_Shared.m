@@ -42,8 +42,18 @@
 }
 
 - (BOOL) isDatabaseOpened: (NSString*)dbName {
-    return [_openDatabaseNames containsObject: dbName];
+    @synchronized(self) {
+        return [_openDatabaseNames containsObject: dbName];
+    }
 }
+
+#if DEBUG
+- (NSUInteger) countForOpenedDatabase: (NSString*)dbName {
+    @synchronized(self) {
+        return [_openDatabaseNames countForObject: dbName];
+    }
+}
+#endif
 
 - (void) openedDatabase: (NSString*)dbName {
     @synchronized(self) {
@@ -126,11 +136,5 @@
             Warn(@"%@: Still waiting to -forgetDatabaseNamed: \"%@\"", self, dbName);
     }
 }
-
-#if DEBUG
-- (NSUInteger) countForOpenedDatabase: (NSString*)dbName {
-    return [_openDatabaseNames countForObject: dbName];
-}
-#endif
 
 @end
