@@ -303,13 +303,14 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
 
     // Tokenize the query string:
-    LogTo(QueryVerbose, @"Full-text search for:");
+    LogTo(QueryVerbose, @"Full-text search for \"%@\":", options.fullTextQuery);
     std::vector<std::string> queryTokens;
     std::vector<KeyRange> collatableKeys;
     Tokenizer tokenizer("en", true);
     for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
         collatableKeys.push_back(Collatable(i.token()));
         queryTokens.push_back(i.token());
+        LogTo(QueryVerbose, @"    token: \"%s\"", i.token().c_str());
     }
 
     LogTo(QueryVerbose, @"Iterating index...");
@@ -317,20 +318,25 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     *outStatus = kCBLStatusOK;
     DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
     for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e.next(); ) {
-        NSString* docID = (NSString*)e.docID();
-        CBLFullTextQueryRow* row = docRows[docID];
-        if (!row) {
-            row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
-                                                    sequence: e.sequence()];
-            docRows[docID] = row;
-        }
         std::string token = (std::string)e.key().readString();
         auto term = std::find(queryTokens.begin(), queryTokens.end(), token) - queryTokens.begin();
         NSRange range;
         CollatableReader reader(e.value());
         reader.beginArray();
+        unsigned emitCount = (unsigned)reader.readInt();
         range.location = (NSUInteger)reader.readDouble();
         range.length = (NSUInteger)reader.readDouble();
+        NSString* docID = (NSString*)e.docID();
+
+        id key = emitCount > 0 ? @[docID, @(emitCount)] : docID;
+        CBLFullTextQueryRow* row = docRows[key];
+        if (!row) {
+            row = [[CBLFullTextQueryRow alloc] initWithView: self
+                                                      docID: docID
+                                                   sequence: e.sequence()
+                                                  emitCount: emitCount];
+            docRows[key] = row;
+        }
         [row addTerm: term atRange: range];
     };
 
@@ -338,6 +344,26 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     return ^CBLQueryRow*() {
         return rowEnum.nextObject;
     };
+}
+
+
+- (NSData*) fullTextForDocument: (NSString*)docID
+                       sequence: (SequenceNumber)sequence
+                      emitCount: (unsigned)emitCount
+{
+    // See MapReduceBridge::emitTextTokens, which writes this key
+    Collatable collKey;
+    collKey.beginArray();
+    collKey << docID << emitCount;
+    collKey.endArray();
+    alloc_slice valueSlice = self.index->getEntry((nsstring_slice)docID, sequence, collKey);
+    if (valueSlice.size == 0) {
+        Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, emitCount %u",
+             self, docID, sequence, emitCount);
+        return nil;
+    }
+    CollatableReader value(valueSlice);
+    return value.readString().copiedNSData();
 }
 
 

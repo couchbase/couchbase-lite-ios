@@ -140,10 +140,11 @@
 @end
 
 @interface CBLFullTextQueryRow ()
-- (instancetype) initWithDocID: (NSString*)docID
-                      sequence: (SequenceNumber)sequence;
+- (instancetype) initWithView: (CBLView*)view
+                        docID: (NSString*)docID
+                     sequence: (SequenceNumber)sequence
+                    emitCount: (unsigned)emitCount;
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
-@property (nonatomic) NSString* snippet;
 @end
 
 @interface CBLGeoQueryRow ()

@@ -1087,10 +1087,22 @@ TestCase(CBL_View_FullTextQuery) {
 
     // Query the full-text index:
     CBLQuery* query = [view createQuery];
-    query.fullTextQuery = @"dog name";
+    query.fullTextQuery = @"dog bark name";
     NSArray* rows = [[query run: NULL] allObjects];
-    CAssertEq(rows.count, 1u);
-    CAssertEqual([rows[0] documentID], @"33333");
+    CAssertEq(rows.count, 2u);
+
+    CBLFullTextQueryRow* row = rows[0];
+    CAssertEqual(row.documentID, @"33333");
+    CAssertEqual(row.fullText, @"a dog whøse ñame was “Dog”");
+    CAssertEq(row.matchCount, 2u);
+    CAssert(NSEqualRanges([row textRangeOfMatch: 0], NSMakeRange(2, 3)));  // first "dog"
+    CAssert(NSEqualRanges([row textRangeOfMatch: 1], NSMakeRange(12, 4))); // "ñame"
+
+    row = rows[1];
+    CAssertEqual(row.documentID, @"55555");
+    CAssertEqual(row.fullText, @"was barking.");
+    CAssertEq(row.matchCount, 1u);
+    CAssert(NSEqualRanges([row textRangeOfMatch: 0], NSMakeRange(4, 7)));  // "barking"
 
     // Now delete a document:
     CBL_Revision* rev = docs[3];
@@ -1103,7 +1115,8 @@ TestCase(CBL_View_FullTextQuery) {
 
     // Make sure the deleted doc doesn't still show up in the query results:
     rows = [[query run: NULL] allObjects];
-    CAssertEq(rows.count, 0u);
+    CAssertEq(rows.count, 1u);
+    CAssertEqual([rows[0] documentID], @"55555");
 }
 
 #if 0 // Boolean operators and snippets are not available (yet) with ForestDB

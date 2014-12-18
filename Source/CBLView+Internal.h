@@ -128,6 +128,9 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
     @return  An array of CBLQueryRow. */
 - (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
                                      status: (CBLStatus*)outStatus;
+- (NSData*) fullTextForDocument: (NSString*)docID
+                       sequence: (SequenceNumber)sequence
+                      emitCount: (unsigned)emitCount;
 #if DEBUG
 - (NSArray*) dump;
 #endif

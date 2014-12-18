@@ -37,17 +37,21 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 
 @implementation CBLFullTextQueryRow
 {
+    __weak CBLView* _view;
+    unsigned _emitCount;
     NSMutableArray* _matchOffsets;
-    NSString* _snippet;
 }
 
-@synthesize snippet=_snippet;
 
-- (instancetype) initWithDocID: (NSString*)docID
+- (instancetype) initWithView: (CBLView*)view
+                        docID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
+                     emitCount: (unsigned)emitCount
 {
     self = [super initWithDocID: docID sequence: sequence key: $null value: nil docProperties: nil];
     if (self) {
+        _view = view;
+        _emitCount = emitCount;
         _matchOffsets = [[NSMutableArray alloc] initWithCapacity: 4];
     }
     return self;
@@ -60,9 +64,17 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
     [_matchOffsets addObject: @(range.length)];
 }
 
+- (NSData*) fullTextUTF8Data {
+    return [_view fullTextForDocument: self.documentID
+                             sequence: self.sequenceNumber
+                            emitCount: _emitCount];
+}
+
 - (NSString*) fullText {
-    Warn(@"CBLFullTextQueryRow.fullText property not supported");   //TODO
-    return nil;
+    NSData* data = self.fullTextUTF8Data;
+    if (!data)
+        return nil;
+    return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 }
 
 - (NSUInteger) matchCount {
@@ -76,23 +88,9 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 - (NSRange) textRangeOfMatch: (NSUInteger)matchNumber {
     NSUInteger byteStart  = [_matchOffsets[4*matchNumber + 2] unsignedIntegerValue];
     NSUInteger byteLength = [_matchOffsets[4*matchNumber + 3] unsignedIntegerValue];
-    NSData* rawText = [self.fullText dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* rawText = self.fullTextUTF8Data;
     return NSMakeRange(utf8BytesToChars(rawText.bytes, 0, byteStart),
                        utf8BytesToChars(rawText.bytes, byteStart, byteStart + byteLength));
-}
-
-
-- (NSString*) snippetWithWordStart: (NSString*)wordStart
-                           wordEnd: (NSString*)wordEnd
-{
-    if (!_snippet)
-        return nil;
-    NSMutableString* snippet = [_snippet mutableCopy];
-    [snippet replaceOccurrencesOfString: @"\001" withString: wordStart
-                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
-    [snippet replaceOccurrencesOfString: @"\002" withString: wordEnd
-                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
-    return snippet;
 }
 
 
@@ -101,8 +99,6 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
     NSMutableDictionary* dict = [[super asJSONDictionary] mutableCopy];
     if (!dict[@"error"]) {
         [dict removeObjectForKey: @"key"];
-        if (_snippet)
-            dict[@"snippet"] = [self snippetWithWordStart: @"[" wordEnd: @"]"];
         if (_matchOffsets) {
             NSMutableArray* matches = [[NSMutableArray alloc] init];
             for (NSUInteger i = 0; i < _matchOffsets.count; i += 4) {

@@ -43,15 +43,6 @@
 /** The text emitted when the view was indexed, which contains the match. */
 @property (readonly) NSString* fullText;
 
-/** Returns a short substring of the full text containing at least some of the matched words.
-    This is useful to display in search results, and is faster than fetching the .fullText.
-    NOTE: The "fullTextSnippets" property of the CBLQuery must be set to YES to enable this;
-    otherwise the result will be nil.
-    @param wordStart  A delimiter that will be inserted before every instance of a match.
-    @param wordEnd  A delimiter that will be inserted after every instance of a match. */
-- (NSString*) snippetWithWordStart: (NSString*)wordStart
-                           wordEnd: (NSString*)wordEnd;
-
 /** The number of matches found in the fullText. */
 @property (readonly) NSUInteger matchCount;
 

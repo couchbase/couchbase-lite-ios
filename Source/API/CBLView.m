@@ -114,17 +114,18 @@ public:
         NSDictionary* doc = ((CocoaMappable&)mappable).body;
         if (!doc)
             return;
+        __block unsigned emitCount = 0;
         CBLMapEmitBlock emit = ^(id key, id value) {
             if (indexType == kCBLFullTextIndex) {
                 Assert([key isKindOfClass: [NSString class]]);
                 LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, toJSONStr(value));
-                emitTextTokens(key, value, doc, emitFn);
+                emitTextTokens(key, value, doc, emitCount, emitFn);
             } else if ([key isKindOfClass: [CBLSpecialKey class]]) {
                 CBLSpecialKey *specialKey = key;
                 LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, toJSONStr(value));
                 NSString* text = specialKey.text;
                 if (text) {
-                    emitTextTokens(text, value, doc, emitFn);
+                    emitTextTokens(text, value, doc, emitCount, emitFn);
                 } else {
                     emitGeo(specialKey.rect, value, doc, emitFn);
                 }
@@ -132,23 +133,40 @@ public:
                 LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
                 callEmit(key, value, doc, emitFn);
             }
+            ++emitCount;
         };
         mapBlock(doc, emit);  // Call the apps' map block!
     }
 
 private:
-    void emitTextTokens(NSString* text, id value, NSDictionary* doc, EmitFn& emitFn) {
+    // Full-text-index the string by emitting each word token, with value being its byte range
+    void emitTextTokens(NSString* text, id value, NSDictionary* doc, unsigned emitCount, EmitFn& emitFn) {
         if (!_tokenizer)
             _tokenizer = new Tokenizer("en", true);
+        bool emitted = false;
         for (TokenIterator i(*_tokenizer, nsstring_slice(text), true); i; ++i) {
-            NSString* token = [[NSString alloc] initWithBytes: i.token().data()
-                                                       length: i.token().length()
-                                                     encoding: NSUTF8StringEncoding];
-            value = @[@(i.wordOffset()), @(i.wordLength())];
-            callEmit(token, value, doc, emitFn);
+            Collatable collKey, collValue;
+            collKey << i.token();
+            collValue.beginArray();
+            collValue << emitCount << i.wordOffset() << i.wordLength();
+            collValue.endArray();
+            emitFn(collKey, collValue);
+            emitted = true;
+        }
+
+        if (emitted) {
+            // Emit the string that was indexed:
+            Collatable collKey, collValue;
+            collKey.beginArray();
+            collKey << doc[@"_id"];
+            collKey << emitCount;
+            collKey.endArray();
+            collValue << text;
+            emitFn(collKey, collValue);
         }
     }
 
+    // Geo-index a rectangle
     void emitGeo(CBLGeoRect rect, id value, NSDictionary* doc, EmitFn& emitFn) {
         geohash::area area(geohash::coord(rect.min.x, rect.min.y),
                            geohash::coord(rect.max.x, rect.max.y));
@@ -161,6 +179,7 @@ private:
         emitFn(collKey, collValue);
     }
 
+    // Emit a regular key/value pair
     void callEmit(id key, id value, NSDictionary* doc, EmitFn& emitFn) {
         Collatable collKey, collValue;
         collKey << key;
