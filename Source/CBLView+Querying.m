@@ -315,6 +315,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
     LogTo(QueryVerbose, @"Iterating index...");
     NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
+    NSMutableArray* result = $marray();
     *outStatus = kCBLStatusOK;
     DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
     for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e.next(); ) {
@@ -338,9 +339,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             docRows[key] = row;
         }
         [row addTerm: term atRange: range];
+        if (row.matchCount == queryTokens.size()) {
+            // Row must contain _all_ the search terms to be a hit
+            [result addObject: row];
+        }
     };
 
-    NSEnumerator* rowEnum = docRows.objectEnumerator;
+    NSEnumerator* rowEnum = result.objectEnumerator;
     return ^CBLQueryRow*() {
         return rowEnum.nextObject;
     };
