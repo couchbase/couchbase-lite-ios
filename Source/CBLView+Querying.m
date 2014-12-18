@@ -361,7 +361,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     collKey.beginArray();
     collKey << docID << emitCount;
     collKey.endArray();
-    alloc_slice valueSlice = self.index->getEntry((nsstring_slice)docID, sequence, collKey);
+    alloc_slice valueSlice = self.index->getEntry((nsstring_slice)docID, sequence, collKey, 0);
     if (valueSlice.size == 0) {
         Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, emitCount %u",
              self, docID, sequence, emitCount);

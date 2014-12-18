@@ -143,25 +143,25 @@ private:
     void emitTextTokens(NSString* text, id value, NSDictionary* doc, unsigned emitCount, EmitFn& emitFn) {
         if (!_tokenizer)
             _tokenizer = new Tokenizer("en", true);
-        bool emitted = false;
+        bool emittedText = false;
         for (TokenIterator i(*_tokenizer, nsstring_slice(text), true); i; ++i) {
+            if (!emittedText) {
+                // Emit the string that was indexed:
+                Collatable collKey, collValue;
+                collKey.beginArray();
+                collKey << doc[@"_id"];
+                collKey << emitCount;
+                collKey.endArray();
+                collValue << text;
+                emitFn(collKey, collValue);
+                emittedText = true;
+            }
+
             Collatable collKey, collValue;
             collKey << i.token();
             collValue.beginArray();
             collValue << emitCount << i.wordOffset() << i.wordLength();
             collValue.endArray();
-            emitFn(collKey, collValue);
-            emitted = true;
-        }
-
-        if (emitted) {
-            // Emit the string that was indexed:
-            Collatable collKey, collValue;
-            collKey.beginArray();
-            collKey << doc[@"_id"];
-            collKey << emitCount;
-            collKey.endArray();
-            collValue << text;
             emitFn(collKey, collValue);
         }
     }

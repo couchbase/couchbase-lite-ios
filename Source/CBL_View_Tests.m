@@ -511,6 +511,41 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     [db _close];
 }
 
+// Check that duplicate keys emitted by the same doc are preserved.
+TestCase(CBL_View_Dup_Keys) {
+    RequireTestCase(CBL_View_Index);
+    CBLDatabase *db = createDB();
+    putDocs(db);
+
+    CBLView* view = [db viewNamed: @"dups"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"key"], @-1);
+        emit(doc[@"key"], @-2);
+    }) reduceBlock: NULL version: @"1"];
+    CAssertEq([view updateIndex], kCBLStatusOK);
+
+    NSArray* dump = [view dump];
+    Log(@"View dump: %@", dump);
+    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}, {@"value", @"-1"}),
+                              $dict({@"key", @"\"five\""}, {@"seq", @5}, {@"value", @"-2"}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @2}, {@"value", @"-1"}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @2}, {@"value", @"-2"}),
+                              $dict({@"key", @"\"one\""},  {@"seq", @3}, {@"value", @"-1"}),
+                              $dict({@"key", @"\"one\""},  {@"seq", @3}, {@"value", @"-2"}),
+                              $dict({@"key", @"\"three\""},{@"seq", @4}, {@"value", @"-1"}),
+                              $dict({@"key", @"\"three\""},{@"seq", @4}, {@"value", @"-2"}),
+                              $dict({@"key", @"\"two\""},  {@"seq", @1}, {@"value", @"-1"}),
+                              $dict({@"key", @"\"two\""},  {@"seq", @1}, {@"value", @"-2"}) ));
+    CBLQueryOptions* options = [CBLQueryOptions new];
+    options.startKey = @"one";
+    options.endKey = @"one";
+    CBLStatus status;
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    NSArray* expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}, {@"value", @-1}),
+                                   $dict({@"id",  @"11111"}, {@"key", @"one"}, {@"value", @-2}));
+    CAssertEqual(rows, expectedRows);
+}
+
 TestCase(CBL_View_PrefixMatch) {
     RequireTestCase(CBL_View_Query);
     CBLDatabase *db = createDB();
@@ -1274,6 +1309,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_Index);
     RequireTestCase(CBL_View_IndexMultiple);
     RequireTestCase(CBL_View_Query);
+    RequireTestCase(CBL_View_Dup_Keys);
     RequireTestCase(CBL_View_AllDocsQuery);
     RequireTestCase(CBL_View_ChangeMapFn);
     RequireTestCase(CBL_View_QueryStartKeyDocID);
@@ -1290,7 +1326,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_NumericKeys);
     RequireTestCase(CBL_View_Reduce);
 //  RequireTestCase(CBL_View_GeoQuery);
-//  RequireTestCase(CBL_View_FullTextQuery);
+    RequireTestCase(CBL_View_FullTextQuery);
     RequireTestCase(CBL_View_TotalDocs);
 }
 
