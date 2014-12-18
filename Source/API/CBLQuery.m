@@ -122,8 +122,6 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         self.endKeyDocID = query.endKeyDocID;
         _indexUpdateMode = query.indexUpdateMode;
         _fullTextQuery = query.fullTextQuery;
-        _fullTextRanking = query.fullTextRanking;
-        _fullTextSnippets = query.fullTextSnippets;
         _allDocsMode = query.allDocsMode;
         
     }

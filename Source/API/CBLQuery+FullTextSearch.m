@@ -102,8 +102,9 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
         if (_matchOffsets) {
             NSMutableArray* matches = [[NSMutableArray alloc] init];
             for (NSUInteger i = 0; i < _matchOffsets.count; i += 4) {
+                NSRange r = [self textRangeOfMatch: i/4];
                 [matches addObject: @{@"term": _matchOffsets[i+1],
-                                      @"range": @[_matchOffsets[i+2], _matchOffsets[i+3]]}];
+                                      @"range": @[@(r.location), @(r.length)]}];
             }
             dict[@"matches"] = matches;
         }
