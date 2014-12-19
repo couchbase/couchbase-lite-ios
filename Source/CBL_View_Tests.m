@@ -379,6 +379,31 @@ TestCase(CBL_View_ConflictLoser) {
 }
 
 
+TestCase(CBL_View_Index_Persistent) {
+    // Make sure index is not invalidated on relaunch (see #540)
+    RequireTestCase(CBL_View_Index);
+    NSString* dbPath = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite_ViewTest.cblite2"];
+    {
+        CBLDatabase* db = [CBLDatabase createEmptyDBAtPath: dbPath];
+        Assert(db);
+        putDocs(db);
+        CBLView* view = createView(db);
+        CAssertEq([view updateIndex], kCBLStatusOK);
+        Assert(!view.stale);
+        CAssertEq([view updateIndex], kCBLStatusNotModified);
+        [db _close];
+    }
+    {
+        CBLDatabase *db = [[CBLDatabase alloc] initWithDir: dbPath name: nil manager: nil readOnly: NO];
+        Assert([db open: nil]);
+        CBLView* view = createView(db);
+        Assert(!view.stale);
+        CAssertEq([view updateIndex], kCBLStatusNotModified);
+        [db _close];
+    }
+}
+
+
 TestCase(CBL_View_Query) {
     RequireTestCase(CBL_View_Index);
     CBLDatabase *db = createDB();
@@ -1308,6 +1333,7 @@ TestCase(CBLView) {
     RequireTestCase(CBL_View_Create);
     RequireTestCase(CBL_View_Index);
     RequireTestCase(CBL_View_IndexMultiple);
+    RequireTestCase(CBL_View_Index_Persistent);
     RequireTestCase(CBL_View_Query);
     RequireTestCase(CBL_View_Dup_Keys);
     RequireTestCase(CBL_View_AllDocsQuery);
