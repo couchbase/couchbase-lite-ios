@@ -38,7 +38,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 @implementation CBLFullTextQueryRow
 {
     __weak CBLView* _view;
-    unsigned _emitCount;
+    unsigned _fullTextID;
     NSMutableArray* _matchOffsets;
 }
 
@@ -46,12 +46,12 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 - (instancetype) initWithView: (CBLView*)view
                         docID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
-                     emitCount: (unsigned)emitCount
+                   fullTextID: (unsigned)fullTextID
 {
     self = [super initWithDocID: docID sequence: sequence key: $null value: nil docProperties: nil];
     if (self) {
         _view = view;
-        _emitCount = emitCount;
+        _fullTextID = fullTextID;
         _matchOffsets = [[NSMutableArray alloc] initWithCapacity: 4];
     }
     return self;
@@ -67,7 +67,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 - (NSData*) fullTextUTF8Data {
     return [_view fullTextForDocument: self.documentID
                              sequence: self.sequenceNumber
-                            emitCount: _emitCount];
+                           fullTextID: _fullTextID];
 }
 
 - (NSString*) fullText {

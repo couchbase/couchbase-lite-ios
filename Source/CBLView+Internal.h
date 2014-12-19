@@ -130,7 +130,7 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
                                      status: (CBLStatus*)outStatus;
 - (NSData*) fullTextForDocument: (NSString*)docID
                        sequence: (SequenceNumber)sequence
-                      emitCount: (unsigned)emitCount;
+                     fullTextID: (unsigned)fullTextID;
 #if DEBUG
 - (NSArray*) dump;
 #endif

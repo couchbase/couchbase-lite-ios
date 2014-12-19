@@ -143,7 +143,7 @@
 - (instancetype) initWithView: (CBLView*)view
                         docID: (NSString*)docID
                      sequence: (SequenceNumber)sequence
-                    emitCount: (unsigned)emitCount;
+                   fullTextID: (unsigned)fullTextID;
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
 @end
 

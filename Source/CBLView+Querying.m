@@ -302,48 +302,49 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         return nil;
     }
 
-    // Tokenize the query string:
-    LogTo(QueryVerbose, @"Full-text search for \"%@\":", options.fullTextQuery);
-    std::vector<std::string> queryTokens;
-    std::vector<KeyRange> collatableKeys;
-    Tokenizer tokenizer("en", true);
-    for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
-        collatableKeys.push_back(Collatable(i.token()));
-        queryTokens.push_back(i.token());
-        LogTo(QueryVerbose, @"    token: \"%s\"", i.token().c_str());
-    }
-
-    LogTo(QueryVerbose, @"Iterating index...");
-    NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
     NSMutableArray* result = $marray();
-    *outStatus = kCBLStatusOK;
-    DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
-    for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e.next(); ) {
-        std::string token = (std::string)e.key().readString();
-        auto term = std::find(queryTokens.begin(), queryTokens.end(), token) - queryTokens.begin();
-        NSRange range;
-        CollatableReader reader(e.value());
-        reader.beginArray();
-        unsigned emitCount = (unsigned)reader.readInt();
-        range.location = (NSUInteger)reader.readDouble();
-        range.length = (NSUInteger)reader.readDouble();
-        NSString* docID = (NSString*)e.docID();
+    @autoreleasepool {
+        // Tokenize the query string:
+        LogTo(QueryVerbose, @"Full-text search for \"%@\":", options.fullTextQuery);
+        std::vector<std::string> queryTokens;
+        std::vector<KeyRange> collatableKeys;
+        Tokenizer tokenizer("en", true);
+        for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
+            collatableKeys.push_back(Collatable(i.token()));
+            queryTokens.push_back(i.token());
+            LogTo(QueryVerbose, @"    token: \"%s\"", i.token().c_str());
+        }
 
-        id key = emitCount > 0 ? @[docID, @(emitCount)] : docID;
-        CBLFullTextQueryRow* row = docRows[key];
-        if (!row) {
-            row = [[CBLFullTextQueryRow alloc] initWithView: self
-                                                      docID: docID
-                                                   sequence: e.sequence()
-                                                  emitCount: emitCount];
-            docRows[key] = row;
-        }
-        [row addTerm: term atRange: range];
-        if (row.matchCount == queryTokens.size()) {
-            // Row must contain _all_ the search terms to be a hit
-            [result addObject: row];
-        }
-    };
+        LogTo(QueryVerbose, @"Iterating index...");
+        NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
+        *outStatus = kCBLStatusOK;
+        DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
+        for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e.next(); ) {
+            std::string token;
+            unsigned fullTextID;
+            size_t wordStart, wordLength;
+            e.getTextToken(token, wordStart, wordLength, fullTextID);
+            NSString* docID = (NSString*)e.docID();
+
+            id key = fullTextID > 0 ? @[docID, @(fullTextID)] : docID;
+            CBLFullTextQueryRow* row = docRows[key];
+            if (!row) {
+                row = [[CBLFullTextQueryRow alloc] initWithView: self
+                                                          docID: docID
+                                                       sequence: e.sequence()
+                                                     fullTextID: fullTextID];
+                docRows[key] = row;
+            }
+
+            auto termIndex = std::find(queryTokens.begin(), queryTokens.end(), token)
+                                - queryTokens.begin();
+            [row addTerm: termIndex atRange: NSMakeRange(wordStart, wordLength)];
+            if (row.matchCount == queryTokens.size()) {
+                // Row must contain _all_ the search terms to be a hit
+                [result addObject: row];
+            }
+        };
+    }
 
     NSEnumerator* rowEnum = result.objectEnumerator;
     return ^CBLQueryRow*() {
@@ -354,17 +355,12 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
 - (NSData*) fullTextForDocument: (NSString*)docID
                        sequence: (SequenceNumber)sequence
-                      emitCount: (unsigned)emitCount
+                     fullTextID: (unsigned)fullTextID
 {
-    // See MapReduceBridge::emitTextTokens, which writes this key
-    Collatable collKey;
-    collKey.beginArray();
-    collKey << docID << emitCount;
-    collKey.endArray();
-    alloc_slice valueSlice = self.index->getEntry((nsstring_slice)docID, sequence, collKey, 0);
+    alloc_slice valueSlice = self.index->readFullText((nsstring_slice)docID, sequence, fullTextID);
     if (valueSlice.size == 0) {
-        Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, emitCount %u",
-             self, docID, sequence, emitCount);
+        Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, fullTextID %u",
+             self, docID, sequence, fullTextID);
         return nil;
     }
     CollatableReader value(valueSlice);
