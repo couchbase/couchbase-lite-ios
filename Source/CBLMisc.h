@@ -79,6 +79,10 @@ BOOL CBLIsFileExistsError( NSError* error );
 /** Removes a file if it exists; does nothing if it doesn't. */
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) __attribute__((nonnull(1)));
 
+/* Remove a file asynchronously if it exists; does nothing if it doesn't.
+   The file will be moved to the temp folder and renamed before it is deleted. */
+BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError);
+
 /** Returns the hostname of this computer/device (will be of the form "___.local") */
 NSString* CBLGetHostName(void);
 
