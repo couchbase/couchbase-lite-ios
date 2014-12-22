@@ -1,18 +1,12 @@
 //
-//  CBL_Router_Tests.m
+//  Router_Tests.m
 //  CouchbaseLite
 //
-//  Created by Jens Alfke on 12/1/11.
-//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
+//  Created by Jens Alfke on 12/23/14.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
-//  except in compliance with the License. You may obtain a copy of the License at
-//    http://www.apache.org/licenses/LICENSE-2.0
-//  Unless required by applicable law or agreed to in writing, software distributed under the
-//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-//  either express or implied. See the License for the specific language governing permissions
-//  and limitations under the License.
+//
 
+#import "CBLTestCase.h"
 #import "CBL_Router.h"
 #import "CBLDatabase.h"
 #import "CBL_Body.h"
@@ -20,28 +14,25 @@
 #import "CBLBase64.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
-#import "Test.h"
-#import "CBLJSON.h"
 
 
 @interface CBL_Router ()
 - (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
+- (void) stopNow;
 @end
 
 
-#if DEBUG
-#pragma mark - UTILITIES
+@interface Router_Tests : CBLTestCaseWithDB
+@end
 
 
-static CBLManager* createDBManager(void) {
-    return [CBLManager createEmptyAtTemporaryPath: @"CBL_RouterTest"];
-}
+@implementation Router_Tests
 
 
-static CBLResponse* SendRequest(CBLManager* server, NSString* method, NSString* path,
-                               NSDictionary* headers, id bodyObj) {
+static CBLResponse* SendRequest(Router_Tests* self, NSString* method, NSString* path,
+                                NSDictionary* headers, id bodyObj) {
     NSURL* url = [NSURL URLWithString: [@"cbl://" stringByAppendingString: path]];
-    CAssert(url, @"Invalid URL: <%@>", path);
+    Assert(url, @"Invalid URL: <%@>", path);
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = method;
     for (NSString* header in headers)
@@ -52,228 +43,219 @@ static CBLResponse* SendRequest(CBLManager* server, NSString* method, NSString* 
         else {
             NSError* error = nil;
             request.HTTPBody = [CBLJSON dataWithJSONObject: bodyObj options:0 error:&error];
-            CAssertNil(error);
+            AssertNil(error);
         }
     }
-    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
-    CAssert(router!=nil);
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: self->dbmgr request: request];
+    Assert(router!=nil);
     __block CBLResponse* response = nil;
     __block NSUInteger dataLength = 0;
     __block BOOL calledOnFinished = NO;
-    router.onResponseReady = ^(CBLResponse* theResponse) {CAssert(!response); response = theResponse;};
+    router.onResponseReady = ^(CBLResponse* theResponse) {Assert(!response); response = theResponse;};
     router.onDataAvailable = ^(NSData* data, BOOL finished) {dataLength += data.length;};
-    router.onFinished = ^{CAssert(!calledOnFinished); calledOnFinished = YES;};
+    router.onFinished = ^{Assert(!calledOnFinished); calledOnFinished = YES;};
     [router start];
-    CAssert(response);
-    CAssertEq(dataLength, response.body.asJSON.length);
-    CAssert(calledOnFinished);
+    Assert(response);
+    AssertEq(dataLength, response.body.asJSON.length);
+    Assert(calledOnFinished);
     return response;
 }
 
-static id ParseJSONResponse(CBLResponse* response) {
+static id ParseJSONResponse(Router_Tests* self, CBLResponse* response) {
     NSData* json = response.body.asJSON;
     NSString* jsonStr = nil;
     id result = nil;
     if (json) {
         jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
-        CAssert(jsonStr);
+        Assert(jsonStr);
         NSError* error;
         result = [CBLJSON JSONObjectWithData: json options: 0 error: &error];
-        CAssert(result, @"Couldn't parse JSON response: %@", error);
+        Assert(result, @"Couldn't parse JSON response: %@", error);
     }
     return result;
 }
 
 static CBLResponse* sLastResponse;
 
-static id SendBody(CBLManager* server, NSString* method, NSString* path, id bodyObj,
+static id SendBody(Router_Tests* self, NSString* method, NSString* path, id bodyObj,
                    CBLStatus expectedStatus, id expectedResult) {
-    sLastResponse = SendRequest(server, method, path, @{@"Accept": @"application/json"}, bodyObj);
-    id result = ParseJSONResponse(sLastResponse);
+    sLastResponse = SendRequest(self, method, path, @{@"Accept": @"application/json"}, bodyObj);
+    id result = ParseJSONResponse(self, sLastResponse);
     Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
-    CAssert(result != nil);
-    
-    CAssertEq(sLastResponse.internalStatus, expectedStatus);
+    Assert(result != nil);
+
+    AssertEq(sLastResponse.internalStatus, expectedStatus);
 
     if (expectedResult)
-        CAssertEqual(result, expectedResult);
+        AssertEqual(result, expectedResult);
     return result;
 }
 
-static id Send(CBLManager* server, NSString* method, NSString* path,
+static id Send(Router_Tests* self, NSString* method, NSString* path,
                int expectedStatus, id expectedResult) {
-    return SendBody(server, method, path, nil, expectedStatus, expectedResult);
+    return SendBody(self, method, path, nil, expectedStatus, expectedResult);
 }
 
-static void CheckCacheable(CBLManager* server, NSString* path) {
+static void CheckCacheable(Router_Tests* self, NSString* path) {
     NSString* eTag = (sLastResponse.headers)[@"Etag"];
-    CAssert(eTag.length > 0, @"Missing eTag in response for %@", path);
-    sLastResponse = SendRequest(server, @"GET", path, $dict({@"If-None-Match", eTag}), nil);
-    CAssertEq(sLastResponse.status, kCBLStatusNotModified);
+    Assert(eTag.length > 0, @"Missing eTag in response for %@", path);
+    sLastResponse = SendRequest(self, @"GET", path, $dict({@"If-None-Match", eTag}), nil);
+    AssertEq(sLastResponse.status, kCBLStatusNotModified);
 }
 
 
 #pragma mark - BASICS
 
 
-TestCase(CBL_Router_Server) {
+- (void) test_Server {
     RequireTestCase(CBLManager);
-    CBLManager* server = createDBManager();
-    Send(server, @"GET", @"/", kCBLStatusOK, $dict({@"CouchbaseLite", @"Welcome"},
+    Send(self, @"GET", @"/", kCBLStatusOK, $dict({@"CouchbaseLite", @"Welcome"},
                                                    {@"couchdb", @"Welcome"},
                                                    {@"version", CBLVersion()},
                                                    {@"vendor", @{@"name": @"Couchbase Lite (Objective-C)",
                                                                  @"version": CBLVersion()}}));
-    Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[]);
-    Send(server, @"GET", @"/non-existent", kCBLStatusNotFound, nil);
-    Send(server, @"GET", @"/BadName", kCBLStatusBadID, nil);
-    Send(server, @"PUT", @"/", kCBLStatusMethodNotAllowed, nil);
-    NSDictionary* response = Send(server, @"POST", @"/", kCBLStatusMethodNotAllowed, nil);
+    Send(self, @"GET", @"/_all_dbs", kCBLStatusOK, @[db.name]);
+    Send(self, @"GET", @"/non-existent", kCBLStatusNotFound, nil);
+    Send(self, @"GET", @"/BadName", kCBLStatusBadID, nil);
+    Send(self, @"PUT", @"/", kCBLStatusMethodNotAllowed, nil);
+    NSDictionary* response = Send(self, @"POST", @"/", kCBLStatusMethodNotAllowed, nil);
     
-    CAssertEqual(response[@"status"], @(405));
-    CAssertEqual(response[@"error"], @"method_not_allowed");
+    AssertEqual(response[@"status"], @(405));
+    AssertEqual(response[@"error"], @"method_not_allowed");
     
-    NSDictionary* session = Send(server, @"GET", @"/_session", kCBLStatusOK, nil);
-    CAssert(session[@"ok"]);
+    NSDictionary* session = Send(self, @"GET", @"/_session", kCBLStatusOK, nil);
+    Assert(session[@"ok"]);
 
     // Send a Persona assertion to the server, should get back an email address.
     // This is an assertion generated by persona.org on 1/13/2013.
     NSString* sampleAssertion = @"eyJhbGciOiJSUzI1NiJ9.eyJwdWJsaWMta2V5Ijp7ImFsZ29yaXRobSI6IkRTIiwieSI6ImNhNWJiYTYzZmI4MDQ2OGE0MjFjZjgxYTIzN2VlMDcwYTJlOTM4NTY0ODhiYTYzNTM0ZTU4NzJjZjllMGUwMDk0ZWQ2NDBlOGNhYmEwMjNkYjc5ODU3YjkxMzBlZGNmZGZiNmJiNTUwMWNjNTk3MTI1Y2NiMWQ1ZWQzOTVjZTMyNThlYjEwN2FjZTM1ODRiOWIwN2I4MWU5MDQ4NzhhYzBhMjFlOWZkYmRjYzNhNzNjOTg3MDAwYjk4YWUwMmZmMDQ4ODFiZDNiOTBmNzllYzVlNDU1YzliZjM3NzFkYjEzMTcxYjNkMTA2ZjM1ZDQyZmZmZjQ2ZWZiZDcwNjgyNWQiLCJwIjoiZmY2MDA0ODNkYjZhYmZjNWI0NWVhYjc4NTk0YjM1MzNkNTUwZDlmMWJmMmE5OTJhN2E4ZGFhNmRjMzRmODA0NWFkNGU2ZTBjNDI5ZDMzNGVlZWFhZWZkN2UyM2Q0ODEwYmUwMGU0Y2MxNDkyY2JhMzI1YmE4MWZmMmQ1YTViMzA1YThkMTdlYjNiZjRhMDZhMzQ5ZDM5MmUwMGQzMjk3NDRhNTE3OTM4MDM0NGU4MmExOGM0NzkzMzQzOGY4OTFlMjJhZWVmODEyZDY5YzhmNzVlMzI2Y2I3MGVhMDAwYzNmNzc2ZGZkYmQ2MDQ2MzhjMmVmNzE3ZmMyNmQwMmUxNyIsInEiOiJlMjFlMDRmOTExZDFlZDc5OTEwMDhlY2FhYjNiZjc3NTk4NDMwOWMzIiwiZyI6ImM1MmE0YTBmZjNiN2U2MWZkZjE4NjdjZTg0MTM4MzY5YTYxNTRmNGFmYTkyOTY2ZTNjODI3ZTI1Y2ZhNmNmNTA4YjkwZTVkZTQxOWUxMzM3ZTA3YTJlOWUyYTNjZDVkZWE3MDRkMTc1ZjhlYmY2YWYzOTdkNjllMTEwYjk2YWZiMTdjN2EwMzI1OTMyOWU0ODI5YjBkMDNiYmM3ODk2YjE1YjRhZGU1M2UxMzA4NThjYzM0ZDk2MjY5YWE4OTA0MWY0MDkxMzZjNzI0MmEzODg5NWM5ZDViY2NhZDRmMzg5YWYxZDdhNGJkMTM5OGJkMDcyZGZmYTg5NjIzMzM5N2EifSwicHJpbmNpcGFsIjp7ImVtYWlsIjoiamVuc0Btb29zZXlhcmQuY29tIn0sImlhdCI6MTM1ODI5NjIzNzU3NywiZXhwIjoxMzU4MzgyNjM3NTc3LCJpc3MiOiJsb2dpbi5wZXJzb25hLm9yZyJ9.RnDK118nqL2wzpLCVRzw1MI4IThgeWpul9jPl6ypyyxRMMTurlJbjFfs-BXoPaOem878G8-4D2eGWS6wd307k7xlPysevYPogfFWxK_eDHwkTq3Ts91qEDqrdV_JtgULC8c1LvX65E0TwW_GL_TM94g3CvqoQnGVxxoaMVye4ggvR7eOZjimWMzUuu4Lo9Z-VBHBj7XM0UMBie57CpGwH4_Wkv0V_LHZRRHKdnl9ISp_aGwfBObTcHG9v0P3BW9vRrCjihIn0SqOJQ9obl52rMf84GD4Lcy9NIktzfyka70xR9Sh7ALotW7rWywsTzMTu3t8AzMz2MJgGjvQmx49QA~eyJhbGciOiJEUzEyOCJ9.eyJleHAiOjEzNTgyOTY0Mzg0OTUsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDk4NC8ifQ.4FV2TrUQffDya0MOxOQlzJQbDNvCPF2sfTIJN7KOLvvlSFPknuIo5g";
 
-    NSDictionary* asserted = SendBody(server, @"POST", @"/_persona_assertion", $dict({@"assertion", sampleAssertion}), kCBLStatusOK, nil);
-    CAssert(asserted[@"ok"]);
-    CAssertEqual(asserted[@"email"], @"jens@mooseyard.com");
+    NSDictionary* asserted = SendBody(self, @"POST", @"/_persona_assertion", $dict({@"assertion", sampleAssertion}), kCBLStatusOK, nil);
+    Assert(asserted[@"ok"]);
+    AssertEqual(asserted[@"email"], @"jens@mooseyard.com");
 }
 
 
-TestCase(CBL_Router_Databases) {
-    RequireTestCase(CBL_Router_Server);
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/database", kCBLStatusCreated, nil);
+- (void) test_Databases {
+    RequireTestCase(Server);
+    Send(self, @"PUT", @"/database", kCBLStatusCreated, nil);
     
-    NSDictionary* dbInfo = Send(server, @"GET", @"/database", kCBLStatusOK, nil);
-    CAssertEq([dbInfo[@"doc_count"] intValue], 0);
-    CAssertEq([dbInfo[@"update_seq"] intValue], 0);
-    CAssert([dbInfo[@"disk_size"] intValue] > 8000);
+    NSDictionary* dbInfo = Send(self, @"GET", @"/database", kCBLStatusOK, nil);
+    AssertEq([dbInfo[@"doc_count"] intValue], 0);
+    AssertEq([dbInfo[@"update_seq"] intValue], 0);
+    Assert([dbInfo[@"disk_size"] intValue] > 8000);
     
-    Send(server, @"PUT", @"/database", kCBLStatusDuplicate, nil);
-    Send(server, @"PUT", @"/database2", kCBLStatusCreated, nil);
-    Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[@"database", @"database2"]);
-    dbInfo = Send(server, @"GET", @"/database2", kCBLStatusOK, nil);
-    CAssertEqual(dbInfo[@"db_name"], @"database2");
-    Send(server, @"DELETE", @"/database2", kCBLStatusOK, nil);
-    Send(server, @"GET", @"/_all_dbs", kCBLStatusOK, @[@"database"]);
+    Send(self, @"PUT", @"/database", kCBLStatusDuplicate, nil);
+    Send(self, @"PUT", @"/database2", kCBLStatusCreated, nil);
+    Send(self, @"GET", @"/_all_dbs", kCBLStatusOK, @[@"database", @"database2", db.name]);
+    dbInfo = Send(self, @"GET", @"/database2", kCBLStatusOK, nil);
+    AssertEqual(dbInfo[@"db_name"], @"database2");
+    Send(self, @"DELETE", @"/database2", kCBLStatusOK, nil);
+    Send(self, @"GET", @"/_all_dbs", kCBLStatusOK, @[@"database", db.name]);
 
-    Send(server, @"PUT", @"/database%2Fwith%2Fslashes", kCBLStatusCreated, nil);
-    dbInfo = Send(server, @"GET", @"/database%2Fwith%2Fslashes", kCBLStatusOK, nil);
-    CAssertEqual(dbInfo[@"db_name"], @"database/with/slashes");
+    Send(self, @"PUT", @"/database%2Fwith%2Fslashes", kCBLStatusCreated, nil);
+    dbInfo = Send(self, @"GET", @"/database%2Fwith%2Fslashes", kCBLStatusOK, nil);
+    AssertEqual(dbInfo[@"db_name"], @"database/with/slashes");
 }
 
 
 // Subroutine used by CBL_Router_Docs, etc.
-static NSArray* populateDocs(CBLManager* server) {
+- (NSArray*) populateDocs {
     // PUT:
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}),
                                     kCBLStatusCreated, nil);
     NSString* revID = result[@"rev"];
-    CAssert([revID hasPrefix: @"1-"]);
+    Assert([revID hasPrefix: @"1-"]);
 
     // PUT to update:
-    result = SendBody(server, @"PUT", @"/db/doc1",
+    result = SendBody(self, @"PUT", @"/db/doc1",
                       $dict({@"message", @"goodbye"}, {@"_rev", revID}), 
                       kCBLStatusCreated, nil);
     Log(@"PUT returned %@", result);
     revID = result[@"rev"];
-    CAssert([revID hasPrefix: @"2-"]);
+    Assert([revID hasPrefix: @"2-"]);
     
-    Send(server, @"GET", @"/db/doc1", kCBLStatusOK,
+    Send(self, @"GET", @"/db/doc1", kCBLStatusOK,
          $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"goodbye"}));
-    CheckCacheable(server, @"/db/doc1");
+    CheckCacheable(self, @"/db/doc1");
     
     // Add more docs:
-    result = SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"hello"}), 
+    result = SendBody(self, @"PUT", @"/db/doc3", $dict({@"message", @"hello"}), 
                                     kCBLStatusCreated, nil);
     NSString* revID3 = result[@"rev"];
-    result = SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"hello"}), 
+    result = SendBody(self, @"PUT", @"/db/doc2", $dict({@"message", @"hello"}), 
                                     kCBLStatusCreated, nil);
     NSString* revID2 = result[@"rev"];
 
     // _all_docs:
-    result = Send(server, @"GET", @"/db/_all_docs", kCBLStatusOK, nil);
-    CAssertEqual(result[@"total_rows"], @3);
-    CAssertEqual(result[@"offset"], @0);
+    result = Send(self, @"GET", @"/db/_all_docs", kCBLStatusOK, nil);
+    AssertEqual(result[@"total_rows"], @3);
+    AssertEqual(result[@"offset"], @0);
     NSArray* rows = result[@"rows"];
-    CAssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
+    AssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
                                     {@"value", $dict({@"rev", revID})}),
                               $dict({@"id",  @"doc2"}, {@"key", @"doc2"},
                                     {@"value", $dict({@"rev", revID2})}),
                               $dict({@"id",  @"doc3"}, {@"key", @"doc3"},
                                     {@"value", $dict({@"rev", revID3})})
                               ));
-    CheckCacheable(server, @"/db/_all_docs");
+    CheckCacheable(self, @"/db/_all_docs");
 
     // DELETE:
-    result = Send(server, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), kCBLStatusOK, nil);
+    result = Send(self, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), kCBLStatusOK, nil);
     revID = result[@"rev"];
-    CAssert([revID hasPrefix: @"3-"]);
+    Assert([revID hasPrefix: @"3-"]);
 
-    Send(server, @"GET", @"/db/doc1", kCBLStatusDeleted, nil);
+    Send(self, @"GET", @"/db/doc1", kCBLStatusDeleted, nil);
     return @[revID, revID2, revID3];
 }
 
 
-TestCase(CBL_Router_Docs) {
-    RequireTestCase(CBL_Router_Databases);
-    CBLManager* server = createDBManager();
-    populateDocs(server);
+- (void) test_Docs {
+    RequireTestCase(Databases);
+    [self populateDocs];
 }
 
 
-TestCase(CBL_Router_LocalDocs) {
+- (void) test_LocalDocs {
     RequireTestCase(CBL_Database_LocalDocs);
-    RequireTestCase(CBL_Router_Docs);
+    RequireTestCase(Docs);
     // PUT a local doc:
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    NSDictionary* result = SendBody(server, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}), 
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/_local/doc1", $dict({@"message", @"hello"}),
                                     kCBLStatusCreated, nil);
     NSString* revID = result[@"rev"];
-    CAssert([revID hasPrefix: @"1-"]);
+    Assert([revID hasPrefix: @"1-"]);
     
     // GET it:
-    Send(server, @"GET", @"/db/_local/doc1", kCBLStatusOK,
+    Send(self, @"GET", @"/db/_local/doc1", kCBLStatusOK,
          $dict({@"_id", @"_local/doc1"},
                {@"_rev", revID},
                {@"message", @"hello"}));
-    CheckCacheable(server, @"/db/_local/doc1");
+    CheckCacheable(self, @"/db/_local/doc1");
 
     // Local doc should not appear in _changes feed:
-    Send(server, @"GET", @"/db/_changes", kCBLStatusOK,
+    Send(self, @"GET", @"/db/_changes", kCBLStatusOK,
          $dict({@"last_seq", @0},
                {@"results", @[]}));
 }
 
 
-TestCase(CBL_Router_AllDocs) {
+- (void) test_AllDocs {
     // PUT:
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    
     NSDictionary* result;
-    result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
+    result = SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
     NSString* revID = result[@"rev"];
-    result = SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
+    result = SendBody(self, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
     NSString* revID3 = result[@"rev"];
-    result = SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
+    result = SendBody(self, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
     NSString* revID2 = result[@"rev"];
     
     // _all_docs:
-    result = Send(server, @"GET", @"/db/_all_docs", kCBLStatusOK, nil);
-    CAssertEqual(result[@"total_rows"], @3);
-    CAssertEqual(result[@"offset"], @0);
+    result = Send(self, @"GET", @"/db/_all_docs", kCBLStatusOK, nil);
+    AssertEqual(result[@"total_rows"], @3);
+    AssertEqual(result[@"offset"], @0);
     NSArray* rows = result[@"rows"];
-    CAssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
+    AssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
                                     {@"value", $dict({@"rev", revID})}),
                               $dict({@"id",  @"doc2"}, {@"key", @"doc2"},
                                     {@"value", $dict({@"rev", revID2})}),
@@ -282,11 +264,11 @@ TestCase(CBL_Router_AllDocs) {
                               ));
     
     // ?include_docs:
-    result = Send(server, @"GET", @"/db/_all_docs?include_docs=true", kCBLStatusOK, nil);
-    CAssertEqual(result[@"total_rows"], @3);
-    CAssertEqual(result[@"offset"], @0);
+    result = Send(self, @"GET", @"/db/_all_docs?include_docs=true", kCBLStatusOK, nil);
+    AssertEqual(result[@"total_rows"], @3);
+    AssertEqual(result[@"offset"], @0);
     rows = result[@"rows"];
-    CAssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
+    AssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
                                     {@"value", $dict({@"rev", revID})},
                                     {@"doc", $dict({@"message", @"hello"},
                                                    {@"_id", @"doc1"}, {@"_rev", revID} )}),
@@ -302,16 +284,12 @@ TestCase(CBL_Router_AllDocs) {
 }
 
 
-TestCase(CBL_Router_Views) {
+- (void) test_Views {
     // PUT:
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
     
-    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
-    SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
-    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
-    
-    CBLDatabase* db = [server existingDatabaseNamed: @"db" error: NULL];
     CBLView* view = [db viewNamed: @"design/view"];
     [view setMapBlock:  MAPBLOCK({
         if (doc[@"message"])
@@ -319,7 +297,7 @@ TestCase(CBL_Router_Views) {
     }) reduceBlock: NULL version: @"1"];
 
     // Query the view and check the result:
-    Send(server, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
+    Send(self, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
          $dict({@"offset", @0},
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
                                 $dict({@"id", @"doc2"}, {@"key", @"guten tag"}),
@@ -327,32 +305,32 @@ TestCase(CBL_Router_Views) {
                {@"total_rows", @3}));
     
     // Check the ETag:
-    CBLResponse* response = SendRequest(server, @"GET", @"/db/_design/design/_view/view", nil, nil);
+    CBLResponse* response = SendRequest(self, @"GET", @"/db/_design/design/_view/view", nil, nil);
     NSString* etag = (response.headers)[@"Etag"];
-    CAssertEqual(etag, $sprintf(@"\"%lld\"", view.lastSequenceIndexed));
+    AssertEqual(etag, ($sprintf(@"\"%lld\"", view.lastSequenceIndexed)));
     
     // Try a conditional GET:
-    response = SendRequest(server, @"GET", @"/db/_design/design/_view/view",
+    response = SendRequest(self, @"GET", @"/db/_design/design/_view/view",
                            $dict({@"If-None-Match", etag}), nil);
-    CAssertEq(response.status, kCBLStatusNotModified);
+    AssertEq(response.status, kCBLStatusNotModified);
 
     // Update the database:
-    SendBody(server, @"PUT", @"/db/doc4", $dict({@"message", @"aloha"}), kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc4", $dict({@"message", @"aloha"}), kCBLStatusCreated, nil);
     
     // Try a conditional GET:
-    response = SendRequest(server, @"GET", @"/db/_design/design/_view/view",
+    response = SendRequest(self, @"GET", @"/db/_design/design/_view/view",
                            $dict({@"If-None-Match", etag}), nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssertEqual(ParseJSONResponse(response)[@"total_rows"], @4);
+    AssertEq(response.status, kCBLStatusOK);
+    AssertEqual(ParseJSONResponse(self, response)[@"total_rows"], @4);
 
     // Query the view with "?key="
-    Send(server, @"GET", @"/db/_design/design/_view/view?key=%22bonjour%22", kCBLStatusOK,
+    Send(self, @"GET", @"/db/_design/design/_view/view?key=%22bonjour%22", kCBLStatusOK,
          $dict({@"offset", @0},
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}) )},
                {@"total_rows", @4}));
 
     // Query the view with "?keys="
-    Send(server, @"GET", @"/db/_design/design/_view/view?keys=%5B%22bonjour%22,%22hello%22%5D",
+    Send(self, @"GET", @"/db/_design/design/_view/view?keys=%5B%22bonjour%22,%22hello%22%5D",
          kCBLStatusOK,
          $dict({@"offset", @0},
                {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}),
@@ -361,42 +339,38 @@ TestCase(CBL_Router_Views) {
 }
 
 
-TestCase(CBL_Router_NoMappedSelectors) {
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-
+- (void) test_NoMappedSelectors {
     __unused NSDictionary* response = nil;
 
-    response = Send(server, @"GET", @"/", kCBLStatusOK, nil);
+    response = Send(self, @"GET", @"/", kCBLStatusOK, nil);
 
-    response = Send(server, @"POST", @"/", kCBLStatusMethodNotAllowed, nil);
-    CAssertEqual(response[@"status"], @(405));
-    CAssertEqual(response[@"error"], @"method_not_allowed");
+    response = Send(self, @"POST", @"/", kCBLStatusMethodNotAllowed, nil);
+    AssertEqual(response[@"status"], @(405));
+    AssertEqual(response[@"error"], @"method_not_allowed");
 
-    response = Send(server, @"PUT", @"/", kCBLStatusMethodNotAllowed, nil);
-    CAssertEqual(response[@"status"], @(405));
-    CAssertEqual(response[@"error"], @"method_not_allowed");
+    response = Send(self, @"PUT", @"/", kCBLStatusMethodNotAllowed, nil);
+    AssertEqual(response[@"status"], @(405));
+    AssertEqual(response[@"error"], @"method_not_allowed");
 
-    response = Send(server, @"POST", @"/db/doc1", kCBLStatusMethodNotAllowed, nil);
-    CAssertEqual(response[@"status"], @(405));
-    CAssertEqual(response[@"error"], @"method_not_allowed");
+    response = Send(self, @"POST", @"/db/doc1", kCBLStatusMethodNotAllowed, nil);
+    AssertEqual(response[@"status"], @(405));
+    AssertEqual(response[@"error"], @"method_not_allowed");
 
-    response = Send(server, @"GET", @"/db/_session", kCBLStatusNotFound, nil);
-    CAssertEqual(response[@"status"], @(404));
-    CAssertEqual(response[@"error"], @"not_found");
+    response = Send(self, @"GET", @"/db/_session", kCBLStatusNotFound, nil);
+    AssertEqual(response[@"status"], @(404));
+    AssertEqual(response[@"error"], @"not_found");
 }
 
 
 #pragma mark - CHANGES:
 
 
-TestCase(CBL_Router_Changes) {
-    RequireTestCase(CBL_Router_Docs);
-    CBLManager* server = createDBManager();
-    NSArray* revIDs = populateDocs(server);
+- (void) test_Changes {
+    RequireTestCase(Docs);
+    NSArray* revIDs = [self populateDocs];
 
     // _changes:
-    Send(server, @"GET", @"/db/_changes", kCBLStatusOK,
+    Send(self, @"GET", @"/db/_changes", kCBLStatusOK,
          $dict({@"last_seq", @5},
                {@"results", $array($dict({@"id", @"doc3"},
                                          {@"changes", $array($dict({@"rev", revIDs[2]}))},
@@ -408,25 +382,24 @@ TestCase(CBL_Router_Changes) {
                                          {@"changes", $array($dict({@"rev", revIDs[0]}))},
                                          {@"seq", @5},
                                          {@"deleted", $true}))}));
-    CheckCacheable(server, @"/db/_changes");
+    CheckCacheable(self, @"/db/_changes");
 
     // _changes with ?since:
-    Send(server, @"GET", @"/db/_changes?since=4", kCBLStatusOK,
+    Send(self, @"GET", @"/db/_changes?since=4", kCBLStatusOK,
          $dict({@"last_seq", @5},
                {@"results", $array($dict({@"id", @"doc1"},
                                          {@"changes", $array($dict({@"rev", revIDs[0]}))},
                                          {@"seq", @5},
                                          {@"deleted", $true}))}));
-    Send(server, @"GET", @"/db/_changes?since=5", kCBLStatusOK,
+    Send(self, @"GET", @"/db/_changes?since=5", kCBLStatusOK,
          $dict({@"last_seq", @5},
                {@"results", @[]}));
 }
 
 
-TestCase(CBL_Router_LongPollChanges) {
-    RequireTestCase(CBL_Router_Changes);
-    CBLManager* server = createDBManager();
-    populateDocs(server);
+- (void) test_LongPollChanges {
+    RequireTestCase(Changes);
+    [self populateDocs];
 
     __block CBLResponse* response = nil;
     NSMutableData* body = [NSMutableData data];
@@ -434,45 +407,42 @@ TestCase(CBL_Router_LongPollChanges) {
 
     NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=longpoll&since=5"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
-    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
     router.onResponseReady = ^(CBLResponse* routerResponse) {
-        CAssert(!response);
+        Assert(!response);
         response = routerResponse;
     };
     router.onDataAvailable = ^(NSData* content, BOOL finished) {
         [body appendData: content];
     };
     router.onFinished = ^{
-        CAssert(!finished);
+        Assert(!finished);
         finished = YES;
     };
 
     // Start:
     [router start];
-    CAssert(!finished);
+    Assert(!finished);
 
     // Now make a change to the database:
-    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc4",
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/doc4",
                                     $dict({@"message", @"hej"}), kCBLStatusCreated, nil);
     NSString* revID6 = result[@"rev"];
 
     // Should now have received a response from the router with one revision:
-    CAssert(finished);
+    Assert(finished);
     NSDictionary* changes = [CBLJSON JSONObjectWithData: body options: 0 error: NULL];
-    CAssert(changes, @"Couldn't parse response body:\n%@", body.my_UTF8ToString);
-    CAssertEqual(changes, $dict({@"last_seq", @6},
+    Assert(changes, @"Couldn't parse response body:\n%@", body.my_UTF8ToString);
+    AssertEqual(changes, $dict({@"last_seq", @6},
                                 {@"results", $array($dict({@"id", @"doc4"},
                                                           {@"changes", $array($dict({@"rev", revID6}))},
                                                           {@"seq", @6}))}));
-    [router stop];
+    [router stopNow];
 }
 
 
-TestCase(CBL_Router_LongPollChanges_Heartbeat) {
+- (void) test_LongPollChanges_Heartbeat {
     RequireTestCase(CBL_Router_ContinuousChanges);
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    
     __block CBLResponse* response = nil;
     NSMutableData* body = [NSMutableData data];
     __block BOOL finished = NO;
@@ -480,9 +450,9 @@ TestCase(CBL_Router_LongPollChanges_Heartbeat) {
     __block NSInteger heartbeat = 0;
     NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=longpoll&heartbeat=5000"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
-    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
     router.onResponseReady = ^(CBLResponse* routerResponse) {
-        CAssert(!response);
+        Assert(!response);
         response = routerResponse;
     };
     router.onDataAvailable = ^(NSData* content, BOOL finished) {
@@ -492,13 +462,13 @@ TestCase(CBL_Router_LongPollChanges_Heartbeat) {
         [body appendData: content];
     };
     router.onFinished = ^{
-        CAssert(!finished);
+        Assert(!finished);
         finished = YES;
     };
     
     // Start:
     [router start];
-    CAssert(!finished);
+    Assert(!finished);
     
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.5];
     while ([[NSDate date] compare: timeout] == NSOrderedAscending
@@ -506,25 +476,21 @@ TestCase(CBL_Router_LongPollChanges_Heartbeat) {
         ;
     
     // Should now have received additional output from the router:
-    CAssert(body.length > 0);
-    CAssert(heartbeat == 2);
-    CAssert(!finished);
+    Assert(body.length > 0);
+    Assert(heartbeat == 2);
+    Assert(!finished);
     
     // Now make a change to the database:
-    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hej"}), kCBLStatusCreated, nil);
-    CAssert(finished);
+    SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hej"}), kCBLStatusCreated, nil);
+    Assert(finished);
     
-    [router stop];
-    [server close];
+    [router stopNow];
 }
 
 
-TestCase(CBL_Router_ContinuousChanges) {
-    RequireTestCase(CBL_Router_Changes);
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-
-    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
+- (void) test_ContinuousChanges {
+    RequireTestCase(Changes);
+    SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
 
     __block CBLResponse* response = nil;
     NSMutableData* body = [NSMutableData data];
@@ -532,16 +498,16 @@ TestCase(CBL_Router_ContinuousChanges) {
     
     NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=continuous"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
-    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
     router.onResponseReady = ^(CBLResponse* routerResponse) {
-        CAssert(!response);
+        Assert(!response);
         response = routerResponse;
     };
     router.onDataAvailable = ^(NSData* content, BOOL finished) {
         [body appendData: content];
     };
     router.onFinished = ^{
-        CAssert(!finished);
+        Assert(!finished);
         finished = YES;
     };
     
@@ -549,27 +515,25 @@ TestCase(CBL_Router_ContinuousChanges) {
     [router start];
     
     // Should initially have a response and one line of output:
-    CAssert(response != nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssert(body.length > 0);
-    CAssert(!finished);
+    Assert(response != nil);
+    AssertEq(response.status, kCBLStatusOK);
+    Assert(body.length > 0);
+    Assert(!finished);
     [body setLength: 0];
     
     // Now make a change to the database:
-    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"hej"}), kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc2", $dict({@"message", @"hej"}), kCBLStatusCreated, nil);
 
     // Should now have received additional output from the router:
-    CAssert(body.length > 0);
-    CAssert(!finished);
+    Assert(body.length > 0);
+    Assert(!finished);
     
-    [router stop];
+    [router stopNow];
 }
 
 
-TestCase(CBL_Router_ContinuousChanges_Heartbeat) {
+- (void) test_ContinuousChanges_Heartbeat {
     RequireTestCase(CBL_Router_ContinuousChanges);
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
     
     __block CBLResponse* response = nil;
     NSMutableData* body = [NSMutableData data];
@@ -578,9 +542,9 @@ TestCase(CBL_Router_ContinuousChanges_Heartbeat) {
     __block NSInteger heartbeat = 0;
     NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=continuous&heartbeat=5000"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
-    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
     router.onResponseReady = ^(CBLResponse* routerResponse) {
-        CAssert(!response);
+        Assert(!response);
         response = routerResponse;
     };
     router.onDataAvailable = ^(NSData* content, BOOL finished) {
@@ -590,7 +554,7 @@ TestCase(CBL_Router_ContinuousChanges_Heartbeat) {
         [body appendData: content];
     };
     router.onFinished = ^{
-        CAssert(!finished);
+        Assert(!finished);
         finished = YES;
     };
     
@@ -598,10 +562,10 @@ TestCase(CBL_Router_ContinuousChanges_Heartbeat) {
     [router start];
     
     // Should initially have a response and one line of output:
-    CAssert(response != nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssert(body.length == 0);
-    CAssert(!finished);
+    Assert(response != nil);
+    AssertEq(response.status, kCBLStatusOK);
+    Assert(body.length == 0);
+    Assert(!finished);
 
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.5];
     while ([[NSDate date] compare: timeout] == NSOrderedAscending
@@ -609,34 +573,28 @@ TestCase(CBL_Router_ContinuousChanges_Heartbeat) {
         ;
     
     // Should now have received additional output from the router:
-    CAssert(body.length > 0);
-    CAssert(heartbeat == 2);
-    CAssert(!finished);
+    Assert(body.length > 0);
+    Assert(heartbeat == 2);
+    Assert(!finished);
     
-    [router stop];
-    [server close];
+    [router stopNow];
 }
 
 
-TestCase(CBL_Router_Changes_BadHeartbeatParams) {
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    Send(server, @"GET", @"/db/_changes?feed=continuous&heartbeat=foo", kCBLStatusBadRequest, nil);
-    Send(server, @"GET", @"/db/_changes?feed=continuous&heartbeat=-1", kCBLStatusBadRequest, nil);
-    Send(server, @"GET", @"/db/_changes?feed=continuous&heartbeat=-0", kCBLStatusBadRequest, nil);
-    Send(server, @"GET", @"/db/_changes?feed=longpoll&heartbeat=foo", kCBLStatusBadRequest, nil);
-    Send(server, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-1", kCBLStatusBadRequest, nil);
-    Send(server, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-0", kCBLStatusBadRequest, nil);
-    [server close];
+- (void) test_CBL_Router_Changes_BadHeartbeatParams {
+    Send(self, @"GET", @"/db/_changes?feed=continuous&heartbeat=foo", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=continuous&heartbeat=-1", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=continuous&heartbeat=-0", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=longpoll&heartbeat=foo", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-1", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-0", kCBLStatusBadRequest, nil);
 }
 
 
 #pragma mark - ATTACHMENTS:
 
 
-static NSDictionary* createDocWithAttachments(CBLManager* server,
-                                              NSData* attach1, NSData* attach2) {
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+- (NSDictionary*) createDocWithAttachment: (NSData*)attach1 and: (NSData*) attach2 {
     NSString* base64 = [CBLBase64 encode: attach1];
     NSString* base642 = [CBLBase64 encode: attach2];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
@@ -647,49 +605,47 @@ static NSDictionary* createDocWithAttachments(CBLManager* server,
     NSDictionary* props = $dict({@"message", @"hello"},
                                 {@"_attachments", attachmentDict});
 
-    return SendBody(server, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
+    return SendBody(self, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
 }
 
 
-TestCase(CBL_Router_GetAttachment) {
-    CBLManager* server = createDBManager();
-
+- (void) test_GetAttachment {
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
-    NSDictionary* result = createDocWithAttachments(server, attach1, attach2);
+    NSDictionary* result = [self createDocWithAttachment: attach1 and: attach2];
     NSString* revID = result[@"rev"];
 
     // Now get the attachment via its URL:
-    CBLResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach", nil, nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssertEqual(response.body.asJSON, attach1);
-    CAssertEqual((response.headers)[@"Content-Type"], @"text/plain");
+    CBLResponse* response = SendRequest(self, @"GET", @"/db/doc1/attach", nil, nil);
+    AssertEq(response.status, kCBLStatusOK);
+    AssertEqual(response.body.asJSON, attach1);
+    AssertEqual((response.headers)[@"Content-Type"], @"text/plain");
     NSString* eTag = (response.headers)[@"Etag"];
-    CAssert(eTag.length > 0);
+    Assert(eTag.length > 0);
     
     // Ditto the 2nd attachment, whose name contains "/"s:
-    response = SendRequest(server, @"GET", @"/db/doc1/path/to/attachment", nil, nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssertEqual(response.body.asJSON, attach2);
-    CAssertEqual((response.headers)[@"Content-Type"], @"text/plain");
+    response = SendRequest(self, @"GET", @"/db/doc1/path/to/attachment", nil, nil);
+    AssertEq(response.status, kCBLStatusOK);
+    AssertEqual(response.body.asJSON, attach2);
+    AssertEqual((response.headers)[@"Content-Type"], @"text/plain");
     eTag = (response.headers)[@"Etag"];
-    CAssert(eTag.length > 0);
+    Assert(eTag.length > 0);
     
     // A nonexistent attachment should result in a kCBLStatusNotFound:
-    response = SendRequest(server, @"GET", @"/db/doc1/bogus", nil, nil);
-    CAssertEq(response.status, kCBLStatusNotFound);
+    response = SendRequest(self, @"GET", @"/db/doc1/bogus", nil, nil);
+    AssertEq(response.status, kCBLStatusNotFound);
     
-    response = SendRequest(server, @"GET", @"/db/missingdoc/bogus", nil, nil);
-    CAssertEq(response.status, kCBLStatusNotFound);
+    response = SendRequest(self, @"GET", @"/db/missingdoc/bogus", nil, nil);
+    AssertEq(response.status, kCBLStatusNotFound);
     
     // Get the document with attachment data:
-    response = SendRequest(server, @"GET", @"/db/doc1?attachments=true", nil, nil);
-    CAssert([response.headers[@"Content-Type"] hasPrefix: @"multipart/related;"]);
+    response = SendRequest(self, @"GET", @"/db/doc1?attachments=true", nil, nil);
+    Assert([response.headers[@"Content-Type"] hasPrefix: @"multipart/related;"]);
 
-    response = SendRequest(server, @"GET", @"/db/doc1?attachments=true",
+    response = SendRequest(self, @"GET", @"/db/doc1?attachments=true",
                            @{@"Accept": @"application/json"}, nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssertEqual((response.body)[@"_attachments"],
+    AssertEq(response.status, kCBLStatusOK);
+    AssertEqual((response.body)[@"_attachments"],
                  $dict({@"attach", $dict({@"data", [CBLBase64 encode: attach1]}, 
                                         {@"content_type", @"text/plain"},
                                         {@"length", @(attach1.length)},
@@ -711,12 +667,12 @@ TestCase(CBL_Router_GetAttachment) {
     props = $dict({@"_rev", revID},
                   {@"message", @"aloha"},
                   {@"_attachments", attachmentDict});
-    result = SendBody(server, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
+    result = SendBody(self, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
     revID = result[@"rev"];
     
     // Get the doc with attachments modified since rev #1:
     NSString* path = $sprintf(@"/db/doc1?attachments=true&atts_since=[%%22%@%%22]", revID);
-    Send(server, @"GET", path, kCBLStatusOK, 
+    Send(self, @"GET", path, kCBLStatusOK, 
          $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"aloha"},
                {@"_attachments", $dict({@"attach", $dict({@"stub", $true}, 
                                                          {@"content_type", @"text/plain"},
@@ -730,13 +686,9 @@ TestCase(CBL_Router_GetAttachment) {
                                                                      {@"revpos", @1})})}));
 }
 
-TestCase(CBL_Router_GetJSONAttachment) {
-    CBLManager* server = createDBManager();
-    
+- (void) test_GetJSONAttachment {
     // Create a document with two json-like attachements. One with be put as 'text/plain' and
     // the other one will be put as 'application/json'.
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    
     NSData* attach1 = [@"{\"name\": \"foo\"}" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"{\"name\": \"bar\"}" dataUsingEncoding: NSUTF8StringEncoding];
     
@@ -749,69 +701,64 @@ TestCase(CBL_Router_GetJSONAttachment) {
                                                             {@"data", base642})});
     NSDictionary* props = $dict({@"message", @"hello"}, {@"_attachments", attachmentDict});
     
-    SendBody(server, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
     
     // Get the first attachment
-    CBLResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach1", nil, nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssertEqual(response.body.asJSON, attach1);
-    CAssertEqual((response.headers)[@"Content-Type"], @"text/plain");
+    CBLResponse* response = SendRequest(self, @"GET", @"/db/doc1/attach1", nil, nil);
+    AssertEq(response.status, kCBLStatusOK);
+    AssertEqual(response.body.asJSON, attach1);
+    AssertEqual((response.headers)[@"Content-Type"], @"text/plain");
     NSString* eTag = (response.headers)[@"Etag"];
-    CAssert(eTag.length > 0);
+    Assert(eTag.length > 0);
     
     // Get the second attachment
-    response = SendRequest(server, @"GET", @"/db/doc1/attach2", nil, nil);
-    CAssertEq(response.status, kCBLStatusOK);
-    CAssertEqual(response.body.asJSON, attach2);
-    CAssertEqual((response.headers)[@"Content-Type"], @"application/json");
+    response = SendRequest(self, @"GET", @"/db/doc1/attach2", nil, nil);
+    AssertEq(response.status, kCBLStatusOK);
+    AssertEqual(response.body.asJSON, attach2);
+    AssertEqual((response.headers)[@"Content-Type"], @"application/json");
     eTag = (response.headers)[@"Etag"];
-    CAssert(eTag.length > 0);
+    Assert(eTag.length > 0);
 }
 
-TestCase(CBL_Router_GetRange) {
-    CBLManager* server = createDBManager();
-
+- (void) test_GetRange {
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
-    createDocWithAttachments(server, attach1, attach2);
+    [self createDocWithAttachment: attach1 and: attach2];
 
-    CBLResponse* response = SendRequest(server, @"GET", @"/db/doc1/attach",
+    CBLResponse* response = SendRequest(self, @"GET", @"/db/doc1/attach",
                                        $dict({@"Range", @"bytes=5-15"}),
                                        nil);
-    CAssertEq(response.status, 206);
-    CAssertEqual((response.headers)[@"Content-Range"], @"bytes 5-15/27");
-    CAssertEqual(response.body.asJSON, [@"is the body" dataUsingEncoding: NSUTF8StringEncoding]);
+    AssertEq(response.status, 206);
+    AssertEqual((response.headers)[@"Content-Range"], @"bytes 5-15/27");
+    AssertEqual(response.body.asJSON, [@"is the body" dataUsingEncoding: NSUTF8StringEncoding]);
 
-    response = SendRequest(server, @"GET", @"/db/doc1/attach",
+    response = SendRequest(self, @"GET", @"/db/doc1/attach",
                                        $dict({@"Range", @"bytes=12-"}),
                                        nil);
-    CAssertEq(response.status, 206);
-    CAssertEqual((response.headers)[@"Content-Range"], @"bytes 12-26/27");
-    CAssertEqual(response.body.asJSON, [@"body of attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+    AssertEq(response.status, 206);
+    AssertEqual((response.headers)[@"Content-Range"], @"bytes 12-26/27");
+    AssertEqual(response.body.asJSON, [@"body of attach1" dataUsingEncoding: NSUTF8StringEncoding]);
 
-    response = SendRequest(server, @"GET", @"/db/doc1/attach",
+    response = SendRequest(self, @"GET", @"/db/doc1/attach",
                                        $dict({@"Range", @"bytes=-7"}),
                                        nil);
-    CAssertEq(response.status, 206);
-    CAssertEqual((response.headers)[@"Content-Range"], @"bytes 20-26/27");
-    CAssertEqual(response.body.asJSON, [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+    AssertEq(response.status, 206);
+    AssertEqual((response.headers)[@"Content-Range"], @"bytes 20-26/27");
+    AssertEqual(response.body.asJSON, [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]);
 
     NSString* eTag = (response.headers)[@"Etag"];
     Assert(eTag.length > 0);
-    response = SendRequest(server, @"GET", @"/db/doc1/attach",
+    response = SendRequest(self, @"GET", @"/db/doc1/attach",
                            $dict({@"Range", @"bytes=-7"},
                                  {@"If-None-Match", eTag}),
                            nil);
-    CAssertEq(response.status, 304);
+    AssertEq(response.status, 304);
 }
 
 
-TestCase(CBL_Router_PutMultipart) {
-    RequireTestCase(CBL_Router_Docs);
+- (void) test_PutMultipart {
+    RequireTestCase(Docs);
     RequireTestCase(CBLMultipartDownloader);
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                            {@"length", @(36)},
                                                            {@"content_type", @"text/plain"},
@@ -830,36 +777,34 @@ TestCase(CBL_Router_PutMultipart) {
                               [CBLJSON stringWithJSONObject: props options: 0 error: NULL],
                               attachmentString);
     
-    CBLResponse* response = SendRequest(server, @"PUT", @"/db/doc",
+    CBLResponse* response = SendRequest(self, @"PUT", @"/db/doc",
                            $dict({@"Content-Type", @"multipart/related; boundary=\"BOUNDARY\""}),
                                        [body dataUsingEncoding: NSUTF8StringEncoding]);
-    CAssertEq(response.status, kCBLStatusCreated);
+    AssertEq(response.status, kCBLStatusCreated);
 }
 
 
 #pragma mark - REVS:
 
 
-TestCase(CBL_Router_OpenRevs) {
-    RequireTestCase(CBL_Router_Databases);
+- (void) test_OpenRevs {
+    RequireTestCase(Databases);
     // PUT:
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    NSDictionary* result = SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), 
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}),
                                     kCBLStatusCreated, nil);
     NSString* revID1 = result[@"rev"];
     
     // PUT to update:
-    result = SendBody(server, @"PUT", @"/db/doc1",
+    result = SendBody(self, @"PUT", @"/db/doc1",
                       $dict({@"message", @"goodbye"}, {@"_rev", revID1}), 
                       kCBLStatusCreated, nil);
     NSString* revID2 = result[@"rev"];
     
-    Send(server, @"GET", @"/db/doc1?open_revs=all", kCBLStatusOK,
+    Send(self, @"GET", @"/db/doc1?open_revs=all", kCBLStatusOK,
          $array( $dict({@"ok", $dict({@"_id", @"doc1"},
                                      {@"_rev", revID2},
                                      {@"message", @"goodbye"})}) ));
-    Send(server, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, revID2), kCBLStatusOK,
+    Send(self, @"GET", $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, revID2), kCBLStatusOK,
          $array($dict({@"ok", $dict({@"_id", @"doc1"},
                                     {@"_rev", revID1},
                                     {@"message", @"hello"})}),
@@ -868,7 +813,7 @@ TestCase(CBL_Router_OpenRevs) {
                                     {@"message", @"goodbye"})})
                 ));
     NSString* uri = $sprintf(@"/db/doc1?open_revs=[%%22%@%%22,%%22%@%%22]", revID1, @"bogus");
-    Send(server, @"GET", uri, kCBLStatusOK,
+    Send(self, @"GET", uri, kCBLStatusOK,
          $array($dict({@"ok", $dict({@"_id", @"doc1"},
                                     {@"_rev", revID1},
                                     {@"message", @"hello"})}),
@@ -876,30 +821,28 @@ TestCase(CBL_Router_OpenRevs) {
                 ));
 
     // We've been forcing JSON, but verify that open_revs defaults to multipart:
-    CBLResponse* response = SendRequest(server, @"GET", uri, nil, nil);
-    CAssert([response.headers[@"Content-Type"] hasPrefix: @"multipart/mixed;"]);
+    CBLResponse* response = SendRequest(self, @"GET", uri, nil, nil);
+    Assert([response.headers[@"Content-Type"] hasPrefix: @"multipart/mixed;"]);
 }
 
 
-TestCase(CBL_Router_RevsDiff) {
-    RequireTestCase(CBL_Router_Databases);
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    NSDictionary* doc1r1 = SendBody(server, @"PUT", @"/db/11111", $dict(), kCBLStatusCreated,nil);
+- (void) test_RevsDiff {
+    RequireTestCase(Databases);
+    NSDictionary* doc1r1 = SendBody(self, @"PUT", @"/db/11111", $dict(), kCBLStatusCreated,nil);
     NSString* doc1r1ID = doc1r1[@"rev"];
-    NSDictionary* doc2r1 = SendBody(server, @"PUT", @"/db/22222", $dict(), kCBLStatusCreated,nil);
+    NSDictionary* doc2r1 = SendBody(self, @"PUT", @"/db/22222", $dict(), kCBLStatusCreated,nil);
     NSString* doc2r1ID = doc2r1[@"rev"];
-    NSDictionary* doc3r1 = SendBody(server, @"PUT", @"/db/33333", $dict(), kCBLStatusCreated,nil);
+    NSDictionary* doc3r1 = SendBody(self, @"PUT", @"/db/33333", $dict(), kCBLStatusCreated,nil);
     NSString* doc3r1ID = doc3r1[@"rev"];
     
-    NSDictionary* doc1r2 = SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r1ID}), kCBLStatusCreated,nil);
+    NSDictionary* doc1r2 = SendBody(self, @"PUT", @"/db/11111", $dict({@"_rev", doc1r1ID}), kCBLStatusCreated,nil);
     NSString* doc1r2ID = doc1r2[@"rev"];
-    SendBody(server, @"PUT", @"/db/22222", $dict({@"_rev", doc2r1ID}), kCBLStatusCreated,nil);
+    SendBody(self, @"PUT", @"/db/22222", $dict({@"_rev", doc2r1ID}), kCBLStatusCreated,nil);
 
-    NSDictionary* doc1r3 = SendBody(server, @"PUT", @"/db/11111", $dict({@"_rev", doc1r2ID}), kCBLStatusCreated,nil);
+    NSDictionary* doc1r3 = SendBody(self, @"PUT", @"/db/11111", $dict({@"_rev", doc1r2ID}), kCBLStatusCreated,nil);
     NSString* doc1r3ID = doc1r3[@"rev"];
     
-    SendBody(server, @"POST", @"/db/_revs_diff",
+    SendBody(self, @"POST", @"/db/_revs_diff",
              $dict({@"11111", @[doc1r2ID, @"3-foo"]},
                    {@"22222", @[doc2r1ID]},
                    {@"33333", @[@"10-bar"]},
@@ -914,9 +857,9 @@ TestCase(CBL_Router_RevsDiff) {
     
     // Compact the database -- this will null out the JSON of doc1r1 & doc1r2,
     // and they won't be returned as possible ancestors anymore.
-    Send(server, @"POST", @"/db/_compact", kCBLStatusAccepted, nil);
+    Send(self, @"POST", @"/db/_compact", kCBLStatusAccepted, nil);
     
-    SendBody(server, @"POST", @"/db/_revs_diff",
+    SendBody(self, @"POST", @"/db/_revs_diff",
              $dict({@"11111", @[doc1r2ID, @"4-foo"]},
                    {@"22222", @[doc2r1ID]},
                    {@"33333", @[@"10-bar"]},
@@ -930,7 +873,7 @@ TestCase(CBL_Router_RevsDiff) {
                    ));
 
     // Check the revision history using _revs_info:
-    Send(server, @"GET", @"/db/11111?revs_info=true", 200,
+    Send(self, @"GET", @"/db/11111?revs_info=true", 200,
           @{ @"_id" : @"11111", @"_rev": doc1r3ID,
              @"_revs_info": @[ @{ @"rev" : doc1r3ID, @"status": @"available" },
                                @{ @"rev" : doc1r2ID, @"status": @"missing" },
@@ -938,7 +881,7 @@ TestCase(CBL_Router_RevsDiff) {
          ]});
 
     // Check the revision history using _revs:
-    Send(server, @"GET", @"/db/11111?revs=true", 200,
+    Send(self, @"GET", @"/db/11111?revs=true", 200,
          @{ @"_id" : @"11111", @"_rev": doc1r3ID,
             @"_revisions": @{
                 @"start": @3,
@@ -948,54 +891,36 @@ TestCase(CBL_Router_RevsDiff) {
 }
 
 
-TestCase(CBL_Router_AccessCheck) {
-    RequireTestCase(CBL_Router_Databases);
-    CBLManager* server = createDBManager();
-    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
-    
+- (void) test_AccessCheck {
+    RequireTestCase(Databases);
     NSURL* url = [NSURL URLWithString: @"cbl:///db/"];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = @"GET";
-    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
-    CAssert(router!=nil);
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
+    Assert(router!=nil);
     __block BOOL calledOnAccessCheck = NO;
     router.onAccessCheck = ^CBLStatus(CBLDatabase* accessDB, NSString* docID, SEL action) {
-        CAssert([accessDB.name isEqualToString: @"db"]);
+        Assert([accessDB.name isEqualToString: @"db"]);
         calledOnAccessCheck = YES;
         return 200;
     };
     [router start];
-    CAssert(calledOnAccessCheck);
-    CAssert(router.response.status == 200);
+    Assert(calledOnAccessCheck);
+    Assert(router.response.status == 200);
     
-    router = [[CBL_Router alloc] initWithDatabaseManager: server request: request];
-    CAssert(router!=nil);
+    router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
+    Assert(router!=nil);
     calledOnAccessCheck = NO;
     router.onAccessCheck = ^CBLStatus(CBLDatabase* accessDB, NSString* docID, SEL action) {
-        CAssert([accessDB.name isEqualToString: @"db"]);
+        Assert([accessDB.name isEqualToString: @"db"]);
         calledOnAccessCheck = YES;
         return 401;
     };
     [router start];
     
-    CAssert(calledOnAccessCheck);
-    CAssert(router.response.status == 401);
+    Assert(calledOnAccessCheck);
+    Assert(router.response.status == 401);
 }
 
 
-TestCase(CBL_Router) {
-    RequireTestCase(CBL_Router_Server);
-    RequireTestCase(CBL_Router_Databases);
-    RequireTestCase(CBL_Router_Docs);
-    RequireTestCase(CBL_Router_AllDocs);
-    RequireTestCase(CBL_Router_LongPollChanges);
-    RequireTestCase(CBL_Router_LongPollChanges_Heartbeat);
-    RequireTestCase(CBL_Router_ContinuousChanges);
-    RequireTestCase(CBL_Router_ContinuousChanges_Heartbeat);
-    RequireTestCase(CBL_Router_GetAttachment);
-    RequireTestCase(CBL_Router_GetJSONAttachment);
-    RequireTestCase(CBL_Router_RevsDiff);
-    RequireTestCase(CBL_Router_AccessCheck);
-}
-
-#endif
+@end

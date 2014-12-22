@@ -547,6 +547,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         if (targetIsLocal) {
             // This is a local-to-local replication. Turn the remote into a full URL to keep the
             // replicator happy:
+            if (!NSClassFromString(@"CBL_URLProtocol"))
+                return kCBLStatusServerError;  // Listener/router framework not installed
             NSError* error;
             CBLDatabase* targetDb;
             if (*outCreateTarget)
@@ -557,7 +559,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                 return CBLStatusFromNSError(error, kCBLStatusBadRequest);
             NSURL* targetURL = targetDb.internalURL;
             if (!targetURL)
-                return kCBLStatusServerError;   // Listener/router framework not installed
+                return kCBLStatusServerError;
             NSMutableDictionary* nuTarget = [targetDict mutableCopy];
             nuTarget[@"url"] = targetURL.absoluteString;
             targetDict = nuTarget;

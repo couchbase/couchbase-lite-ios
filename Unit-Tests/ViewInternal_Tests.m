@@ -1,83 +1,70 @@
 //
-//  CBL_View_Tests.m
+//  ViewInternal_Tests.m
 //  CouchbaseLite
 //
-//  Created by Jens Alfke on 12/8/11.
-//  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
+//  Created by Jens Alfke on 12/22/14.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
-//  except in compliance with the License. You may obtain a copy of the License at
-//    http://www.apache.org/licenses/LICENSE-2.0
-//  Unless required by applicable law or agreed to in writing, software distributed under the
-//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-//  either express or implied. See the License for the specific language governing permissions
-//  and limitations under the License.
+//
 
+#import "CBLTestCase.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
 #import "CBLQuery+Geo.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLInternal.h"
-#import "CouchbaseLitePrivate.h"
-#import "Test.h"
 
 
-#if DEBUG
+@interface ViewInternal_Tests : CBLTestCaseWithDB
+@end
 
-static CBLDatabase* createDB(void) {
-    CBLDatabase* db =  [CBLDatabase createEmptyDBAtPath: [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite_ViewTest.touchdb"]];
-    Assert(db);
-    AfterThisTest(^{
-        [db _close];
-    });
-    return db;
-}
 
-TestCase(CBL_View_Create) {
+@implementation ViewInternal_Tests
+
+
+- (void) test_Create {
     RequireTestCase(CBLDatabase);
-    CBLDatabase *db = createDB();
-    
-    CAssertNil([db existingViewNamed: @"aview"]);
+
+    AssertNil([db existingViewNamed: @"aview"]);
     
     CBLView* view = [db viewNamed: @"aview"];
-    CAssert(view);
-    CAssertEqual(view.name, @"aview");
-    CAssert(view.mapBlock == nil, nil);
-    CAssertEq([db existingViewNamed: @"aview"], view);
+    Assert(view);
+    AssertEqual(view.name, @"aview");
+    Assert(view.mapBlock == nil);
+    AssertEq([db existingViewNamed: @"aview"], view);
 
     
     BOOL changed = [view setMapBlock: MAPBLOCK({})
                          reduceBlock: NULL version: @"1"];
-    CAssert(changed);
+    Assert(changed);
     
-    CAssertEqual(db.allViews, @[view]);
+    AssertEqual(db.allViews, @[view]);
 
     changed = [view setMapBlock: MAPBLOCK({})
                     reduceBlock: NULL version: @"1"];
-    CAssert(!changed);
+    Assert(!changed);
     
     changed = [view setMapBlock: MAPBLOCK({})
                     reduceBlock: NULL version: @"2"];
-    CAssert(changed);
+    Assert(changed);
 }
 
 
-static CBL_Revision* putDoc(CBLDatabase* db, NSDictionary* props) {
+- (CBL_Revision*) putDoc: (NSDictionary*)props {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
     CBL_Revision* result = [db putRevision: rev prevRevisionID: nil allowConflict: NO status: &status];
-    CAssert(status < 300);
+    Assert(status < 300);
     return result;
 }
 
 
-static NSArray* putDocs(CBLDatabase* db) {
+- (NSArray*) putDocs {
     NSMutableArray* docs = $marray();
-    [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"key", @"four"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"key", @"one"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"key", @"three"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"key", @"five"}))];
+    [docs addObject: [self putDoc: $dict({@"_id", @"22222"}, {@"key", @"two"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"44444"}, {@"key", @"four"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"11111"}, {@"key", @"one"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"33333"}, {@"key", @"three"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"55555"}, {@"key", @"five"})]];
     return docs;
 }
 
@@ -89,35 +76,35 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
     return CBLGeoRectToJSON((CBLGeoRect){{x0,y0}, {x1,y1}});
 }
 
-static NSArray* putGeoDocs(CBLDatabase* db) {
+- (NSArray*) putGeoDocs {
     NSMutableArray* docs = $marray();
-    [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"key", @"two"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"key", @"four"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"key", @"one"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"key", @"three"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"key", @"five"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"pdx"},   {@"key", @"Portland"},
-                                      {@"geoJSON", mkGeoPoint(-122.68, 45.52)}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"aus"},   {@"key", @"Austin"},
-                                      {@"geoJSON", mkGeoPoint(-97.75, 30.25)}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"mv"},    {@"key", @"Mountain View"},
-                                      {@"geoJSON", mkGeoPoint(-122.08, 37.39)}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"hkg"}, {@"geoJSON", mkGeoPoint(-113.91, 45.52)}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"diy"}, {@"geoJSON", mkGeoPoint(40.12, 37.53)}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"snc"}, {@"geoJSON", mkGeoPoint(-2.205, -80.98)}))];
+    [docs addObject: [self putDoc: $dict({@"_id", @"22222"}, {@"key", @"two"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"44444"}, {@"key", @"four"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"11111"}, {@"key", @"one"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"33333"}, {@"key", @"three"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"55555"}, {@"key", @"five"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"pdx"},   {@"key", @"Portland"},
+                                      {@"geoJSON", mkGeoPoint(-122.68, 45.52)})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"aus"},   {@"key", @"Austin"},
+                                      {@"geoJSON", mkGeoPoint(-97.75, 30.25)})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"mv"},    {@"key", @"Mountain View"},
+                                      {@"geoJSON", mkGeoPoint(-122.08, 37.39)})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"hkg"}, {@"geoJSON", mkGeoPoint(-113.91, 45.52)})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"diy"}, {@"geoJSON", mkGeoPoint(40.12, 37.53)})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"snc"}, {@"geoJSON", mkGeoPoint(-2.205, -80.98)})]];
 
-    [docs addObject: putDoc(db, $dict({@"_id", @"xxx"}, {@"geoJSON",
-                                        mkGeoRect(-115,-10, -90, 12)}))];
+    [docs addObject: [self putDoc: $dict({@"_id", @"xxx"}, {@"geoJSON",
+                                        mkGeoRect(-115,-10, -90, 12)})]];
     return docs;
 }
 
 
-static CBLView* createViewNamed(CBLDatabase* db, NSString* name) {
+- (CBLView*) createViewNamed: (NSString*)name {
     CBLView* view = [db viewNamed: name];
     [view setMapBlock: MAPBLOCK({
-        CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
-        CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
-        CAssert([doc[@"_local_seq"] isKindOfClass: [NSNumber class]], @"Invalid _local_seq in %@", doc);
+        Assert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
+        Assert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
+        Assert([doc[@"_local_seq"] isKindOfClass: [NSNumber class]], @"Invalid _local_seq in %@", doc);
         if (doc[@"key"])
             emit(doc[@"key"], nil);
         if (doc[@"geoJSON"])
@@ -126,8 +113,8 @@ static CBLView* createViewNamed(CBLDatabase* db, NSString* name) {
     return view;
 }
 
-static CBLView* createView(CBLDatabase* db) {
-    return createViewNamed(db, @"aview");
+- (CBLView*) createView {
+    return [self createViewNamed: @"aview"];
 }
 
 
@@ -136,57 +123,56 @@ static NSArray* rowsToDicts(NSArray* rows) {
 }
 
 
-TestCase(CBL_View_Index) {
-    RequireTestCase(CBL_View_Create);
-    CBLDatabase *db = createDB();
-    CBL_Revision* rev1 = putDoc(db, $dict({@"key", @"one"}));
-    CBL_Revision* rev2 = putDoc(db, $dict({@"key", @"two"}));
-    CBL_Revision* rev3 = putDoc(db, $dict({@"key", @"three"}));
-    putDoc(db, $dict({@"_id", @"_design/foo"}));
-    putDoc(db, $dict({@"clef", @"quatre"}));
+- (void) test_Index {
+    RequireTestCase(Create);
+    CBL_Revision* rev1 = [self putDoc: $dict({@"key", @"one"})];
+    CBL_Revision* rev2 = [self putDoc: $dict({@"key", @"two"})];
+    CBL_Revision* rev3 = [self putDoc: $dict({@"key", @"three"})];
+    [self putDoc: $dict({@"_id", @"_design/foo"})];
+    [self putDoc: $dict({@"clef", @"quatre"})];
     
-    CBLView* view = createView(db);
-    CAssertEq(view.viewID, 1);
+    CBLView* view = [self createView];
+    AssertEq(view.viewID, 1);
     
-    CAssert(view.stale);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    Assert(view.stale);
+    AssertEq([view updateIndex], kCBLStatusOK);
     
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", @1}),
+    AssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", @1}),
                               $dict({@"key", @"\"three\""}, {@"seq", @3}),
                               $dict({@"key", @"\"two\""}, {@"seq", @2}) ));
     // No-op reindex:
-    CAssert(!view.stale);
-    CAssertEq([view updateIndex], kCBLStatusNotModified);
+    Assert(!view.stale);
+    AssertEq([view updateIndex], kCBLStatusNotModified);
     
     // Now add a doc and update a doc:
     CBL_MutableRevision* threeUpdated = [[CBL_MutableRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO];
     threeUpdated.properties = $dict({@"key", @"3hree"});
     CBLStatus status;
     rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];
-    CAssert(status < 300);
+    Assert(status < 300);
 
-    CBL_Revision* rev4 = putDoc(db, $dict({@"key", @"four"}));
+    CBL_Revision* rev4 = [self putDoc: $dict({@"key", @"four"})];
     
     CBL_Revision* twoDeleted = [[CBL_Revision alloc] initWithDocID: rev2.docID revID: nil deleted:YES];
     [db putRevision: twoDeleted prevRevisionID: rev2.revID allowConflict: NO status: &status];
-    CAssert(status < 300);
+    Assert(status < 300);
 
     // Reindex again:
-    CAssert(view.stale);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    Assert(view.stale);
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", @6}),
+    AssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", @6}),
                               $dict({@"key", @"\"four\""}, {@"seq", @7}),
                               $dict({@"key", @"\"one\""}, {@"seq", @1}) ));
     
     // Now do a real query:
     NSArray* rows = rowsToDicts([view _queryWithOptions: NULL status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEqual(rows, $array( $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, $array( $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
                                $dict({@"key", @"four"}, {@"id", rev4.docID}),
                                $dict({@"key", @"one"}, {@"id", rev1.docID}) ));
     
@@ -194,16 +180,15 @@ TestCase(CBL_View_Index) {
 }
 
 
-TestCase(CBL_View_IndexMultiple) {
-    RequireTestCase(CBL_View_Index);
-    CBLDatabase *db = createDB();
+- (void) test_IndexMultiple {
+    RequireTestCase(Index);
 
-    CBLView* v1 = createViewNamed(db, @"agroup/view1");
-    CBLView* v2 = createViewNamed(db, @"other/view2");
-    CBLView* v3 = createViewNamed(db, @"other/view3");
-    CBLView* vX = createViewNamed(db, @"other/viewX");
-    CBLView* v4 = createViewNamed(db, @"view4");
-    CBLView* v5 = createViewNamed(db, @"view5");
+    CBLView* v1 = [self createViewNamed: @"agroup/view1"];
+    CBLView* v2 = [self createViewNamed: @"other/view2"];
+    CBLView* v3 = [self createViewNamed: @"other/view3"];
+    CBLView* vX = [self createViewNamed: @"other/viewX"];
+    CBLView* v4 = [self createViewNamed: @"view4"];
+    CBLView* v5 = [self createViewNamed: @"view5"];
 
     [vX forgetMapBlock]; // To reproduce #438
 
@@ -216,40 +201,39 @@ TestCase(CBL_View_IndexMultiple) {
 
     const int kNDocs = 10;
     for (int i=0; i<kNDocs; i++) {
-        putDoc(db, @{@"key": @(i)});
+        [self putDoc: @{@"key": @(i)}];
         if (i == kNDocs/2) {
             CBLStatus status = [v1 updateIndex];
-            CAssert(status < 300);
+            Assert(status < 300);
         }
     }
 
     CBLStatus status = [v2 updateIndexAlone];
-    CAssert(status < 300);
+    Assert(status < 300);
 
     status = [v2 updateIndex];
-    CAssertEq(status, kCBLStatusNotModified); // should not update v3
+    AssertEq(status, kCBLStatusNotModified); // should not update v3
 
     status = [v3 updateIndex];
-    CAssert(status < 300);
+    Assert(status < 300);
 
     for (CBLView* view in @[v2, v3])
-        CAssertEq(view.lastSequenceIndexed, kNDocs);
+        AssertEq(view.lastSequenceIndexed, kNDocs);
 }
 
 
-TestCase(CBL_View_ConflictWinner) {
+- (void) test_ConflictWinner {
     // If a view is re-indexed, and a document in the view has gone into conflict,
     // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
-    RequireTestCase(CBL_View_Index);
-    CBLDatabase *db = createDB();
-    NSArray* docs = putDocs(db);
+    RequireTestCase(Index);
+    NSArray* docs = [self putDocs];
     CBL_Revision* leaf1 = docs[1];
     
-    CBLView* view = createView(db);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+    AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"four\""}, {@"seq", @2}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
@@ -261,14 +245,14 @@ TestCase(CBL_View_ConflictWinner) {
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
-    CAssert(status < 300);
-    CAssertEqual(leaf1.docID, leaf2.docID);
+    Assert(status < 300);
+    AssertEqual(leaf1.docID, leaf2.docID);
     
     // Update the view -- should contain only the key from the new rev, not the old:
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6}),
+    AssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6}),
                               $dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
@@ -276,19 +260,18 @@ TestCase(CBL_View_ConflictWinner) {
 }
 
 
-TestCase(CBL_View_ConflictLoser) {
+- (void) test_ConflictLoser {
     // Like the ConflictWinner test, except the newer revision is the loser,
     // so it shouldn't be indexed at all. Instead, the older still-winning revision
     // should be indexed again.
-    CBLDatabase *db = createDB();
-    NSArray* docs = putDocs(db);
+    NSArray* docs = [self putDocs];
     CBL_Revision* leaf1 = docs[1];
     
-    CBLView* view = createView(db);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+    AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"four\""}, {@"seq", @2}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
@@ -300,14 +283,14 @@ TestCase(CBL_View_ConflictLoser) {
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
-    CAssert(status < 300);
-    CAssertEqual(leaf1.docID, leaf2.docID);
+    Assert(status < 300);
+    AssertEqual(leaf1.docID, leaf2.docID);
     
     // Update the view -- should contain only the key from the new rev, not the old:
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
     dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+    AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"four\""}, {@"seq", @2}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
@@ -315,12 +298,11 @@ TestCase(CBL_View_ConflictLoser) {
 }
 
 
-TestCase(CBL_View_Query) {
-    RequireTestCase(CBL_View_Index);
-    CBLDatabase *db = createDB();
-    putDocs(db);
-    CBLView* view = createView(db);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+- (void) test_Query {
+    RequireTestCase(Index);
+    [self putDocs];
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
     
     // Query all rows:
     CBLQueryOptions* options = [CBLQueryOptions new];
@@ -331,7 +313,7 @@ TestCase(CBL_View_Query) {
                                    $dict({@"id",  @"11111"}, {@"key", @"one"}),
                                    $dict({@"id",  @"33333"}, {@"key", @"three"}),
                                    $dict({@"id",  @"22222"}, {@"key", @"two"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Start/end key query:
     options = [CBLQueryOptions new];
@@ -341,7 +323,7 @@ TestCase(CBL_View_Query) {
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Start/end query without inclusive start:
     options->inclusiveStart = NO;
@@ -349,7 +331,7 @@ TestCase(CBL_View_Query) {
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Start/end query without inclusive end:
     options->inclusiveStart = YES;
@@ -358,7 +340,7 @@ TestCase(CBL_View_Query) {
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Reversed:
     options->descending = YES;
@@ -368,13 +350,13 @@ TestCase(CBL_View_Query) {
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"55555"}, {@"key", @"five"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Reversed, no inclusive end:
     options->inclusiveEnd = NO;
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
     
     // Limit:
     options = [CBLQueryOptions new];
@@ -382,7 +364,7 @@ TestCase(CBL_View_Query) {
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Skip rows:
     options = [CBLQueryOptions new];
@@ -391,13 +373,13 @@ TestCase(CBL_View_Query) {
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}),
                           $dict({@"id",  @"33333"}, {@"key", @"three"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Skip + limit:
     options->limit = 1;
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Specific keys:
     options = [CBLQueryOptions new];
@@ -406,17 +388,16 @@ TestCase(CBL_View_Query) {
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"22222"}, {@"key", @"two"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 }
 
-TestCase(CBL_View_QueryStartKeyDocID) {
-    RequireTestCase(CBL_View_Query);
-    CBLDatabase *db = createDB();
-    putDocs(db);
-    putDoc(db, $dict({@"_id", @"11112"}, {@"key", @"one"}));
+- (void) test_QueryStartKeyDocID {
+    RequireTestCase(Query);
+    [self putDocs];
+    [self putDoc: $dict({@"_id", @"11112"}, {@"key", @"one"})];
 
-    CBLView* view = createView(db);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     CBLQueryOptions* options = [CBLQueryOptions new];
     options.startKey = @"one";
@@ -426,7 +407,7 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"11112"}, {@"key", @"one"}),
                                    $dict({@"id",  @"33333"}, {@"key", @"three"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     options = [CBLQueryOptions new];
     options.endKey = @"one";
@@ -435,21 +416,20 @@ TestCase(CBL_View_QueryStartKeyDocID) {
     expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                           $dict({@"id",  @"44444"}, {@"key", @"four"}),
                           $dict({@"id",  @"11111"}, {@"key", @"one"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     options.startKey = @"one";
     options.startKeyDocID = @"11111";
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 }
 
-TestCase(CBL_View_PrefixMatch) {
-    RequireTestCase(CBL_View_Query);
-    CBLDatabase *db = createDB();
-    putDocs(db);
-    CBLView* view = createView(db);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+- (void) test_PrefixMatch {
+    RequireTestCase(Query);
+    [self putDocs];
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     // Query all rows:
     CBLQueryOptions* options = [CBLQueryOptions new];
@@ -459,14 +439,13 @@ TestCase(CBL_View_PrefixMatch) {
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                                    $dict({@"id",  @"44444"}, {@"key", @"four"}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
     // TODO: Test prefixMatchLevel > 1
 }
 
-TestCase(CBL_View_EmitDocAsValue) {
-    RequireTestCase(CBL_View_Query);
-    CBLDatabase *db = createDB();
-    NSArray* docs = putDocs(db);
+- (void) test_EmitDocAsValue {
+    RequireTestCase(Query);
+    NSArray* docs = [self putDocs];
 
     CBLView* view = [db viewNamed: @"wholedoc"];
     [view setMapBlock: MAPBLOCK({
@@ -484,7 +463,7 @@ TestCase(CBL_View_EmitDocAsValue) {
         return result;
     } version: @"1"];
 
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     // Query all rows:
     CBLQueryOptions* options = [CBLQueryOptions new];
@@ -505,22 +484,20 @@ TestCase(CBL_View_EmitDocAsValue) {
                                          {@"value", [docs[3] properties]}),
                                    $dict({@"id",  @"22222"}, {@"key", @"two"},
                                          {@"value", [docs[0] properties]}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 
     // Now test reducing
     options->reduce = YES;
     NSArray* reduced = [view _queryWithOptions: options status: &status];
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEq(reduced.count, 1u);
-    CAssertEqual([(CBLQueryRow*)reduced[0] value], @"fivefouronethreetwo");
+    AssertEq(status, kCBLStatusOK);
+    AssertEq(reduced.count, 1u);
+    AssertEqual([(CBLQueryRow*)reduced[0] value], @"fivefouronethreetwo");
 }
 
-TestCase (CBL_View_NumericKeys) {
-    CBLDatabase *db = createDB();
-
-    putDoc(db, $dict({@"_id", @"22222"},
+- (void) test_NumericKeys {
+    [self putDoc: $dict({@"_id", @"22222"},
                      {@"refrenceNumber", @(33547239)},
-                     {@"title", @"this is the title"}));
+                     {@"title", @"this is the title"})];
 
     CBLView* view = [db viewNamed: @"things_byRefNumber"];
     [view setMapBlock: MAPBLOCK({
@@ -539,13 +516,12 @@ TestCase (CBL_View_NumericKeys) {
     AssertEqual([rows[0] key], @(33547239));
 }
 
-TestCase(CBL_View_GeoQuery) {
+- (void) test_GeoQuery {
     RequireTestCase(CBLGeometry);
-    RequireTestCase(CBL_View_Index);
-    CBLDatabase *db = createDB();
-    putGeoDocs(db);
-    CBLView* view = createView(db);
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    RequireTestCase(Index);
+    [self putGeoDocs];
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
     
     // Bounding-box query:
     CBLQueryOptions* options = [CBLQueryOptions new];
@@ -562,13 +538,13 @@ TestCase(CBL_View_GeoQuery) {
                                $dict({@"id", @"diy"},
                                      {@"geometry", mkGeoPoint(40.12, 37.53)},
                                      {@"bbox", @[@40.12, @37.53, @40.12, @37.53]})];
-    CAssertEqual(rowsToDicts(rows), expectedRows);
+    AssertEqualish(rowsToDicts(rows), expectedRows);
 
     // Now try again using the public API:
     CBLQuery* query = [view createQuery];
     query.boundingBox = bbox;
     rows = [[query run: NULL] allObjects];
-    CAssertEqual(rowsToDicts(rows), expectedRows);
+    AssertEqualish(rowsToDicts(rows), expectedRows);
 
     CBLGeoQueryRow* row = rows[0];
     AssertEq(row.boundingBox.min.x, -115);
@@ -585,9 +561,8 @@ TestCase(CBL_View_GeoQuery) {
     AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
 }
 
-TestCase(CBL_View_AllDocsQuery) {
-    CBLDatabase *db = createDB();
-    NSArray* docs = putDocs(db);
+- (void) test_AllDocsQuery {
+    NSArray* docs = [self putDocs];
     NSDictionary* expectedRow[docs.count];
     memset(&expectedRow, 0, sizeof(expectedRow));
     int i = 0;
@@ -603,14 +578,14 @@ TestCase(CBL_View_AllDocsQuery) {
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
-    CAssert(status < 300);
+    Assert(status < 300);
 
     // Query all rows:
     CBLQueryOptions* options = [CBLQueryOptions new];
     NSArray* query = [db getAllDocs: options];
     NSArray* expectedRows = $array(expectedRow[2], expectedRow[0], expectedRow[3], expectedRow[1],
                                    expectedRow[4]);
-    CAssertEqual(rowsToDicts(query), expectedRows);
+    AssertEqual(rowsToDicts(query), expectedRows);
 
     // Start/end key query:
     options = [CBLQueryOptions new];
@@ -618,38 +593,38 @@ TestCase(CBL_View_AllDocsQuery) {
     options.endKey = @"44444";
     query = [db getAllDocs: options];
     expectedRows = @[expectedRow[0], expectedRow[3], expectedRow[1]];
-    CAssertEqual(rowsToDicts(query), expectedRows);
+    AssertEqual(rowsToDicts(query), expectedRows);
 
     // Start/end query without inclusive end:
     options->inclusiveEnd = NO;
     query = [db getAllDocs: options];
     expectedRows = @[expectedRow[0], expectedRow[3]];
-    CAssertEqual(rowsToDicts(query), expectedRows);
+    AssertEqual(rowsToDicts(query), expectedRows);
 
     // Get zero specific documents:
     options = [CBLQueryOptions new];
     options.keys = @[];
     query = [db getAllDocs: options];
-    CAssertEq(query.count, 0u);
+    AssertEq(query.count, 0u);
     
     // Get specific documents:
     options = [CBLQueryOptions new];
     __unused NSArray* keys = @[(expectedRow[2])[@"id"], expectedRow[3][@"id"]];
     options.keys = keys;
     query = [db getAllDocs: options];
-    CAssertEqual(rowsToDicts(query), (@[expectedRow[2], expectedRow[3]]));
+    AssertEqual(rowsToDicts(query), (@[expectedRow[2], expectedRow[3]]));
 
     // Delete a document:
     CBL_Revision* del = docs[0];
     del = [[CBL_Revision alloc] initWithDocID: del.docID revID: del.revID deleted: YES];
     del = [db putRevision: del prevRevisionID: del.revID allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusOK);
+    AssertEq(status, kCBLStatusOK);
 
     // Get deleted doc, and one bogus one:
     options = [CBLQueryOptions new];
     keys = options.keys = @[@"BOGUS", expectedRow[0][@"id"]];
     query = [db getAllDocs: options];
-    CAssertEqual(rowsToDicts(query), (@[$dict({@"key",  @"BOGUS"},
+    AssertEqual(rowsToDicts(query), (@[$dict({@"key",  @"BOGUS"},
                                               {@"error", @"not_found"}),
                                       $dict({@"id",  del.docID},
                                             {@"key", del.docID},
@@ -665,27 +640,26 @@ TestCase(CBL_View_AllDocsQuery) {
                                             {@"value", $dict({@"rev", [docs[1] revID]},
                                                              {@"_conflicts", @[curRevID, @"1-...."]})} );
     expectedRows = $array(expectedRow[2], expectedRow[3], expectedConflict1, expectedRow[4]);
-    CAssertEqual(rowsToDicts(query), expectedRows);
+    AssertEqual(rowsToDicts(query), expectedRows);
 
     // Get _only_ conflicts:
     options->allDocsMode = kCBLOnlyConflicts;
     query = [db getAllDocs: options];
     expectedRows = $array(expectedConflict1);
-    CAssertEqual(rowsToDicts(query), expectedRows);
+    AssertEqual(rowsToDicts(query), expectedRows);
 }
 
 
-TestCase(CBL_View_Reduce) {
-    RequireTestCase(CBL_View_Query);
-    CBLDatabase *db = createDB();
-    putDoc(db, $dict({@"_id", @"CD"},      {@"cost", @(8.99)}));
-    putDoc(db, $dict({@"_id", @"App"},     {@"cost", @(1.95)}));
-    putDoc(db, $dict({@"_id", @"Dessert"}, {@"cost", @(6.50)}));
+- (void) test_Reduce {
+    RequireTestCase(Query);
+    [self putDoc: $dict({@"_id", @"CD"},      {@"cost", @(8.99)})];
+    [self putDoc: $dict({@"_id", @"App"},     {@"cost", @(1.95)})];
+    [self putDoc: $dict({@"_id", @"Dessert"}, {@"cost", @(6.50)})];
     
     CBLView* view = [db viewNamed: @"totaler"];
     [view setMapBlock: MAPBLOCK({
-        CAssert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
-        CAssert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
+        Assert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
+        Assert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
         id cost = doc[@"cost"];
         if (cost)
             emit(doc[@"_id"], cost);
@@ -693,36 +667,35 @@ TestCase(CBL_View_Reduce) {
         return [CBLView totalValues: values];
     } version: @"1"];
 
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
     NSArray* dump = [view dump];
     Log(@"View dump: %@", dump);
-    CAssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", @2}),
+    AssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", @2}),
                               $dict({@"key", @"\"CD\""}, {@"value", @"8.99"}, {@"seq", @1}),
                               $dict({@"key", @"\"Dessert\""}, {@"value", @"6.5"}, {@"seq", @3}) ));
 
     CBLQueryOptions* options = [CBLQueryOptions new];
     CBLStatus status;
     NSArray* reduced = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEq(reduced.count, 1u);
+    AssertEq(status, kCBLStatusOK);
+    AssertEq(reduced.count, 1u);
     double result = [reduced[0][@"value"] doubleValue];
-    CAssert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
+    Assert(fabs(result - 17.44) < 0.001, @"Unexpected reduced value %@", reduced);
 }
 
 
-TestCase(CBL_View_Grouped) {
-    RequireTestCase(CBL_View_Reduce);
-    CBLDatabase *db = createDB();
-    putDoc(db, $dict({@"_id", @"1"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
-                     {@"track", @"Ether"}, {@"time", @(231)}));
-    putDoc(db, $dict({@"_id", @"2"}, {@"artist", @"Gang Of Four"}, {@"album", @"Songs Of The Free"},
-                     {@"track", @"I Love A Man In Uniform"}, {@"time", @(248)}));
-    putDoc(db, $dict({@"_id", @"3"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
-                     {@"track", @"Natural's Not In It"}, {@"time", @(187)}));
-    putDoc(db, $dict({@"_id", @"4"}, {@"artist", @"PiL"}, {@"album", @"Metal Box"},
-                     {@"track", @"Memories"}, {@"time", @(309)}));
-    putDoc(db, $dict({@"_id", @"5"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
-                     {@"track", @"Not Great Men"}, {@"time", @(187)}));
+- (void) test_Grouped {
+    RequireTestCase(Reduce);
+    [self putDoc: $dict({@"_id", @"1"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
+                     {@"track", @"Ether"}, {@"time", @(231)})];
+    [self putDoc: $dict({@"_id", @"2"}, {@"artist", @"Gang Of Four"}, {@"album", @"Songs Of The Free"},
+                     {@"track", @"I Love A Man In Uniform"}, {@"time", @(248)})];
+    [self putDoc: $dict({@"_id", @"3"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
+                     {@"track", @"Natural's Not In It"}, {@"time", @(187)})];
+    [self putDoc: $dict({@"_id", @"4"}, {@"artist", @"PiL"}, {@"album", @"Metal Box"},
+                     {@"track", @"Memories"}, {@"time", @(309)})];
+    [self putDoc: $dict({@"_id", @"5"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
+                     {@"track", @"Not Great Men"}, {@"time", @(187)})];
     
     CBLView* view = [db viewNamed: @"grouper"];
     [view setMapBlock: MAPBLOCK({
@@ -734,18 +707,18 @@ TestCase(CBL_View_Grouped) {
         return [CBLView totalValues: values];
     } version: @"1"];
     
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     CBLQueryOptions* options = [CBLQueryOptions new];
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", $null}, {@"value", @(1162)})));
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, $array($dict({@"key", $null}, {@"value", @(1162)})));
 
     options->group = YES;
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, $array($dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
                                                     @"Ether")},
                                     {@"value", @(231)}),
                               $dict({@"key", $array(@"Gang Of Four", @"Entertainment!",
@@ -763,14 +736,14 @@ TestCase(CBL_View_Grouped) {
 
     options->groupLevel = 1;
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four"]}, {@"value", @(853)}),
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four"]}, {@"value", @(853)}),
                               $dict({@"key", @[@"PiL"]}, {@"value", @(309)})));
     
     options->groupLevel = 2;
     rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four", @"Entertainment!"]},
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, $array($dict({@"key", @[@"Gang Of Four", @"Entertainment!"]},
                                     {@"value", @(605)}),
                               $dict({@"key", @[@"Gang Of Four", @"Songs Of The Free"]},
                                     {@"value", @(248)}),
@@ -779,14 +752,13 @@ TestCase(CBL_View_Grouped) {
 }
 
 
-TestCase(CBL_View_GroupedStrings) {
-    RequireTestCase(CBL_View_Grouped);
-    CBLDatabase *db = createDB();
-    putDoc(db, $dict({@"name", @"Alice"}));
-    putDoc(db, $dict({@"name", @"Albert"}));
-    putDoc(db, $dict({@"name", @"Naomi"}));
-    putDoc(db, $dict({@"name", @"Jens"}));
-    putDoc(db, $dict({@"name", @"Jed"}));
+- (void) test_GroupedStrings {
+    RequireTestCase(Grouped);
+    [self putDoc: $dict({@"name", @"Alice"})];
+    [self putDoc: $dict({@"name", @"Albert"})];
+    [self putDoc: $dict({@"name", @"Naomi"})];
+    [self putDoc: $dict({@"name", @"Jens"})];
+    [self putDoc: $dict({@"name", @"Jed"})];
     
     CBLView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: MAPBLOCK({
@@ -797,27 +769,26 @@ TestCase(CBL_View_GroupedStrings) {
          return @([values count]);
      } version:@"1.0"];
    
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     CBLQueryOptions* options = [CBLQueryOptions new];
     options->groupLevel = 1;
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, $array($dict({@"key", @"A"}, {@"value", @2}),
                               $dict({@"key", @"J"}, {@"value", @2}),
                               $dict({@"key", @"N"}, {@"value", @1})));
 }
 
-TestCase(CBL_View_Grouped_NoReduce) {
-    RequireTestCase(CBL_View_Grouped);
-    CBLDatabase *db = createDB();
-    putDoc(db, $dict({@"_id", @"1"}, {@"type", @"A"}));
-    putDoc(db, $dict({@"_id", @"2"}, {@"type", @"A"}));
-    putDoc(db, $dict({@"_id", @"3"}, {@"type", @"B"}));
-    putDoc(db, $dict({@"_id", @"4"}, {@"type", @"B"}));
-    putDoc(db, $dict({@"_id", @"5"}, {@"type", @"C"}));
-    putDoc(db, $dict({@"_id", @"6"}, {@"type", @"C"}));
+- (void) test_Grouped_NoReduce {
+    RequireTestCase(Grouped);
+    [self putDoc: $dict({@"_id", @"1"}, {@"type", @"A"})];
+    [self putDoc: $dict({@"_id", @"2"}, {@"type", @"A"})];
+    [self putDoc: $dict({@"_id", @"3"}, {@"type", @"B"})];
+    [self putDoc: $dict({@"_id", @"4"}, {@"type", @"B"})];
+    [self putDoc: $dict({@"_id", @"5"}, {@"type", @"C"})];
+    [self putDoc: $dict({@"_id", @"6"}, {@"type", @"C"})];
     
     CBLView* view = [db viewNamed: @"GroupByType"];
     [view setMapBlock: MAPBLOCK({
@@ -826,21 +797,21 @@ TestCase(CBL_View_Grouped_NoReduce) {
             emit(type, nil);
     }) version:@"1.0"];
     
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
     CBLQueryOptions *options = [CBLQueryOptions new];
     options->groupLevel = 1;
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEqual(rows, $array($dict({@"key", @"A"}, {@"error", @"not_found"}),
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, $array($dict({@"key", @"A"}, {@"error", @"not_found"}),
                               $dict({@"key", @"B"}, {@"error", @"not_found"}),
                               $dict({@"key", @"C"}, {@"error", @"not_found"})));
 }
 
 
-TestCase(CBL_View_Collation) {
+- (void) test_Collation {
     // Based on CouchDB's "view_collation.js" test
-    RequireTestCase(CBL_View_Query);
+    RequireTestCase(Query);
     NSArray* testKeys = @[$null,
                                                    $false,
                                                    $true,
@@ -861,10 +832,9 @@ TestCase(CBL_View_Collation) {
                                                    @[@"b", @"c", @"a"],
                                                    @[@"b", @"d"],
                                                    @[@"b", @"d", @"e"]];
-    CBLDatabase *db = createDB();
     int i = 0;
     for (id key in testKeys)
-        putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
+        [self putDoc: $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key})];
 
     CBLView* view = [db viewNamed: @"default/names"];
     [view setMapBlock:  MAPBLOCK({
@@ -875,15 +845,15 @@ TestCase(CBL_View_Collation) {
     CBLQueryOptions* options = [CBLQueryOptions new];
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEq(rows.count, testKeys.count);
+    AssertEq(status, kCBLStatusOK);
+    AssertEq(rows.count, testKeys.count);
     i = 0;
     for (NSDictionary* row in rows)
-        CAssertEqual(row[@"key"], testKeys[i++]);
+        AssertEqual(row[@"key"], testKeys[i++]);
 }
 
 
-TestCase(CBL_View_CollationRaw) {
+- (void) test_CollationRaw {
     NSArray* testKeys = @[@0,
                                                    @(2.5),
                                                    @(10),
@@ -906,11 +876,10 @@ TestCase(CBL_View_CollationRaw) {
                                                    @"ba",
                                                    @"bb",
                                                    @"~"];
-    RequireTestCase(CBL_View_Query);
-    CBLDatabase *db = createDB();
+    RequireTestCase(Query);
     int i = 0;
     for (id key in testKeys)
-        putDoc(db, $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key}));
+        [self putDoc: $dict({@"_id", $sprintf(@"%d", i++)}, {@"name", key})];
 
     CBLView* view = [db viewNamed: @"default/names"];
     [view setMapBlock: MAPBLOCK({
@@ -921,17 +890,16 @@ TestCase(CBL_View_CollationRaw) {
     CBLQueryOptions* options = [CBLQueryOptions new];
     CBLStatus status;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
-    CAssertEq(status, kCBLStatusOK);
+    AssertEq(status, kCBLStatusOK);
     i = 0;
     for (NSDictionary* row in rows)
-        CAssertEqual(row[@"key"], testKeys[i++]);
+        AssertEqual(row[@"key"], testKeys[i++]);
 }
 
 
-TestCase(CBL_View_LinkedDocs) {
-    RequireTestCase(CBL_View_Query);
-    CBLDatabase *db = createDB();
-    NSArray* revs = putDocs(db);
+- (void) test_LinkedDocs {
+    RequireTestCase(Query);
+    NSArray* revs = [self putDocs];
     
     NSDictionary* docs[5];
     int i = 0;
@@ -949,7 +917,7 @@ TestCase(CBL_View_LinkedDocs) {
         emit(key, value);
     }) reduceBlock: NULL version: @"1"];
 
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
     
     // Query all rows:
     CBLQueryOptions* options = [CBLQueryOptions new];
@@ -970,20 +938,19 @@ TestCase(CBL_View_LinkedDocs) {
                                    $dict({@"id",  @"22222"}, {@"key", @"two"},
                                          {@"value", $dict({@"_id", @"11111"})},
                                          {@"doc", docs[2]}));
-    CAssertEqual(rows, expectedRows);
+    AssertEqual(rows, expectedRows);
 }
 
 
-TestCase(CBL_View_FullTextQuery) {
-    RequireTestCase(CBL_View_Query);
-    CBLDatabase *db = createDB();
+- (void) test_FullTextQuery {
+    RequireTestCase(Query);
 
     NSMutableArray* docs = $marray();
-    [docs addObject: putDoc(db, $dict({@"_id", @"22222"}, {@"text", @"it was a dark"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"44444"}, {@"text", @"and STöRMy night."}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"11111"}, {@"text", @"outside somewhere"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"33333"}, {@"text", @"a dog whøse ñame was “Dog”"}))];
-    [docs addObject: putDoc(db, $dict({@"_id", @"55555"}, {@"text", @"was barking."}))];
+    [docs addObject: [self putDoc: $dict({@"_id", @"22222"}, {@"text", @"it was a dark"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"44444"}, {@"text", @"and STöRMy night."})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"11111"}, {@"text", @"outside somewhere"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"33333"}, {@"text", @"a dog whøse ñame was “Dog”"})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"55555"}, {@"text", @"was barking."})]];
 
     CBLView* view = [db viewNamed: @"fts"];
     [view setMapBlock: MAPBLOCK({
@@ -991,7 +958,7 @@ TestCase(CBL_View_FullTextQuery) {
             emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
 
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     // Create another view that outputs similar-but-different text, to make sure the results
     // don't get mixed up
@@ -1000,7 +967,7 @@ TestCase(CBL_View_FullTextQuery) {
         if (doc[@"text"])
             emit(CBLTextKey(@"dog stormy"), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
-    CAssertEq([otherView updateIndex], kCBLStatusOK);
+    AssertEq([otherView updateIndex], kCBLStatusOK);
     
     CBLQueryOptions* options = [CBLQueryOptions new];
     __unused NSString* fullTextQuery = @"stormy OR dog";
@@ -1009,7 +976,7 @@ TestCase(CBL_View_FullTextQuery) {
     options->fullTextSnippets = YES;
     CBLStatus status;
     NSArray* rows = [view _queryWithOptions: options status: &status];
-    CAssert(rows, @"_queryFullText failed: %d", status);
+    Assert(rows, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rows);
     NSArray* expectedRows = $array($dict({@"id",  @"44444"},
                                          {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
@@ -1020,76 +987,74 @@ TestCase(CBL_View_FullTextQuery) {
                                                         @{@"range": @[@26, @3], @"term": @1}]},
                                          {@"snippet", @"a [dog] whøse ñame was “[Dog]”"},
                                          {@"value", @"33333"}));
-    CAssertEqual(rowsToDicts(rows), expectedRows);
+    AssertEqual(rowsToDicts(rows), expectedRows);
 
     // Try a query with the public API:
     CBLQuery* query = [view createQuery];
     query.fullTextQuery = @"(was NOT barking) OR dog";
     query.fullTextSnippets = YES;
     rows = [[query run: NULL] allObjects];
-    CAssertEq(rows.count, 2u);
+    AssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
-    CAssertEqual(row.fullText, @"a dog whøse ñame was “Dog”");
-    CAssertEqual(row.documentID, @"33333");
-    CAssertEqual(row.snippet, @"a \001dog\002 whøse ñame \001was\002 “\001Dog\002”");
-    CAssertEq(row.matchCount, 3u);
-    CAssertEq([row termIndexOfMatch: 0], 1u);
-    CAssertEq([row textRangeOfMatch: 0].location, 2u);
-    CAssertEq([row textRangeOfMatch: 0].length, 3u);
-    CAssertEq([row termIndexOfMatch: 1], 0u);
-    CAssertEq([row textRangeOfMatch: 1].location, 17u);
-    CAssertEq([row textRangeOfMatch: 1].length, 3u);
-    CAssertEq([row termIndexOfMatch: 2], 1u);
-    CAssertEq([row textRangeOfMatch: 2].location, 22u);
-    CAssertEq([row textRangeOfMatch: 2].length, 3u);
+    AssertEqual(row.fullText, @"a dog whøse ñame was “Dog”");
+    AssertEqual(row.documentID, @"33333");
+    AssertEqual(row.snippet, @"a \001dog\002 whøse ñame \001was\002 “\001Dog\002”");
+    AssertEq(row.matchCount, 3u);
+    AssertEq([row termIndexOfMatch: 0], 1u);
+    AssertEq([row textRangeOfMatch: 0].location, 2u);
+    AssertEq([row textRangeOfMatch: 0].length, 3u);
+    AssertEq([row termIndexOfMatch: 1], 0u);
+    AssertEq([row textRangeOfMatch: 1].location, 17u);
+    AssertEq([row textRangeOfMatch: 1].length, 3u);
+    AssertEq([row termIndexOfMatch: 2], 1u);
+    AssertEq([row textRangeOfMatch: 2].location, 22u);
+    AssertEq([row textRangeOfMatch: 2].length, 3u);
     NSString* snippet = [row snippetWithWordStart: @"[" wordEnd: @"]"];
-    CAssertEqual(snippet, @"a [dog] whøse ñame [was] “[Dog]”");
+    AssertEqual(snippet, @"a [dog] whøse ñame [was] “[Dog]”");
 
     row = rows[1];
-    CAssertEqual(row.fullText, @"it was a dark");
-    CAssertEqual(row.documentID, @"22222");
-    CAssertEqual(row.snippet, @"it \001was\002 a dark");
-    CAssertEq(row.matchCount, 1u);
-    CAssertEq([row termIndexOfMatch: 0], 0u);
-    CAssertEq([row textRangeOfMatch: 0].location, 3u);
-    CAssertEq([row textRangeOfMatch: 0].length, 3u);
+    AssertEqual(row.fullText, @"it was a dark");
+    AssertEqual(row.documentID, @"22222");
+    AssertEqual(row.snippet, @"it \001was\002 a dark");
+    AssertEq(row.matchCount, 1u);
+    AssertEq([row termIndexOfMatch: 0], 0u);
+    AssertEq([row textRangeOfMatch: 0].location, 3u);
+    AssertEq([row textRangeOfMatch: 0].length, 3u);
 
     // Now delete a document:
     CBL_Revision* rev = docs[3];
     CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusOK);
+    AssertEq(status, kCBLStatusOK);
 
-    CAssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
 
     // Make sure the deleted doc doesn't still show up in the query results:
     fullTextQuery = @"stormy OR dog";
     options.fullTextQuery = fullTextQuery;
     rows = [view _queryWithOptions: options status: &status];
-    CAssert(rows, @"_queryFullText failed: %d", status);
+    Assert(rows, @"_queryFullText failed: %d", status);
     Log(@"after deletion, rows = %@", rows);
 
     expectedRows = $array($dict({@"id",  @"44444"},
                                 {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
                                 {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
-    CAssertEqual(rowsToDicts(rows), expectedRows);
+    AssertEqual(rowsToDicts(rows), expectedRows);
 }
 
 
-TestCase(CBL_View_TotalDocs) {
-    CBLDatabase *db = createDB();
-    
+- (void) test_TotalDocs {
     // Create some docs
-    NSArray* docs = putDocs(db);
+    NSArray* docs = [self putDocs];
     NSUInteger totalRows = [docs count];
     
     // Create a view
-    CBLView* view = createView(db);
-    CAssertEq(view.totalRows, 0u);
-    CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalRows, totalRows);
+    CBLView* view = [self createView];
+    AssertEq(view.totalRows, 0u);
+    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq(view.totalRows, totalRows);
 
     // Create a conflict, won by the new revision:
     NSDictionary* props;
@@ -1100,9 +1065,9 @@ TestCase(CBL_View_TotalDocs) {
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
-    CAssert(status < 300);
-    CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalRows, totalRows);
+    Assert(status < 300);
+    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq(view.totalRows, totalRows);
     
     // Create a conflict, won by the old revision:
     props = $dict({@"_id", @"44444"},
@@ -1110,54 +1075,30 @@ TestCase(CBL_View_TotalDocs) {
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     status = [db forceInsert: rev revisionHistory: @[] source: nil];
-    CAssert(status < 300);
-    CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalRows, totalRows);
+    Assert(status < 300);
+    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq(view.totalRows, totalRows);
     
     // Update a doc
     CBL_MutableRevision* nuRev = [[CBL_MutableRevision alloc] initWithDocID: rev.docID
                                                                       revID: nil deleted:NO];
     nuRev.properties = $dict({@"key", @"F0uR"});
     rev = [db putRevision: nuRev prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssert(status < 300);
-    CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalRows, totalRows);
+    Assert(status < 300);
+    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq(view.totalRows, totalRows);
     
     // Delete a doc
     CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
-    CAssertEq(status, kCBLStatusOK);
-    CAssertEq([view updateIndex], kCBLStatusOK);
-    CAssertEq(view.totalRows, totalRows - 1);
+    AssertEq(status, kCBLStatusOK);
+    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq(view.totalRows, totalRows - 1);
     
     // Delete the index
     [view deleteIndex];
-    CAssertEq(view.totalRows, 0u);
+    AssertEq(view.totalRows, 0u);
 }
 
 
-TestCase(CBLView) {
-    RequireTestCase(CBL_View_Create);
-    RequireTestCase(CBL_View_Index);
-    RequireTestCase(CBL_View_IndexMultiple);
-    RequireTestCase(CBL_View_Query);
-    RequireTestCase(CBL_View_QueryStartKeyDocID);
-    RequireTestCase(CBL_View_EmitDocAsValue);
-    RequireTestCase(CBL_View_MapConflicts);
-    RequireTestCase(CBL_View_ConflictWinner);
-    RequireTestCase(CBL_View_ConflictLoser);
-    RequireTestCase(CBL_View_LinkedDocs);
-    RequireTestCase(CBL_View_Grouped);
-    RequireTestCase(CBL_View_GroupedStrings);
-    RequireTestCase(CBL_View_Grouped_NoReduce);
-    RequireTestCase(CBL_View_Collation);
-    RequireTestCase(CBL_View_CollationRaw);
-    RequireTestCase(CBL_View_NumericKeys);
-    RequireTestCase(CBL_View_Reduce);
-    RequireTestCase(CBL_View_GeoQuery);
-    RequireTestCase(CBL_View_FullTextQuery);
-    RequireTestCase(CBL_View_TotalDocs);
-}
-
-
-#endif
+@end
