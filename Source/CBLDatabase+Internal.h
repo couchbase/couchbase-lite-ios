@@ -90,6 +90,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readonly) NSString* path;
 @property (nonatomic, readonly) BOOL isOpen;
 
+- (void) notifyDocumentsRevisionAdded: (NSArray*)changes; // implemented in CBLDatabase.m
 - (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
 
 @end

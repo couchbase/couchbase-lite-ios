@@ -319,6 +319,27 @@ TestCase(API_CreateNewRevisions) {
     CAssertEq(doc2, doc);
 }
 
+TestCase(API_CreateNewRevisionsInTransaction) {
+    RequireTestCase(API_CreateNewRevisions);
+    CBLDatabase* db = createEmptyDB();
+    CBLDocument* doc = [db createDocument];
+    NSError* error;
+    CBLSavedRevision* rev = [doc putProperties: @{@"toogle":@YES} error: &error];
+    CAssert(rev, @"Save rev failed: %@", error);
+
+    [db inTransaction:^BOOL{
+        for (int i = 0; i < 10; i++) {
+            NSMutableDictionary* properties = [doc.properties mutableCopy];
+            bool wasChecked = [[properties objectForKey:@"toggle"] boolValue];
+            [properties setObject: [NSNumber numberWithBool: !wasChecked] forKey: @"toggle"];
+            NSError* error;
+            CBLSavedRevision* rev = [doc putProperties: properties error: &error];
+            CAssert(rev, @"Save rev failed: %@", error);
+        }
+        return YES;
+    }];
+}
+
 #if 0
 TestCase(API_SaveMultipleDocuments) {
     CBLDatabase* db = createEmptyDB();
