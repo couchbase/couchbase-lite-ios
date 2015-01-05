@@ -23,25 +23,13 @@
 #import "DemoAppDelegate.h"
 
 #import "CouchbaseLite.h"
-#import "CBLView+Internal.h"
-#import "CBLDatabase+Insertion.h"
-#import "CBLJSON.h"
-
 
 @interface RootViewController ()
 @property(nonatomic, strong)CBLDatabase *database;
-@property(nonatomic, strong)NSURL* remoteSyncURL;
 @end
 
 
 @implementation RootViewController
-
-
-@synthesize dataSource;
-@synthesize database;
-@synthesize tableView;
-@synthesize remoteSyncURL;
-
 
 #pragma mark - View lifecycle
 
@@ -142,7 +130,7 @@
     // into its value, so we can read them from there without having to load the document.
     // cell.textLabel.text is already set, thanks to setting up labelProperty above.
     NSDictionary* properties = row.value;
-    BOOL checked = [[properties objectForKey:@"check"] boolValue];
+    BOOL checked = [properties[@"check"] boolValue];
     cell.textLabel.textColor = checked ? [UIColor grayColor] : [UIColor blackColor];
     cell.imageView.image = [UIImage imageNamed:
             (checked ? @"list_area___checkbox___checked" : @"list_area___checkbox___unchecked")];
@@ -158,13 +146,13 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    CBLQueryRow *row = [self.dataSource rowAtIndex:indexPath.row];
+    CBLQueryRow *row = [self.dataSource rowAtIndex:(NSUInteger) indexPath.row];
     CBLDocument *doc = [row document];
 
     // Toggle the document's 'checked' property:
     NSMutableDictionary *docContent = [doc.properties mutableCopy];
     BOOL wasChecked = [[docContent valueForKey:@"check"] boolValue];
-    [docContent setObject:[NSNumber numberWithBool:!wasChecked] forKey:@"check"];
+    docContent[@"check"] = @(!wasChecked);
 
     // Save changes:
     NSError* error;
@@ -209,7 +197,7 @@
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
     if (buttonIndex == 0)
         return;
-    [dataSource deleteDocuments: self.checkedDocuments error: NULL];
+    [self.dataSource deleteDocuments: self.checkedDocuments error: NULL];
 }
 
 
@@ -238,10 +226,11 @@
     [addItemTextField setText:nil];
 
     // Create the new document's properties:
-	NSDictionary *inDocument = [NSDictionary dictionaryWithObjectsAndKeys:text, @"text",
-                                [NSNumber numberWithBool:NO], @"check",
-                                [CBLJSON JSONObjectWithDate: [NSDate date]], @"created_at",
-                                nil];
+	NSDictionary *inDocument = @{
+            @"text" : text,
+            @"check" : @NO,
+            @"created_at" : [CBLJSON JSONObjectWithDate:[NSDate date]]
+    };
 
     // Save the document:
     CBLDocument* doc = [database createDocument];
@@ -276,11 +265,11 @@
         _pull = [self.database createPullReplication: newRemoteURL];
         _push = [self.database createPushReplication: newRemoteURL];
         _pull.continuous = _push.continuous = YES;
-        NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
-        [nctr addObserver: self selector: @selector(replicationProgress:)
-                     name: kCBLReplicationChangeNotification object: _pull];
-        [nctr addObserver: self selector: @selector(replicationProgress:)
-                     name: kCBLReplicationChangeNotification object: _push];
+        NSNotificationCenter*notificationCenter = [NSNotificationCenter defaultCenter];
+        [notificationCenter addObserver:self selector:@selector(replicationProgress:)
+                                   name:kCBLReplicationChangeNotification object:_pull];
+        [notificationCenter addObserver:self selector:@selector(replicationProgress:)
+                                   name:kCBLReplicationChangeNotification object:_push];
         [_pull start];
         [_push start];
     }
