@@ -26,11 +26,9 @@
 @interface RootViewController : UIViewController <CBLUITableDelegate, UITextFieldDelegate>
 {
     CBLDatabase *database;
-    NSURL* remoteSyncURL;
     CBLReplication* _pull;
     CBLReplication* _push;
     
-    UITableView *tableView;
     IBOutlet UIProgressView *progress;
     BOOL showingSyncButton;
     IBOutlet UITextField *addItemTextField;
