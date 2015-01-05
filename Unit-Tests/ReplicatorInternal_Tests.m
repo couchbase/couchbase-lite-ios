@@ -292,7 +292,7 @@
                                       userInfo: nil]);
 
     Log(@"Now replicating with correct pinned cert...");
-    digest = @"dff813775424b4dd8e1032dda95eecb53e3c7726";
+    digest = @"c745fbfc03382125271daffc2e715a5b0172d1d8";
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil,
                                    @{kCBLReplicatorOption_PinnedCert: digest},
                                    nil);

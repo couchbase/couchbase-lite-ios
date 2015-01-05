@@ -778,10 +778,10 @@ static BOOL sOnlyTrustAnchorCerts;
     SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
     if (_pinnedCertData) {
         if (_pinnedCertData.length == CC_SHA1_DIGEST_LENGTH) {
-            NSData* certKeyDigest = MYGetCertificatePublicKeyDigest(cert);
-            if (![certKeyDigest isEqual: _pinnedCertData]) {
+            NSData* certDigest = MYGetCertificateDigest(cert);
+            if (![certDigest isEqual: _pinnedCertData]) {
                 Warn(@"%@: SSL cert digest %@ doesn't match pinnedCert %@",
-                     self, certKeyDigest, _pinnedCertData);
+                     self, certDigest, _pinnedCertData);
                 return NO;
             }
         } else {
