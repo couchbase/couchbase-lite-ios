@@ -58,6 +58,10 @@
     }
 
     CBLModel *model = [[self alloc] initWithDocument:nil orDatabase:database];
+    NSString *documentType = [database.modelFactory documentTypeForClass:[self class]];
+    if(documentType != nil){
+        model.type = documentType;
+    }
     return model;
 }
 

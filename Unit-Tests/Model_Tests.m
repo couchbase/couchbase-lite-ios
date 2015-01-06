@@ -226,6 +226,15 @@
                                             @"type": @"Dummy"}));
 }
 
+- (void)test00_AutoTypeProperty {
+    [db.modelFactory registerClass:[TestModel class] forDocumentType:@"Dummy"];
+    
+    TestModel *model = [TestModel modelForNewDocumentInDatabase:db];
+    AssertEqual(model.type, @"Dummy");
+    AssertEqual([model getValueOfProperty:@"type"], @"Dummy");
+    AssertEqual(model.propertiesToSave, (@{@"_id": model.document.documentID,
+                                           @"type": @"Dummy"}));
+}
 
 - (void) test00_DeleteProperty {
     NSArray* strings = @[@"fee", @"fie", @"foe", @"fum"];
