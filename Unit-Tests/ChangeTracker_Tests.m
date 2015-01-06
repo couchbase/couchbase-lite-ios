@@ -33,27 +33,30 @@
 - (void) test_Simple {
     for (CBLChangeTrackerMode mode = kOneShot; mode <= kLongPoll; ++mode) {
         Log(@"Mode = %d ...", mode);
-        NSURL* url = [self remoteTestDBURL: @"attach-test"];
+        NSURL* url = [self remoteTestDBURL: @"attach_test"];
         CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: mode conflicts: NO lastSequence: nil client: self];
-        NSArray* expected = $array($dict({@"seq", @3},
-                                         {@"id", @"038c536dc29ff0f4127705879700062c"},
-                                         {@"revs", $array(@"3-e715bcf1865f8283ab1f0ba76e7a92ba")}),
-                                   $dict({@"seq", @5},
+        NSArray* expected = $array($dict({@"seq", @1},
+                                         {@"id", @"_user/GUEST"},
+                                         {@"revs", $array()}),
+                                   $dict({@"seq", @2},
                                          {@"id", @"oneBigAttachment"},
                                          {@"revs", $array(@"2-7a9086d57651b86882d4806bad25903c")}),
-                                   $dict({@"seq", @8},
-                                         {@"id", @"text_attachment"},
-                                         {@"revs", $array(@"2-116dc4ccc934971ae14d8a8afb29b023")}),
-                                   $dict({@"seq", @11},
-                                         {@"id", @"weirdmeta"},
-                                         {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746")}),
-                                   $dict({@"seq", @12},
-                                         {@"id", @"extrameta"},
-                                         {@"revs", $array(@"1-11d28a27038a6cce1f08674ab3d67653")}),
-                                   $dict({@"seq", @13},
+                                   $dict({@"seq", @3},
+                                         {@"id", @"038c536dc29ff0f4127705879700062c"},
+                                         {@"revs", $array(@"3-e715bcf1865f8283ab1f0ba76e7a92ba")}),
+                                   $dict({@"seq", @4},
                                          {@"id", @"propertytest"},
                                          {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c")},
-                                         {@"deleted", @YES})
+                                         {@"deleted", @YES}),
+                                   $dict({@"seq", @5},
+                                         {@"id", @"extrameta"},
+                                         {@"revs", $array(@"1-11d28a27038a6cce1f08674ab3d67653")}),
+                                   $dict({@"seq", @6},
+                                         {@"id", @"weirdmeta"},
+                                         {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746")}),
+                                   $dict({@"seq", @7},
+                                         {@"id", @"text_attachment"},
+                                         {@"revs", $array(@"2-116dc4ccc934971ae14d8a8afb29b023")})
                                    );
         [self run: tracker expectingChanges: expected];
     }
@@ -98,24 +101,27 @@
 - (void) test_Auth {
     RequireTestCase(AuthFailure);
     // This database requires authentication to access at all.
-    NSURL* url = [self remoteTestDBURL: @"tdpuller_test2_auth"];
+    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!url) {
         Warn(@"Skipping test; no remote DB URL configured");
         return;
     }
 
-    AddTemporaryCredential(url, @"CouchDB", @"dummy", @"dummy");
+    AddTemporaryCredential(url, @"Couchbase Sync Gateway", @"test", @"abc123");
 
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
     NSArray* expected = $array($dict({@"seq", @1},
+                                     {@"id", @"_user/test"},
+                                     {@"revs", @[]}),
+                               $dict({@"seq", @2},
                                      {@"id", @"something"},
-                                     {@"revs", $array(@"1-31e4c2faf5cfcd56f4518c29367f9124")}) );
+                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
     [self run: tracker expectingChanges: expected];
 }
 
 
 - (void) test_AuthFailure {
-    NSURL* url = [self remoteTestDBURL: @"tdpuller_test2_auth"];
+    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!url) {
         Warn(@"Skipping test; no remote DB URL configured");
         return;
@@ -188,7 +194,7 @@
         return;
     }
     AssertNil(tracker.error);
-    AssertEqual(_changes, expectedChanges);
+    AssertEqualish(_changes, expectedChanges);
 }
 
 - (void) run: (CBLChangeTracker*)tracker expectingError: (NSError*)error {

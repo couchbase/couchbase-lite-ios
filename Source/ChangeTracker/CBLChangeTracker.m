@@ -23,6 +23,7 @@
 #import "CBLStatus.h"
 #import "CBLJSONReader.h"
 #import "MYURLUtils.h"
+#import "WebSocket.h"
 
 
 #define kDefaultHeartbeat (5 * 60.0)
@@ -239,18 +240,25 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 
 
 - (void) failedWithError: (NSError*)error {
-    // Map lower-level errors from CFStream to higher-level NSURLError ones:
     NSString* domain = error.domain;
     NSInteger code = error.code;
     if ($equal(domain, NSPOSIXErrorDomain)) {
+        // Map POSIX errors from CFStream to higher-level NSURLError ones:
         if (code == ECONNREFUSED)
             error = [NSError errorWithDomain: NSURLErrorDomain
                                         code: NSURLErrorCannotConnectToHost
                                     userInfo: error.userInfo];
     } else if ($equal(domain, NSURLErrorDomain)) {
+        // Map a lower-level auth failure to an HTTP status:
         if (code == NSURLErrorUserAuthenticationRequired)
             error = [NSError errorWithDomain: CBLHTTPErrorDomain
                                         code: kCBLStatusUnauthorized
+                                    userInfo: error.userInfo];
+    } else if ($equal(domain, WebSocketErrorDomain)) {
+        // Map HTTP errors in WebSocket domain to our HTTP domain:
+        if (code >= 300 && code <= 510)
+            error = [NSError errorWithDomain: CBLHTTPErrorDomain
+                                        code: code
                                     userInfo: error.userInfo];
     }
 

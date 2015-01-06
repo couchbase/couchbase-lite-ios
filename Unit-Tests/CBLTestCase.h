@@ -93,6 +93,6 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 @property (readonly) NSArray* remoteTestDBAnchorCerts;
 
 /** Deletes a remote database. Works only with CouchDB, not Sync Gateway. */
-- (void) deleteRemoteDB: (NSURL*)url;
+- (void) eraseRemoteDB: (NSURL*)url;
 
 @end

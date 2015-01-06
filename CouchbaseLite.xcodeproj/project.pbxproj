@@ -1082,6 +1082,7 @@
 		2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultiStreamWriter.m; sourceTree = "<group>"; };
 		276BA0AC17DD13FA00D367CB /* CBLParseDate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CBLParseDate.c; sourceTree = "<group>"; };
 		276BA0AF17DD222400D367CB /* CBLParseDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLParseDate.h; sourceTree = "<group>"; };
+		276E68331A5C4511006D6EEB /* Server */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Server; sourceTree = "<group>"; };
 		276F25F918A3386100A70679 /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDData.h; path = "WebSockets-Cocoa/Categories/DDData.h"; sourceTree = "<group>"; };
 		276F25FA18A3386100A70679 /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDData.m; path = "WebSockets-Cocoa/Categories/DDData.m"; sourceTree = "<group>"; };
 		27726AA81889835F00AE6931 /* CBLGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLGeometry.h; sourceTree = "<group>"; };
@@ -1674,6 +1675,7 @@
 				270035971A44FE890015B9F4 /* CBLTestCase.m */,
 				2700358E1A44E9270015B9F4 /* Info-UnitTests.plist */,
 				274E163119B90F420066CA5E /* TestData */,
+				276E68331A5C4511006D6EEB /* Server */,
 			);
 			name = "Unit Tests";
 			path = "Unit-Tests";

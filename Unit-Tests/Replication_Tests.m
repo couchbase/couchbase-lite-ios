@@ -20,24 +20,27 @@
 #define kCookieTestDBName @"cbl_replicator_cookies"
 
 
-@interface ReplicationObserverHelper : NSObject
-- (instancetype) initWithReplication: (CBLReplication*)repl;
-@property NSUInteger expectedChangesCount;
-@end
-
-
 @interface Replication_Tests : CBLTestCaseWithDB
 @end
 
 
 @implementation Replication_Tests
+{
+    CBLReplication* _currentReplication;
+    NSUInteger _expectedChangesCount;
+}
 
 
 - (void) runReplication: (CBLReplication*)repl expectedChangesCount: (unsigned)expectedChangesCount
 {
     Log(@"Waiting for %@ to finish...", repl);
-    ReplicationObserverHelper *observer = [[ReplicationObserverHelper alloc] initWithReplication: repl];
-    observer.expectedChangesCount = expectedChangesCount;
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(replChanged:)
+                                                 name: kCBLReplicationChangeNotification
+                                               object: repl];
+    _currentReplication = repl;
+    _expectedChangesCount = expectedChangesCount;
+
     bool started = false, done = false;
     [repl start];
     CFAbsoluteTime lastTime = 0;
@@ -60,7 +63,26 @@
     }
     Log(@"...replicator finished. mode=%u, progress %u/%u, error=%@",
         repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
-    observer = nil;
+
+    [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                    name: kCBLReplicationChangeNotification
+                                                  object: _currentReplication];
+    _currentReplication = nil;
+}
+
+
+- (void) replChanged: (NSNotification*)n {
+    Assert(n.object == _currentReplication, @"Wrong replication given to notification");
+    Log(@"Replication status=%u; completedChangesCount=%u; changesCount=%u",
+        _currentReplication.status, _currentReplication.completedChangesCount, _currentReplication.changesCount);
+    Assert(_currentReplication.completedChangesCount <= _currentReplication.changesCount, @"Invalid change counts");
+    if (_currentReplication.status == kCBLReplicationStopped) {
+        AssertEq(_currentReplication.completedChangesCount, _currentReplication.changesCount);
+        if (_expectedChangesCount > 0) {
+            AssertNil(_currentReplication.lastError);
+            AssertEq(_currentReplication.changesCount, _expectedChangesCount);
+        }
+    }
 }
 
 
@@ -124,7 +146,8 @@
         Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
         return;
     }
-    
+    [self eraseRemoteDB: remoteDbURL];
+
     CBLDocument* doc = [db createDocument];
     
     NSError* error;
@@ -190,7 +213,7 @@
         Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
         return;
     }
-    [self deleteRemoteDB: remoteDbURL];
+    [self eraseRemoteDB: remoteDbURL];
 
     Log(@"Creating %d documents...", kNDocuments);
     [db inTransaction:^BOOL{
@@ -207,7 +230,6 @@
 
     Log(@"Pushing...");
     CBLReplication* repl = [db createPushReplication: remoteDbURL];
-    repl.createTarget = YES;
     [repl start];
 
     NSSet* unpushed = repl.pendingDocumentIDs;
@@ -332,7 +354,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         Warn(@"Skipping test ReplicationWithEncoding (no remote test DB URL)");
         return;
     }
-    [self deleteRemoteDB: remoteDbURL];
+    [self eraseRemoteDB: remoteDbURL];
 
     Log(@"Creating document...");
     CBLDocument* doc = db[@"seekrit"];
@@ -459,46 +481,5 @@ static NSHTTPCookie* cookieForURL(NSURL* url, NSString* name) {
     AssertNil(cookie.value);
 }
 
-
-@end
-
-
-
-
-@implementation ReplicationObserverHelper
-{
-    CBLReplication* _repl;
-}
-
-@synthesize expectedChangesCount=_expectedChangesCount;
-
-- (instancetype) initWithReplication: (CBLReplication*)repl {
-    NSParameterAssert(repl != nil);
-    self = [super init];
-    if (self) {
-        _repl = repl;
-        [[NSNotificationCenter defaultCenter] addObserver: self
-                                                 selector: @selector(replChanged:)
-                                                     name: kCBLReplicationChangeNotification
-                                                   object: _repl];
-    }
-    return self;
-}
-
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-
-- (void) replChanged: (NSNotification*)n {
-    NSAssert(n.object == _repl, @"Wrong replication given to notification");
-    Log(@"Replication status=%u; completedChangesCount=%u; changesCount=%u",
-        _repl.status, _repl.completedChangesCount, _repl.changesCount);
-    NSAssert(_repl.completedChangesCount <= _repl.changesCount, @"Invalid change counts");
-    if (_repl.status == kCBLReplicationStopped) {
-        NSAssert(_repl.completedChangesCount == _repl.changesCount, @"Stopped with invalid change count");
-        if (_expectedChangesCount > 0)
-            NSAssert(_repl.changesCount == _expectedChangesCount, @"Stopped with invalid change count");
-    }
-}
 
 @end

@@ -16,7 +16,7 @@
 
 
 // Another hardcoded DB that needs to exist on the remote test server.
-#define kAttachTestDBName @"attach-test"
+#define kAttachTestDBName @"attach_test"
 
 
 @interface Multipart_Tests : CBLTestCaseWithDB

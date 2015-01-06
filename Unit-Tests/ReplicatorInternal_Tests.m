@@ -90,7 +90,7 @@
     // Push them to the remote:
     NSURL* remoteDB = [self remoteTestDBURL: kScratchDBName];
     if (remoteDB) {
-        [self deleteRemoteDB: remoteDB];
+        [self eraseRemoteDB: remoteDB];
         id lastSeq = replic8(db, remoteDB, YES, @"filter", nil, nil);
         AssertEqual(lastSeq, @"3");
         AssertEq(filterCalls, 2);
@@ -110,7 +110,7 @@
     }
 
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
-    AssertEqual(lastSeq, @2);
+    AssertEqual(lastSeq, @3);
     
     AssertEq(db.documentCount, 2u);
     AssertEq(db.lastSequenceNumber, 3);
@@ -141,7 +141,7 @@
     }
 
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
-    AssertEqual(lastSeq, @2);
+    AssertEqual(lastSeq, @3);
 
     AssertEq(db.documentCount, 2u);
     AssertEq(db.lastSequenceNumber, 3);
@@ -210,7 +210,7 @@
     AssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     id lastSeq = repl.lastSequence;
-    AssertEqual(lastSeq, @2);
+    AssertEqual(lastSeq, @3);
 
     Log(@"GOT DOCS: %@", [db getAllDocs:nil]);
 
@@ -226,7 +226,7 @@
 
 - (void) test_06_Puller_AuthFailure {
     RequireTestCase(Puller);
-    NSURL* remoteURL = [self remoteTestDBURL: @"tdpuller_test2_auth"];
+    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!remoteURL) {
         Warn(@"Skipping test CBL_Puller: no remote test DB URL");
         return;
@@ -329,6 +329,8 @@
                                                          userInfo: nil]);
 }
 
+
+#if 0 // FIX: Sync Gateway doesn't support this yet!
 - (void) test_11_Puller_DocIDs {
     RequireTestCase(Pusher); // CBL_Pusher populates the remote db that this test pulls from...
     
@@ -376,6 +378,7 @@
     Assert([doc.revID hasPrefix: @"2-"]);
     AssertEqual(doc[@"foo"], @1);
 }
+#endif
 
 
 - (void) test_12_Pusher_DocIDs {
@@ -392,7 +395,7 @@
     // Push them to the remote:
     NSURL* remoteDB = [self remoteTestDBURL: kScratchDBName];
     if (remoteDB) {
-        [self deleteRemoteDB: remoteDB];
+        [self eraseRemoteDB: remoteDB];
         replic8(db, remoteDB, YES, nil, (@[@"doc4", @"doc7"]), nil);
     } else {
         Warn(@"Skipping rest of test CBL_Pusher_DocIDs (no remote test DB URL)");
@@ -408,30 +411,6 @@
     AssertEq(rows.count, 2u);
     AssertEqual((rows[0])[@"id"], @"doc4");
     AssertEqual((rows[1])[@"id"], @"doc7");
-}
-
-
-- (void) test_13_Puller_FromCouchApp {
-    RequireTestCase(Puller);
-    NSURL* remote = [self remoteTestDBURL: kCouchAppDBName];
-    if (!remote) {
-        Warn(@"Skipping test: no remote URL");
-        return;
-    }
-
-    replic8(db, remote, NO, nil, nil, nil);
-
-    CBLStatus status;
-    CBL_Revision* rev = [db getDocumentWithID: @"_design/helloworld" revisionID: nil options: kCBLIncludeAttachments status: &status];
-    NSDictionary* attachments = rev[@"_attachments"];
-    AssertEq(attachments.count, 10u);
-    for (NSString* name in attachments) { 
-        NSDictionary* attachment = attachments[name];
-        NSData* data = [CBLBase64 decode: attachment[@"data"]];
-        Log(@"Attachment %@: %u bytes", name, (unsigned)data.length);
-        Assert(data);
-        AssertEq([data length], [attachment[@"length"] unsignedLongLongValue]);
-    }
 }
 
 
@@ -529,30 +508,6 @@
 
 
 #pragma mark - UTILITY FUNCTIONS
-
-
-- (void) deleteRemoteDB: (NSURL*)dbURL {
-    Log(@"Deleting %@", dbURL);
-    __block NSError* error = nil;
-    __block BOOL finished = NO;
-    CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"DELETE"
-                                                                     URL: dbURL
-                                                                    body: nil
-                                                          requestHeaders: nil
-                                                            onCompletion:
-        ^(id result, NSError *err) {
-            finished = YES;
-            error = err;
-        }
-                                ];
-    request.authorizer = self.authorizer;
-    [request start];
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
-    while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                                 beforeDate: timeout])
-        ;
-    Assert(error == nil || error.code == kCBLStatusNotFound, @"Couldn't delete remote: %@", error);
-}
 
 
 - (NSString*) replicate: (NSURL*)remote

@@ -12,7 +12,7 @@
 
 
 // The default remote server URL used by RemoteTestDBURL().
-#define kDefaultRemoteTestServer @"http://127.0.0.1:5984/"
+#define kDefaultRemoteTestServer @"http://127.0.0.1:4984/"
 
 
 extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
@@ -190,12 +190,18 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 }
 
 
-- (void) deleteRemoteDB: (NSURL*)dbURL {
+- (void) eraseRemoteDB: (NSURL*)dbURL {
     Log(@"Deleting %@", dbURL);
     __block NSError* error = nil;
     __block BOOL finished = NO;
-    CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"DELETE"
-                                                                     URL: dbURL
+    
+    // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
+    NSURLComponents* comp = [NSURLComponents componentsWithURL: dbURL resolvingAgainstBaseURL: YES];
+    comp.port = @4985;
+    comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
+
+    CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
+                                                                     URL: comp.URL
                                                                     body: nil
                                                           requestHeaders: nil
                                                             onCompletion:
@@ -210,7 +216,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                                  beforeDate: timeout])
         ;
-    Assert(error == nil || error.code == 404, @"Couldn't delete remote: %@", error);
+    Assert(error == nil, @"Couldn't delete remote: %@", error);
 }
 
 
