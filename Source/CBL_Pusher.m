@@ -81,7 +81,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
         _creatingTarget = NO;
-        if (error && error.code != kCBLStatusDuplicate) {
+        if (error && error.code != kCBLStatusDuplicate && error.code != kCBLStatusMethodNotAllowed) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
             [self stop]; // this is fatal: no db to push to!
