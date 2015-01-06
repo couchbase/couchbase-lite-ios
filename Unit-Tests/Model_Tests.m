@@ -63,6 +63,10 @@
 @end
 
 
+@interface CBL_TestAwakeInitModel : CBLModel
+@property BOOL didAwake;
+@end
+
 #pragma mark - TEST CASES:
 
 
@@ -525,9 +529,14 @@
 }
 
 
+- (void) test00_AwakeFromInitializer {
+    CBL_TestAwakeInitModel* model = [CBL_TestAwakeInitModel modelForNewDocumentInDatabase: db];
+    Assert(model.didAwake);
+    NSError *error;
+    Assert([model save: &error], @"Save of new model object failed: %@", error);
+}
+
 @end
-
-
 
 
 @implementation TestModel
@@ -611,3 +620,15 @@
 }
 
 @end
+
+@implementation CBL_TestAwakeInitModel
+
+@dynamic didAwake;
+
+- (void) awakeFromInitializer {
+    self.didAwake = YES;
+}
+
+@end
+
+
