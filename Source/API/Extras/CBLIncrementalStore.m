@@ -340,152 +340,164 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     return success;
 }
 
+- (void) saveRequest:(NSSet *)objects withContext:(NSManagedObjectContext *)context error:(NSError **)outError changedEntities:(NSMutableSet *)changedEntities
+{
+    for (NSManagedObject *object in objects) {
+        NSString* docID = [[object objectID] couchbaseLiteIDRepresentation];
+        CBLDocument *doc = [[self database] documentWithID: docID];
+        CBLUnsavedRevision *revision = [doc newRevision];
+        
+        NSMutableDictionary *properties = [revision properties];
+        
+        NSEntityDescription *entity = [object entity];
+        NSDictionary *propertiesByName = [entity propertiesByName];
+        NSString *entityName = [entity name];
+        [changedEntities addObject:entityName];
+        [properties setValue: entityName forKey: kCBLISTypeKey];
+        
+        for (NSString *property in propertiesByName) {
+            if( [kCBLISCurrentRevisionAttributeName isEqual:property] ) continue;
+            
+            id desc = [propertiesByName objectForKey:property];
+            
+            if ([desc isKindOfClass:[NSRelationshipDescription class]]) {
+                id relationshipDestination = [object valueForKey:property];
+                
+                if (relationshipDestination) {
+                    NSRelationshipDescription *rel = desc;
+                    if (![rel isToMany]) {
+                        NSManagedObjectID *objectID = [relationshipDestination valueForKey:@"objectID"];
+                        [properties setObject:[objectID couchbaseLiteIDRepresentation] forKey:property];
+                    }
+                }
+                else
+                    [properties removeObjectForKey: property];
+                continue;
+            }
+            
+            if( ! [desc isKindOfClass:[NSAttributeDescription class]] ) continue;
+            
+            NSAttributeDescription *attr = desc;
+            
+            if( [attr isTransient] ) continue;
+            
+            id value = [object valueForKey:property];
+            
+            if( CBLISIsNull( value ) ) {
+                if( [attr isStoredInExternalRecord] )
+                    [revision removeAttachmentNamed: [attr name]];
+                else
+                    [properties removeObjectForKey: property];
+                continue;
+            }
+            
+            if( [attr isStoredInExternalRecord] ) {
+                if (attr.valueTransformerName) {
+                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
+                    
+                    if( transformer )
+                    {
+                        value = [transformer transformedValue:value];
+                        if( CBLISIsNull( value ) )
+                           {
+                               [revision removeAttachmentNamed: [attr name]];
+                               continue;
+                           }
+                    }
+                }
+                
+                [revision setAttachmentNamed: [attr name] withContentType:@"application/binary" content:value];
+                continue;
+            }
+            
+            NSAttributeType attributeType = [attr attributeType];
+            
+            switch (attributeType) {
+                case NSInteger16AttributeType:
+                case NSInteger32AttributeType:
+                case NSInteger64AttributeType:
+                case NSDecimalAttributeType:
+                case NSDoubleAttributeType:
+                case NSFloatAttributeType:
+                case NSBooleanAttributeType:
+                case NSStringAttributeType:
+                    [properties setValue: value forKey: property];
+                    break;
+                case NSBinaryDataAttributeType:
+                    [properties setValue: [value base64EncodedStringWithOptions: 0] forKey: property];
+                    break;
+                case NSDateAttributeType:
+                    [properties setValue: [CBLJSON JSONObjectWithDate:value] forKey: property];
+                    break;
+                case NSTransformableAttributeType:
+                    if (attr.valueTransformerName) {
+                        NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
+                        
+                        if (!transformer) {
+                            NSLog(@"[info] value transformer for attribute %@ with name %@ not found", attr.name, attr.valueTransformerName);
+                            continue;
+                        }
+                        
+                        value = [transformer transformedValue:value];
+                        if( CBLISIsNull( value ) ) {
+                            [properties removeObjectForKey: property];
+                            continue;
+                        }
+                        
+                        [properties setValue: [value base64EncodedStringWithOptions: 0] forKey: property];
+                    }
+                    break;
+                default:
+                    NSLog(@"[info] unsupported attribute %@, type: %@ (%d)", attr.name, attr, (int)[attr attributeType]);
+                    break;
+            }
+        }
+        
+        if( ! [revision save: outError] ) break;
+        
+        [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
+        [object setPrimitiveValue: [doc currentRevisionID] forKey:kCBLISCurrentRevisionAttributeName];
+        [object didChangeValueForKey:kCBLISCurrentRevisionAttributeName];
+    }
+}
+
 - (id)executeRequest:(NSPersistentStoreRequest *)request withContext:(NSManagedObjectContext*)context error:(NSError **)outError
 {
     if (request.requestType == NSSaveRequestType) {
-        
         NSSaveChangesRequest *save = (NSSaveChangesRequest*)request;
-        
-#ifdef DEBUG_DETAILS
-        NSLog(@"[tdis] save request: ---------------- \n"
-              "[tdis]   inserted:%@\n"
-              "[tdis]   updated:%@\n"
-              "[tdis]   deleted:%@\n"
-              "[tdis]   locked:%@\n"
-              "[tids]---------------- ", [save insertedObjects], [save updatedObjects], [save deletedObjects], [save lockedObjects]);
-#endif
-        
-        // TODO: Check if using the CouchbaseLite transaction mechanism makes sense here.
-        
-        NSError *error;
-        
-        NSMutableSet *changedEntities = [NSMutableSet setWithCapacity:[save insertedObjects].count];
-        
-        // Objects that were inserted...
-        for (NSManagedObject *object in [save insertedObjects]) {
-            NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
+        [[self database] inTransaction:^BOOL() {
+            NSMutableSet *changedEntities = [NSMutableSet setWithCapacity:[save insertedObjects].count +[save updatedObjects].count +[save deletedObjects].count];
             
-            CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            CBLUnsavedRevision *revision = [doc newRevision];
-            [revision.properties setValuesForKeysWithDictionary:contents];
+            [self saveRequest: [save insertedObjects] withContext: context error: outError changedEntities: changedEntities ];
+            if( &outError == nil ) return FALSE;
             
+            [self saveRequest: [save updatedObjects] withContext: context error: outError changedEntities: changedEntities ];
+            if( &outError == nil ) return FALSE;
             
-            // add attachments
-            NSDictionary *propertyDesc = [object.entity propertiesByName];
-
-            for (NSString *property in propertyDesc) {
-                if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
-                
-                NSAttributeDescription *attr = [propertyDesc objectForKey:property];
-                if (![attr isKindOfClass:[NSAttributeDescription class]]) continue;
-                
-                if ([attr isTransient]) continue;
-                if ([attr attributeType] != NSBinaryDataAttributeType) continue;
-                
-                NSData *data = [object valueForKey:attr.name];
-                if (!data) continue;
-                
-                [revision setAttachmentNamed:attr.name withContentType:@"application/binary"
-                                     content:data];
-            }
-            
-            
-            if ([revision save:&error]) {
-                [changedEntities addObject:object.entity.name];
-                
-                [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
-                [object setPrimitiveValue:doc.currentRevisionID forKey:kCBLISCurrentRevisionAttributeName];
-                [object didChangeValueForKey:kCBLISCurrentRevisionAttributeName];
-                
-                [object willChangeValueForKey:@"objectID"];
-                [context obtainPermanentIDsForObjects:@[object] error:nil];
-                [object didChangeValueForKey:@"objectID"];
-                
-                [context refreshObject:object mergeChanges:YES];
-            } else {
-                if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                              code:CBLIncrementalStoreErrorPersistingInsertedObjectsFailed
-                                                          userInfo:@{
-                                                                     NSLocalizedFailureReasonErrorKey: @"Error persisting inserted objects",
-                                                                     NSUnderlyingErrorKey:error
-                                                                     }];
-            }
-        }
-        
-        // Objects that were updated...
-        for (NSManagedObject *object in [save updatedObjects]) {
-            NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
-            
-            CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            CBLUnsavedRevision *revision = [doc newRevision];
-            [revision.properties setValuesForKeysWithDictionary:contents];
-            
-            
-            // update attachments
-            NSDictionary *propertyDesc = [object.entity propertiesByName];
-            
-            for (NSString *property in [[object changedValues] allKeys]) {
-                if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
-                
-                NSAttributeDescription *attr = [propertyDesc objectForKey:property];
-                if (![attr isKindOfClass:[NSAttributeDescription class]]) continue;
-                
-                if ([attr isTransient]) continue;
-                if ([attr attributeType] != NSBinaryDataAttributeType) continue;
-                
-                NSData *data = [object valueForKey:attr.name];
-                
-                if (data) {
-                    [revision setAttachmentNamed:attr.name withContentType:@"application/binary"
-                                         content:data];
-                } else {
-                    [revision removeAttachmentNamed:attr.name];
+            for (NSManagedObject *object in [save deletedObjects]) {
+                CBLDocument *doc = [[self database] documentWithID:[[object objectID] couchbaseLiteIDRepresentation]];
+                if( [doc deleteDocument: outError ] ) {
+                    NSEntityDescription *entity = [object entity];
+                    NSString *entityName = [entity name];
+                    [changedEntities addObject: entityName];
                 }
+                else
+                    break;
             }
             
+            if( &outError == nil ) return FALSE;
             
-            if ([revision save:&error]) {
-                [changedEntities addObject:object.entity.name];
-                
-                [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
-                [object setPrimitiveValue:doc.currentRevisionID forKey:kCBLISCurrentRevisionAttributeName];
-                [object didChangeValueForKey:kCBLISCurrentRevisionAttributeName];
-                
-                [context refreshObject:object mergeChanges:YES];
-            } else {
-                if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                              code:CBLIncrementalStoreErrorPersistingUpdatedObjectsFailed
-                                                          userInfo:@{
-                                                                     NSLocalizedFailureReasonErrorKey: @"Error persisting updated object",
-                                                                     NSUnderlyingErrorKey:error
-                                                                     }];
-            }
+            for (NSString *entityName in changedEntities)
+                [self _purgeCacheForEntityName: entityName];
+            
+            if ( [[save insertedObjects] count ] )
+                [context obtainPermanentIDsForObjects: [[save insertedObjects] allObjects]  error: outError];
+            
+            return &outError != nil;
         }
-        
-        
-        // Objects that were deleted from the calling context...
-        for (NSManagedObject *object in [save deletedObjects]) {
-            // doesn't delete the document the normal way, but marks it as deleted to keep the type field needed for notifying Core Data.
-            CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
-            NSDictionary *contents = [self _propertiesForDeletingDocument:doc];
-            if (![doc putProperties:contents error:&error]) {
-                if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                              code:CBLIncrementalStoreErrorPersistingDeletedObjectsFailed
-                                                          userInfo:@{
-                                                                     NSLocalizedFailureReasonErrorKey: @"Error deleting object",
-                                                                     NSUnderlyingErrorKey:error
-                                                                     }];
-            }
-        }
-        
-        // clear cache for entities to get changes
-        for (NSString *entityName in changedEntities) {
-            [self _purgeCacheForEntityName:entityName];
-        }
+         ];
         
         return @[];
-        
-        
     } else if (request.requestType == NSFetchRequestType) {
         
         NSFetchRequest *fetch = (NSFetchRequest*)request;
@@ -602,18 +614,105 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 - (NSIncrementalStoreNode *)newValuesForObjectWithID:(NSManagedObjectID*)objectID withContext:(NSManagedObjectContext*)context error:(NSError**)outError
 {
-    CBLDocument* doc = [self.database documentWithID:[objectID couchbaseLiteIDRepresentation]];
+    CBLDocument* doc = [[self database] existingDocumentWithID: [objectID couchbaseLiteIDRepresentation]];
     
-    NSEntityDescription *entity = objectID.entity;
-    if (![entity.name isEqual:[doc propertyForKey:kCBLISTypeKey]]) {
-        entity = [NSEntityDescription entityForName:[doc propertyForKey:kCBLISTypeKey]
-                             inManagedObjectContext:context];
+    if( doc == nil ) return nil;
+    
+    CBLSavedRevision* currentRevision = [doc currentRevision];
+    NSDictionary* docProperties = [currentRevision properties];
+    
+    NSMutableDictionary* outValues = [[NSMutableDictionary alloc] initWithCapacity: [docProperties count]];
+    
+    NSEntityDescription *entity = [objectID entity];
+    NSDictionary *propertiesByName = [entity propertiesByName];
+    
+    NSArray* arrayAttachmentNames = [currentRevision attachmentNames];
+    
+    for( NSString *property in arrayAttachmentNames ) {
+        id desc = [propertiesByName objectForKey:property];
+        
+        if( desc == nil ) continue;
+        
+        if( ! [desc isKindOfClass:[NSAttributeDescription class]]) continue;
+        
+        NSAttributeDescription *attr = desc;
+        
+        if( ! [attr isStoredInExternalRecord] ) continue;
+        
+        CBLAttachment *attachment = [currentRevision attachmentNamed:property];
+        id value = attachment.content;
+        if( value == nil ) continue;
+        
+        if( [attr valueTransformerName] ) {
+            NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
+            
+            if( transformer )
+                value = [transformer reverseTransformedValue:value];
+        }
+        
+        [outValues setValue: value forKey: property];
     }
     
-    NSDictionary *values = [self _coreDataPropertiesOfDocumentWithID:doc.documentID properties:doc.properties withEntity:entity inContext:context];
-    NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID
-                                                                         withValues:values
-                                                                            version:1];
+    for (NSString *property in docProperties ) {
+        id desc = [propertiesByName objectForKey:property];
+        
+        if( desc == nil ) continue;
+        
+        if( ! [desc isKindOfClass:[NSAttributeDescription class]]) continue;
+        
+        id value = [docProperties objectForKey:property];
+        if( CBLISIsNull( value ) ) continue;
+        
+        NSAttributeDescription *attr = desc;
+        
+        switch ([attr attributeType]) {
+            case NSInteger16AttributeType:
+            case NSInteger32AttributeType:
+            case NSInteger64AttributeType:
+            case NSBooleanAttributeType:
+            case NSStringAttributeType:
+                [outValues setValue: value forKey: property];
+                break;
+            case NSDoubleAttributeType:
+            case NSFloatAttributeType:
+            case NSDecimalAttributeType:
+                [outValues setValue: [[NSDecimalNumber alloc] initWithDouble:[value doubleValue]] forKey: property];
+                break;
+            case NSBinaryDataAttributeType:
+            {
+                NSData *data = [[NSData alloc] initWithBase64EncodedString:value options:kNilOptions];
+                [outValues setValue: data forKey: property];
+            }
+                break;
+            case NSDateAttributeType:
+                [outValues setValue: [CBLJSON dateWithJSONObject:value] forKey: property];
+                break;
+                
+            case NSTransformableAttributeType:
+                if( [attr valueTransformerName] ) {
+                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName: [attr valueTransformerName]];
+                    
+                    if (!transformer) {
+                        NSLog(@"[info] value transformer for attribute %@ with name %@ not found", [attr name], [attr valueTransformerName]);
+                        continue;
+                    }
+                    
+                    NSData *data = [[NSData alloc] initWithBase64EncodedString:value options:kNilOptions];
+                    value = [transformer reverseTransformedValue:data];
+                    if( CBLISIsNull( value ) )
+                        continue;
+
+                    [outValues setValue: value forKey: property];
+                }
+                break;
+                
+            default:
+                NSLog(@"[info] unsupported attribute %@, type: %@ (%d)", attr.name, attr, (int)[attr attributeType]);
+                break;
+        }
+    }
+    
+    NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID withValues:outValues version:1];
     
     return node;
 }
@@ -653,17 +752,13 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     for (NSManagedObject *object in array) {
         // if you call -[NSManagedObjectContext obtainPermanentIDsForObjects:error:] yourself,
         // this can get called with already permanent ids which leads to mismatch between store.
-        if (![object.objectID isTemporaryID]) {
-            
-            [result addObject:object.objectID];
-            
-        } else {
-            
-            NSString *uuid = [[NSProcessInfo processInfo] globallyUniqueString];
-            NSManagedObjectID *objectID = [self newObjectIDForEntity:object.entity
-                                                     referenceObject:uuid];
+        NSManagedObjectID *objectID = [object objectID];
+        if (![objectID isTemporaryID])
             [result addObject:objectID];
-            
+        else {
+            NSString *uuid = [[NSProcessInfo processInfo] globallyUniqueString];
+            objectID = [self newObjectIDForEntity:[object entity] referenceObject:uuid];
+            [result addObject:objectID];
         }
     }
     return result;
@@ -842,7 +937,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     return array;
 }
 
-/** Creates a query for fetching the data for an entity filtered by a NSFetchRequest. Only takes a NSComparisonPredicate that references 
+/** Creates a query for fetching the data for an entity filtered by a NSFetchRequest. Only takes a NSComparisonPredicate that references
  * the requested entity into account.
  */
 - (CBLQuery*) _queryForFetchRequest:(NSFetchRequest*)fetch onEntity:(NSEntityDescription*)entity error:(NSError**)outError
@@ -980,230 +1075,6 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 {
     NSManagedObjectID *objectID = [self newObjectIDForEntity:entity referenceObject:couchID];
     return objectID;
-}
-
-- (id) _couchbaseLiteRepresentationOfManagedObject:(NSManagedObject*)object withCouchbaseLiteID:(BOOL)withID
-{
-    NSEntityDescription *desc = object.entity;
-    NSDictionary *propertyDesc = [desc propertiesByName];
-    
-    NSMutableDictionary *proxy = [NSMutableDictionary dictionary];
-    
-    [proxy setObject:desc.name
-              forKey:kCBLISTypeKey];
-    
-    if ([propertyDesc objectForKey:kCBLISCurrentRevisionAttributeName]) {
-        id rev = [object valueForKey:kCBLISCurrentRevisionAttributeName];
-        if (!CBLISIsNull(rev)) {
-            [proxy setObject:rev forKey:@"_rev"];
-        }
-    }
-    
-    if (withID) {
-        [proxy setObject:[object.objectID couchbaseLiteIDRepresentation] forKey:@"_id"];
-    }
-    
-    for (NSString *property in propertyDesc) {
-        if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
-        
-        id desc = [propertyDesc objectForKey:property];
-        
-        if ([desc isKindOfClass:[NSAttributeDescription class]]) {
-            NSAttributeDescription *attr = desc;
-            
-            if ([attr isTransient]) {
-                continue;
-            }
-            
-            // skip binary attributes to not load them into memory here. They are added as attachments
-            if ([attr attributeType] == NSBinaryDataAttributeType) {
-                continue;
-            }
-            
-            id value = [object valueForKey:property];
-            
-            if (value) {
-                
-                NSAttributeType attributeType = [attr attributeType];
-                
-                if (attr.valueTransformerName) {
-                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
-                    
-                    if (!transformer) {
-                        NSLog(@"[info] value transformer for attribute %@ with name %@ not found", attr.name, attr.valueTransformerName);
-                        continue;
-                    }
-                    
-                    value = [transformer transformedValue:value];
-                    
-                    Class transformedClass = [[transformer class] transformedValueClass];
-                    if (transformedClass == [NSString class]) {
-                        attributeType = NSStringAttributeType;
-                    } else if (transformedClass == [NSData class]) {
-                        value = [value base64EncodedStringWithOptions:0];
-                        attributeType = NSStringAttributeType;
-                    } else {
-                        NSLog(@"[info] unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
-                        continue;
-                    }
-                }
-                
-                switch (attributeType) {
-                    case NSInteger16AttributeType:
-                    case NSInteger32AttributeType:
-                    case NSInteger64AttributeType:
-                        value = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
-                        break;
-                    case NSDecimalAttributeType:
-                    case NSDoubleAttributeType:
-                    case NSFloatAttributeType:
-                        value = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
-                        break;
-                    case NSStringAttributeType:
-                        value = CBLISIsNull(value) ? @"" : value;
-                        break;
-                    case NSBooleanAttributeType:
-                        value = [NSNumber numberWithBool:CBLISIsNull(value) ? NO : [value boolValue]];
-                        break;
-                    case NSDateAttributeType:
-                        value = CBLISIsNull(value) ? nil : [CBLJSON JSONObjectWithDate:value];
-                        break;
-                        //                    case NSBinaryDataAttributeType: // handled above
-                    case NSUndefinedAttributeType:
-                        // intentionally do nothing
-                        break;
-                    default:
-                        NSLog(@"[info] unsupported attribute %@, type: %@ (%d)", attr.name, attr, (int)[attr attributeType]);
-                        break;
-                }
-                
-                if (value) {
-                    [proxy setObject:value forKey:property];
-                }
-                
-            }
-        } else if ([desc isKindOfClass:[NSRelationshipDescription class]]) {
-            NSRelationshipDescription *rel = desc;
-            
-            id relationshipDestination = [object valueForKey:property];
-            
-            if (relationshipDestination) {
-                if (![rel isToMany]) {
-                    NSManagedObjectID *objectID = [relationshipDestination valueForKey:@"objectID"];
-                    [proxy setObject:[objectID couchbaseLiteIDRepresentation] forKey:property];
-                }
-            }
-            
-        }
-    }
-    
-    return proxy;
-}
-
-- (NSDictionary*) _coreDataPropertiesOfDocumentWithID:(NSString*)documentID properties:(NSDictionary*)properties withEntity:(NSEntityDescription*)entity inContext:(NSManagedObjectContext*)context
-{
-    NSMutableDictionary *result = [NSMutableDictionary dictionaryWithCapacity:properties.count];
-    
-    NSDictionary *propertyDesc = [entity propertiesByName];
-    
-    for (NSString *property in propertyDesc) {
-        id desc = [propertyDesc objectForKey:property];
-        
-        if ([desc isKindOfClass:[NSAttributeDescription class]]) {
-            NSAttributeDescription *attr = desc;
-            
-            if ([attr isTransient]) {
-                continue;
-            }
-            
-            // handle binary attributes specially
-            if ([attr attributeType] == NSBinaryDataAttributeType) {
-                id value = [self _loadDataForAttachmentWithName:property ofDocumentWithID:documentID];
-                if (value) {
-                    [result setObject:value forKey:property];
-                }
-                
-                continue;
-            }
-            
-            id value = nil;
-            if ([kCBLISCurrentRevisionAttributeName isEqual:property]) {
-                value = [properties objectForKey:@"_rev"];
-            } else {
-                value = [properties objectForKey:property];
-            }
-            
-            if (value) {
-                
-                NSAttributeType attributeType = [attr attributeType];
-                
-                if (attr.valueTransformerName) {
-                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
-                    
-                    Class transformedClass = [[transformer class] transformedValueClass];
-                    if (transformedClass == [NSString class]) {
-                        value = [transformer reverseTransformedValue:value];
-                    } else if (transformedClass == [NSData class]) {
-                        value = [transformer reverseTransformedValue:[[NSData alloc]initWithBase64EncodedString:value options:0]];
-                    } else {
-                        NSLog(@"[info] unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
-                        continue;
-                    }
-                }
-                
-                switch (attributeType) {
-                    case NSInteger16AttributeType:
-                    case NSInteger32AttributeType:
-                    case NSInteger64AttributeType:
-                        value = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
-                        break;
-                    case NSDecimalAttributeType:
-                        value = [NSDecimalNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
-                        break;
-                    case NSDoubleAttributeType:
-                    case NSFloatAttributeType:
-                        value = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
-                        break;
-                    case NSStringAttributeType:
-                        value = CBLISIsNull(value) ? @"" : value;
-                        break;
-                    case NSBooleanAttributeType:
-                        value = [NSNumber numberWithBool:CBLISIsNull(value) ? NO : [value boolValue]];
-                        break;
-                    case NSDateAttributeType:
-                        value = CBLISIsNull(value) ? nil : [CBLJSON dateWithJSONObject:value];
-                        break;
-                    case NSTransformableAttributeType:
-                        // intentionally do nothing
-                        break;
-                    default:
-                        //NSAssert(NO, @"Unsupported attribute type");
-                        //break;
-                        NSLog(@"CBLIncrementalStore: unsupported attribute %@, type: %lu",  attr, (unsigned long)attributeType);
-                }
-                
-                if (value) {
-                    [result setObject:value forKey:property];
-                }
-                
-            }
-        } else if ([desc isKindOfClass:[NSRelationshipDescription class]]) {
-            NSRelationshipDescription *rel = desc;
-            
-            if (![rel isToMany]) { // only handle to-one relationships
-                id value = [properties objectForKey:property];
-                
-                if (!CBLISIsNull(value)) {
-                    NSManagedObjectID *destination = [self newObjectIDForEntity:rel.destinationEntity
-                                                                referenceObject:value];
-                    
-                    [result setObject:destination forKey:property];
-                }
-            }
-        }
-    }
-    
-    return result;
 }
 
 /** Convenience method to execute a CouchbaseLite query and build a telling NSError if it fails. */
@@ -1476,7 +1347,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         CBLRevision *rev = [doc revisionWithID:change.revisionID];
         
         BOOL deleted = rev.isDeletion;
-
+        
         NSDictionary *properties = [rev properties];
         
         NSString *type = [properties objectForKey:kCBLISTypeKey];
@@ -1490,7 +1361,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
         } else {
             [updatedObjectIDs addObject:objectID];
         }
-
+        
         [changedEntitites addObject:type];
     }
     
@@ -1575,7 +1446,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 #pragma mark -
 
-/** Returns the properties that are stored for deleting a document. Must contain at least "_rev" and "_deleted" = true for 
+/** Returns the properties that are stored for deleting a document. Must contain at least "_rev" and "_deleted" = true for
  * CouchbaseLite and kCBLISTypeKey for this store. Can be overridden if you need more for filtered syncing, for example.
  */
 - (NSDictionary*) _propertiesForDeletingDocument:(CBLDocument*)doc
