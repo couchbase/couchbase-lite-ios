@@ -459,6 +459,111 @@ static NSHTTPCookie* cookieForURL(NSURL* url, NSString* name) {
     AssertNil(cookie.value);
 }
 
+- (void) test11_ReplicationWithReplacedDatabase {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL) {
+        Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
+        return;
+    }
+    [self deleteRemoteDB: remoteDbURL];
+
+    // Create pre-populated database:
+    NSUInteger numPrePopulatedDocs = 100u;
+    Log(@"Creating %lu pre-populated documents...", (unsigned long)numPrePopulatedDocs);
+
+    NSError* error;
+    CBLDatabase* prePopulateDB = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: &error];
+    Assert(prePopulateDB, @"Couldn't create db: %@", error);
+
+    [prePopulateDB inTransaction:^BOOL{
+        for (int i = 1; i <= (int)numPrePopulatedDocs; i++) {
+            @autoreleasepool {
+                CBLDocument* doc = prePopulateDB[ $sprintf(@"foo-doc-%d", i) ];
+                NSError* error;
+                [doc putProperties: @{@"index": @(i), @"foo": $true} error: &error];
+                AssertNil(error);
+            }
+        }
+        return YES;
+    }];
+
+    Log(@"Pushing pre-populated documents ...");
+    CBLReplication* pusher = [prePopulateDB createPushReplication: remoteDbURL];
+    pusher.createTarget = YES;
+    [pusher start];
+    [self runReplication: pusher expectedChangesCount: (unsigned)numPrePopulatedDocs];
+    AssertEq(pusher.status, kCBLReplicationStopped);
+    AssertEq(pusher.completedChangesCount, numPrePopulatedDocs);
+    AssertEq(pusher.changesCount, numPrePopulatedDocs);
+
+    Log(@"Pulling pre-populated documents ...");
+    CBLReplication* puller = [prePopulateDB createPullReplication: remoteDbURL];
+    puller.createTarget = YES;
+    [puller start];
+    [self runReplication: puller expectedChangesCount: (unsigned)numPrePopulatedDocs];
+    AssertEq(puller.status, kCBLReplicationStopped);
+    AssertEq(puller.completedChangesCount, numPrePopulatedDocs);
+    AssertEq(puller.changesCount, numPrePopulatedDocs);
+
+    // Add some documents to the remote database:
+    CBLDatabase* anotherDB = [dbmgr createEmptyDatabaseNamed: @"anotherdb" error: &error];
+    Assert(anotherDB, @"Couldn't create db: %@", error);
+
+    NSUInteger numNonPrePopulatedDocs = 100u;
+    Log(@"Creating %lu non-pre-populated documents...", (unsigned long)numNonPrePopulatedDocs);
+    [anotherDB inTransaction:^BOOL{
+        for (int i = 1; i <= (int)numNonPrePopulatedDocs; i++) {
+            @autoreleasepool {
+                CBLDocument* doc = anotherDB[ $sprintf(@"bar-doc-%d", i) ];
+                NSError* error;
+                [doc putProperties: @{@"index": @(i), @"bar": $true} error: &error];
+                AssertNil(error);
+            }
+        }
+        return YES;
+    }];
+
+    Log(@"Pushing non-pre-populated documents ...");
+    pusher = [anotherDB createPushReplication: remoteDbURL];
+    pusher.createTarget = NO;
+    [pusher start];
+    [self runReplication: pusher expectedChangesCount: (unsigned)numNonPrePopulatedDocs];
+    AssertEq(pusher.status, kCBLReplicationStopped);
+    AssertEq(pusher.completedChangesCount, numNonPrePopulatedDocs);
+    AssertEq(pusher.changesCount, numNonPrePopulatedDocs);
+
+    // Import pre-populated database to a new database called 'importdb':
+    NSString* oldDbPath = [[dbmgr directory] stringByAppendingPathComponent: @"prepopdb.cblite"];
+    NSString* oldDbAttachmentPath = [[oldDbPath stringByDeletingPathExtension]
+                                     stringByAppendingString: @" attachments"];
+    [dbmgr replaceDatabaseNamed: @"importdb"
+               withDatabaseFile: oldDbPath
+                withAttachments: oldDbAttachmentPath
+                          error: &error];
+
+    CBLDatabase* importDb = [dbmgr databaseNamed:@"importdb" error:&error];
+    
+    pusher = [importDb createPushReplication: remoteDbURL];
+    pusher.createTarget = NO;
+    [pusher start];
+    [self runReplication: pusher expectedChangesCount: 0u];
+    AssertEq(pusher.status, kCBLReplicationStopped);
+    AssertEq(pusher.completedChangesCount, 0u);
+    AssertEq(pusher.changesCount, 0u);
+
+    puller = [importDb createPullReplication: remoteDbURL];
+    puller.createTarget = NO;
+    [puller start];
+    [self runReplication: puller expectedChangesCount:(unsigned)numNonPrePopulatedDocs];
+    AssertEq(puller.status, kCBLReplicationStopped);
+    AssertEq(puller.completedChangesCount, numNonPrePopulatedDocs);
+    AssertEq(puller.changesCount, numNonPrePopulatedDocs);
+
+    // Clean up, delete all created databases:
+    Assert([prePopulateDB deleteDatabase:&error], @"Couldn't delete db: %@", error);
+    Assert([anotherDB deleteDatabase:&error], @"Couldn't delete db: %@", error);
+    Assert([importDb deleteDatabase:&error], @"Couldn't delete db: %@", error);
+}
 
 @end
 

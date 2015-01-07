@@ -446,6 +446,7 @@ static CBLManager* sInstance;
                                                toPath: dstAttachmentsPath
                                                 error: outError]) &&
             [db open: outError] &&
+            [db createLocalCheckpointDocument] &&
             [db replaceUUIDs: outError];
 }
 
