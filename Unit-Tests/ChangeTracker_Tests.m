@@ -34,6 +34,8 @@
     for (CBLChangeTrackerMode mode = kOneShot; mode <= kLongPoll; ++mode) {
         Log(@"Mode = %d ...", mode);
         NSURL* url = [self remoteTestDBURL: @"attach_test"];
+        if (!url)
+            return;
         CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: mode conflicts: NO lastSequence: nil client: self];
         NSArray* expected = $array($dict({@"seq", @1},
                                          {@"id", @"_user/GUEST"},
@@ -65,7 +67,9 @@
 
 - (void) test_SSL_Part1_Failure {
     // First try without adding the custom root cert, which should fail:
-    NSURL* url = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    NSURL* url = [self remoteSSLTestDBURL: @"public"];
+    if (!url)
+        return;
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
     [self run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain
                                                              code:NSURLErrorServerCertificateUntrusted
@@ -74,14 +78,16 @@
 
 - (void) test_SSL_Part2_Success {
     // Now get a copy of the server's certificate:
-    NSData* certData = [NSData dataWithContentsOfFile: @"/Couchbase/sync_gateway/examples/ssl/cert.cer"];//FIX: Make portable
+    NSData* certData = [self contentsOfTestFile: @"SelfSigned.cer"]; // same as Server/cert.pem
     Assert(certData, @"Couldn't load cert file");
     SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
     Assert(cert, @"Couldn't parse cert");
 
     // Retry, registering the server cert as a root:
     self.anchorCerts = @[(__bridge id)cert];
-    NSURL* url = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    NSURL* url = [self remoteSSLTestDBURL: @"public"];
+    if (!url)
+        return;
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
     NSArray* expected = $array($dict({@"seq", @8},
                                      {@"id", @"foo"},
@@ -102,10 +108,8 @@
     RequireTestCase(AuthFailure);
     // This database requires authentication to access at all.
     NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
-    if (!url) {
-        Warn(@"Skipping test; no remote DB URL configured");
+    if (!url)
         return;
-    }
 
     AddTemporaryCredential(url, @"Couchbase Sync Gateway", @"test", @"abc123");
 
@@ -122,10 +126,8 @@
 
 - (void) test_AuthFailure {
     NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
-    if (!url) {
-        Warn(@"Skipping test; no remote DB URL configured");
+    if (!url)
         return;
-    }
     // Add a bogus user to make auth fail:
     NSString* urlStr = url.absoluteString;
     urlStr = [urlStr stringByReplacingOccurrencesOfString: @"http://" withString: @"http://bogus@"];

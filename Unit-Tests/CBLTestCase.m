@@ -13,6 +13,7 @@
 
 // The default remote server URL used by RemoteTestDBURL().
 #define kDefaultRemoteTestServer @"http://127.0.0.1:4984/"
+#define kDefaultRemoteSSLTestServer @"https://localhost:4994/"
 
 
 extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
@@ -149,8 +150,10 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     NSString* urlStr = [[NSProcessInfo processInfo] environment][@"CBL_TEST_SERVER"];
     if (!urlStr)
         urlStr = kDefaultRemoteTestServer;
-    else if (urlStr.length == 0)
+    else if (urlStr.length == 0) {
+        Assert(NO, @"Skipping test: no remote DB SSL URL configured");
         return nil;
+    }
     NSURL* server = [NSURL URLWithString: urlStr];
 
     static dispatch_once_t onceToken;
@@ -166,6 +169,19 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
         }
     });
 
+    return [server URLByAppendingPathComponent: dbName];
+}
+
+
+- (NSURL*) remoteSSLTestDBURL: (NSString*)dbName {
+    NSString* urlStr = [[NSProcessInfo processInfo] environment][@"CBL_SSL_TEST_SERVER"];
+    if (!urlStr)
+        urlStr = kDefaultRemoteSSLTestServer;
+    else if (urlStr.length == 0) {
+        Assert(NO, @"Skipping test: no remote DB SSL URL configured");
+        return nil;
+    }
+    NSURL* server = [NSURL URLWithString: urlStr];
     return [server URLByAppendingPathComponent: dbName];
 }
 

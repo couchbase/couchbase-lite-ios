@@ -65,10 +65,8 @@
     RequireTestCase(CBLMultipartReader_Types);
 
     NSString* urlStr = [self remoteTestDBURL: kAttachTestDBName].absoluteString;
-    if (!urlStr) {
-        Warn(@"Skipping test CBLMultipartDownloader (no remote test DB URL)");
+    if (!urlStr)
         return;
-    }
     urlStr = [urlStr stringByAppendingString: @"/oneBigAttachment?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;

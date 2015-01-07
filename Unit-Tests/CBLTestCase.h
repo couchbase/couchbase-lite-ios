@@ -86,6 +86,10 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 */
 - (NSURL*) remoteTestDBURL: (NSString*)dbName;
 
+/** Same as remoteTestDBURL: but with a server that uses/requires SSL.
+    The environment variable that controls this is CBL_SSL_TEST_SERVER. */
+- (NSURL*) remoteSSLTestDBURL: (NSString*)dbName;
+
 /** A CBLAuthorizer to use when talking to the remote test server. */
 @property (readonly) id<CBLAuthorizer> authorizer;
 

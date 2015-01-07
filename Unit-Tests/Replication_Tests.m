@@ -142,10 +142,8 @@
 - (void) test02_RunPushReplicationNoSendAttachmentForUpdatedRev {
     //RequireTestCase(CreateReplicators);
     NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
-    if (!remoteDbURL) {
-        Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
+    if (!remoteDbURL)
         return;
-    }
     [self eraseRemoteDB: remoteDbURL];
 
     CBLDocument* doc = [db createDocument];
@@ -209,10 +207,8 @@
 - (void) test03_RunPushReplication {
     RequireTestCase(CreateReplicators);
     NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
-    if (!remoteDbURL) {
-        Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
+    if (!remoteDbURL)
         return;
-    }
     [self eraseRemoteDB: remoteDbURL];
 
     Log(@"Creating %d documents...", kNDocuments);
@@ -250,10 +246,8 @@
 - (void) test04_RunPullReplication {
     RequireTestCase(RunPushReplication);
     NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
-    if (!remoteDbURL) {
-        Warn(@"Skipping test RunPullReplication (no remote test DB URL)");
+    if (!remoteDbURL)
         return;
-    }
 
     Log(@"Pulling...");
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
@@ -273,6 +267,8 @@
 - (void) test05_RunReplicationWithError {
     RequireTestCase(CreateReplicators);
     NSURL* const fakeRemoteURL = [self remoteTestDBURL: @"no-such-db"];
+    if (!fakeRemoteURL)
+        return;
 
     // Create a replication:
     CBLReplication* r1 = [db createPullReplication: fakeRemoteURL];
@@ -298,7 +294,9 @@
 
 - (void) test06_RunSSLReplication {
     RequireTestCase(RunPullReplication);
-    NSURL* remoteDbURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    NSURL* remoteDbURL = [self remoteSSLTestDBURL: @"public"];
+    if (!remoteDbURL)
+        return;
 
     Log(@"Pulling SSL...");
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
@@ -317,6 +315,8 @@
 
 - (void) test07_ReplicationChannelsProperty {
     NSURL* const fakeRemoteURL = [self remoteTestDBURL: @"no-such-db"];
+    if (!fakeRemoteURL)
+        return;
     CBLReplication* r1 = [db createPullReplication: fakeRemoteURL];
 
     AssertNil(r1.channels);
@@ -350,10 +350,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 - (void) test08_ReplicationWithEncoding {
     RequireTestCase(RunPushReplication);
     NSURL* remoteDbURL = [self remoteTestDBURL: kEncodedDBName];
-    if (!remoteDbURL) {
-        Warn(@"Skipping test ReplicationWithEncoding (no remote test DB URL)");
+    if (!remoteDbURL)
         return;
-    }
     [self eraseRemoteDB: remoteDbURL];
 
     Log(@"Creating document...");
@@ -399,10 +397,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 - (void) test09_ReplicationWithDecoding {
     RequireTestCase(ReplicationWithEncoding);
     NSURL* remoteDbURL = [self remoteTestDBURL: kEncodedDBName];
-    if (!remoteDbURL) {
-        Warn(@"Skipping test ReplicationWithDecoding (no remote test DB URL)");
+    if (!remoteDbURL)
         return;
-    }
 
     Log(@"Pulling...");
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
@@ -466,6 +462,8 @@ static NSHTTPCookie* cookieForURL(NSURL* url, NSString* name) {
 - (void) test10_ReplicationCookie {
     RequireTestCase(CreateReplicators);
     NSURL* remoteDbURL = [self remoteTestDBURL: kCookieTestDBName];
+    if (!remoteDbURL)
+        return;
 
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
     [repl setCookieNamed: @"UnitTestCookie"

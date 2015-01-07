@@ -89,25 +89,20 @@
     
     // Push them to the remote:
     NSURL* remoteDB = [self remoteTestDBURL: kScratchDBName];
-    if (remoteDB) {
-        [self eraseRemoteDB: remoteDB];
-        id lastSeq = replic8(db, remoteDB, YES, @"filter", nil, nil);
-        AssertEqual(lastSeq, @"3");
-        AssertEq(filterCalls, 2);
-    } else {
-        Warn(@"Skipping rest of test CBL_Pusher (no remote test DB URL)");
+    if (!remoteDB)
         return;
-    }
+    [self eraseRemoteDB: remoteDB];
+    id lastSeq = replic8(db, remoteDB, YES, @"filter", nil, nil);
+    AssertEqual(lastSeq, @"3");
+    AssertEq(filterCalls, 2);
 }
 
 
 - (void) test_02_Puller {
     RequireTestCase(01_Pusher);
     NSURL* remoteURL = [self remoteTestDBURL: kScratchDBName];
-    if (!remoteURL) {
-        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+    if (!remoteURL)
         return;
-    }
 
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
     AssertEqual(lastSeq, @3);
@@ -135,10 +130,8 @@
 - (void) test_03_Puller_Continuous {
     RequireTestCase(02_Puller);
     NSURL* remoteURL = [self remoteTestDBURL: kScratchDBName];
-    if (!remoteURL) {
-        Warn(@"Skipping test CBL_Puller: no remote URL");
+    if (!remoteURL)
         return;
-    }
 
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
     AssertEqual(lastSeq, @3);
@@ -166,11 +159,9 @@
 - (void) test_04_Puller_Continuous_PermanentError {
     RequireTestCase(Puller);
     NSURL* remoteURL = [self remoteTestDBURL: @"non_existent_remote_db"];
-    if (!remoteURL) {
-        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+    if (!remoteURL)
         return;
-    }
-    
+
     NSError* error = CBLStatusToNSError(kCBLStatusNotFound, nil);
     replic8Continuous(db, remoteURL, NO, nil, nil, error);
 }
@@ -180,10 +171,8 @@
     RequireTestCase(Pusher);
 
     NSURL* remote = [self remoteTestDBURL: kScratchDBName];
-    if (!remote) {
-        Warn(@"Skipping test: no remote URL");
+    if (!remote)
         return;
-    }
 
     [db setValidationNamed:@"OnlyDoc1" asBlock:^(CBLRevision *newRevision, id<CBLValidationContext> context) {
         if (![newRevision.document.documentID isEqualToString:@"doc1"]) {
@@ -227,10 +216,8 @@
 - (void) test_06_Puller_AuthFailure {
     RequireTestCase(Puller);
     NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
-    if (!remoteURL) {
-        Warn(@"Skipping test CBL_Puller: no remote test DB URL");
+    if (!remoteURL)
         return;
-    }
     // Add a bogus user to make auth fail:
     NSString* urlStr = remoteURL.absoluteString;
     urlStr = [urlStr stringByReplacingOccurrencesOfString: @"http://" withString: @"http://bogus@"];
@@ -243,7 +230,9 @@
 
 - (void) test_06_Puller_SSL {
     RequireTestCase(Pusher);
-    NSURL* remoteURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    NSURL* remoteURL = [self remoteSSLTestDBURL: @"public"];
+    if (!remoteURL)
+        return;
 
     Log(@"Replicating without root cert; should fail...");
     replic8(db, remoteURL, NO, nil, nil,
@@ -262,7 +251,9 @@
 
 - (void) test_07_Puller_SSL_Continuous {
     RequireTestCase(Pusher);
-    NSURL* remoteURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    NSURL* remoteURL = [self remoteSSLTestDBURL: @"public"];
+    if (!remoteURL)
+        return;
 
     Log(@"Replicating without root cert; should fail...");
     replic8Continuous(db, remoteURL, NO, nil, nil,
@@ -282,7 +273,9 @@
 
 - (void) test_08_Puller_SSL_Pinned {
     RequireTestCase(Puller_SSL_Continuous);
-    NSURL* remoteURL = [NSURL URLWithString: @"https://localhost:4994/public"];//FIX: Make portable
+    NSURL* remoteURL = [self remoteSSLTestDBURL: @"public"];
+    if (!remoteURL)
+        return;
 
     Log(@"Replicating with wrong pinned cert; should fail...");
     NSString* digest = @"123456789abcdef0123456789abcdef012345678";
@@ -394,13 +387,10 @@
 
     // Push them to the remote:
     NSURL* remoteDB = [self remoteTestDBURL: kScratchDBName];
-    if (remoteDB) {
-        [self eraseRemoteDB: remoteDB];
-        replic8(db, remoteDB, YES, nil, (@[@"doc4", @"doc7"]), nil);
-    } else {
-        Warn(@"Skipping rest of test CBL_Pusher_DocIDs (no remote test DB URL)");
+    if (!remoteDB)
         return;
-    }
+    [self eraseRemoteDB: remoteDB];
+    replic8(db, remoteDB, YES, nil, (@[@"doc4", @"doc7"]), nil);
 
     // Check _all_docs on the remote db and make sure only doc4 and doc7 were pushed:
     NSURL* allDocsURL = [remoteDB URLByAppendingPathComponent: @"_all_docs"];
