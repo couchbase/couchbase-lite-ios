@@ -160,6 +160,8 @@
                  docProperties: (NSDictionary*)docProperties;
 @end
 
+NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing
+
 
 @interface CBLReplication ()
 {

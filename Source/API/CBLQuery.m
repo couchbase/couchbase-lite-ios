@@ -26,9 +26,6 @@
 #define kDefaultLiveQueryUpdateInterval 0.5
 
 
-static NSString* keyPathForQueryRow(NSString* keyPath);
-
-
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
 - (NSArray*) queryViewNamed: (NSString*)viewName
@@ -479,7 +476,7 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
     sortDescriptors = [sortDescriptors my_map: ^id(id descOrString) {
         NSSortDescriptor* desc = [[self class] asNSSortDescriptor: descOrString];
         NSString* keyPath = desc.key;
-        NSString* newKeyPath = keyPathForQueryRow(keyPath);
+        NSString* newKeyPath = CBLKeyPathForQueryRow(keyPath);
         Assert(newKeyPath, @"Invalid CBLQueryRow key path \"%@\"", keyPath);
         if (newKeyPath == keyPath)
             return desc;
@@ -821,7 +818,7 @@ static inline BOOL isNonMagicValue(id value) {
 
 // Tweaks a key-path for use with a CBLQueryRow. The "key" and "value" properties can be
 // indexed as arrays using a syntax like "key[0]". (Yes, this is a hack.)
-static NSString* keyPathForQueryRow(NSString* keyPath) {
+NSString* CBLKeyPathForQueryRow(NSString* keyPath) {
     NSRange bracket = [keyPath rangeOfString: @"["];
     if (bracket.length == 0)
         return keyPath;
@@ -839,21 +836,4 @@ static NSString* keyPathForQueryRow(NSString* keyPath) {
     [newKey deleteCharactersInRange: NSMakeRange(indexPos+1, 1)]; // delete ']'
     [newKey deleteCharactersInRange: NSMakeRange(indexPos-1, 1)]; // delete '['
     return newKey;
-}
-
-
-TestCase(CBLQuery_KeyPathForQueryRow) {
-    AssertEqual(keyPathForQueryRow(@"value"),           @"value");
-    AssertEqual(keyPathForQueryRow(@"value.foo"),       @"value.foo");
-    AssertEqual(keyPathForQueryRow(@"value[0]"),        @"value0");
-    AssertEqual(keyPathForQueryRow(@"key[3].foo"),      @"key3.foo");
-    AssertEqual(keyPathForQueryRow(@"value[0].foo"),    @"value0.foo");
-    AssertEqual(keyPathForQueryRow(@"[2]"),             nil);
-    AssertEqual(keyPathForQueryRow(@"sequence[2]"),     nil);
-    AssertEqual(keyPathForQueryRow(@"value.addresses[2]"),nil);
-    AssertEqual(keyPathForQueryRow(@"value["),          nil);
-    AssertEqual(keyPathForQueryRow(@"value[0"),         nil);
-    AssertEqual(keyPathForQueryRow(@"value[0"),         nil);
-    AssertEqual(keyPathForQueryRow(@"value[0}"),        nil);
-    AssertEqual(keyPathForQueryRow(@"value[d]"),        nil);
 }

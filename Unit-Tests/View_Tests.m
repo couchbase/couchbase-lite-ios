@@ -611,4 +611,21 @@
 }
 
 
+- (void) test_CBLKeyPathForQueryRow {
+    AssertEqual(CBLKeyPathForQueryRow(@"value"),           @"value");
+    AssertEqual(CBLKeyPathForQueryRow(@"value.foo"),       @"value.foo");
+    AssertEqual(CBLKeyPathForQueryRow(@"value[0]"),        @"value0");
+    AssertEqual(CBLKeyPathForQueryRow(@"key[3].foo"),      @"key3.foo");
+    AssertEqual(CBLKeyPathForQueryRow(@"value[0].foo"),    @"value0.foo");
+    AssertEqual(CBLKeyPathForQueryRow(@"[2]"),             nil);
+    AssertEqual(CBLKeyPathForQueryRow(@"sequence[2]"),     nil);
+    AssertEqual(CBLKeyPathForQueryRow(@"value.addresses[2]"),nil);
+    AssertEqual(CBLKeyPathForQueryRow(@"value["),          nil);
+    AssertEqual(CBLKeyPathForQueryRow(@"value[0"),         nil);
+    AssertEqual(CBLKeyPathForQueryRow(@"value[0"),         nil);
+    AssertEqual(CBLKeyPathForQueryRow(@"value[0}"),        nil);
+    AssertEqual(CBLKeyPathForQueryRow(@"value[d]"),        nil);
+}
+
+
 @end

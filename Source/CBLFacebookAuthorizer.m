@@ -87,26 +87,3 @@ static NSMutableDictionary* sRegisteredTokens;
 }
 
 @end
-
-
-
-
-TestCase(CBLFacebookAuthorizer) {
-    NSString* token = @"pyrzqxgl";
-    NSURL* site = [NSURL URLWithString: @"https://example.com/database"];
-    NSString* email = @"jimbo@example.com";
-
-    CBLFacebookAuthorizer* auth = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
-
-    // Register and retrieve the sample token:
-    CAssert([CBLFacebookAuthorizer registerToken: token
-                                 forEmailAddress: email forSite: site]);
-    NSString* gotToken = [auth tokenForSite: site];
-    CAssertEqual(gotToken, token);
-
-    // Try a variant form of the URL:
-    gotToken = [auth tokenForSite: [NSURL URLWithString: @"HttpS://example.com:443/some/other/path"]];
-    CAssertEqual(gotToken, token);
-
-    CAssertEqual([auth loginParametersForSite: site], (@{@"access_token": token}));
-}
