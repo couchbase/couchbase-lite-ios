@@ -18,6 +18,7 @@
 #import "CBLDatabaseChange.h"
 #import "CBL_BlobStore.h"
 #import "CBLBase64.h"
+#import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "GTMNSData+zlib.h"
@@ -1089,6 +1090,25 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     AssertEq(result, YES);
     AssertNil(error);
     AssertEq([manager fileExistsAtPath: attachmentStorePath], NO);
+}
+
+
+- (void) test_Manager_Close {
+    CBLManager* mgr1 = [dbmgr copy];
+    CBLDatabase* testdb = [mgr1 databaseNamed: @"test_db" error: NULL];
+    Assert(testdb);
+
+    CBLManager* mgr2 = [dbmgr copy];
+    testdb = [mgr2 databaseNamed: @"test_db" error: NULL];
+    Assert(testdb);
+
+    [mgr1 close];
+    NSInteger count = [dbmgr.shared countForOpenedDatabase: @"test_db"];
+    AssertEq(count, 1);
+
+    [mgr2 close];
+    count = [dbmgr.shared countForOpenedDatabase: @"test_db"];
+    AssertEq(count, 0);
 }
 
 

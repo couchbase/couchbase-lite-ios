@@ -18,10 +18,10 @@
 #import "CBLChangeTracker.h"
 #import "CBLSocketChangeTracker.h"
 #import "CBLWebSocketChangeTracker.h"
+#import "CBLChangeMatcher.h"
 #import "CBLAuthorizer.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
-#import "CBLJSONReader.h"
 #import "MYURLUtils.h"
 #import "WebSocket.h"
 
@@ -30,14 +30,6 @@
 
 #define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
 #define kMaxRetryDelay (10*60.0)    // ...but will never get longer than this
-
-
-typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* revs, bool deleted);
-
-@interface CBLChangeMatcher : CBLJSONDictMatcher
-+ (CBLJSONMatcher*) changesFeedMatcherWithClient: (CBLChangeMatcherClient)client
-                               expectWrapperDict: (BOOL)expectWrapperDict;
-@end
 
 
 @interface CBLChangeTracker ()
@@ -336,125 +328,3 @@ typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* re
 
 
 @end
-
-
-
-
-#pragma mark - PARSER
-
-
-@interface CBLRevInfoMatcher : CBLJSONDictMatcher
-@end
-
-@implementation CBLRevInfoMatcher
-{
-    NSMutableArray* _revIDs;
-}
-
-- (id)initWithArray: (NSMutableArray*)revIDs
-{
-    self = [super init];
-    if (self) {
-        _revIDs = revIDs;
-    }
-    return self;
-}
-
-- (bool) matchValue:(id)value forKey:(NSString *)key {
-    if ([key isEqualToString: @"rev"])
-        [_revIDs addObject: value];
-    return true;
-}
-
-@end
-
-
-
-@implementation CBLChangeMatcher
-{
-    id _sequence;
-    NSString* _docID;
-    NSMutableArray* _revs;
-    bool _deleted;
-    CBLTemplateMatcher* _revsMatcher;
-    CBLChangeMatcherClient _client;
-}
-
-+ (CBLJSONMatcher*) changesFeedMatcherWithClient: (CBLChangeMatcherClient)client
-                               expectWrapperDict: (BOOL)expectWrapperDict
-{
-    CBLChangeMatcher* changeMatcher = [[CBLChangeMatcher alloc] initWithClient: client];
-    id template = @[changeMatcher];
-    if (expectWrapperDict)
-        template = @{@"results": template};
-    return [[CBLTemplateMatcher alloc] initWithTemplate: @[template]];
-}
-
-- (id) initWithClient: (CBLChangeMatcherClient)client {
-    self = [super init];
-    if (self) {
-        _client = client;
-        _revs = $marray();
-        CBLRevInfoMatcher* m = [[CBLRevInfoMatcher alloc] initWithArray: _revs];
-        _revsMatcher = [[CBLTemplateMatcher alloc] initWithTemplate: @[m]];
-    }
-    return self;
-}
-
-- (bool) matchValue:(id)value forKey:(NSString *)key {
-    if ([key isEqualToString: @"deleted"])
-        _deleted = [value boolValue];
-    else if ([key isEqualToString: @"seq"])
-        _sequence = value;
-    else if ([self.key isEqualToString: @"id"])
-        _docID = value;
-    return true;
-}
-
-- (CBLJSONArrayMatcher*) startArray {
-    if ([self.key isEqualToString: @"changes"])
-        return (CBLJSONArrayMatcher*)_revsMatcher;
-    return [super startArray];
-}
-
-- (id) end {
-    //Log(@"Ended ChangeMatcher with seq=%@, id='%@', deleted=%d, revs=%@", _sequence, _docID, _deleted, _revs);
-    if (!_sequence || !_docID)
-        return nil;
-    _client(_sequence, _docID, [_revs copy], _deleted);
-    _sequence = nil;
-    _docID = nil;
-    _deleted = false;
-    [_revs removeAllObjects];
-    return self;
-}
-
-@end
-
-
-TestCase(CBLChangeMatcher) {
-    NSString* kJSON = @"[\
-    {\"seq\":1,\"id\":\"1\",\"changes\":[{\"rev\":\"2-751ac4eebdc2a3a4044723eaeb0fc6bd\"}],\"deleted\":true},\
-    {\"seq\":2,\"id\":\"10\",\"changes\":[{\"rev\":\"2-566bffd5785eb2d7a79be8080b1dbabb\"}],\"deleted\":true},\
-    {\"seq\":3,\"id\":\"100\",\"changes\":[{\"rev\":\"2-ec2e4d1833099b8a131388b628fbefbf\"}],\"deleted\":true}]";
-    NSMutableArray* docIDs = $marray();
-    CBLJSONMatcher* root = [CBLChangeMatcher changesFeedMatcherWithClient:
-        ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
-            [docIDs addObject: docID];
-        } expectWrapperDict: NO];
-    CBLJSONReader* parser = [[CBLJSONReader alloc] initWithMatcher: root];
-    CAssert([parser parseData: [kJSON dataUsingEncoding: NSUTF8StringEncoding]]);
-    CAssert([parser finish]);
-    CAssertEqual(docIDs, (@[@"1", @"10", @"100"]));
-
-    kJSON = [NSString stringWithFormat: @"{\"results\":%@}", kJSON];
-    docIDs = $marray();
-    root = [CBLChangeMatcher changesFeedMatcherWithClient:
-                            ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
-                                [docIDs addObject: docID];
-                            } expectWrapperDict: YES];
-    parser = [[CBLJSONReader alloc] initWithMatcher: root];
-    CAssert([parser parseData: [kJSON dataUsingEncoding: NSUTF8StringEncoding]]);
-    CAssert([parser finish]);
-    CAssertEqual(docIDs, (@[@"1", @"10", @"100"]));
-}

@@ -106,24 +106,3 @@ BOOL CBLGeoJSONBoundingBox(NSDictionary* geoJSON, CBLGeoRect* outRect) {
     }
     return YES;
 }
-
-
-
-
-TestCase(CBLGeometry) {
-    // Convert a rect to GeoJSON and back:
-    CBLGeoRect rect = {{-115,-10}, {-90, 12}};
-    NSDictionary* json = @{@"type": @"Polygon",
-                           @"coordinates": @[ @[
-                                   @[@-115,@-10], @[@-115, @12], @[@-90, @12],
-                                   @[@-90, @-10], @[@-115, @-10]
-                                   ]]};
-    AssertEqual(CBLGeoRectToJSON(rect), json);
-
-    CBLGeoRect bbox;
-    Assert(CBLGeoJSONBoundingBox(json, &bbox));
-    Assert(CBLGeoRectEqual(bbox, rect));
-
-    Assert(CBLGeoCoordsStringToRect(@"-115,-10,-90,12.0",&bbox));
-    Assert(CBLGeoRectEqual(bbox, rect));
-}

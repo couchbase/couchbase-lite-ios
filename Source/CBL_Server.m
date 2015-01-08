@@ -174,10 +174,3 @@
 
 
 @end
-
-
-
-
-TestCase(CBL_Server) {
-    RequireTestCase(CBLManager);
-}

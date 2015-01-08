@@ -10,6 +10,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
+#import "CBLReachability.h"
 #import "CBL_Server.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Insertion.h"
@@ -495,6 +496,43 @@
     Assert([authorizer isKindOfClass: [CBLOAuth1Authorizer class]]);
 }
 
+
+- (void) test_Reachability {
+    NSArray* hostnames = @[@"couchbase.com", @"localhost", @"127.0.0.1", @"67.221.231.37",
+                           @"fsdfsaf.fsdfdaf.fsfddf"];
+    for (NSString* hostname in hostnames) {
+        Log(@"Test reachability of %@ ...", hostname);
+        CBLReachability* r = [[CBLReachability alloc] initWithHostName: hostname];
+        Assert(r);
+        Log(@"\tCBLReachability = %@", r);
+        AssertEqual(r.hostName, hostname);
+        __block BOOL resolved = NO;
+        
+        __weak CBLReachability *weakR = r;
+        r.onChange = ^{
+            CBLReachability *strongR = weakR;
+            Log(@"\tonChange: known=%d, flags=%x --> reachable=%d",
+                strongR.reachabilityKnown, strongR.reachabilityFlags, strongR.reachable);
+            Log(@"\tCBLReachability = %@", strongR);
+            if (strongR.reachabilityKnown)
+                resolved = YES;
+        };
+        Assert([r start]);
+
+        BOOL known = r.reachabilityKnown;
+        Log(@"\tInitially: known=%d, flags=%x --> reachable=%d",
+            known, r.reachabilityFlags, r.reachable);
+        if (!known) {
+            while (!resolved) {
+                Log(@"\twaiting...");
+                [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                         beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
+            }
+        }
+        [r stop];
+        Log(@"\t...done!");
+    }
+}
 
 
 #pragma mark - UTILITY FUNCTIONS

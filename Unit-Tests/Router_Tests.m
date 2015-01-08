@@ -14,6 +14,7 @@
 #import "CBLBase64.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
+#import "CBL_URLProtocol.h"
 
 
 @interface CBL_Router ()
@@ -920,6 +921,72 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     
     Assert(calledOnAccessCheck);
     Assert(router.response.status == 401);
+}
+
+
+- (void) test_URLProtocol_Registration {
+    [CBL_URLProtocol forgetServers];
+    AssertNil([CBL_URLProtocol serverForHostname: @"some.hostname"]);
+    
+    NSURL* url = [NSURL URLWithString: @"cbl://some.hostname/"];
+    NSURLRequest* req = [NSURLRequest requestWithURL: url];
+    NSHTTPURLResponse* response = nil;
+    NSError* error = nil;
+    NSData* body = [NSURLConnection sendSynchronousRequest: req 
+                                         returningResponse: &response 
+                                                     error: &error];
+    AssertNil(body);
+    AssertEqual(error.domain, NSURLErrorDomain);
+    AssertEq(error.code, NSURLErrorCannotFindHost);
+    
+    CBL_Server* server = [CBL_Server createEmptyAtTemporaryPath: @"CBL_URLProtocolTest"];
+    NSURL* root = [CBL_URLProtocol registerServer: server forHostname: @"some.hostname"];
+    AssertEqual(root, url);
+    AssertEq([CBL_URLProtocol serverForHostname: @"some.hostname"], server);
+    
+    body = [NSURLConnection sendSynchronousRequest: req 
+                                 returningResponse: &response 
+                                             error: &error];
+    Assert(body != nil);
+    Assert(response != nil);
+    AssertEq(response.statusCode, kCBLStatusOK);
+    
+    [server close];
+    [CBL_URLProtocol registerServer: nil forHostname: @"some.hostname"];
+    body = [NSURLConnection sendSynchronousRequest: req 
+                                 returningResponse: &response 
+                                             error: &error];
+    AssertNil(body);
+    AssertEqual(error.domain, NSURLErrorDomain);
+    AssertEq(error.code, NSURLErrorCannotFindHost);
+}
+
+
+- (void) test_URLProtocol {
+    RequireTestCase(CBL_Router);
+    [CBL_URLProtocol forgetServers];
+    CBL_Server* server = [CBL_Server createEmptyAtTemporaryPath: @"CBL_URLProtocolTest"];
+    [CBL_URLProtocol setServer: server];
+    
+    NSURL* url = [NSURL URLWithString: @"cbl:///"];
+    NSURLRequest* req = [NSURLRequest requestWithURL: url];
+    NSHTTPURLResponse* response = nil;
+    NSError* error = nil;
+    NSData* body = [NSURLConnection sendSynchronousRequest: req 
+                                         returningResponse: &response 
+                                                     error: &error];
+    NSString* bodyStr = [[NSString alloc] initWithData: body encoding: NSUTF8StringEncoding];
+    Log(@"Response = %@", response);
+    Log(@"MIME Type = %@", response.MIMEType);
+    Log(@"Body = %@", bodyStr);
+    Assert(body != nil);
+    Assert(response != nil);
+    AssertEq(response.statusCode, kCBLStatusOK);
+    AssertEqual((response.allHeaderFields)[@"Content-Type"], @"application/json");
+    Assert([bodyStr rangeOfString: @"\"CouchbaseLite\":\"Welcome\""].length > 0
+            || [bodyStr rangeOfString: @"\"CouchbaseLite\": \"Welcome\""].length > 0);
+    [server close];
+    [CBL_URLProtocol setServer: nil];
 }
 
 

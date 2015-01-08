@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLChangeTracker.h"
+#import "CBLChangeMatcher.h"
 #import "CBLAuthorizer.h"
 #import "CBLInternal.h"
 #import "MYURLUtils.h"
@@ -169,6 +170,34 @@
     CBLChangeTracker* tracker = [[[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self] autorelease];
     [self run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCannotConnectToHost userInfo: nil]];
 #endif
+}
+
+
+- (void) test_ChangeMatcher {
+    NSString* kJSON = @"[\
+    {\"seq\":1,\"id\":\"1\",\"changes\":[{\"rev\":\"2-751ac4eebdc2a3a4044723eaeb0fc6bd\"}],\"deleted\":true},\
+    {\"seq\":2,\"id\":\"10\",\"changes\":[{\"rev\":\"2-566bffd5785eb2d7a79be8080b1dbabb\"}],\"deleted\":true},\
+    {\"seq\":3,\"id\":\"100\",\"changes\":[{\"rev\":\"2-ec2e4d1833099b8a131388b628fbefbf\"}],\"deleted\":true}]";
+    NSMutableArray* docIDs = $marray();
+    CBLJSONMatcher* root = [CBLChangeMatcher changesFeedMatcherWithClient:
+        ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
+            [docIDs addObject: docID];
+        } expectWrapperDict: NO];
+    CBLJSONReader* parser = [[CBLJSONReader alloc] initWithMatcher: root];
+    Assert([parser parseData: [kJSON dataUsingEncoding: NSUTF8StringEncoding]]);
+    Assert([parser finish]);
+    AssertEqual(docIDs, (@[@"1", @"10", @"100"]));
+
+    kJSON = [NSString stringWithFormat: @"{\"results\":%@}", kJSON];
+    docIDs = $marray();
+    root = [CBLChangeMatcher changesFeedMatcherWithClient:
+                            ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
+                                [docIDs addObject: docID];
+                            } expectWrapperDict: YES];
+    parser = [[CBLJSONReader alloc] initWithMatcher: root];
+    Assert([parser parseData: [kJSON dataUsingEncoding: NSUTF8StringEncoding]]);
+    Assert([parser finish]);
+    AssertEqual(docIDs, (@[@"1", @"10", @"100"]));
 }
 
 

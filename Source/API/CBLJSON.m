@@ -245,29 +245,6 @@ static NSDateFormatter* getISO8601Formatter() {
 
 #if DEBUG
 
-TestCase(CBLJSON_Date) {
-    AssertAlmostEq([CBLJSON absoluteTimeWithJSONObject: @"2013-04-01T20:42:33Z"], 386541753.000, 1e-6);
-    NSDate* date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33Z"];
-    CAssertEq(date.timeIntervalSinceReferenceDate, 386541753.000);
-    date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33.388Z"];
-    AssertAlmostEq(date.timeIntervalSinceReferenceDate, 386541753.388, 1e-6);
-    CAssertNil([CBLJSON dateWithJSONObject: @""]);
-    CAssertNil([CBLJSON dateWithJSONObject: @"1347554643"]);
-    CAssertNil([CBLJSON dateWithJSONObject: @"20:42:33Z"]);
-
-    CAssert(isnan([CBLJSON absoluteTimeWithJSONObject: @""]));
-
-    CAssertEqual([CBLJSON JSONObjectWithDate: date], @"2013-04-01T20:42:33.388Z");
-
-    date = [CBLJSON dateWithJSONObject:@"2014-07-30T17:09:00.000+02:00"];
-
-    CAssertEqual([CBLJSON JSONObjectWithDate:date
-                                    timeZone:[NSTimeZone timeZoneForSecondsFromGMT:3600*2]], @"2014-07-30T17:09:00.000+02:00");
-
-    CAssertEqual([CBLJSON JSONObjectWithDate:date
-                                    timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]], @"2014-07-30T15:09:00.000Z");
-}
-
 
 #if 0 // this is a performance not a correctness test; and it's slow
 // Benchmark code adapted from https://gist.github.com/AnuragMishra/6474321

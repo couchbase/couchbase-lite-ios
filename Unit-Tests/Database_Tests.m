@@ -41,6 +41,17 @@
 }
 
 
+- (void) test00_ValidDatabaseNames {
+    for (NSString* name in @[@"f", @"foo123", @"foo/($12)", @"f+-_00/"])
+        Assert([CBLManager isValidDatabaseName: name]);
+    NSMutableString* longName = [@"long" mutableCopy];
+    while (longName.length < 240)
+        [longName appendString: @"!"];
+    for (NSString* name in @[@"", @"0", @"123foo", @"Foo", @"/etc/passwd", @"foo ", @"_foo", longName])
+        Assert(![CBLManager isValidDatabaseName: name], @"Db name '%@' should not be valid", name);
+}
+
+
 - (void)test01_ExcludedFromBackup {
     AssertEq(dbmgr.excludedFromBackup, NO);
     dbmgr.excludedFromBackup = YES;
