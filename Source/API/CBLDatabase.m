@@ -136,10 +136,14 @@ static void catchInBlock(void (^block)()) {
 
 
 - (void) doAsync: (void (^)())block {
+    block = ^{
+        if (_isOpen)
+            catchInBlock(block);
+    };
     if (_dispatchQueue)
-        dispatch_async(_dispatchQueue, ^{catchInBlock(block);});
+        dispatch_async(_dispatchQueue, block);
     else
-        MYOnThreadInModes(_thread, CBL_RunloopModes, NO, ^{catchInBlock(block);});
+        MYOnThreadInModes(_thread, CBL_RunloopModes, NO, block);
 }
 
 
@@ -152,12 +156,16 @@ static void catchInBlock(void (^block)()) {
 
 
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block {
+    block = ^{
+        if (_isOpen)
+            catchInBlock(block);
+    };
     if (_dispatchQueue) {
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC));
         dispatch_after(popTime, _dispatchQueue, block);
     } else {
         //FIX: This schedules on the _current_ thread, not _thread!
-        MYAfterDelay(delay, ^{catchInBlock(block);});
+        MYAfterDelay(delay, block);
     }
 }
 

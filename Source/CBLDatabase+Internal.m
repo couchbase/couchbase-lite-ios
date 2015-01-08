@@ -1590,21 +1590,10 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     return rows;
 }
 
-- (void) postNotification: (NSNotification*)notification
-{
-    if (_dispatchQueue) {
-        // NSNotificationQueue is runloop-based, doesn't work on dispatch queues. (#364)
-        [self doAsync:^{
-            [[NSNotificationCenter defaultCenter] postNotification: notification];
-        }];
-    } else {
-        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-        [queue enqueueNotification: notification
-                      postingStyle: NSPostASAP
-                      coalesceMask: NSNotificationNoCoalescing
-                          forModes: @[NSRunLoopCommonModes]];
-    }
-
+- (void) postNotification: (NSNotification*)notification {
+    [self doAsync:^{
+        [[NSNotificationCenter defaultCenter] postNotification: notification];
+    }];
 }
 
 
