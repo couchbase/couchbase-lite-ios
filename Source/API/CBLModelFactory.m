@@ -62,10 +62,13 @@ static CBLModelFactory* sSharedInstance;
     return klass;
 }
 
-- (NSString*)documentTypeForClass: (Class)modelClass {
+- (NSString*) documentTypeForClass: (Class)modelClass {
     NSArray *keys = [_typeDict allKeysForObject:modelClass];
-    if(keys.count == 0) return nil;
-    else return keys[0];
+    if (keys.count == 0)
+        keys = [_typeDict allKeysForObject: NSStringFromClass(modelClass)];
+    if (keys.count != 1)
+        return nil; // Either not found, or ambiguous (multiple types registered)
+    return keys.firstObject;
 }
 
 - (Class) classForDocument: (CBLDocument*)document {

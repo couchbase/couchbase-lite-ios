@@ -227,8 +227,20 @@
 }
 
 - (void)test00_AutoTypeProperty {
+    db.modelFactory = [[CBLModelFactory alloc] init];
     [db.modelFactory registerClass:[TestModel class] forDocumentType:@"Dummy"];
-    
+
+    TestModel *model = [TestModel modelForNewDocumentInDatabase:db];
+    AssertEqual(model.type, @"Dummy");
+    AssertEqual([model getValueOfProperty:@"type"], @"Dummy");
+    AssertEqual(model.propertiesToSave, (@{@"_id": model.document.documentID,
+                                           @"type": @"Dummy"}));
+}
+
+- (void)test00_AutoTypePropertyByString {
+    db.modelFactory = [[CBLModelFactory alloc] init];
+    [db.modelFactory registerClass: @"TestModel" forDocumentType:@"Dummy"];
+
     TestModel *model = [TestModel modelForNewDocumentInDatabase:db];
     AssertEqual(model.type, @"Dummy");
     AssertEqual([model getValueOfProperty:@"type"], @"Dummy");
