@@ -139,6 +139,9 @@
 		27411445179744F6005EF2F8 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		27411446179744FE005EF2F8 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		2741144717974555005EF2F8 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
+		27486F171A5F5E24008D94F0 /* libCBLJSViewCompiler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 792867BF178DE01900248AF0 /* libCBLJSViewCompiler.a */; };
+		27486F191A5F5E57008D94F0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
+		27486F1A1A5F5E74008D94F0 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */; };
 		274C391F149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */; };
@@ -222,10 +225,6 @@
 		2764D2BA1A5F054D005AC95A /* CBLChangeMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2B71A5F054D005AC95A /* CBLChangeMatcher.m */; };
 		2764D2BE1A5F10E5005AC95A /* JSViewCompiler_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2BB1A5F1063005AC95A /* JSViewCompiler_Tests.m */; };
 		2764D2BF1A5F10E6005AC95A /* JSViewCompiler_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2BB1A5F1063005AC95A /* JSViewCompiler_Tests.m */; };
-		2764D2C01A5F113D005AC95A /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F6D02A16B72885006E1576 /* CBLJSFunction.m */; };
-		2764D2C11A5F113D005AC95A /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4A51697995C00F0E50F /* CBLJSViewCompiler.m */; };
-		2764D2C21A5F113E005AC95A /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F6D02A16B72885006E1576 /* CBLJSFunction.m */; };
-		2764D2C31A5F113E005AC95A /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1E4A51697995C00F0E50F /* CBLJSViewCompiler.m */; };
 		2764D2C71A5F18A0005AC95A /* IncrementalStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2C41A5F1792005AC95A /* IncrementalStore_Tests.m */; };
 		2764D2C81A5F18A1005AC95A /* IncrementalStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2C41A5F1792005AC95A /* IncrementalStore_Tests.m */; };
 		2764D2C91A5F2412005AC95A /* CBLIncrementalStore.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */; };
@@ -667,7 +666,6 @@
 		27FFE20B17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27FFE20817BD28080040AE60 /* CBL_Replicator+Backgrounding.m */; };
 		792867C0178DE01900248AF0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		792867D0178DE03E00248AF0 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
-		792867D1178DE03E00248AF0 /* CBLJSViewCompiler_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CD178DE03E00248AF0 /* CBLJSViewCompiler_Test.m */; };
 		792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */; };
 		AA1776BC1857AE4D00CB01A3 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1776BB1857AE4D00CB01A3 /* CoreData.framework */; };
@@ -1405,13 +1403,9 @@
 		27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableURLRequest+Parameters.h"; sourceTree = "<group>"; };
 		27F128AF156AC1C8008465C2 /* CBLOAuth1Authorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLOAuth1Authorizer.h; sourceTree = "<group>"; };
 		27F128B0156AC1C9008465C2 /* CBLOAuth1Authorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLOAuth1Authorizer.m; sourceTree = "<group>"; };
-		27F1E4A41697995C00F0E50F /* CBLJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLJSViewCompiler.h; path = ../Source/CBLJSViewCompiler.h; sourceTree = "<group>"; };
-		27F1E4A51697995C00F0E50F /* CBLJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSViewCompiler.m; path = ../Source/CBLJSViewCompiler.m; sourceTree = "<group>"; };
 		27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		27F273C317039F3600CD2B85 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.md; path = Extras/README.md; sourceTree = "<group>"; };
 		27F5B175164D74EA00126D0D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		27F6D02916B72885006E1576 /* CBLJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLJSFunction.h; path = Source/CBLJSFunction.h; sourceTree = SOURCE_ROOT; };
-		27F6D02A16B72885006E1576 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLJSFunction.m; path = Source/CBLJSFunction.m; sourceTree = SOURCE_ROOT; };
 		27F87BE61558890600F0A416 /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLGNUstep.m; sourceTree = "<group>"; };
 		27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONValidator.h; sourceTree = "<group>"; };
@@ -1442,7 +1436,6 @@
 		792867C3178DE01900248AF0 /* CBLJSViewCompiler-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLJSViewCompiler-Prefix.pch"; path = "../Source/CBLJSViewCompiler-Prefix.pch"; sourceTree = "<group>"; };
 		792867CB178DE03E00248AF0 /* CBLJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSFunction.h; sourceTree = "<group>"; };
 		792867CC178DE03E00248AF0 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSFunction.m; sourceTree = "<group>"; };
-		792867CD178DE03E00248AF0 /* CBLJSViewCompiler_Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSViewCompiler_Test.m; sourceTree = "<group>"; };
 		792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSViewCompiler.h; sourceTree = "<group>"; };
 		792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSViewCompiler.m; sourceTree = "<group>"; };
 		792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRegisterJSViewCompiler.h; sourceTree = "<group>"; };
@@ -1461,6 +1454,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27486F171A5F5E24008D94F0 /* libCBLJSViewCompiler.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2309,10 +2303,6 @@
 				27C706D01488679500F0F099 /* ShoppingDemo.xib */,
 				27C706D11488679500F0F099 /* ShoppingItem.h */,
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
-				27F6D02916B72885006E1576 /* CBLJSFunction.h */,
-				27F6D02A16B72885006E1576 /* CBLJSFunction.m */,
-				27F1E4A41697995C00F0E50F /* CBLJSViewCompiler.h */,
-				27F1E4A51697995C00F0E50F /* CBLJSViewCompiler.m */,
 				27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */,
 			);
 			path = "Test-Mac";
@@ -2523,7 +2513,6 @@
 				792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */,
 				792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */,
 				792867CC178DE03E00248AF0 /* CBLJSFunction.m */,
-				792867CD178DE03E00248AF0 /* CBLJSViewCompiler_Test.m */,
 				792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */,
 				792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */,
 				792867C2178DE01900248AF0 /* Supporting Files */,
@@ -3263,7 +3252,6 @@
 			files = (
 				272AA85F1A49D4A9004B8D55 /* BlobStore_Tests.m in Sources */,
 				2764D2B11A5E240D005AC95A /* JSON_Tests.m in Sources */,
-				2764D2C11A5F113D005AC95A /* CBLJSViewCompiler.m in Sources */,
 				272AA8651A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
 				2700359A1A4500160015B9F4 /* View_Tests.m in Sources */,
 				272AA85C1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
@@ -3272,7 +3260,6 @@
 				2764D2BE1A5F10E5005AC95A /* JSViewCompiler_Tests.m in Sources */,
 				270035981A44FE890015B9F4 /* CBLTestCase.m in Sources */,
 				272AA8621A49D5B0004B8D55 /* ChangeTracker_Tests.m in Sources */,
-				2764D2C01A5F113D005AC95A /* CBLJSFunction.m in Sources */,
 				270035901A44E9270015B9F4 /* Database_Tests.m in Sources */,
 				2764D2B41A5E29EC005AC95A /* Misc_Tests.m in Sources */,
 				272AA81A1A48A023004B8D55 /* Model_Tests.m in Sources */,
@@ -3449,8 +3436,8 @@
 			files = (
 				272AA8601A49D4A9004B8D55 /* BlobStore_Tests.m in Sources */,
 				2764D2B21A5E240D005AC95A /* JSON_Tests.m in Sources */,
-				2764D2C31A5F113E005AC95A /* CBLJSViewCompiler.m in Sources */,
 				272AA8661A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
+				27486F191A5F5E57008D94F0 /* CBLJSViewCompiler.m in Sources */,
 				272AA84D1A48DA0F004B8D55 /* Database_Tests.m in Sources */,
 				272AA85D1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
 				27AF0A5A1A4A1F9D003F51D0 /* Router_Tests.m in Sources */,
@@ -3458,10 +3445,10 @@
 				2764D2BF1A5F10E6005AC95A /* JSViewCompiler_Tests.m in Sources */,
 				272AA8521A48DA0F004B8D55 /* CBLTestCase.m in Sources */,
 				272AA8631A49D5B0004B8D55 /* ChangeTracker_Tests.m in Sources */,
-				2764D2C21A5F113E005AC95A /* CBLJSFunction.m in Sources */,
 				272AA84E1A48DA0F004B8D55 /* Model_Tests.m in Sources */,
 				2764D2B51A5E29EC005AC95A /* Misc_Tests.m in Sources */,
 				272AA84F1A48DA0F004B8D55 /* QueryBuilder_Tests.m in Sources */,
+				27486F1A1A5F5E74008D94F0 /* CBLJSFunction.m in Sources */,
 				272AA8761A49EE5D004B8D55 /* Multipart_Tests.m in Sources */,
 				2764D2C91A5F2412005AC95A /* CBLIncrementalStore.m in Sources */,
 				272AA8501A48DA0F004B8D55 /* View_Tests.m in Sources */,
@@ -3710,7 +3697,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				792867D0178DE03E00248AF0 /* CBLJSFunction.m in Sources */,
-				792867D1178DE03E00248AF0 /* CBLJSViewCompiler_Test.m in Sources */,
 				792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */,
 				270489B017A0968E001E0FB9 /* CBLRegisterJSViewCompiler.m in Sources */,
 			);
