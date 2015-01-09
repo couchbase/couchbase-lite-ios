@@ -1608,13 +1608,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 }
 
-- (BOOL) createLocalCheckpointDocument {
+- (BOOL) createLocalCheckpointDocument: (NSError**)outError {
     NSDictionary* document = @{ kCBLDatabaseLocalCheckpoint_LocalUUID : self.privateUUID };
-    NSError* error;
-    BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: &error];
-    if (!result) {
-        Warn(@"CBLDatabase: Could not create local checkpoint document with an error: %@", error);
-    }
+    BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
+    if (!result)
+        Warn(@"CBLDatabase: Could not create a local checkpoint document with an error: %@", *outError);
     return result;
 }
 

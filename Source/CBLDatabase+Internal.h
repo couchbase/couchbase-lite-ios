@@ -248,7 +248,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     before importing. The old localUUID is used by replicators to get the local checkpoint 
     from the imported database in order to start replicating from from the current local 
     checkpoint of the imported database after importing. */
-- (BOOL) createLocalCheckpointDocument;
+- (BOOL) createLocalCheckpointDocument: (NSError**)outError;
 
 /** Returns local checkpoint document if it exists. Otherwise returns nil. */
 - (NSDictionary*) getLocalCheckpointDocument;
