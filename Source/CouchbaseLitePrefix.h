@@ -18,6 +18,11 @@
 extern "C" {
 #endif
 
+// Workaround for building with older (pre-iOS8/10.10) SDKs that don't define this macro:
+#ifndef NS_DESIGNATED_INITIALIZER
+#define NS_DESIGNATED_INITIALIZER
+#endif
+
 #import "CBLJSON.h"
 
 #import "CollectionUtils.h"

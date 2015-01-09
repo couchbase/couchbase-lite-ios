@@ -285,7 +285,6 @@
 		277EF49517F5F3CB00F7B7F7 /* CBLView+Querying.m in Sources */ = {isa = PBXBuildFile; fileRef = 277EF49317F5F3CB00F7B7F7 /* CBLView+Querying.m */; settings = {COMPILER_FLAGS = "-x objective-c++"; }; };
 		278097561A32817A00876DE6 /* MYAnonymousIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 278097541A32817A00876DE6 /* MYAnonymousIdentity.h */; };
 		278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
-		278097581A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		27821BB7148E7D6F0099B373 /* CBL_Replicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* CBL_Replicator.h */; };
 		27821BB8148E7D6F0099B373 /* CBL_Replicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* CBL_Replicator.m */; };
 		27821BBC149001B30099B373 /* CBLReplicator_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BBB149001B20099B373 /* CBLReplicator_Tests.m */; };
@@ -486,17 +485,12 @@
 		27E2E5CF159533A5005B9234 /* CBLReplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E2E5CC159533A5005B9234 /* CBLReplication.m */; };
 		27E2E61715993CB4005B9234 /* CBL_URLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* CBL_URLProtocol.m */; };
 		27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706471487584300F0F099 /* CBL_URLProtocol.m */; };
-		27E3475D19969A4200076EAC /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27E3475E19969A4200076EAC /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27E3476019969A4200076EAC /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27E3476119969AA400076EAC /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27E3476619994A1A00076EAC /* CBL_Database_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B15516164A118100DF5E2C /* CBL_Database_Tests.m */; };
 		27E3476719994A1A00076EAC /* CBL_View_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B77F1491E73400A817AD /* CBL_View_Tests.m */; };
 		27E3476919994A1A00076EAC /* CBLBlobStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE40414D88031009F3FA6 /* CBLBlobStore_Tests.m */; };
 		27E3476A19994A1A00076EAC /* CBLChangeTracker_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E7FAEA155D78C20025F93A /* CBLChangeTracker_Tests.m */; };
 		27E3476B19994A3600076EAC /* APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FF015D5C8250030122F /* APITests.m */; };
 		27E3476C19994A4900076EAC /* ReplicationAPITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A98EA317BEDC9900943528 /* ReplicationAPITests.m */; };
-		27E3477019994FB600076EAC /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E3476D19994F5A00076EAC /* Test_Assertions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27E3477119994FDA00076EAC /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E3476D19994F5A00076EAC /* Test_Assertions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27E347721999502400076EAC /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E3476D19994F5A00076EAC /* Test_Assertions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27E34773199950A800076EAC /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E3476D19994F5A00076EAC /* Test_Assertions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -3383,12 +3377,6 @@
 				27DA435F159230AC00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4361159230B200F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61715993CB4005B9234 /* CBL_URLProtocol.m in Sources */,
-				278097581A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */,
-				27E3475D19969A4200076EAC /* Logging.m in Sources */,
-				27E3477019994FB600076EAC /* Test_Assertions.m in Sources */,
-				27E3475E19969A4200076EAC /* CollectionUtils.m in Sources */,
-				27E3476119969AA400076EAC /* ExceptionUtils.m in Sources */,
-				27E3476019969A4200076EAC /* MYRegexUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3989,7 +3977,6 @@
 				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GENERATE_MASTER_OBJECT_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -3998,7 +3985,6 @@
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 				);
 				OTHER_LDFLAGS = "-ObjC";
-				PRELINK_FLAGS = "-objc_abi_version 2";
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -4011,6 +3997,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
 				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -4018,7 +4005,6 @@
 				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GENERATE_MASTER_OBJECT_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -4027,7 +4013,6 @@
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 				);
 				OTHER_LDFLAGS = "-ObjC";
-				PRELINK_FLAGS = "-objc_abi_version 2";
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -4332,9 +4317,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
 				GCC_WARN_SIGN_COMPARE = NO;
-				GENERATE_MASTER_OBJECT_FILE = YES;
 				OTHER_LDFLAGS = "-ObjC";
-				PRELINK_FLAGS = "-objc_abi_version 2";
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -4349,6 +4332,7 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
 				EXPORTED_SYMBOLS_FILE = Listener/CouchbaseLiteListener.exp;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -4358,9 +4342,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
 				GCC_WARN_SIGN_COMPARE = NO;
-				GENERATE_MASTER_OBJECT_FILE = YES;
 				OTHER_LDFLAGS = "-ObjC";
-				PRELINK_FLAGS = "-objc_abi_version 2";
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;

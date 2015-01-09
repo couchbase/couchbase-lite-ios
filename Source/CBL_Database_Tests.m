@@ -572,7 +572,6 @@ TestCase(CBL_Database_DuplicateRev) {
 #pragma mark - ATTACHMENTS:
 
 
-#if 0
 static void insertAttachment(CBLDatabase* db, NSData* blob,
                              SequenceNumber sequence,
                              NSString* name, NSString* type,
@@ -581,16 +580,17 @@ static void insertAttachment(CBLDatabase* db, NSData* blob,
                              unsigned revpos)
 {
     CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name contentType: type];
-    CAssert([db storeBlob: blob creatingKey: &attachment->blobKey], @"Failed to store blob");
+    CBLBlobKey blobKey = attachment.blobKey;
+    CAssert([db storeBlob: blob creatingKey: &blobKey], @"Failed to store blob");
     attachment->encoding = encoding;
     attachment->length = length;
     attachment->encodedLength = encodedLength;
     attachment->revpos = revpos;
     CAssertEq([db insertAttachment: attachment forSequence: sequence], kCBLStatusCreated);
-    [db _setNoAttachments: NO forSequence: sequence];
 }
 
 
+#if 0
 TestCase(CBL_Database_Attachments) {
     RequireTestCase(CBL_Database_CRUD);
     // Start with a fresh database in /tmp:
@@ -1194,6 +1194,38 @@ TestCase(CBL_Database_PurgeRevs) {
 }
 
 
+TestCase(CBL_Database_DeleteDatabase) {
+    CBLDatabase* db = createDB();
+
+    // Add a revision and an attachment:
+    CBL_Revision* rev1;
+    CBLStatus status;
+    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: $dict({@"foo", @1},
+                                                                               {@"bar", $false})]
+            prevRevisionID: nil allowConflict: NO status: &status];
+    CAssertEq(status, kCBLStatusCreated);
+
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    insertAttachment(db, attach1,
+                     rev1.sequence,
+                     @"attach", @"text/plain",
+                     kCBLAttachmentEncodingNone,
+                     attach1.length,
+                     0,
+                     rev1.generation);
+
+    NSFileManager* manager = [NSFileManager defaultManager];
+    NSString* attachmentStorePath = db.attachmentStorePath;
+    CAssertEq([manager fileExistsAtPath: attachmentStorePath], YES);
+
+    NSError* error;
+    BOOL result = [db deleteDatabase: &error];
+    CAssertEq(result, YES);
+    CAssertNil(error);
+    CAssertEq([manager fileExistsAtPath: attachmentStorePath], NO);
+}
+
+
 TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_CRUD);
     RequireTestCase(CBL_Database_DeterministicRevIDs);
@@ -1212,6 +1244,7 @@ TestCase(CBLDatabase) {
     RequireTestCase(CBL_Database_GarbageCollectAttachments);
 //    RequireTestCase(CBL_Database_EncodedAttachment);
     RequireTestCase(CBL_Database_StubOutAttachmentsBeforeRevPos);
+    RequireTestCase(CBL_Database_DeleteDatabase);
 }
 
 

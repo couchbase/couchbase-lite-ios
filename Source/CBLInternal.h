@@ -72,6 +72,7 @@
 // protected:
 @property (copy) NSString* lastSequence;
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
+@property (readonly) NSString* remoteCheckpointDocID;
 - (void) maybeCreateRemoteDB;
 - (void) beginReplicating;
 - (void) addToInbox: (CBL_Revision*)rev;

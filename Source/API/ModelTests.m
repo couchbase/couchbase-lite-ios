@@ -169,7 +169,7 @@ TestCase(API_ModelDynamicProperties) {
     NSData* data = [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding];
 
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
 
     TEST_PROPERTY(number, 1337);
     TEST_PROPERTY(number, INT_MAX);
@@ -230,8 +230,7 @@ TestCase(API_ModelDynamicProperties) {
 
 TestCase(API_ModelEncodableProperties) {
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
-
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
     CBL_TestSubModel* name = [[CBL_TestSubModel alloc] initWithFirstName: @"Jens" lastName: @"Alfke"];
     model.subModel = name;
     AssertEq(model.subModel, name);
@@ -243,7 +242,7 @@ TestCase(API_ModelEncodableProperties) {
 
     CBLDocument* doc2 = [db createDocument];
     CAssert([doc2 putProperties: props error: NULL]);
-    CBL_TestModel* model2 = [[CBL_TestModel alloc] initWithDocument: doc2];
+    CBL_TestModel* model2 = [CBL_TestModel modelForDocument: doc2];
     CAssertEqual(model2.subModel, name);
 
     // Now test array of encodable objects:
@@ -267,7 +266,7 @@ TestCase(API_ModelEncodableProperties) {
 
     CBLDocument* doc3 = [db createDocument];
     CAssert([doc3 putProperties: props error: NULL]);
-    CBL_TestModel* model3 = [[CBL_TestModel alloc] initWithDocument: doc3];
+    CBL_TestModel* model3 = [CBL_TestModel modelForDocument: doc3];
     Assert(!model3.needsSave);
     CAssertEqual(model3.subModels, subModels);
     CAssertEqual(model3.mutableSubModel, name3);
@@ -291,19 +290,19 @@ TestCase(API_ModelEncodablePropertiesNilValue) { // See #247
     RequireTestCase(API_ModelEncodableProperties);
     CBLDatabase* db = createEmptyDB();
 
-    CBL_TestModel* emptyModel = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* emptyModel = [CBL_TestModel modelForNewDocumentInDatabase: db];
     AssertNil(emptyModel.mutableSubModel);
     NSString* documentID = [[emptyModel document] documentID];
     emptyModel = nil;
     CBLDocument *document = [db documentWithID:documentID];
-    emptyModel = [[CBL_TestModel alloc] initWithDocument:document];
+    emptyModel = [CBL_TestModel modelForDocument:document];
     AssertNil(emptyModel.mutableSubModel);
 }
 
 
 TestCase(API_ModelTypeProperty) {
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
 
     model.type = @"Dummy";
     CAssertEqual(model.type, @"Dummy");
@@ -318,7 +317,7 @@ TestCase(API_ModelDeleteProperty) {
     NSData* data = [@"ASCII" dataUsingEncoding: NSUTF8StringEncoding];
 
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
     model.number = 1337;
     model.str = @"LEET";
     model.strings = strings;
@@ -350,7 +349,7 @@ TestCase(API_SaveModel) {
     CBLDatabase* db = createEmptyDB();
     NSString* modelID, *model2ID, *model3ID;
     {
-        CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+        CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
         CAssert(model != nil);
         CAssert(model.isNew);
         CAssert(!model.needsSave);
@@ -380,9 +379,9 @@ TestCase(API_SaveModel) {
                                                 @"decimal": @"12345.6789",
                                                 @"url": @"http://bogus"}));
 
-        CBL_TestModel* model2 = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+        CBL_TestModel* model2 = [CBL_TestModel modelForNewDocumentInDatabase: db];
         model2ID = model2.document.documentID;
-        CBL_TestModel* model3 = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+        CBL_TestModel* model3 = [CBL_TestModel modelForNewDocumentInDatabase: db];
         model3ID = model3.document.documentID;
 
         model.other = model3;
@@ -475,7 +474,7 @@ TestCase(API_SaveMutatedSubModel) {
     NSError* error;
     
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
     CBL_TTestMutableSubModel* submodel = [[CBL_TTestMutableSubModel alloc] initWithFirstName: @"Jens" lastName: @"Alfke"];
     model.mutableSubModel = submodel;
     NSMutableDictionary* props = [model.propertiesToSave mutableCopy];
@@ -507,7 +506,7 @@ TestCase(API_SaveMutatedSubModel) {
 
 TestCase(API_SaveModelWithNaNProperty) {
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
     model.doubly = sqrt(-1);
     NSError* error;
     [model save: &error];
@@ -518,7 +517,7 @@ TestCase(API_SaveModelWithNaNProperty) {
 TestCase(API_SaveMutableSubmodels) {
     NSError *error;
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
 
     CBL_TTestMutableSubModel* submodel = [[CBL_TTestMutableSubModel alloc]
                                           initWithFirstName: @"Phasin"
@@ -572,7 +571,7 @@ TestCase(API_ModelAttachments) {
     NSData* attData = [@"Ceci n'est pas une pipe." dataUsingEncoding: NSUTF8StringEncoding];
     CBLDocument* doc;
     {
-        CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+        CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
         doc = model.document;
         model.number = 1337;
         CAssert([model save: &error], @"Initial failed: %@", error);
@@ -610,7 +609,7 @@ TestCase(API_ModelAttachments) {
 TestCase(API_ModelPropertyObservation) {
     // For https://github.com/couchbase/couchbase-lite-ios/issues/244
     CBLDatabase* db = createEmptyDB();
-    CBL_TestModel* model = [[CBL_TestModel alloc] initWithNewDocumentInDatabase: db];
+    CBL_TestModel* model = [CBL_TestModel modelForNewDocumentInDatabase: db];
     id observer = [NSObject new];
 
     @autoreleasepool {

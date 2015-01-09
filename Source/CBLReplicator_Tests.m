@@ -437,6 +437,40 @@ TestCase(CBL_Puller_SSL_Pinned) {
     CAssertEq(db.lastSequenceNumber, 2);
 }
 
+TestCase(CBL_Pusher_NonExistentServer) {
+    RequireTestCase(CBL_Pusher);
+    NSURL* remoteURL = [NSURL URLWithString:@"http://mylocalhost/db"];
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Pusher_NonExistentServer: invalid URL");
+        return;
+    }
+
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PusherTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    replic8(db, remoteURL, YES, nil, nil, [NSError errorWithDomain: NSURLErrorDomain
+                                                              code: NSURLErrorCannotFindHost
+                                                          userInfo: nil]);
+}
+
+TestCase(CBL_Puller_NonExistentServer) {
+    RequireTestCase(CBL_Puller);
+    NSURL* remoteURL = [NSURL URLWithString:@"http://mylocalhost/db"];
+    if (!remoteURL) {
+        Warn(@"Skipping test CBL_Puller_NonExistentServer: invalid URL");
+        return;
+    }
+
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBL_PullerTest"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    replic8(db, remoteURL, NO, nil, nil, [NSError errorWithDomain: NSURLErrorDomain
+                                                             code: NSURLErrorCannotFindHost
+                                                         userInfo: nil]);
+}
+
 TestCase(CBL_Puller_DocIDs) {
     RequireTestCase(CBL_Pusher); // CBL_Pusher populates the remote db that this test pulls from...
     
@@ -721,6 +755,8 @@ TestCase(CBLReplicator) {
     RequireTestCase(CBL_Puller_AuthFailure);
     RequireTestCase(CBL_Puller_FromCouchApp);
     RequireTestCase(CBL_Puller_DatabaseValidation);
+    RequireTestCase(CBL_Pusher_NonExistentServer);
+    RequireTestCase(CBL_Puller_NonExistentServer);
     RequireTestCase(CBLPuller_DocIDs);
     RequireTestCase(ParseReplicatorProperties);
 }

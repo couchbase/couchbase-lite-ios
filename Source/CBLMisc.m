@@ -366,6 +366,32 @@ BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
     }
 }
 
+BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError) {
+    NSString* renamedPath = [NSTemporaryDirectory()
+                             stringByAppendingPathComponent: CBLCreateUUID()];
+    NSError* error;
+    BOOL result = [[NSFileManager defaultManager] moveItemAtPath: path
+                                                          toPath: renamedPath
+                                                           error: &error];
+    if (result) {
+        LogTo(CBLDatabase, @"Renamed file %@ to %@ for async delete", renamedPath, renamedPath);
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSError* outError;
+            if (CBLRemoveFileIfExists(renamedPath, &outError))
+                LogTo(CBLDatabase, @"Deleted file %@", renamedPath);
+            else
+                Warn(@"Failed to delete an attachment folder at %@ with error: %@",
+                     renamedPath, outError);
+        });
+        return YES;
+    } else if (CBLIsFileNotFoundError(error)) {
+        return YES;
+    } else {
+        if (outError)
+            *outError = error;
+        return NO;
+    }
+}
 
 NSString* CBLGetHostName() {
     // From <http://stackoverflow.com/a/16902907/98077>

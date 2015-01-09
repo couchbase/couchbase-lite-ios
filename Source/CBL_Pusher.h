@@ -26,6 +26,9 @@
 
 @property BOOL createTarget;
 
+/** Returns the database revisions that still need to be pushed to the server, or nil on error. */
+@property (readonly) CBL_RevisionList* unpushedRevisions;
+
 @end
 
 

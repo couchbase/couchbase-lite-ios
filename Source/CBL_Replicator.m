@@ -350,8 +350,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
     
     _online = NO;
-    if ([NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
-        [self goOnline];    // local-to-local replication
+    if (!_continuous || [NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
+        [self goOnline];    // non-continuous or local-to-local replication
     } else {
         // Start reachability checks. (This creates another ref cycle, because
         // the block also retains a ref to self. Cycle is also broken in -stopped.)

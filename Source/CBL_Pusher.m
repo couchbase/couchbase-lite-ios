@@ -95,6 +95,36 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 }
 
 
+- (CBL_RevisionList*) unpushedRevisions {
+    CBLDatabase* db = _db;
+    CBLFilterBlock filter = self.filter;
+    if (!filter && self.error)
+        return nil;
+
+    NSString* lastSequence = _lastSequence;
+    if (!lastSequence) {
+        // If replicator hasn't started yet (can happen if this method is being called from a
+        // CBLReplication), get local checkpoint from db:
+        NSString* checkpointID = self.remoteCheckpointDocID;
+        lastSequence = [db lastSequenceWithCheckpointID: checkpointID];
+    }
+
+    // Include conflicts so all conflicting revisions are replicated too
+    CBLChangesOptions options = kDefaultCBLChangesOptions;
+    options.includeConflicts = YES;
+
+    CBLStatus status;
+    CBL_RevisionList* revs = [db changesSinceSequence: [lastSequence longLongValue]
+                                              options: &options
+                                               filter: filter
+                                               params: _filterParameters
+                                               status: &status];
+    if (!revs)
+        self.error = CBLStatusToNSError(status, nil);
+    return revs;
+}
+
+
 - (void) beginReplicating {
     // If we're still waiting to create the remote db, do nothing now. (This method will be
     // re-invoked after that request finishes; see -maybeCreateRemoteDB above.)
@@ -104,28 +134,19 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     _pendingSequences = [NSMutableIndexSet indexSet];
     _maxPendingSequence = self.lastSequence.longLongValue;
     
-    CBLFilterBlock filter = self.filter;
-    if (!filter && self.error)
-        return;
-
-    // Include conflicts so all conflicting revisions are replicated too
-    CBLChangesOptions options = kDefaultCBLChangesOptions;
-    options.includeConflicts = YES;
     // Process existing changes since the last push:
-    CBLDatabase* db = _db;
-    CBLStatus status;
-    [self addRevsToInbox: [db changesSinceSequence: [_lastSequence longLongValue]
-                                           options: &options
-                                            filter: filter
-                                            params: _filterParameters
-                                            status: &status]];
+    CBL_RevisionList* unpushedRevisions = self.unpushedRevisions;
+    if (!unpushedRevisions)
+        return;
+    [self addRevsToInbox: unpushedRevisions];
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
     if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
-                                                     name: CBL_DatabaseChangesNotification object: db];
+                                                     name: CBL_DatabaseChangesNotification
+                                                   object: _db];
     }
 
 #ifdef GNUSTEP    // TODO: Multipart upload on GNUstep
