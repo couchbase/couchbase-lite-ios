@@ -1112,4 +1112,24 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
+static CBL_Revision* mkrev(NSString* revID) {
+    return [[CBL_Revision alloc] initWithDocID: @"docid" revID: revID deleted: NO];
+}
+
+- (void) test_MakeRevisionHistoryDict {
+    NSArray* revs = @[mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def")];
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+                 $dict({@"ids", @[@"jkl", @"ghi", @"def"]},
+                       {@"start", @4}));
+
+    revs = @[mkrev(@"4-jkl"), mkrev(@"2-def")];
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+                 $dict({@"ids", @[@"4-jkl", @"2-def"]}));
+
+    revs = @[mkrev(@"12345"), mkrev(@"6789")];
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+                 $dict({@"ids", @[@"12345", @"6789"]}));
+}
+
+
 @end

@@ -190,6 +190,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
 
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history; // exposed for testing
+
 /** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as far as any of the revision ID strings in that array. */
 - (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
                        startingFromAnyOf: (NSArray*)ancestorRevIDs;

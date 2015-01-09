@@ -497,6 +497,16 @@
 }
 
 
+- (void) test_FindCommonAncestor {
+    NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
+    CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
+    AssertEq(CBLFindCommonAncestor(rev, @[]), 0);
+    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway", @"1-nope"]), 0);
+    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway", @"1-first"]), 1);
+    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway", @"2-second", @"1-first"]), 2);
+}
+
+
 - (void) test_Reachability {
     NSArray* hostnames = @[@"couchbase.com", @"localhost", @"127.0.0.1", @"67.221.231.37",
                            @"fsdfsaf.fsdfdaf.fsfddf"];
