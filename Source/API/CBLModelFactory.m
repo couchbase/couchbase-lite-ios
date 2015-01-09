@@ -62,6 +62,11 @@ static CBLModelFactory* sSharedInstance;
     return klass;
 }
 
+- (NSString*)documentTypeForClass: (Class)modelClass {
+    NSArray *keys = [_typeDict allKeysForObject:modelClass];
+    if(keys.count == 0) return nil;
+    else return keys[0];
+}
 
 - (Class) classForDocument: (CBLDocument*)document {
     NSString* type = [document propertyForKey: @"type"];

@@ -37,6 +37,9 @@
 /** Looks up the CBLModel subclass that's been registered for a document type. */
 - (Class) classForDocumentType: (NSString*)type                         __attribute__((nonnull));
 
+/** Looks up the document type for which the argument class has ben registered. */
+- (NSString*)documentTypeForClass: (Class)modelClass                    __attribute__((nonnull));
+
 @end
 
 
