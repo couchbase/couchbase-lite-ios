@@ -141,7 +141,7 @@
 
 - (void) test_CBLWebSocketChangeTracker_Auth {
     // This Sync Gateway database requires authentication to access at all.
-    NSURL* url = $url(@"http://localhost:4984/cbl_auth_test"); //TEMP
+    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!url) {
         Warn(@"Skipping test; no remote DB URL configured");
         return;
@@ -284,6 +284,16 @@
     }
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified)
         return YES;
+
+    // The hostname in our cheesy self-signed cert is 'localhost', so if the server isn't actually
+    // the same device running the test, SecTrust will report a host-mismatch error.
+    if (![host isEqualToString: @"localhost"]) {
+        NSDictionary* result = CFBridgingRelease(SecTrustCopyResult(trust));
+        NSDictionary* details = result[@"TrustResultDetails"];
+        if ([details isEqual: @[@{@"SSLHostname": @NO}]])
+            return YES;
+    }
+
     CBLWarnUntrustedCert(@"", trust);
     return NO;
 }

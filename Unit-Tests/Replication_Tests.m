@@ -307,6 +307,8 @@
     [CBLReplication setAnchorCerts: nil onlyThese: NO];
 
     AssertNil(repl.lastError);
+    if (repl.lastError)
+        return;
     SecCertificateRef gotServerCert = repl.serverCertificate;
     Assert(gotServerCert);
     Assert(CFEqual(gotServerCert, (SecCertificateRef)serverCerts[0]));
