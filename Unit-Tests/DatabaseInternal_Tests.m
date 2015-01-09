@@ -549,22 +549,18 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 
 #pragma mark - ATTACHMENTS:
 
-#if 0
-static void insertAttachment(DatabaseInternal_Tests* self,
-                             NSData* blob,
-                             SequenceNumber sequence,
-                             NSString* name, NSString* type,
-                             CBLAttachmentEncoding encoding,
-                             UInt64 length, UInt64 encodedLength,
-                             unsigned revpos)
-{
-    CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name contentType: type];
-    CBLBlobKey blobKey = attachment.blobKey;
-    Assert([self->db storeBlob: blob creatingKey: &blobKey], @"Failed to store blob");
-    attachment->encoding = encoding;
-    attachment->length = length;
-    attachment->encodedLength = encodedLength;
-    AssertEq([self->db insertAttachment: attachment forSequence: sequence], kCBLStatusCreated);
+
+static NSDictionary* attachmentsDict(NSData* data, NSString* name, NSString* type, BOOL gzipped) {
+    if (gzipped)
+        data = [NSData gtm_dataByGzippingData: data];
+    NSMutableDictionary* att = $mdict({@"content_type", type}, {@"data", data});
+    if (gzipped)
+        att[@"encoding"] = @"gzip";
+    return $dict({name, att});
+}
+
+static NSDictionary* attachmentsStub(NSString* name) {
+    return @{name: @{@"stub": $true}};
 }
 
 
@@ -576,24 +572,18 @@ static void insertAttachment(DatabaseInternal_Tests* self,
     AssertEqual(attachments.allKeys, @[]);
     
     // Add a revision and an attachment to it:
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSDictionary* props = @{@"foo": @1,
+                            @"bar": $false,
+                            @"_attachments": attachmentsDict(attach1, @"attach", @"text/plain", NO)};
     CBL_Revision* rev1;
     CBLStatus status;
-    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties:$dict({@"foo", @1},
-                                                                       {@"bar", $false})]
+    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
             prevRevisionID: nil allowConflict: NO status: &status];
     AssertEq(status, kCBLStatusCreated);
 
-    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
-    insertAttachment(self, attach1,
-                     rev1.sequence,
-                     @"attach", @"text/plain",
-                     kCBLAttachmentEncodingNone,
-                     attach1.length,
-                     0,
-                     rev1.generation);
-    
     CBL_Attachment* att = [db attachmentForRevision: rev1 named: @"attach" status: &status];
-    AssertEq(status, kCBLStatusOK);
+    Assert(att, @"Couldn't get attachment: status %d", status);
     AssertEqual(att.data, attach1);
     AssertEqual(att.contentType, @"text/plain");
     AssertEq(att->encoding, kCBLAttachmentEncodingNone);
@@ -617,40 +607,34 @@ static void insertAttachment(DatabaseInternal_Tests* self,
     AssertEqual(gotRev1[@"_attachments"], attachmentDict);
     
     // Add a second revision that doesn't update the attachment:
-    CBL_Revision* rev2;
-    rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties:$dict({@"_id", rev1.docID},
-                                                                      {@"foo", @2},
-                                                                      {@"bazz", $false})]
-            prevRevisionID: rev1.revID allowConflict: NO status: &status];
+    props = $dict({@"_id", rev1.docID},
+                  {@"foo", @2},
+                  {@"bazz", $false},
+                  {@"_attachments", attachmentsStub(@"attach")});
+    CBL_Revision* rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties:props]
+                          prevRevisionID: rev1.revID allowConflict: NO status: &status];
     AssertEq(status, kCBLStatusCreated);
 
     // Add a third revision of the same document:
-    CBL_Revision* rev3;
-    rev3 = [db putRevision: [CBL_MutableRevision revisionWithProperties:$dict({@"_id", rev2.docID},
-                                                                      {@"foo", @2},
-                                                                      {@"bazz", $false})]
-            prevRevisionID: rev2.revID allowConflict: NO status: &status];
-    AssertEq(status, kCBLStatusCreated);
-    
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
-    insertAttachment(self, attach2,
-                     rev3.sequence,
-                     @"attach", @"text/html",
-                     kCBLAttachmentEncodingNone,
-                     attach2.length,
-                     0,
-                     rev2.generation);
-    
+    props = @{@"_id": rev2.docID,
+              @"foo": @2,
+              @"bazz": $false,
+              @"_attachments": attachmentsDict(attach2, @"attach", @"text/html", NO)};
+    CBL_Revision* rev3 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
+                          prevRevisionID: rev2.revID allowConflict: NO status: &status];
+    AssertEq(status, kCBLStatusCreated);
+
     // Check the 2nd revision's attachment:
     att = [db attachmentForRevision: rev2 named: @"attach" status: &status];
-    AssertEq(status, kCBLStatusOK);
+    Assert(att, @"Couldn't get attachment: status %d", status);
     AssertEqual(att.data, attach1);
     AssertEqual(att.contentType, @"text/plain");
     AssertEq(att->encoding, kCBLAttachmentEncodingNone);
     
     // Check the 3rd revision's attachment:
     att = [db attachmentForRevision: rev3 named: @"attach" status: &status];
-    AssertEq(status, kCBLStatusOK);
+    Assert(att, @"Couldn't get attachment: status %d", status);
     AssertEqual(att.data, attach2);
     AssertEqual(att.contentType, @"text/html");
     AssertEq(att->encoding, kCBLAttachmentEncodingNone);
@@ -665,7 +649,6 @@ static void insertAttachment(DatabaseInternal_Tests* self,
     AssertEq(attachments.count, 1u);
     AssertEqual(attachments.allKeys, @[[CBL_BlobStore keyDataForBlob: attach2]]);
 }
-#endif
 
 
 static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
@@ -762,6 +745,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
                                                          {@"revpos", @2})}));
 
     CBL_Attachment* gotAttach = [db attachmentForRevision: gotRev2 named: @"attach" status: &status];
+    Assert(gotAttach, @"Couldn't get attachment: status %d", status);
     AssertEqual(gotAttach.data, attachv2);
 
     // Delete the attachment:
