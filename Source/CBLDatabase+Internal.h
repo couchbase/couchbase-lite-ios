@@ -245,4 +245,17 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
  (issue #364). */
 - (void) postNotification: (NSNotification*)notification;
 
+/** Create a local checkpoint document. This method is called only when importing or
+    replacing the database. The local checkpoint contains the old localUUID of the database 
+    before importing. The old localUUID is used by replicators to get the local checkpoint 
+    from the imported database in order to start replicating from from the current local 
+    checkpoint of the imported database after importing. */
+- (BOOL) createLocalCheckpointDocument: (NSError**)outError;
+
+/** Returns local checkpoint document if it exists. Otherwise returns nil. */
+- (NSDictionary*) getLocalCheckpointDocument;
+
+// Local checkpoint document keys:
+#define kCBLDatabaseLocalCheckpoint_LocalUUID @"localUUID"
+
 @end

@@ -835,24 +835,42 @@ static BOOL sOnlyTrustAnchorCerts;
 /** This is the _local document ID stored on the remote server to keep track of state.
     It's based on the local database UUID (the private one, to make the result unguessable),
     the remote database's URL, and the filter name and parameters (if any). */
+- (NSString*) remoteCheckpointDocIDForLocalUUID: (NSString*)localUUID {
+    // Needs to be consistent with -hasSameSettingsAs: --
+    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
+    NSMutableDictionary* spec = $mdict({@"localUUID", localUUID},
+                                       {@"remoteURL", _remote.absoluteString},
+                                       {@"push", @(self.isPush)},
+                                       {@"continuous", (self.continuous ? nil : $false)},
+                                       {@"filter", _filterName},
+                                       {@"filterParams", _filterParameters},
+                                       //{@"headers", _requestHeaders}, (removed; see #143)
+                                       {@"docids", _docIDs});
+    NSError *error;
+    NSString *remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
+                                                                         error: &error]);
+    Assert(!error);
+    return remoteCheckpointDocID;
+}
+
+
 - (NSString*) remoteCheckpointDocID {
     if (!_remoteCheckpointDocID) {
-        // Needs to be consistent with -hasSameSettingsAs: --
-        // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
-        NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
-                                           {@"remoteURL", _remote.absoluteString},
-                                           {@"push", @(self.isPush)},
-                                           {@"continuous", (self.continuous ? nil : $false)},
-                                           {@"filter", _filterName},
-                                           {@"filterParams", _filterParameters},
-                                         //{@"headers", _requestHeaders}, (removed; see #143)
-                                           {@"docids", _docIDs});
-        NSError *error;
-        _remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
-                                                                             error: &error]);
-        Assert(!error);
+        _remoteCheckpointDocID = [self remoteCheckpointDocIDForLocalUUID:_db.privateUUID];
     }
     return _remoteCheckpointDocID;
+}
+
+
+- (NSString*) getLastSequenceFromLocalCheckpointDocument {
+    CBLDatabase* strongDb = _db;
+    NSDictionary* doc = [strongDb getLocalCheckpointDocument];
+    if (doc) {
+        NSString* checkpointID = [self remoteCheckpointDocIDForLocalUUID:
+                                  doc[kCBLDatabaseLocalCheckpoint_LocalUUID]];
+        return [strongDb lastSequenceWithCheckpointID: checkpointID];
+    }
+    return nil;
 }
 
 
@@ -881,6 +899,13 @@ static BOOL sOnlyTrustAnchorCerts;
 
                       if ($equal(remoteLastSequence, localLastSequence)) {
                           _lastSequence = localLastSequence;
+                          if (!_lastSequence) {
+                              // Try to get the last sequence from the local checkpoint document
+                              // created only when importing a database. This allows the
+                              // replicator to continue replicating from the current local checkpoint
+                              // of the imported database after importing.
+                              _lastSequence = [self getLastSequenceFromLocalCheckpointDocument];
+                          }
                           LogTo(Sync, @"%@: Replicating from lastSequence=%@", self, _lastSequence);
                       } else {
                           LogTo(Sync, @"%@: lastSequence mismatch: I had %@, remote had %@ (response = %@)",

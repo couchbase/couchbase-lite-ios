@@ -49,6 +49,7 @@ NSArray* CBL_RunloopModes;
 #define kTransactionMaxRetries 10
 #define kTransactionRetryDelay 0.050
 
+#define kLocalCheckpointDocId @"CBL_LocalCheckpoint"
 
 @implementation CBLDatabase (Internal)
 
@@ -1596,5 +1597,16 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     }];
 }
 
+- (BOOL) createLocalCheckpointDocument: (NSError**)outError {
+    NSDictionary* document = @{ kCBLDatabaseLocalCheckpoint_LocalUUID : self.privateUUID };
+    BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
+    if (!result)
+        Warn(@"CBLDatabase: Could not create a local checkpoint document with an error: %@", *outError);
+    return result;
+}
+
+- (NSDictionary*) getLocalCheckpointDocument {
+    return [self existingLocalDocumentWithID:kLocalCheckpointDocId];
+}
 
 @end
