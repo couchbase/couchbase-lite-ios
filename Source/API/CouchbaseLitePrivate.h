@@ -45,6 +45,11 @@
 #endif
 @end
 
+@interface CBLDatabase (Private)
+@property (nonatomic, readonly) NSString* privateUUID;
+@property (nonatomic, readonly) NSString* publicUUID;
+@end
+
 
 @interface CBLDatabaseChange ()
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
@@ -155,6 +160,8 @@
                          value: (NSData*)valueData
                  docProperties: (NSDictionary*)docProperties;
 @end
+
+NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing
 
 
 @interface CBLReplication ()

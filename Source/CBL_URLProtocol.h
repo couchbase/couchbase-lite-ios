@@ -46,6 +46,10 @@
 /** Returns YES if CBL_URLProtocol will handle this URL. */
 + (BOOL) handlesURL: (NSURL*)url;
 
+
+// only exposed for testing
++ (void) forgetServers;
+
 @end
 
 

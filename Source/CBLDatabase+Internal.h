@@ -197,6 +197,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
 
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history; // exposed for testing
+
 /** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as far as any of the revision ID strings in that array. */
 - (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
                        startingFromAnyOf: (NSArray*)ancestorRevIDs;
@@ -252,5 +254,18 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 /** Post an NSNotification. handles if the database is running on a separate dispatch_thread
  (issue #364). */
 - (void) postNotification: (NSNotification*)notification;
+
+/** Create a local checkpoint document. This method is called only when importing or
+    replacing the database. The local checkpoint contains the old localUUID of the database 
+    before importing. The old localUUID is used by replicators to get the local checkpoint 
+    from the imported database in order to start replicating from from the current local 
+    checkpoint of the imported database after importing. */
+- (BOOL) createLocalCheckpointDocument: (NSError**)outError;
+
+/** Returns local checkpoint document if it exists. Otherwise returns nil. */
+- (NSDictionary*) getLocalCheckpointDocument;
+
+// Local checkpoint document keys:
+#define kCBLDatabaseLocalCheckpoint_LocalUUID @"localUUID"
 
 @end

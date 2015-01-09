@@ -31,9 +31,6 @@
 #define kMaxBulkDocsObjectSize (5*1000*1000) // Max in-memory size of buffered bulk_docs dictionary
 
 
-static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
-
-
 @interface CBL_Pusher ()
 - (BOOL) uploadMultipartRevision: (CBL_Revision*)rev;
 @end
@@ -81,7 +78,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
         _creatingTarget = NO;
-        if (error && error.code != kCBLStatusDuplicate) {
+        if (error && error.code != kCBLStatusDuplicate && error.code != kCBLStatusMethodNotAllowed) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
             [self stop]; // this is fatal: no db to push to!
@@ -294,7 +291,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                         // Strip any attachments already known to the target db:
                         if (properties.cbl_attachments) {
                             // Look for the latest common ancestor and stub out older attachments:
-                            int minRevPos = findCommonAncestor(populatedRev, possibleAncestors);
+                            int minRevPos = CBLFindCommonAncestor(populatedRev, possibleAncestors);
                             [CBLDatabase stubOutAttachmentsIn: populatedRev beforeRevPos: minRevPos + 1
                                             attachmentsFollow: NO];
                             properties = populatedRev.properties;
@@ -537,7 +534,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
 // Given a revision and an array of revIDs, finds the latest common ancestor revID
 // and returns its generation #. If there is none, returns 0.
-static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
+int CBLFindCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
     if (possibleRevIDs.count == 0)
         return 0;
     NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
@@ -553,15 +550,3 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
 
 
 @end
-
-
-
-
-TestCase(CBL_Pusher_findCommonAncestor) {
-    NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
-    CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
-    CAssertEq(findCommonAncestor(rev, @[]), 0);
-    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-nope"]), 0);
-    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-first"]), 1);
-    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"2-second", @"1-first"]), 2);
-}

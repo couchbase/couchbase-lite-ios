@@ -19,4 +19,11 @@
 
 - (NSString*) assertionForSite: (NSURL*)site;
 
++ (NSString*) assertionForEmailAddress: (NSString*)email site: (NSURL*)site;
+
 @end
+
+
+// for testing
+bool CBLParsePersonaAssertion(NSString* assertion,
+                              NSString** outEmail, NSString** outOrigin, NSDate** outExp);

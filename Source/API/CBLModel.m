@@ -30,8 +30,9 @@
 @dynamic type;
 
 
-- (instancetype) initWithDocument: (CBLDocument*)document
+- (instancetype) initWithDocument: (CBLDocument*)document orDatabase:(CBLDatabase *)database
 {
+    NSParameterAssert(document || database);
     self = [super init];
     if (self) {
         if (document) {
@@ -39,8 +40,9 @@
             self.document = document;
             [self didLoadFromDocument];
         } else {
+            LogTo(CBLModel, @"%@ initWithDatabase: %@", self.class, database);
             _isNew = true;
-            LogTo(CBLModel, @"%@ init", self);
+            self.database = database;
         }
         [self awakeFromInitializer];
     }
@@ -55,8 +57,11 @@
         return nil;
     }
 
-    CBLModel *model = [[self alloc] initWithDocument:nil];
-    model.database = database;
+    CBLModel *model = [[self alloc] initWithDocument:nil orDatabase:database];
+    NSString *documentType = [database.modelFactory documentTypeForClass:[self class]];
+    if(documentType != nil){
+        model.type = documentType;
+    }
     return model;
 }
 
@@ -70,7 +75,7 @@
                  self, document, model);
     } else if (self != [CBLModel class]) {
         // If invoked on a subclass of CBLModel, create an instance of that subclass:
-        model = [[self alloc] initWithDocument: document];
+        model = [[self alloc] initWithDocument: document orDatabase:nil];
     } else {
         // If invoked on CBLModel itself, ask the factory to instantiate the appropriate class:
         model = [document.database.modelFactory modelForDocument: document];

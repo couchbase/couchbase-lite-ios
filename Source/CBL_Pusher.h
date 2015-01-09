@@ -33,3 +33,4 @@
 
 
 CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item);
+int CBLFindCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs); // exposed for testing

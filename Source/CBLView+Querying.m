@@ -17,7 +17,6 @@ extern "C" {
 #import "CBLView+Internal.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
-#import "CBLCollateJSON.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
 }

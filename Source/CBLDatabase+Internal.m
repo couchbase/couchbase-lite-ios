@@ -23,7 +23,6 @@ extern "C" {
 #import "CBLModel_Internal.h"
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
-#import "CBLCollateJSON.h"
 #import "CBL_BlobStore.h"
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
@@ -60,6 +59,7 @@ NSArray* CBL_RunloopModes;
 
 @implementation CBLDatabase (Internal)
 
+#define kLocalCheckpointDocId @"CBL_LocalCheckpoint"
 
 static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     switch (level) {
@@ -725,6 +725,37 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history {
+    if (!history)
+        return nil;
+    
+    // Try to extract descending numeric prefixes:
+    NSMutableArray* suffixes = $marray();
+    id start = nil;
+    int lastRevNo = -1;
+    for (CBL_Revision* rev in history) {
+        int revNo;
+        NSString* suffix;
+        if ([CBL_Revision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
+            if (!start)
+                start = @(revNo);
+            else if (revNo != lastRevNo - 1) {
+                start = nil;
+                break;
+            }
+            lastRevNo = revNo;
+            [suffixes addObject: suffix];
+        } else {
+            start = nil;
+            break;
+        }
+    }
+    
+    NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
+    return $dict({@"ids", revIDs}, {@"start", start});
+}
+
+
 const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
@@ -987,21 +1018,23 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     };
 }
 
-- (void) postNotification: (NSNotification*)notification
-{
-    if (_dispatchQueue) {
-        // NSNotificationQueue is runloop-based, doesn't work on dispatch queues. (#364)
-        [self doAsync:^{
-            [[NSNotificationCenter defaultCenter] postNotification: notification];
-        }];
-    } else {
-        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-        [queue enqueueNotification: notification
-                      postingStyle: NSPostASAP
-                      coalesceMask: NSNotificationNoCoalescing
-                          forModes: @[NSRunLoopCommonModes]];
-    }
+- (void) postNotification: (NSNotification*)notification {
+    [self doAsync:^{
+        [[NSNotificationCenter defaultCenter] postNotification: notification];
+    }];
+}
 
+
+    - (BOOL) createLocalCheckpointDocument: (NSError**)outError {
+    NSDictionary* document = @{ kCBLDatabaseLocalCheckpoint_LocalUUID : self.privateUUID };
+    BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
+    if (!result)
+        Warn(@"CBLDatabase: Could not create a local checkpoint document with an error: %@", *outError);
+    return result;
+}
+
+- (NSDictionary*) getLocalCheckpointDocument {
+    return [self existingLocalDocumentWithID:kLocalCheckpointDocId];
 }
 
 

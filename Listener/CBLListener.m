@@ -157,7 +157,11 @@
         return nil;
     SecCertificateRef cert = NULL;
     SecIdentityCopyCertificate(_SSLIdentity, &cert);
-    return MYGetCertificatePublicKeyDigest(cert);
+    if (!cert)
+        return nil;
+    NSData* digest = MYGetCertificateDigest(cert);
+    CFRelease(cert);
+    return digest;
 }
 
 + (void) runTestCases {

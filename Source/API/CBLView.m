@@ -19,7 +19,6 @@ extern "C" {
 #import "CBLSpecialKey.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
-#import "CBLCollateJSON.h"
 #import "CBJSONEncoder.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
