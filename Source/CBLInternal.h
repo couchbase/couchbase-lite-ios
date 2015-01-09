@@ -35,12 +35,6 @@
 #if DEBUG
 - (id) attachmentWriterForAttachment: (NSDictionary*)attachment;
 #endif
-- (BOOL) storeBlob: (NSData*)blob creatingKey: (CBLBlobKey*)outKey;
-- (CBLStatus) insertAttachment: (CBL_Attachment*)attachment
-                  forSequence: (SequenceNumber)sequence;
-- (CBLStatus) copyAttachmentNamed: (NSString*)name
-                    fromSequence: (SequenceNumber)fromSequence
-                      toSequence: (SequenceNumber)toSequence;
 - (BOOL) inlineFollowingAttachmentsIn: (CBL_Revision*)rev error: (NSError**)outError;
 @end
 

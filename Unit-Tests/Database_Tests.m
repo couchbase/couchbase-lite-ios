@@ -742,6 +742,7 @@
         NSAssert(bgdb, @"Couldn't create bgdb: %@", error);
         Log(@"bg writer: %@", bgdb);
         [self lotsaWrites: kNTransactions ofDocs: kNDocs database: bgdb];
+        [bgmgr close];
     });
 
     CBLManager* readQueueMgr = [dbmgr copy];
@@ -753,6 +754,7 @@
         NSAssert(bgdb, @"Couldn't create bgdb: %@", error);
         Log(@"bg reader: %@", bgdb);
         [self lotsaReads: kNTransactions/2 database: bgdb];
+        [readQueueMgr close];
     });
 
     CBLManager* readQueue2Mgr = [dbmgr copy];
@@ -764,16 +766,15 @@
         NSAssert(bgdb, @"Couldn't create bgdb: %@", error);
         Log(@"bg2 reader: %@", bgdb);
         [self lotsaReads: kNTransactions/2 database: bgdb];
+        [readQueue2Mgr close];
     });
 
     [self lotsaWrites: kNTransactions ofDocs: kNDocs database: db];
 
-    // Wait for queue to finish the previous block:
+    // Wait for all queues to finish:
     dispatch_sync(readingQueue, ^{  });
     dispatch_sync(readingQueue2, ^{  });
-    dispatch_sync(writingQueue, ^{
-        [bgmgr close];
-    });
+    dispatch_sync(writingQueue, ^{  });
 }
 
 

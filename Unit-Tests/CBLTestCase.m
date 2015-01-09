@@ -65,10 +65,13 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     NSError* error;
     db = [dbmgr createEmptyDatabaseNamed: @"db" error: &error];
     Assert(db, @"Couldn't create db: %@", error);
+
+    AssertEq(db.lastSequenceNumber, 0); // Ensure db was deleted properly by the previous test
 }
 
 - (void)tearDown {
-    [db close: NULL];
+    NSError* error;
+    Assert(!db || [db close: &error], @"Couldn't close db: %@", error);
     [dbmgr close];
 
     [super tearDown];
@@ -77,9 +80,9 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void) reopenTestDB {
     Assert(db != nil);
     NSString* dbName = db.name;
-    [db close: NULL];
-    [dbmgr _forgetDatabase: db];
     NSError* error;
+    Assert([db close: &error], @"Couldn't close db: %@", error);
+    [dbmgr _forgetDatabase: db];
 
     CBLDatabase* db2 = [dbmgr databaseNamed: dbName error: &error];
     Assert(db2, @"Couldn't reopen db: %@", error);

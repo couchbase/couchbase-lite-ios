@@ -267,7 +267,6 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
         Assert(newRevision);
         Assert(context);
         Assert(newRevision.properties || newRevision.isDeletion);
-        AssertNil(newRevision.revisionID);
         validationCalled = YES;
         BOOL hoopy = newRevision.isDeletion || newRevision[@"towel"] != nil;
         Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
@@ -426,7 +425,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertNil(rev2);
 
     // Make sure no duplicate rows were inserted for the common revisions:
-    AssertEq(db.lastSequenceNumber, 8u);
+    AssertEq(db.lastSequenceNumber, 3u);
     
     // Make sure the revision with the higher revID wins the conflict:
     CBL_Revision* current = [db getDocumentWithID: rev.docID revisionID: nil];
@@ -550,7 +549,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 
 #pragma mark - ATTACHMENTS:
 
-
+#if 0
 static void insertAttachment(DatabaseInternal_Tests* self,
                              NSData* blob,
                              SequenceNumber sequence,
@@ -624,8 +623,6 @@ static void insertAttachment(DatabaseInternal_Tests* self,
                                                                       {@"bazz", $false})]
             prevRevisionID: rev1.revID allowConflict: NO status: &status];
     AssertEq(status, kCBLStatusCreated);
-    
-    [db copyAttachmentNamed: @"attach" fromSequence: rev1.sequence toSequence: rev2.sequence];
 
     // Add a third revision of the same document:
     CBL_Revision* rev3;
@@ -668,6 +665,7 @@ static void insertAttachment(DatabaseInternal_Tests* self,
     AssertEq(attachments.count, 1u);
     AssertEqual(attachments.allKeys, @[[CBL_BlobStore keyDataForBlob: attach2]]);
 }
+#endif
 
 
 static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
@@ -1146,19 +1144,19 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     // Add a revision and an attachment:
     CBL_Revision* rev1;
     CBLStatus status;
-    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: $dict({@"foo", @1},
-                                                                               {@"bar", $false})]
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSDictionary* props = @{@"foo": @1,
+                            @"bar": $false,
+                            @"_attachments": @{
+                                @"attach": @{
+                                    @"content_type": @"text/plain",
+                                    @"data": attach1
+                                }
+                            }
+                           };
+    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
             prevRevisionID: nil allowConflict: NO status: &status];
     AssertEq(status, kCBLStatusCreated);
-
-    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
-    insertAttachment(self, attach1,
-                     rev1.sequence,
-                     @"attach", @"text/plain",
-                     kCBLAttachmentEncodingNone,
-                     attach1.length,
-                     0,
-                     rev1.generation);
 
     NSFileManager* manager = [NSFileManager defaultManager];
     NSString* attachmentStorePath = db.attachmentStorePath;

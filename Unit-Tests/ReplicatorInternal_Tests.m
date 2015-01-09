@@ -109,12 +109,12 @@
     AssertEqual(lastSeq, @3);
     
     AssertEq(db.documentCount, 2u);
-    AssertEq(db.lastSequenceNumber, 3);
+    AssertEq(db.lastSequenceNumber, 2);
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
     replic8(db, ([self remoteTestDBURL: kScratchDBName]), NO, nil, nil, nil);
-    AssertEq(db.lastSequenceNumber, 3);
+    AssertEq(db.lastSequenceNumber, 2);
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);
@@ -138,12 +138,12 @@
     AssertEqual(lastSeq, @3);
 
     AssertEq(db.documentCount, 2u);
-    AssertEq(db.lastSequenceNumber, 3);
+    AssertEq(db.lastSequenceNumber, 2);
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
     replic8Continuous(db, remoteURL, NO, nil, nil, nil);
-    AssertEq(db.lastSequenceNumber, 3);
+    AssertEq(db.lastSequenceNumber, 2);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);
@@ -203,7 +203,7 @@
     AssertEqual(lastSeq, @3);
 
     AssertEq(db.documentCount, 1u);
-    AssertEq(db.lastSequenceNumber, 2);
+    AssertEq(db.lastSequenceNumber, 1);
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);

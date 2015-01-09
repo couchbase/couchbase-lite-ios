@@ -154,7 +154,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     [self putDoc: $dict({@"clef", @"quatre"})];
     
     CBLView* view = [self createView];
-    Assert([view.indexFilePath hasSuffix: @"/CouchbaseLite_ViewTest.cblite2/aview.viewindex"]);
+    Assert([view.indexFilePath hasSuffix: @"/db.cblite2/aview.viewindex"]);
 
     Assert(view.stale);
     AssertEq([view updateIndex], kCBLStatusOK);

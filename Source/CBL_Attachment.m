@@ -82,17 +82,21 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
             }
         }
 
-        NSString* dataBase64 = $castIf(NSString, attachInfo[@"data"]);
-        if (dataBase64) {
+        id data = attachInfo[@"data"];
+        if (data) {
             // If there's inline attachment data, decode and store it:
-            @autoreleasepool {
-                _data = [CBLBase64 decode: dataBase64];
-                if (!_data) {
-                    *outStatus = kCBLStatusBadEncoding;
-                    return nil;
+            if ([data isKindOfClass: [NSString class]]) {
+                @autoreleasepool {
+                    _data = [CBLBase64 decode: data];
                 }
-                self.possiblyEncodedLength = _data.length;
+            } else {
+                _data = $castIf(NSData, data);
             }
+            if (!_data) {
+                *outStatus = kCBLStatusBadEncoding;
+                return nil;
+            }
+            self.possiblyEncodedLength = _data.length;
         } else if ([attachInfo[@"stub"] isEqual: $true]) {
             // This item is just a stub; validate and skip it
             id revPosObj = attachInfo[@"revpos"];

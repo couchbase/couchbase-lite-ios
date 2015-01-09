@@ -251,7 +251,7 @@ static void test(QueryBuilder_Tests *self,
                                                               error: &error];
     Assert(p1);
     Log(@"Explanation: %@", p1.explanation);
-//TEMP    AssertEqual(p1.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
+//    AssertEqual(p1.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
 
     CBLQueryBuilder* p2 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
@@ -260,7 +260,7 @@ static void test(QueryBuilder_Tests *self,
                                                               error: &error];
     Assert(p2);
     Log(@"Explanation: %@", p2.explanation);
-//TEMP    AssertEqual(p2.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
+//    AssertEqual(p2.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
     AssertEq(p2.view, p1.view);
 }
 

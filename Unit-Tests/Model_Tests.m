@@ -443,6 +443,7 @@
     NSError* error;
     [model save: &error];
     AssertEq(error.code, 400);
+    [model revertChanges];
 }
 
 
