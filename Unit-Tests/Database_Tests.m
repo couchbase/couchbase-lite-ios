@@ -729,7 +729,7 @@
 
 
 - (void) test21_ConcurrentWrites {
-    const NSUInteger kNTransactions = 50;
+    const NSUInteger kNTransactions = 100;
     const NSUInteger kNDocs = 100;
     Log(@"Main thread writer: %@", db);
 

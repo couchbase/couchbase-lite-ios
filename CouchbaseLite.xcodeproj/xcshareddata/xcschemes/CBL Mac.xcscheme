@@ -46,6 +46,16 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "27139B2F18F8E9750021A9A3"
+               BuildableName = "CBForest Tests.xctest"
+               BlueprintName = "CBForest Tests"
+               ReferencedContainer = "container:vendor/CBForest/CBForest.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "272AA83E1A48D835004B8D55"
                BuildableName = "CBL Mac Unit Tests.xctest"
                BlueprintName = "CBL Mac Unit Tests"
