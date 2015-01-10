@@ -487,7 +487,7 @@ static NSHTTPCookie* cookieForURL(NSURL* url, NSString* name) {
         Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
         return;
     }
-    [self deleteRemoteDB: remoteDbURL];
+    [self eraseRemoteDB: remoteDbURL];
 
     // Create pre-populated database:
     NSUInteger numPrePopulatedDocs = 100u;
