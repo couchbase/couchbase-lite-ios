@@ -57,7 +57,7 @@
     NSString* host = CBLGetHostName();
     Log(@"CBLGetHostName returned: <%@>", host);
     Assert(host, @"Can't get hostname");
-    Assert([host rangeOfString: @"^[-a-zA-Z0-9]+\\.local\\.?$"
+    Assert([host rangeOfString: @"^[-.a-zA-Z0-9]+$"
                        options: NSRegularExpressionSearch].length > 0,
            @"Invalid hostname: \"%@\"", host);
 }
