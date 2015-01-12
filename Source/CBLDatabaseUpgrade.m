@@ -306,7 +306,7 @@ static int collateRevIDs(void *context,
             NSString* docID = columnString(localQuery, 0);
             NSData* json = columnData(localQuery, 1);
             NSDictionary* props = [CBLJSON JSONObjectWithData: json options: 0 error: NULL];
-            LogTo(Upgrade, @"Upgradeing local doc '%@'", docID);
+            LogTo(Upgrade, @"Upgrading local doc '%@'", docID);
             NSError* error;
             if (props && ![_db putLocalDocument: props withID: docID error: &error]) {
                 Warn(@"Couldn't import local doc '%@': %@", docID, error);
@@ -380,28 +380,3 @@ static CBLStatus sqliteErrToStatus(int sqliteErr) {
 
 
 @end
-
-
-#if DEBUG
-
-static CBLDatabase* createDB(void) {
-    NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"cbl_test.cblite2"];
-    CBLDatabase *db = [CBLDatabase createEmptyDBAtPath: path];
-    CAssert([db open: nil]);
-    return db;
-}
-
-TestCase(UpgradeDB) {
-    CBLDatabase* db = createDB();
-    NSString* path = @"/Users/snej/Library/Application Support/com.mooseyard.Beanbag/CouchbaseLite/people.cblite";
-    CBLDatabaseUpgrade* upgrade = [[CBLDatabaseUpgrade alloc] initWithDatabase: db
-                                                                 sqliteFile: path];
-    Assert(upgrade);
-    upgrade.canRemoveOldAttachmentsDir = NO;
-    CBLStatus status = [upgrade import];
-    AssertEq(status, kCBLStatusOK);
-    Log(@"Upgradeed %lu docs, %lu revisions", (unsigned long)upgrade.numDocs, (unsigned long)upgrade.numRevs);
-    [db _close];
-}
-
-#endif

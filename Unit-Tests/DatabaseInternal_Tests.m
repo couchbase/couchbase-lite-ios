@@ -12,6 +12,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+LocalDocs.h"
 #import "CBLDatabase+Replication.h"
+#import "CBLDatabaseUpgrade.h"
 #import "CBL_Attachment.h"
 #import "CBL_Body.h"
 #import "CBLRevision.h"
@@ -32,6 +33,11 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     }
     return user;
 }
+
+
+@interface CBLForestBridge : NSObject
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history; // exposed for testing only
+@end
 
 
 @interface DatabaseInternal_Tests : CBLTestCaseWithDB
@@ -1179,17 +1185,70 @@ static CBL_Revision* mkrev(NSString* revID) {
 
 - (void) test_MakeRevisionHistoryDict {
     NSArray* revs = @[mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def")];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+    AssertEqual([CBLForestBridge makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"jkl", @"ghi", @"def"]},
                        {@"start", @4}));
 
     revs = @[mkrev(@"4-jkl"), mkrev(@"2-def")];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+    AssertEqual([CBLForestBridge makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"4-jkl", @"2-def"]}));
 
     revs = @[mkrev(@"12345"), mkrev(@"6789")];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+    AssertEqual([CBLForestBridge makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"12345", @"6789"]}));
+}
+
+
+- (void) test_UpgradeDB {
+    NSString* path = [self pathToTestFile: @"people.cblite"];
+    CBLDatabaseUpgrade* upgrade = [[CBLDatabaseUpgrade alloc] initWithDatabase: db
+                                                                    sqliteFile: path];
+    Assert(upgrade);
+    upgrade.canRemoveOldAttachmentsDir = NO;
+    CBLStatus status = [upgrade import];
+    AssertEq(status, kCBLStatusOK);
+    AssertEq(upgrade.numDocs, 20u);
+    AssertEq(upgrade.numRevs, 20u);
+    AssertEq(db.documentCount, 19u);  // one of the imported docs is deleted and doesn't count
+    AssertEq(db.attachmentStore.count, 2u);
+
+    // Check the doc IDs:
+    NSMutableArray* docIDs = $marray();
+    CBLQueryIteratorBlock iterator = [db getAllDocs: nil status: NULL];
+    CBLQueryRow* row;
+    while (nil != (row = iterator())) {
+        [docIDs addObject: row.documentID];
+    }
+    AssertEqual(docIDs, (@[@"0BCD3CDB-2D2A-4794-9778-C246E1342DAF",
+                           @"2523E485-BA62-41B6-B944-08F117DA9F1C",
+                           @"290E84BA-CF7F-47C2-A9CD-8DCFA5D510D1",
+                           @"7999782A-5064-44F7-94C0-6C7BB255380B",
+                           @"8C912855-BBC5-422B-91AB-91E315B2B236",
+                           @"B17BDF9C-17D7-4A20-99C7-98DECBC5DBBD",
+                           @"CB35C64F-0570-45E1-AAEF-8183278A3AB7",
+                           @"D04FB085-3AF9-48FC-AAED-EA5E61060B29",
+                           @"DCB227A9-E079-484A-93A3-264A88562D36",
+                           @"ECA02CAC-0672-4F42-856A-70BCB9EF941A",
+                           @"ED49F69E-4FF9-4A3E-B3BA-8CD7D190F896",
+                           @"F98C9AC0-A572-46BE-B94E-6593B3A15BE4",
+                           @"FD1D7D76-88A8-4BF5-A3E2-D69573DFB647",
+                           @"person-0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983",
+                           @"person-FDEB582FE67CB5AA12C76A8F75BDD2540B52F8BC",
+                           @"rel-(person-0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983)-to-(person-FDEB582FE67CB5AA12C76A8F75BDD2540B52F8BC)",
+                           @"rel-(person-FDEB582FE67CB5AA12C76A8F75BDD2540B52F8BC)-to-(person-0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983)",
+                           @"thumbsup-by-(0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983)-on-(7999782A-5064-44F7-94C0-6C7BB255380B)",
+                           @"thumbsup-by-(0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983)-on-(8C912855-BBC5-422B-91AB-91E315B2B236)"]));
+
+    // Get an attachment:
+    CBL_Revision* rev = [db getDocumentWithID: @"person-0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983"
+                                   revisionID: nil];
+    NSData* att = [db dataForAttachmentDict: rev.properties[@"_attachments"][@"picture"]];
+    AssertEq(att.length, 39730u);
+
+    // This is the one deleted doc:
+    rev = [db getDocumentWithID: @"thumbsup:0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983:7999782A-5064-44F7-94C0-6C7BB255380B"
+                                   revisionID: @"2-59a8b99190d92a186249cdf86c0344f6"];
+    Assert(rev != nil);
 }
 
 
