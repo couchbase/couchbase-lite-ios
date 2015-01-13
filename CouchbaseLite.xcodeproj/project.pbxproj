@@ -573,6 +573,8 @@
 		27DA43671592387400F9E7B5 /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4310158FB79E00F9E7B5 /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DA43681592387400F9E7B5 /* CBLModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA435315918C8C00F9E7B5 /* CBLModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DA43691592387400F9E7B5 /* CBLModelFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA435515918C8D00F9E7B5 /* CBLModelFactory.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27DADE3E1A647D8D0075313A /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE3A1A647CE20075313A /* CBLRouter+Changes.m */; };
+		27DADE3F1A647D8E0075313A /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE3A1A647CE20075313A /* CBLRouter+Changes.m */; };
 		27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */; };
 		27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -1343,6 +1345,7 @@
 		27DA435415918C8C00F9E7B5 /* CBLModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLModel.m; sourceTree = "<group>"; };
 		27DA435515918C8D00F9E7B5 /* CBLModelFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLModelFactory.h; sourceTree = "<group>"; };
 		27DA435615918C8E00F9E7B5 /* CBLModelFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLModelFactory.m; sourceTree = "<group>"; };
+		27DADE3A1A647CE20075313A /* CBLRouter+Changes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLRouter+Changes.m"; sourceTree = "<group>"; };
 		27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSData+zlib.h"; sourceTree = "<group>"; };
 		27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GTMNSData+zlib.m"; sourceTree = "<group>"; };
 		27DB90DA14DB24E800FC7118 /* GTMDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMDefines.h; sourceTree = "<group>"; };
@@ -2163,6 +2166,7 @@
 				27C706431486BE7100F0F099 /* CBL_Router.h */,
 				27C706441486BE7100F0F099 /* CBL_Router.m */,
 				2700BC5B14B64AA600B5B297 /* CBL_Router+Handlers.m */,
+				27DADE3A1A647CE20075313A /* CBLRouter+Changes.m */,
 				27C706461487584300F0F099 /* CBL_URLProtocol.h */,
 				27C706471487584300F0F099 /* CBL_URLProtocol.m */,
 			);
@@ -3471,6 +3475,7 @@
 				275315E914ACF1130065964D /* HTTPMessage.m in Sources */,
 				275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */,
 				275315E814ACF1130065964D /* HTTPConnection.m in Sources */,
+				27DADE3E1A647D8D0075313A /* CBLRouter+Changes.m in Sources */,
 				275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */,
 				2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */,
 				27DA435E159230AA00F9E7B5 /* CBL_Router.m in Sources */,
@@ -3722,6 +3727,7 @@
 				27DA435F159230AC00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4361159230B200F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61715993CB4005B9234 /* CBL_URLProtocol.m in Sources */,
+				27DADE3F1A647D8E0075313A /* CBLRouter+Changes.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

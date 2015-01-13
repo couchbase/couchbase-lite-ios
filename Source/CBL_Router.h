@@ -17,6 +17,14 @@ typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
 typedef void (^OnFinishedBlock)();
 
 
+typedef enum : NSUInteger {
+    kNormalFeed,
+    kLongPollFeed,
+    kContinuousFeed,
+    kEventSourceFeed,
+} CBLChangesFeedMode;
+
+
 @interface CBL_Router : NSObject
 {
     @private
@@ -37,7 +45,7 @@ typedef void (^OnFinishedBlock)();
     OnDataAvailableBlock _onDataAvailable;
     OnFinishedBlock _onFinished;
     BOOL _running;
-    BOOL _longpoll;
+    CBLChangesFeedMode _changesMode;
     CBLFilterBlock _changesFilter;
     NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
@@ -71,6 +79,7 @@ typedef void (^OnFinishedBlock)();
 - (int) intQuery: (NSString*)param defaultValue: (int)defaultValue;
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
 @property NSDictionary* queries;
+- (void) parseChangesMode;
 - (BOOL) cacheWithEtag: (NSString*)etag;
 - (CBLContentOptions) contentOptions;
 - (CBLQueryOptions*) getQueryOptions;
@@ -79,9 +88,11 @@ typedef void (^OnFinishedBlock)();
 @property (readonly) NSString* ifMatch;
 - (CBLStatus) openDB;
 - (void) sendResponseHeaders;
+- (void) sendData: (NSData*)data;
+- (void) sendContinuousLine: (NSDictionary*)changeDict;
 - (void) sendResponseBodyAndFinish: (BOOL)finished;
 - (void) finished;
-- (void) startHeartbeat: (NSTimeInterval)interval;
+- (void) startHeartbeat: (NSString*)response interval: (NSTimeInterval)interval;
 - (void) stopHeartbeat;
 @end
 
