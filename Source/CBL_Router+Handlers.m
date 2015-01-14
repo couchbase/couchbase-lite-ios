@@ -247,7 +247,7 @@
     BOOL allOrNothing = (allObj && allObj != $false);
     BOOL noNewEdits = (body[@"new_edits"] == $false);
 
-    return [_db _inTransaction: ^CBLStatus {
+    return [_db.storage inTransaction: ^CBLStatus {
         NSMutableArray* results = [NSMutableArray arrayWithCapacity: docs.count];
         for (NSDictionary* doc in docs) {
             @autoreleasepool {

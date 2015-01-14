@@ -13,14 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-extern "C" {
 #import "CBLDatabase+Replication.h"
 #import "CBLInternal.h"
 #import "CBL_Puller.h"
 #import "MYBlockUtils.h"
-}
-#import <CBForest/CBForest.hh>
-using namespace forestdb;
 
 
 #define kActiveReplicatorCleanupDelay 10.0
@@ -77,33 +73,11 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
 
 
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID {
-    // This table schema is out of date but I'm keeping it the way it is for compatibility.
-    // The 'remote' column now stores the opaque checkpoint IDs, and 'push' is ignored.
     return [_storage infoForKey: checkpointInfoKey(checkpointID)];
 }
 
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID {
     return [_storage setInfo: lastSequence forKey: checkpointInfoKey(checkpointID)] == kCBLStatusOK;
-}
-
-
-+ (NSString*) joinQuotedStrings: (NSArray*)strings {
-    if (strings.count == 0)
-        return @"";
-    NSMutableString* result = [NSMutableString stringWithString: @"'"];
-    BOOL first = YES;
-    for (NSString* str in strings) {
-        if (first)
-            first = NO;
-        else
-            [result appendString: @"','"];
-        NSRange range = NSMakeRange(result.length, str.length);
-        [result appendString: str];
-        [result replaceOccurrencesOfString: @"'" withString: @"''"
-                                   options: NSLiteralSearch range: range];
-    }
-    [result appendString: @"'"];
-    return result;
 }
 
 

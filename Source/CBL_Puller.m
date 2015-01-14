@@ -647,7 +647,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         
     downloads = [downloads sortedArrayUsingSelector: @selector(compareSequences:)];
-    [_db _inTransaction: ^CBLStatus {
+    [_db.storage inTransaction: ^CBLStatus {
         for (CBL_Revision* rev in downloads) {
             @autoreleasepool {
                 SequenceNumber fakeSequence = rev.sequence;

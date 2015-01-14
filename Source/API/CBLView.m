@@ -68,7 +68,11 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
     self = [super init];
     if (self) {
         _storage = [db.storage viewStorageNamed: name create: create];
+        if (!_storage)
+            return nil;
         _storage.delegate = self;
+        _weakDB = db;
+        _name = [name copy];
     }
     return self;
 }
@@ -84,8 +88,6 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 
 
 #if DEBUG
-@synthesize indexFilePath=_path;
-
 - (void) setCollation: (CBLViewCollation)collation {
     _collation = collation;
 }
@@ -107,7 +109,7 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 }
 
 
-- (void) databaseClosing {
+- (void) close {
     [_storage close];
     _storage = nil;
     _weakDB = nil;
@@ -122,6 +124,7 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 - (void) deleteView {
     [_storage deleteView];
     [_weakDB forgetViewNamed: _name];
+    [self close];
 }
 
 
@@ -261,7 +264,10 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 - (CBLStatus) updateIndexes: (NSArray*)views {
-    return [_storage updateIndexes: views];
+    NSArray* storages = [views my_map:^id(CBLView* view) {
+        return view.storage;
+    }];
+    return [_storage updateIndexes: storages];
 }
 
 - (void) postPublicChangeNotification {
@@ -305,6 +311,35 @@ static id<CBLViewCompiler> sCompiler;
 
 - (CBLQuery*) createQuery {
     return [[CBLQuery alloc] initWithDatabase: self.database view: self];
+}
+
+
+/** Main internal call to query a view. */
+- (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
+                                     status: (CBLStatus*)outStatus
+{
+    if (!options)
+        options = [CBLQueryOptions new];
+    CBLQueryIteratorBlock iterator;
+    if (options.fullTextQuery) {
+        iterator = [_storage fullTextQueryWithOptions: options status: outStatus];
+    } else if ([self groupOrReduceWithOptions: options])
+        iterator = [_storage reducedQueryWithOptions: options status: outStatus];
+    else
+        iterator = [_storage regularQueryWithOptions: options status: outStatus];
+    LogTo(Query, @"Query %@: Returning iterator", _name);
+    return iterator;
+}
+
+
+// Should this query be run as grouped/reduced?
+- (BOOL) groupOrReduceWithOptions: (CBLQueryOptions*) options {
+    if (options->group || options->groupLevel > 0)
+        return YES;
+    else if (options->reduceSpecified)
+        return options->reduce;
+    else
+        return (self.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
 }
 
 

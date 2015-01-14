@@ -82,29 +82,17 @@ extern NSArray* CBL_RunloopModes;
 - (void) _close; // closes without saving CBLModels.
 
 + (void) setAutoCompact: (BOOL)autoCompact;
-- (BOOL) _compact: (NSError**)outError;
 
 @property (nonatomic, readonly) id<CBL_Storage> storage;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 
 @property (nonatomic, readonly) BOOL exists;
-@property (nonatomic, readonly) NSUInteger _documentCount;
-@property (nonatomic, readonly) SequenceNumber _lastSequence;
 @property (nonatomic, readonly) UInt64 totalDataSize;
 @property (nonatomic, readonly) NSDate* startTime;
 
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
-
-/** Executes the block within a database transaction.
-    If the block returns a non-OK status, the transaction is aborted/rolled back.
-    If the block returns kCBLStatusDBBusy, the block will also be retried after a short delay;
-    if 10 retries all fail, the kCBLStatusDBBusy will be returned to the caller.
-    Any exception raised by the block will be caught and treated as kCBLStatusException. */
-- (CBLStatus) _inTransaction: (CBLStatus(^)())block;
-
-- (void) notifyChange: (CBLDatabaseChange*)change;
 
 
 // DOCUMENTS:
@@ -114,11 +102,10 @@ extern NSArray* CBL_RunloopModes;
                          revisionID: (NSString*)revID
                             options: (CBLContentOptions)options
                              status: (CBLStatus*)outStatus;
+#if DEBUG // convenience method for tests
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
                          revisionID: (NSString*)revID;
-
-- (BOOL) existsDocumentWithID: (NSString*)docID
-                   revisionID: (NSString*)revID;
+#endif
 
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
                        options: (CBLContentOptions)options;

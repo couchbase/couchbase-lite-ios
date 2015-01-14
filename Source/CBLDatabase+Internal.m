@@ -13,12 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import <CBForest/CBForest.hh>
-
-extern "C" {
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
+#import "CBL_ForestDBStorage.h"
 #import "CBLInternal.h"
 #import "CBLModel_Internal.h"
 #import "CBL_Revision.h"
@@ -33,10 +31,6 @@ extern "C" {
 
 #import "MYBlockUtils.h"
 #import "ExceptionUtils.h"
-}
-
-
-using namespace forestdb;
 
 
 NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
@@ -53,35 +47,11 @@ static BOOL sAutoCompact = YES;
 
 #define kLocalCheckpointDocId @"CBL_LocalCheckpoint"
 
-static void FDBLogCallback(forestdb::logLevel level, const char *message) {
-    switch (level) {
-        case forestdb::kDebug:
-            LogTo(CBLDatabaseVerbose, @"ForestDB: %s", message);
-            break;
-        case forestdb::kInfo:
-            LogTo(CBLDatabase, @"ForestDB: %s", message);
-            break;
-        case forestdb::kWarning:
-            Warn(@"%s", message);
-        case forestdb::kError:
-            Warn(@"ForestDB error: %s", message);
-        default:
-            break;
-    }
-}
-
 
 + (void) initialize {
     if (self == [CBLDatabase class]) {
         CBL_RunloopModes = @[NSRunLoopCommonModes, CBL_PrivateRunloopMode];
-
         [self setAutoCompact: YES];
-
-        forestdb::LogCallback = FDBLogCallback;
-        if (WillLogTo(CBLDatabaseVerbose))
-            forestdb::LogLevel = kDebug;
-        else if (WillLogTo(CBLDatabase))
-            forestdb::LogLevel = kInfo;
     }
 }
 
@@ -235,7 +205,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                                                         name: CBL_DatabaseWillBeDeletedNotification
                                                       object: nil];
         for (CBLView* view in _views.allValues)
-            [view databaseClosing];
+            [view close];
         
         _views = nil;
         for (CBL_Replicator* repl in _activeReplicators.copy)
@@ -253,16 +223,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         _modelFactory = nil;
     }
     [_manager _forgetDatabase: self];
-}
-
-
-- (NSUInteger) _documentCount {
-    return _storage.documentCount;
-}
-
-
-- (SequenceNumber) _lastSequence {
-    return _storage.lastSequence;
 }
 
 
@@ -284,21 +244,11 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 
-- (BOOL) _compact: (NSError**)outError {
-    return [_storage compact: outError];
-}
-
-
 #pragma mark - TRANSACTIONS & NOTIFICATIONS:
 
 
-- (CBLStatus) _inTransaction: (CBLStatus(^)())block {
-    return [_storage inTransaction: block];
-}
-
-
 /** Posts a local NSNotification of a new revision of a document. */
-- (void) notifyChange: (CBLDatabaseChange*)change {
+- (void) databaseStorageChanged:(CBLDatabaseChange *)change {
     LogTo(CBLDatabase, @"Added: %@", change.addedRevision);
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
@@ -355,11 +305,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     [self postChangeNotifications];
 }
 
-// CBL_StorageDelegate method
-- (void) databaseStorageChanged:(CBLDatabaseChange *)change {
-    [self notifyChange: change];
-}
-
 
 - (void) dbChanged: (NSNotification*)n {
     CBLDatabase* senderDB = n.object;
@@ -405,18 +350,14 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 
+#if DEBUG // convenience method for tests
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
                          revisionID: (NSString*)revID
 {
     CBLStatus status;
     return [self getDocumentWithID: docID revisionID: revID options: 0 status: &status];
 }
-
-
-- (BOOL) existsDocumentWithID: (NSString*)docID revisionID: (NSString*)revID {
-    CBLStatus status;
-    return [self getDocumentWithID: docID revisionID: revID options: kCBLNoBody status: &status] != nil;
-}
+#endif
 
 
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
@@ -500,8 +441,11 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     NSArray* path = [fnName componentsSeparatedByString: @"/"];
     if (path.count != 2)
         return nil;
+    CBLStatus status;
     CBL_Revision* rev = [self getDocumentWithID: [@"_design/" stringByAppendingString: path[0]]
-                                    revisionID: nil];
+                                    revisionID: nil
+                                        options: 0
+                                         status: &status];
     if (!rev)
         return nil;
     *outLanguage = rev[@"language"] ?: @"javascript";

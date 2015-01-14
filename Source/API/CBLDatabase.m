@@ -96,12 +96,12 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 - (NSUInteger) documentCount {
-    return self._documentCount;
+    return _storage.documentCount;
 }
 
 
 - (SequenceNumber) lastSequenceNumber {
-    return self._lastSequence;
+    return _storage.lastSequence;
 }
 
 
@@ -190,7 +190,7 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) inTransaction: (BOOL(^)(void))block {
-    return 200 == [self _inTransaction: ^CBLStatus {
+    return 200 == [_storage inTransaction: ^CBLStatus {
         return block() ? 200 : 999;
     }];
 }
@@ -228,11 +228,11 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) compact: (NSError**)outError {
-    CBLStatus status = [self _inTransaction: ^CBLStatus {
+    CBLStatus status = [_storage inTransaction: ^CBLStatus {
         // Do this in a transaction because garbageCollectAttachments expects the database to be
         // freshly compacted (i.e. only current revisions have bodies), and it could delete new
         // attachments added while it's working. So lock out other writers for the duration.
-        if ([self _compact: outError] && [self garbageCollectAttachments: outError])
+        if ([_storage compact: outError] && [self garbageCollectAttachments: outError])
             return kCBLStatusOK;
         else
             return kCBLStatusDBError;

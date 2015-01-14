@@ -87,7 +87,6 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 
 
 @protocol CBL_StorageDelegate;
-@protocol CBL_StorageAttachmentIDSet;
 
 
 /** Abstraction of database storage. */
@@ -226,18 +225,4 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 - (NSString*) generateRevIDForJSON: (NSData*)json
                            deleted: (BOOL)deleted
                          prevRevID: (NSString*)prevID;
-@end
-
-
-
-@protocol CBL_StorageAttachmentIDSet <NSObject>
-- (BOOL) containsAttachmentID: (NSData*)attachmentID;
-@end
-
-
-
-
-@interface CBL_ForestDBStorage : NSObject <CBL_Storage>
-// internal:
-@property (nonatomic, readonly) void* forestDatabase; // really forestdb::Database*
 @end

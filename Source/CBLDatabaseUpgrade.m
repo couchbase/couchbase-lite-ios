@@ -86,7 +86,7 @@ static int collateRevIDs(void *context,
     if (CBLStatusIsError(status))
         return status;
 
-    status = [_db _inTransaction: ^CBLStatus {
+    status = [_db.storage inTransaction: ^CBLStatus {
         int err;
         while (SQLITE_ROW == (err = sqlite3_step(_docQuery))) {
             @autoreleasepool {

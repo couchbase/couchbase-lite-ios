@@ -37,7 +37,7 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create;
 
-- (void) databaseClosing;
+- (void) close;
 
 @property (readonly) NSUInteger totalRows;
 
@@ -46,7 +46,6 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 @property (readonly) id<CBL_ViewStorage> storage;
 
 #if DEBUG  // for unit tests only
-@property (readonly) NSString* indexFilePath;
 - (void) setCollation: (CBLViewCollation)collation;
 - (void) forgetMapBlock;
 #endif

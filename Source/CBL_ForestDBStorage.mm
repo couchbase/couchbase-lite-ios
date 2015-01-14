@@ -7,8 +7,8 @@
 //
 
 extern "C" {
-#import "CBL_Storage.h"
-#import "CBL_ViewStorage.h"
+#import "CBL_ForestDBStorage.h"
+#import "CBL_ForestDBViewStorage.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
 }
@@ -40,6 +40,35 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 }
 
 @synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact, maxRevTreeDepth=_maxRevTreeDepth;
+
+
+static void FDBLogCallback(forestdb::logLevel level, const char *message) {
+    switch (level) {
+        case forestdb::kDebug:
+            LogTo(CBLDatabaseVerbose, @"ForestDB: %s", message);
+            break;
+        case forestdb::kInfo:
+            LogTo(CBLDatabase, @"ForestDB: %s", message);
+            break;
+        case forestdb::kWarning:
+            Warn(@"%s", message);
+        case forestdb::kError:
+            Warn(@"ForestDB error: %s", message);
+        default:
+            break;
+    }
+}
+
+
++ (void) initialize {
+    if (self == [CBLDatabase class]) {
+        forestdb::LogCallback = FDBLogCallback;
+        if (WillLogTo(CBLDatabaseVerbose))
+            forestdb::LogLevel = kDebug;
+        else if (WillLogTo(CBLDatabase))
+            forestdb::LogLevel = kInfo;
+    }
+}
 
 
 - (instancetype) init {

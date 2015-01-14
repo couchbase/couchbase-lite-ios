@@ -13,7 +13,6 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-extern "C" {
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase.h"
@@ -27,10 +26,7 @@ extern "C" {
 #import "CBLMisc.h"
 #import "Test.h"
 #import "ExceptionUtils.h"
-}
 
-#import <CBForest/CBForest.hh>
-using namespace forestdb;
 
 #ifdef GNUSTEP
 #import <openssl/sha.h>

@@ -55,19 +55,6 @@
 
 
 
-@interface CBL_ForestDBViewStorage : NSObject <CBL_ViewStorage>
-
-// internal:
-- (instancetype) initWithDBStorage: (CBL_ForestDBStorage*)dbStorage
-                              name: (NSString*)name
-                            create: (BOOL)create;
-+ (NSString*) fileNameToViewName: (NSString*)fileName;
-
-@end
-
-
-
-
 @protocol CBL_ViewStorageDelegate <NSObject>
 
 @property (readonly) CBLMapBlock mapBlock;

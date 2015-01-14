@@ -24,7 +24,6 @@
                      "digest":"md5-muNoTiLXyJYP9QkvPukNng==", "length":9, "stub":true}}
 */
 
-extern "C" {
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLBase64.h"
@@ -37,10 +36,6 @@ extern "C" {
 
 #import "CollectionUtils.h"
 #import "GTMNSData+zlib.h"
-}
-
-#import <CBForest/CBForest.hh>
-using namespace forestdb;
 
 
 // Length that constitutes a 'big' attachment
@@ -447,8 +442,11 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
         // Load existing revision if this is a replacement:
         *outStatus = [self loadRevisionBody: oldRev options: 0];
         if (CBLStatusIsError(*outStatus)) {
-            if (*outStatus == kCBLStatusNotFound && [self existsDocumentWithID: docID revisionID: nil])
+            if (*outStatus == kCBLStatusNotFound
+                    && [self getDocumentWithID: docID revisionID: nil options: kCBLNoBody
+                                        status: outStatus] != nil) {
                 *outStatus = kCBLStatusConflict;   // if some other revision exists, it's a conflict
+            }
             return nil;
         }
     } else {

@@ -7,7 +7,8 @@
 //
 
 extern "C" {
-#import "CBL_ViewStorage.h"
+#import "CBL_ForestDBViewStorage.h"
+#import "CBL_ForestDBStorage.h"
 #import "CBLSpecialKey.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
@@ -32,20 +33,6 @@ using namespace forestdb;
 
 // Close the index db after it's inactive this many seconds
 #define kCloseDelay 60.0
-
-
-static inline NSString* viewNameToFileName(NSString* viewName) {
-    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @":"].length > 0)
-        return nil;
-    viewName = [viewName stringByReplacingOccurrencesOfString: @"/" withString: @":"];
-    return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
-}
-
-static NSString* toJSONStr(id obj) {
-    if (!obj)
-        return @"nil";
-    return [CBLJSON stringWithJSONObject: obj options: CBLJSONWritingAllowFragments error: nil];
-}
 
 
 #pragma mark - C++ MAP/REDUCE GLUE:
@@ -145,9 +132,17 @@ private:
             collValue << value;
         emitFn(collKey, collValue);
     }
+
+    static NSString* toJSONStr(id obj) {
+        if (!obj)
+            return @"nil";
+        return [CBLJSON stringWithJSONObject: obj options: CBLJSONWritingAllowFragments error: nil];
+    }
+
 };
 
 
+#pragma mark -
 
 @implementation CBL_ForestDBViewStorage
 {
@@ -171,6 +166,13 @@ private:
     NSString* viewName = fileName.stringByDeletingPathExtension;
     viewName = [viewName stringByReplacingOccurrencesOfString: @":" withString: @"/"];
     return viewName;
+}
+
+static inline NSString* viewNameToFileName(NSString* viewName) {
+    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @":"].length > 0)
+        return nil;
+    viewName = [viewName stringByReplacingOccurrencesOfString: @"/" withString: @":"];
+    return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
 }
 
 
@@ -213,6 +215,26 @@ private:
 - (void) close {
     [self closeIndex];
 }
+
+
+- (NSUInteger) totalRows {
+    return (NSUInteger) self.index->rowCount();
+}
+
+
+- (SequenceNumber) lastSequenceIndexed {
+    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
+    return self.index->lastSequenceIndexed();
+}
+
+
+- (SequenceNumber) lastSequenceChangedAt {
+    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
+    return self.index->lastSequenceChangedAt();
+}
+
+
+#pragma mark - INDEX MANAGEMENT:
 
 
 - (MapReduceIndex*) index {
@@ -346,21 +368,23 @@ static NSString* viewNames(NSArray* views) {
 }
 
 
-- (NSUInteger) totalRows {
-    return (NSUInteger) self.index->rowCount();
+// This is really just for unit tests & debugging
+#if DEBUG
+- (NSArray*) dump {
+    MapReduceIndex* index = self.index;
+    if (!index)
+        return nil;
+    NSMutableArray* result = $marray();
+
+    IndexEnumerator e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
+    while (e.next()) {
+        [result addObject: $dict({@"key", CBLJSONString(e.key().readNSObject())},
+                                 {@"value", CBLJSONString(e.value().readNSObject())},
+                                 {@"seq", @(e.sequence())})];
+    }
+    return result;
 }
-
-
-- (SequenceNumber) lastSequenceIndexed {
-    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
-    return self.index->lastSequenceIndexed();
-}
-
-
-- (SequenceNumber) lastSequenceChangedAt {
-    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
-    return self.index->lastSequenceChangedAt();
-}
+#endif
 
 
 #pragma mark - QUERYING:
@@ -461,7 +485,110 @@ static NSString* viewNames(NSArray* views) {
 }
 
 
+// Changes a maxKey into one that also extends to any key it matches as a prefix.
+static id keyForPrefixMatch(id key, unsigned depth) {
+    if (depth < 1)
+        return key;
+    if ([key isKindOfClass: [NSString class]]) {
+        // Kludge: prefix match a string by appending max possible character value to it
+        return [key stringByAppendingString: @"\uffffffff"];
+    } else if ([key isKindOfClass: [NSArray class]]) {
+        NSMutableArray* nuKey = [key mutableCopy];
+        if (depth == 1) {
+            [nuKey addObject: @{}];
+        } else {
+            id lastObject = keyForPrefixMatch(nuKey.lastObject, depth-1);
+            [nuKey replaceObjectAtIndex: nuKey.count-1 withObject: lastObject];
+        }
+        return nuKey;
+    } else {
+        return key;
+    }
+}
+
+
 #pragma mark - REDUCING/GROUPING:
+
+
+- (CBLQueryIteratorBlock) reducedQueryWithOptions: (CBLQueryOptions*)options
+                                           status: (CBLStatus*)outStatus
+{
+    unsigned groupLevel = options->groupLevel;
+    bool group = options->group || groupLevel > 0;
+
+    CBLReduceBlock reduce = _delegate.reduceBlock;
+    if (options->reduceSpecified) {
+        if (!options->reduce) {
+            reduce = nil;
+        } else if (!reduce) {
+            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined",
+                 _name);
+            *outStatus = kCBLStatusBadParam;
+            return nil;
+        }
+    }
+
+    __block id lastKey = nil;
+    CBLQueryRowFilter filter = options.filter;
+    NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
+    if (reduce) {
+        keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
+        valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
+    }
+
+    if (!self.index) {
+        *outStatus = kCBLStatusNotFound;
+        return nil;
+    }
+    __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
+
+    *outStatus = kCBLStatusOK;
+    return ^CBLQueryRow*() {
+        CBLQueryRow* row = nil;
+        do {
+            id key = e.next() ? e.key().readNSObject() : nil;
+            if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
+                // key doesn't match lastKey; emit a grouped/reduced row for what came before:
+                row = [[CBLQueryRow alloc] initWithDocID: nil
+                                        sequence: 0
+                                             key: (group ? groupKey(lastKey, groupLevel) : $null)
+                                           value: callReduce(reduce, keysToReduce,valuesToReduce)
+                                   docProperties: nil
+                                         storage: self];
+                LogTo(QueryVerbose, @"Query %@: Reduced row with key=%@, value=%@",
+                                    _name, CBLJSONString(row.key), CBLJSONString(row.value));
+                if (filter && !filter(row))
+                    row = nil;
+                [keysToReduce removeAllObjects];
+                [valuesToReduce removeAllObjects];
+            }
+
+            if (key && reduce) {
+                // Add this key/value to the list to be reduced:
+                [keysToReduce addObject: key];
+                CollatableReader collatableValue = e.value();
+                id value;
+                if (collatableValue.peekTag() == CollatableReader::kSpecial) {
+                    CBLStatus status;
+                    CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e.docID()
+                                                             sequence: e.sequence()
+                                                               status: &status];
+                    if (!rev)
+                        Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+                    value = rev.properties;
+                } else {
+                    value = collatableValue.readNSObject();
+                }
+                [valuesToReduce addObject: (value ?: $null)];
+                //TODO: Reduce the keys/values when there are too many; then rereduce at end
+            }
+
+            lastKey = key;
+        } while (!row && lastKey);
+        return row;
+    };
+}
+
 
 #define PARSED_KEYS
 
@@ -532,86 +659,6 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-- (CBLQueryIteratorBlock) reducedQueryWithOptions: (CBLQueryOptions*)options
-                                           status: (CBLStatus*)outStatus
-{
-    unsigned groupLevel = options->groupLevel;
-    bool group = options->group || groupLevel > 0;
-
-    CBLReduceBlock reduce = _delegate.reduceBlock;
-    if (options->reduceSpecified) {
-        if (!options->reduce) {
-            reduce = nil;
-        } else if (!reduce) {
-            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined",
-                 _name);
-            *outStatus = kCBLStatusBadParam;
-            return nil;
-        }
-    }
-
-    __block id lastKey = nil;
-    CBLQueryRowFilter filter = options.filter;
-    NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
-    if (reduce) {
-        keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-        valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-    }
-
-    if (!self.index) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    }
-    __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
-
-    *outStatus = kCBLStatusOK;
-    return ^CBLQueryRow*() {
-        CBLQueryRow* row = nil;
-        do {
-            id key = e.next() ? e.key().readNSObject() : nil;
-            if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
-                // key doesn't match lastKey; emit a grouped/reduced row for what came before:
-                row = [[CBLQueryRow alloc] initWithDocID: nil
-                                        sequence: 0
-                                             key: (group ? groupKey(lastKey, groupLevel) : $null)
-                                           value: callReduce(reduce, keysToReduce,valuesToReduce)
-                                   docProperties: nil
-                                         storage: self];
-                LogTo(QueryVerbose, @"Query %@: Reduced row with key=%@, value=%@",
-                                    _name, CBLJSONString(row.key), CBLJSONString(row.value));
-                if (filter && !filter(row))
-                    row = nil;
-                [keysToReduce removeAllObjects];
-                [valuesToReduce removeAllObjects];
-            }
-
-            if (key && reduce) {
-                // Add this key/value to the list to be reduced:
-                [keysToReduce addObject: key];
-                CollatableReader collatableValue = e.value();
-                id value;
-                if (collatableValue.peekTag() == CollatableReader::kSpecial) {
-                    CBLStatus status;
-                    CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e.docID()
-                                                             sequence: e.sequence()
-                                                               status: &status];
-                    if (rev)
-                        Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
-                    value = rev.properties;
-                } else {
-                    value = collatableValue.readNSObject();
-                }
-                [valuesToReduce addObject: (value ?: $null)];
-                //TODO: Reduce the keys/values when there are too many; then rereduce at end
-            }
-
-            lastKey = key;
-        } while (!row && lastKey);
-        return row;
-    };
-}
-
-
 #pragma mark - FULL-TEXT:
 
 
@@ -622,9 +669,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (!index) {
         *outStatus = kCBLStatusNotFound;
         return nil;
-    } else if (index->indexType() != kCBLFullTextIndex) {
-        *outStatus = kCBLStatusBadRequest;
-        return nil;
+//    } else if (index->indexType() != kCBLFullTextIndex) {
+//        *outStatus = kCBLStatusBadRequest;
+//        return nil;
     }
 
     NSMutableArray* result = $marray();
@@ -712,47 +759,6 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
     CollatableReader value(valueSlice);
     return value.readString().copiedNSData();
-}
-
-
-// This is really just for unit tests & debugging
-#if DEBUG
-- (NSArray*) dump {
-    MapReduceIndex* index = self.index;
-    if (!index)
-        return nil;
-    NSMutableArray* result = $marray();
-
-    IndexEnumerator e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
-    while (e.next()) {
-        [result addObject: $dict({@"key", CBLJSONString(e.key().readNSObject())},
-                                 {@"value", CBLJSONString(e.value().readNSObject())},
-                                 {@"seq", @(e.sequence())})];
-    }
-    return result;
-}
-#endif
-
-
-// Changes a maxKey into one that also extends to any key it matches as a prefix.
-static id keyForPrefixMatch(id key, unsigned depth) {
-    if (depth < 1)
-        return key;
-    if ([key isKindOfClass: [NSString class]]) {
-        // Kludge: prefix match a string by appending max possible character value to it
-        return [key stringByAppendingString: @"\uffffffff"];
-    } else if ([key isKindOfClass: [NSArray class]]) {
-        NSMutableArray* nuKey = [key mutableCopy];
-        if (depth == 1) {
-            [nuKey addObject: @{}];
-        } else {
-            id lastObject = keyForPrefixMatch(nuKey.lastObject, depth-1);
-            [nuKey replaceObjectAtIndex: nuKey.count-1 withObject: lastObject];
-        }
-        return nuKey;
-    } else {
-        return key;
-    }
 }
 
 

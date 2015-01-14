@@ -154,7 +154,6 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     [self putDoc: $dict({@"clef", @"quatre"})];
     
     CBLView* view = [self createView];
-    Assert([view.indexFilePath hasSuffix: @"/db.cblite2/aview.viewindex"]);
 
     Assert(view.stale);
     AssertEq([view updateIndex], kCBLStatusOK);
@@ -1093,7 +1092,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBLView* view = [db viewNamed: @"fts"];
     [view setMapBlock: MAPBLOCK({
         if (doc[@"text"])
-            emit(doc[@"text"], doc[@"_id"]);
+            emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
 
     AssertEq([view updateIndex], kCBLStatusOK);
@@ -1103,7 +1102,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBLView* otherView = [db viewNamed: @"fts_other"];
     [otherView setMapBlock: MAPBLOCK({
         if (doc[@"text"])
-            emit(@"dog stormy", doc[@"_id"]);
+            emit(CBLTextKey(@"dog stormy"), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
     AssertEq([otherView updateIndex], kCBLStatusOK);
 
