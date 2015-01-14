@@ -19,7 +19,4 @@
 
 - (void) addActiveReplicator: (CBL_Replicator*)repl;
 
-- (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
-                       status: (CBLStatus*)outStatus;
-
 @end

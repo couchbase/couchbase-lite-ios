@@ -180,14 +180,14 @@
 
 
 - (NSString*) parentRevisionID  {
-    return _parentRevID ?: [_document.database getParentRevision: _rev].revID;
+    return _parentRevID ?: [_document.database.storage getParentRevision: _rev].revID;
 }
 
 - (CBLSavedRevision*) parentRevision  {
     if (_parentRevID)
         return [_document revisionWithID: _parentRevID];
     CBLDocument* document = _document;
-    return [document revisionFromRev: [document.database getParentRevision: _rev]];
+    return [document revisionFromRev: [document.database.storage getParentRevision: _rev]];
 }
 
 
@@ -239,7 +239,7 @@
 
 - (NSArray*) getRevisionHistory: (NSError**)outError {
     NSMutableArray* history = $marray();
-    for (CBL_Revision* rev in [self.database getRevisionHistory: _rev]) {
+    for (CBL_Revision* rev in [self.database.storage getRevisionHistory: _rev]) {
         CBLSavedRevision* revision;
         if ($equal(rev.revID, _rev.revID))
             revision = self;

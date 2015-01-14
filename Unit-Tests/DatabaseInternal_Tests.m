@@ -10,7 +10,6 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
-#import "CBLDatabase+LocalDocs.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabaseUpgrade.h"
 #import "CBL_Attachment.h"

@@ -266,9 +266,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                 id value;
                 if (collatableValue.peekTag() == CollatableReader::kSpecial) {
                     CBLStatus status;
-                    CBL_Revision* rev = [db getDocumentWithID: (NSString*)e.docID()
-                                                     sequence: e.sequence()
-                                                       status: &status];
+                    CBL_Revision* rev = [db.storage getDocumentWithID: (NSString*)e.docID()
+                                                             sequence: e.sequence()
+                                                               status: &status];
                     if (rev)
                         Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
                     value = rev.properties;

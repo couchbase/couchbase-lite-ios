@@ -6,33 +6,10 @@
 //  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Revision.h"
-#import "CBLStatus.h"
+#import "CBL_Storage.h"
 #import "CBLDatabase.h"
 @class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase,
        CBLDatabaseChange, CBL_Shared, CBLModelFactory;
-
-#ifdef __cplusplus
-namespace forestdb {
-    class Database;
-    class KeyStore;
-    class Transaction;
-    class VersionedDocument;
-    class MapReduceIndex;
-}
-typedef forestdb::Database Database;
-typedef forestdb::KeyStore KeyStore;
-typedef forestdb::Transaction Transaction;
-typedef forestdb::VersionedDocument VersionedDocument;
-typedef forestdb::MapReduceIndex MapReduceIndex;
-#else
-// Fake structs to appease the compiler when in non-C++ mode:
-typedef struct _cpp_Database Database;
-typedef struct _cpp_KeyStore KeyStore;
-typedef struct _cpp_Transaction Transaction;
-typedef struct _cpp_VersionedDocument VersionedDocument;
-typedef struct _cpp_MapReduceIndex MapReduceIndex;
-#endif
 
 
 /** NSNotification posted when one or more documents have been updated.
@@ -53,36 +30,6 @@ extern NSString* const CBL_PrivateRunloopMode;
 extern NSArray* CBL_RunloopModes;
 
 
-/** Options for what metadata to include in document bodies */
-typedef unsigned CBLContentOptions;
-enum {
-    kCBLIncludeAttachments = 1,              // adds inline bodies of attachments
-    kCBLIncludeConflicts = 2,                // adds '_conflicts' property (if relevant)
-    kCBLIncludeRevs = 4,                     // adds '_revisions' property
-    kCBLIncludeRevsInfo = 8,                 // adds '_revs_info' property
-    kCBLIncludeLocalSeq = 16,                // adds '_local_seq' property
-    kCBLLeaveAttachmentsEncoded = 32,        // i.e. don't decode
-    kCBLBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
-    kCBLNoBody = 128,                        // omit regular doc body properties
-    kCBLNoAttachments = 256                  // Omit the _attachments property
-};
-
-
-/** Options for _changes feed (-changesSinceSequence:). */
-typedef struct CBLChangesOptions {
-    unsigned limit;
-    CBLContentOptions contentOptions;
-    BOOL includeDocs;
-    BOOL includeConflicts;
-    BOOL sortBySequence;
-} CBLChangesOptions;
-
-extern const CBLChangesOptions kDefaultCBLChangesOptions;
-
-
-typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
-
-
 // Additional instance variable and property declarations
 @interface CBLDatabase ()
 {
@@ -90,12 +37,9 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
     NSString* _dir;
     NSString* _name;
     CBLManager* _manager;
-    Database* _forest;
-    Transaction* _forestTransaction;
-    KeyStore* _localDocs;
+    id<CBL_Storage> _storage;
     BOOL _readOnly;
     BOOL _isOpen;
-    int _transactionLevel;
     NSThread* _thread;
     dispatch_queue_t _dispatchQueue;    // One and only one of _thread or _dispatchQueue is set
     NSMutableDictionary* _views;
@@ -140,7 +84,7 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 + (void) setAutoCompact: (BOOL)autoCompact;
 - (BOOL) _compact: (NSError**)outError;
 
-@property (nonatomic, readonly) Database* forestDB;
+@property (nonatomic, readonly) id<CBL_Storage> storage;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
 
@@ -153,9 +97,6 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
 
-/** Executes the block, catching any exception and converting it to a CBLStatus return value. */
-- (CBLStatus) _try: (CBLStatus(^)())block;
-
 /** Executes the block within a database transaction.
     If the block returns a non-OK status, the transaction is aborted/rolled back.
     If the block returns kCBLStatusDBBusy, the block will also be retried after a short delay;
@@ -165,19 +106,13 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
 
 - (void) notifyChange: (CBLDatabaseChange*)change;
 
+
 // DOCUMENTS:
 
 
-- (CBL_Revision*) getDocumentWithID: (NSString*)docID 
-                       revisionID: (NSString*)revID
-                          options: (CBLContentOptions)options
-                           status: (CBLStatus*)outStatus;
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                       revisionID: (NSString*)revID;
-
-// Loads revision given its sequence. Assumes the given docID is valid.
-- (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                           sequence: (SequenceNumber)sequence
+                         revisionID: (NSString*)revID
+                            options: (CBLContentOptions)options
                              status: (CBLStatus*)outStatus;
 
 - (BOOL) existsDocumentWithID: (NSString*)docID
@@ -189,31 +124,6 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus;
 
-- (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev;
-
-- (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
-
-/** Returns an array of CBL_Revisions in reverse chronological order,
-    starting with the given revision. */
-- (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
-
-/** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as far as any of the revision ID strings in that array. */
-- (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
-                       startingFromAnyOf: (NSArray*)ancestorRevIDs;
-
-/** Returns all the known revisions (or all current/conflicting revisions) of a document. */
-- (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                    onlyCurrent: (BOOL)onlyCurrent;
-
-/** Returns IDs of local revisions of the same document, that have a lower generation number.
-    Does not return revisions whose bodies have been compacted away, or deletion markers.
-    If 'onlyAttachments' is true, only revisions with attachments will be returned. */
-- (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
-                                      limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments;
-
-/** Returns the most recent member of revIDs that appears in rev's ancestry. */
-- (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs;
 
 // VIEWS & QUERIES:
 
@@ -233,14 +143,12 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)();
     design document and compile them with the CBLViewCompiler. */
 - (CBLView*) compileViewNamed: (NSString*)name status: (CBLStatus*)outStatus;
 
-- (NSString*) _indexedTextWithID: (UInt64)fullTextID;
-
 //@property (readonly) NSArray* allViews;
 
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
-                                 options: (const CBLChangesOptions*)options
-                                  filter: (CBLFilterBlock)filter
-                                  params: (NSDictionary*)filterParams
+                                   options: (const CBLChangesOptions*)options
+                                    filter: (CBLFilterBlock)filter
+                                    params: (NSDictionary*)filterParams
                                     status: (CBLStatus*)outStatus;
 
 - (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus;

@@ -17,7 +17,6 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Insertion.h"
-#import "CBLDatabase+LocalDocs.h"
 #import "CBLDatabaseChange.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
@@ -243,7 +242,7 @@ static void catchInBlock(void (^block)()) {
 
 - (NSUInteger) maxRevTreeDepth {
     if (_maxRevTreeDepth == 0)
-        _maxRevTreeDepth = [[self infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+        _maxRevTreeDepth = [[_storage infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
     return _maxRevTreeDepth;
 }
 
@@ -252,15 +251,15 @@ static void catchInBlock(void (^block)()) {
         maxRevs = kDefaultMaxRevs;
     if (maxRevs != self.maxRevTreeDepth) {
         _maxRevTreeDepth = maxRevs;
-        [self setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];
+        [_storage setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];
     }
 }
 
 
 - (BOOL) replaceUUIDs: (NSError**)outError {
-    CBLStatus status = [self setInfo: CBLCreateUUID() forKey: @"publicUUID"];
+    CBLStatus status = [_storage setInfo: CBLCreateUUID() forKey: @"publicUUID"];
     if (status == kCBLStatusOK)
-        status = [self setInfo: CBLCreateUUID() forKey: @"privateUUID"];
+        status = [_storage setInfo: CBLCreateUUID() forKey: @"privateUUID"];
     if (status == kCBLStatusOK)
         return YES;
 
@@ -335,7 +334,7 @@ static NSString* makeLocalDocID(NSString* docID) {
 
 
 - (NSDictionary*) existingLocalDocumentWithID: (NSString*)localDocID {
-    return [self getLocalDocumentWithID: makeLocalDocID(localDocID) revisionID: nil].properties;
+    return [_storage getLocalDocumentWithID: makeLocalDocID(localDocID) revisionID: nil].properties;
 }
 
 - (BOOL) putLocalDocument: (NSDictionary*)properties
@@ -350,10 +349,10 @@ static NSString* makeLocalDocID(NSString* docID) {
         rev.properties = properties;
     // Now update the doc (or delete it, if properties is nil):
     CBLStatus status;
-    BOOL ok = [self putLocalRevision: rev
-                      prevRevisionID: nil
-                            obeyMVCC: NO
-                              status: &status] != nil;
+    BOOL ok = [_storage putLocalRevision: rev
+                          prevRevisionID: nil
+                                obeyMVCC: NO
+                                  status: &status] != nil;
     if (!ok && outError)
         *outError = CBLStatusToNSError(status, nil);
     return ok;

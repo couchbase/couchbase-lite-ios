@@ -15,7 +15,6 @@
 
 extern "C" {
 #import "CBLDatabase+Replication.h"
-#import "CBLDatabase+LocalDocs.h"
 #import "CBLInternal.h"
 #import "CBL_Puller.h"
 #import "MYBlockUtils.h"
@@ -80,11 +79,11 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID {
     // This table schema is out of date but I'm keeping it the way it is for compatibility.
     // The 'remote' column now stores the opaque checkpoint IDs, and 'push' is ignored.
-    return [self infoForKey: checkpointInfoKey(checkpointID)];
+    return [_storage infoForKey: checkpointInfoKey(checkpointID)];
 }
 
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID {
-    return [self setInfo: lastSequence forKey: checkpointInfoKey(checkpointID)] == kCBLStatusOK;
+    return [_storage setInfo: lastSequence forKey: checkpointInfoKey(checkpointID)] == kCBLStatusOK;
 }
 
 
@@ -105,30 +104,6 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
     }
     [result appendString: @"'"];
     return result;
-}
-
-
-- (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
-                       status: (CBLStatus*)outStatus
-{
-    [revs sortByDocID];
-    __block VersionedDocument* doc = NULL;
-    *outStatus = [self _try: ^CBLStatus {
-        NSString* lastDocID = nil;
-        for (NSInteger i = revs.count-1; i >= 0; i--) {
-            CBL_Revision* rev = revs[i];
-            if (!$equal(rev.docID, lastDocID)) {
-                lastDocID = rev.docID;
-                delete doc;
-                doc = new VersionedDocument(*_forest, lastDocID);
-            }
-            if (doc && doc->get(rev.revID) != NULL)
-                [revs removeRev: rev];
-        }
-        return kCBLStatusOK;
-    }];
-    delete doc;
-    return !CBLStatusIsError(*outStatus);
 }
 
 

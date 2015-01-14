@@ -10,7 +10,6 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
-#import "CBLDatabase+LocalDocs.h"
 #import "CBL_Revision.h"
 #import "CBLMisc.h"
 #import <sqlite3.h>
@@ -326,7 +325,7 @@ static int collateRevIDs(void *context,
         return status;
     int err;
     while (SQLITE_ROW == (err = sqlite3_step(infoQuery))) {
-        [_db setInfo: columnString(infoQuery, 1) forKey: columnString(infoQuery, 0)];
+        [_db.storage setInfo: columnString(infoQuery, 1) forKey: columnString(infoQuery, 0)];
     }
     return sqliteErrToStatus(err);
 }

@@ -16,42 +16,6 @@
 #define kViewIndexPathExtension @"viewindex"
 
 
-/** Standard query options for views. */
-@interface CBLQueryOptions : NSObject
-{
-    @public
-    const struct CBLGeoRect* bbox;
-    unsigned prefixMatchLevel;
-    unsigned skip;
-    unsigned limit;
-    unsigned groupLevel;
-    CBLContentOptions content;
-    BOOL descending;
-    BOOL includeDocs;
-    BOOL updateSeq;
-    BOOL localSeq;
-    BOOL inclusiveStart;
-    BOOL inclusiveEnd;
-    BOOL reduceSpecified;
-    BOOL reduce;                   // Ignore if !reduceSpecified
-    BOOL group;
-    BOOL fullTextSnippets;
-    BOOL fullTextRanking;
-    CBLIndexUpdateMode indexUpdateMode;
-    CBLAllDocsMode allDocsMode;
-}
-
-@property (copy, nonatomic) id startKey;
-@property (copy, nonatomic) id endKey;
-@property (copy, nonatomic) NSString* startKeyDocID;
-@property (copy, nonatomic) NSString* endKeyDocID;
-@property (copy, nonatomic) NSArray* keys;
-@property (copy, nonatomic) NSPredicate* filter;
-@property (copy, nonatomic) NSString* fullTextQuery;
-
-@end
-
-
 extern NSString* const kCBLViewChangeNotification;
 
 typedef enum {

@@ -296,7 +296,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger originalCount = inbox.count;
     CBLStatus status;
-    if (![_db findMissingRevisions: inbox status: &status]) {
+    if (![_db.storage findMissingRevisions: inbox status: &status]) {
         Warn(@"%@ failed to look up local revs; status=%d", self, status);
         inbox = nil;
     }
@@ -408,9 +408,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // already-known revisions, so the server can skip sending the bodies of any
     // attachments we already have locally:
     CBLDatabase* db = _db;
-    NSArray* knownRevs = [db getPossibleAncestorRevisionIDs: rev
-                                                      limit: kMaxNumberOfAttsSince
-                                            onlyAttachments: YES];
+    NSArray* knownRevs = [db.storage getPossibleAncestorRevisionIDs: rev
+                                                              limit: kMaxNumberOfAttsSince
+                                                    onlyAttachments: YES];
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     LogTo(SyncVerbose, @"%@: GET %@", self, path);

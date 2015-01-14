@@ -90,7 +90,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (BOOL) purgeDocument: (NSError**)outError {
-    CBLStatus status = [_database purgeRevisions: @{self.documentID : @[@"*"]} result: nil];
+    CBLStatus status = [_database.storage purgeRevisions: @{self.documentID : @[@"*"]} result: nil];
     if (CBLStatusIsError(status)) {
         if (outError)
             *outError = CBLStatusToNSError(status, nil);
@@ -200,7 +200,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (NSArray*) getLeafRevisions: (NSError**)outError includeDeleted: (BOOL)includeDeleted {
-    CBL_RevisionList* revs = [_database getAllRevisionsOfDocumentID: _docID onlyCurrent: YES];
+    CBL_RevisionList* revs = [_database.storage getAllRevisionsOfDocumentID: _docID
+                                                                onlyCurrent: YES];
     return [revs.allRevisions my_map: ^CBLSavedRevision*(CBL_Revision* rev) {
         if (!includeDeleted && rev.deleted)
             return nil;

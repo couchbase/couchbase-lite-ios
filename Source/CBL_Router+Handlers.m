@@ -18,7 +18,6 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
-#import "CBLDatabase+LocalDocs.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
@@ -180,7 +179,7 @@
     if (!body)
         return kCBLStatusBadJSON;
     NSDictionary* purgedDocs;
-    CBLStatus status = [db purgeRevisions: body result: &purgedDocs];
+    CBLStatus status = [db.storage purgeRevisions: body result: &purgedDocs];
     if (CBLStatusIsError(status))
         return status;
     _response.bodyObject = $dict({@"purged", purgedDocs});
@@ -312,7 +311,7 @@
     
     // Look them up, removing the existing ones from revs:
     CBLStatus status;
-    if (![db findMissingRevisions: revs status: &status])
+    if (![db.storage findMissingRevisions: revs status: &status])
         return status;
     
     // Return the missing revs in a somewhat different format:
@@ -340,7 +339,8 @@
             }
         }
         CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
-        NSArray* ancestors = [_db getPossibleAncestorRevisionIDs: rev limit: 0 onlyAttachments: NO];
+        NSArray* ancestors = [_db.storage getPossibleAncestorRevisionIDs: rev limit: 0
+                                                         onlyAttachments: NO];
         if (ancestors.count > 0)
             docInfo[@"possible_ancestors"] = ancestors;
     }
@@ -479,7 +479,7 @@
 
 
 - (NSDictionary*) changeDictForRev: (CBL_Revision*)rev {
-    return $dict({@"seq", @([_db getRevisionSequence: rev])},
+    return $dict({@"seq", @([_db.storage getRevisionSequence: rev])},
                  {@"id",  rev.docID},
                  {@"changes", $marray($dict({@"rev", rev.revID}))},
                  {@"deleted", rev.deleted ? $true : nil},
@@ -489,7 +489,7 @@
 - (NSDictionary*) responseBodyForChanges: (NSArray*)changes since: (UInt64)since {
     NSArray* results = [changes my_map: ^(id rev) {return [self changeDictForRev: rev];}];
     if (changes.count > 0)
-        since = [_db getRevisionSequence: changes.lastObject];
+        since = [_db.storage getRevisionSequence: changes.lastObject];
     return $dict({@"results", results}, {@"last_seq", @(since)});
 }
 
@@ -555,7 +555,7 @@
                 CBL_MutableRevision* mRev = winningRev.mutableCopy;
                 if (_changesIncludeDocs)
                     [_db loadRevisionBody: mRev options: 0];
-                if ([_db getRevisionSequence: rev] > 0)
+                if ([_db.storage getRevisionSequence: rev] > 0)
                     mRev.sequence = rev.sequence;
                 rev = mRev;
             }
@@ -692,7 +692,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         CBL_Revision* rev;
         BOOL includeAttachments = NO, sendMultipart = NO;
         if (isLocalDoc) {
-            rev = [db getLocalDocumentWithID: docID revisionID: revID];
+            rev = [db.storage getLocalDocumentWithID: docID revisionID: revID];
         } else {
             includeAttachments = (options & kCBLIncludeAttachments) != 0;
             if (includeAttachments) {
@@ -719,7 +719,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if (includeAttachments) {
             int minRevPos = 1;
             NSArray* attsSince = parseJSONRevArrayQuery([self query: @"atts_since"]);
-            NSString* ancestorID = [_db findCommonAncestorOf: rev withRevIDs: attsSince];
+            NSString* ancestorID = [_db.storage findCommonAncestorOf: rev withRevIDs: attsSince];
             if (ancestorID)
                 minRevPos = [CBL_Revision generationFromRevID: ancestorID] + 1;
             CBL_MutableRevision* stubbedRev = rev.mutableCopy;
@@ -740,7 +740,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if ($equal(openRevsParam, @"all")) {
             // ?open_revs=all returns all current/leaf revisions:
             BOOL includeDeleted = [self boolQuery: @"include_deleted"];
-            CBL_RevisionList* allRevs = [_db getAllRevisionsOfDocumentID: docID onlyCurrent: YES];
+            CBL_RevisionList* allRevs = [_db.storage getAllRevisionsOfDocumentID: docID
+                                                                     onlyCurrent: YES];
             result = [NSMutableArray arrayWithCapacity: allRevs.count];
             for (CBL_Revision* rev in allRevs.allRevisions) {
                 if (!includeDeleted && rev.deleted)
@@ -873,10 +874,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     
     CBLStatus status;
     if ([docID hasPrefix: @"_local/"])
-        *outRev = [db putLocalRevision: rev
-                        prevRevisionID: prevRevID
-                              obeyMVCC: YES
-                                status: &status];
+        *outRev = [db.storage putLocalRevision: rev
+                                prevRevisionID: prevRevID
+                                      obeyMVCC: YES
+                                        status: &status];
     else
         *outRev = [db putRevision: rev prevRevisionID: prevRevID
                     allowConflict: allowConflict

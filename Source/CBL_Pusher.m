@@ -16,6 +16,7 @@
 #import "CBL_Pusher.h"
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
+#import "CBL_Storage.h"
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
 #import "CBLBatcher.h"
@@ -181,7 +182,7 @@
 
 // Adds a local revision to the "pending" set that are awaiting upload:
 - (void) addPending: (CBL_Revision*)rev {
-    SequenceNumber seq = [_db getRevisionSequence: rev];
+    SequenceNumber seq = [_db.storage getRevisionSequence: rev];
     Assert(seq > 0);
     [_pendingSequences addIndex: (NSUInteger)seq];
     _maxPendingSequence = MAX(_maxPendingSequence, seq);
@@ -220,7 +221,7 @@
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
             LogTo(SyncVerbose, @"%@: Queuing #%lld %@",
-                  self, [db getRevisionSequence: nuRev], nuRev);
+                  self, [db.storage getRevisionSequence: nuRev], nuRev);
             [self addToInbox: nuRev];
         }
     }
@@ -284,7 +285,7 @@
 
                         // Add the revision history:
                         NSArray* possibleAncestors = revResults[@"possible_ancestors"];
-                        populatedRev[@"_revisions"] = [db getRevisionHistoryDict: populatedRev
+                        populatedRev[@"_revisions"] = [db.storage getRevisionHistoryDict: populatedRev
                                                                startingFromAnyOf: possibleAncestors];
                         properties = populatedRev.properties;
 

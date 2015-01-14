@@ -197,7 +197,17 @@
     options->allDocsMode = _allDocsMode;
     options->indexUpdateMode = _indexUpdateMode;
     options->indexUpdateMode = _indexUpdateMode;
-    options.filter = _postFilter;
+
+    NSPredicate* postFilter = _postFilter;
+    if (postFilter) {
+        CBLDatabase* database = _database;
+        options.filter = ^(CBLQueryRow* row) {
+            row.database = database;    //FIX: What if this is called on another thread??
+            BOOL result = [postFilter evaluateWithObject: row];
+            row.database = nil;
+            return result;
+        };
+    }
     return options;
 }
 
@@ -763,7 +773,7 @@ static inline BOOL isNonMagicValue(id value) {
                 Assert(_database);
                 Assert(_sequence);
                 CBLStatus status;
-                CBL_Revision* rev = [_database getDocumentWithID: _sourceDocID
+                CBL_Revision* rev = [_database.storage getDocumentWithID: _sourceDocID
                                                         sequence: _sequence
                                                           status: &status];
                 if (!rev)

@@ -129,6 +129,10 @@ typedef SInt64 SequenceNumber;
 @end
 
 
+/** A block that can filter revisions by passing or rejecting them. */
+typedef BOOL (^CBL_RevisionFilter)(CBL_Revision*);
+
+
 /** Compares revision IDs by CouchDB rules: generation number first, then the suffix. */
 NSComparisonResult CBLCompareRevIDs(NSString* revID1, NSString* revID2);
 
