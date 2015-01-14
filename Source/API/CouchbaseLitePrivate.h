@@ -130,27 +130,35 @@
                          mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
 @end
 
+
 @interface CBLQueryEnumerator ()
 + (NSSortDescriptor*) asNSSortDescriptor: (id)descOrStr; // Converts NSString to NSSortDescriptor
 @end
+
+
+@protocol CBL_QueryRowStorage;
 
 @interface CBLQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
-                 docProperties: (NSDictionary*)docProperties;
+                 docProperties: (NSDictionary*)docProperties
+                       storage: (id<CBL_QueryRowStorage>)storage;
 @property (readwrite, nonatomic) CBLDatabase* database;
+@property (readonly, nonatomic) id<CBL_QueryRowStorage> storage;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @end
 
+
 @interface CBLFullTextQueryRow ()
-- (instancetype) initWithView: (CBLView*)view
-                        docID: (NSString*)docID
-                     sequence: (SequenceNumber)sequence
-                   fullTextID: (unsigned)fullTextID;
+- (instancetype) initWithDocID: (NSString*)docID
+                      sequence: (SequenceNumber)sequence
+                    fullTextID: (unsigned)fullTextID
+                       storage: (id<CBL_QueryRowStorage>)storage;
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
 @end
+
 
 @interface CBLGeoQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID
@@ -158,7 +166,8 @@
                    boundingBox: (CBLGeoRect)bbox
                    geoJSONData: (NSData*)geoJSONData
                          value: (NSData*)valueData
-                 docProperties: (NSDictionary*)docProperties;
+                 docProperties: (NSDictionary*)docProperties
+                       storage: (id<CBL_QueryRowStorage>)storage;
 @end
 
 NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing

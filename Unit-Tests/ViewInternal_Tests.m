@@ -159,7 +159,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     Assert(view.stale);
     AssertEq([view updateIndex], kCBLStatusOK);
     
-    NSArray* dump = [view dump];
+    NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", @1}),
                               $dict({@"key", @"\"three\""}, {@"seq", @3}),
@@ -185,7 +185,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     Assert(view.stale);
     AssertEq([view updateIndex], kCBLStatusOK);
 
-    dump = [view dump];
+    dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", @6}),
                               $dict({@"key", @"\"four\""}, {@"seq", @7}),
@@ -213,7 +213,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBLView* view = [self createView];
     AssertEq([view updateIndex], kCBLStatusOK);
 
-    NSArray* dump = [view dump];
+    NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", @1}),
                               $dict({@"key", @"\"three\""}, {@"seq", @3}),
@@ -228,7 +228,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     Assert(view.stale);
     AssertEq([view updateIndex], kCBLStatusOK);
 
-    dump = [view dump];
+    dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"e\""}, {@"seq", @1}),
                               $dict({@"key", @"\"o\""}, {@"seq", @2}),
@@ -288,7 +288,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     
     CBLView* view = [self createView];
     AssertEq([view updateIndex], kCBLStatusOK);
-    NSArray* dump = [view dump];
+    NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"four\""}, {@"seq", @2}),
@@ -307,7 +307,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     
     // Update the view -- should contain only the key from the new rev, not the old:
     AssertEq([view updateIndex], kCBLStatusOK);
-    dump = [view dump];
+    dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6}),
                               $dict({@"key", @"\"five\""}, {@"seq", @5}),
@@ -326,7 +326,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     
     CBLView* view = [self createView];
     AssertEq([view updateIndex], kCBLStatusOK);
-    NSArray* dump = [view dump];
+    NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"four\""}, {@"seq", @2}),
@@ -348,7 +348,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 
     // Update the view -- should contain only the key from the new rev, not the old:
     AssertEq([view updateIndex], kCBLStatusOK);
-    dump = [view dump];
+    dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
                               $dict({@"key", @"\"four\""}, {@"seq", @6}),
@@ -525,7 +525,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     }) reduceBlock: NULL version: @"1"];
     AssertEq([view updateIndex], kCBLStatusOK);
 
-    NSArray* dump = [view dump];
+    NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}, {@"value", @"-1"}),
                               $dict({@"key", @"\"five\""}, {@"seq", @5}, {@"value", @"-2"}),
@@ -803,7 +803,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     } version: @"1"];
 
     AssertEq([view updateIndex], kCBLStatusOK);
-    NSArray* dump = [view dump];
+    NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", @2}),
                               $dict({@"key", @"\"CD\""}, {@"value", @"8.99"}, {@"seq", @1}),
@@ -1091,7 +1091,6 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     [docs addObject: [self putDoc: $dict({@"_id", @"55555"}, {@"text", @"was barking."})]];
 
     CBLView* view = [db viewNamed: @"fts"];
-    view.indexType = kCBLFullTextIndex;
     [view setMapBlock: MAPBLOCK({
         if (doc[@"text"])
             emit(doc[@"text"], doc[@"_id"]);
@@ -1102,7 +1101,6 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     // Create another view that outputs similar-but-different text, to make sure the results
     // don't get mixed up
     CBLView* otherView = [db viewNamed: @"fts_other"];
-    otherView.indexType = kCBLFullTextIndex;
     [otherView setMapBlock: MAPBLOCK({
         if (doc[@"text"])
             emit(@"dog stormy", doc[@"_id"]);

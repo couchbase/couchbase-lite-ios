@@ -491,47 +491,29 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 
 - (BOOL) garbageCollectAttachments: (NSError**)outError {
-    NSString* path = [_dir stringByAppendingPathComponent: @"attachmentIndex.forest"];
-    if (!CBLRemoveFileIfExists(path, outError))
-        return NO;
-
-    CBLStatus status = [self _try:^CBLStatus{
-        Database::config config = Database::defaultConfig();
-        config.buffercache_size = 128*1024;
-        config.wal_threshold = 128;
-        config.wal_flush_before_commit = true;
-        config.seqtree_opt = false;
-        Database attachmentIndex(path.fileSystemRepresentation, FDB_OPEN_FLAG_CREATE, config);
-        {
-            Transaction attachmentTransaction(&attachmentIndex);
-            Transaction& attachmentTransactionP = attachmentTransaction;
-
-
-            LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
-            [_storage findAllAttachments:^(NSDictionary *attachments) {
-                for (NSString* key in attachments) {
-                    NSDictionary* att = attachments[key];
-                    NSString* digest = att[@"digest"];
-                    CBLBlobKey blobKey;
-                    if (digestToBlobKey(digest, &blobKey)) {
-                        attachmentTransactionP.set(forestdb::slice(&blobKey, sizeof(blobKey)),
-                                                  forestdb::slice("x", 1));
-                    }
-                }
-            }];
-            LogTo(CBLDatabase, @"    ...found %llu attachments", attachmentIndex.getInfo().doc_count);
-
-            Database& attachmentIndexP = attachmentIndex; // workaround to allow block below to call it
-            NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
-                return attachmentIndexP.get(forestdb::slice(&blobKey, sizeof(blobKey))).exists();
-            }];
-
-            LogTo(CBLDatabase, @"    ... deleted %ld obsolete attachment files.", (long)deleted);
+    LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
+    NSMutableSet* keys = [NSMutableSet setWithCapacity: 1000];
+    CBLStatus status = [_storage findAllAttachments:^(NSDictionary *attachments) {
+        for (NSString* key in attachments) {
+            NSDictionary* att = attachments[key];
+            NSString* digest = att[@"digest"];
+            CBLBlobKey blobKey;
+            if (digestToBlobKey(digest, &blobKey)) {
+                NSData* keyData = [[NSData alloc] initWithBytes: &blobKey length: sizeof(blobKey)];
+                [keys addObject: keyData];
+            }
         }
-        attachmentIndex.deleteDatabase();
-        return kCBLStatusOK;
     }];
-    return !CBLStatusIsError(status);
+    if (status != kCBLStatusOK)
+        return ReturnNSErrorFromCBLStatus(status, outError);
+
+    LogTo(CBLDatabase, @"    ...found %lu attachments", (unsigned long)keys.count);
+    NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
+        NSData* keyData = [[NSData alloc] initWithBytes: &blobKey length: sizeof(blobKey)];
+        return [keys containsObject: keyData];
+    } error: outError];
+    LogTo(CBLDatabase, @"    ... deleted %ld obsolete attachment files.", (long)deleted);
+    return deleted >= 0;
 }
 
 

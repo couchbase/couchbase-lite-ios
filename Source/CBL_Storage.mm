@@ -6,11 +6,14 @@
 //
 //
 
+extern "C" {
 #import "CBL_Storage.h"
-#import <CBForest/CBForest.hh>
-#import "CBLForestBridge.h"
+#import "CBL_ViewStorage.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
+}
+#import <CBForest/CBForest.hh>
+#import "CBLForestBridge.h"
 
 using namespace forestdb;
 
@@ -29,13 +32,14 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 @implementation CBL_ForestDBStorage
 {
     @private
+    NSString* _directory;
     Database* _forest;
     Transaction* _forestTransaction;
     KeyStore* _localDocs;
     int _transactionLevel;
 }
 
-@synthesize delegate=_delegate, autoCompact=_autoCompact, maxRevTreeDepth=_maxRevTreeDepth;
+@synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact, maxRevTreeDepth=_maxRevTreeDepth;
 
 
 - (instancetype) init {
@@ -49,6 +53,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
 
 - (BOOL)openInDirectory: (NSString *)directory readOnly: (BOOL)readOnly error: (NSError**)outError {
+    _directory = [directory copy];
     NSString* forestPath = [directory stringByAppendingPathComponent: @"db.forest"];
     Database::openFlags options = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
 
@@ -81,6 +86,11 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
     delete _forest;
     _forest = NULL;
     _transactionLevel = 0;
+}
+
+
+- (void*) forestDatabase {
+    return _forest;
 }
 
 
@@ -457,7 +467,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                  sequence: 0
                                                       key: docID
                                                     value: nil
-                                            docProperties: nil];
+                                            docProperties: nil
+                                                  storage: nil];
             }
 
             NSString* revID = (NSString*)doc.revID();
@@ -488,7 +499,8 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
                                                  sequence: sequence
                                                       key: docID
                                                     value: value
-                                            docProperties: docContents];
+                                            docProperties: docContents
+                                                  storage: nil];
             if (filter && !filter(row)) {
                 LogTo(QueryVerbose, @"   ... on 2nd thought, filter predicate skipped that row");
                 continue;
@@ -530,30 +542,32 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 #pragma mark - PURGING / COMPACTING:
 
 
-- (void) findAllAttachments: (void (^)(NSDictionary* attachments))block {
-    DocEnumerator::Options options = DocEnumerator::Options::kDefault;
-    options.contentOptions = Database::kMetaOnly;
-    for (DocEnumerator e(*_forest, slice::null, slice::null, options); e.next(); ) {
-        VersionedDocument doc(*_forest, *e);
-        if (!doc.hasAttachments() || (doc.isDeleted() && !doc.isConflicted()))
-            continue;
-        doc.read();
-        // Since db is assumed to have just been compacted, we know that non-current revisions
-        // won't have any bodies. So only scan the current revs.
-        auto revNodes = doc.currentRevisions();
-        for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
-            if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
-                alloc_slice body = (*revNode)->readBody();
-                if (body.size > 0) {
-                    NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
-                                                            options: 0 error: NULL];
-                    block(rev.cbl_attachments);
+- (CBLStatus) findAllAttachments: (void (^)(NSDictionary* attachments))block {
+    return [self _try: ^CBLStatus{
+        DocEnumerator::Options options = DocEnumerator::Options::kDefault;
+        options.contentOptions = Database::kMetaOnly;
+        for (DocEnumerator e(*_forest, slice::null, slice::null, options); e.next(); ) {
+            VersionedDocument doc(*_forest, *e);
+            if (!doc.hasAttachments() || (doc.isDeleted() && !doc.isConflicted()))
+                continue;
+            doc.read();
+            // Since db is assumed to have just been compacted, we know that non-current revisions
+            // won't have any bodies. So only scan the current revs.
+            auto revNodes = doc.currentRevisions();
+            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
+                if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
+                    alloc_slice body = (*revNode)->readBody();
+                    if (body.size > 0) {
+                        NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
+                                                                options: 0 error: NULL];
+                        block(rev.cbl_attachments);
+                    }
                 }
             }
         }
-    }
+        return kCBLStatusOK;
+    }];
 }
-
 
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
                       result: (NSDictionary**)outResult
@@ -977,6 +991,23 @@ static void convertRevIDs(NSArray* revIDs,
     if (change)
         [_delegate databaseStorageChanged: change];
     return status;
+}
+
+
+#pragma mark - VIEWS:
+
+
+- (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name create:(BOOL)create {
+    return [[CBL_ForestDBViewStorage alloc] initWithDBStorage: self name: name create: create];
+}
+
+
+- (NSArray*) allViewNames {
+    NSArray* filenames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _directory
+                                                                             error: NULL];
+    return [filenames my_map: ^id(NSString* filename) {
+        return [CBL_ForestDBViewStorage fileNameToViewName: filename];
+    }];
 }
 
 

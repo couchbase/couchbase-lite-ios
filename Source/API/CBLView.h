@@ -58,10 +58,6 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 /** The name of the view. */
 @property (readonly) NSString* name;
 
-/** The type of the view. Defaults to general-purpose map-reduce.
-    This can be changed at any time, but the next query will rebuild the index from scratch. */
-@property CBLViewIndexType indexType;
-
 /** The map function that controls how index rows are created from documents. */
 @property (readonly) CBLMapBlock mapBlock;
 

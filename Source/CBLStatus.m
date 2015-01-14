@@ -89,6 +89,15 @@ NSError* CBLStatusToNSError( CBLStatus status, NSURL* url ) {
 }
 
 
+BOOL ReturnNSErrorFromCBLStatus( CBLStatus status, NSError** outError) {
+    if (!CBLStatusIsError(status))
+        return YES;
+    if (outError)
+        *outError = CBLStatusToNSError(status, nil);
+    return NO;
+}
+
+
 CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus) {
     NSInteger code = error.code;
     if (!error)

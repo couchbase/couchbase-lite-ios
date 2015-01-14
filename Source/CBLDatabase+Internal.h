@@ -67,7 +67,7 @@ extern NSArray* CBL_RunloopModes;
 
 
 // Internal API
-@interface CBLDatabase (Internal)
+@interface CBLDatabase (Internal) <CBL_StorageDelegate>
 
 - (instancetype) _initWithDir: (NSString*)dirPath
                          name: (NSString*)name
@@ -114,6 +114,8 @@ extern NSArray* CBL_RunloopModes;
                          revisionID: (NSString*)revID
                             options: (CBLContentOptions)options
                              status: (CBLStatus*)outStatus;
+- (CBL_Revision*) getDocumentWithID: (NSString*)docID
+                         revisionID: (NSString*)revID;
 
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;

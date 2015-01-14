@@ -197,29 +197,37 @@
 }
 
 
-- (NSInteger) deleteBlobsExceptMatching: (BOOL(^)(CBLBlobKey))predicate {
+- (NSInteger) deleteBlobsExceptMatching: (BOOL(^)(CBLBlobKey))predicate
+                                  error: (NSError**)outError
+{
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    NSArray* blob = [fmgr contentsOfDirectoryAtPath: _path error: NULL];
+    NSArray* blob = [fmgr contentsOfDirectoryAtPath: _path error: outError];
     if (!blob)
-        return 0;
+        return -1;
     NSUInteger numDeleted = 0;
-    BOOL errors = NO;
+    NSError* error = nil;
     for (NSString* filename in blob) {
         CBLBlobKey curKey;
         if ([[self class] getKey: &curKey forFilename: filename]) {
             if (!predicate(curKey)) {
-                NSError* error;
+                NSError* error1;
                 if ([fmgr removeItemAtPath: [_path stringByAppendingPathComponent: filename]
-                                     error: &error])
+                                     error: &error1])
                     ++numDeleted;
                 else {
-                    errors = YES;
+                    if (!error)
+                        error = error1;
                     Warn(@"%@: Failed to delete '%@': %@", self, filename, error);
                 }
             }
         }
     }
-    return errors ? -1 : numDeleted;
+    if (error) {
+        if (outError)
+            *outError = error;
+        return -1;
+    }
+    return numDeleted;
 }
 
 

@@ -16,6 +16,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLQuery+FullTextSearch.h"
 #import "CBLView+Internal.h"
+#import "CBL_ViewStorage.h"
 #import "CBLDatabase.h"
 #import "CBL_Server.h"
 #import "CBLMisc.h"
@@ -690,13 +691,13 @@ static id fromJSON( NSData* json ) {
     UInt64 _sequence;
     NSString* _sourceDocID;
     NSDictionary* _documentProperties;
-    @protected
     CBLDatabase* _database;
+    __weak id<CBL_QueryRowStorage> _storage;
 }
 
 
 @synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID,
-            database=_database, sequenceNumber=_sequence;
+            database=_database, storage=_storage, sequenceNumber=_sequence;
 
 
 - (instancetype) initWithDocID: (NSString*)docID
@@ -704,6 +705,7 @@ static id fromJSON( NSData* json ) {
                            key: (id)key
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties
+                       storage: (id<CBL_QueryRowStorage>)storage
 {
     self = [super init];
     if (self) {
@@ -715,13 +717,15 @@ static id fromJSON( NSData* json ) {
         _key = [key copy];
         _value = [value copy];
         _documentProperties = [docProperties copy];
+        _storage = storage;
     }
     return self;
 }
 
 
-static inline BOOL isNonMagicValue(id value) {
-    return value && !([value isKindOfClass: [NSData class]] && CBLValueIsEntireDoc(value));
+- (BOOL) isNonMagicValue {
+    return _value && !( [_value isKindOfClass: [NSData class]]
+                        && [_storage rowValueIsEntireDoc: _value] );
 }
 
 
@@ -740,8 +744,8 @@ static inline BOOL isNonMagicValue(id value) {
             && $equal(_documentProperties, other->_documentProperties)) {
         // If values were emitted, compare them. Otherwise we have nothing to go on so check
         // if _anything_ about the doc has changed (i.e. the sequences are different.)
-        if (isNonMagicValue(_value) || isNonMagicValue(other->_value))
-            return  $equal(_value, other->_value);
+        if ([self isNonMagicValue] || [other isNonMagicValue])
+            return $equal(_value, other->_value);
         else
             return _sequence == other->_sequence;
     }
@@ -767,20 +771,20 @@ static inline BOOL isNonMagicValue(id value) {
         value = _value;
         if ([value isKindOfClass: [NSData class]]) {
             // _value may start out as unparsed Collatable data
-            if (CBLValueIsEntireDoc(value)) {
+            id<CBL_QueryRowStorage> storage = _storage;
+            Assert(storage);
+            if ([storage rowValueIsEntireDoc: _value]) {
                 // Value is a placeholder ("*") denoting that the map function emitted "doc" as
                 // the value. So load the body of the revision now:
-                Assert(_database);
                 Assert(_sequence);
                 CBLStatus status;
-                CBL_Revision* rev = [_database.storage getDocumentWithID: _sourceDocID
-                                                        sequence: _sequence
-                                                          status: &status];
-                if (!rev)
+                value = [storage documentPropertiesWithID: _sourceDocID
+                                                 sequence: _sequence
+                                                   status: &status];
+                if (!value)
                     Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
-                value = rev.properties;
             } else {
-                value = CBLParseQueryValue(value);
+                value = [storage parseRowValue: _value];
             }
             _parsedValue = value;
         }

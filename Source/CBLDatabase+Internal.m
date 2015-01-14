@@ -18,6 +18,7 @@
 extern "C" {
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
+#import "CBLDatabase+Insertion.h"
 #import "CBLInternal.h"
 #import "CBLModel_Internal.h"
 #import "CBL_Revision.h"
@@ -180,6 +181,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
     // Open the ForestDB database:
     _storage = [[CBL_ForestDBStorage alloc] init];
+    _storage.delegate = self;
     if (![_storage openInDirectory: _dir readOnly: _readOnly error: outError])
         return NO;
     _storage.autoCompact = sAutoCompact;
@@ -291,7 +293,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 
 - (CBLStatus) _inTransaction: (CBLStatus(^)())block {
-    [_storage inTransaction: block];
+    return [_storage inTransaction: block];
 }
 
 
@@ -345,6 +347,17 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
         _postingChangeNotifications = false;
     }
+}
+
+
+// CBL_StorageDelegate method
+- (void) storageExitedTransaction {
+    [self postChangeNotifications];
+}
+
+// CBL_StorageDelegate method
+- (void) databaseStorageChanged:(CBLDatabaseChange *)change {
+    [self notifyChange: change];
 }
 
 
@@ -531,12 +544,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 
 - (NSArray*) allViews {
-    NSArray* filenames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir
-                                                                             error: NULL];
-    return [filenames my_map: ^id(NSString* filename) {
-        NSString* viewName = [CBLView fileNameToViewName: filename];
-        if (!viewName)
-            return nil;
+    return [_storage.allViewNames my_map: ^id(NSString* viewName) {
         return [self existingViewNamed: viewName];
     }];
 }
@@ -608,5 +616,13 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     return [self existingLocalDocumentWithID:kLocalCheckpointDocId];
 }
 
+
+// CBL_StorageDelegate method. It has to be in this category but the real method is in another one
+- (NSString*) generateRevIDForJSON: (NSData*)json
+                           deleted: (BOOL)deleted
+                         prevRevID: (NSString*)prevID
+{
+    return [self _generateRevIDForJSON: json deleted: deleted prevRevID: prevID];
+}
 
 @end

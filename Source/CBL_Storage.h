@@ -10,6 +10,7 @@
 #import "CBLStatus.h"
 #import "CBLQuery.h"
 @class CBLDatabaseChange;
+@protocol CBL_ViewStorage;
 
 
 /** Options for what metadata to include in document bodies */
@@ -86,7 +87,7 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 
 
 @protocol CBL_StorageDelegate;
-
+@protocol CBL_StorageAttachmentIDSet;
 
 
 /** Abstraction of database storage. */
@@ -100,6 +101,7 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 
 @property id<CBL_StorageDelegate> delegate;
 
+@property (nonatomic, readonly) NSString* directory;
 @property (nonatomic, readonly) NSUInteger documentCount;
 @property (nonatomic, readonly) SequenceNumber lastSequence;
 
@@ -116,9 +118,7 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
 - (CBLStatus) inTransaction: (CBLStatus(^)())block;
 
-
 // DOCUMENTS:
-
 
 - (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
                                 revisionID: (NSString*)revID
@@ -167,7 +167,7 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 - (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
                        status: (CBLStatus*)outStatus;
 
-- (void) findAllAttachments: (void (^)(NSDictionary* attachments))block;
+- (CBLStatus) findAllAttachments: (void (^)(NSDictionary* attachments))block;
 
 /** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
     @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
@@ -177,6 +177,8 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 
 - (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
                               status: (CBLStatus*)outStatus;
+
+// LOCAL DOCS / DB INFO:
 
 - (CBL_MutableRevision*) getLocalDocumentWithID: (NSString*)docID
                                      revisionID: (NSString*)revID;
@@ -191,6 +193,8 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 - (NSString*) infoForKey: (NSString*)key;
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key;
 
+// INSERTION:
+
 - (CBL_Revision*) addDocID: (NSString*)inDocID
                  prevRevID: (NSString*)inPrevRevID
                 properties: (NSMutableDictionary*)properties
@@ -203,6 +207,13 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
           revisionHistory: (NSArray*)history
           validationBlock: (CBL_StorageValidationBlock)validationBlock
                    source: (NSURL*)source;
+
+// VIEWS:
+
+- (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name
+                                  create: (BOOL)create;
+
+@property (readonly) NSArray* allViewNames;
 
 @end
 
@@ -219,12 +230,14 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 
 
 
+@protocol CBL_StorageAttachmentIDSet <NSObject>
+- (BOOL) containsAttachmentID: (NSData*)attachmentID;
+@end
+
+
+
 
 @interface CBL_ForestDBStorage : NSObject <CBL_Storage>
-
-
-/** Executes the block, catching any exception and converting it to a CBLStatus return value. */
-- (CBLStatus) _try: (CBLStatus(^)())block;
-
-
+// internal:
+@property (nonatomic, readonly) void* forestDatabase; // really forestdb::Database*
 @end

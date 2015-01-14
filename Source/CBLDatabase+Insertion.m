@@ -83,7 +83,7 @@ using namespace forestdb;
 
 /** Given an existing revision ID, generates an ID for the next revision.
     Returns nil if prevID is invalid. */
-- (NSString*) generateRevIDForJSON: (NSData*)json
+- (NSString*) _generateRevIDForJSON: (NSData*)json
                            deleted: (BOOL)deleted
                          prevRevID: (NSString*) prevID
 {
@@ -143,28 +143,6 @@ using namespace forestdb;
 
 
 #pragma mark - INSERTION:
-
-
-- (CBLDatabaseChange*) changeWithNewRevision: (CBL_Revision*)inRev
-                                isWinningRev: (BOOL)isWinningRev
-                                         doc: (VersionedDocument&)doc
-                                      source: (NSURL*)source
-{
-    CBL_Revision* winningRev = inRev;
-    if (!isWinningRev) {
-        const Revision* winningRevision = doc.currentRevision();
-        NSString* winningRevID = (NSString*)winningRevision->revID;
-        if (!$equal(winningRevID, inRev.revID)) {
-            winningRev = [[CBL_Revision alloc] initWithDocID: inRev.docID
-                                                       revID: winningRevID
-                                                     deleted: winningRevision->isDeleted()];
-        }
-    }
-    return [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
-                                            winningRevision: winningRev
-                                                 inConflict: doc.hasConflict()
-                                                     source: source];
-}
 
 
 - (CBL_Revision*) putRevision: (CBL_MutableRevision*)putRev
@@ -229,18 +207,6 @@ using namespace forestdb;
         LogTo(CBLDatabase, @"--> created %@", putRev);
     }
     return putRev;
-}
-
-
-static void convertRevIDs(NSArray* revIDs,
-                          std::vector<revidBuffer> &historyBuffers,
-                          std::vector<revid> &historyVector)
-{
-    historyBuffers.resize(revIDs.count);
-    for (NSString* revID in revIDs) {
-        historyBuffers.push_back(revidBuffer(revID));
-        historyVector.push_back(historyBuffers.back());
-    }
 }
 
 

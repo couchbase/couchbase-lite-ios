@@ -10,10 +10,8 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLView.h"
 #import "CBLQuery.h"
+#import "CBL_ViewStorage.h"
 @class CBForestMapReduceIndex;
-
-
-#define kViewIndexPathExtension @"viewindex"
 
 
 extern NSString* const kCBLViewChangeNotification;
@@ -25,17 +23,14 @@ typedef enum {
 } CBLViewCollation;
 
 
-/** Returns YES if the data is meant as a placeholder for the doc's entire data (a "*") */
-BOOL CBLValueIsEntireDoc(NSData* valueData);
-id CBLParseQueryValue(NSData* collatable);
-
 BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options);
 
 
-@interface CBLView ()
+@interface CBLView () <CBL_ViewStorageDelegate>
 {
     @private
     CBLDatabase* __weak _weakDB;
+    id<CBL_ViewStorage> _storage;
     NSString* _name;
     uint8_t _collation;
 }
@@ -44,15 +39,11 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 
 - (void) databaseClosing;
 
-+ (NSString*) fileNameToViewName: (NSString*)fileName;
-
 @property (readonly) NSUInteger totalRows;
 
-@property (readonly) MapReduceIndex* index;
-
-@property (readonly) NSString* mapVersion;
-
 @property (readonly) SequenceNumber lastSequenceChangedAt;
+
+@property (readonly) id<CBL_ViewStorage> storage;
 
 #if DEBUG  // for unit tests only
 @property (readonly) NSString* indexFilePath;
@@ -92,11 +83,5 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
     @return  An array of CBLQueryRow. */
 - (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
                                      status: (CBLStatus*)outStatus;
-- (NSData*) fullTextForDocument: (NSString*)docID
-                       sequence: (SequenceNumber)sequence
-                     fullTextID: (unsigned)fullTextID;
-#if DEBUG
-- (NSArray*) dump;
-#endif
 
 @end

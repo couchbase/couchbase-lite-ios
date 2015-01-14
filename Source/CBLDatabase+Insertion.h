@@ -16,6 +16,10 @@
 
 + (NSString*) generateDocumentID;
 
+- (NSString*) _generateRevIDForJSON: (NSData*)json
+                            deleted: (BOOL)deleted
+                          prevRevID: (NSString*) prev;
+
 - (CBL_Revision*) putDocID: (NSString*)inDocID
                 properties: (NSMutableDictionary*)properties
             prevRevisionID: (NSString*)inPrevRevID

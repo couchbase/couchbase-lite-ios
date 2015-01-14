@@ -15,6 +15,7 @@
 
 extern "C" {
 #import "CouchbaseLitePrivate.h"
+#import "CBL_ViewStorage.h"
 #import "CBLView+Internal.h"
 #import "CBLSpecialKey.h"
 #import "CBL_Shared.h"
@@ -23,19 +24,9 @@ extern "C" {
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
 }
-#import <CBForest/CBForest.hh>
-#import <CBForest/GeoIndex.hh>
-#import <CBForest/MapReduceDispatchIndexer.hh>
-#import <CBForest/Tokenizer.hh>
-using namespace forestdb;
-#import "CBLForestBridge.h"
 
 
-// Size of ForestDB buffer cache allocated for a view index
-#define kViewBufferCacheSize (8*1024*1024)
-
-// Close the index db after it's inactive this many seconds
-#define kCloseDelay 60.0
+NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 
 
 // GROUP_VIEWS_BY_DEFAULT alters the behavior of -viewsInGroup and thus which views will be
@@ -44,123 +35,6 @@ using namespace forestdb;
 // and will be re-indexed only individually. (The latter matches the CBL 1.0 behavior and
 // avoids unexpected slowdowns if an app suddenly has all its views re-index at once.)
 #undef GROUP_VIEWS_BY_DEFAULT
-
-
-static inline NSString* viewNameToFileName(NSString* viewName) {
-    if ([viewName hasPrefix: @"."] || [viewName rangeOfString: @":"].length > 0)
-        return nil;
-    viewName = [viewName stringByReplacingOccurrencesOfString: @"/" withString: @":"];
-    return [viewName stringByAppendingPathExtension: kViewIndexPathExtension];
-}
-
-static NSString* toJSONStr(id obj) {
-    if (!obj)
-        return @"nil";
-    return [CBLJSON stringWithJSONObject: obj options: CBLJSONWritingAllowFragments error: nil];
-}
-
-
-#pragma mark - C++ MAP/REDUCE GLUE:
-
-
-class CocoaMappable : public Mappable {
-public:
-    explicit CocoaMappable(const Document& doc, NSDictionary* dict)
-    :Mappable(doc), body(dict)
-    { }
-
-    __strong NSDictionary* body;
-};
-
-NSString* const kCBLViewChangeNotification = @"CBLViewChange";
-
-class CocoaIndexer : public MapReduceIndexer {
-public:
-    CocoaIndexer(std::vector<MapReduceIndex*> indexes, Transaction &t)
-    :MapReduceIndexer(indexes, t),
-     _sourceStore(indexes[0]->sourceStore())
-    { }
-
-    virtual void addDocument(const Document& cppDoc) {
-        if (VersionedDocument::flagsOfDocument(cppDoc) & VersionedDocument::kDeleted) {
-            CocoaMappable mappable(cppDoc, nil);
-            addMappable(mappable);
-        } else {
-            @autoreleasepool {
-                VersionedDocument vdoc(_sourceStore, cppDoc);
-                const Revision* node = vdoc.currentRevision();
-                NSDictionary* body = [CBLForestBridge bodyOfNode: node
-                                                         options: kCBLIncludeLocalSeq];
-                LogTo(ViewVerbose, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
-                CocoaMappable mappable(cppDoc, body);
-                addMappable(mappable);
-            }
-        }
-    }
-
-private:
-    KeyStore _sourceStore;
-};
-
-
-class MapReduceBridge : public MapFn {
-public:
-    CBLMapBlock mapBlock;
-    NSString* viewName;
-    CBLViewIndexType indexType;
-
-    virtual void operator() (const Mappable& mappable, EmitFn& emitFn) {
-        NSDictionary* doc = ((CocoaMappable&)mappable).body;
-        if (!doc)
-            return;
-        CBLMapEmitBlock emit = ^(id key, id value) {
-            if (indexType == kCBLFullTextIndex) {
-                Assert([key isKindOfClass: [NSString class]]);
-                LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, toJSONStr(value));
-                emitFn.emitTextTokens(nsstring_slice(key));
-            } else if ([key isKindOfClass: [CBLSpecialKey class]]) {
-                CBLSpecialKey *specialKey = key;
-                LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, toJSONStr(value));
-                NSString* text = specialKey.text;
-                if (text) {
-                    emitFn.emitTextTokens(nsstring_slice(text));
-                } else {
-                    emitGeo(specialKey.rect, value, doc, emitFn);
-                }
-            } else if (key) {
-                LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
-                callEmit(key, value, doc, emitFn);
-            }
-        };
-        mapBlock(doc, emit);  // Call the apps' map block!
-    }
-
-private:
-    // Geo-index a rectangle
-    void emitGeo(CBLGeoRect rect, id value, NSDictionary* doc, EmitFn& emitFn) {
-        geohash::area area(geohash::coord(rect.min.x, rect.min.y),
-                           geohash::coord(rect.max.x, rect.max.y));
-        Collatable collKey, collValue;
-        collKey << area.mid(); // HACK: Can only emit points for now
-        if (value == doc)
-            collValue.addSpecial(); // placeholder for doc
-        else if (value)
-            collValue << value;
-        emitFn(collKey, collValue);
-    }
-
-    // Emit a regular key/value pair
-    void callEmit(id key, id value, NSDictionary* doc, EmitFn& emitFn) {
-        Collatable collKey, collValue;
-        collKey << key;
-        if (value == doc)
-            collValue.addSpecial(); // placeholder for doc
-        else if (value)
-            collValue << value;
-        emitFn(collKey, collValue);
-    }
-};
-
 
 
 @implementation CBLQueryOptions
@@ -186,24 +60,6 @@ private:
 #pragma mark -
 
 @implementation CBLView
-{
-    NSString* _path;
-    Database* _indexDB;
-    MapReduceIndex* _index;
-    CBLViewIndexType _indexType;
-    MapReduceBridge _mapReduceBridge;
-}
-
-
-+ (NSString*) fileNameToViewName: (NSString*)fileName {
-    if (![fileName.pathExtension isEqualToString: kViewIndexPathExtension])
-        return nil;
-    if ([fileName hasPrefix: @"."])
-        return nil;
-    NSString* viewName = fileName.stringByDeletingPathExtension;
-    viewName = [viewName stringByReplacingOccurrencesOfString: @":" withString: @"/"];
-    return viewName;
-}
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create {
@@ -211,38 +67,14 @@ private:
     Assert(name.length);
     self = [super init];
     if (self) {
-        _weakDB = db;
-        _name = [name copy];
-        _path = [db.dir stringByAppendingPathComponent: viewNameToFileName(_name)];
-        _indexType = (CBLViewIndexType)-1; // unknown
-        if ((0)) { // appease static analyzer
-            _collation = 0;
-        }
-
-        if (![[NSFileManager defaultManager] fileExistsAtPath: _path isDirectory: NULL]) {
-            if (!create || ![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE])
-                return nil;
-            [self closeIndexSoon];
-        }
-
-#if TARGET_OS_IPHONE
-        // On iOS, close the index when there's a low-memory notification:
-        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(closeIndex)
-                             name: UIApplicationDidReceiveMemoryWarningNotification object: nil];
-#endif
+        _storage = [db.storage viewStorageNamed: name create: create];
+        _storage.delegate = self;
     }
     return self;
 }
 
 
-#if TARGET_OS_IPHONE
-- (void) dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-#endif
-
-
-@synthesize name=_name;
+@synthesize name=_name, storage=_storage;
 
 
 - (NSString*) description {
@@ -275,76 +107,20 @@ private:
 }
 
 
-- (MapReduceIndex*) index {
-    [self closeIndexSoon];
-    return _index ?: [self openIndexWithOptions: 0];
-}
-
-
-- (MapReduceIndex*) openIndexWithOptions: (Database::openFlags)options {
-    Assert(!_indexDB);
-    Assert(!_index);
-    auto config = Database::defaultConfig();
-    config.buffercache_size = kViewBufferCacheSize;
-    config.wal_threshold = 8192;
-    config.wal_flush_before_commit = true;
-    config.seqtree_opt = YES;
-    config.compaction_threshold = 50;
-    try {
-        _indexDB = new Database(_path.fileSystemRepresentation, options, config);
-        _index = new MapReduceIndex(_indexDB, "index", *_weakDB.forestDB);
-    } catch (forestdb::error x) {
-        Warn(@"Unable to open index of %@: ForestDB error %d", self, x.status);
-        return nil;
-    } catch (...) {
-        Warn(@"Unable to open index of %@: Unexpected exception", self);
-        return nil;
-    }
-
-//    if (_indexType >= 0)
-//        _index->indexType = _indexType;  // In case it was changed while index was closed
-//    if (_indexType == kCBLFullTextIndex)
-//        _index->textTokenizer = [[CBTextTokenizer alloc] init];
-    LogTo(View, @"%@: Opened index %p (type %d)", self, _index, _index->indexType());
-    return _index;
-}
-
-
-- (void) closeIndex {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
-                                               object: nil];
-    if (_indexDB)
-        LogTo(View, @"%@: Closing index db", self);
-    delete _indexDB;
-    _indexDB = NULL;
-    delete _index;
-    _index = NULL;
-}
-
-- (void) closeIndexSoon {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
-                                               object: nil];
-    [self performSelector: @selector(closeIndex) withObject: nil afterDelay: kCloseDelay];
-}
-
-
 - (void) databaseClosing {
-    [self closeIndex];
+    [_storage close];
+    _storage = nil;
     _weakDB = nil;
 }
 
 
 - (void) deleteIndex {
-    if (self.index) {
-        Transaction t(_indexDB);
-        _index->erase(t);
-    }
+    [_storage deleteIndex];
 }
 
 
 - (void) deleteView {
-    [self closeIndex];
-    [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
+    [_storage deleteView];
     [_weakDB forgetViewNamed: _name];
 }
 
@@ -448,17 +224,6 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 
-- (CBLViewIndexType) indexType {
-    if (_index || _indexType < 0)
-        _indexType = (CBLViewIndexType) self.index->indexType();
-    return _indexType;
-}
-
-- (void)setIndexType:(CBLViewIndexType)indexType {
-    _indexType = indexType;
-}
-
-
 #pragma mark - INDEXING:
 
 
@@ -486,18 +251,6 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 
-- (void) setupIndex {
-    _mapReduceBridge.mapBlock = self.mapBlock;
-    _mapReduceBridge.viewName = _name;
-    _mapReduceBridge.indexType = _indexType;
-    (void)self.index; // open db
-    {
-        Transaction t(_indexDB);
-        _index->setup(t, _indexType, &_mapReduceBridge, self.mapVersion.UTF8String);
-    }
-}
-
-
 /** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
 - (CBLStatus) updateIndex {
     return [self updateIndexes: self.viewsInGroup];
@@ -508,40 +261,8 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 - (CBLStatus) updateIndexes: (NSArray*)views {
-    LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), self.name);
-    try {
-        std::vector<MapReduceIndex*> indexes;
-        for (CBLView* view in views) {
-            [view setupIndex];
-            CBLMapBlock mapBlock = view.mapBlock;
-            MapReduceIndex* index = view.index;
-            if (mapBlock && index)
-                indexes.push_back(index);
-            else
-                LogTo(ViewVerbose, @"    %@ has no map block; skipping it", view.name);
-        }
-        (void)self.index;
-        bool updated;
-        {
-            Transaction t(_indexDB);
-            CocoaIndexer indexer(indexes, t);
-            indexer.triggerOnIndex(_index);
-            updated = indexer.run();
-        }
-        return updated ? kCBLStatusOK : kCBLStatusNotModified;
-    } catch (forestdb::error x) {
-        Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
-        return CBLStatusFromForestDBStatus(x.status);
-    } catch (...) {
-        Warn(@"Unexpected exception indexing %@", self);
-        return kCBLStatusException;
-    }
+    return [_storage updateIndexes: views];
 }
-
-static NSString* viewNames(NSArray* views) {
-    return [[views my_map: ^(CBLView* view) {return view.name;}] componentsJoinedByString: @", "];
-}
-
 
 - (void) postPublicChangeNotification {
     // Post the public kCBLViewChangeNotification:
@@ -563,19 +284,17 @@ static NSString* viewNames(NSArray* views) {
 
 
 - (NSUInteger) totalRows {
-    return (NSUInteger) self.index->rowCount();
+    return _storage.totalRows;
 }
 
 
 - (SequenceNumber) lastSequenceIndexed {
-    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
-    return self.index->lastSequenceIndexed();
+    return _storage.lastSequenceIndexed;
 }
 
 
 - (SequenceNumber) lastSequenceChangedAt {
-    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
-    return self.index->lastSequenceChangedAt();
+    return _storage.lastSequenceChangedAt;
 }
 
 

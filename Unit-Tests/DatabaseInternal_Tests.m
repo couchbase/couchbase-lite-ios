@@ -11,6 +11,7 @@
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
+#import "CBL_Storage.h"
 #import "CBLDatabaseUpgrade.h"
 #import "CBL_Attachment.h"
 #import "CBL_Body.h"
@@ -169,7 +170,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     Log(@"Changes = %@", changes);
     AssertEq(changes.count, 1u);
     
-    NSArray* history = [db getRevisionHistory: revD];
+    NSArray* history = [db.storage getRevisionHistory: revD];
     Log(@"History = %@", history);
     AssertEqual(history, (@[revD, rev2, rev1]));
 
@@ -177,10 +178,10 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     NSString* revDSuffix = [revD.revID substringFromIndex: 2];
     NSString* rev2Suffix = [rev2.revID substringFromIndex: 2];
     NSString* rev1Suffix = [rev1.revID substringFromIndex: 2];
-    AssertEqual(([db getRevisionHistoryDict: revD startingFromAnyOf: @[@"??", rev2.revID]]),
+    AssertEqual(([db.storage getRevisionHistoryDict: revD startingFromAnyOf: @[@"??", rev2.revID]]),
                  (@{@"ids": @[revDSuffix, rev2Suffix],
                     @"start": @3}));
-    AssertEqual(([db getRevisionHistoryDict: revD startingFromAnyOf: nil]),
+    AssertEqual(([db.storage getRevisionHistoryDict: revD startingFromAnyOf: nil]),
                  (@{@"ids": @[revDSuffix, rev2Suffix, rev1Suffix],
                     @"start": @3}));
 
@@ -356,7 +357,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     AssertEqual(gotRev, rev);
     AssertEqual(gotRev.properties, rev.properties);
     
-    NSArray* revHistory = [db getRevisionHistory: gotRev];
+    NSArray* revHistory = [db.storage getRevisionHistory: gotRev];
     AssertEq(revHistory.count, history.count);
     for (unsigned i=0; i<history.count; i++) {
         CBL_Revision* hrev = revHistory[i];
@@ -437,7 +438,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertEqual(current, conflict);
 
     // Check that the list of conflicts is accurate:
-    CBL_RevisionList* conflictingRevs = [db getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES];
+    CBL_RevisionList* conflictingRevs = [db.storage getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES];
     AssertEqual(conflictingRevs.allRevisions, (@[conflict, rev]));
 
     // Get the _changes feed and verify only the winner is in it:
@@ -1006,14 +1007,14 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     CBL_Body* doc = [[CBL_Body alloc] initWithProperties: props];
     CBL_Revision* rev1 = [[CBL_Revision alloc] initWithBody: doc];
     CBLStatus status;
-    rev1 = [db putLocalRevision: rev1 prevRevisionID: nil obeyMVCC: YES status: &status];
+    rev1 = [db.storage putLocalRevision: rev1 prevRevisionID: nil obeyMVCC: YES status: &status];
     AssertEq(status, kCBLStatusCreated);
     Log(@"Created: %@", rev1);
     AssertEqual(rev1.docID, @"_local/doc1");
     Assert([rev1.revID hasPrefix: @"1-"]);
     
     // Read it back:
-    CBL_Revision* readRev = [db getLocalDocumentWithID: rev1.docID revisionID: nil];
+    CBL_Revision* readRev = [db.storage getLocalDocumentWithID: rev1.docID revisionID: nil];
     Assert(readRev != nil);
     AssertEqual(readRev[@"_id"], rev1.docID);
     AssertEqual(readRev[@"_rev"], rev1.revID);
@@ -1025,35 +1026,35 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     doc = [CBL_Body bodyWithProperties: props];
     CBL_Revision* rev2 = [[CBL_Revision alloc] initWithBody: doc];
     CBL_Revision* rev2Input = rev2;
-    rev2 = [db putLocalRevision: rev2 prevRevisionID: rev1.revID obeyMVCC: YES status: &status];
+    rev2 = [db.storage putLocalRevision: rev2 prevRevisionID: rev1.revID obeyMVCC: YES status: &status];
     AssertEq(status, kCBLStatusCreated);
     Log(@"Updated: %@", rev2);
     AssertEqual(rev2.docID, rev1.docID);
     Assert([rev2.revID hasPrefix: @"2-"]);
     
     // Read it back:
-    readRev = [db getLocalDocumentWithID: rev2.docID revisionID: nil];
+    readRev = [db.storage getLocalDocumentWithID: rev2.docID revisionID: nil];
     Assert(readRev != nil);
     AssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Try to update the first rev, which should fail:
-    AssertNil([db putLocalRevision: rev2Input prevRevisionID: rev1.revID obeyMVCC: YES status: &status]);
+    AssertNil([db.storage putLocalRevision: rev2Input prevRevisionID: rev1.revID obeyMVCC: YES status: &status]);
     AssertEq(status, kCBLStatusConflict);
     
     // Delete it:
     CBL_Revision* revD = [[CBL_Revision alloc] initWithDocID: rev2.docID revID: nil deleted: YES];
-    AssertEqual([db putLocalRevision: revD prevRevisionID: nil obeyMVCC: YES status: &status], nil);
+    AssertEqual([db.storage putLocalRevision: revD prevRevisionID: nil obeyMVCC: YES status: &status], nil);
     AssertEq(status, kCBLStatusConflict);
-    revD = [db putLocalRevision: revD prevRevisionID: rev2.revID obeyMVCC: YES status: &status];
+    revD = [db.storage putLocalRevision: revD prevRevisionID: rev2.revID obeyMVCC: YES status: &status];
     AssertEq(status, kCBLStatusOK);
     
     // Delete nonexistent doc:
     CBL_Revision* revFake = [[CBL_Revision alloc] initWithDocID: @"_local/fake" revID: nil deleted: YES];
-    [db putLocalRevision: revFake prevRevisionID: nil obeyMVCC: YES status: &status];
+    [db.storage putLocalRevision: revFake prevRevisionID: nil obeyMVCC: YES status: &status];
     AssertEq(status, kCBLStatusNotFound);
 
     // Read it back (should fail):
-    readRev = [db getLocalDocumentWithID: revD.docID revisionID: nil];
+    readRev = [db.storage getLocalDocumentWithID: revD.docID revisionID: nil];
     AssertNil(readRev);
 }
 
@@ -1076,15 +1077,15 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     CBL_Revision* revToFind3 = [[CBL_Revision alloc] initWithDocID: @"99999" revID: @"9-4141" deleted: NO];
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]];
     CBLStatus status;
-    Assert([db findMissingRevisions: revs status: &status]);
+    Assert([db.storage findMissingRevisions: revs status: &status]);
     AssertEqual(revs.allRevisions, (@[revToFind1, revToFind3]));
     
     // Check the possible ancestors:
-    AssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 0 onlyAttachments: NO],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 0 onlyAttachments: NO],
                  (@[doc1r2.revID, doc1r1.revID]));
-    AssertEqual([db getPossibleAncestorRevisionIDs: revToFind1 limit: 1 onlyAttachments: NO],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 1 onlyAttachments: NO],
                  (@[doc1r2.revID]));
-    AssertEqual([db getPossibleAncestorRevisionIDs: revToFind3 limit: 0 onlyAttachments: NO],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind3 limit: 0 onlyAttachments: NO],
                  nil);
 }
 
@@ -1098,10 +1099,10 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     // Purge the entire document:
     NSDictionary* toPurge = $dict({@"doc", @[@"*"]});
     NSDictionary* result;
-    AssertEq([db purgeRevisions: toPurge result: &result], kCBLStatusOK);
+    AssertEq([db.storage purgeRevisions: toPurge result: &result], kCBLStatusOK);
     AssertEqual(result, toPurge);
 
-    CBL_RevisionList* remainingRevs = [db getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
+    CBL_RevisionList* remainingRevs = [db.storage getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
     AssertEq(remainingRevs.count, 0u);
     [db _close];
 }
@@ -1115,16 +1116,16 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
     // Try to purge rev2, which should fail since it's not a leaf:
     NSDictionary* toPurge = $dict({@"doc", @[rev2.revID]});
     NSDictionary* result;
-    AssertEq([db purgeRevisions: toPurge result: &result], kCBLStatusOK);
+    AssertEq([db.storage purgeRevisions: toPurge result: &result], kCBLStatusOK);
     AssertEqual(result, $dict({@"doc", @[]}));
     AssertEq([result[@"doc"] count], 0u);
 
     // Purge rev3, which will remove all ancestors too:
     toPurge = $dict({@"doc", @[rev3.revID]});
-    AssertEq([db purgeRevisions: toPurge result: &result], kCBLStatusOK);
+    AssertEq([db.storage purgeRevisions: toPurge result: &result], kCBLStatusOK);
     AssertEqual(result, toPurge);
 
-    CBL_RevisionList* remainingRevs = [db getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
+    CBL_RevisionList* remainingRevs = [db.storage getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
     AssertEq(remainingRevs.count, 0u);
 }
 

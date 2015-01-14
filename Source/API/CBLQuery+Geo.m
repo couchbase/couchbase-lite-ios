@@ -47,12 +47,14 @@
                    geoJSONData: (NSData*)geoJSONData
                          value: (NSData*)valueData
                  docProperties: (NSDictionary*)docProperties
+                       storage: (id<CBL_QueryRowStorage>)storage
 {
     self = [super initWithDocID: docID
                        sequence: sequence
                             key: nil
                           value: valueData
-                  docProperties: docProperties];
+                  docProperties: docProperties
+                        storage: storage];
     if (self) {
         _boundingBox = bbox;
         _geoJSONData = geoJSONData;
