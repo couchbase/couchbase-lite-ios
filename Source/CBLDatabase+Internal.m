@@ -16,7 +16,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
-#import "CBL_ForestDBStorage.h"
+#import "CBL_Storage.h"
 #import "CBLInternal.h"
 #import "CBLModel_Internal.h"
 #import "CBL_Revision.h"
@@ -149,10 +149,17 @@ static BOOL sAutoCompact = YES;
                                                          error: outError])
         return NO;
 
-    // Open the ForestDB database:
-    _storage = [[CBL_ForestDBStorage alloc] init];
+    // Open the storage (ForestDB or SQLite):
+//    NSString* storageName = @"CBL_ForestDBStorage";
+    NSString* storageName = @"CBL_SQLiteStorage";
+    Class storageClass = NSClassFromString(storageName);
+    Assert(storageClass);
+    _storage = [[storageClass alloc] init];
     _storage.delegate = self;
-    if (![_storage openInDirectory: _dir readOnly: _readOnly error: outError])
+    if (![_storage openInDirectory: _dir
+                          readOnly: _readOnly
+                           manager: _manager
+                             error: outError])
         return NO;
     _storage.autoCompact = sAutoCompact;
 
@@ -301,7 +308,9 @@ static BOOL sAutoCompact = YES;
 
 
 // CBL_StorageDelegate method
-- (void) storageExitedTransaction {
+- (void) storageExitedTransaction: (BOOL)committed {
+    if (!committed)
+        _changesToNotify = nil;
     [self postChangeNotifications];
 }
 

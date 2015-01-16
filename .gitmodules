@@ -16,3 +16,6 @@
 [submodule "vendor/CBForest"]
 	path = vendor/CBForest
 	url = https://github.com/couchbaselabs/cbforest.git
+[submodule "vendor/fmdb"]
+	path = vendor/fmdb
+	url = git://github.com/couchbaselabs/fmdb.git

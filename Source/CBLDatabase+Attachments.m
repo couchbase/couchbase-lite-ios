@@ -42,17 +42,6 @@
 #define kBigAttachmentLength (16*1024)
 
 
-static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
-    if (![digest hasPrefix: @"sha1-"])
-        return false;
-    NSData* keyData = [CBLBase64 decode: [digest substringFromIndex: 5]];
-    if (!keyData || keyData.length != sizeof(CBLBlobKey))
-        return nil;
-    *key = *(CBLBlobKey*)keyData.bytes;
-    return true;
-}
-
-
 @implementation CBLDatabase (Attachments)
 
 
@@ -213,7 +202,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
     } else {
         // If it's an installed attachment, ask the blob-store for it:
         CBLBlobKey key;
-        if (digestToBlobKey(digest, &key))
+        if ([CBL_Attachment digest: digest toBlobKey: &key])
             path = [_attachments pathForKey: key];
     }
 
@@ -490,21 +479,9 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 - (BOOL) garbageCollectAttachments: (NSError**)outError {
     LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
-    NSMutableSet* keys = [NSMutableSet setWithCapacity: 1000];
-    CBLStatus status = [_storage findAllAttachments:^(NSDictionary *attachments) {
-        for (NSString* key in attachments) {
-            NSDictionary* att = attachments[key];
-            NSString* digest = att[@"digest"];
-            CBLBlobKey blobKey;
-            if (digestToBlobKey(digest, &blobKey)) {
-                NSData* keyData = [[NSData alloc] initWithBytes: &blobKey length: sizeof(blobKey)];
-                [keys addObject: keyData];
-            }
-        }
-    }];
-    if (status != kCBLStatusOK)
-        return ReturnNSErrorFromCBLStatus(status, outError);
-
+    NSSet* keys = [_storage findAllAttachmentKeys: outError];
+    if (!keys)
+        return NO;
     LogTo(CBLDatabase, @"    ...found %lu attachments", (unsigned long)keys.count);
     NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
         NSData* keyData = [[NSData alloc] initWithBytes: &blobKey length: sizeof(blobKey)];

@@ -60,7 +60,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
-- (void) test_CRUD {
+- (void) test01_CRUD {
     NSString* privateUUID = db.privateUUID, *publicUUID = db.publicUUID;
     NSLog(@"DB private UUID = '%@', public = '%@'", privateUUID, publicUUID);
     Assert(privateUUID.length >= 20, @"Invalid privateUUID: %@", privateUUID);
@@ -201,7 +201,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
-- (void) test_EmptyDoc {
+- (void) test02_EmptyDoc {
     // Test case for issue #44, which is caused by a bug in CBLJSON.
     CBL_Revision* rev = [self putDoc: $dict()];
     CBLQueryOptions *options = [CBLQueryOptions new];
@@ -216,7 +216,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
-- (void) test_DeleteWithProperties {
+- (void) test03_DeleteWithProperties {
     // Test case for issue #50.
     // Test that it's possible to delete a document by PUTting a revision with _deleted=true,
     // and that the saved deleted revision will preserve any extra properties.
@@ -243,7 +243,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
-- (void) test_DeleteAndRecreate {
+- (void) test04_DeleteAndRecreate {
     // Test case for issue #205: Create a doc, delete it, create it again with the same content.
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"dock"}, {@"property", @"value"})];
     Log(@"Created: %@ -- %@", rev1, rev1.properties);
@@ -262,7 +262,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
 }
 
 
-- (void) test_Validation {
+- (void) test05_Validation {
     __block BOOL validationCalled = NO;
     __block NSString* expectedParentRevID = nil;
     __weak DatabaseInternal_Tests* weakSelf = self;
@@ -377,7 +377,12 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 }
 
 
-- (void) test_RevTree {
+- (BOOL) isSQLiteDB {
+    return [NSStringFromClass(db.storage.class) isEqualToString: @"CBL_SQLiteStorage"];
+}
+
+
+- (void) test06_RevTree {
     RequireTestCase(CRUD);
 
     // Track the latest database-change notification that's posted:
@@ -431,7 +436,8 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertNil(rev2);
 
     // Make sure no duplicate rows were inserted for the common revisions:
-    AssertEq(db.lastSequenceNumber, 3u);
+    // (SQLite storage assigns sequences to inserted ancestor revs, while ForestDB doesn't)
+    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 8u : 3u));
     
     // Make sure the revision with the higher revID wins the conflict:
     CBL_Revision* current = [db getDocumentWithID: rev.docID revisionID: nil];
@@ -447,7 +453,9 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertEqual(changes.allRevisions, (@[conflict, other]));
     options.includeConflicts = YES;
     changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil status: &status];
-    AssertEqual(changes.allRevisions, (@[conflict, rev, other]));
+    // Ordering of conflicting revs isn't significant (and will be different with SQLite vs ForestDB)
+    Assert(([changes.allRevisions isEqual: @[conflict, rev, other]]
+         || [changes.allRevisions isEqual: @[rev, conflict, other]]));
 
     // Verify that compaction leaves the document history:
     Assert([db compact: NULL]);
@@ -482,7 +490,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 }
 
 
-- (void) test_RevTreeConflict {
+- (void) test07_RevTreeConflict {
     RequireTestCase(RevTree);
 
     // Track the latest database-change notification that's posted:
@@ -524,7 +532,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 }
 
 
-- (void) test_DeterministicRevIDs {
+- (void) test08_DeterministicRevIDs {
     CBL_Revision* rev = [self putDoc: $dict({@"_id", @"mydoc"}, {@"key", @"value"})];
     NSString* revID = rev.revID;
     [self eraseTestDB];
@@ -534,7 +542,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 
 
 // Adding an identical revision to one that already exists should succeed with status 200.
-- (void) test_DuplicateRev {
+- (void) test09_DuplicateRev {
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"mydoc"}, {@"key", @"value"})];
 
     NSDictionary* props = $dict({@"_id", @"mydoc"},
@@ -570,7 +578,7 @@ static NSDictionary* attachmentsStub(NSString* name) {
 }
 
 
-- (void) test_Attachments {
+- (void) test10_Attachments {
     RequireTestCase(CRUD);
     CBL_BlobStore* attachments = db.attachmentStore;
 
@@ -695,7 +703,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_PutAttachment {
+- (void) test11_PutAttachment {
     RequireTestCase(CBL_Database_CRUD);
     // Put a revision that includes an _attachments dict:
     CBL_Revision* rev1 = [self putDoc: nil withAttachment: @"This is the body of attach1" compressed: NO];
@@ -807,7 +815,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 
 
 // Test that updating an attachment via a PUT correctly updates its revpos.
-- (void) test_AttachmentRevPos {
+- (void) test12_AttachmentRevPos {
     RequireTestCase(PutAttachment);
 
     // Put a revision that includes an _attachments dict:
@@ -846,7 +854,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_GarbageCollectAttachments {
+- (void) test13_GarbageCollectAttachments {
     NSMutableArray* revs = $marray();
     for (int i=0; i<100; i++) {
         [revs addObject: [self putDoc: $sprintf(@"doc-%d", i)
@@ -869,7 +877,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 
 
 #if 0
-- (void) test_EncodedAttachment {
+- (void) test14_EncodedAttachment {
     RequireTestCase(CBL_Database_CRUD);
     // Start with a fresh database in /tmp:
     CBLDatabase* db = createDB();
@@ -945,7 +953,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 #endif
 
 
-- (void) test_StubOutAttachmentsBeforeRevPos {
+- (void) test15_StubOutAttachmentsBeforeRevPos {
     NSDictionary* hello = $dict({@"revpos", @1}, {@"follows", $true});
     NSDictionary* goodbye = $dict({@"revpos", @2}, {@"data", @"squeeee"});
     NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
@@ -985,7 +993,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 #pragma mark - MISC.:
 
 
-- (void) test_ReplicatorSequences {
+- (void) test16_ReplicatorSequences {
     RequireTestCase(CRUD);
     AssertNil([db lastSequenceWithCheckpointID: @"pull"]);
     [db setLastSequence: @"lastpull" withCheckpointID: @"pull"];
@@ -1000,7 +1008,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_LocalDocs {
+- (void) test17_LocalDocs {
     // Create a document:
     NSMutableDictionary* props = $mdict({@"_id", @"_local/doc1"},
                                         {@"foo", @1}, {@"bar", $false});
@@ -1059,7 +1067,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_FindMissingRevisions {
+- (void) test18_FindMissingRevisions {
     CBL_Revision* doc1r1 = [self putDoc: $dict({@"_id", @"11111"}, {@"key", @"one"})];
     CBL_Revision* doc2r1 = [self putDoc: $dict({@"_id", @"22222"}, {@"key", @"two"})];
     [self putDoc: $dict({@"_id", @"33333"}, {@"key", @"three"})];
@@ -1090,7 +1098,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_Purge {
+- (void) test19_Purge {
     RequireTestCase(CBL_Database_PurgeRevs);
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"doc"}, {@"key", @"1"})];
     CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"})];
@@ -1108,7 +1116,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_PurgeRevs {
+- (void) test20_PurgeRevs {
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"doc"}, {@"key", @"1"})];
     CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"})];
     CBL_Revision* rev3 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev2.revID}, {@"key", @"3"})];
@@ -1130,7 +1138,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_DeleteDatabase {
+- (void) test21_DeleteDatabase {
     // Add a revision and an attachment:
     CBL_Revision* rev1;
     CBLStatus status;
@@ -1160,7 +1168,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void) test_Manager_Close {
+- (void) test22_Manager_Close {
     CBLManager* mgr1 = [dbmgr copy];
     CBLDatabase* testdb = [mgr1 databaseNamed: @"test_db" error: NULL];
     Assert(testdb);
@@ -1183,7 +1191,7 @@ static CBL_Revision* mkrev(NSString* revID) {
     return [[CBL_Revision alloc] initWithDocID: @"docid" revID: revID deleted: NO];
 }
 
-- (void) test_MakeRevisionHistoryDict {
+- (void) test23_MakeRevisionHistoryDict {
     NSArray* revs = @[mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def")];
     AssertEqual([CBLForestBridge makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"jkl", @"ghi", @"def"]},
@@ -1199,7 +1207,7 @@ static CBL_Revision* mkrev(NSString* revID) {
 }
 
 
-- (void) test_UpgradeDB {
+- (void) test24_UpgradeDB {
     NSString* path = [self pathToTestFile: @"people.cblite"];
     CBLDatabaseUpgrade* upgrade = [[CBLDatabaseUpgrade alloc] initWithDatabase: db
                                                                     sqliteFile: path];

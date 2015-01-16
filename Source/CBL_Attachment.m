@@ -24,17 +24,6 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
     return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key length: sizeof(key)]];
 }
 
-static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
-    if (![digest hasPrefix: @"sha1-"])
-        return false;
-    NSData* keyData = [CBLBase64 decode: [digest substringFromIndex: 5]];
-    if (!keyData || keyData.length != sizeof(CBLBlobKey))
-        return nil;
-    *key = *(CBLBlobKey*)keyData.bytes;
-    return true;
-}
-
-
 @implementation CBL_Attachment
 {
     CBLBlobKey _blobKey;
@@ -44,6 +33,17 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
 
 @synthesize name=_name, contentType=_contentType, database=_database;
+
+
++ (bool) digest: (NSString*)digest toBlobKey: (CBLBlobKey*)outKey {
+    if (![digest hasPrefix: @"sha1-"])
+        return false;
+    NSData* keyData = [CBLBase64 decode: [digest substringFromIndex: 5]];
+    if (!keyData || keyData.length != sizeof(CBLBlobKey))
+        return nil;
+    *outKey = *(CBLBlobKey*)keyData.bytes;
+    return true;
+}
 
 
 - (instancetype) initWithName: (NSString*)name contentType: (NSString*)contentType {
@@ -70,7 +70,7 @@ static bool digestToBlobKey(NSString* digest, CBLBlobKey* key) {
 
         _digest = $castIf(NSString, attachInfo[@"digest"]);
         if (_digest)
-            digestToBlobKey(_digest, &_blobKey); // (but digest might not map to a blob key)
+            [[self class] digest: _digest toBlobKey: &_blobKey]; // (but digest might not map to a blob key)
 
         NSString* encodingStr = $castIf(NSString, attachInfo[@"encoding"]);
         if (encodingStr) {

@@ -22,6 +22,8 @@
     unsigned revpos;
 }
 
++ (bool) digest: (NSString*)digest toBlobKey: (CBLBlobKey*)outKey;
+
 - (instancetype) initWithName: (NSString*)name contentType: (NSString*)contentType;
 
 - (instancetype) initWithName: (NSString*)name

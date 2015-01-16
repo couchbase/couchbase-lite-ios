@@ -10,6 +10,9 @@ extern "C" {
 #import "CBL_ForestDBStorage.h"
 #import "CBL_ForestDBViewStorage.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBL_BlobStore.h"
+#import "CBL_Attachment.h"
+#import "CBLBase64.h"
 #import "CBLMisc.h"
 }
 #import <CBForest/CBForest.hh>
@@ -81,7 +84,11 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 
-- (BOOL)openInDirectory: (NSString *)directory readOnly: (BOOL)readOnly error: (NSError**)outError {
+- (BOOL)openInDirectory: (NSString *)directory
+               readOnly: (BOOL)readOnly
+                manager: (CBLManager*)manager
+                  error: (NSError**)outError
+{
     _directory = [directory copy];
     NSString* forestPath = [directory stringByAppendingPathComponent: @"db.forest"];
     Database::openFlags options = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
@@ -171,12 +178,15 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     CBLStatus status = [self _try: ^CBLStatus{
         return block();
     }];
+    BOOL commit = !CBLStatusIsError(status);
 
     LogTo(CBLDatabase, @"END transaction (status=%d)", status);
     if (--_transactionLevel == 0) {
+        if (!commit)
+            _forestTransaction->abort();
         delete _forestTransaction;
         _forestTransaction = NULL;
-        [_delegate storageExitedTransaction];
+        [_delegate storageExitedTransaction: commit];
     }
     return status;
 }
@@ -571,8 +581,9 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 #pragma mark - PURGING / COMPACTING:
 
 
-- (CBLStatus) findAllAttachments: (void (^)(NSDictionary* attachments))block {
-    return [self _try: ^CBLStatus{
+- (NSSet*) findAllAttachmentKeys: (NSError**)outError {
+    NSMutableSet* keys = [NSMutableSet setWithCapacity: 1000];
+    CBLStatus status = [self _try: ^CBLStatus{
         DocEnumerator::Options options = DocEnumerator::Options::kDefault;
         options.contentOptions = Database::kMetaOnly;
         for (DocEnumerator e(*_forest, slice::null, slice::null, options); e.next(); ) {
@@ -589,14 +600,26 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                     if (body.size > 0) {
                         NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
                                                                 options: 0 error: NULL];
-                        block(rev.cbl_attachments);
+                        [rev.cbl_attachments enumerateKeysAndObjectsUsingBlock:^(id key, NSDictionary* att, BOOL *stop) {
+                            CBLBlobKey blobKey;
+                            if ([CBL_Attachment digest: att[@"digest"] toBlobKey: &blobKey]) {
+                                NSData* keyData = [[NSData alloc] initWithBytes: &blobKey length: sizeof(blobKey)];
+                                [keys addObject: keyData];
+                            }
+                        }];
                     }
                 }
             }
         }
         return kCBLStatusOK;
     }];
+    if (CBLStatusIsError(status)) {
+        ReturnNSErrorFromCBLStatus(status, outError);
+        keys = nil;
+    }
+    return keys;
 }
+
 
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
                       result: (NSDictionary**)outResult

@@ -9,7 +9,7 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLQuery.h"
-@class CBLDatabaseChange;
+@class CBLDatabaseChange, CBLManager;
 @protocol CBL_ViewStorage;
 
 
@@ -95,6 +95,7 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 /** Opens storage. Files will be created in the directory, which must already exist. */
 - (BOOL) openInDirectory: (NSString*)directory
                 readOnly: (BOOL)readOnly
+                 manager: (CBLManager*)manager
                    error: (NSError**)error;
 - (void) close;
 
@@ -166,7 +167,8 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 - (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
                        status: (CBLStatus*)outStatus;
 
-- (CBLStatus) findAllAttachments: (void (^)(NSDictionary* attachments))block;
+/** Returns all attachment keys, in the form of an NSData containing a CBLBlobKey (SHA-1 digest). */
+- (NSSet*) findAllAttachmentKeys: (NSError**)outError;
 
 /** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
     @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
@@ -185,9 +187,6 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
                     prevRevisionID: (NSString*)prevRevID
                           obeyMVCC: (BOOL)obeyMVCC
                             status: (CBLStatus*)outStatus;
-- (CBLStatus) deleteLocalDocumentWithID: (NSString*)docID
-                             revisionID: (NSString*)revID
-                               obeyMVCC: (BOOL)obeyMVCC;
 
 - (NSString*) infoForKey: (NSString*)key;
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key;
@@ -220,7 +219,7 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 
 
 @protocol CBL_StorageDelegate <NSObject>
-- (void) storageExitedTransaction;
+- (void) storageExitedTransaction: (BOOL)committed;
 - (void) databaseStorageChanged: (CBLDatabaseChange*)change;
 - (NSString*) generateRevIDForJSON: (NSData*)json
                            deleted: (BOOL)deleted
