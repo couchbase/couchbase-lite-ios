@@ -377,11 +377,6 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 }
 
 
-- (BOOL) isSQLiteDB {
-    return [NSStringFromClass(db.storage.class) isEqualToString: @"CBL_SQLiteStorage"];
-}
-
-
 - (void) test06_RevTree {
     RequireTestCase(CRUD);
 

@@ -154,7 +154,7 @@
 @interface CBLFullTextQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
-                    fullTextID: (unsigned)fullTextID
+                    fullTextID: (UInt64)fullTextID
                        storage: (id<CBL_QueryRowStorage>)storage;
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
 @end

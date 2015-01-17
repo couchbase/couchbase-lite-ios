@@ -7,6 +7,7 @@
 //
 
 #import "CBL_SQLiteStorage.h"
+#import "CBL_SQLiteViewStorage.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Shared.h"
 #import "CBLCollateJSON.h"
@@ -38,13 +39,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 @implementation CBL_SQLiteStorage
 {
-    CBL_FMDatabase* _fmdb;
     BOOL _readOnly;
     NSCache* _docIDs;
 }
 
 @synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact,
-            maxRevTreeDepth=_maxRevTreeDepth;
+            maxRevTreeDepth=_maxRevTreeDepth, fmdb=_fmdb;
 
 
 #pragma mark - OPEN/CLOSE:
@@ -1185,6 +1185,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
         for (NSString* docID in options.keys) {
             CBLQueryRow* change = docs[docID];
             if (!change) {
+                // create entry for missing or deleted doc:
                 NSDictionary* value = nil;
                 SInt64 docNumericID = [self getDocNumericID: docID];
                 if (docNumericID > 0) {
@@ -2001,13 +2002,19 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 - (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name
                                   create: (BOOL)create
 {
-    //FIX: IMPLEMENT
-    return nil;
+    return [[CBL_SQLiteViewStorage alloc] initWithDBStorage: self name: name create: create];
 }
 
+
 - (NSArray*) allViewNames {
-    //FIX: IMPLEMENT
-    return nil;
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT name FROM views"];
+    if (!r)
+        return nil;
+    NSMutableArray* names = $marray();
+    while ([r next])
+        [names addObject: [r stringForColumnIndex: 0]];
+    [r close];
+    return names;
 }
 
 

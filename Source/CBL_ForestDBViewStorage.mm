@@ -147,7 +147,6 @@ private:
 @implementation CBL_ForestDBViewStorage
 {
     CBL_ForestDBStorage* _dbStorage;
-    NSString* _name;
     NSString* _path;
     Database* _indexDB;
     MapReduceIndex* _index;
@@ -214,6 +213,11 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 - (void) close {
     [self closeIndex];
+}
+
+
+- (BOOL) setVersion: (NSString*)version {
+    return YES;
 }
 
 
@@ -749,11 +753,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
 - (NSData*) fullTextForDocument: (NSString*)docID
                        sequence: (SequenceNumber)sequence
-                     fullTextID: (unsigned)fullTextID
+                     fullTextID: (UInt64)fullTextID
 {
-    alloc_slice valueSlice = self.index->readFullText((nsstring_slice)docID, sequence, fullTextID);
+    alloc_slice valueSlice = self.index->readFullText((nsstring_slice)docID, sequence, (unsigned)fullTextID);
     if (valueSlice.size == 0) {
-        Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, fullTextID %u",
+        Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, fullTextID %llu",
              self, docID, sequence, fullTextID);
         return nil;
     }

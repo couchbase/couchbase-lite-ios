@@ -66,6 +66,8 @@ typedef BOOL (^CBLQueryRowFilter)(CBLQueryRow*);
 
 @end
 
+#define kCBLQueryOptionsDefaultLimit UINT_MAX
+
 
 /** Options for _changes feed (-changesSinceSequence:). */
 typedef struct CBLChangesOptions {

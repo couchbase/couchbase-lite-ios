@@ -59,6 +59,8 @@ typedef SInt64 SequenceNumber;
 /** Revision's sequence number, or 0 if unknown/unset. */
 @property (readonly) SequenceNumber sequenceIfKnown;
 
+- (void) forgetSequence;
+
 - (NSComparisonResult) compareSequences: (CBL_Revision*)rev;
 
 /** Generation number: 1 for a new document, 2 for the 2nd revision, ...

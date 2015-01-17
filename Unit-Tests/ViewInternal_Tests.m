@@ -21,7 +21,7 @@
 @implementation ViewInternal_Tests
 
 
-- (void) test_Create {
+- (void) test01_Create {
     RequireTestCase(CBLDatabase);
 
     AssertNil([db existingViewNamed: @"aview"]);
@@ -145,7 +145,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_Index {
+- (void) test02_Index {
     RequireTestCase(Create);
     CBL_Revision* rev1 = [self putDoc: $dict({@"key", @"one"})];
     CBL_Revision* rev2 = [self putDoc: $dict({@"key", @"two"})];
@@ -201,7 +201,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_ChangeMapFn {
+- (void) test03_ChangeMapFn {
     RequireTestCase(CBL_View_Index);
     [self putDoc: $dict({@"key", @"one"})];
     [self putDoc: $dict({@"key", @"two"})];
@@ -235,7 +235,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_IndexMultiple {
+- (void) test04_IndexMultiple {
     RequireTestCase(Index);
 
     CBLView* v1 = [self createViewNamed: @"agroup/view1"];
@@ -278,7 +278,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_ConflictWinner {
+- (void) test05_ConflictWinner {
     // If a view is re-indexed, and a document in the view has gone into conflict,
     // rows emitted by the earlier 'losing' revision shouldn't appear in the view.
     RequireTestCase(Index);
@@ -316,7 +316,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_ConflictLoser {
+- (void) test06_ConflictLoser {
     // Like the ConflictWinner test, except the newer revision is the loser,
     // so it shouldn't be indexed at all. Instead, the older still-winning revision
     // should be indexed again.
@@ -349,15 +349,16 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEq([view updateIndex], kCBLStatusOK);
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
+    SequenceNumber fourSeq = (self.isSQLiteDB ? leaf1 : leaf2).sequence;
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
-                              $dict({@"key", @"\"four\""}, {@"seq", @6}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @(fourSeq)}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
 }
 
 
-- (void) test_Index_Persistent {
+- (void) test07_Index_Persistent {
     // Make sure index is not invalidated on relaunch (see #540)
     RequireTestCase(CBL_View_Index);
     NSString* dbPath = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite_ViewTest.cblite2"];
@@ -384,7 +385,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_Query {
+- (void) test08_Query {
     RequireTestCase(Index);
     [self putDocs];
     CBLView* view = [self createView];
@@ -478,7 +479,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEqual(rows, expectedRows);
 }
 
-- (void) test_QueryStartKeyDocID {
+- (void) test09_QueryStartKeyDocID {
     RequireTestCase(Query);
     [self putDocs];
     [self putDoc: $dict({@"_id", @"11112"}, {@"key", @"one"})];
@@ -513,7 +514,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 // Check that duplicate keys emitted by the same doc are preserved.
-- (void) test_Dup_Keys {
+- (void) test10_Dup_Keys {
     RequireTestCase(CBL_View_Index);
     [self putDocs];
 
@@ -546,7 +547,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEqual(rows, expectedRows);
 }
 
-- (void) test_PrefixMatch {
+- (void) test11_PrefixMatch {
     RequireTestCase(Query);
     [self putDocs];
     CBLView* view = [self createView];
@@ -564,7 +565,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     // TODO: Test prefixMatchLevel > 1
 }
 
-- (void) test_EmitDocAsValue {
+- (void) test12_EmitDocAsValue {
     RequireTestCase(Query);
     NSArray* docs = [self putDocs];
 
@@ -615,7 +616,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertNil(reduced());
 }
 
-- (void) test_NumericKeys {
+- (void) test13_NumericKeys {
     [self putDoc: $dict({@"_id", @"22222"},
                      {@"refrenceNumber", @(33547239)},
                      {@"title", @"this is the title"})];
@@ -638,7 +639,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 #if 0 //FIX: REIMPLEMENT GEO
-- (void) test_GeoQuery {
+- (void) test14_GeoQuery {
     RequireTestCase(CBLGeometry);
     RequireTestCase(Index);
     [self putGeoDocs];
@@ -684,7 +685,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 #endif
 
-- (void) test_AllDocsQuery {
+- (void) test15_AllDocsQuery {
     NSArray* docs = [self putDocs];
     NSDictionary* expectedRow[docs.count];
     memset(&expectedRow, 0, sizeof(expectedRow));
@@ -784,7 +785,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_Reduce {
+- (void) test16_Reduce {
     RequireTestCase(Query);
     [self putDoc: $dict({@"_id", @"CD"},      {@"cost", @(8.99)})];
     [self putDoc: $dict({@"_id", @"App"},     {@"cost", @(1.95)})];
@@ -818,7 +819,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_Grouped {
+- (void) test17_Grouped {
     RequireTestCase(Reduce);
     [self putDoc: $dict({@"_id", @"1"}, {@"artist", @"Gang Of Four"}, {@"album", @"Entertainment!"},
                      {@"track", @"Ether"}, {@"time", @(231)})];
@@ -886,7 +887,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_GroupedStrings {
+- (void) test18_GroupedStrings {
     RequireTestCase(Grouped);
     [self putDoc: $dict({@"name", @"Alice"})];
     [self putDoc: $dict({@"name", @"Albert"})];
@@ -915,7 +916,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                               $dict({@"key", @"N"}, {@"value", @1})));
 }
 
-- (void) test_Grouped_NoReduce {
+- (void) test19_Grouped_NoReduce {
     RequireTestCase(Grouped);
     [self putDoc: $dict({@"_id", @"1"}, {@"type", @"A"})];
     [self putDoc: $dict({@"_id", @"2"}, {@"type", @"A"})];
@@ -943,7 +944,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_Collation {
+- (void) test20_Collation {
     // Based on CouchDB's "view_collation.js" test
     RequireTestCase(Query);
     NSArray* testKeys = @[ $null,
@@ -991,7 +992,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_CollationRaw {
+- (void) test21_CollationRaw {
     NSArray* testKeys = @[ @0,
                            @(2.5),
                            @(10),
@@ -1034,7 +1035,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_LinkedDocs {
+- (void) test22_LinkedDocs {
     RequireTestCase(Query);
     NSArray* revs = [self putDocs];
     
@@ -1079,7 +1080,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test_FullTextQuery {
+- (void) test23_FullTextQuery {
     RequireTestCase(Query);
 
     NSMutableArray* docs = $marray();
@@ -1115,9 +1116,15 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBLFullTextQueryRow* row = rows[0];
     AssertEqual(row.documentID, @"33333");
     AssertEqual(row.fullText, @"a dog whøse ñame was “Dog”");
-    AssertEq(row.matchCount, 2u);
-    Assert(NSEqualRanges([row textRangeOfMatch: 0], NSMakeRange(2, 3)));  // first "dog"
-    Assert(NSEqualRanges([row textRangeOfMatch: 1], NSMakeRange(12, 4))); // "ñame"
+    Assert(row.matchCount >= 2u);
+    if (row.matchCount >= 2u) {
+        Assert(NSEqualRanges([row textRangeOfMatch: 0], NSMakeRange(2, 3)));  // first "dog"
+        Assert(NSEqualRanges([row textRangeOfMatch: 1], NSMakeRange(12, 4))); // "ñame"
+        // SQlite's fts4 will report a 3rd match, the second occurrance of "dog",
+        // but our homegrown ForestDB matcher only reports the 1st instance of a term.
+        if (row.matchCount >= 3u)
+            Assert(NSEqualRanges([row textRangeOfMatch: 2], NSMakeRange(22, 3))); // "Dog"
+    }
 
     // Now delete a document:
     CBL_Revision* rev = docs[3];
@@ -1134,7 +1141,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 #if 0 // Boolean operators and snippets are not available (yet) with ForestDB
-- (void) test_FullTextQuery_Advanced {
+- (void) test24_FullTextQuery_Advanced {
     RequireTestCase(CBL_View_FullTextQuery);
     CBLDatabase *db = createDB();
     CBLStatus status;
@@ -1229,7 +1236,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 #endif
 
 
-- (void) test_TotalDocs {
+- (void) test25_TotalDocs {
     // Create some docs
     NSArray* docs = [self putDocs];
     NSUInteger totalRows = [docs count];

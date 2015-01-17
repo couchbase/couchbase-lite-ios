@@ -104,6 +104,10 @@
     }
 }
 
+- (void) forgetSequence {
+    _sequence = 0;
+}
+
 - (unsigned) generation {
     return [[self class] generationFromRevID: _revID];
 }
@@ -180,7 +184,9 @@
     props[@"_rev"] = self.revID;
     if (_deleted)
         props[@"_deleted"] = @YES;
-    return [[CBL_Revision alloc] initWithProperties: props];
+    CBL_Revision* result = [[CBL_Revision alloc] initWithProperties: props];
+    result->_sequence = _sequence;
+    return result;
 }
 
 

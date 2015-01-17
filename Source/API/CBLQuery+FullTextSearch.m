@@ -35,14 +35,14 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 
 @implementation CBLFullTextQueryRow
 {
-    unsigned _fullTextID;
+    UInt64 _fullTextID;
     NSMutableArray* _matchOffsets;
 }
 
 
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
-                    fullTextID: (unsigned)fullTextID
+                    fullTextID: (UInt64)fullTextID
                        storage: (id<CBL_QueryRowStorage>)storage
 {
     self = [super initWithDocID: docID sequence: sequence key: $null value: nil

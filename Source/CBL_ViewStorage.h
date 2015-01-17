@@ -19,6 +19,8 @@
 - (void) deleteIndex;
 - (void) deleteView;
 
+- (BOOL) setVersion: (NSString*)version;
+
 - (CBLStatus) updateIndexes: (NSArray*)views; // array of CBL_ViewStorage
 
 @property (readonly) NSUInteger totalRows;
@@ -49,7 +51,7 @@
                                     status: (CBLStatus*)outStatus;
 - (NSData*) fullTextForDocument: (NSString*)docID
                        sequence: (SequenceNumber)sequenceNumber
-                     fullTextID: (unsigned)fullTextID;
+                     fullTextID: (UInt64)fullTextID;
 @end
 
 

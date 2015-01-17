@@ -7,6 +7,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLDatabase+Internal.h"
 #import "MYURLUtils.h"
 #import "CBLRemoteRequest.h"
 
@@ -97,6 +98,11 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Assert([db deleteDatabase: &error], @"Couldn't delete test db: %@", error);
     db = [dbmgr createEmptyDatabaseNamed: dbName error: &error];
     Assert(db, @"Couldn't recreate test db: %@", error);
+}
+
+
+- (BOOL) isSQLiteDB {
+    return [NSStringFromClass(db.storage.class) isEqualToString: @"CBL_SQLiteStorage"];
 }
 
 

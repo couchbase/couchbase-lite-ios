@@ -63,6 +63,9 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 // Deletes and re-creates 'db'
 - (void) eraseTestDB;
 
+/** YES if the underlying data store is SQLite (not ForestDB). */
+@property (readonly) BOOL isSQLiteDB;
+
 /** Creates a document in the test database with the given properties. */
 - (CBLDocument*) createDocumentWithProperties: (NSDictionary*)properties;
 

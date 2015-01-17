@@ -44,7 +44,7 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 - (instancetype)init {
     self = [super init];
     if (self) {
-        limit = UINT_MAX;
+        limit = kCBLQueryOptionsDefaultLimit;
         inclusiveStart = YES;
         inclusiveEnd = YES;
         fullTextRanking = YES;
@@ -165,6 +165,7 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
     [shared setValue: [reduceBlock copy]
              forType: @"reduce" name: _name inDatabaseNamed: db.name];
     if (changed) {
+        [_storage setVersion: version];
         // update any live queries that might be listening to this view, now that it has changed
         [self postPublicChangeNotification];
     }

@@ -954,14 +954,13 @@ static void convertRevIDs(NSArray* revIDs,
                                                 deleting,
                                                 (putRev.attachments != nil),
                                                 revNode, allowConflict, status);
-            if (fdbRev)
-                putRev.sequence = fdbRev->sequence;
-            else if (CBLStatusIsError((CBLStatus)status))
+            if (!fdbRev && CBLStatusIsError((CBLStatus)status))
                 return (CBLStatus)status;
             isWinner = (fdbRev == doc.currentRevision());
         } // prune call will invalidate fdbRev ptr, so let it go out of scope
         doc.prune((unsigned)_maxRevTreeDepth);
         doc.save(*_forestTransaction);
+        putRev.sequence = doc.sequence();
 #if DEBUG
         LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
 #endif
@@ -1030,6 +1029,7 @@ static void convertRevIDs(NSArray* revIDs,
         // Save updated doc back to the database:
         doc.prune((unsigned)_maxRevTreeDepth);
         doc.save(*_forestTransaction);
+        inRev.sequence = doc.sequence();
 #if DEBUG
         LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
 #endif

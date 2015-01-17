@@ -651,6 +651,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         for (CBL_Revision* rev in downloads) {
             @autoreleasepool {
                 SequenceNumber fakeSequence = rev.sequence;
+                [rev forgetSequence];
                 NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
