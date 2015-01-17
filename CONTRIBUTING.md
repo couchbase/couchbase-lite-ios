@@ -2,7 +2,7 @@ We hate bugs, but we love bug reports! And we're grateful to our developers who 
 
 We also want to hear about your ideas for new features and improvements. You can file those in the issue trackers too.
 
-And while we welcome questions, **we prefer to answer questions on our [mailing list](https://groups.google.com/forum/?fromgroups#!forum/mobile-couchbase)** rather than in Github issues.
+And while we welcome questions, **we prefer to answer questions on our [developer forums](https://forums.couchbase.com)** rather than in Github issues.
 
 # 1. Is This A Duplicate?
 
